@@ -12,7 +12,7 @@ public class ArenaMap : MonoBehaviour
     }
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F))
+        if (Input.GetKeyDown(KeyCode.F) && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             if (cam.orthographicSize == 15f)
             {
@@ -25,17 +25,7 @@ public class ArenaMap : MonoBehaviour
         }
     }
    
-    public void Zoom()
-    {
-        if (cam.orthographicSize == 15f)
-        {
-            cam.orthographicSize = 30f;
-        }
-        else if (cam.orthographicSize == 30f)
-        {
-            cam.orthographicSize = 15f;
-        }
-    }
+
     private void LateUpdate()
     {
         Vector3 newpos = spaceship.position;
