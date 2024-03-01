@@ -72,20 +72,22 @@ public class SpaceshipMovement : MonoBehaviour
 
         //    GameManager.Instance.enterKeyActivate = false;
         //}*/
+        Quaternion Currentpos;
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
         {
             Debug.Log("Enter key");
             //------------------RIGHT LEFT TURN--------------------
             //transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
+            Currentpos = transform.rotation;
             Quaternion targetRotationLR = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotationLR, 10 * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(Currentpos, targetRotationLR, 10 * Time.deltaTime);
             rotationAngle = new Vector3(0, 0, 0);
             turnAngle.text = "0";
 
             //------------------UP DOWN TURN--------------------
             //transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
             Quaternion targetRotationUD = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotationUD, 10 * Time.deltaTime);
+            transform.rotation = Quaternion.Slerp(Currentpos, targetRotationUD, 10 * Time.deltaTime);
             upDownAngle = new Vector3(0, 0, 0);
             elevationAngle.text = "0";
 
