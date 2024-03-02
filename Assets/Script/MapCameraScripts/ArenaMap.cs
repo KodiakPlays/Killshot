@@ -25,7 +25,10 @@ public class ArenaMap : MonoBehaviour
         }
     }
    
+    public void ZoomOut()
+    {
 
+    }
     private void LateUpdate()
     {
         Vector3 newpos = spaceship.position;

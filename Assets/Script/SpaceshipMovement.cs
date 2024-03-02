@@ -77,20 +77,27 @@ public class SpaceshipMovement : MonoBehaviour
         {
             Debug.Log("Enter key");
             //------------------RIGHT LEFT TURN--------------------
-            //transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
-            Currentpos = transform.rotation;
-            Quaternion targetRotationLR = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
-            transform.rotation = Quaternion.Slerp(Currentpos, targetRotationLR, 10 * Time.deltaTime);
+            transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
+           Currentpos = transform.rotation;
+            Quaternion targetRotationLR = Quaternion.Euler(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
+            /*float alpha = 0;
+           while (alpha <= 1)
+           {
+               transform.rotation = Quaternion.Lerp(Currentpos, targetRotationLR, alpha);
+               alpha += Time.deltaTime;
+           }
+               //transform.rotation = Quaternion.Lerp(Currentpos, targetRotationLR, 2 * Time.deltaTime);
+           */
             rotationAngle = new Vector3(0, 0, 0);
             turnAngle.text = "0";
 
             //------------------UP DOWN TURN--------------------
-            //transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
-            Quaternion targetRotationUD = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
-            transform.rotation = Quaternion.Slerp(Currentpos, targetRotationUD, 10 * Time.deltaTime);
+            transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
+            //Quaternion targetRotationUD = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
+            //transform.rotation = Quaternion.Lerp(Currentpos, targetRotationUD, 2 * Time.deltaTime);
             upDownAngle = new Vector3(0, 0, 0);
             elevationAngle.text = "0";
-
+            //
         }
 
     }
@@ -102,14 +109,14 @@ public class SpaceshipMovement : MonoBehaviour
             //------------------RIGHT LEFT TURN--------------------
             //transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
             Quaternion targetRotationLR = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotationLR, 10 * Time.deltaTime);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotationLR, 10 * Time.deltaTime);
             rotationAngle = new Vector3(0, 0, 0);
             turnAngle.text = "0";
 
             //------------------UP DOWN TURN--------------------
             //transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
             Quaternion targetRotationUD = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotationUD, 10 * Time.deltaTime);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotationUD, 10 * Time.deltaTime);
             upDownAngle = new Vector3(0, 0, 0);
             elevationAngle.text = "0";
 
