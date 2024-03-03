@@ -7,13 +7,17 @@ public class GameManager : MonoBehaviour
     private static GameManager instance;
     public static GameManager Instance { get { return instance; } }
 
+
     public bool eActive;
     public bool bActive;
+    public bool pActive;
     public bool enterKeyActivate;
     public GameObject eGreenImage;
     public GameObject eRedImage;
     public GameObject bGreenImage;
     public GameObject bRedImage;
+    public GameObject pGreenImage;
+    public GameObject pRedImage;
 
     private void Awake()
     {
@@ -36,7 +40,7 @@ public class GameManager : MonoBehaviour
     }
 
   
-    public void eButtonActive()
+    public void EButtonActive()
     {
         if (!eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
@@ -52,7 +56,7 @@ public class GameManager : MonoBehaviour
         }
 
     }
-    public void bButtonActivate()
+    public void BButtonActivate()
     {
         if (!bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
@@ -65,6 +69,21 @@ public class GameManager : MonoBehaviour
             bActive = false;
             bGreenImage.SetActive(false);
             bRedImage.SetActive(true);
+        }
+    }
+    public void PButtonActivate()
+    {
+        if (!pActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        {
+            pActive = true;
+            pGreenImage.SetActive(true);
+            pRedImage.SetActive(false);
+        }
+        else if (pActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        {
+            pActive = false;
+            pGreenImage.SetActive(false);
+            pRedImage.SetActive(true);
         }
     }
     public void returnButton()

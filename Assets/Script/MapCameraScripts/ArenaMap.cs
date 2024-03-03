@@ -6,8 +6,10 @@ public class ArenaMap : MonoBehaviour
 {
     [SerializeField] Transform spaceship;
     private Camera cam;
+    bool isZoom;
     private void Start()
     {
+        isZoom = true;
         cam = GetComponent<Camera>();
     }
     private void Update()
@@ -16,10 +18,12 @@ public class ArenaMap : MonoBehaviour
         {
             if (cam.orthographicSize == 15f)
             {
-                cam.orthographicSize = 30f;
+                cam.orthographicSize = 100f;
+                isZoom = false;
             }
-            else if (cam.orthographicSize == 30f)
+            else if (cam.orthographicSize == 100f)
             {
+                isZoom = true;
                 cam.orthographicSize = 15f;
             }
         }
@@ -27,12 +31,19 @@ public class ArenaMap : MonoBehaviour
    
     public void ZoomOut()
     {
-
+        if (isZoom)
+        {
+            Vector3 newpos = spaceship.position;
+            newpos.y = transform.position.y;
+            transform.position = newpos;
+        }
+        else
+        {
+            transform.position = new Vector3(0, 60, 0);
+        }
     }
     private void LateUpdate()
     {
-        Vector3 newpos = spaceship.position;
-        newpos.y = transform.position.y;
-        transform.position = newpos;
+        ZoomOut();
     }
 }

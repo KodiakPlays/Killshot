@@ -9,30 +9,44 @@ public class SpaceshipMovement : MonoBehaviour
     Vector3 rotationAngle;
     Vector3 upDownAngle;
 
+    [SerializeField] float SpaceshipMoveSpeed = 0.5f;
+
     [SerializeField] TextMeshProUGUI turnAngle;
     [SerializeField] TextMeshProUGUI elevationAngle;
+
+    [SerializeField] float detectionRadius;
+    [SerializeField] LayerMask enemyLayer;
     // Update is called once per frame
     void Update()
     {
+        SpaceshipMove();
+        EnemySpaseshipDetection();
+    }
+    void SpaceshipMove()
+    {
         //CONTINUES FORWORD MOVEMENT 
-        transform.Translate(Vector3.forward * Time.deltaTime * 0.5f);
+        transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
+
+        //ELEVATION MOVEMENT
         if (GameManager.Instance.eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            if(Input.GetKeyDown(KeyCode.W))
+            if (Input.GetKeyDown(KeyCode.W))
             {
                 //GOES UPSIDE
                 upDownAngle += new Vector3(-10, 0, 0);
                 Debug.Log("rotationAmount " + upDownAngle);
                 elevationAngle.text = upDownAngle.x.ToString();
-            } 
-            if(Input.GetKeyDown(KeyCode.S))
+            }
+            if (Input.GetKeyDown(KeyCode.S))
             {
                 //GOES DOWNSIDE
                 upDownAngle += new Vector3(10, 0, 0);
                 Debug.Log("rotationAmount " + upDownAngle);
                 elevationAngle.text = upDownAngle.x.ToString();
-            } 
+            }
         }
+
+        //BEARING MOVEMENT
         if (GameManager.Instance.bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             if (Input.GetKeyDown(KeyCode.A))
@@ -41,8 +55,8 @@ public class SpaceshipMovement : MonoBehaviour
                 rotationAngle += new Vector3(0, -10, 0);
                 Debug.Log("rotationAmount " + rotationAngle);
                 turnAngle.text = rotationAngle.y.ToString();
-            } 
-            if(Input.GetKeyDown(KeyCode.D))
+            }
+            if (Input.GetKeyDown(KeyCode.D))
             {
                 //TURN RIGHT
                 rotationAngle += new Vector3(0, 10, 0);
@@ -50,35 +64,15 @@ public class SpaceshipMovement : MonoBehaviour
                 turnAngle.text = rotationAngle.y.ToString();
             }
         }
-        /*
-        //if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-        //{
-        //    Debug.Log("Enter key");
-        //    //------------------RIGHT LEFT TURN--------------------
-        //    //transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
-        //    Quaternion targetRotationLR = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
-        //    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotationLR, 10 * Time.deltaTime);
-        //    rotationAngle = new Vector3(0, 0, 0);
-        //    turnAngle.text = "0";
 
-        //    //------------------UP DOWN TURN--------------------
-        //    //transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
-        //    Quaternion targetRotationUD = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
-        //    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotationUD, 10* Time.deltaTime);
-        //    upDownAngle = new Vector3(0, 0, 0);
-        //    elevationAngle.text = "0";
-
-        //    // Invoke("MakeItCenter", 5f);
-
-        //    GameManager.Instance.enterKeyActivate = false;
-        //}*/
+        //SMMOTH ROTATION AFTER ENTER
         Quaternion Currentpos;
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
         {
             Debug.Log("Enter key");
             //------------------RIGHT LEFT TURN--------------------
             transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
-           Currentpos = transform.rotation;
+            Currentpos = transform.rotation;
             Quaternion targetRotationLR = Quaternion.Euler(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
             /*float alpha = 0;
            while (alpha <= 1)
@@ -99,35 +93,45 @@ public class SpaceshipMovement : MonoBehaviour
             elevationAngle.text = "0";
             //
         }
-
     }
-    void turn()
+    void EnemySpaseshipDetection()
     {
-        if (GameManager.Instance.enterKeyActivate)
+        Collider[] hitCollider = Physics.OverlapSphere(transform.position, detectionRadius, enemyLayer);
+        foreach (Collider collider in hitCollider)
         {
-            Debug.Log("Enter key");
-            //------------------RIGHT LEFT TURN--------------------
-            //transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
-            Quaternion targetRotationLR = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + rotationAngle);
-            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotationLR, 10 * Time.deltaTime);
-            rotationAngle = new Vector3(0, 0, 0);
-            turnAngle.text = "0";
-
-            //------------------UP DOWN TURN--------------------
-            //transform.Rotate(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
-            Quaternion targetRotationUD = Quaternion.LookRotation(new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z) + upDownAngle);
-            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotationUD, 10 * Time.deltaTime);
-            upDownAngle = new Vector3(0, 0, 0);
-            elevationAngle.text = "0";
-
-            // Invoke("MakeItCenter", 5f);
-
-            GameManager.Instance.enterKeyActivate = false;
+            Debug.Log("Enemy Detected: " + collider.gameObject.name);
         }
     }
-    void MakeItCenter()
+
+    public void PowerInc()
     {
-        Debug.Log("MakeItCenter");
-        transform.rotation = Quaternion.Euler(0, transform.rotation.y, transform.rotation.z);
+        if (GameManager.Instance.pActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        {
+            if(SpaceshipMoveSpeed <= 5)
+            {
+                SpaceshipMoveSpeed += 0.2f;
+            }
+            else
+            {
+                SpaceshipMoveSpeed = 5f;
+            }
+        }
+        
+    }
+    public void PowerDec()
+    {
+        if (GameManager.Instance.pActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        {
+            if(SpaceshipMoveSpeed >= 0.5f)
+            {
+                SpaceshipMoveSpeed -= 0.2f;
+            }
+            else
+            {
+                SpaceshipMoveSpeed = 0.5f;
+            }
+            
+        }
+            
     }
 }
