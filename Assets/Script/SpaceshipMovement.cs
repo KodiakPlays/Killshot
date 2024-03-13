@@ -10,7 +10,7 @@ public class SpaceshipMovement : MonoBehaviour
     Vector3 rotationAngle;
     Vector3 upDownAngle;
 
-    [SerializeField] float SpaceshipMoveSpeed = 50f;
+    [SerializeField] float SpaceshipMoveSpeed = 10f;
 
     [SerializeField] TextMeshProUGUI turnAngle;
     [SerializeField] TextMeshProUGUI elevationAngle;
@@ -42,29 +42,22 @@ public class SpaceshipMovement : MonoBehaviour
         //ELEVATION MOVEMENT
         if (GameManager.Instance.eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            if(transform.position.y <= 50 && transform.position.y >= -50)
+            if (Input.GetKeyDown(KeyCode.W))
             {
-                if (Input.GetKeyDown(KeyCode.W))
-                {
-                    //GOES UPSIDE
-                    upDownAngle += new Vector3(0, 10f, 0);
-                    Debug.Log("RaiseAmount " + upDownAngle);
-                    elevationAngle.text = upDownAngle.y.ToString();
-
-                }
-                if (Input.GetKeyDown(KeyCode.S))
-                {
-                    //GOES DOWNSIDE
-                    upDownAngle += new Vector3(0, -10f, 0);
-                    Debug.Log("RaiseAmount " + upDownAngle);
-                    elevationAngle.text = upDownAngle.y.ToString();
-                }
-            }
-            else
-            {
+                //GOES UPSIDE
+                upDownAngle += new Vector3(0, 1f, 0);
+                Debug.Log("RaiseAmount " + upDownAngle);
+                elevationAngle.text = upDownAngle.y.ToString();
 
             }
-            
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                //GOES DOWNSIDE
+                upDownAngle += new Vector3(0, -1f, 0);
+                Debug.Log("RaiseAmount " + upDownAngle);
+                elevationAngle.text = upDownAngle.y.ToString();
+            }
+
         }
 
         //BEARING MOVEMENT
@@ -114,21 +107,8 @@ public class SpaceshipMovement : MonoBehaviour
 
             //------------------UP DOWN TURN--------------------
             // transform.Rotate(currentpos + upDownAngle);
-            if (transform.position.y <= 50 && transform.position.y >= -50)
-            {
-                transform.position = currentPos + upDownAngle;
-                //transform.position = Vector3.MoveTowards(currentPos, currentPos + upDownAngle, 25 * Time.deltaTime);
-            }
-            else if(transform.position.y > 50)
-            {
-                transform.position = new Vector3(transform.position.x, 50, transform.position.z);
-            }
-            else if(transform.position.y < -50)
-            {
-                transform.position = new Vector3(transform.position.x, -50, transform.position.z);
-            }
-            
-            //transform.position = currentPos + upDownAngle;
+            transform.position = currentPos + upDownAngle;
+           
             /*
             //Quaternion targetRotationUD = Quaternion.LookRotation(transform.rotation.eulerAngles + upDownAngle);
             //transform.rotation = Quaternion.Lerp(Currentpos, targetRotationUD, 2 * Time.deltaTime);
@@ -155,13 +135,13 @@ public class SpaceshipMovement : MonoBehaviour
     {
         if (GameManager.Instance.pActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            if (power <= 5)
+            if (power <= 50)
             {
-                power += 0.2f;
+                power += 5f;
             }
             else
             {
-                power = 5f;
+                power = 50f;
             }
             powerText.text = power.ToString();
         }
@@ -173,13 +153,13 @@ public class SpaceshipMovement : MonoBehaviour
     {
         if (GameManager.Instance.pActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            if (power >= 0.5f)
+            if (power >= 10f)
             {
-                power -= 0.2f;
+                power -= 5f;
             }
             else
             {
-                power = 0.5f;
+                power = 10f;
             }
             powerText.text = power.ToString();
         }

@@ -36,13 +36,22 @@ public class GameManager : MonoBehaviour
 
         eActive = false;
         bActive = false;
+        pActive = false;
         eRedImage.SetActive(true);
         eGreenImage.SetActive(false);
         bRedImage.SetActive(true);
         bGreenImage.SetActive(false);
+        pRedImage.SetActive(true);
+        pGreenImage.SetActive(false);
+    }
+    private void Update()
+    {
+        if(Input.GetKeyUp(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
     }
 
-  
     public void EButtonActive()
     {
         if (!eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
@@ -57,7 +66,13 @@ public class GameManager : MonoBehaviour
             eGreenImage.SetActive(false);
             eRedImage.SetActive(true);
         }
+        pRedImage.SetActive(true);
+        pGreenImage.SetActive(false);
+        bRedImage.SetActive(true);
+        bGreenImage.SetActive(false);
 
+        pActive = false;
+        bActive = false;
     }
     public void BButtonActivate()
     {
@@ -73,9 +88,17 @@ public class GameManager : MonoBehaviour
             bGreenImage.SetActive(false);
             bRedImage.SetActive(true);
         }
+        eRedImage.SetActive(true);
+        eGreenImage.SetActive(false);
+        pRedImage.SetActive(true);
+        pGreenImage.SetActive(false);
+
+        eActive = false;
+        pActive = false;
     }
     public void PButtonActivate()
     {
+        eRedImage.SetActive(false);
         if (!pActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             pActive = true;
@@ -88,9 +111,20 @@ public class GameManager : MonoBehaviour
             pGreenImage.SetActive(false);
             pRedImage.SetActive(true);
         }
+        eRedImage.SetActive(true);
+        eGreenImage.SetActive(false);
+        bRedImage.SetActive(true);
+        bGreenImage.SetActive(false);
+
+        eActive = false;
+        bActive = false;
     }
     public void returnButton()
     {
         enterKeyActivate = true;
+    }
+    public void CloseApp()
+    {
+        Application.Quit();
     }
 }
