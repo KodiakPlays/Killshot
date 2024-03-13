@@ -60,6 +60,10 @@ public class SpaceshipMovement : MonoBehaviour
                     elevationAngle.text = upDownAngle.y.ToString();
                 }
             }
+            else
+            {
+
+            }
             
         }
 
