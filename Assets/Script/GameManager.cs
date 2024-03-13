@@ -19,6 +19,9 @@ public class GameManager : MonoBehaviour
     public GameObject pGreenImage;
     public GameObject pRedImage;
 
+    //bool to get that enemy is detected or not
+    public bool isEnemyDetect;
+
     private void Awake()
     {
         if(instance == null)

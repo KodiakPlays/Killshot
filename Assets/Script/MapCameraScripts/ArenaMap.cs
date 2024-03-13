@@ -16,15 +16,15 @@ public class ArenaMap : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.F) && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            if (cam.orthographicSize == 15f)
+            if (cam.orthographicSize == 100f)
             {
-                cam.orthographicSize = 100f;
+                cam.orthographicSize = 500f;
                 isZoom = false;
             }
-            else if (cam.orthographicSize == 100f)
+            else if (cam.orthographicSize == 500f)
             {
                 isZoom = true;
-                cam.orthographicSize = 15f;
+                cam.orthographicSize = 100f;
             }
         }
     }
@@ -39,7 +39,7 @@ public class ArenaMap : MonoBehaviour
         }
         else
         {
-            transform.position = new Vector3(0, 60, 0);
+            transform.position = new Vector3(0, 100, 0);
         }
     }
     private void LateUpdate()
