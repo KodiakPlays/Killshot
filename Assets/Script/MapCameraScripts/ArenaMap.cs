@@ -16,7 +16,7 @@ public class ArenaMap : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.F) && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            if (cam.orthographicSize == 100f)
+            if (cam.orthographicSize <= 500f)
             {
                 cam.orthographicSize = 500f;
                 isZoom = false;
