@@ -9287,7 +9287,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5b745c9b5b464c4d953332b300528bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SpaceshipMoveSpeed: 10
+  SpaceshipMoveSpeed: 0
   turnAngle: {fileID: 736918546}
   elevationAngle: {fileID: 2084084634}
   detectionRadius: 20
@@ -9297,6 +9297,12 @@ MonoBehaviour:
   speed: 0
   speedText: {fileID: 26505063}
   power: {fileID: 854799182}
+  moveSpeed: 1
+  targetMovement: 0
+  isMove: 0
+  rotSpeed: 5
+  targetRotAngle: 0
+  isRotate: 0
 --- !u!65 &1830778271
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+//UnityEngine.Gizmos.DrawWireSphere;
 using UnityEngine.UIElements;
 
 public class SpaceshipMovement : MonoBehaviour
 {
-    Vector3 rotationAngle;
+    Quaternion rotationAngle;
     Vector3 upDownAngle;
 
-    [SerializeField] float SpaceshipMoveSpeed = 10f;
+    [SerializeField] float SpaceshipMoveSpeed = 0f;
 
     [SerializeField] TextMeshProUGUI turnAngle;
     [SerializeField] TextMeshProUGUI elevationAngle;
@@ -22,6 +23,14 @@ public class SpaceshipMovement : MonoBehaviour
     [SerializeField] TextMeshProUGUI speedText;
 
     [SerializeField] Power power;
+
+    [SerializeField] float moveSpeed;
+    [SerializeField] float targetMovement;
+    [SerializeField] bool isMove;
+
+    [SerializeField] float rotSpeed;
+    [SerializeField] float targetRotAngle;
+    [SerializeField] bool isRotate;
 
     //public Enemy[] enemy;
     // Update is called once per frame
@@ -37,6 +46,37 @@ public class SpaceshipMovement : MonoBehaviour
         SpaceshipMove();
         EnemySpaseshipDetection();
     }
+    private void FixedUpdate()
+    {
+        if(isRotate)
+        {
+            RotateSpaceship();
+        }
+        if(isMove)
+        {
+            RaiseSpaceship();
+        }
+
+    }
+    void RotateSpaceship()
+    {
+        Quaternion targetRotation = Quaternion.Euler(0, targetRotAngle, 0);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotSpeed * Time.deltaTime);
+        if(transform.rotation == targetRotation)
+        {
+            isRotate = false;
+        }
+    }
+    void RaiseSpaceship()
+    {
+        Vector3 targetPosition = new Vector3(transform.position.x, targetMovement, transform.position.z);
+        transform.position =  Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+
+        if(transform.position == targetPosition)
+        {
+            isMove = false;
+        }
+    }
     void SpaceshipMove()
     {
         //CONTINUES FORWORD MOVEMENT 
@@ -48,17 +88,24 @@ public class SpaceshipMovement : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.W))
             {
                 //GOES UPSIDE
-                upDownAngle += new Vector3(0, 1f, 0);
-                Debug.Log("RaiseAmount " + upDownAngle);
-                elevationAngle.text = upDownAngle.y.ToString();
+                //upDownAngle += new Vector3(0, 1f, 0);
+                //Debug.Log("RaiseAmount " + upDownAngle);
+                //elevationAngle.text = upDownAngle.y.ToString();
 
+                targetMovement += 1f;
+                elevationAngle.text = targetMovement.ToString();
+                Debug.Log("targetMovement: " + targetMovement);
             }
             if (Input.GetKeyDown(KeyCode.S))
             {
                 //GOES DOWNSIDE
-                upDownAngle += new Vector3(0, -1f, 0);
-                Debug.Log("RaiseAmount " + upDownAngle);
-                elevationAngle.text = upDownAngle.y.ToString();
+                //upDownAngle += new Vector3(0, -1f, 0);
+                //Debug.Log("RaiseAmount " + upDownAngle);
+                //elevationAngle.text = upDownAngle.y.ToString();
+
+                targetMovement -= 1f;
+                elevationAngle.text = targetMovement.ToString();
+                Debug.Log("targetMovement: " + targetMovement);
             }
 
         }
@@ -69,45 +116,39 @@ public class SpaceshipMovement : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.A))
             {
                 //TURN LEFT
-                rotationAngle += new Vector3(0, -15, 0);
-                Debug.Log("rotationAmount " + rotationAngle);
-                turnAngle.text = rotationAngle.y.ToString();
+                //rotationAngle.y += -15;// new Vector3(0, -15, 0);
+                //Debug.Log("rotationAmount " + rotationAngle);
+                //turnAngle.text = rotationAngle.y.ToString();
+
+                targetRotAngle += -15f;
+                Debug.Log("rotationAmount " + targetRotAngle);
+                turnAngle.text =targetRotAngle.ToString();
             }
             if (Input.GetKeyDown(KeyCode.D))
             {
                 //TURN RIGHT
-                rotationAngle += new Vector3(0, 15, 0);
-                Debug.Log("rotationAmount " + rotationAngle);
-                turnAngle.text = rotationAngle.y.ToString();
+                //rotationAngle.y += 15;// new Vector3(0, 15, 0);
+                //Debug.Log("rotationAmount " + rotationAngle);
+                //turnAngle.text = rotationAngle.y.ToString();
+
+                targetRotAngle += 15f;
+                Debug.Log("rotationAmount " + targetRotAngle);
+                turnAngle.text = targetRotAngle.ToString();
             }
         }
-
+       
         //SMMOTH ROTATION AFTER ENTER
-        if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        if ((Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.KeypadEnter)))
         {
             if(power.enginePower >= 1)
             {
                 power.enginePower--;
 
-                Vector3 currentRot = new Vector3(transform.rotation.x, transform.rotation.y, transform.rotation.z);
                 Vector3 currentPos = new Vector3(transform.position.x, transform.position.y, transform.position.z);
 
-                Debug.Log("Enter key");
-                //------------------RIGHT LEFT TURN--------------------
-                transform.Rotate(currentRot + rotationAngle);
-                /*
-                Quaternion targetRotationLR = Quaternion.Euler(transform.rotation.eulerAngles + rotationAngle);
-                // transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotationLR, 1000 * Time.deltaTime);
-
-                float timer = 0f;
-                float alpha = 0f;
-                while (alpha <= 1)
-                {
-                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotationLR, alpha);
-                    alpha = timer * 0.01f;
-                    timer += Time.deltaTime;
-                }
-                */
+                isRotate = true;
+                isMove = true;
+              
                 if (power.enginePower <= 2 && rotationAngle.y <= 30)
                 {
                     Debug.Log("Safe turn");
@@ -120,14 +161,11 @@ public class SpaceshipMovement : MonoBehaviour
                 {
                     Debug.Log("Aggressive turn, Need more power, higher chances of damage to stability");
                 }
-                rotationAngle = new Vector3(0, 0, 0);
+                rotationAngle = new Quaternion(0, 0, 0, 0);
                 turnAngle.text = "0";
                 //------------------UP DOWN TURN--------------------
-                transform.position = currentPos + upDownAngle;
-                /*
-                //Quaternion targetRotationUD = Quaternion.LookRotation(transform.rotation.eulerAngles + upDownAngle);
-                //transform.rotation = Quaternion.Lerp(Currentpos, targetRotationUD, 2 * Time.deltaTime);
-                */
+               // transform.position = currentPos + upDownAngle;
+                
                 upDownAngle = new Vector3(0, 0, 0);
                 elevationAngle.text = "0";
 
@@ -153,9 +191,11 @@ public class SpaceshipMovement : MonoBehaviour
         {
             Debug.Log("Enemy Detected: " + collider.gameObject.name);
             //GameManager.Instance.isEnemyDetect = true;
-            //collider.gameObject.GetComponent<Enemy>().enabled = true;
+            // collider.gameObject.GetComponent<Enemy>().enabled = true;
+            
         }
     }
+    
 
     public void SpeedInc()
     {
