@@ -6,8 +6,6 @@ public class GameManager : MonoBehaviour
 {
     private static GameManager instance;
     public static GameManager Instance { get { return instance; } }
-
-
     public bool eActive, bActive, sActive, pActive;
 
     public bool enterKeyActivate;
@@ -17,7 +15,6 @@ public class GameManager : MonoBehaviour
     public GameObject pGreenImage, pRedImage;
 
     public Power power;
-
     //bool to get that enemy is detected or not
     public bool isEnemyDetect;
 
