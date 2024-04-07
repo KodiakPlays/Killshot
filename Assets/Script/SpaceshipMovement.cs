@@ -142,7 +142,6 @@ public class SpaceshipMovement : MonoBehaviour
             {
                 power.enginePower--;
 
-                //Vector3 currentPos = new Vector3(transform.position.x, transform.position.y, transform.position.z);
 
                 isRotate = true;
                 isMove = true;
@@ -159,12 +158,9 @@ public class SpaceshipMovement : MonoBehaviour
                 {
                     Debug.Log("Aggressive turn, Need more power, higher chances of damage to stability");
                 }
-                //targetRotAngle = 0;
                 turnAngle.text = "0";
                 //------------------UP DOWN TURN--------------------
-                // transform.position = currentPos + upDownAngle;
 
-                //targetMovement = 0;
                 elevationAngle.text = "0";
 
             }

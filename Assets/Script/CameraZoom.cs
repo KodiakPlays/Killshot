@@ -10,7 +10,6 @@ public class CameraZoom : MonoBehaviour
 
     private void Start()
     {
-        //camera.orthographicSize = zoomValue;
         camera = GetComponent<Camera>();
     }
     void Update()
@@ -19,6 +18,7 @@ public class CameraZoom : MonoBehaviour
         Vector3 newpos = spaceship.position;
         newpos.y = transform.position.y;
         transform.position = newpos;
+        transform.rotation = Quaternion.Euler(90, spaceship.eulerAngles.y,0);
     }
     public void ZoomInOut(float zoom)
     {
