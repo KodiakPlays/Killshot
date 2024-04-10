@@ -36,6 +36,10 @@ public class SpaceshipMovement : MonoBehaviour
     Quaternion currentRotation;
     Vector3 currentPosition;
 
+    private void Awake()
+    {
+        LineRendIn();
+    }
     // Update is called once per frame
     private void Start()
     {
@@ -47,6 +51,7 @@ public class SpaceshipMovement : MonoBehaviour
     {
         SpaceshipMove();
         EnemySpaseshipDetection();
+        DrawCicle();
     }
     private void FixedUpdate()
     {
@@ -170,7 +175,7 @@ public class SpaceshipMovement : MonoBehaviour
 
             if (power.sensorPower >= 1)
             {
-                detectionRadius += 10;
+                detectionRadius += 5;
                 power.sensorPower--;
                 Debug.Log("Sensors dec by 1 and Detection redius inc by 10");
                 Debug.Log("detectionRadius: " + detectionRadius.ToString());
@@ -189,7 +194,39 @@ public class SpaceshipMovement : MonoBehaviour
 
         }
     }
+    public int segments = 25; // Number of segments to create a smoother circle
+    //public Color circleColor = Color.green; // Color of the circle
+    public Material circleMat;
 
+    public LineRenderer lineRenderer;
+    void LineRendIn()
+    {
+        lineRenderer = GetComponent<LineRenderer>();
+        // Set LineRenderer properties
+        lineRenderer.positionCount = segments + 1;
+        lineRenderer.startWidth = 1f;
+        lineRenderer.endWidth = 1f;
+        lineRenderer.useWorldSpace = true;
+        //lineRenderer.startColor = circleColor;
+        //lineRenderer.endColor = circleColor;
+        lineRenderer.material = circleMat;
+        DrawCicle();
+    }
+    void DrawCicle()
+    {
+        // Calculate segment size
+        float angleStep = 360f / segments;
+
+        // Update LineRenderer positions
+        for (int i = 0; i <= segments; i++)
+        {
+            float angle = angleStep * i;
+            float x = Mathf.Sin(Mathf.Deg2Rad * angle) * detectionRadius;
+            float z = Mathf.Cos(Mathf.Deg2Rad * angle) * detectionRadius;
+
+            lineRenderer.SetPosition(i, transform.position + new Vector3(x, 0, z));
+        }
+    }
 
     public void SpeedInc()
     {

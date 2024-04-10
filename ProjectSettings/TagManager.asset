@@ -16,10 +16,10 @@ TagManager:
   - ElevationMapObjects
   - MapObject
   - 
-  - 
-  - 
-  - 
-  - 
+  - Target
+  - Obstacle
+  - SensorCircle
+  - Spaceship
   - 
   - 
   - 
