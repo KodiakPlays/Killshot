@@ -168,7 +168,8 @@ public class GameManager : MonoBehaviour
     {
         if (pActive)
         {
-            if((power.enginePower >= 0 && power.enginePower <= 10) && (power.reactorPower >=0 && power.reactorPower <= 10))
+            if((power.enginePower >= 0 && power.enginePower <= 10) && (power.reactorPower >=0 && power.reactorPower <= 10)
+                && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
             {
                 Invoke("EnergyAdd", 3f);
             }
@@ -209,14 +210,16 @@ public class GameManager : MonoBehaviour
     }
     public void PowerSensorAdd()
     {
-        if(power.sensorPower >= 0 && power.sensorPower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10))
+        if(power.sensorPower >= 0 && power.sensorPower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10)
+            && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             Invoke("SensorAdd", 3f);
         }
     }
     public void PowerSensorMinus()
     {
-        if(power.sensorPower >= 0 && power.sensorPower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10))
+        if(power.sensorPower >= 0 && power.sensorPower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10)
+            && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             power.sensorPower--;
             power.reactorPower++;
