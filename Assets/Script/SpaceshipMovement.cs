@@ -125,14 +125,12 @@ public class SpaceshipMovement : MonoBehaviour
             {
                 //TURN LEFT
                 targetRotAngle += -15f;
-                Debug.Log("rotationAmount " + targetRotAngle);
                 turnAngle.text = targetRotAngle.ToString();
             }
             if (Input.GetKeyDown(KeyCode.D))
             {
                 //TURN RIGHT
                 targetRotAngle += 15f;
-                Debug.Log("rotationAmount " + targetRotAngle);
                 turnAngle.text = targetRotAngle.ToString();
             }
         }
