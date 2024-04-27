@@ -91,7 +91,7 @@ public class SpaceshipMovement : MonoBehaviour
             targetMovement = 0;
         }
 
-    }
+    } 
     void SpaceshipMove()
     {
         //CONTINUES FORWORD MOVEMENT 

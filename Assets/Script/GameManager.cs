@@ -55,6 +55,26 @@ public class GameManager : MonoBehaviour
         {
             Application.Quit();
         }
+        if(Input.GetKeyDown(KeyCode.E))
+        {
+            EButtonActive();
+        }
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            BButtonActivate();
+        }
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            SButtonActivate();
+        }
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            pButtonActivate();
+        }
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            LButtonActive();
+        }
     }
 
     public void EButtonActive()

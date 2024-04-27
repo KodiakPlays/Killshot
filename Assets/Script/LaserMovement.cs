@@ -10,7 +10,7 @@ public class LaserMovement : MonoBehaviour
 
     void Update()
     {
-        if(GameManager.Instance.lActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        if(GameManager.Instance.lActive && !GameManager.Instance.bActive && !GameManager.Instance.eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             float currentYAngle = transform.rotation.eulerAngles.y;
             Debug.Log(currentYAngle);
