@@ -18,11 +18,11 @@ public class LaserMovement : MonoBehaviour
             {
                 if (Input.GetKey(KeyCode.A))
                 {
-                    transform.Rotate(0, 0, rotateSpeed * Time.deltaTime);
+                    transform.Rotate(0, rotateSpeed * Time.deltaTime, 0);
                 }
                 if (Input.GetKey(KeyCode.D))
                 {
-                    transform.Rotate(0, 0, -rotateSpeed * Time.deltaTime);
+                    transform.Rotate(0, -rotateSpeed * Time.deltaTime, 0);
                 }
             }
 
@@ -34,19 +34,20 @@ public class LaserMovement : MonoBehaviour
             {
                 transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, 316f, transform.rotation.eulerAngles.z);
             }
-        }
-        float currentXAngle = transform.rotation.eulerAngles.x;
-        if (currentXAngle <= 105 || currentXAngle >= 75)
-        {
-            if (Input.GetKey(KeyCode.W))
+        
+            float currentXAngle = transform.rotation.eulerAngles.x;
+            if (currentXAngle <= 105 || currentXAngle >= 75)
             {
-                transform.Rotate(-rotateSpeed * Time.deltaTime, 0, 0);
+                if (Input.GetKey(KeyCode.W))
+                {
+                    transform.Rotate(-rotateSpeed * Time.deltaTime, 0, 0);
+                }
+                if (Input.GetKey(KeyCode.S))
+                {
+                    transform.Rotate(rotateSpeed * Time.deltaTime, 0, 0);
+                }
+                //Debug.Log(transform.rotation.eulerAngles);
             }
-            if (Input.GetKey(KeyCode.S))
-            {
-                transform.Rotate(rotateSpeed * Time.deltaTime, 0, 0);
-            }
-            //Debug.Log(transform.rotation.eulerAngles);
         }
 
     }

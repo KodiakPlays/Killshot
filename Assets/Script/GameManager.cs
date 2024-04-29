@@ -6,12 +6,12 @@ public class GameManager : MonoBehaviour
 {
     private static GameManager instance;
     public static GameManager Instance { get { return instance; } }
-    public bool eActive, bActive, sActive, pActive, lActive;
+    public bool eActive, bActive, fActive, pActive, lActive;
 
     public bool enterKeyActivate;
     public GameObject eGreenImage, eRedImage;
     public GameObject bGreenImage, bRedImage;
-    public GameObject sGreenImage, sRedImage;
+    public GameObject fGreenImage, fRedImage;
     public GameObject pGreenImage, pRedImage;
     public GameObject lGreenImage, lRedImage;
 
@@ -33,7 +33,7 @@ public class GameManager : MonoBehaviour
 
         eActive = false;
         bActive = false;
-        sActive = false;
+        fActive = false;
         pActive = false;
         lActive = false;
 
@@ -41,8 +41,8 @@ public class GameManager : MonoBehaviour
         eGreenImage.SetActive(false);
         bRedImage.SetActive(true);
         bGreenImage.SetActive(false);
-        sRedImage.SetActive(true);
-        sGreenImage.SetActive(false);
+        fRedImage.SetActive(true);
+        fGreenImage.SetActive(false);
         pRedImage.SetActive(true);
         pGreenImage.SetActive(false);
         lRedImage.SetActive(true);
@@ -63,9 +63,9 @@ public class GameManager : MonoBehaviour
         {
             BButtonActivate();
         }
-        if (Input.GetKeyDown(KeyCode.S))
+        if (Input.GetKeyDown(KeyCode.F))
         {
-            SButtonActivate();
+            FButtonActivate();
         }
         if (Input.GetKeyDown(KeyCode.P))
         {
@@ -91,8 +91,8 @@ public class GameManager : MonoBehaviour
             eGreenImage.SetActive(false);
             eRedImage.SetActive(true);
         }
-        sRedImage.SetActive(true);
-        sGreenImage.SetActive(false);
+        fRedImage.SetActive(true);
+        fGreenImage.SetActive(false);
         bRedImage.SetActive(true);
         bGreenImage.SetActive(false);
         pRedImage.SetActive(true);
@@ -100,7 +100,7 @@ public class GameManager : MonoBehaviour
         lRedImage.SetActive(true);
         lGreenImage.SetActive(false);
 
-        sActive = false;
+        fActive = false;
         bActive = false;
         pActive = false;
         lActive = false;
@@ -121,32 +121,32 @@ public class GameManager : MonoBehaviour
         }
         eRedImage.SetActive(true);
         eGreenImage.SetActive(false);
-        sRedImage.SetActive(true);
-        sGreenImage.SetActive(false);
+        fRedImage.SetActive(true);
+        fGreenImage.SetActive(false);
         pRedImage.SetActive(true);
         pGreenImage.SetActive(false);
         lRedImage.SetActive(true);
         lGreenImage.SetActive(false);
 
         eActive = false;
-        sActive = false;
+        fActive = false;
         pActive = false;
         lActive = false;
     }
-    public void SButtonActivate()
+    public void FButtonActivate()
     {
         eRedImage.SetActive(false);
-        if (!sActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        if (!fActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            sActive = true;
-            sGreenImage.SetActive(true);
-            sRedImage.SetActive(false);
+            fActive = true;
+            fGreenImage.SetActive(true);
+            fRedImage.SetActive(false);
         }
-        else if (sActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        else if (fActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            sActive = false;
-            sGreenImage.SetActive(false);
-            sRedImage.SetActive(true);
+            fActive = false;
+            fGreenImage.SetActive(false);
+            fRedImage.SetActive(true);
         }
         eRedImage.SetActive(true);
         eGreenImage.SetActive(false);
@@ -181,14 +181,14 @@ public class GameManager : MonoBehaviour
         eGreenImage.SetActive(false);
         bRedImage.SetActive(true);
         bGreenImage.SetActive(false);
-        sRedImage.SetActive(true);
-        sGreenImage.SetActive(false);
+        fRedImage.SetActive(true);
+        fGreenImage.SetActive(false);
         lRedImage.SetActive(true);
         lGreenImage.SetActive(false);
 
         eActive = false;
         bActive = false;
-        sActive = false;
+        fActive = false;
         lActive = false;
     }
     public void LButtonActive()
@@ -209,14 +209,14 @@ public class GameManager : MonoBehaviour
         eGreenImage.SetActive(false);
         bRedImage.SetActive(true);
         bGreenImage.SetActive(false);
-        sRedImage.SetActive(true);
+        fRedImage.SetActive(true);
         eGreenImage.SetActive(false);
         pRedImage.SetActive(true);
         pGreenImage.SetActive(false);
 
         eActive = false;
         bActive = false;
-        sActive = false;
+        fActive = false;
         pActive = false;
     }
     public void returnButton()

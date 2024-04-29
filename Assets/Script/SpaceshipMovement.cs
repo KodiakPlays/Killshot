@@ -228,7 +228,7 @@ public class SpaceshipMovement : MonoBehaviour
 
     public void SpeedInc()
     {
-        if (GameManager.Instance.sActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        if (GameManager.Instance.fActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             if (speed < 50)
             {
@@ -246,7 +246,7 @@ public class SpaceshipMovement : MonoBehaviour
     }
     public void SpeedDec()
     {
-        if (GameManager.Instance.sActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        if (GameManager.Instance.fActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             if (speed > 0f)
             {

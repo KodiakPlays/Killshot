@@ -24,7 +24,6 @@ public class LaserBeam : MonoBehaviour
     void Activate()
     {
         beam.enabled = true;
-        Debug.Log("Activate");
     }
     void DeActivate()
     {
@@ -32,13 +31,12 @@ public class LaserBeam : MonoBehaviour
 
         beam.SetPosition(0, startPoint.position);
         beam.SetPosition(1, startPoint.position);
-        Debug.Log("DeActivate");
 
     }
     // Update is called once per frame
     void Update()
     {
-        //Activate();
+       
         if (Input.GetMouseButtonDown(0))
         {
             beam.enabled = true;
@@ -49,35 +47,27 @@ public class LaserBeam : MonoBehaviour
             beam.enabled = false;
             DeActivate();
         }
-        //if (Input.GetButton("Fire1"))
-        //{
-        //    beam.enabled = true;
-        //    //beam.SetPosition(0, startPoint.position);
-        //    //beam.SetPosition(1, startPoint.forward);
-        //}
-        //if (Input.GetButtonUp("Fire1"))
-        //{
-        //    beam.enabled = false;
-        //}
-
+        
     }
     private void FixedUpdate()
     {
-        //if (!beam.enabled)
-        //{
-        //    return;
-        //}
+        if (!beam.enabled)
+        {
+            return;
+        }
         Ray ray = new Ray(startPoint.position, startPoint.forward);
         RaycastHit hit;
         bool cast = Physics.Raycast(ray, out hit, maxDistance);
-        Vector3 hitPosition = cast ? hit.point : startPoint.position + new Vector3(startPoint.position.x * maxDistance, startPoint.position.y , startPoint.position.z );//startPoint.up * maxDistance;
+        Vector3 hitPosition = cast ? hit.point : startPoint.position + startPoint.forward * maxDistance;//new Vector3(startPoint.position.x , startPoint.position.y - 3f, startPoint.position.z * maxDistance);//startPoint.up * maxDistance;
 
-        beam.SetPosition(0, startPoint.position + new Vector3(0, 1.1f,0));
+        beam.SetPosition(0, startPoint.position + new Vector3(0, 0, 1.1f));
         beam.SetPosition(1, hitPosition);
-        //if (cast & hit.collider.TryGetComponent(out Damageable damageable))
-        //{
-        //    damageable.ApplyDamage(damage);
-        //}
+        
+        if (cast && hit.collider.TryGetComponent(out Damageable damageable))
+        {
+            damageable.ApplyDamage(damage);
+        }
+
     }
     
 }
