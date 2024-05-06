@@ -175,9 +175,7 @@ public class SpaceshipMovement : MonoBehaviour
             {
                 detectionRadius += 5;
                 power.sensorPower--;
-                Debug.Log("Sensors dec by 1 and Detection redius inc by 10");
-                Debug.Log("detectionRadius: " + detectionRadius.ToString());
-                Debug.Log("sespo" + power.sensorPower);
+                
             }
         }
     }
@@ -187,6 +185,7 @@ public class SpaceshipMovement : MonoBehaviour
         foreach (Collider collider in hitCollider)
         {
             Debug.Log("Enemy Detected: " + collider.gameObject.name);
+            AudioManager.Instance.PlayEnemyAlert();
             //GameManager.Instance.isEnemyDetect = true;
             // collider.gameObject.GetComponent<Enemy>().enabled = true;
 

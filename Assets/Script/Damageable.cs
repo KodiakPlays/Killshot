@@ -25,5 +25,6 @@ public class Damageable : MonoBehaviour
     void DestroyEnemyShip()
     {
         Destroy(gameObject);
+        AudioManager.Instance.PlayEnemyExplosion();
     }
 }

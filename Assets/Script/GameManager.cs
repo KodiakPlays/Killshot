@@ -234,7 +234,8 @@ public class GameManager : MonoBehaviour
             if((power.enginePower >= 0 && power.enginePower <= 10) && (power.reactorPower >=0 && power.reactorPower <= 10)
                 && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
             {
-                Invoke("EnergyAdd", 3f);
+                EnergyAdd();
+                //Invoke("EnergyAdd", 3f);
             }
         }
     }
@@ -255,7 +256,8 @@ public class GameManager : MonoBehaviour
         {
             if(power.weaponPower >= 0 && power.weaponPower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10))
             {
-                Invoke("WeaponAdd", 3f);
+                WeaponAdd();
+                //Invoke("WeaponAdd", 3f);
             }
         }
     }
@@ -276,7 +278,8 @@ public class GameManager : MonoBehaviour
         if(power.sensorPower >= 0 && power.sensorPower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10)
             && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            Invoke("SensorAdd", 3f);
+            SensorAdd();
+            //Invoke("SensorAdd", 3f);
         }
     }
     public void PowerSensorMinus()
