@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -33,9 +34,13 @@ public class SpaceshipMovement : MonoBehaviour
     [SerializeField] float targetRotAngle;
     [SerializeField] bool isRotate;
 
+    [SerializeField] bool isRotateArrow;
+    [SerializeField] float arrowRotAngle;
+
     Quaternion currentRotation;
     Vector3 currentPosition;
 
+    [SerializeField] GameObject arrow;
     private void Awake()
     {
         LineRendIn();
@@ -63,21 +68,35 @@ public class SpaceshipMovement : MonoBehaviour
         {
             RaiseSpaceship();
         }
+        if(isRotateArrow)
+        {
+            //RotateArrow();
+        }
 
     }
-   
+   void RotateArrow()
+    {
+        Quaternion targetRotation = Quaternion.Euler(-90, 0, 0);
+
+        arrow.transform.rotation = Quaternion.RotateTowards(arrow.transform.rotation, Quaternion.Euler(-90, 0, 0), rotSpeed * Time.deltaTime);
+        if(arrow.transform.rotation == Quaternion.Euler(-90,0,0))
+        {
+            isRotateArrow = false;
+        }
+    }
     void RotateSpaceship()
     {
         Quaternion targetRotation = Quaternion.Euler(0, targetRotAngle, 0);
+        
         Quaternion newTargetRotation =  targetRotation * currentRotation;
         transform.rotation = Quaternion.RotateTowards(transform.rotation, newTargetRotation, rotSpeed * Time.deltaTime);
+        Quaternion newarrowRotation = Quaternion.Euler(-90, 0, 0);
+        arrow.transform.rotation = Quaternion.RotateTowards(arrow.transform.rotation, newarrowRotation, rotSpeed * Time.deltaTime);
         if (transform.rotation == newTargetRotation)
         {
             isRotate = false;
             targetRotAngle = 0;
         }
-
-
     }
     void RaiseSpaceship()
     {
@@ -126,18 +145,44 @@ public class SpaceshipMovement : MonoBehaviour
                 //TURN LEFT
                 targetRotAngle += -15f;
                 turnAngle.text = targetRotAngle.ToString();
+
+                arrowRotAngle -= 15f;
+                arrow.transform.rotation = Quaternion.Euler(-90, arrowRotAngle, 0);
             }
             if (Input.GetKeyDown(KeyCode.D))
             {
                 //TURN RIGHT
                 targetRotAngle += 15f;
                 turnAngle.text = targetRotAngle.ToString();
+
+                arrowRotAngle += 15f;
+                arrow.transform.rotation  = Quaternion.Euler(-90, arrowRotAngle, 0);
             }
         }
 
         //SMMOTH ROTATION AFTER ENTER
         if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
+            #region DEACTIVATE ALL BUTTONS AND TURN ON THE RED IMAGE
+            GameManager.Instance.eActive = false;
+            GameManager.Instance.bActive = false;
+            GameManager.Instance.fActive = false;
+            GameManager.Instance.pActive = false;
+            GameManager.Instance.lActive = false;
+
+            GameManager.Instance.eRedImage.SetActive(true);
+            GameManager.Instance.eGreenImage.SetActive(false);
+            GameManager.Instance.bRedImage.SetActive(true);
+            GameManager.Instance.bGreenImage.SetActive(false);
+            GameManager.Instance.fRedImage.SetActive(true);
+            GameManager.Instance.fGreenImage.SetActive(false);
+            GameManager.Instance.pRedImage.SetActive(true);
+            GameManager.Instance.pGreenImage.SetActive(false);
+            GameManager.Instance.lRedImage.SetActive(true);
+            GameManager.Instance.lGreenImage.SetActive(false);
+
+            #endregion
+            arrowRotAngle = 0;
             // Stores curent rotation and position
             currentRotation = transform.rotation;
             currentPosition = transform.position;
@@ -148,6 +193,7 @@ public class SpaceshipMovement : MonoBehaviour
 
                 isRotate = true;
                 isMove = true;
+                isRotateArrow = true;
 
                 if (power.enginePower <= 2 && targetRotAngle <= 30)
                 {
@@ -186,13 +232,9 @@ public class SpaceshipMovement : MonoBehaviour
         {
             Debug.Log("Enemy Detected: " + collider.gameObject.name);
             AudioManager.Instance.PlayEnemyAlert();
-            //GameManager.Instance.isEnemyDetect = true;
-            // collider.gameObject.GetComponent<Enemy>().enabled = true;
-
         }
     }
-    public int segments = 25; // Number of segments to create a smoother circle
-    //public Color circleColor = Color.green; // Color of the circle
+    public int segments = 25; 
     public Material circleMat;
 
     public LineRenderer lineRenderer;

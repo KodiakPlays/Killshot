@@ -11,7 +11,8 @@ public class LaserBeam : MonoBehaviour
     public Material laserMat;
 
     [SerializeField] float damage;
-   
+    public LayerMask uiLayer;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -39,6 +40,7 @@ public class LaserBeam : MonoBehaviour
        
         if (Input.GetMouseButtonDown(0))
         {
+
             beam.enabled = true;
             Activate();
         }
@@ -57,7 +59,7 @@ public class LaserBeam : MonoBehaviour
         }
         Ray ray = new Ray(startPoint.position, startPoint.forward);
         RaycastHit hit;
-        bool cast = Physics.Raycast(ray, out hit, maxDistance);
+        bool cast = Physics.Raycast(ray, out hit, maxDistance, ~uiLayer);
         Vector3 hitPosition = cast ? hit.point : startPoint.position + startPoint.forward * maxDistance;//new Vector3(startPoint.position.x , startPoint.position.y - 3f, startPoint.position.z * maxDistance);//startPoint.up * maxDistance;
 
         beam.SetPosition(0, startPoint.position + new Vector3(0, 0, 1.1f));
