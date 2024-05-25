@@ -17,6 +17,10 @@ public class Enemy : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.position = Vector3.MoveTowards(transform.position, playerSubmarine.position, speed);
+        if(isEnemyDetect)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, playerSubmarine.position, speed);
+        }
+        
     }
 }

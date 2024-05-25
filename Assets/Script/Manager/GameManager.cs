@@ -15,9 +15,13 @@ public class GameManager : MonoBehaviour
     public GameObject pGreenImage, pRedImage;
     public GameObject lGreenImage, lRedImage;
 
+    public bool engineActivate, weaponActive, sensorActive;
+
     public Power power;
     //bool to get that enemy is detected or not
     public bool isEnemyDetect;
+
+     public bool isShipInside;
 
     private void Awake()
     {
@@ -75,7 +79,46 @@ public class GameManager : MonoBehaviour
         {
             LButtonActive();
         }
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            if (pActive) //if power is on
+            {
+                if (engineActivate && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+                {
+                    PowerEnergyAdd();
+                }
+                if (weaponActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+                {
+                    PowerWeaponAdd();    
+                }
+                if (sensorActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+                {
+                    PowerSensorAdd();
+                }
+            }
+            
+        }
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            if (pActive) //if power is on
+            {
+                if (engineActivate && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+                {
+                    PowerEnergyMinus();
+                }
+                if (weaponActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+                {
+                    PowerWeaponMinus();
+                }
+                if (sensorActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+                {
+                    PowerSensorMinus();
+                }
+            }
+
+        }
     }
+
 
     public void EButtonActive()
     {
@@ -231,7 +274,7 @@ public class GameManager : MonoBehaviour
     {
         if (pActive)
         {
-            if((power.enginePower >= 0 && power.enginePower <= 10) && (power.reactorPower >=0 && power.reactorPower <= 10)
+            if((power.enginePower >= 1 && power.enginePower <= 8) && (power.reactorPower >= 1 && power.reactorPower <= 10)
                 && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
             {
                 EnergyAdd();
@@ -243,7 +286,7 @@ public class GameManager : MonoBehaviour
     {
         if(pActive)
         {
-            if(power.enginePower >= 0 && power.enginePower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10))
+            if(power.enginePower > 1 && power.enginePower <= 8 && (power.reactorPower >= 0 && power.reactorPower <= 8))
             {
                 power.enginePower--;
                 power.reactorPower++;
@@ -254,7 +297,7 @@ public class GameManager : MonoBehaviour
     {
         if(pActive)
         {
-            if(power.weaponPower >= 0 && power.weaponPower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10))
+            if(power.weaponPower >= 1 && power.weaponPower <= 8 && (power.reactorPower >= 1 && power.reactorPower <= 10))
             {
                 WeaponAdd();
                 //Invoke("WeaponAdd", 3f);
@@ -265,7 +308,7 @@ public class GameManager : MonoBehaviour
     {
         if (pActive)
         {
-            if(power.weaponPower >= 0 && power.weaponPower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10))
+            if(power.weaponPower > 1 && power.weaponPower <= 8 && (power.reactorPower >= 0 && power.reactorPower <= 8))
             {
                 power.weaponPower--;
                 power.reactorPower++;
@@ -275,7 +318,7 @@ public class GameManager : MonoBehaviour
     }
     public void PowerSensorAdd()
     {
-        if(power.sensorPower >= 0 && power.sensorPower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10)
+        if(power.sensorPower >= 1 && power.sensorPower <= 8 && (power.reactorPower >= 1 && power.reactorPower <= 10)
             && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             SensorAdd();
@@ -284,7 +327,7 @@ public class GameManager : MonoBehaviour
     }
     public void PowerSensorMinus()
     {
-        if(power.sensorPower >= 0 && power.sensorPower <= 10 && (power.reactorPower >= 0 && power.reactorPower <= 10)
+        if(power.sensorPower > 1 && power.sensorPower <= 8 && (power.reactorPower > 0 && power.reactorPower <= 8)
             && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             power.sensorPower--;
@@ -306,4 +349,35 @@ public class GameManager : MonoBehaviour
         power.sensorPower++;
         power.reactorPower--;
     }
+    public void EngineActivation()
+    {
+        if (pActive)
+        {
+            engineActivate = true;
+            weaponActive = false;
+            sensorActive = false;
+        }
+        
+    }
+    public void WeaponActivation()
+    {
+        if (pActive)
+        {
+            weaponActive = true;
+            sensorActive = false;
+            engineActivate = false;
+        }
+        
+    }
+    public void SensorActivation()
+    {
+        if (pActive)
+        {
+            sensorActive = true;
+            weaponActive = false;
+            engineActivate = false;
+        }
+        
+    }
+
 }

@@ -8,9 +8,15 @@ public class ElevationMap : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Vector3 newPose = spaceship.position;
-        newPose.z = transform.rotation.z;
-        transform.position = newPose;
+        if (spaceship != null)
+        {
+            Vector3 newPos = transform.position;
+            newPos.z = spaceship.position.z -3;
+            transform.position = newPos;
+
+            transform.rotation = spaceship.rotation;
+
+        }
     }
 }
 

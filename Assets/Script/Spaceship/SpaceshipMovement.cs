@@ -1,10 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using TMPro;
 using Unity.PlasticSCM.Editor.WebApi;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
+
 //UnityEngine.Gizmos.DrawWireSphere;
 using UnityEngine.UIElements;
 
@@ -20,6 +23,8 @@ public class SpaceshipMovement : MonoBehaviour
 
     [SerializeField] float detectionRadius;
     [SerializeField] LayerMask enemyLayer;
+    [SerializeField] LayerMask rockLayer;
+    [SerializeField] LayerMask cloudLayer;
 
     [SerializeField] float speed;
     [SerializeField] TextMeshProUGUI speedText;
@@ -40,23 +45,36 @@ public class SpaceshipMovement : MonoBehaviour
     Quaternion currentRotation;
     Vector3 currentPosition;
 
+    [SerializeField] UnityEngine.UI.Slider elevCounterSlider;
+
     [SerializeField] GameObject arrow;
+
+    [SerializeField] Damageable damageable;
     private void Awake()
     {
         LineRendIn();
     }
     // Update is called once per frame
+    public bool isEleCounterAdd;
     private void Start()
     {
+        isEleCounterAdd = true;
         speed = SpaceshipMoveSpeed;
         speedText.text = speed.ToString() + " km/h";
 
     }
+    
     void Update()
     {
         SpaceshipMove();
-        EnemySpaseshipDetection();
+        SpeedController();
         DrawCicle();
+        ElevationCounter();
+        //Detection 
+        EnemySpaseshipDetection();
+        RockDetection();
+        CloudDetection();
+
     }
     private void FixedUpdate()
     {
@@ -74,7 +92,7 @@ public class SpaceshipMovement : MonoBehaviour
         }
 
     }
-   void RotateArrow()
+    void RotateArrow()
     {
         Quaternion targetRotation = Quaternion.Euler(-90, 0, 0);
 
@@ -86,25 +104,35 @@ public class SpaceshipMovement : MonoBehaviour
     }
     void RotateSpaceship()
     {
+        Debug.Log("is rotate");
         Quaternion targetRotation = Quaternion.Euler(0, targetRotAngle, 0);
         
         Quaternion newTargetRotation =  targetRotation * currentRotation;
         transform.rotation = Quaternion.RotateTowards(transform.rotation, newTargetRotation, rotSpeed * Time.deltaTime);
-        Quaternion newarrowRotation = Quaternion.Euler(-90, 0, 0);
-        arrow.transform.rotation = Quaternion.RotateTowards(arrow.transform.rotation, newarrowRotation, rotSpeed * Time.deltaTime);
+       // Quaternion newarrowRotation = Quaternion.Euler(-90, 0.000f, 0.00000f);
+       // arrow.transform.rotation = Quaternion.RotateTowards(arrow.transform.rotation, newarrowRotation, rotSpeed * Time.deltaTime);
+        GameManager.Instance.bActive = false;
+        GameManager.Instance.bRedImage.SetActive(true);
+        GameManager.Instance.bGreenImage.SetActive(false);
         if (transform.rotation == newTargetRotation)
         {
             isRotate = false;
             targetRotAngle = 0;
+            transform.rotation = newTargetRotation;
         }
     }
     void RaiseSpaceship()
     {
-        Vector3 targetPosition = new Vector3(0, targetMovement, 0);
+        Vector3 targetPosition = new Vector3(0,  targetMovement, 0);
         Vector3 newTargetPosition = currentPosition + targetPosition;
+
         transform.position = Vector3.MoveTowards(transform.position, newTargetPosition, moveSpeed * Time.deltaTime);
 
-        if (transform.position == newTargetPosition)
+        GameManager.Instance.eActive = false;
+        GameManager.Instance.eRedImage.SetActive(true);
+        GameManager.Instance.eGreenImage.SetActive(false);
+
+        if (Mathf.Abs(transform.position.y - newTargetPosition.y) < 0.1f)
         {
             isMove = false;
             targetMovement = 0;
@@ -146,8 +174,23 @@ public class SpaceshipMovement : MonoBehaviour
                 targetRotAngle += -15f;
                 turnAngle.text = targetRotAngle.ToString();
 
-                arrowRotAngle -= 15f;
-                arrow.transform.rotation = Quaternion.Euler(-90, arrowRotAngle, 0);
+                //arrowRotAngle += -15f;
+                 //arrow.transform.rotation = Quaternion.Euler(-90, arrowRotAngle, 0);
+                if(power.enginePower >= 1 && power.enginePower <= 3)
+                {
+                    if(targetRotAngle <= -45)
+                    {
+                        Debug.Log("Your taking safe turn");
+                    }
+                    if(targetRotAngle > -45 &&  targetRotAngle <= -60)
+                    {
+                        Debug.Log("Your taking sharp turn you can decrease the turn angle or you can inc the power");
+                    }
+                    if (targetRotAngle > -60)
+                    {
+                        Debug.Log("Your taking Agressive turn you have to decrease the turn angle or you can inc the power if you not then ship will get damage");
+                    }
+                }
             }
             if (Input.GetKeyDown(KeyCode.D))
             {
@@ -155,8 +198,24 @@ public class SpaceshipMovement : MonoBehaviour
                 targetRotAngle += 15f;
                 turnAngle.text = targetRotAngle.ToString();
 
-                arrowRotAngle += 15f;
-                arrow.transform.rotation  = Quaternion.Euler(-90, arrowRotAngle, 0);
+               // arrowRotAngle += 15f;
+               // arrow.transform.rotation = Quaternion.Euler(-90, arrowRotAngle, 0);
+
+                if (power.enginePower >= 1 && power.enginePower < 3)
+                {
+                    if (targetRotAngle <= 45 || targetRotAngle <= -45)
+                    {
+                        Debug.Log("Your taking safe turn");
+                    }
+                    if (targetRotAngle > 45 && targetRotAngle <= 60)
+                    {
+                        Debug.Log("Your taking sharp turn need more power. chance of damage to stability");
+                    }
+                    if (targetRotAngle > 60)
+                    {
+                        Debug.Log("Your taking Agressive turn  Need more power, higher chances of damage to stability");
+                    }
+                }
             }
         }
 
@@ -188,28 +247,105 @@ public class SpaceshipMovement : MonoBehaviour
             currentPosition = transform.position;
             if (power.enginePower >= 1)
             {
-                power.enginePower--;
-
 
                 isRotate = true;
                 isMove = true;
                 isRotateArrow = true;
 
-                if (power.enginePower <= 2 && targetRotAngle <= 30)
+                #region POWER AND DAMAGE FOR ROTATION
+                if (power.enginePower >= 1 && power.enginePower < 3)
                 {
-                    Debug.Log("Safe turn");
+                    if (targetRotAngle <= 45 || targetRotAngle <= -45)
+                    {
+                        Debug.Log("safe turn");
+                    }
+                    if ((targetRotAngle > 45 && targetRotAngle <= 60) || (targetRotAngle > -45 && targetRotAngle <= -60))
+                    {
+                        Debug.Log(" sharp turn chance of damage to stability");
+                        damageable.ApplyDamage(5);
+                    }
+                    if (targetRotAngle > 60 || targetRotAngle > -60)
+                    {
+                        Debug.Log("Agressive turn higher chances of damage to stability");
+                        damageable.ApplyDamage(10);
+                    }
                 }
-                if (power.enginePower <= 2 && targetRotAngle >= 60 && (targetRotAngle <= 105))
+                if (power.enginePower >= 3 && power.enginePower < 6)
                 {
-                    Debug.Log("sharp turn need more power. chance of damage to stability");
+                    if (targetRotAngle <= 60 || targetRotAngle <= -60)
+                    {
+                        Debug.Log("safe turn");
+                    }
+                    if ((targetRotAngle > 60 && targetRotAngle <= 90) || (targetRotAngle > -60 && targetRotAngle <= -90))
+                    {
+                        Debug.Log(" sharp turn chance of damage to stability");
+                        damageable.ApplyDamage(5);
+                    }
+                    if (targetRotAngle > 120 || targetRotAngle > -120)
+                    {
+                        Debug.Log("Agressive turn higher chances of damage to stability");
+                        damageable.ApplyDamage(10);
+                    }
                 }
-                if (power.enginePower <= 2 && targetRotAngle >= 105)
+                if (power.enginePower >= 6 && power.enginePower < 9)
                 {
-                    Debug.Log("Aggressive turn, Need more power, higher chances of damage to stability");
+                    if (targetRotAngle <= 90 || targetRotAngle <= -90)
+                    {
+                        Debug.Log("safe turn");
+                    }
+                    if ((targetRotAngle > 120 && targetRotAngle <= 130) || (targetRotAngle > -120 && targetRotAngle <= -130))
+                    {
+                        Debug.Log(" sharp turn chance of damage to stability");
+                        damageable.ApplyDamage(5);
+                    }
+                    if (targetRotAngle > 160 || targetRotAngle > -160)
+                    {
+                        Debug.Log("Agressive turn higher chances of damage to stability");
+                        damageable.ApplyDamage(10);
+                    }
                 }
-                turnAngle.text = "0";
-                //------------------UP DOWN TURN--------------------
+                #endregion
 
+                #region POWER AND DAMAGE FOR RAISE UP & DOWN
+                if (power.enginePower >= 1 && power.enginePower < 3)
+                {
+                    if (targetMovement <= 2 || targetMovement <= -2)
+                    {
+                        Debug.Log("safe Raise");
+                    }
+                    if ((targetRotAngle > 2 && targetRotAngle <= 4) || (targetRotAngle > -2 && targetRotAngle <= -4))
+                    {
+                        Debug.Log(" sharp Raise chance of damage to stability");
+                        damageable.ApplyDamage(5);
+                    }
+                    if (targetRotAngle > 5 || targetRotAngle > -5)
+                    {
+                        Debug.Log("Agressive Raise higher chances of damage to stability");
+                        damageable.ApplyDamage(10);
+                    }
+                }
+                if (power.enginePower >= 3 && power.enginePower < 6)
+                {
+                    if (targetMovement <= 3 || targetMovement <= -3)
+                    {
+                        Debug.Log("safe Raise");
+                    }
+                    if ((targetRotAngle > 3 && targetRotAngle <= 5) || (targetRotAngle > -3 && targetRotAngle <= -5))
+                    {
+                        Debug.Log(" sharp Raise chance of damage to stability");
+                        damageable.ApplyDamage(5);
+                    }
+                    if (targetRotAngle > 6 || targetRotAngle > -6)
+                    {
+                        Debug.Log("Agressive Raise higher chances of damage to stability");
+                        damageable.ApplyDamage(10);
+                    }
+                }
+
+                #endregion
+
+
+                turnAngle.text = "0";
                 elevationAngle.text = "0";
 
             }
@@ -217,12 +353,39 @@ public class SpaceshipMovement : MonoBehaviour
             //ADD POWER TO THE SPEED
             SpaceshipMoveSpeed = speed;
 
+            #region SENSORS
             if (power.sensorPower >= 1)
             {
-                detectionRadius += 5;
-                power.sensorPower--;
-                
+               // detectionRadius += 5;
+               // power.sensorPower--;
+
             }
+            if(power.sensorPower == 1)
+            {
+                detectionRadius = 20;
+            }
+            if(power.sensorPower == 2)
+            {
+                detectionRadius = 30;
+            }
+            if(power.sensorPower == 3)
+            {
+                detectionRadius = 40;
+            }
+            if((power.sensorPower == 4))
+            {
+                detectionRadius = 50;
+            }
+            if(power.sensorPower == 5)
+            {
+                detectionRadius = 60;
+            }
+            if((power.sensorPower == 6))
+            {
+                detectionRadius = 70;
+            }
+            #endregion
+
         }
     }
     void EnemySpaseshipDetection()
@@ -231,7 +394,27 @@ public class SpaceshipMovement : MonoBehaviour
         foreach (Collider collider in hitCollider)
         {
             Debug.Log("Enemy Detected: " + collider.gameObject.name);
-            AudioManager.Instance.PlayEnemyAlert();
+            //AudioManager.Instance.PlayEnemyAlert();
+        }
+    }
+
+    void RockDetection()
+    {
+        Collider[] hitCollider = Physics.OverlapSphere(transform.position, detectionRadius, rockLayer);
+        foreach (Collider collider in hitCollider)
+        {
+            Debug.Log("Rock Detected: " + collider.gameObject.name);
+            
+            //AudioManager.Instance.PlayEnemyAlert();
+        }
+    }
+    void CloudDetection()
+    {
+        Collider[] hitCollider = Physics.OverlapSphere(transform.position, detectionRadius, cloudLayer);
+        foreach (Collider collider in hitCollider)
+        {
+            Debug.Log("Cloud Detected: " + collider.gameObject.name);
+            //AudioManager.Instance.PlayEnemyAlert();
         }
     }
     public int segments = 25; 
@@ -269,7 +452,7 @@ public class SpaceshipMovement : MonoBehaviour
 
     public void SpeedInc()
     {
-        if (GameManager.Instance.fActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        if (GameManager.Instance.bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             if (speed < 50)
             {
@@ -287,7 +470,7 @@ public class SpaceshipMovement : MonoBehaviour
     }
     public void SpeedDec()
     {
-        if (GameManager.Instance.fActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        if (GameManager.Instance.bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             if (speed > 0f)
             {
@@ -301,5 +484,39 @@ public class SpaceshipMovement : MonoBehaviour
         }
 
 
+    }
+    public void SpeedController()
+    {
+        if(!(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) && GameManager.Instance.bActive)
+        {
+            if (Input.GetKeyDown(KeyCode.W))
+            {
+                SpeedInc();
+            }
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                SpeedDec();
+            }
+        }
+        
+
+    }
+    public float minY = -10f; 
+    public float maxY = 10f;
+    void ElevationCounter()
+    {
+        elevCounterSlider.value = this.gameObject.transform.position.y;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision != null)
+        {
+            if (collision.gameObject.layer == 15 || collision.gameObject.layer == 3)
+            {
+                Destroy(gameObject, 1f);
+                //damageable.ApplyDamage(100);
+            }
+        }
     }
 }

@@ -18,7 +18,7 @@ public class CameraZoom : MonoBehaviour
         Vector3 newpos = spaceship.position;
         newpos.y = transform.position.y;
         transform.position = newpos;
-        transform.rotation = Quaternion.Euler(90, spaceship.eulerAngles.y,0);
+        transform.rotation = Quaternion.Euler(90, 0,0);
     }
     public void ZoomInOut(float zoom)
     {
