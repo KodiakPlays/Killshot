@@ -19,19 +19,24 @@ public class Damageable : MonoBehaviour
     }
     public void ApplyDamage(float damage)
     {
-        Debug.Log("Apply Damage");
-        if (currentHealth <= 0)
+        if(!(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            return;
+            Debug.Log("Apply Damage");
+            if (currentHealth <= 0)
+            {
+                return;
+            }
+            currentHealth -= damage;
+            if (currentHealth <= 0)
+            {
+                DestroyEnemyShip();
+            }
         }
-        currentHealth -= damage;
-        if (currentHealth <= 0)
-        {
-            DestroyEnemyShip();
-        }
+        
     }
     void DestroyEnemyShip()
     {
+        Debug.Log("Destroy ship by Damage");
         Destroy(gameObject);
         AudioManager.Instance.PlayEnemyExplosion();
     }

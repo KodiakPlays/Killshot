@@ -11,7 +11,7 @@ public class ElevationMap : MonoBehaviour
         if (spaceship != null)
         {
             Vector3 newPos = transform.position;
-            newPos.z = spaceship.position.z -3;
+            newPos.z = spaceship.position.z + 3;
             transform.position = newPos;
 
             transform.rotation = spaceship.rotation;

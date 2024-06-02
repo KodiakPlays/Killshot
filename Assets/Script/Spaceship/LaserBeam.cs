@@ -67,7 +67,8 @@ public class LaserBeam : MonoBehaviour
         
         if (cast && hit.collider.TryGetComponent(out Damageable damageable))
         {
-            damageable.ApplyDamage(damage);
+            Debug.Log("Destroy ship by damagable");
+            //damageable.ApplyDamage(damage);
         }
 
     }

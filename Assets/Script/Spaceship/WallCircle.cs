@@ -13,6 +13,7 @@ public class WallCircle : MonoBehaviour
     public float targetTime = 10.0f;
     public GameObject spaceShip;
 
+    [SerializeField] bool isShipInside;
 
     private void Awake()
     {
@@ -21,10 +22,9 @@ public class WallCircle : MonoBehaviour
     private void Update()
     {
         DrawCicle();
-        if (!GameManager.Instance.isShipInside)
+        if (!isShipInside)
         {
             targetTime -= Time.deltaTime;
-
             if (targetTime <= 0.0f)
             {
                 targetTime = 0.0f;
@@ -34,7 +34,9 @@ public class WallCircle : MonoBehaviour
     }
     void timerEnded()
     {
+        Debug.Log("Destroy ship by time over");
         Destroy(spaceShip);
+        GameManager.Instance.EndGame();
     }
     void LineRendIn()
     {
@@ -65,12 +67,11 @@ public class WallCircle : MonoBehaviour
         }
     }
    
-    private void OnTriggerStay(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Spaceship"))
         {
-            GameManager.Instance.isShipInside = true;
-            Debug.Log("stay");
+            isShipInside = true;
             targetTime = 10;
         }
     }
@@ -78,8 +79,7 @@ public class WallCircle : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Spaceship"))
         {
-            GameManager.Instance.isShipInside = false;
-            Debug.Log("exit");
+            isShipInside = false;
         }
     }
 }
