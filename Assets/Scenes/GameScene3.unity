@@ -11976,7 +11976,7 @@ MonoBehaviour:
   speedText: {fileID: 1627513845}
   speedLimit: 0
   power: {fileID: 1828997472}
-  moveSpeed: 0
+  moveSpeed: 0.09
   targetMovement: 0
   isMove: 0
   currentHeightOfShip: {fileID: 817173819}

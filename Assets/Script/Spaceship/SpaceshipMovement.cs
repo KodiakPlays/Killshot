@@ -135,10 +135,11 @@ public class SpaceshipMovement : MonoBehaviour
     }
     void RaiseSpaceship()
     {
+        Debug.Log("Move true");
         Vector3 targetPosition = new Vector3(0,  targetMovement, 0);
         Vector3 newTargetPosition = currentPosition + targetPosition;
 
-        transform.position = Vector3.MoveTowards(transform.position, newTargetPosition, moveSpeed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, newTargetPosition, moveSpeed );
 
         GameManager.Instance.eActive = false;
         GameManager.Instance.eRedImage.SetActive(true);
@@ -216,17 +217,17 @@ public class SpaceshipMovement : MonoBehaviour
 
                 if (power.enginePower == 2)
                 {
-                    if (targetMovement <= 2)
+                    if (targetMovement <= 2 && targetMovement >=0 || targetMovement >= -2 && targetMovement <= 0)
                     {
                         alertText.text = "Safe Raise";
                         alertText.color = Color.white;
                     }
-                    if ((targetRotAngle > 2 && targetRotAngle <= 4))
+                    if ((targetMovement > 2 && targetMovement <= 4) || (targetMovement < -2 && targetMovement >= -4))
                     {
                         alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
                         alertText.color = Color.yellow;
                     }
-                    if (targetRotAngle > 5)
+                    if ((targetMovement > 5 && targetMovement < 8) || (targetMovement < -5 && targetMovement > -8))
                     {
                         alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
                         alertText.color = Color.red;
@@ -234,17 +235,17 @@ public class SpaceshipMovement : MonoBehaviour
                 }
                 if (power.enginePower == 3)
                 {
-                    if (targetMovement <= 3)
+                    if ((targetMovement <= 3 && targetMovement >=0) || (targetMovement >= -3 && targetMovement <= 0))
                     {
                         alertText.text = "Safe Raise";
                         alertText.color = Color.white;
                     }
-                    if ((targetRotAngle > 3 && targetRotAngle <= 5))
+                    if ((targetMovement > 3 && targetMovement <= 5) || (targetMovement < -3 && targetMovement >= -5))
                     {
                         alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
                         alertText.color = Color.yellow;
                     }
-                    if (targetRotAngle > 6)
+                    if ((targetMovement > 6 && targetMovement < 8) || (targetRotAngle < -6 && targetMovement < -8))
                     {
                         alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
                         alertText.color = Color.red;
@@ -252,17 +253,17 @@ public class SpaceshipMovement : MonoBehaviour
                 }
                 if (power.enginePower == 7)
                 {
-                    if (targetMovement <= 5 )
+                    if ((targetMovement <= 5 && targetMovement >= 0) || (targetMovement >= -5 && targetMovement <= 0))
                     {
                         alertText.text = "Safe Raise";
                         alertText.color = Color.white;
                     }
-                    if ((targetRotAngle > 5 && targetRotAngle <= 7))
+                    if ((targetMovement > 5 && targetMovement <= 7) || (targetMovement < -3 && targetMovement >= -5))
                     {
                         alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
                         alertText.color = Color.yellow;
                     }
-                    if (targetRotAngle > 7)
+                    if ((targetMovement > 7 && targetMovement < 9) || (targetMovement < -7 && targetMovement > -9))
                     {
                         alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
                         alertText.color = Color.red;
@@ -278,17 +279,17 @@ public class SpaceshipMovement : MonoBehaviour
                 Debug.Log("targetMovement: " + targetMovement);
                 if (power.enginePower == 2)
                 {
-                    if ( targetMovement <= -2)
+                    if ((targetMovement >= -2 && targetMovement <= 0) || (targetMovement <= 2 && targetMovement >= 0))
                     {
                         alertText.text = "Safe Raise";
                         alertText.color = Color.white;
                     }
-                    if ( (targetRotAngle > -2 && targetRotAngle <= -4))
+                    if ((targetMovement < -2 && targetMovement >= -4) || (targetMovement > 2 && targetMovement <= 4))
                     {
                         alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
                         alertText.color = Color.yellow;
                     }
-                    if ( targetRotAngle > -5)
+                    if ((targetMovement < -5 && targetMovement > -8 ) || (targetMovement > 5 && targetMovement < 8))
                     {
                         alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
                         alertText.color = Color.red;
@@ -296,17 +297,17 @@ public class SpaceshipMovement : MonoBehaviour
                 }
                 if (power.enginePower == 3)
                 {
-                    if (targetMovement <= -3)
+                    if ((targetMovement >= -3 && targetMovement <=0) || (targetMovement <= 3 && targetMovement >= 0))
                     {
                         alertText.text = "Safe Raise";
                         alertText.color = Color.white;
                     }
-                    if ( (targetRotAngle > -3 && targetRotAngle <= -5))
+                    if ( (targetMovement < -3 && targetMovement >= -5) || (targetMovement > 3 && targetMovement <= 5))
                     {
                         alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
                         alertText.color = Color.yellow;
                     }
-                    if ( targetRotAngle > -6)
+                    if ((targetMovement < -6 && targetMovement > -8) || (targetMovement > 6 && targetMovement < 8))
                     {
                         alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
                         alertText.color = Color.red;
@@ -314,17 +315,17 @@ public class SpaceshipMovement : MonoBehaviour
                 }
                 if (power.enginePower == 7)
                 {
-                    if ( targetMovement <= -5)
+                    if ((targetMovement >= -5 && targetMovement <= 0) || (targetMovement <= 5 && targetMovement >= 0))
                     {
                         alertText.text = "Safe Raise";
                         alertText.color = Color.white;
                     }
-                    if ( (targetRotAngle > -3 && targetRotAngle <= -5))
+                    if ( (targetMovement < -3 && targetMovement >= -5) || (targetMovement > 5 && targetMovement <= 7))
                     {
                         alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
                         alertText.color = Color.yellow;
                     }
-                    if ( targetRotAngle > -7)
+                    if ((targetMovement < -7 && targetMovement > -9) || (targetMovement > 7 && targetMovement < 9))
                     {
                         alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
                         alertText.color = Color.red;
