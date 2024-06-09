@@ -24,6 +24,7 @@ public class GameManager : MonoBehaviour
     //public bool isShipInside;
 
     [SerializeField] GameObject gameOverPanal;
+    public SpaceshipMovement shipMoveScript;
 
     private void Awake()
     {
@@ -55,6 +56,7 @@ public class GameManager : MonoBehaviour
         lGreenImage.SetActive(false);
 
         gameOverPanal.SetActive(false);
+
     }
    
     private void Update()
@@ -67,40 +69,49 @@ public class GameManager : MonoBehaviour
             }
             if (Input.GetKeyDown(KeyCode.E))
             {
+                shipMoveScript.isEnterPress = false;
                 EButtonActive();
             }
             if (Input.GetKeyDown(KeyCode.B))
             {
+                shipMoveScript.isEnterPress = false;
                 BButtonActivate();
             }
             if (Input.GetKeyDown(KeyCode.F))
             {
+                shipMoveScript.isEnterPress = false;
                 FButtonActivate();
             }
             if (Input.GetKeyDown(KeyCode.P))
             {
+                shipMoveScript.isEnterPress = false;
                 pButtonActivate();
             }
             if (Input.GetKeyDown(KeyCode.L))
             {
+                shipMoveScript.isEnterPress = false;
                 LButtonActive();
             }
             if (pActive)
             {
                 if (Input.GetKeyDown(KeyCode.G))
                 {
+                    shipMoveScript.isEnterPress = false;
                     BalanceBetweenSystem();
                 }
                 if (Input.GetKeyDown(KeyCode.H))
                 {
+                    shipMoveScript.isEnterPress = false;
                     FocusOnEngine();
                 }
                 if (Input.GetKeyDown(KeyCode.J))
                 {
+                    shipMoveScript.isEnterPress = false;
                     FocuseOnWeapons();
                 }
                 if (Input.GetKeyDown(KeyCode.K))
                 {
+                    shipMoveScript.isEnterPress = false;
                     FocusOnSensor();
                 }
             }

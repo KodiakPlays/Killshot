@@ -17,7 +17,7 @@ public class SpaceshipMovement : MonoBehaviour
     //Vector3 upDownAngle;
     #region VARIABLES
     [SerializeField] float SpaceshipMoveSpeed = 0f;
-    [SerializeField] bool isEnterPress;
+    public bool isEnterPress;
 
     [SerializeField] TextMeshProUGUI turnAngle;
     [SerializeField] TextMeshProUGUI elevationAngle;
@@ -38,7 +38,7 @@ public class SpaceshipMovement : MonoBehaviour
     [SerializeField] float moveSpeed;
     [SerializeField] float targetMovement;
     [SerializeField] bool isMove;
-    [SerializeField] TextMeshProUGUI currentHeightOfShip;
+    //[SerializeField] TextMeshProUGUI currentHeightOfShip;
 
     [SerializeField] float rotSpeed;
     [SerializeField] float targetRotAngle;
@@ -57,7 +57,7 @@ public class SpaceshipMovement : MonoBehaviour
     float timeInterval1, timeInterval2;
     float timeDiff1 = 0.05f, timeDiff2 = 0.2f;
 
-    [SerializeField] TextMeshProUGUI alertText;
+    public TextMeshProUGUI alertText;
     #endregion
 
     private void Awake()
@@ -86,15 +86,15 @@ public class SpaceshipMovement : MonoBehaviour
         SpaceshipMove();
         SpeedController();
         DrawCicle();
-        ElevationCounter();
+        //ElevationCounter();
         //Detection 
         EnemySpaseshipDetection();
         RockDetection();
         CloudDetection();
 
-        currentHeightOfShip.text = gameObject.transform.position.y.ToString();
+        elevCounterSlider.value = gameObject.transform.position.y;
 
-        
+
     }
     private void FixedUpdate()
     {
@@ -106,11 +106,7 @@ public class SpaceshipMovement : MonoBehaviour
         {
             RaiseSpaceship();
         }
-        if(isRotateArrow)
-        {
-            //RotateArrow();
-        }
-
+        
     }
     
     
@@ -139,8 +135,8 @@ public class SpaceshipMovement : MonoBehaviour
         Vector3 targetPosition = new Vector3(0,  targetMovement, 0);
         Vector3 newTargetPosition = currentPosition + targetPosition;
 
-        transform.position = Vector3.MoveTowards(transform.position, newTargetPosition, moveSpeed );
-
+        //transform.position = Vector3.MoveTowards(transform.position, newTargetPosition, moveSpeed * Time.deltaTime );
+        transform.position = Vector3.Lerp(transform.position, newTargetPosition, moveSpeed * Time.deltaTime);
         GameManager.Instance.eActive = false;
         GameManager.Instance.eRedImage.SetActive(true);
         GameManager.Instance.eGreenImage.SetActive(false);
@@ -158,8 +154,8 @@ public class SpaceshipMovement : MonoBehaviour
     {
         //CONTINUES FORWORD MOVEMENT 
 
-     
-        
+        transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
+
         if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             //ADD POWER TO THE SPEED
@@ -167,7 +163,7 @@ public class SpaceshipMovement : MonoBehaviour
             isEnterPress = true;
             
         }
-        transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
+        
         if (isEnterPress )
         {
             if (power.enginePower == 2)
@@ -215,7 +211,7 @@ public class SpaceshipMovement : MonoBehaviour
                 elevationAngle.text = targetMovement.ToString();
                 Debug.Log("targetMovement: " + targetMovement);
 
-                if (power.enginePower == 2)
+                if (power.enginePower == 2)                                                                                                                                                                 
                 {
                     if (targetMovement <= 2 && targetMovement >=0 || targetMovement >= -2 && targetMovement <= 0)
                     {
@@ -482,6 +478,7 @@ public class SpaceshipMovement : MonoBehaviour
         //SMMOTH ROTATION AFTER ENTER
         if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
+            alertText.text = "";
             #region DEACTIVATE ALL BUTTONS AND TURN ON THE RED IMAGE
             GameManager.Instance.eActive = false;
             GameManager.Instance.bActive = false;
@@ -514,6 +511,7 @@ public class SpaceshipMovement : MonoBehaviour
                 #region POWER AND DAMAGE FOR ROTATION AND RAISE
                 if (power.enginePower == 2)
                 {
+                    alertText.text = "";
                     powerTurnSpeed = 5;
                     rotSpeed = 5;
                     //TURN RIGHT LEFT
@@ -625,7 +623,7 @@ public class SpaceshipMovement : MonoBehaviour
                 elevationAngle.text = "0";
                 
                 StartDecrementingAngle();
-               // StartDecrementingRaise();
+              //  StartDecrementingRaise();
             }
 
             
@@ -660,6 +658,7 @@ public class SpaceshipMovement : MonoBehaviour
 
     void DecrementAngleOverTime()
     {
+
         if (n1 > 0)  // Continue decrementing until n1 reaches 0
         {
             n += Time.deltaTime;
@@ -669,6 +668,16 @@ public class SpaceshipMovement : MonoBehaviour
                 n1 -= 1;  // Decrease n1
                 //targetRotAngle -= 1;  // Decrease targetRotAngle
                 turnAngle.text = n1.ToString();  // Update the UI text
+            }
+        }
+        if(n1 < 0)
+        {
+            n += Time.deltaTime;
+            if(n >= timeDiff2)
+            {
+                n = 0;
+                n1 += 1;
+                turnAngle.text = n1.ToString();
             }
         }
     }
@@ -684,13 +693,13 @@ public class SpaceshipMovement : MonoBehaviour
         if (m1 > 0)  // Continue decrementing until n1 reaches 0
         {
             m += Time.deltaTime;
-            if (m >= timeDiff2)
+            if (m >=timeDiff2)
             {
                 m = 0;  // Reset the timer
                 m1 -= 1;  // Decrease n1
                 //targetRotAngle -= 1;  // Decrease targetRotAngle
                 elevationAngle.text = m1.ToString();  
-                elevCounterSlider.value = m1;
+                //elevCounterSlider.value = m1;
             }
         }
     }
@@ -776,13 +785,13 @@ public class SpaceshipMovement : MonoBehaviour
     {
         if (GameManager.Instance.bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            if (speed > 0f)
+            if (speed > 5f)
             {
                 speed -= 1f;
             }
             else
             {
-                speed = 0f;
+                speed = 5f;
             }
             speedText.text = speed.ToString() + " km/h";
         }
@@ -815,13 +824,13 @@ public class SpaceshipMovement : MonoBehaviour
             n = 0;  // Reset the timer
             if (speed > endSpeed)
             {
-                SpaceshipMoveSpeed -= 1;
+                //SpaceshipMoveSpeed -= 1;
                 speed -= 1f;  // Decrease speed
             }
             else if(speed == endSpeed)
             {
                 speed = endSpeed;
-                SpaceshipMoveSpeed = endSpeed;
+               // SpaceshipMoveSpeed = endSpeed;
                 isEnterPress = false;
             }
             speedText.text = speed.ToString() + " km/h";  // Update the UI text
@@ -831,13 +840,13 @@ public class SpaceshipMovement : MonoBehaviour
     {
         if(!(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) && GameManager.Instance.bActive)
         {
-            if (Input.GetKey(KeyCode.W))
+            if (Input.GetKey(KeyCode.W) && !isEnterPress)
             {
                 SmoothSpeedInc();
             }
-            if (Input.GetKey(KeyCode.S))
+            if (Input.GetKey(KeyCode.S) && !isEnterPress)
             {
-                SmoothSpeedDec(0);
+                SmoothSpeedDec(5);
             }
         }
         

@@ -14,7 +14,7 @@ public class CameraZoom : MonoBehaviour
     }
     void Update()
     {
-        camera.orthographicSize = zoomValue;
+        camera.orthographicSize = zoomValue - 20;
         Vector3 newpos = spaceship.position;
         newpos.y = transform.position.y;
         

@@ -12,11 +12,12 @@ public class WallCircle : MonoBehaviour
 
     public float targetTime = 10.0f;
     public GameObject spaceShip;
-
+    SpaceshipMovement shipMoveScript;
     [SerializeField] bool isShipInside;
 
     private void Awake()
     {
+        shipMoveScript = spaceShip.gameObject.GetComponent<SpaceshipMovement>();
         LineRendIn();
     }
     private void Update()
@@ -25,10 +26,13 @@ public class WallCircle : MonoBehaviour
         if (!isShipInside)
         {
             targetTime -= Time.deltaTime;
+            shipMoveScript.alertText.text = "Ship is out of range you only have " + ((int)targetTime) + " sec to come back";
+            shipMoveScript.alertText.color = Color.red;
             if (targetTime <= 0.0f)
             {
                 targetTime = 0.0f;
                 timerEnded();
+               
             }
         }
     }
