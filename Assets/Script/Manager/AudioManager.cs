@@ -44,6 +44,7 @@ public class AudioManager : MonoBehaviour
         audioSource.loop = false;
         Debug.Log("Enemy Explosion sound Play");
     }
+
     public void StopEnemyExplosion()
     {
         audioSource.clip = clips[1];
@@ -51,6 +52,14 @@ public class AudioManager : MonoBehaviour
         audioSource.loop = false;
         Debug.Log("Enemy Explosion sound stop");
     }
+    public void PlayLaserLoading()
+    {
+        audioSource.clip = clips[2];
+        audioSource.Play();
+        audioSource.loop = false;
+        Debug.Log("Laser Charging sound Play");
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.M))

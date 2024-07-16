@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -24,7 +25,9 @@ public class GameManager : MonoBehaviour
     //public bool isShipInside;
 
     [SerializeField] GameObject gameOverPanal;
+    [SerializeField] GameObject spaceship;
     public SpaceshipMovement shipMoveScript;
+    public GameObject GameWinPanale;
 
     private void Awake()
     {
@@ -116,7 +119,11 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        
+
+        if (!spaceship)
+        {
+            gameOverPanal.SetActive(true);
+        }
     }
 
 
@@ -269,9 +276,7 @@ public class GameManager : MonoBehaviour
     public void CloseApp()
     {
         Application.Quit();
-    }
-   
-    
+    }  
     public void EngineActivation()
     {
         if (pActive)
@@ -350,5 +355,9 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 0;
         gameOverPanal.SetActive(true);
+    }
+    public void StartGame()
+    {
+        SceneManager.LoadScene("GameScene3");
     }
 }

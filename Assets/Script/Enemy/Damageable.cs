@@ -3,7 +3,7 @@ using UnityEngine;
 public class Damageable : MonoBehaviour
 {
     [SerializeField] float initialHealth;
-    [SerializeField] float currentHealth;
+    public float currentHealth;
     [SerializeField] UnityEngine.UI.Slider healthbar;
 
     void Start()
@@ -29,10 +29,9 @@ public class Damageable : MonoBehaviour
             currentHealth -= damage;
             if (currentHealth <= 0)
             {
-                DestroyEnemyShip();
+                //DestroyEnemyShip();
             }
         }
-        
     }
     void DestroyEnemyShip()
     {

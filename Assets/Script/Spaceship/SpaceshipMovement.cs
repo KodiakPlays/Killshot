@@ -44,9 +44,6 @@ public class SpaceshipMovement : MonoBehaviour
     [SerializeField] float targetRotAngle;
     [SerializeField] bool isRotate;
 
-    [SerializeField] bool isRotateArrow;
-    [SerializeField] float arrowRotAngle;
-
     Quaternion currentRotation;
     Vector3 currentPosition;
 
@@ -430,7 +427,7 @@ public class SpaceshipMovement : MonoBehaviour
                         alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
                         alertText.color = Color.yellow;
                     }
-                    if (targetRotAngle < -60 && targetRotAngle >= -150  || targetRotAngle > 60 && targetRotAngle <= 150)
+                    if ((targetRotAngle < -60 && targetRotAngle >= -150)  || (targetRotAngle > 60 && targetRotAngle <= 150))
                     {
                         alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
                         alertText.color = Color.red;
@@ -498,7 +495,6 @@ public class SpaceshipMovement : MonoBehaviour
             GameManager.Instance.lGreenImage.SetActive(false);
 
             #endregion
-            arrowRotAngle = 0;
             // Stores curent rotation and position
             currentRotation = transform.rotation;
             currentPosition = transform.position;
@@ -506,7 +502,6 @@ public class SpaceshipMovement : MonoBehaviour
             {
                 isRotate = true;
                 isMove = true;
-                isRotateArrow = true;
 
                 #region POWER AND DAMAGE FOR ROTATION AND RAISE
                 if (power.enginePower == 2)
@@ -515,16 +510,16 @@ public class SpaceshipMovement : MonoBehaviour
                     powerTurnSpeed = 5;
                     rotSpeed = 5;
                     //TURN RIGHT LEFT
-                    if (targetRotAngle <= 45 || targetRotAngle <= -45)
+                    if ((targetRotAngle >= -45 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 45))
                     {
                         Debug.Log("safe turn");
                     }
-                    if ((targetRotAngle > 45 && targetRotAngle <= 60) || (targetRotAngle > -45 && targetRotAngle <= -60))
+                    if ((targetRotAngle < -45 && targetRotAngle >= -60) || (targetRotAngle > 45 && targetRotAngle <= 60))
                     {
                         Debug.Log(" sharp turn chance of damage to stability");
                         damageable.ApplyDamage(5);
                     }
-                    if (targetRotAngle > 60 || targetRotAngle > -60)
+                    if ((targetRotAngle < -60 && targetRotAngle >= -150) || (targetRotAngle > 60 && targetRotAngle <= 150))
                     {
                         Debug.Log("Agressive turn higher chances of damage to stability");
                         damageable.ApplyDamage(10);
@@ -687,7 +682,6 @@ public class SpaceshipMovement : MonoBehaviour
         m = 0;  // Reset the timer
         m1 = targetMovement;  // Update n1 with the current targetRotAngle
     }
-
     void DecrementRaisOverTime()
     {
         if (m1 > 0)  // Continue decrementing until n1 reaches 0
@@ -709,7 +703,7 @@ public class SpaceshipMovement : MonoBehaviour
         foreach (Collider collider in hitCollider)
         {
             Debug.Log("Enemy Detected: " + collider.gameObject.name);
-            //AudioManager.Instance.PlayEnemyAlert();
+            AudioManager.Instance.PlayEnemyAlert();
         }
     }
 
@@ -857,15 +851,14 @@ public class SpaceshipMovement : MonoBehaviour
         //elevCounterSlider.value = this.gameObject.transform.position.y;
         elevCounterSlider.value = targetMovement;
     }
-
     private void OnCollisionEnter(Collision collision)
     {
         if(collision != null)
         {
             if (collision.gameObject.layer == 15 || collision.gameObject.layer == 3)
             {
-                Destroy(gameObject);
-                GameManager.Instance.EndGame(); 
+                damageable.ApplyDamage(10);
+               // GameManager.Instance.EndGame(); 
                 //damageable.ApplyDamage(100);
             }
         }
