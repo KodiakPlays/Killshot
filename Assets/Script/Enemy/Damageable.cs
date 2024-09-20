@@ -17,6 +17,9 @@ public class Damageable : MonoBehaviour
     {
         healthbar.value = currentHealth;
     }
+    ///<summary>
+    ///It use to apply the damage to ship
+    ///</summary>
     public void ApplyDamage(float damage)
     {
         if(!(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
@@ -37,6 +40,6 @@ public class Damageable : MonoBehaviour
     {
         Debug.Log("Destroy ship by Damage");
         Destroy(gameObject);
-        AudioManager.Instance.PlayEnemyExplosion();
+        //AudioManager.Instance.PlayEnemyExplosion();
     }
 }

@@ -7,12 +7,12 @@ public class AstroidManager : MonoBehaviour
     [SerializeField] GameObject astroid;
     [SerializeField] int numberOfAstroidOnAxis;
     [SerializeField] int gridSpace;
-    // Start is called before the first frame update
+    
     void Start()
     {
-        PlaseAstroid();
+        PlaceAstroid();
     }
-    void PlaseAstroid()
+    void PlaceAstroid()
     {
         for (int x = -numberOfAstroidOnAxis; x < numberOfAstroidOnAxis; x++)
         {

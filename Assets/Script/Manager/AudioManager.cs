@@ -60,21 +60,4 @@ public class AudioManager : MonoBehaviour
         Debug.Log("Laser Charging sound Play");
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.M))
-        {
-            Debug.Log("sound play");
-            audioSource.clip = clips[2];
-            audioSource.Play();
-            audioSource.loop = true;
-        }
-        if (Input.GetKeyUp(KeyCode.M))
-        {
-            audioSource.clip = clips[2];
-            audioSource.Stop();
-            Debug.Log("sound Stop");
-            audioSource.loop = false;
-        }
-    }
 }

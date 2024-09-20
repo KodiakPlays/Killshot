@@ -8,7 +8,7 @@ public class CameraZoom : MonoBehaviour
     public Transform playerIcon;
     public Transform laserIcon;
    // public float playerIconScale = 1f;
-    public float zoomValue;
+    public float zoomInValue;
     [SerializeField] Transform spaceship;
     private Vector3 originalPlayerIconScale;
     private Vector3 originalLaserIconScale;
@@ -23,7 +23,7 @@ public class CameraZoom : MonoBehaviour
     }
     void Update()
     {
-        camera.orthographicSize = zoomValue - 20;
+        camera.orthographicSize = zoomInValue - 20;
         Vector3 newpos = spaceship.position;
         newpos.y = transform.position.y;
         
@@ -49,6 +49,6 @@ public class CameraZoom : MonoBehaviour
     }
     public void ZoomInOut(float zoom)
     {
-        zoomValue = zoom;
+        zoomInValue = zoom;
     }
 }

@@ -8,6 +8,7 @@ TagManager:
   - Spaceship
   - Enemy
   - Rock
+  - EscapePoint
   layers:
   - Default
   - TransparentFX
@@ -19,7 +20,7 @@ TagManager:
   - BearingMapObjects
   - ElevationMapObjects
   - MapObject
-  - 
+  - EscapePoint
   - Target
   - Obstacle
   - SensorCircle

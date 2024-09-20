@@ -14,6 +14,7 @@ public class ArenaMap : MonoBehaviour
     }
     private void Update()
     {
+        /* OLD CODE FOR ZOOM CAMERA AFTER PRESS F KEY
         if (Input.GetKeyDown(KeyCode.F) && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             if (cam.orthographicSize <= 500f)
@@ -26,7 +27,7 @@ public class ArenaMap : MonoBehaviour
                 isZoom = true;
                 cam.orthographicSize = 100f;
             }
-        }
+        }*/
     }
    
     public void ZoomOut()

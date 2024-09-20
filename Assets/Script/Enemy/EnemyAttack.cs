@@ -21,10 +21,12 @@ public class EnemyAttack : MonoBehaviour
     {
         if(Infrount() && HaveLineOfSight())
         {
-            Debug.Log("aaaaaaaaaaaaa");
             FireLaser();
         }
     }
+    ///<summary>
+    ///It checks if the target is in front of the enemy or not
+    ///</summary>
     bool Infrount()
     {
         Vector3 directionToTarget = transform.position - target.position;
@@ -38,6 +40,9 @@ public class EnemyAttack : MonoBehaviour
         //Debug.DrawLine(transform.position, target.position, Color.yellow);
         return false;
     }
+    ///<summary>
+    ///It checks if the target HaveLineOfSight of the enemy or not
+    ///</summary>
     bool HaveLineOfSight()
     {
         RaycastHit hit;

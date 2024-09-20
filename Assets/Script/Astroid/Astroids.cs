@@ -14,9 +14,22 @@ public class Astroids : MonoBehaviour
     }
     void Start()
     {
+        RandomScaleAndRotation();
+    }
+
+    void Update()
+    {
+        RandomRotation();
+    }
+    void RandomRotation()
+    {
+        trans.Rotate(randomRotation * Time.deltaTime);
+    }
+    void RandomScaleAndRotation()
+    {
         Vector3 scale = Vector3.one;
-        scale.x  = Random.Range(minScale, maxScale);
-        scale.y  = Random.Range(minScale, maxScale);
+        scale.x = Random.Range(minScale, maxScale);
+        scale.y = Random.Range(minScale, maxScale);
         scale.z = Random.Range(minScale, maxScale);
 
         trans.localScale = scale;
@@ -26,11 +39,5 @@ public class Astroids : MonoBehaviour
         randomRotation.x = Random.Range(-rotationOffset, rotationOffset);
         randomRotation.y = Random.Range(-rotationOffset, rotationOffset);
         randomRotation.z = Random.Range(-rotationOffset, rotationOffset);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        trans.Rotate(randomRotation * Time.deltaTime);
     }
 }

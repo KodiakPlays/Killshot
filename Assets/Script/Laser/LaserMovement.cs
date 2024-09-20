@@ -3,32 +3,51 @@ using UnityEngine;
 
 public class LaserMovement : MonoBehaviour
 {
-    [SerializeField] float rotateSpeed;
-    [SerializeField] Transform target;
-    float tolerance = 1f;
+    [SerializeField] float rotateSpeed;// Speed at which the laser rotates
+    //[SerializeField] Transform target;
+    //float tolerance = 1f;
+    //[SerializeField] float enemyDamage;
     [SerializeField] Laser laser;
-    [SerializeField] float enemyDamage;
     [SerializeField] ArcRenderer arcRenderer;
     [SerializeField] ChargeLaser chargeLaserScript;
+
+    float currentYAngle;// Current rotation angle on the Y-axis
+    float currentXAngle;// Current rotation angle on the X-axis
+   
     private void Awake()
     {
+
         arcRenderer = gameObject.GetComponent<ArcRenderer>();
         arcRenderer.enabled = false;
         arcRenderer.lineRenderer.enabled = false;
+
+        currentYAngle = this.transform.rotation.eulerAngles.y;
+        currentXAngle = this.transform.rotation.eulerAngles.x;
+        rotateSpeed = 100f; // Adjust rotateSpeed as needed
     }
     void Update()
     {
         if (GameManager.Instance.lActive && !GameManager.Instance.bActive && !GameManager.Instance.eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            LaserMovment();
+            LaserMove();// Call the method to move the laser
         }
         if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) && GameManager.Instance.lActive)//
         {
-            if (chargeLaserScript.isCharged)
+            //Debug.Log("Press shoot button");
+
+            if(chargeLaserScript != null)
             {
-                chargeLaserScript.isCharged = false;
-                Invoke("FireLaser", 0.5f);
+                //Debug.Log("chargeLaserScript is not null");
+                //Debug.Log("chargeLaserScript.isCharged: " + chargeLaserScript.isCharged);
+
+                if (chargeLaserScript.isCharged)
+                {
+                    //Debug.Log("fire");
+                    chargeLaserScript.isCharged = false;
+                    Invoke("FireLaser", 0.5f);
+                }
             }
+            
             
         }
         if (GameManager.Instance.lActive)
@@ -41,12 +60,16 @@ public class LaserMovement : MonoBehaviour
             arcRenderer.enabled = false;
             arcRenderer.lineRenderer.enabled = false;
         }
+
+       
     }
+
+    /* OLD LASER MOVEMENT CODE
     void LaserMovment()
     {
-        float currentYAngle = transform.rotation.eulerAngles.y;
-        float currentXAngle = transform.rotation.eulerAngles.x;
-        float rotateSpeed = 100f; // Adjust rotateSpeed as needed
+        currentYAngle = this.transform.rotation.eulerAngles.y;
+        currentXAngle = this.transform.rotation.eulerAngles.x;
+        rotateSpeed = 100f; // Adjust rotateSpeed as needed
 
         // Ensure currentYAngle is within -180 to 180 range
         if (currentYAngle > 180)
@@ -110,6 +133,34 @@ public class LaserMovement : MonoBehaviour
             transform.rotation = Quaternion.Euler(15, transform.rotation.eulerAngles.y, transform.rotation.eulerAngles.z);
         }
     }
+    */
+    void LaserMove()
+    {
+        /// Update angles based on input
+        if (Input.GetKey(KeyCode.F))
+        {
+            currentYAngle -= rotateSpeed * Time.deltaTime;
+        }
+        if (Input.GetKey(KeyCode.H))
+        {
+            currentYAngle += rotateSpeed * Time.deltaTime;
+        }
+        if (Input.GetKey(KeyCode.T))
+        {
+            currentXAngle -= rotateSpeed * Time.deltaTime;
+        }
+        if (Input.GetKey(KeyCode.G))
+        {
+            currentXAngle += rotateSpeed * Time.deltaTime;
+        }
+
+        // Clamp the angles
+        currentYAngle = Mathf.Clamp(currentYAngle, -45f, 45f);
+        currentXAngle = Mathf.Clamp(currentXAngle, -15f, 15f);
+
+        // Apply the clamped rotation directly
+        transform.localRotation = Quaternion.Euler(currentXAngle, currentYAngle, 0f);
+    }
     void FireLaser()
     {
         Debug.Log("Fire from laser movement");
@@ -118,46 +169,7 @@ public class LaserMovement : MonoBehaviour
         GameManager.Instance.lGreenImage.SetActive(false);
         GameManager.Instance.lRedImage.SetActive(true);
 
-        /*
-        laser.FireLaser(transform.forward * laser.Distance);
-        RaycastHit hit;
-        Vector3 laserOrigin = laser.transform.position;
-        Vector3 laserDirection = transform.forward;
-        float laserDistance = laser.Distance;
-        int layerMask = 3;
-
-        if (Physics.Raycast(laserOrigin, laserDirection, out hit, laserDistance, layerMask))
-        {
-            Debug.Log($"Raycast hit: {hit.transform.name} at {hit.point}");
-
-            if (hit.transform.CompareTag("Enemy"))
-            {
-                Debug.Log("hit enetity " + hit.transform.name);
-                Destroy(hit.transform.gameObject);
-            }
-        }
-        */
+      
     }
     
-    //void AddDamage()
-    //{
-    //    RaycastHit hit;
-    //    if (Physics.Raycast(laser.transform.position, transform.forward, out hit, laser.Distance))
-    //    {
-    //        if (hit.transform.CompareTag("Enemy"))
-    //        {
-    //            hitPosition = hit.transform.position;
-    //            damageable = hit.transform.gameObject.GetComponent<Damageable>();
-    //            Debug.Log("hit enetity " + hit.transform.name);
-    //            Destroy(hit.transform.gameObject);
-    //            // enemyObj = hit.transform.gameObject;
-    //        }
-    //    }
-
-
-    //}
-    //void CanDamage()
-    //{
-    //    isDamage = false;
-    //}
 }

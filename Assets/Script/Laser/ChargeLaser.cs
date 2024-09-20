@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+
 public class ChargeLaser : MonoBehaviour
 {
     public Slider chargeSlider;  // Reference to the UI Slider
@@ -8,44 +9,52 @@ public class ChargeLaser : MonoBehaviour
     public float chargeTime = 9f;  // Time it takes to fully charge
 
     public bool isCharging = false;  // To check if currently charging
-    public bool isCharged = false;  // To check if currently charging
+    public bool isCharged = false;  // To check if fully charged
     private Coroutine chargeCoroutine;
 
     void Start()
     {
-       // chargeButton.onClick.AddListener(OnChargeButtonClick);
         chargeSlider.value = 0;
     }
+
     private void Update()
     {
-        //isCharged = false;
         if (!GameManager.Instance.lActive)
-        {
-            chargeSlider.value = 0;
-            isCharged = false;
-            StopCoroutine(chargeCoroutine);
-        }
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-        {
-           // chargeSlider.value = 0;
-            
-        }
-    }
-    public void OnChargeButtonClick()
-    {
-        AudioManager.Instance.PlayLaserLoading();
-        if (GameManager.Instance.lActive &&!(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             if (isCharging)
             {
                 StopCoroutine(chargeCoroutine);
-                chargeSlider.value = 0;
-                isCharged = false;
+                isCharging = false;
+            }
+        }
+
+       
+        if(chargeSlider.value == 1)
+        {
+            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            {
+                //Optionally reset charge on Return / Enter key press and also when it finished whole charge
+                Invoke("ResetValue", 0.3f);
+            }
+        }
+    }
+    void ResetValue()
+    {
+        chargeSlider.value = 0;
+        isCharged = false;
+    }
+    public void OnChargeButtonClick()
+    {
+       // AudioManager.Instance.PlayLaserLoading();
+        if (GameManager.Instance.lActive )//&& !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        {
+            if (isCharging)
+            {
+                StopCoroutine(chargeCoroutine);
             }
 
             chargeCoroutine = StartCoroutine(ChargeRoutine());
         }
-        
         else
         {
             Debug.Log("lActive GameObject is not active. Charging cannot start.");
@@ -55,7 +64,7 @@ public class ChargeLaser : MonoBehaviour
     IEnumerator ChargeRoutine()
     {
         isCharging = true;
-        float elapsedTime = 0f;
+        float elapsedTime = chargeSlider.value * chargeTime;
 
         while (elapsedTime < chargeTime)
         {
@@ -67,5 +76,7 @@ public class ChargeLaser : MonoBehaviour
         chargeSlider.value = 1;
         isCharging = false;
         isCharged = true;
+        Debug.Log("is charged: " + isCharged);
+        Debug.Log("is isCharging: " + isCharging);
     }
 }

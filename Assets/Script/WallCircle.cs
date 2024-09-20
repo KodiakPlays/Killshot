@@ -22,25 +22,8 @@ public class WallCircle : MonoBehaviour
     }
     private void Update()
     {
-        DrawCicle();
-        if (!isShipInside)
-        {
-            targetTime -= Time.deltaTime;
-            shipMoveScript.alertText.text = "Ship is out of range you only have " + ((int)targetTime) + " sec to come back";
-            shipMoveScript.alertText.color = Color.red;
-            if (targetTime <= 0.0f)
-            {
-                targetTime = 0.0f;
-                timerEnded();
-               
-            }
-        }
-    }
-    void timerEnded()
-    {
-        Debug.Log("Destroy ship by time over");
-        Destroy(spaceShip);
-        GameManager.Instance.EndGame();
+        DrawCircle();
+        StartTimerIfShipOutside();
     }
     void LineRendIn()
     {
@@ -53,9 +36,9 @@ public class WallCircle : MonoBehaviour
         //lineRenderer.startColor = circleColor;
         //lineRenderer.endColor = circleColor;
         lineRenderer.material = circleMat;
-        DrawCicle();
+        DrawCircle();
     }
-    void DrawCicle()
+    void DrawCircle()
     {
         // Calculate segment size
         float angleStep = 360f / segments;
@@ -70,6 +53,28 @@ public class WallCircle : MonoBehaviour
             lineRenderer.SetPosition(i, transform.position + new Vector3(x, 0, z));
         }
     }
+    void StartTimerIfShipOutside()
+    {
+        if (!isShipInside)
+        {
+            targetTime -= Time.deltaTime;
+            shipMoveScript.alertText.text = "Ship is out of range you only have " + ((int)targetTime) + " sec to come back";
+            shipMoveScript.alertText.color = Color.red;
+            if (targetTime <= 0.0f)
+            {
+                targetTime = 0.0f;
+                TimerEnded();
+
+            }
+        }
+    }
+    void TimerEnded()
+    {
+        Debug.Log("Destroy ship by time over");
+        Destroy(spaceShip);
+        GameManager.Instance.EndGame();
+    }
+  
    
     private void OnTriggerEnter(Collider other)
     {

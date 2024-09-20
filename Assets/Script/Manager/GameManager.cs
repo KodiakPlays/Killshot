@@ -10,14 +10,12 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get { return instance; } }
     public bool eActive, bActive, fActive, pActive, lActive;
 
-    public bool enterKeyActivate;
     public GameObject eGreenImage, eRedImage;
     public GameObject bGreenImage, bRedImage;
     public GameObject fGreenImage, fRedImage;
     public GameObject pGreenImage, pRedImage;
     public GameObject lGreenImage, lRedImage;
 
-    public bool engineActivate, weaponActive, sensorActive;
 
     public Power power;
     //bool to get that enemy is detected or not
@@ -28,6 +26,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject spaceship;
     public SpaceshipMovement shipMoveScript;
     public GameObject GameWinPanale;
+    public GameObject EscapePoint;
 
     private void Awake()
     {
@@ -47,10 +46,10 @@ public class GameManager : MonoBehaviour
         pActive = false;
         lActive = false;
 
-        eRedImage.SetActive(true);
-        eGreenImage.SetActive(false);
-        bRedImage.SetActive(true);
-        bGreenImage.SetActive(false);
+        eRedImage.SetActive(false);
+        eGreenImage.SetActive(true);
+        bRedImage.SetActive(false);
+        bGreenImage.SetActive(true);
         fRedImage.SetActive(true);
         fGreenImage.SetActive(false);
         pRedImage.SetActive(true);
@@ -60,11 +59,20 @@ public class GameManager : MonoBehaviour
 
         gameOverPanal.SetActive(false);
 
+        EscapePoint.SetActive(false);
+
     }
    
     private void Update()
     {
-        if(!(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        KeyboardInputs();
+    }
+    /// <summary>
+    ///  this function is use to controls the inputs using Hotkeys
+    /// </summary>
+    void KeyboardInputs()
+    {
+        if (!(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             if (Input.GetKeyUp(KeyCode.Escape))
             {
@@ -73,17 +81,12 @@ public class GameManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.E))
             {
                 shipMoveScript.isEnterPress = false;
-                EButtonActive();
+                //EButtonActive();
             }
             if (Input.GetKeyDown(KeyCode.B))
             {
                 shipMoveScript.isEnterPress = false;
-                BButtonActivate();
-            }
-            if (Input.GetKeyDown(KeyCode.F))
-            {
-                shipMoveScript.isEnterPress = false;
-                FButtonActivate();
+                //BButtonActivate();
             }
             if (Input.GetKeyDown(KeyCode.P))
             {
@@ -120,12 +123,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (!spaceship)
-        {
-            gameOverPanal.SetActive(true);
-        }
     }
-
 
     public void EButtonActive()
     {
@@ -183,35 +181,7 @@ public class GameManager : MonoBehaviour
         pActive = false;
         lActive = false;
     }
-    public void FButtonActivate()
-    {
-        eRedImage.SetActive(false);
-        if (!fActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
-        {
-            fActive = true;
-            fGreenImage.SetActive(true);
-            fRedImage.SetActive(false);
-        }
-        else if (fActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
-        {
-            fActive = false;
-            fGreenImage.SetActive(false);
-            fRedImage.SetActive(true);
-        }
-        eRedImage.SetActive(true);
-        eGreenImage.SetActive(false);
-        bRedImage.SetActive(true);
-        bGreenImage.SetActive(false);
-        pRedImage.SetActive(true);
-        pGreenImage.SetActive(false);
-        lRedImage.SetActive(true);
-        lGreenImage.SetActive(false);
-
-        eActive = false;
-        bActive = false;
-        pActive = false;
-        lActive = false;
-    }
+   
     public void pButtonActivate()
     {
         //pRedImage.SetActive(false);
@@ -269,44 +239,7 @@ public class GameManager : MonoBehaviour
         fActive = false;
         pActive = false;
     }
-    public void returnButton()
-    {
-        enterKeyActivate = true;
-    }
-    public void CloseApp()
-    {
-        Application.Quit();
-    }  
-    public void EngineActivation()
-    {
-        if (pActive)
-        {
-            engineActivate = true;
-            weaponActive = false;
-            sensorActive = false;
-        }
-        
-    }
-    public void WeaponActivation()
-    {
-        if (pActive)
-        {
-            weaponActive = true;
-            sensorActive = false;
-            engineActivate = false;
-        }
-        
-    }
-    public void SensorActivation()
-    {
-        if (pActive)
-        {
-            sensorActive = true;
-            weaponActive = false;
-            engineActivate = false;
-        }
-        
-    }
+   
     public void BalanceBetweenSystem()
     {
         if(pActive)

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(LineRenderer))]
@@ -9,7 +7,7 @@ public class Laser : MonoBehaviour
     [SerializeField] float maxDistance = 300f;
     public float fireDelay = 2f;
     LineRenderer lineRenderer;
-    bool canFire;
+    [SerializeField] bool canFire;
     private void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
@@ -27,13 +25,9 @@ public class Laser : MonoBehaviour
     {
         if (canFire)
         {
-            //if(target != null)
-            //{
-            //    SpawnExplosion(targetPos, target);
-            //}
+            lineRenderer.enabled = true;
             lineRenderer.SetPosition(0, transform.position);
             lineRenderer.SetPosition(1, targetPos);
-            lineRenderer.enabled = true;
             canFire = false;
             Invoke("TurnOffLaser", laserOffTime);
             Invoke("CanFire", fireDelay);
@@ -42,6 +36,7 @@ public class Laser : MonoBehaviour
     }
     public void FireLaser() // fore player to shoot enemy
     {
+        Debug.Log("FireLaser");
         Vector3 pos = CastRay();// FireLaser(CastRay());
         FireLaser(pos);
     }
@@ -58,9 +53,14 @@ public class Laser : MonoBehaviour
         get { return maxDistance; }
     }
 
-    void ActiveWinPanle()
+    void ActiveWinPanel()
     {
         GameManager.Instance.GameWinPanale.SetActive(true);
+        Time.timeScale = 0;
+    }
+    void ActiveEscapePoint()
+    {
+        GameManager.Instance.EscapePoint.SetActive(true);
     }
     Vector3 CastRay()
     {
@@ -72,15 +72,17 @@ public class Laser : MonoBehaviour
             if (hit.transform.name == "Enemy" || hit.transform.gameObject.tag == "Rock")
             {
                 Destroy(hit.transform.gameObject);
-                Invoke("ActiveWinPanle", 0.5f);
-                AudioManager.Instance.PlayEnemyExplosion();
-
+                Debug.Log("hit.transform.gameObject: " + hit.transform.gameObject);
+                //Invoke("ActiveWinPanel", 0.5f);
+                //AudioManager.Instance.PlayEnemyExplosion();
+                ActiveEscapePoint();
             }
 
             return hit.point;
         }
         return transform.position + (transform.forward * maxDistance);
     }
+   
     void SpawnExplosion(Vector3 hitPos, Transform target)
     {
         Explosion temp = target.GetComponent<Explosion>();

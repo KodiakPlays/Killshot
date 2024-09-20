@@ -42,6 +42,7 @@ public class SpaceshipMovement : MonoBehaviour
 
     [SerializeField] float rotSpeed;
     [SerializeField] float targetRotAngle;
+    public float RotAngle;
     [SerializeField] bool isRotate;
 
     Quaternion currentRotation;
@@ -82,16 +83,14 @@ public class SpaceshipMovement : MonoBehaviour
     {
         SpaceshipMove();
         SpeedController();
-        DrawCicle();
+        DrawCircle();
         //ElevationCounter();
         //Detection 
-        EnemySpaseshipDetection();
+        EnemySpaceshipDetection();
         RockDetection();
         CloudDetection();
 
         elevCounterSlider.value = gameObject.transform.position.y;
-
-
     }
     private void FixedUpdate()
     {
@@ -105,388 +104,61 @@ public class SpaceshipMovement : MonoBehaviour
         }
         
     }
-    
-    
-    void RotateSpaceship()
-    {
-        Debug.Log("is rotate");
-        Quaternion targetRotation = Quaternion.Euler(0, targetRotAngle, 0);
-        
-        Quaternion newTargetRotation =  targetRotation * currentRotation;
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, newTargetRotation, rotSpeed * Time.deltaTime);
-        GameManager.Instance.bActive = false;
-        GameManager.Instance.bRedImage.SetActive(true);
-        GameManager.Instance.bGreenImage.SetActive(false);
-        
-        if (transform.rotation == newTargetRotation)
-        {
-            isRotate = false;
-            
-            targetRotAngle = 0;
-            transform.rotation = newTargetRotation;
-        }
-    }
-    void RaiseSpaceship()
-    {
-        Debug.Log("Move true");
-        Vector3 targetPosition = new Vector3(0,  targetMovement, 0);
-        Vector3 newTargetPosition = currentPosition + targetPosition;
-
-        //transform.position = Vector3.MoveTowards(transform.position, newTargetPosition, moveSpeed * Time.deltaTime );
-        transform.position = Vector3.Lerp(transform.position, newTargetPosition, moveSpeed * Time.deltaTime);
-        GameManager.Instance.eActive = false;
-        GameManager.Instance.eRedImage.SetActive(true);
-        GameManager.Instance.eGreenImage.SetActive(false);
-
-        if (Mathf.Abs(transform.position.y - newTargetPosition.y) < 0.05f)
-        {
-            isMove = false;
-            targetMovement = 0;
-        }
-
-
-    }
-    
+    ///<summary>
+    ///this is the main fuction of the script which controlls the ship movement
+    ///</summary>
     void SpaceshipMove()
     {
         //CONTINUES FORWORD MOVEMENT 
 
         transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
 
-        if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
-        {
-            //ADD POWER TO THE SPEED
-            SpaceshipMoveSpeed = speed;
-            isEnterPress = true;
-            
-        }
-        
-        if (isEnterPress )
-        {
-            if (power.enginePower == 2)
-            {
-                speedLimit = 35f;
-                if (speed > speedLimit)
-                {
-                    SmoothSpeedDec(35);
 
-                }
-                
-                transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
-            }
-            if (power.enginePower == 3)
-            {
-                speedLimit = 50f;
-                if (speed > speedLimit)
-                {
-                    SmoothSpeedDec(50);
-                }
-
-                transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
-            }
-            if (power.enginePower == 7)
-            {
-                speedLimit = 150f;
-
-                transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
-            }
-            if (speed == speedLimit)
-            {
-                isEnterPress = false;
-            }
-        }
         //SpaceshipMoveSpeed = 13;
         //transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
 
+        #region WITHOUT ACTIVE/INACTIVE CONDITION
+        // Elevation
+        Elevation();
+
+        // Turn
+        Turn();
+
+        #endregion
+
+        #region OLD CODE WITH ACTIVE CONDITION
+
+        /*
         //ELEVATION MOVEMENT
+
         if (GameManager.Instance.eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            if (Input.GetKeyDown(KeyCode.W))
-            {
-                //GOES UPSIDE
-                targetMovement += 1f;
-                elevationAngle.text = targetMovement.ToString();
-                Debug.Log("targetMovement: " + targetMovement);
-
-                if (power.enginePower == 2)                                                                                                                                                                 
-                {
-                    if (targetMovement <= 2 && targetMovement >=0 || targetMovement >= -2 && targetMovement <= 0)
-                    {
-                        alertText.text = "Safe Raise";
-                        alertText.color = Color.white;
-                    }
-                    if ((targetMovement > 2 && targetMovement <= 4) || (targetMovement < -2 && targetMovement >= -4))
-                    {
-                        alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if ((targetMovement > 5 && targetMovement < 8) || (targetMovement < -5 && targetMovement > -8))
-                    {
-                        alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-                if (power.enginePower == 3)
-                {
-                    if ((targetMovement <= 3 && targetMovement >=0) || (targetMovement >= -3 && targetMovement <= 0))
-                    {
-                        alertText.text = "Safe Raise";
-                        alertText.color = Color.white;
-                    }
-                    if ((targetMovement > 3 && targetMovement <= 5) || (targetMovement < -3 && targetMovement >= -5))
-                    {
-                        alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if ((targetMovement > 6 && targetMovement < 8) || (targetRotAngle < -6 && targetMovement < -8))
-                    {
-                        alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-                if (power.enginePower == 7)
-                {
-                    if ((targetMovement <= 5 && targetMovement >= 0) || (targetMovement >= -5 && targetMovement <= 0))
-                    {
-                        alertText.text = "Safe Raise";
-                        alertText.color = Color.white;
-                    }
-                    if ((targetMovement > 5 && targetMovement <= 7) || (targetMovement < -3 && targetMovement >= -5))
-                    {
-                        alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if ((targetMovement > 7 && targetMovement < 9) || (targetMovement < -7 && targetMovement > -9))
-                    {
-                        alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-            }
-            if (Input.GetKeyDown(KeyCode.S))
-            {
-                //GOES DOWNSIDE
-
-                targetMovement -= 1f;
-                elevationAngle.text = targetMovement.ToString();
-                Debug.Log("targetMovement: " + targetMovement);
-                if (power.enginePower == 2)
-                {
-                    if ((targetMovement >= -2 && targetMovement <= 0) || (targetMovement <= 2 && targetMovement >= 0))
-                    {
-                        alertText.text = "Safe Raise";
-                        alertText.color = Color.white;
-                    }
-                    if ((targetMovement < -2 && targetMovement >= -4) || (targetMovement > 2 && targetMovement <= 4))
-                    {
-                        alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if ((targetMovement < -5 && targetMovement > -8 ) || (targetMovement > 5 && targetMovement < 8))
-                    {
-                        alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-                if (power.enginePower == 3)
-                {
-                    if ((targetMovement >= -3 && targetMovement <=0) || (targetMovement <= 3 && targetMovement >= 0))
-                    {
-                        alertText.text = "Safe Raise";
-                        alertText.color = Color.white;
-                    }
-                    if ( (targetMovement < -3 && targetMovement >= -5) || (targetMovement > 3 && targetMovement <= 5))
-                    {
-                        alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if ((targetMovement < -6 && targetMovement > -8) || (targetMovement > 6 && targetMovement < 8))
-                    {
-                        alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-                if (power.enginePower == 7)
-                {
-                    if ((targetMovement >= -5 && targetMovement <= 0) || (targetMovement <= 5 && targetMovement >= 0))
-                    {
-                        alertText.text = "Safe Raise";
-                        alertText.color = Color.white;
-                    }
-                    if ( (targetMovement < -3 && targetMovement >= -5) || (targetMovement > 5 && targetMovement <= 7))
-                    {
-                        alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if ((targetMovement < -7 && targetMovement > -9) || (targetMovement > 7 && targetMovement < 9))
-                    {
-                        alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-            }
-
+            Elevation();
         }
 
         //BEARING MOVEMENT
         if (GameManager.Instance.bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            if (Input.GetKey(KeyCode.A))
-            {
-                //TURN LEFT
-
-                timeInterval1 += Time.deltaTime;
-                if(timeInterval1 >= timeDiff1)
-                {
-                    timeInterval1 = 0;
-                    targetRotAngle = targetRotAngle - 1f ;
-                    turnAngle.text = targetRotAngle.ToString();
-                }
-
-
-                if (power.enginePower == 2)
-                {
-                    if ((targetRotAngle >= -45 && targetRotAngle <= 0 )||(targetRotAngle >= 0 && targetRotAngle <= 45))
-                    {
-                        alertText.text = "Safe turn";
-                        alertText.color = Color.white;
-                    }
-                    if ((targetRotAngle < -45 && targetRotAngle >= -60) || (targetRotAngle > 45 && targetRotAngle <= 60))
-                    {
-                        alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if (targetRotAngle < -60 || targetRotAngle > 60)
-                    {
-                        alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-                if (power.enginePower == 3)
-                {
-                    if ((targetRotAngle >= -60 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 60) )
-                    {
-                        alertText.text = "Safe turn";
-                        alertText.color = Color.white;
-                    }
-                    if ((targetRotAngle < -60 && targetRotAngle >= -90) || (targetRotAngle > 60 && targetRotAngle <= 90))
-                    {
-                        alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if (targetRotAngle < -120 || targetRotAngle > 120)
-                    {
-                        alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-                if (power.enginePower == 7)
-                {
-                    if ((targetRotAngle <= -120 && targetRotAngle <= 0)|| (targetRotAngle >= 0 && targetRotAngle <= 120))
-                    {
-                        alertText.text = "Safe turn";
-                        alertText.color = Color.white;
-                    }
-                    if ((targetRotAngle < -120 && targetRotAngle >= -180) || (targetRotAngle > 120 && targetRotAngle <= 180))
-                    {
-                        alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if ( targetRotAngle < -180 || targetRotAngle > 180)
-                    {
-                        alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-
-            }
-            if (Input.GetKey(KeyCode.D))
-            {
-                //TURN RIGHT
-                timeInterval2 += Time.deltaTime;
-                if (timeInterval2 >= timeDiff1)
-                {
-                    timeInterval2 = 0;
-                    targetRotAngle = targetRotAngle + 1f ;
-                    turnAngle.text = targetRotAngle.ToString();
-                }
-                    
-
-               // arrowRotAngle += 15f;
-               // arrow.transform.rotation = Quaternion.Euler(-90, arrowRotAngle, 0);
-
-                if (power.enginePower == 2)
-                {
-                    if ((targetRotAngle >= -45 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 45))
-                    {
-                        alertText.text = "Safe turn";
-                        alertText.color = Color.white;
-                    }
-                    if ((targetRotAngle < -45 && targetRotAngle >= -60) || (targetRotAngle > 45 && targetRotAngle <= 60))
-                    {
-                        alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if ((targetRotAngle < -60 && targetRotAngle >= -150)  || (targetRotAngle > 60 && targetRotAngle <= 150))
-                    {
-                        alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-                if (power.enginePower == 3)
-                {
-                    if ((targetRotAngle >= -60 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 60))
-                    {
-                        alertText.text = "Safe turn";
-                        alertText.color = Color.white;
-                    }
-                    if ((targetRotAngle < -60 && targetRotAngle >= -90) || (targetRotAngle > 60 && targetRotAngle <= 90))
-                    {
-                        alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if (targetRotAngle < -120 && targetRotAngle >= -200 || targetRotAngle > 120 && targetRotAngle <= 200)
-                    {
-                        alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-                if (power.enginePower == 7)
-                {
-                    if ((targetRotAngle <= -120 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 120))
-                    {
-                        alertText.text = "Safe turn";
-                        alertText.color = Color.white;
-                    }
-                    if ((targetRotAngle < -120 && targetRotAngle >= -180) || (targetRotAngle > 120 && targetRotAngle <= 180))
-                    {
-                        alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
-                        alertText.color = Color.yellow;
-                    }
-                    if (targetRotAngle < -180 && targetRotAngle >= -250 || targetRotAngle > 180 && targetRotAngle <= 250)
-                    {
-                        alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
-                        alertText.color = Color.red;
-                    }
-                }
-            }
+            Turn();
         }
+        */
+        #endregion
 
         //SMMOTH ROTATION AFTER ENTER
         if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             alertText.text = "";
             #region DEACTIVATE ALL BUTTONS AND TURN ON THE RED IMAGE
-            GameManager.Instance.eActive = false;
-            GameManager.Instance.bActive = false;
+            GameManager.Instance.eActive = true;
+            GameManager.Instance.bActive = true;
             GameManager.Instance.fActive = false;
             GameManager.Instance.pActive = false;
             GameManager.Instance.lActive = false;
 
-            GameManager.Instance.eRedImage.SetActive(true);
-            GameManager.Instance.eGreenImage.SetActive(false);
-            GameManager.Instance.bRedImage.SetActive(true);
-            GameManager.Instance.bGreenImage.SetActive(false);
+            GameManager.Instance.eRedImage.SetActive(false);
+            GameManager.Instance.eGreenImage.SetActive(true);
+            GameManager.Instance.bRedImage.SetActive(false);
+            GameManager.Instance.bGreenImage.SetActive(true);
             GameManager.Instance.fRedImage.SetActive(true);
             GameManager.Instance.fGreenImage.SetActive(false);
             GameManager.Instance.pRedImage.SetActive(true);
@@ -539,7 +211,7 @@ public class SpaceshipMovement : MonoBehaviour
                         Debug.Log("Agressive Raise higher chances of damage to stability");
                         damageable.ApplyDamage(10);
                     }
-                   
+
                 }
                 if (power.enginePower == 3)
                 {
@@ -616,41 +288,437 @@ public class SpaceshipMovement : MonoBehaviour
 
                 //turnAngle.text = "0";
                 elevationAngle.text = "0";
-                
+
                 StartDecrementingAngle();
-              //  StartDecrementingRaise();
+                //  StartDecrementingRaise();
             }
 
-            
+
 
             #region SENSORS
-            
-            if(power.sensorPower == 2)
+
+            if (power.sensorPower == 2)
             {
                 detectionRadius = 20;
             }
-            if(power.sensorPower == 3)
+            if (power.sensorPower == 3)
             {
                 detectionRadius = 30;
             }
-            if((power.sensorPower == 7))
+            if ((power.sensorPower == 7))
             {
                 detectionRadius = 70;
             }
-            
+
             #endregion
 
         }
         DecrementAngleOverTime();
-       // DecrementRaisOverTime();
+        // DecrementRaisOverTime();
+        if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        {
+            //ADD POWER TO THE SPEED
+            SpaceshipMoveSpeed = speed;
+            isEnterPress = true;
+
+        }
+
+        if (isEnterPress)
+        {
+            if (power.enginePower == 2)
+            {
+                speedLimit = 35f;
+                if (speed > speedLimit)
+                {
+                    SmoothSpeedDec(35);
+
+                }
+
+                transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
+            }
+            if (power.enginePower == 3)
+            {
+                speedLimit = 50f;
+                if (speed > speedLimit)
+                {
+                    SmoothSpeedDec(50);
+                }
+
+                transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
+            }
+            if (power.enginePower == 7)
+            {
+                speedLimit = 120f;
+
+                transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
+            }
+            if (speed == speedLimit)
+            {
+                isEnterPress = false;
+            }
+        }
     }
+    ///<summary>
+    ///Rotate the ship using RotateTowards function 
+    ///and set the targetRotAngle variable 0 after it turn at set rotation
+    ///</summary>
+    void RotateSpaceship()
+    {
+        Quaternion targetRotation = Quaternion.Euler(0, targetRotAngle, 0);
+        
+        Quaternion newTargetRotation =  targetRotation * currentRotation;
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, newTargetRotation, rotSpeed * Time.deltaTime);
+        //GameManager.Instance.bActive = false;
+       // GameManager.Instance.bRedImage.SetActive(true);
+        GameManager.Instance.bGreenImage.SetActive(true);
+        
+        if (transform.rotation == newTargetRotation)
+        {
+            isRotate = false;
+            
+            targetRotAngle = 0;
+            transform.rotation = newTargetRotation;
+        }
+    }
+    ///<summary>
+    ///Raise the ship and set targetMovement variable 0 
+    ///</summary>
+    void RaiseSpaceship()
+    {
+        //Debug.Log("Move true");
+        Vector3 targetPosition = new Vector3(0,  targetMovement, 0);
+        Vector3 newTargetPosition = currentPosition + targetPosition;
+
+        //transform.position = Vector3.MoveTowards(transform.position, newTargetPosition, moveSpeed * Time.deltaTime );
+        transform.position = Vector3.Lerp(transform.position, newTargetPosition, moveSpeed * Time.deltaTime);
+       // GameManager.Instance.eActive = false;
+        //GameManager.Instance.eRedImage.SetActive(true);
+        GameManager.Instance.eGreenImage.SetActive(true);
+
+        if (Mathf.Abs(transform.position.y - newTargetPosition.y) < 0.05f)
+        {
+            isMove = false;
+            targetMovement = 0;
+            transform.position = newTargetPosition;
+        }
+
+
+    }
+    ///<summary>
+    ///It sets the number to raise ship upside
+    ///</summary> 
+    public void XButton()
+    {
+        //GOES UPSIDE
+        targetMovement += 1f;
+        elevationAngle.text = targetMovement.ToString();
+        Debug.Log("targetMovement: " + targetMovement);
+
+        if (power.enginePower == 2)
+        {
+            if (targetMovement <= 2 && targetMovement >= 0 || targetMovement >= -2 && targetMovement <= 0)
+            {
+                alertText.text = "Safe Raise";
+                alertText.color = Color.white;
+            }
+            if ((targetMovement > 2 && targetMovement <= 4) || (targetMovement < -2 && targetMovement >= -4))
+            {
+                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
+                alertText.color = Color.yellow;
+            }
+            if ((targetMovement > 5 && targetMovement < 8) || (targetMovement < -5 && targetMovement > -8))
+            {
+                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+        if (power.enginePower == 3)
+        {
+            if ((targetMovement <= 3 && targetMovement >= 0) || (targetMovement >= -3 && targetMovement <= 0))
+            {
+                alertText.text = "Safe Raise";
+                alertText.color = Color.white;
+            }
+            if ((targetMovement > 3 && targetMovement <= 5) || (targetMovement < -3 && targetMovement >= -5))
+            {
+                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
+                alertText.color = Color.yellow;
+            }
+            if ((targetMovement > 6 && targetMovement < 8) || (targetRotAngle < -6 && targetMovement < -8))
+            {
+                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+        if (power.enginePower == 7)
+        {
+            if ((targetMovement <= 5 && targetMovement >= 0) || (targetMovement >= -5 && targetMovement <= 0))
+            {
+                alertText.text = "Safe Raise";
+                alertText.color = Color.white;
+            }
+            if ((targetMovement > 5 && targetMovement <= 7) || (targetMovement < -3 && targetMovement >= -5))
+            {
+                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
+                alertText.color = Color.yellow;
+            }
+            if ((targetMovement > 7 && targetMovement < 9) || (targetMovement < -7 && targetMovement > -9))
+            {
+                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+    }
+    ///<summary>
+    ///It sets the number to raise ship downside
+    ///</summary> 
+    public void SpaceButton()
+    {
+        //GOES DOWNSIDE
+
+        targetMovement -= 1f;
+        elevationAngle.text = targetMovement.ToString();
+        Debug.Log("targetMovement: " + targetMovement);
+        if (power.enginePower == 2)
+        {
+            if ((targetMovement >= -2 && targetMovement <= 0) || (targetMovement <= 2 && targetMovement >= 0))
+            {
+                alertText.text = "Safe Raise";
+                alertText.color = Color.white;
+            }
+            if ((targetMovement < -2 && targetMovement >= -4) || (targetMovement > 2 && targetMovement <= 4))
+            {
+                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
+                alertText.color = Color.yellow;
+            }
+            if ((targetMovement < -5 && targetMovement > -8) || (targetMovement > 5 && targetMovement < 8))
+            {
+                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+        if (power.enginePower == 3)
+        {
+            if ((targetMovement >= -3 && targetMovement <= 0) || (targetMovement <= 3 && targetMovement >= 0))
+            {
+                alertText.text = "Safe Raise";
+                alertText.color = Color.white;
+            }
+            if ((targetMovement < -3 && targetMovement >= -5) || (targetMovement > 3 && targetMovement <= 5))
+            {
+                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
+                alertText.color = Color.yellow;
+            }
+            if ((targetMovement < -6 && targetMovement > -8) || (targetMovement > 6 && targetMovement < 8))
+            {
+                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+        if (power.enginePower == 7)
+        {
+            if ((targetMovement >= -5 && targetMovement <= 0) || (targetMovement <= 5 && targetMovement >= 0))
+            {
+                alertText.text = "Safe Raise";
+                alertText.color = Color.white;
+            }
+            if ((targetMovement < -3 && targetMovement >= -5) || (targetMovement > 5 && targetMovement <= 7))
+            {
+                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
+                alertText.color = Color.yellow;
+            }
+            if ((targetMovement < -7 && targetMovement > -9) || (targetMovement > 7 && targetMovement < 9))
+            {
+                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+    }
+    ///<summary>
+    ///It takes the Inputs X/Space to set Elevation of spaceship
+    ///</summary>
+    void Elevation() {
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            XButton();
+        }
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            SpaceButton();
+        }
+    }
+    ///<summary>
+    ///It sets the number to turn ship Left
+    ///</summary> 
+    public void TurnLeft()
+    {
+        //TURN LEFT
+
+        timeInterval1 += Time.deltaTime;
+        if (timeInterval1 >= timeDiff1)
+        {
+            timeInterval1 = 0;
+            targetRotAngle = targetRotAngle - 1f;
+            turnAngle.text = targetRotAngle.ToString();
+
+            RotAngle = targetRotAngle;
+        }
+
+        if (power.enginePower == 2)
+        {
+            if ((targetRotAngle >= -45 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 45))
+            {
+                alertText.text = "Safe turn";
+                alertText.color = Color.white;
+            }
+            if ((targetRotAngle < -45 && targetRotAngle >= -60) || (targetRotAngle > 45 && targetRotAngle <= 60))
+            {
+                alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
+                alertText.color = Color.yellow;
+            }
+            if (targetRotAngle < -60 || targetRotAngle > 60)
+            {
+                alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+        if (power.enginePower == 3)
+        {
+            if ((targetRotAngle >= -60 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 60))
+            {
+                alertText.text = "Safe turn";
+                alertText.color = Color.white;
+            }
+            if ((targetRotAngle < -60 && targetRotAngle >= -90) || (targetRotAngle > 60 && targetRotAngle <= 90))
+            {
+                alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
+                alertText.color = Color.yellow;
+            }
+            if (targetRotAngle < -120 || targetRotAngle > 120)
+            {
+                alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+        if (power.enginePower == 7)
+        {
+            if ((targetRotAngle <= -120 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 120))
+            {
+                alertText.text = "Safe turn";
+                alertText.color = Color.white;
+            }
+            if ((targetRotAngle < -120 && targetRotAngle >= -180) || (targetRotAngle > 120 && targetRotAngle <= 180))
+            {
+                alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
+                alertText.color = Color.yellow;
+            }
+            if (targetRotAngle < -180 || targetRotAngle > 180)
+            {
+                alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+    }
+    ///<summary>
+    ///It sets the number to turn ship right
+    ///</summary> 
+    public void TurnRight()
+    {
+        //TURN RIGHT
+        timeInterval2 += Time.deltaTime;
+        if (timeInterval2 >= timeDiff1)
+        {
+            timeInterval2 = 0;
+            targetRotAngle = targetRotAngle + 1f;
+            turnAngle.text = targetRotAngle.ToString();
+
+            RotAngle = targetRotAngle;
+        }
+
+
+        // arrowRotAngle += 15f;
+        // arrow.transform.rotation = Quaternion.Euler(-90, arrowRotAngle, 0);
+
+        if (power.enginePower == 2)
+        {
+            if ((targetRotAngle >= -45 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 45))
+            {
+                alertText.text = "Safe turn";
+                alertText.color = Color.white;
+            }
+            if ((targetRotAngle < -45 && targetRotAngle >= -60) || (targetRotAngle > 45 && targetRotAngle <= 60))
+            {
+                alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
+                alertText.color = Color.yellow;
+            }
+            if ((targetRotAngle < -60 && targetRotAngle >= -150) || (targetRotAngle > 60 && targetRotAngle <= 150))
+            {
+                alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+        if (power.enginePower == 3)
+        {
+            if ((targetRotAngle >= -60 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 60))
+            {
+                alertText.text = "Safe turn";
+                alertText.color = Color.white;
+            }
+            if ((targetRotAngle < -60 && targetRotAngle >= -90) || (targetRotAngle > 60 && targetRotAngle <= 90))
+            {
+                alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
+                alertText.color = Color.yellow;
+            }
+            if (targetRotAngle < -120 && targetRotAngle >= -200 || targetRotAngle > 120 && targetRotAngle <= 200)
+            {
+                alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+        if (power.enginePower == 7)
+        {
+            if ((targetRotAngle <= -120 && targetRotAngle <= 0) || (targetRotAngle >= 0 && targetRotAngle <= 120))
+            {
+                alertText.text = "Safe turn";
+                alertText.color = Color.white;
+            }
+            if ((targetRotAngle < -120 && targetRotAngle >= -180) || (targetRotAngle > 120 && targetRotAngle <= 180))
+            {
+                alertText.text = "Sharp turn, chance of damage to stability oncrease the power";
+                alertText.color = Color.yellow;
+            }
+            if (targetRotAngle < -180 && targetRotAngle >= -250 || targetRotAngle > 180 && targetRotAngle <= 250)
+            {
+                alertText.text = "Agressive turn Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+    }
+    ///<summary>
+    ///It takes the Inputs A/D to set Bearing or turn angle of spaceship    
+    ///</summary>
+    void Turn()
+    {
+        if (Input.GetKey(KeyCode.A))
+        {
+            TurnLeft();
+        }
+        if (Input.GetKey(KeyCode.D))
+        {
+            TurnRight();
+        }
+    }
+    
     float n, n1;
+   
     void StartDecrementingAngle()
     {
         n = 0;  // Reset the timer
         n1 = targetRotAngle;  // Update n1 with the current targetRotAngle
     }
-
+    ///<summary>
+    ///it decrease the Turn text to 0 slowly
+    ///</summary>
     void DecrementAngleOverTime()
     {
 
@@ -663,6 +731,7 @@ public class SpaceshipMovement : MonoBehaviour
                 n1 -= 1;  // Decrease n1
                 //targetRotAngle -= 1;  // Decrease targetRotAngle
                 turnAngle.text = n1.ToString();  // Update the UI text
+                RotAngle = n1;
             }
         }
         if(n1 < 0)
@@ -673,40 +742,26 @@ public class SpaceshipMovement : MonoBehaviour
                 n = 0;
                 n1 += 1;
                 turnAngle.text = n1.ToString();
+                RotAngle = n1;
             }
         }
     }
-    float m, m1;
-    void StartDecrementingRaise()
-    {
-        m = 0;  // Reset the timer
-        m1 = targetMovement;  // Update n1 with the current targetRotAngle
-    }
-    void DecrementRaisOverTime()
-    {
-        if (m1 > 0)  // Continue decrementing until n1 reaches 0
-        {
-            m += Time.deltaTime;
-            if (m >=timeDiff2)
-            {
-                m = 0;  // Reset the timer
-                m1 -= 1;  // Decrease n1
-                //targetRotAngle -= 1;  // Decrease targetRotAngle
-                elevationAngle.text = m1.ToString();  
-                //elevCounterSlider.value = m1;
-            }
-        }
-    }
-    void EnemySpaseshipDetection()
+
+
+    ///<summary>
+    ///Detect the enemy ship by taking transform of enemy if enemy enter some specific radius of Spaceship
+    ///</summary>
+    void EnemySpaceshipDetection()
     {
         Collider[] hitCollider = Physics.OverlapSphere(transform.position, detectionRadius, enemyLayer);
         foreach (Collider collider in hitCollider)
         {
             Debug.Log("Enemy Detected: " + collider.gameObject.name);
-            AudioManager.Instance.PlayEnemyAlert();
+            //AudioManager.Instance.PlayEnemyAlert();
         }
     }
-
+    ///<summary>
+    ///Detect the Rock ship by taking transform of rock is rock enter some specific radius of Spaceship    ///</summary>
     void RockDetection()
     {
         Collider[] hitCollider = Physics.OverlapSphere(transform.position, detectionRadius, rockLayer);
@@ -717,6 +772,11 @@ public class SpaceshipMovement : MonoBehaviour
             //AudioManager.Instance.PlayEnemyAlert();
         }
     }
+    ///<summary>
+    ///detect the Cloud ship by taking transform of Cloud if Cloud enter some specific  radius of Spaceship
+    ///for now it only debug the cloud detection
+    ///</summary>
+
     void CloudDetection()
     {
         Collider[] hitCollider = Physics.OverlapSphere(transform.position, detectionRadius, cloudLayer);
@@ -730,6 +790,8 @@ public class SpaceshipMovement : MonoBehaviour
     public Material circleMat;
 
     public LineRenderer lineRenderer;
+    ///<summary>
+    ///Sets the line render variables and call draw circle function    ///</summary>
     void LineRendIn()
     {
         lineRenderer = GetComponent<LineRenderer>();
@@ -741,9 +803,12 @@ public class SpaceshipMovement : MonoBehaviour
         //lineRenderer.startColor = circleColor;
         //lineRenderer.endColor = circleColor;
         lineRenderer.material = circleMat;
-        DrawCicle();
+        DrawCircle();
     }
-    void DrawCicle()
+    ///<summary>
+    ///Draw circle using Line render around the ship    ///</summary>
+    
+    void DrawCircle()
     {
         // Calculate segment size
         float angleStep = 360f / segments;
@@ -758,41 +823,11 @@ public class SpaceshipMovement : MonoBehaviour
             lineRenderer.SetPosition(i, transform.position + new Vector3(x, 0, z));
         }
     }
- 
-    public void SpeedInc()
-    {
-        if (GameManager.Instance.bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
-        {
-            if (speed < speedLimit)
-            {
-                speed += 1f;
-            }
-            else
-            {
-                speed = speedLimit;
-            }
-            speedText.text = speed.ToString() + " km/h";
-        }
-
-    }
-    public void SpeedDec()
-    {
-        if (GameManager.Instance.bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
-        {
-            if (speed > 5f)
-            {
-                speed -= 1f;
-            }
-            else
-            {
-                speed = 5f;
-            }
-            speedText.text = speed.ToString() + " km/h";
-        }
-
-
-    }
-    void SmoothSpeedInc()
+    
+    ///<summary>
+    ///Set the speed text smoothly increase    ///</summary>
+    
+    public void SmoothSpeedInc()
     {
         n += Time.deltaTime;
         if (n >= timeDiff1)
@@ -809,8 +844,8 @@ public class SpaceshipMovement : MonoBehaviour
             speedText.text = speed.ToString() + " km/h";  // Update the UI text
         }
     }
-
-    void SmoothSpeedDec(float endSpeed)
+    ///<summary> Set the speed text smoothly decrease  ///</summary>
+    public void SmoothSpeedDec(float endSpeed)
     {
         n += Time.deltaTime;
         if (n >= timeDiff1)
@@ -830,9 +865,21 @@ public class SpaceshipMovement : MonoBehaviour
             speedText.text = speed.ToString() + " km/h";  // Update the UI text
         }
     }
+    ///<summary>
+    ///controlling the speed by taking input from user using W/S keyword///</summary>
     public void SpeedController()
     {
-        if(!(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) && GameManager.Instance.bActive)
+        if (Input.GetKey(KeyCode.W))
+        {
+            SmoothSpeedInc();
+        }
+        if (Input.GetKey(KeyCode.S))
+        {
+            SmoothSpeedDec(5);
+        }
+        #region OLD CODE WITH BEARING ACTIVATION 
+        /*
+        if (!(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) && GameManager.Instance.bActive)
         {
             if (Input.GetKey(KeyCode.W) && !isEnterPress)
             {
@@ -842,25 +889,11 @@ public class SpaceshipMovement : MonoBehaviour
             {
                 SmoothSpeedDec(5);
             }
-        }
-        
+        }*/
+        #endregion
+
 
     }
-    void ElevationCounter()
-    {
-        //elevCounterSlider.value = this.gameObject.transform.position.y;
-        elevCounterSlider.value = targetMovement;
-    }
-    private void OnCollisionEnter(Collision collision)
-    {
-        if(collision != null)
-        {
-            if (collision.gameObject.layer == 15 || collision.gameObject.layer == 3)
-            {
-                damageable.ApplyDamage(10);
-               // GameManager.Instance.EndGame(); 
-                //damageable.ApplyDamage(100);
-            }
-        }
-    }
+   
+    
 }
