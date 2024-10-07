@@ -1,15 +1,6 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using TMPro;
-using Unity.PlasticSCM.Editor.WebApi;
-using Unity.VisualScripting;
-using UnityEngine;
-using UnityEngine.UI;
 
-//UnityEngine.Gizmos.DrawWireSphere;
-using UnityEngine.UIElements;
+using TMPro;
+using UnityEngine;
 
 public class SpaceshipMovement : MonoBehaviour
 {

@@ -31,14 +31,12 @@ public class LaserMovement : MonoBehaviour
         {
             LaserMove();// Call the method to move the laser
         }
-        if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) && GameManager.Instance.lActive)//
+        if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) && GameManager.Instance.lActive)
         {
             //Debug.Log("Press shoot button");
 
             if(chargeLaserScript != null)
             {
-                //Debug.Log("chargeLaserScript is not null");
-                //Debug.Log("chargeLaserScript.isCharged: " + chargeLaserScript.isCharged);
 
                 if (chargeLaserScript.isCharged)
                 {
@@ -60,8 +58,6 @@ public class LaserMovement : MonoBehaviour
             arcRenderer.enabled = false;
             arcRenderer.lineRenderer.enabled = false;
         }
-
-       
     }
 
     /* OLD LASER MOVEMENT CODE
@@ -145,18 +141,10 @@ public class LaserMovement : MonoBehaviour
         {
             currentYAngle += rotateSpeed * Time.deltaTime;
         }
-        if (Input.GetKey(KeyCode.T))
-        {
-            currentXAngle -= rotateSpeed * Time.deltaTime;
-        }
-        if (Input.GetKey(KeyCode.G))
-        {
-            currentXAngle += rotateSpeed * Time.deltaTime;
-        }
+        
 
         // Clamp the angles
         currentYAngle = Mathf.Clamp(currentYAngle, -45f, 45f);
-        currentXAngle = Mathf.Clamp(currentXAngle, -15f, 15f);
 
         // Apply the clamped rotation directly
         transform.localRotation = Quaternion.Euler(currentXAngle, currentYAngle, 0f);
@@ -169,7 +157,6 @@ public class LaserMovement : MonoBehaviour
         GameManager.Instance.lGreenImage.SetActive(false);
         GameManager.Instance.lRedImage.SetActive(true);
 
-      
     }
     
 }
