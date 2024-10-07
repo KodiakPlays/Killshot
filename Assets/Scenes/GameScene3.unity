@@ -13294,7 +13294,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   segments: 25
   circleMat: {fileID: 2100000, guid: db65511f955129d4f9d764ccbe6ab093, type: 2}
-  radius: 500
+  radius: 2500
   lineRenderer: {fileID: 1372257895}
   shipLayer:
     serializedVersion: 2
@@ -13336,8 +13336,8 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 500
-  m_Height: 100
+  m_Radius: 2500
+  m_Height: 10000
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1380963666
@@ -14694,7 +14694,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   astroid: {fileID: 4231082210408128982, guid: bed6ba47a3d46234bb1f594860b02da9, type: 3}
   numberOfAstroidOnAxis: 5
-  gridSpace: 200
+  gridSpace: 500
 --- !u!4 &1556120505
 Transform:
   m_ObjectHideFlags: 0
