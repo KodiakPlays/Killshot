@@ -400,71 +400,6 @@ public class SpaceshipMovement : MonoBehaviour
     ///</summary> 
     public void XButton()
     {
-        //GOES UPSIDE
-        targetMovement += 1f;
-        elevationAngle.text = targetMovement.ToString();
-        Debug.Log("targetMovement: " + targetMovement);
-
-        if (power.enginePower == 2)
-        {
-            if (targetMovement <= 2 && targetMovement >= 0 || targetMovement >= -2 && targetMovement <= 0)
-            {
-                alertText.text = "Safe Raise";
-                alertText.color = Color.white;
-            }
-            if ((targetMovement > 2 && targetMovement <= 4) || (targetMovement < -2 && targetMovement >= -4))
-            {
-                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
-                alertText.color = Color.yellow;
-            }
-            if ((targetMovement > 5 && targetMovement < 8) || (targetMovement < -5 && targetMovement > -8))
-            {
-                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
-                alertText.color = Color.red;
-            }
-        }
-        if (power.enginePower == 3)
-        {
-            if ((targetMovement <= 3 && targetMovement >= 0) || (targetMovement >= -3 && targetMovement <= 0))
-            {
-                alertText.text = "Safe Raise";
-                alertText.color = Color.white;
-            }
-            if ((targetMovement > 3 && targetMovement <= 5) || (targetMovement < -3 && targetMovement >= -5))
-            {
-                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
-                alertText.color = Color.yellow;
-            }
-            if ((targetMovement > 6 && targetMovement < 8) || (targetRotAngle < -6 && targetMovement < -8))
-            {
-                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
-                alertText.color = Color.red;
-            }
-        }
-        if (power.enginePower == 7)
-        {
-            if ((targetMovement <= 5 && targetMovement >= 0) || (targetMovement >= -5 && targetMovement <= 0))
-            {
-                alertText.text = "Safe Raise";
-                alertText.color = Color.white;
-            }
-            if ((targetMovement > 5 && targetMovement <= 7) || (targetMovement < -3 && targetMovement >= -5))
-            {
-                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
-                alertText.color = Color.yellow;
-            }
-            if ((targetMovement > 7 && targetMovement < 9) || (targetMovement < -7 && targetMovement > -9))
-            {
-                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
-                alertText.color = Color.red;
-            }
-        }
-    }
-    ///<summary>
-    ///It sets the number to raise ship downside
-    ///</summary> 
-    public void SpaceButton()
-    {
         //GOES DOWNSIDE
 
         targetMovement -= 1f;
@@ -519,6 +454,74 @@ public class SpaceshipMovement : MonoBehaviour
                 alertText.color = Color.yellow;
             }
             if ((targetMovement < -7 && targetMovement > -9) || (targetMovement > 7 && targetMovement < 9))
+            {
+                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+
+        
+    }
+    ///<summary>
+    ///It sets the number to raise ship downside
+    ///</summary> 
+    public void SpaceButton()
+    {
+        //GOES UPSIDE
+
+        targetMovement += 1f;
+        elevationAngle.text = targetMovement.ToString();
+        Debug.Log("targetMovement: " + targetMovement);
+
+        if (power.enginePower == 2)
+        {
+            if (targetMovement <= 2 && targetMovement >= 0 || targetMovement >= -2 && targetMovement <= 0)
+            {
+                alertText.text = "Safe Raise";
+                alertText.color = Color.white;
+            }
+            if ((targetMovement > 2 && targetMovement <= 4) || (targetMovement < -2 && targetMovement >= -4))
+            {
+                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
+                alertText.color = Color.yellow;
+            }
+            if ((targetMovement > 5 && targetMovement < 8) || (targetMovement < -5 && targetMovement > -8))
+            {
+                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+        if (power.enginePower == 3)
+        {
+            if ((targetMovement <= 3 && targetMovement >= 0) || (targetMovement >= -3 && targetMovement <= 0))
+            {
+                alertText.text = "Safe Raise";
+                alertText.color = Color.white;
+            }
+            if ((targetMovement > 3 && targetMovement <= 5) || (targetMovement < -3 && targetMovement >= -5))
+            {
+                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
+                alertText.color = Color.yellow;
+            }
+            if ((targetMovement > 6 && targetMovement < 8) || (targetRotAngle < -6 && targetMovement < -8))
+            {
+                alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
+                alertText.color = Color.red;
+            }
+        }
+        if (power.enginePower == 7)
+        {
+            if ((targetMovement <= 5 && targetMovement >= 0) || (targetMovement >= -5 && targetMovement <= 0))
+            {
+                alertText.text = "Safe Raise";
+                alertText.color = Color.white;
+            }
+            if ((targetMovement > 5 && targetMovement <= 7) || (targetMovement < -3 && targetMovement >= -5))
+            {
+                alertText.text = "Sharp Raise, chance of damage to stability on increase the power";
+                alertText.color = Color.yellow;
+            }
+            if ((targetMovement > 7 && targetMovement < 9) || (targetMovement < -7 && targetMovement > -9))
             {
                 alertText.text = "Agressive Raise Need more power, higher chances of damage to stability";
                 alertText.color = Color.red;
