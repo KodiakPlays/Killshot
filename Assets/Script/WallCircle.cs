@@ -30,8 +30,8 @@ public class WallCircle : MonoBehaviour
         lineRenderer = GetComponent<LineRenderer>();
         // Set LineRenderer properties
         lineRenderer.positionCount = segments + 1;
-        lineRenderer.startWidth = 1f;
-        lineRenderer.endWidth = 1f;
+        lineRenderer.startWidth = 10f;
+        lineRenderer.endWidth = 10f;
         lineRenderer.useWorldSpace = true;
         //lineRenderer.startColor = circleColor;
         //lineRenderer.endColor = circleColor;

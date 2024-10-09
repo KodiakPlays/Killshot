@@ -70,8 +70,10 @@ public class EnemyAttack : MonoBehaviour
             damageable.ApplyDamage(shipDamage);
             isDamage = true;
             Invoke("CanDamage", laser.fireDelay);
-            if (damageable.currentHealth == 0)
+            Debug.Log("damageable.currentHealth: " + damageable.currentHealth);
+            if (damageable.currentHealth <= 0)
             {
+                Debug.Log("destroy ship");
                 Destroy(hitGO);
                 Invoke("ActiveGOPanal", 1);
 

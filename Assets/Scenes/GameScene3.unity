@@ -995,7 +995,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerShip: {fileID: 838309585}
   speed: 5
-  rotationSpeed: 0.5
+  rotationSpeed: 0.3
   isEnemyDetect: 0
   isShootStart: 0
   enemyAtackScript: {fileID: 92078446}
@@ -1076,7 +1076,7 @@ Transform:
   m_GameObject: {fileID: 92078435}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.3, y: 0, z: 28.7}
+  m_LocalPosition: {x: 0, y: 0, z: -20.1}
   m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1098,7 +1098,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 838309585}
   Laser: {fileID: 0}
-  GameOverPanale: {fileID: 0}
+  GameOverPanale: {fileID: 1321609127}
   hitGO: {fileID: 0}
   shipDamage: 10
   laser: {fileID: 1573597650}
@@ -7536,7 +7536,7 @@ Rigidbody:
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 16
+  m_Constraints: 80
   m_CollisionDetection: 0
 --- !u!114 &838309590
 MonoBehaviour:
@@ -12325,7 +12325,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 250440
+    m_Bits: 234056
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 8400000, guid: 231daa0069eccb144b3a6f201e45c892, type: 2}
   m_TargetDisplay: 0
@@ -13223,7 +13223,7 @@ LineRenderer:
   - {x: 0, y: 0, z: 1}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 1
+    widthMultiplier: 30
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -13292,7 +13292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cebdd84a98fc90748b9f349256aef7da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  segments: 25
+  segments: 50
   circleMat: {fileID: 2100000, guid: db65511f955129d4f9d764ccbe6ab093, type: 2}
   radius: 2500
   lineRenderer: {fileID: 1372257895}
@@ -14120,7 +14120,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1472520067434997158, guid: ad858e84623b26e478b8a2556f95bccf, type: 3}
       propertyPath: fireDelay
-      value: 5
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 1472520067434997158, guid: ad858e84623b26e478b8a2556f95bccf, type: 3}
       propertyPath: m_Enabled
@@ -15444,7 +15444,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2090861759}
   m_Direction: 0
   m_MinValue: 50
-  m_MaxValue: 500
+  m_MaxValue: 2600
   m_WholeNumbers: 0
   m_Value: 50
   m_OnValueChanged:
