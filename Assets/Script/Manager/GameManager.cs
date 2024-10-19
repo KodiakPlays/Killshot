@@ -293,4 +293,8 @@ public class GameManager : MonoBehaviour
     {
         SceneManager.LoadScene("GameScene3");
     }
+    public void BackGame()
+    {
+        SceneManager.LoadScene("StartScene");
+    }
 }

@@ -290,15 +290,15 @@ public class SpaceshipMovement : MonoBehaviour
 
             if (power.sensorPower == 2)
             {
-                detectionRadius = 20;
+                detectionRadius = 100;
             }
             if (power.sensorPower == 3)
             {
-                detectionRadius = 30;
+                detectionRadius = 120;
             }
             if ((power.sensorPower == 7))
             {
-                detectionRadius = 70;
+                detectionRadius = 250;
             }
 
             #endregion
@@ -751,6 +751,7 @@ public class SpaceshipMovement : MonoBehaviour
         foreach (Collider collider in hitCollider)
         {
             Debug.Log("Enemy Detected: " + collider.gameObject.name);
+
             //AudioManager.Instance.PlayEnemyAlert();
         }
     }
