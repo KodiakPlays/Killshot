@@ -10,19 +10,27 @@ public class CameraZoom : MonoBehaviour
    // public float playerIconScale = 1f;
     public float zoomInValue;
     [SerializeField] Transform spaceship;
-    private Vector3 originalPlayerIconScale;
-    private Vector3 originalLaserIconScale;
-    private Vector3 originalLaserIconPos;
+    //private Vector3 originalPlayerIconScale;
+    //private Vector3 originalLaserIconScale;
+    //private Vector3 originalLaserIconPos;
 
     private void Start()
     {
         camera = GetComponent<Camera>();
-        originalPlayerIconScale = playerIcon.localScale;
-        originalLaserIconScale = laserIcon.localScale;
-        originalLaserIconPos = laserIcon.localPosition ;
+
+        //originalPlayerIconScale = playerIcon.localScale;
+        //originalLaserIconScale = laserIcon.localScale;
+        //originalLaserIconPos = laserIcon.localPosition ;
     }
     void Update()
     {
+        camera.orthographicSize = zoomInValue ;
+        Vector3 newpos = spaceship.position;
+        newpos.y = transform.position.y;
+
+        transform.position = newpos;
+        transform.rotation = Quaternion.Euler(90, spaceship.rotation.eulerAngles.y, 0);
+        /* OldCode
         camera.orthographicSize = zoomInValue - 20;
         Vector3 newpos = spaceship.position;
         newpos.y = transform.position.y;
@@ -46,6 +54,10 @@ public class CameraZoom : MonoBehaviour
             originalLaserIconScale.z * laserScaleFactor
         );
         laserIcon.localPosition = originalLaserIconPos;
+
+        */
+
+
     }
     public void ZoomInOut(float zoom)
     {

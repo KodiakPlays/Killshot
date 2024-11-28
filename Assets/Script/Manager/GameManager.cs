@@ -19,7 +19,10 @@ public class GameManager : MonoBehaviour
 
     public Power power;
     //bool to get that enemy is detected or not
+    [HideInInspector]
     public bool isEnemyDetect;
+    [HideInInspector]
+    public GameObject detectedEnemy;
     //public bool isShipInside;
 
     [SerializeField] GameObject gameOverPanal;
@@ -27,7 +30,9 @@ public class GameManager : MonoBehaviour
     public SpaceshipMovement shipMoveScript;
     public GameObject GameWinPanale;
     public GameObject EscapePoint;
+    public int avgPower, minPower, maxPower;
 
+    
     private void Awake()
     {
         if(instance == null)
@@ -60,6 +65,11 @@ public class GameManager : MonoBehaviour
         gameOverPanal.SetActive(false);
 
         EscapePoint.SetActive(false);
+
+        //Power distribution
+        //minPower = 2;
+       //avgPower = 3;
+        //maxPower = 7;
 
     }
    
@@ -244,10 +254,10 @@ public class GameManager : MonoBehaviour
     {
         if(pActive)
         {
-            power.enginePower = 3;
-            power.weaponPower = 3;
-            power.sensorPower = 3;
-            power.reactorPower = 3;
+            power.enginePower = avgPower;
+            power.weaponPower = avgPower;
+            power.sensorPower = avgPower;
+            power.reactorPower = avgPower;
         }
         
     }
@@ -255,10 +265,10 @@ public class GameManager : MonoBehaviour
     {
         if (pActive)
         {
-            power.enginePower = 7;
-            power.weaponPower = 2;
-            power.sensorPower = 2;
-            power.reactorPower = 3;
+            power.enginePower = maxPower;
+            power.weaponPower = minPower;
+            power.sensorPower = minPower;
+            power.reactorPower = avgPower;
         }
         
     }
@@ -266,10 +276,10 @@ public class GameManager : MonoBehaviour
     {
         if (pActive)
         {
-            power.enginePower = 2;
-            power.weaponPower = 7;
-            power.sensorPower = 2;
-            power.reactorPower = 3;
+            power.enginePower = minPower;
+            power.weaponPower = maxPower;
+            power.sensorPower = minPower;
+            power.reactorPower = avgPower;
         }
         
     }
@@ -277,10 +287,10 @@ public class GameManager : MonoBehaviour
     {
         if (pActive)
         {
-            power.enginePower = 2;
-            power.weaponPower = 2;
-            power.sensorPower = 7;
-            power.reactorPower = 3;
+            power.enginePower = minPower;
+            power.weaponPower = minPower;
+            power.sensorPower = maxPower;
+            power.reactorPower = avgPower;
         }
         
     }

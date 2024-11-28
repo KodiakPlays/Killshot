@@ -11,7 +11,7 @@ public class ArenaMap : MonoBehaviour
     {
         isZoom = true;
         cam = GetComponent<Camera>();
-    }
+    } 
     private void Update()
     {
         /* OLD CODE FOR ZOOM CAMERA AFTER PRESS F KEY

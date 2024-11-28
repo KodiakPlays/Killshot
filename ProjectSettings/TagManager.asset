@@ -16,7 +16,7 @@ TagManager:
   - EnemySpaceship
   - Water
   - UI
-  - ArenaMapObjects
+  - ArenaMapNormleObjects
   - BearingMapObjects
   - ElevationMapObjects
   - MapObject
@@ -28,7 +28,7 @@ TagManager:
   - Rock
   - Cloud
   - Laser
-  - 
+  - ArenaMapBigObjects
   - 
   - 
   - 

@@ -8,12 +8,15 @@ public class SpaceshipMovement : MonoBehaviour
     //Vector3 upDownAngle;
     #region VARIABLES
     [SerializeField] float SpaceshipMoveSpeed = 0f;
+    [SerializeField] float SpaceshipMinSpeed ;
+    public int speedLimitMin, speedLimitMax, speedLimitAvg;
     public bool isEnterPress;
 
     [SerializeField] TextMeshProUGUI turnAngle;
     [SerializeField] TextMeshProUGUI elevationAngle;
 
-    [SerializeField] float detectionRadius;
+    public float detectionRadius;
+    [SerializeField] float minDetectionRadius, maxDetectionRadius, avgDetectionRadius;
     [SerializeField] LayerMask enemyLayer;
     [SerializeField] LayerMask rockLayer;
     [SerializeField] LayerMask cloudLayer;
@@ -47,6 +50,8 @@ public class SpaceshipMovement : MonoBehaviour
     float timeDiff1 = 0.05f, timeDiff2 = 0.2f;
 
     public TextMeshProUGUI alertText;
+
+   
     #endregion
 
     private void Awake()
@@ -60,10 +65,11 @@ public class SpaceshipMovement : MonoBehaviour
         isEleCounterAdd = true;
         speed = SpaceshipMoveSpeed;
         speedText.text = speed.ToString() + " km/h";
-        power.enginePower = 3;
-        power.weaponPower = 3;
-        power.sensorPower = 3;
-        speedLimit = 50f;
+        power.enginePower = GameManager.Instance.avgPower;
+        power.weaponPower = GameManager.Instance.avgPower;
+        power.sensorPower = GameManager.Instance.avgPower;
+        detectionRadius = avgDetectionRadius;
+        speedLimit = speedLimitAvg;//50f;
         powerRaiseSpeed = 1f;
         powerTurnSpeed = 10f;
 
@@ -288,17 +294,17 @@ public class SpaceshipMovement : MonoBehaviour
 
             #region SENSORS
 
-            if (power.sensorPower == 2)
+            if (power.sensorPower == GameManager.Instance.minPower)
             {
-                detectionRadius = 100;
+                detectionRadius = minDetectionRadius;
             }
-            if (power.sensorPower == 3)
+            if (power.sensorPower == GameManager.Instance.avgPower)
             {
-                detectionRadius = 120;
+                detectionRadius = avgDetectionRadius;
             }
-            if ((power.sensorPower == 7))
+            if ((power.sensorPower == GameManager.Instance.maxPower))
             {
-                detectionRadius = 250;
+                detectionRadius = maxDetectionRadius;
             }
 
             #endregion
@@ -316,30 +322,30 @@ public class SpaceshipMovement : MonoBehaviour
 
         if (isEnterPress)
         {
-            if (power.enginePower == 2)
+            if (power.enginePower == GameManager.Instance.minPower)
             {
-                speedLimit = 35f;
+                speedLimit = speedLimitMin;
                 if (speed > speedLimit)
                 {
-                    SmoothSpeedDec(35);
+                    SmoothSpeedDec(speedLimitMin);
 
                 }
 
                 transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
             }
-            if (power.enginePower == 3)
+            if (power.enginePower == GameManager.Instance.avgPower)
             {
-                speedLimit = 50f;
+                speedLimit = speedLimitAvg;
                 if (speed > speedLimit)
                 {
-                    SmoothSpeedDec(50);
+                    SmoothSpeedDec(speedLimitAvg);
                 }
 
                 transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
             }
-            if (power.enginePower == 7)
+            if (power.enginePower == GameManager.Instance.maxPower)
             {
-                speedLimit = 120f;
+                speedLimit = speedLimitMax;
 
                 transform.Translate(Vector3.forward * Time.deltaTime * SpaceshipMoveSpeed);
             }
@@ -747,13 +753,19 @@ public class SpaceshipMovement : MonoBehaviour
     ///</summary>
     void EnemySpaceshipDetection()
     {
+        GameManager.Instance.isEnemyDetect = false;
         Collider[] hitCollider = Physics.OverlapSphere(transform.position, detectionRadius, enemyLayer);
         foreach (Collider collider in hitCollider)
         {
             Debug.Log("Enemy Detected: " + collider.gameObject.name);
-
+            Debug.Log("isEnemyDetect " + GameManager.Instance.isEnemyDetect);
+            GameManager.Instance.isEnemyDetect = true;
+            GameManager.Instance.detectedEnemy = collider.gameObject;
             //AudioManager.Instance.PlayEnemyAlert();
+            
         }
+
+        //GameManager.Instance.isEnemyDetect = false;
     }
     ///<summary>
     ///Detect the Rock ship by taking transform of rock is rock enter some specific radius of Spaceship    ///</summary>
@@ -870,7 +882,7 @@ public class SpaceshipMovement : MonoBehaviour
         }
         if (Input.GetKey(KeyCode.S))
         {
-            SmoothSpeedDec(5);
+            SmoothSpeedDec(SpaceshipMinSpeed);
         }
         #region OLD CODE WITH BEARING ACTIVATION 
         /*

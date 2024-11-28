@@ -7,6 +7,7 @@ using UnityEngine.UIElements;
 public class Power : MonoBehaviour
 {
     public UnityEngine.UI.Slider reactorSlider, engineSlider, weaponSlider, senorSlider;
+    [HideInInspector]
     public int reactorPower, enginePower, weaponPower, sensorPower;
     
     void Update()
