@@ -47,7 +47,7 @@ public class SpaceshipMovement : MonoBehaviour
     [SerializeField] Damageable damageable;
 
     float timeInterval1, timeInterval2;
-    float timeDiff1 = 0.05f, timeDiff2 = 0.2f;
+    float timeDiff1 = 0.05f, timeDiff2 = 1f;
 
     public TextMeshProUGUI alertText;
 
@@ -721,12 +721,12 @@ public class SpaceshipMovement : MonoBehaviour
     ///</summary>
     void DecrementAngleOverTime()
     {
-
+        //timeDiff2 = rotSpeed;
         if (n1 > 0)  // Continue decrementing until n1 reaches 0
         {
-            n += Time.deltaTime;
+            n += rotSpeed * Time.deltaTime;
             if (n >= timeDiff2)
-            {
+            { 
                 n = 0;  // Reset the timer
                 n1 -= 1;  // Decrease n1
                 //targetRotAngle -= 1;  // Decrease targetRotAngle
@@ -736,7 +736,7 @@ public class SpaceshipMovement : MonoBehaviour
         }
         if(n1 < 0)
         {
-            n += Time.deltaTime;
+            n += rotSpeed * Time.deltaTime;
             if(n >= timeDiff2)
             {
                 n = 0;

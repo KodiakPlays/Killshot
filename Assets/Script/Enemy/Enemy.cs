@@ -22,16 +22,16 @@ public class Enemy : MonoBehaviour
        
         if (isEnemyDetect)
         {
-            //Turn();
-            //Move();
+            Turn();
+            Move();
 
         }
         
         if(isShootStart)
         {
             enemyAtackScript.enabled = true;
-            Turn();
-            Move();
+            //Turn();
+           // Move();
         }
         else
         {
