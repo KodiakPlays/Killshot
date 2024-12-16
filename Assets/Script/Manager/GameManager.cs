@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour
 
     public Power power;
     //bool to get that enemy is detected or not
-    [HideInInspector]
+    //[HideInInspector]
     public bool isEnemyDetect;
     [HideInInspector]
     public GameObject detectedEnemy;
@@ -231,7 +231,7 @@ public class GameManager : MonoBehaviour
         }
         else if (lActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-            lActive = false;
+           // lActive = false;
             lGreenImage.SetActive(false);
             lRedImage.SetActive(true);
         }

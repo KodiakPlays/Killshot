@@ -150,7 +150,7 @@ public class SpaceshipMovement : MonoBehaviour
             GameManager.Instance.bActive = true;
             GameManager.Instance.fActive = false;
             GameManager.Instance.pActive = false;
-            GameManager.Instance.lActive = false;
+            //GameManager.Instance.lActive = false;
 
             GameManager.Instance.eRedImage.SetActive(false);
             GameManager.Instance.eGreenImage.SetActive(true);
@@ -217,31 +217,31 @@ public class SpaceshipMovement : MonoBehaviour
                     //TURN RIGHT LEFT
                     if (targetRotAngle <= 60 || targetRotAngle <= -60)
                     {
-                        Debug.Log("safe turn");
+                        //Debug.Log("safe turn");
                     }
                     if ((targetRotAngle > 60 && targetRotAngle <= 90) || (targetRotAngle > -60 && targetRotAngle <= -90))
                     {
-                        Debug.Log(" sharp turn chance of damage to stability");
+                       // Debug.Log(" sharp turn chance of damage to stability");
                         damageable.ApplyDamage(5);
                     }
                     if (targetRotAngle > 120 || targetRotAngle > -120)
                     {
-                        Debug.Log("Agressive turn higher chances of damage to stability");
+                        //Debug.Log("Agressive turn higher chances of damage to stability");
                         damageable.ApplyDamage(10);
                     }
                     //RAISE UP OR DOWN
                     if (targetMovement <= 3 || targetMovement <= -3)
                     {
-                        Debug.Log("safe Raise");
+                        //Debug.Log("safe Raise");
                     }
                     if ((targetRotAngle > 3 && targetRotAngle <= 5) || (targetRotAngle > -3 && targetRotAngle <= -5))
                     {
-                        Debug.Log(" sharp Raise chance of damage to stability");
+                        ////Debug.Log(" sharp Raise chance of damage to stability");
                         damageable.ApplyDamage(5);
                     }
                     if (targetRotAngle > 6 || targetRotAngle > -6)
                     {
-                        Debug.Log("Agressive Raise higher chances of damage to stability");
+                       // Debug.Log("Agressive Raise higher chances of damage to stability");
                         damageable.ApplyDamage(10);
                     }
                 }
@@ -252,31 +252,31 @@ public class SpaceshipMovement : MonoBehaviour
                     //TURN RIGHT LEFT
                     if (targetRotAngle <= 120 || targetRotAngle <= -120)
                     {
-                        Debug.Log("safe turn");
+                       // Debug.Log("safe turn");
                     }
                     if ((targetRotAngle > 120 && targetRotAngle <= 180) || (targetRotAngle > -120 && targetRotAngle <= -180))
                     {
-                        Debug.Log(" sharp turn chance of damage to stability");
+                        //Debug.Log(" sharp turn chance of damage to stability");
                         damageable.ApplyDamage(5);
                     }
                     if (targetRotAngle > 180 || targetRotAngle > -180)
                     {
-                        Debug.Log("Agressive turn higher chances of damage to stability");
+                       // Debug.Log("Agressive turn higher chances of damage to stability");
                         damageable.ApplyDamage(10);
                     }
                     //RAISE UP OR DOWN
                     if (targetMovement <= 5 || targetMovement <= -5)
                     {
-                        Debug.Log("safe Raise");
+                       // Debug.Log("safe Raise");
                     }
                     if ((targetRotAngle > 5 && targetRotAngle <= 7) || (targetRotAngle > -3 && targetRotAngle <= -5))
                     {
-                        Debug.Log(" sharp Raise chance of damage to stability");
+                        //Debug.Log(" sharp Raise chance of damage to stability");
                         damageable.ApplyDamage(5);
                     }
                     if (targetRotAngle > 7 || targetRotAngle > -7)
                     {
-                        Debug.Log("Agressive Raise higher chances of damage to stability");
+                       // Debug.Log("Agressive Raise higher chances of damage to stability");
                         damageable.ApplyDamage(10);
                     }
                 }
@@ -757,15 +757,15 @@ public class SpaceshipMovement : MonoBehaviour
         Collider[] hitCollider = Physics.OverlapSphere(transform.position, detectionRadius, enemyLayer);
         foreach (Collider collider in hitCollider)
         {
-            Debug.Log("Enemy Detected: " + collider.gameObject.name);
-            Debug.Log("isEnemyDetect " + GameManager.Instance.isEnemyDetect);
+           // Debug.Log("Enemy Detected: " + collider.gameObject.name);
+           // Debug.Log("isEnemyDetect " + GameManager.Instance.isEnemyDetect);
             GameManager.Instance.isEnemyDetect = true;
             GameManager.Instance.detectedEnemy = collider.gameObject;
             //AudioManager.Instance.PlayEnemyAlert();
             
         }
 
-        //GameManager.Instance.isEnemyDetect = false;
+       // GameManager.Instance.isEnemyDetect = false;
     }
     ///<summary>
     ///Detect the Rock ship by taking transform of rock is rock enter some specific radius of Spaceship    ///</summary>

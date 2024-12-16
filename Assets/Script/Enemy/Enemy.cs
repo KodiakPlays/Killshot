@@ -14,9 +14,20 @@ public class Enemy : MonoBehaviour
     [SerializeField] float detectionRadius;
     [SerializeField] float shootRadius;
     [SerializeField] LayerMask playerLayer;
+    [SerializeField] GameObject enemySmallIcon, enemyBigIcon;
 
     void Update()
     {
+        if (GameManager.Instance.isEnemyDetect)
+        {
+            enemySmallIcon.SetActive(true);
+            enemyBigIcon.SetActive(true);
+        }
+        else
+        {
+            enemySmallIcon.SetActive(false);
+            enemyBigIcon.SetActive(false);
+        }
         SpaceshipDetection();
         StartShooting();
        
@@ -26,6 +37,7 @@ public class Enemy : MonoBehaviour
             Move();
 
         }
+
         
         if(isShootStart)
         {

@@ -30,10 +30,15 @@ public class LaserMovement : MonoBehaviour
         if (GameManager.Instance.lActive && !GameManager.Instance.bActive && !GameManager.Instance.eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             LaserMove();// Call the method to move the laser
+            Debug.Log("// Call the method to move the laser"); 
+            if((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+            {
+                Debug.Log("Press shoot button");
+            }
         }
         if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) && GameManager.Instance.lActive)
         {
-            //Debug.Log("Press shoot button");
+            Debug.Log("Press shoot button");
 
             if(chargeLaserScript != null)
             {
@@ -42,8 +47,13 @@ public class LaserMovement : MonoBehaviour
                 {
                     //Debug.Log("fire");
                     chargeLaserScript.isCharged = false;
+                    //FireLaser();
                     Invoke("FireLaser", 0.5f);
                 }
+            }
+            else
+            {
+                Debug.LogError("chargeLaserScript script is null");
             }
             
             

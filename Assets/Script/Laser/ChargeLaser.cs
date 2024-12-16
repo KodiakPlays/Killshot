@@ -76,7 +76,7 @@ public class ChargeLaser : MonoBehaviour
         chargeSlider.value = 1;
         isCharging = false;
         isCharged = true;
-        Debug.Log("is charged: " + isCharged);
-        Debug.Log("is isCharging: " + isCharging);
+       // Debug.Log("is charged: " + isCharged);
+        //Debug.Log("is isCharging: " + isCharging);
     }
 }
