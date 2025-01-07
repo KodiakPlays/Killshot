@@ -148,16 +148,10 @@ public class SpaceshipMovement : MonoBehaviour
             #region DEACTIVATE ALL BUTTONS AND TURN ON THE RED IMAGE
             GameManager.Instance.eActive = true;
             GameManager.Instance.bActive = true;
-            GameManager.Instance.fActive = false;
             GameManager.Instance.pActive = false;
             //GameManager.Instance.lActive = false;
 
-            GameManager.Instance.eRedImage.SetActive(false);
-            GameManager.Instance.eGreenImage.SetActive(true);
-            GameManager.Instance.bRedImage.SetActive(false);
-            GameManager.Instance.bGreenImage.SetActive(true);
-            GameManager.Instance.fRedImage.SetActive(true);
-            GameManager.Instance.fGreenImage.SetActive(false);
+            
             GameManager.Instance.pRedImage.SetActive(true);
             GameManager.Instance.pGreenImage.SetActive(false);
             GameManager.Instance.lRedImage.SetActive(true);

@@ -8,11 +8,11 @@ public class GameManager : MonoBehaviour
 {
     private static GameManager instance;
     public static GameManager Instance { get { return instance; } }
-    public bool eActive, bActive, fActive, pActive, lActive;
+    public bool eActive, bActive, pActive, lActive;
 
     public GameObject eGreenImage, eRedImage;
     public GameObject bGreenImage, bRedImage;
-    public GameObject fGreenImage, fRedImage;
+   // public GameObject fGreenImage, fRedImage;
     public GameObject pGreenImage, pRedImage;
     public GameObject lGreenImage, lRedImage;
 
@@ -26,7 +26,6 @@ public class GameManager : MonoBehaviour
     //public bool isShipInside;
 
     [SerializeField] GameObject gameOverPanal;
-    [SerializeField] GameObject spaceship;
     public SpaceshipMovement shipMoveScript;
     public GameObject GameWinPanale;
     public GameObject EscapePoint;
@@ -47,16 +46,16 @@ public class GameManager : MonoBehaviour
 
         eActive = false;
         bActive = false;
-        fActive = false;
+        //fActive = false;
         pActive = false;
         lActive = false;
 
-        eRedImage.SetActive(false);
+       // eRedImage.SetActive(false);
         eGreenImage.SetActive(true);
-        bRedImage.SetActive(false);
+       // bRedImage.SetActive(false);
         bGreenImage.SetActive(true);
-        fRedImage.SetActive(true);
-        fGreenImage.SetActive(false);
+        //fRedImage.SetActive(true);
+        //fGreenImage.SetActive(false);
         pRedImage.SetActive(true);
         pGreenImage.SetActive(false);
         lRedImage.SetActive(true);
@@ -82,7 +81,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     void KeyboardInputs()
     {
-        if (!(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
+        if (!(Input.GetKeyDown(KeyCode.Return) || !(Input.GetKeyDown(KeyCode.KeypadEnter))))
         {
             if (Input.GetKeyUp(KeyCode.Escape))
             {
@@ -140,25 +139,19 @@ public class GameManager : MonoBehaviour
         if (!eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             eActive = true;
-            eGreenImage.SetActive(true);
-            eRedImage.SetActive(false);
+            //eGreenImage.SetActive(true);
+            //eRedImage.SetActive(false);
         }
         else if( eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             eActive = false;
-            eGreenImage.SetActive(false);
-            eRedImage.SetActive(true);
         }
-        fRedImage.SetActive(true);
-        fGreenImage.SetActive(false);
-        bRedImage.SetActive(true);
-        bGreenImage.SetActive(false);
         pRedImage.SetActive(true);
         pGreenImage.SetActive(false);
         lRedImage.SetActive(true);
         lGreenImage.SetActive(false);
 
-        fActive = false;
+        //fActive = false;
         bActive = false;
         pActive = false;
         lActive = false;
@@ -168,26 +161,24 @@ public class GameManager : MonoBehaviour
         if (!bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             bActive = true;
-            bGreenImage.SetActive(true);
-            bRedImage.SetActive(false);
         }
         else if(bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             bActive = false;
-            bGreenImage.SetActive(false);
-            bRedImage.SetActive(true);
+            //bGreenImage.SetActive(false);
+           // bRedImage.SetActive(true);
         }
-        eRedImage.SetActive(true);
-        eGreenImage.SetActive(false);
-        fRedImage.SetActive(true);
-        fGreenImage.SetActive(false);
+        //eRedImage.SetActive(true);
+        //eGreenImage.SetActive(false);
+        //fRedImage.SetActive(true);
+        //fGreenImage.SetActive(false);
         pRedImage.SetActive(true);
         pGreenImage.SetActive(false);
         lRedImage.SetActive(true);
         lGreenImage.SetActive(false);
 
         eActive = false;
-        fActive = false;
+        //fActive = false;
         pActive = false;
         lActive = false;
     }
@@ -207,18 +198,18 @@ public class GameManager : MonoBehaviour
             pGreenImage.SetActive(false);
             pRedImage.SetActive(true);
         }
-        eRedImage.SetActive(true);
-        eGreenImage.SetActive(false);
-        bRedImage.SetActive(true);
-        bGreenImage.SetActive(false);
-        fRedImage.SetActive(true);
-        fGreenImage.SetActive(false);
+        //eRedImage.SetActive(true);
+        //eGreenImage.SetActive(false);
+       // bRedImage.SetActive(true);
+        //bGreenImage.SetActive(false);
+        //fRedImage.SetActive(true);
+        //fGreenImage.SetActive(false);
         lRedImage.SetActive(true);
         lGreenImage.SetActive(false);
 
         eActive = false;
         bActive = false;
-        fActive = false;
+        //fActive = false;
         lActive = false;
     }
     public void LButtonActive()
@@ -231,22 +222,21 @@ public class GameManager : MonoBehaviour
         }
         else if (lActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
-           // lActive = false;
+            lActive = false;
             lGreenImage.SetActive(false);
             lRedImage.SetActive(true);
         }
-        eRedImage.SetActive(true);
-        eGreenImage.SetActive(false);
-        bRedImage.SetActive(true);
-        bGreenImage.SetActive(false);
-        fRedImage.SetActive(true);
-        eGreenImage.SetActive(false);
+        //eRedImage.SetActive(true);
+        //eGreenImage.SetActive(false);
+        //bRedImage.SetActive(true);
+       // bGreenImage.SetActive(false);
+        //fRedImage.SetActive(true);
         pRedImage.SetActive(true);
         pGreenImage.SetActive(false);
 
         eActive = false;
         bActive = false;
-        fActive = false;
+        //fActive = false;
         pActive = false;
     }
    
