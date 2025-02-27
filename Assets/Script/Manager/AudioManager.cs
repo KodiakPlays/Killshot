@@ -22,7 +22,7 @@ public class AudioManager : MonoBehaviour
 
     public AudioSource audioSource;
     public AudioClip[] clips;
-
+     
     public void PlayEnemyAlert()
     {
         audioSource.clip = clips[0];
@@ -58,6 +58,12 @@ public class AudioManager : MonoBehaviour
         audioSource.Play();
         audioSource.loop = false;
         Debug.Log("Laser Charging sound Play");
+    }
+    public void OnClick()
+    {
+        audioSource.clip = clips[3];
+        audioSource.Play();
+        audioSource.loop = false;
     }
 
 }

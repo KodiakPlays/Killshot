@@ -74,6 +74,7 @@ public class GameManager : MonoBehaviour
    
     private void Update()
     {
+        Debug.Log("a");
         KeyboardInputs();
     }
     /// <summary>
@@ -81,29 +82,37 @@ public class GameManager : MonoBehaviour
     /// </summary>
     void KeyboardInputs()
     {
-        if (!(Input.GetKeyDown(KeyCode.Return) || !(Input.GetKeyDown(KeyCode.KeypadEnter))))
+        if (!(Input.GetKeyDown(KeyCode.Return)) || !(Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             if (Input.GetKeyUp(KeyCode.Escape))
             {
-                Application.Quit();
+                AudioManager.Instance.OnClick();
+                //Application.Quit();
+                SceneManager.LoadScene("StartScene");
             }
             if (Input.GetKeyDown(KeyCode.E))
             {
+               // AudioManager.Instance.OnClick();
                 shipMoveScript.isEnterPress = false;
                 //EButtonActive();
             }
             if (Input.GetKeyDown(KeyCode.B))
             {
+                //AudioManager.Instance.OnClick();
                 shipMoveScript.isEnterPress = false;
                 //BButtonActivate();
             }
             if (Input.GetKeyDown(KeyCode.P))
             {
+                Debug.Log("p");
+                //AudioManager.Instance.OnClick();
                 shipMoveScript.isEnterPress = false;
                 pButtonActivate();
             }
             if (Input.GetKeyDown(KeyCode.L))
             {
+                Debug.Log("L");
+                //AudioManager.Instance.OnClick();
                 shipMoveScript.isEnterPress = false;
                 LButtonActive();
             }
@@ -111,21 +120,26 @@ public class GameManager : MonoBehaviour
             {
                 if (Input.GetKeyDown(KeyCode.G))
                 {
+                    Debug.Log("G");
+                    // AudioManager.Instance.OnClick();
                     shipMoveScript.isEnterPress = false;
                     BalanceBetweenSystem();
                 }
                 if (Input.GetKeyDown(KeyCode.H))
                 {
+                   // AudioManager.Instance.OnClick();
                     shipMoveScript.isEnterPress = false;
                     FocusOnEngine();
                 }
                 if (Input.GetKeyDown(KeyCode.J))
                 {
+                    //AudioManager.Instance.OnClick();
                     shipMoveScript.isEnterPress = false;
                     FocuseOnWeapons();
                 }
                 if (Input.GetKeyDown(KeyCode.K))
                 {
+                    //AudioManager.Instance.OnClick();
                     shipMoveScript.isEnterPress = false;
                     FocusOnSensor();
                 }
@@ -136,6 +150,7 @@ public class GameManager : MonoBehaviour
 
     public void EButtonActive()
     {
+        AudioManager.Instance.OnClick();
         if (!eActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             eActive = true;
@@ -158,6 +173,7 @@ public class GameManager : MonoBehaviour
     }
     public void BButtonActivate()
     {
+        AudioManager.Instance.OnClick();
         if (!bActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             bActive = true;
@@ -185,6 +201,7 @@ public class GameManager : MonoBehaviour
    
     public void pButtonActivate()
     {
+        AudioManager.Instance.OnClick();
         //pRedImage.SetActive(false);
         if (!pActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
@@ -214,6 +231,7 @@ public class GameManager : MonoBehaviour
     }
     public void LButtonActive()
     {
+        AudioManager.Instance.OnClick();
         if (!lActive && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             lActive = true;
@@ -242,7 +260,8 @@ public class GameManager : MonoBehaviour
    
     public void BalanceBetweenSystem()
     {
-        if(pActive)
+        AudioManager.Instance.OnClick();
+        if (pActive)
         {
             power.enginePower = avgPower;
             power.weaponPower = avgPower;
@@ -253,6 +272,7 @@ public class GameManager : MonoBehaviour
     }
     public void FocusOnEngine()
     {
+        AudioManager.Instance.OnClick();
         if (pActive)
         {
             power.enginePower = maxPower;
@@ -264,6 +284,7 @@ public class GameManager : MonoBehaviour
     }
     public void FocuseOnWeapons()
     {
+        AudioManager.Instance.OnClick();
         if (pActive)
         {
             power.enginePower = minPower;
@@ -275,6 +296,7 @@ public class GameManager : MonoBehaviour
     }
     public void FocusOnSensor()
     {
+        AudioManager.Instance.OnClick();
         if (pActive)
         {
             power.enginePower = minPower;

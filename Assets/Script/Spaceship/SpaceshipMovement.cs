@@ -401,7 +401,7 @@ public class SpaceshipMovement : MonoBehaviour
     public void XButton()
     {
         //GOES DOWNSIDE
-
+        AudioManager.Instance.OnClick();
         targetMovement -= 1f;
         elevationAngle.text = targetMovement.ToString();
         Debug.Log("targetMovement: " + targetMovement);
@@ -468,7 +468,7 @@ public class SpaceshipMovement : MonoBehaviour
     public void SpaceButton()
     {
         //GOES UPSIDE
-
+        AudioManager.Instance.OnClick();
         targetMovement += 1f;
         elevationAngle.text = targetMovement.ToString();
         Debug.Log("targetMovement: " + targetMovement);
@@ -534,10 +534,12 @@ public class SpaceshipMovement : MonoBehaviour
     void Elevation() {
         if (Input.GetKeyDown(KeyCode.X))
         {
+            //AudioManager.Instance.OnClick();
             XButton();
         }
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            //AudioManager.Instance.OnClick();
             SpaceButton();
         }
     }
@@ -547,7 +549,7 @@ public class SpaceshipMovement : MonoBehaviour
     public void TurnLeft()
     {
         //TURN LEFT
-
+        AudioManager.Instance.OnClick();
         timeInterval1 += Time.deltaTime;
         if (timeInterval1 >= timeDiff1)
         {
@@ -619,6 +621,8 @@ public class SpaceshipMovement : MonoBehaviour
     public void TurnRight()
     {
         //TURN RIGHT
+        AudioManager.Instance.OnClick();
+
         timeInterval2 += Time.deltaTime;
         if (timeInterval2 >= timeDiff1)
         {
@@ -693,12 +697,15 @@ public class SpaceshipMovement : MonoBehaviour
     ///</summary>
     void Turn()
     {
+       
         if (Input.GetKey(KeyCode.A))
         {
+            //AudioManager.Instance.OnClick();
             TurnLeft();
         }
         if (Input.GetKey(KeyCode.D))
         {
+           // AudioManager.Instance.OnClick();
             TurnRight();
         }
     }
@@ -830,6 +837,7 @@ public class SpaceshipMovement : MonoBehaviour
     
     public void SmoothSpeedInc()
     {
+        AudioManager.Instance.OnClick();
         n += Time.deltaTime;
         if (n >= timeDiff1)
         {
@@ -848,6 +856,7 @@ public class SpaceshipMovement : MonoBehaviour
     ///<summary> Set the speed text smoothly decrease  ///</summary>
     public void SmoothSpeedDec(float endSpeed)
     {
+        AudioManager.Instance.OnClick();
         n += Time.deltaTime;
         if (n >= timeDiff1)
         {
@@ -872,10 +881,12 @@ public class SpaceshipMovement : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.W))
         {
+           // AudioManager.Instance.OnClick();
             SmoothSpeedInc();
         }
         if (Input.GetKey(KeyCode.S))
         {
+           // AudioManager.Instance.OnClick();
             SmoothSpeedDec(SpaceshipMinSpeed);
         }
         #region OLD CODE WITH BEARING ACTIVATION 

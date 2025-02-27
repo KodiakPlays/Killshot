@@ -40,10 +40,12 @@ public class ScanningProcess : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.RightArrow) && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
             {
+                AudioManager.Instance.OnClick();
                 mScanningProcessSlider.value++;
             }
             if (Input.GetKeyDown(KeyCode.LeftArrow) && !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
             {
+                AudioManager.Instance.OnClick();
                 mScanningProcessSlider.value--;
             }
             if(mScanningProcessSlider.value == randNumber)
@@ -76,6 +78,7 @@ public class ScanningProcess : MonoBehaviour
     }
     public void LockButton()
     {
+        AudioManager.Instance.OnClick();
         if (isNumberMatch)
         {
             mScannerActive.SetActive(false);
@@ -94,9 +97,11 @@ public class ScanningProcess : MonoBehaviour
     public void LeftButton()
     {
         mScanningProcessSlider.value--;
+        AudioManager.Instance.OnClick();
     }
     public void RightButton()
     {
         mScanningProcessSlider.value++;
+        AudioManager.Instance.OnClick();
     }
 }

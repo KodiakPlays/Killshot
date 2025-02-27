@@ -1,10 +1,15 @@
 
 using UnityEngine;
-
+using System.Collections;
+using TMPro;
 public class OnCollisionDestroyed : MonoBehaviour
 {
     [SerializeField] Damageable damageable;
     public int damage = 10;
+
+    [SerializeField] TMP_Text timerText; // Assign in Inspector
+    private bool isCountingDown = false;
+    [SerializeField] int winTimmer = 5;
     private void Start()
     {
         damageable = GetComponent<Damageable>();
@@ -31,11 +36,34 @@ public class OnCollisionDestroyed : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         //after triggering this game object gamepanle will be active
-        if(other.gameObject.tag == "EscapePoint")
+        if(other.gameObject.tag == "EscapePoint" && !isCountingDown)
         {
             Debug.Log("win win!!");
-            Invoke("ActiveWinPanel", 0.5f);
+            //Time.timeScale = 0; // to pause the game
+            // Invoke("ActiveWinPanel", 0.5f);
+
+            StartCoroutine(StartCountdown());
         }
+    }
+
+    IEnumerator StartCountdown()
+    {
+        isCountingDown = true;
+        Time.timeScale = 0; // Pause the game
+        int timeLeft = winTimmer;
+
+        while (timeLeft >= 0)
+        {
+            if (timerText != null)
+            {
+                timerText.text = "Escape in: " + timeLeft.ToString();
+            }
+            yield return new WaitForSecondsRealtime(1f); // Use WaitForSecondsRealtime to work when Time.timeScale = 0
+            timeLeft--;
+        }
+
+        // Call ActiveWinPanel after countdown ends
+        ActiveWinPanel();
     }
     void ActiveWinPanel()
     {

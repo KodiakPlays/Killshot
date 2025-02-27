@@ -45,9 +45,12 @@ public class ChargeLaser : MonoBehaviour
     }
     public void OnChargeButtonClick()
     {
-       // AudioManager.Instance.PlayLaserLoading();
+        
+        
         if (GameManager.Instance.lActive )//&& !(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
+            //AudioManager.Instance.PlayLaserLoading();
+            AudioManager.Instance.OnClick();
             if (isCharging)
             {
                 StopCoroutine(chargeCoroutine);
