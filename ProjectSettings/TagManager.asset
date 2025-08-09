@@ -3,32 +3,27 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags:
-  - Wall
-  - Spaceship
-  - Enemy
-  - Rock
-  - EscapePoint
+  tags: []
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - EnemySpaceship
+  - 
   - Water
   - UI
-  - ArenaMapNormleObjects
-  - BearingMapObjects
-  - ElevationMapObjects
-  - MapObject
-  - EscapePoint
-  - Target
-  - Obstacle
-  - SensorCircle
-  - Spaceship
-  - Rock
-  - Cloud
-  - Laser
-  - ArenaMapBigObjects
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
   - 
   - 
   - 
