@@ -61,7 +61,7 @@ public class Weapons : MonoBehaviour
         Laser laser = laserObj.GetComponent<Laser>();
         if (laser != null)
         {
-            laser.Fire(firePoint ? firePoint.forward : transform.forward);
+            laser.Fire(firePoint ? firePoint.forward : transform.forward, false);  // false indicates player projectile
         }
         else
         {

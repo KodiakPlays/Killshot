@@ -7,6 +7,10 @@ public class PlayerShip : MonoBehaviour
 	[SerializeField] private float rotationSpeed = 100f;
 	[SerializeField] private float maxSpeed = 20f;
 
+	[Header("Health Settings")]
+	[SerializeField] private float maxHealth = 100f;
+	[SerializeField] private float currentHealth;
+
 	private Rigidbody rb;
 
 	private void Awake()
@@ -17,6 +21,18 @@ public class PlayerShip : MonoBehaviour
 			rb = gameObject.AddComponent<Rigidbody>();
 			rb.useGravity = false;
 			rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+		}
+		currentHealth = maxHealth;
+	}
+
+	public void TakeDamage(float damage)
+	{
+		currentHealth = Mathf.Max(0, currentHealth - damage);
+		
+		if (currentHealth <= 0)
+		{
+			// Handle player death
+			Destroy(gameObject);
 		}
 	}
 

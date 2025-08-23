@@ -1,0 +1,174 @@
+using UnityEngine;
+
+public class EnemyShip : MonoBehaviour
+{
+    [Header("Detection and Combat")]
+    public float detectionRadius = 30f;
+    public float optimalCombatDistance = 15f;
+    public GameObject laserPrefab;
+    public Transform firePoint;
+    public float fireRate = 0.5f;
+    public int maxHealth = 3;
+
+    [Header("Movement Settings")]
+    public float thrustForce = 8f;
+    public float rotationSpeed = 90f;
+    public float maxSpeed = 15f;
+    public float orbitSpeed = 30f;
+
+    private Transform playerTransform;
+    private Rigidbody rb;
+    private float lastFireTime;
+    private int currentHealth;
+    private bool playerDetected = false;
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody>();
+            rb.useGravity = false;
+            rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        }
+
+        // Find the player
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            playerTransform = player.transform;
+        }
+
+        currentHealth = maxHealth;
+    }
+
+    private void FixedUpdate()
+    {
+        if (playerTransform == null) return;
+
+        float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+        playerDetected = distanceToPlayer <= detectionRadius;
+
+        if (playerDetected)
+        {
+            // Calculate direction to player
+            Vector3 directionToPlayer = (playerTransform.position - transform.position).normalized;
+            
+            // Calculate the desired position (maintaining optimal distance)
+            Vector3 desiredPosition = playerTransform.position - directionToPlayer * optimalCombatDistance;
+            
+            // Add orbital movement
+            Vector3 orbitDirection = Vector3.Cross(Vector3.up, directionToPlayer);
+            desiredPosition += orbitDirection * Mathf.Sin(Time.time * orbitSpeed) * 5f;
+
+            // Move towards the desired position
+            Vector3 moveDirection = (desiredPosition - transform.position).normalized;
+            
+            // Apply thrust
+            rb.AddForce(moveDirection * thrustForce, ForceMode.Acceleration);
+
+            // Rotate to face the player
+            Quaternion targetRotation = Quaternion.LookRotation(-directionToPlayer, Vector3.up);
+            rb.MoveRotation(Quaternion.RotateTowards(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
+
+            // Check if we're in combat range and facing the player
+            bool inCombatRange = distanceToPlayer <= detectionRadius && distanceToPlayer >= optimalCombatDistance * 0.5f;
+            bool facingPlayer = Vector3.Dot(-transform.forward, directionToPlayer) > 0.7f; // About 45 degrees or less
+
+            // Fire at player if in combat range, facing player, and enough time has passed
+            if (inCombatRange && facingPlayer && Time.time - lastFireTime > fireRate)
+            {
+                FireLaser();
+            }
+        }
+
+        // Apply speed limit
+        Vector3 horizontalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+        if (horizontalVelocity.magnitude > maxSpeed)
+        {
+            horizontalVelocity = horizontalVelocity.normalized * maxSpeed;
+            rb.linearVelocity = new Vector3(horizontalVelocity.x, rb.linearVelocity.y, horizontalVelocity.z);
+        }
+    }
+
+    private void FireLaser()
+    {
+        if (playerTransform == null) return;
+
+        lastFireTime = Time.time;
+        Vector3 spawnPos = firePoint ? firePoint.position : transform.position;
+        
+        // Calculate direction to player
+        Vector3 directionToPlayer = (playerTransform.position - spawnPos).normalized;
+        Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
+        
+        // Spawn and orient the laser
+        GameObject laserObj = Instantiate(laserPrefab, spawnPos, targetRotation);
+        Laser laser = laserObj.GetComponent<Laser>();
+        if (laser != null)
+        {
+            laser.Fire(directionToPlayer, true);  // true indicates enemy projectile
+        }
+    }
+
+    public void TakeDamage(int damage = 1)
+    {
+        currentHealth -= damage;
+        if (currentHealth <= 0)
+        {
+            Explode();
+        }
+    }
+
+    private void Explode()
+    {
+        // Create simple particle effect for explosion
+        ParticleSystem.MainModule mainModule;
+
+        // Create explosion particle system
+        GameObject explosionObj = new GameObject("Explosion");
+        explosionObj.transform.position = transform.position;
+        ParticleSystem particles = explosionObj.AddComponent<ParticleSystem>();
+        
+        // Configure particle system for explosion effect
+        mainModule = particles.main;
+        mainModule.startSize = 2f;
+        mainModule.startSpeed = 5f;
+        mainModule.startLifetime = 1f;
+        mainModule.maxParticles = 100;
+        
+        var emission = particles.emission;
+        emission.rateOverTime = 0;
+        emission.SetBurst(0, new ParticleSystem.Burst(0f, 50));
+        
+        var shape = particles.shape;
+        shape.shapeType = ParticleSystemShapeType.Sphere;
+        shape.radius = 0.1f;
+        
+        // Destroy the explosion after particles are done
+        Destroy(explosionObj, mainModule.startLifetime.constant);
+        
+        // Destroy the enemy ship
+        Destroy(gameObject);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        // Only take damage from player projectiles
+        if (other.CompareTag("PlayerProjectile"))
+        {
+            TakeDamage();
+            Destroy(other.gameObject); // Destroy the laser
+        }
+    }
+
+    // Optional: Visualize detection radius in editor
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, detectionRadius);
+        
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, optimalCombatDistance);
+    }
+}

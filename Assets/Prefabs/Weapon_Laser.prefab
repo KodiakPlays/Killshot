@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6562450034532542076}
   - component: {fileID: 4530519083251356294}
+  - component: {fileID: -9109329528072006453}
+  - component: {fileID: -637268337621829029}
   m_Layer: 0
   m_Name: Weapon_Laser
   m_TagString: Untagged
@@ -60,6 +62,42 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-9109329528072006453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 968730919820449257}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039387337feeda54988c3db6cec31cb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: 30
+  lifeTime: 3
+  damage: 20
+--- !u!65 &-637268337621829029
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 968730919820449257}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 11.733859, y: 1, z: 3.1976817}
+  m_Center: {x: -0.06947555, y: 0, z: 8.765459}
 --- !u!1 &8546458114973754349
 GameObject:
   m_ObjectHideFlags: 0
@@ -137,7 +175,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -1
   m_Sprite: {fileID: 21300000, guid: c3caad0e82f1a844bb80655d766a76a9, type: 3}
-  m_Color: {r: 0.15552878, g: 1, b: 0, a: 1}
+  m_Color: {r: 0.15686274, g: 1, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
