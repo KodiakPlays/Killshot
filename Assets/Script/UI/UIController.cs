@@ -3,8 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
+using TMPro;
+using System.Numerics;
+using Vector2 = UnityEngine.Vector2;
 
 public class UIController : MonoBehaviour
 {
@@ -20,25 +24,40 @@ public class UIController : MonoBehaviour
 
     [SerializeField]
     private Shader shaPowerMet;
+    [SerializeField] private Shader shaReactorMet;
+    private int reactorCharges = 0;
+
+    [SerializeField]
+    private List<Sprite> uiSprite = new List<Sprite>();
+
+    [SerializeField]
+    private List<Image> btnPowerBoolImage = new List<Image>();
+
+    [SerializeField] TextMeshProUGUI frequancyTMP;
+    [SerializeField] Transform frequancyTrans;
+    private float frequancyFlt = 0f;
+
+    [SerializeField] List<Transform> tunerTrans = new List<Transform>();
 
     void Start()
     {
+        FrequancyTune(360f);
+
         StartPower();
     }
 
     private void StartPower()
     {
-        for (int i = 0; i < btnPowerBool.Count; i++)
+        for (int i = 0; i < btnPowerBool.Count-1; i++)
         {
-            uiPowerMetClass.Add(new UIPowerClass(new Material(shaPowerMet), 6+i, 1, 0f, false));
+            uiPowerMetClass.Add(new UIPowerClass(new Material(shaPowerMet), 6, 1, 0f, false));
 
             imgPowerMet[i].material = uiPowerMetClass[i].mat;
         }
 
-        //for (int i = 0; i < 5; i++)
-        //{
-        //    powerAnimCoroutine.Add(i, ChargeOnAnim(i, 1));
-        //}
+        uiPowerMetClass.Add(new UIPowerClass(new Material(shaReactorMet), 15, 15, 0f, false));
+
+        imgPowerMet[btnPowerBool.Count-1].material = uiPowerMetClass[btnPowerBool.Count-1].mat;
     }
 
     public void ChargeBtn(int i)
@@ -55,29 +74,49 @@ public class UIController : MonoBehaviour
 
     public void ChargeOn(int i, int speed)
     {
-        //if (powerAnimCoroutine == null)
-        //{
-            //uiPowerMetClass[i].mat.SetFloat("_Charge", 1f);
         uiPowerMetClass[i].Charge(true);
+        //uiPowerMetClass[uiPowerMetClass.Count - 1].Charge(true);
 
         powerAnimCoroutine[i] = ChargeOnAnim(i, 1);
 
         StartCoroutine(powerAnimCoroutine[i]);
 
-        //powerAnimCoroutine.Add(StartCoroutine(ChargeOnAnim(i, speed)));
-        //}
+        btnPowerBoolImage[i].sprite = uiSprite[1];
     }
 
     public void ChargeOff(int i)
     {
         Debug.Log("off: " + (i));
-        //if (powerAnimCoroutine != null)
-        //{
-        //uiPowerMetClass[i].mat.SetFloat("_Charge", 0f);
+
         uiPowerMetClass[i].Charge(false);
-            //uiPowerMetClass.R
+
         StopCoroutine(powerAnimCoroutine[i]);
+
+        btnPowerBoolImage[i].sprite = uiSprite[0];
+
+        //int chargeTrue = 0;
+
+        //for (int j = 0; j < uiPowerMetClass.Count - 1; j++)
+        //{
+        //    if (uiPowerMetClass[j].charge)
+        //    {
+        //        chargeTrue++;
+        //    }
         //}
+
+        //if (chargeTrue > 0)
+        //{
+        //    uiPowerMetClass[uiPowerMetClass.Count - 1].Charge(true);
+
+        //}else if (chargeTrue <= 0)
+        //{
+        //    uiPowerMetClass[uiPowerMetClass.Count - 1].Charge(false);
+        //}
+
+    }
+
+    private void BoolBtn(int i)
+    {
 
     }
 
@@ -91,7 +130,6 @@ public class UIController : MonoBehaviour
         while (time < crgAmt)
         {
 
-
             Mathf.MoveTowards(0, crgAmt, time);
 
             time += (Time.deltaTime) * (speed);
@@ -100,39 +138,111 @@ public class UIController : MonoBehaviour
 
         }
 
-        if (uiPowerMetClass[i].cur >= uiPowerMetClass[i].max)
+        if (uiPowerMetClass[i].cur >= uiPowerMetClass[i].max || uiPowerMetClass[btnPowerBool.Count - 1].cur <= 0)
         {
             ChargeOff(i);
         }
-        else if (uiPowerMetClass[i].cur < uiPowerMetClass[i].max)
+        else if (uiPowerMetClass[i].cur < uiPowerMetClass[i].max && uiPowerMetClass[btnPowerBool.Count - 1].cur > 0)
         {
             uiPowerMetClass[i].cur++;
+            uiPowerMetClass[uiPowerMetClass.Count - 1].cur--;
 
             uiPowerMetClass[i].mat.SetFloat("_PowerCur", uiPowerMetClass[i].cur);
+            uiPowerMetClass[uiPowerMetClass.Count - 1].mat.SetFloat("_PowerCur", uiPowerMetClass[uiPowerMetClass.Count - 1].cur);
+
+            //shaReactorMet[btnPowerBool.Count - 1].mat.SetFloat("_PowerCur", uiPowerMetClass[i].cur);
 
             ChargeOn(i, speed);
             //powerAnimCoroutine.Add(StartCoroutine(ChargeOnAnim(i, speed)));
         }
     }
 
-    private IEnumerator VentAnim(int i)
+    public void VentBtn()
+    {
+        for (int i = 0; i < uiPowerMetClass.Count - 1; i++)
+        {
+           uiPowerMetClass[i].Charge(false);
+            StopCoroutine(powerAnimCoroutine[i]);
+        }
+
+        StartCoroutine(VentAnim());
+    }
+
+    private IEnumerator VentAnim()
     {
         float time = 0;
 
         float speed = 1;
 
-        while (time < 1)
+        float crgAmt = 5f;
+
+        while (time < crgAmt)
         {
-            Mathf.MoveTowards(0, 1, time);
+            Mathf.MoveTowards(0, crgAmt, time);
 
             time += (Time.deltaTime) * (speed);
 
-            yield return null;
+            for (int i = 0; i < uiPowerMetClass.Count - 1; i++)
+            {
+                if (uiPowerMetClass[i].cur > 1)
+                {
+                    uiPowerMetClass[i].cur--;
+                    uiPowerMetClass[uiPowerMetClass.Count - 1].cur++;
 
+                    uiPowerMetClass[i].mat.SetFloat("_PowerCur", uiPowerMetClass[i].cur);
+                    uiPowerMetClass[uiPowerMetClass.Count - 1].mat.SetFloat("_PowerCur", uiPowerMetClass[uiPowerMetClass.Count - 1].cur);
+
+                    //Mathf.MoveTowards(0, crgAmt, time);
+                    //time += (Time.deltaTime) * (speed);
+
+                    yield return new WaitForSeconds(.5f);
+                }
+            }
+        }
+    }
+
+    public void FrequancyTune(float speed)
+    {
+        frequancyFlt = frequancyFlt + speed; //(360 * speed);
+
+        if (frequancyFlt >= 360 * 5)
+        {
+            frequancyFlt = 360 * 5;
+        }
+        else if (frequancyFlt <= 0)
+        {
+            frequancyFlt = 0;
         }
 
-        uiPowerMetClass[i].cur = 1;
+        //float multi = Mathf.Pow(100, 3);
 
-        uiPowerMetClass[i].UpdateMat();
+        //float roundedFrequancy = MathF.Round(frequancyFlt * multi) / multi;
+
+        frequancyTrans.rotation = Quaternion.Euler(0f, 0f, frequancyFlt * -1);
+
+        frequancyTMP.text = frequancyFlt.ToString();
+
+        //frequancyFlt = roundedFrequancy;
+
+        float normF = tunerTrans[1].localPosition.x / tunerTrans[2].localPosition.x;
+
+        tunerTrans[0].localPosition = Vector2.Lerp(tunerTrans[1].localPosition, tunerTrans[2].localPosition, frequancyFlt/(360*5));
+
+
+    }
+
+    public void BtnScannerCloke()
+    {
+        //cloke the ship
+    }
+
+    public void BtnRepair()
+    {
+        //repair player ship
+    }
+
+    public void SignalGhost()
+    {
+        //create a signal elseware
     }
 }
