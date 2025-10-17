@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
+using Random = UnityEngine.Random;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 using TMPro;
 using System.Numerics;
 using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 public class UIController : MonoBehaviour
 {
@@ -38,6 +40,18 @@ public class UIController : MonoBehaviour
     private float frequancyFlt = 0f;
 
     [SerializeField] List<Transform> tunerTrans = new List<Transform>();
+
+    [SerializeField] private Transform shipHit;
+    public AnimationCurve shipHitCurve;
+    private Coroutine shipHitCo;
+
+    [SerializeField] private Transform sensorLoad;
+    [SerializeField] private List<TextMeshProUGUI> sensorLoadInfo = new List<TextMeshProUGUI>();
+    [SerializeField] private Image sensorIcon;
+    [SerializeField] private List<Sprite> sensorLoadSprites = new List<Sprite>();
+
+    [SerializeField] private RectTransform compassRect;
+    [SerializeField] private TextMeshProUGUI speedometer;
 
     void Start()
     {
@@ -123,6 +137,7 @@ public class UIController : MonoBehaviour
     public IEnumerator ChargeOnAnim(int i, int speed)
     {
         Debug.Log("i: " + i);
+
         float time = 0;
 
         float crgAmt = 5f;
@@ -229,6 +244,65 @@ public class UIController : MonoBehaviour
         tunerTrans[0].localPosition = Vector2.Lerp(tunerTrans[1].localPosition, tunerTrans[2].localPosition, frequancyFlt/(360*5));
 
 
+    }
+
+    public void updateShipHit(float duration)
+    {
+        shipHitCo = StartCoroutine(ShipShake(duration));
+    }
+
+    private IEnumerator ShipShake(float duration)
+    {
+        Vector3 startPos = new Vector3(0f, 0f, 0f);
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            float strength = shipHitCurve.Evaluate(elapsedTime / duration);
+            shipHit.localPosition = startPos + Random.insideUnitSphere * strength;
+            yield return null;
+        }
+
+        shipHit.localPosition = startPos;
+    }
+
+    public void updateCompass(bool loaded, int icon, float port, float aft, float prow, float starboard)
+    {
+
+        if (loaded)
+        {
+            sensorIcon.sprite = sensorLoadSprites[icon];
+            sensorLoadInfo[0].text = port.ToString() + "/ 100";
+            sensorLoadInfo[1].text = aft.ToString() + "/ 100";
+            sensorLoadInfo[2].text = prow.ToString() + "/ 100";
+            sensorLoadInfo[3].text = starboard.ToString() + "/ 100";
+
+            sensorLoad.localPosition = new Vector2(0,0);
+        }
+        else if (!loaded)
+        {
+            sensorIcon.sprite = null;
+            sensorLoadInfo[0].text = null;
+            sensorLoadInfo[1].text = null;
+            sensorLoadInfo[2].text = null;
+            sensorLoadInfo[3].text = null;
+
+            sensorLoad.localPosition = new Vector2(2000, 0);
+        }
+
+
+    }
+
+
+    public void updateCompass(float angle)
+    {
+        compassRect.rotation = Quaternion.Euler(0, 0, angle);
+    }
+
+    public void updateSpeedometer(float speed)
+    {
+        speedometer.text = speed.ToString();
     }
 
     public void BtnScannerCloke()
