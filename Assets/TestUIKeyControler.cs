@@ -1,24 +1,18 @@
 using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 
 public class TestUIKeyControler : MonoBehaviour
 {
     public UIController uiContoller;
-    public Image gridBK;
-    public Material gridMat;
-    [SerializeField] private Shader gridShad;
+    //public Image gridBK;
+    //public Material gridMat;
+    //[SerializeField] private Shader gridShad;
     float rotation = 0;
     float movmentSpeed = 100;
 
-    void Start()
-    {
-        gridMat = new Material(gridShad);
-        gridBK.GetComponent<Image>().material = gridMat;
-
-        gridMat.SetFloat("_SpeedMovement", rotation);
-        gridMat.SetFloat("_SpeedRotation", movmentSpeed);
-    }
+    [SerializeField] Transform enemyShip;
 
     void Update()
     {
@@ -26,13 +20,13 @@ public class TestUIKeyControler : MonoBehaviour
         if (Input.GetKey(KeyCode.W))
         {
 
-            gridMat.SetFloat("_SpeedMovement", (++movmentSpeed / 100));
+            uiContoller.gridMat.SetFloat("_SpeedMovement", (++movmentSpeed / 100));
 
             uiContoller.updateSpeedometer(1000f);//this is a made up number
         }
         else if (Input.GetKey(KeyCode.S))
         {
-            gridMat.SetFloat("_SpeedMovement", (--movmentSpeed / 100));
+            uiContoller.gridMat.SetFloat("_SpeedMovement", (--movmentSpeed / 100));
 
             uiContoller.updateSpeedometer(-1000f);//this is a made up number
         }
@@ -52,15 +46,15 @@ public class TestUIKeyControler : MonoBehaviour
         //ship rotates
         if (Input.GetKey(KeyCode.A))
         {
-            gridMat.SetFloat("_SpeedRotation", (++rotation / 100));
+            uiContoller.gridMat.SetFloat("_SpeedRotation", (--rotation / 100));
 
-            uiContoller.updateCompass(++rotation / 100f);
+            uiContoller.updateCompass(--rotation / 100f);
         }
         if (Input.GetKey(KeyCode.D))
         {
-            gridMat.SetFloat("_SpeedRotation", (--rotation / 100));
+            uiContoller.gridMat.SetFloat("_SpeedRotation", (++rotation / 100));
 
-            uiContoller.updateCompass(--rotation / 100f);
+            uiContoller.updateCompass(++rotation / 100f);
         }
 
         //ship gets hit/takes dmg effect
@@ -85,6 +79,12 @@ public class TestUIKeyControler : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha3))//enemy ship
         {
             uiContoller.updateCompass(true, 2, 100, 100, 100, 100);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Debug.Log("space");
+            uiContoller.FireWeapon();
         }
     }
 }

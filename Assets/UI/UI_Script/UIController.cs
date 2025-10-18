@@ -53,11 +53,26 @@ public class UIController : MonoBehaviour
     [SerializeField] private RectTransform compassRect;
     [SerializeField] private TextMeshProUGUI speedometer;
 
+    [SerializeField] private Image gridBK;
+    public Material gridMat;
+    [SerializeField] private Shader gridShad;
+
+    [SerializeField] private Image weaponScreenImage;
+    public Material weaponScreenMat;
+    [SerializeField] private Shader weaponScreenShad;
+
+    [SerializeField] private Transform enemyShip;
+    [SerializeField] private Transform playerShip;
+
     void Start()
     {
         FrequancyTune(360f);
 
         StartPower();
+
+        StartGrid();
+
+        StartWeaponsScreen();
     }
 
     private void StartPower()
@@ -292,6 +307,79 @@ public class UIController : MonoBehaviour
         }
 
 
+    }
+
+    private void StartGrid()
+    {
+        gridMat = new Material(gridShad);
+        gridBK.GetComponent<Image>().material = gridMat;
+
+        gridMat.SetFloat("_SpeedMovement", 0f);
+        gridMat.SetFloat("_SpeedRotation", 0f);
+    }
+
+    public void StartWeaponsScreen()
+    {
+        weaponScreenMat = new Material(weaponScreenShad);
+        weaponScreenImage.GetComponent<Image>().material = weaponScreenMat;
+
+        weaponScreenMat.SetFloat("_RangeAngle", 45f);
+
+        weaponScreenMat.SetFloat("_RangeRadius", .5f);
+
+        weaponScreenMat.SetFloat("_LaserDegree", 45f);
+
+        weaponScreenMat.SetFloat("_Fire", 0f);
+
+        weaponScreenMat.SetFloat("_EnemyDistance", .5f);
+    }
+
+    public void UpdateWeaponsScreen(float rangeAngle, float rangeRadius)//update the weapon with this
+    {
+        weaponScreenMat = new Material(weaponScreenShad);
+        weaponScreenImage.GetComponent<Image>().material = weaponScreenMat;
+
+        weaponScreenMat.SetFloat("_RangeAngle", rangeAngle);
+
+        weaponScreenMat.SetFloat("_RangeRadius", rangeRadius);
+    }
+
+    public void FireWeapon()//find a enemy ship to shoot
+    {
+
+        //Vector2 targetDir = enemyShip.localPosition - playerShip.localPosition;
+
+        //float angle = Vector3.Angle(playerShip.localPosition, enemyShip.localPosition);
+
+        float angle = Vector3.Angle(new Vector3(playerShip.localPosition.x, playerShip.localPosition.y, 0f), new Vector3(enemyShip.localPosition.x, enemyShip.localPosition.y, 0f));
+        float sign = Mathf.Sign(Vector3.Dot(Vector3.zero, Vector3.Cross(new Vector3(playerShip.localPosition.x, playerShip.localPosition.y, 0f), new Vector3(enemyShip.localPosition.x, enemyShip.localPosition.y, 0f))));
+        angle =  angle * sign;
+
+        Debug.Log("angle: " + angle);
+
+        //float angle = Vector2.Angle(new Vector2(0, 0), enemyShip.localPosition);
+
+        float dist = Vector2.Distance(new Vector2(0, 0), enemyShip.localPosition);
+
+        dist = (dist - 0) / (970 - 0) - .05f;
+
+        StartCoroutine(FireWeaponC(angle, dist));
+
+    }
+
+    private IEnumerator FireWeaponC(float laserAngle, float enemyDistance)
+    {
+        //Debug.Log("enemyDistance: " + enemyDistance + ", laserAngle: " + laserAngle);
+
+        weaponScreenMat.SetFloat("_LaserDegree", laserAngle);
+
+        weaponScreenMat.SetFloat("_EnemyDistance", enemyDistance);
+
+        weaponScreenMat.SetFloat("_Fire", 1f);
+
+        yield return new WaitForSeconds(.1f);
+
+        weaponScreenMat.SetFloat("_Fire", 0f);
     }
 
 
