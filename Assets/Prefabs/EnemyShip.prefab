@@ -79,7 +79,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: df53f4b84e78c654fb0232982503fbfd, type: 3}
-  m_Color: {r: 0.5566038, g: 0.5566038, b: 0.5566038, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -199,11 +199,11 @@ MonoBehaviour:
   laserPrefab: {fileID: 968730919820449257, guid: 62faa2a5f451cff43a69075720685447, type: 3}
   firePoint: {fileID: 7467692870832686899}
   fireRate: 1
-  maxHealth: 3
+  maxHealth: 1
   thrustForce: 1.5
-  rotationSpeed: 10
-  maxSpeed: 2
-  orbitSpeed: 1
+  rotationSpeed: 1
+  maxSpeed: 0.25
+  orbitSpeed: 0.15
 --- !u!135 &7279727551215678412
 SphereCollider:
   m_ObjectHideFlags: 0

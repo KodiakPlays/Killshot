@@ -54,25 +54,12 @@ public class EnemyShip : MonoBehaviour
             // Calculate direction to player
             Vector3 directionToPlayer = (playerTransform.position - transform.position).normalized;
             
-            // Calculate the desired position (maintaining optimal distance)
-            Vector3 desiredPosition = playerTransform.position - directionToPlayer * optimalCombatDistance;
-            
-            // Add orbital movement
-            Vector3 orbitDirection = Vector3.Cross(Vector3.up, directionToPlayer);
-            desiredPosition += orbitDirection * Mathf.Sin(Time.time * orbitSpeed) * 5f;
-
-            // Move towards the desired position
-            Vector3 moveDirection = (desiredPosition - transform.position).normalized;
-            
-            // Apply thrust
-            rb.AddForce(moveDirection * thrustForce, ForceMode.Acceleration);
-
-            // Rotate to face the player
+            // Rotate to face the player (no movement towards player)
             Quaternion targetRotation = Quaternion.LookRotation(-directionToPlayer, Vector3.up);
             rb.MoveRotation(Quaternion.RotateTowards(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
 
             // Check if we're in combat range and facing the player
-            bool inCombatRange = distanceToPlayer <= detectionRadius && distanceToPlayer >= optimalCombatDistance * 0.5f;
+            bool inCombatRange = distanceToPlayer <= detectionRadius;
             bool facingPlayer = Vector3.Dot(-transform.forward, directionToPlayer) > 0.7f; // About 45 degrees or less
 
             // Fire at player if in combat range, facing player, and enough time has passed

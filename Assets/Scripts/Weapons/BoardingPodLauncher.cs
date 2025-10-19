@@ -9,7 +9,6 @@ public class BoardingPodLauncher : WeaponBase
     [SerializeField] private float podVelocity = 500f;
     [SerializeField] private float maxLaunchRange = 5000f;
     [SerializeField] private float minLaunchRange = 200f;
-    [SerializeField] private float reloadTime = 10f;
     
     private bool isLoaded = false;
     private Transform currentTarget;

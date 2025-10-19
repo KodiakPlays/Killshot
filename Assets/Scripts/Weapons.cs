@@ -1,77 +1,126 @@
-using Unity.Mathematics;
 using UnityEngine;
-// Add this if Laser is in the same namespace, otherwise adjust as needed
 
-
-public class Weapons : MonoBehaviour
+public class Weapons : WeaponBase
 {
+    [Header("Weapon Settings")]
     public GameObject laserPrefab;
-    public Transform firePoint; // Assign in inspector or set to ship's position
-    public int maxAmmo = 5;
-    public float rechargeTime = 3f; // Time to fully recharge
-    public float fireRate = 0.25f; // Minimum time between shots
+    public Transform firePoint;
+    public float laserSpeed = 50f;
+    
+    [Header("Power Integration")]
+    public float minPowerToFire = 0.2f;
 
-    private int currentAmmo;
-    private float lastFireTime;
     private bool isRecharging;
     private float rechargeTimer;
 
-    void Start()
+    protected override void Start()
     {
-        currentAmmo = maxAmmo;
-        isRecharging = false;
-        rechargeTimer = 0f;
+        base.Start();
+        
+        if (firePoint == null)
+        {
+            firePoint = transform;
+        }
     }
 
     void Update()
     {
-        // Fire if Space (keyboard) or X (controller) is pressed
-        bool fireInput = Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.JoystickButton2); // X is usually JoystickButton2
-        if (fireInput && currentAmmo > 0 && Time.time - lastFireTime > fireRate && !isRecharging)
-        {
-            FireLaser();
-        }
-
-        // Start recharge if ammo depleted
-        if (currentAmmo <= 0 && !isRecharging)
-        {
-            isRecharging = true;
-            rechargeTimer = 0f;
-        }
-
-        // Handle recharge
         if (isRecharging)
         {
             rechargeTimer += Time.deltaTime;
-            if (rechargeTimer >= rechargeTime)
+            if (rechargeTimer >= reloadTime)
             {
                 currentAmmo = maxAmmo;
                 isRecharging = false;
             }
         }
+        else if (currentAmmo <= 0)
+        {
+            isRecharging = true;
+            rechargeTimer = 0f;
+        }
+    }
+
+    public bool TryFire(float weaponPowerEfficiency)
+    {
+        if (currentAmmo <= 0 || 
+            Time.time - lastFireTime < fireRate || 
+            isRecharging || 
+            weaponPowerEfficiency < minPowerToFire ||
+            laserPrefab == null)
+        {
+            return false;
+        }
+
+        FireLaser();
+        return true;
     }
 
     void FireLaser()
     {
         lastFireTime = Time.time;
         currentAmmo--;
-        Vector3 spawnPos = firePoint ? firePoint.position : transform.position;
-        Quaternion spawnRot = firePoint ? firePoint.rotation : transform.rotation;
-        GameObject laserObj = Instantiate(laserPrefab, spawnPos, quaternion.identity);
-        Laser laser = laserObj.GetComponent<Laser>();
-        if (laser != null)
+        
+        // Get spawn position and fire direction
+        Vector3 spawnPos = firePoint.position;
+        Vector3 fireDirection = firePoint.forward;
+        
+        // Instantiate laser
+        GameObject laser = Instantiate(laserPrefab, spawnPos, Quaternion.LookRotation(fireDirection));
+        
+        // Get or add Rigidbody
+        Rigidbody rb = laser.GetComponent<Rigidbody>();
+        if (rb == null)
         {
-            laser.Fire(firePoint ? firePoint.forward : transform.forward, false);  // false indicates player projectile
+            rb = laser.AddComponent<Rigidbody>();
+            rb.useGravity = false;
         }
-        else
-        {
-            // fallback: apply velocity directly if no Laser script
-            Rigidbody rb = laserObj.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                rb.linearVelocity = (firePoint ? firePoint.forward : transform.forward) * 30f;
-            }
-            Destroy(laserObj, 3f);
-        }
+        
+        // Apply impulse force
+        rb.AddForce(fireDirection * laserSpeed, ForceMode.Impulse);
+        
+        // Set tag for collision detection
+        laser.tag = "PlayerProjectile";
+        
+        // Destroy after 5 seconds
+        Destroy(laser, 5f);
     }
+
+    // Implement the abstract Fire method from WeaponBase
+    public override void Fire(Vector3 target)
+    {
+        if (!CanFire()) return;
+        
+        lastFireTime = Time.time;
+        currentAmmo--;
+        
+        // Calculate direction to target
+        Vector3 fireDirection = (target - firePoint.position).normalized;
+        
+        // Instantiate laser
+        GameObject laser = Instantiate(laserPrefab, firePoint.position, Quaternion.LookRotation(fireDirection));
+        
+        // Get or add Rigidbody
+        Rigidbody rb = laser.GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = laser.AddComponent<Rigidbody>();
+            rb.useGravity = false;
+        }
+        
+        // Apply impulse force
+        rb.AddForce(fireDirection * laserSpeed, ForceMode.Impulse);
+        
+        // Set tag for collision detection
+        laser.tag = "PlayerProjectile";
+        
+        // Destroy after 5 seconds
+        Destroy(laser, 5f);
+    }
+
+    // Public getters for UI
+    public int GetCurrentAmmo() => currentAmmo;
+    public int GetMaxAmmo() => maxAmmo;
+    public bool IsRecharging() => isRecharging;
+    public float GetRechargeProgress() => isRecharging ? (rechargeTimer / reloadTime) : 1f;
 }

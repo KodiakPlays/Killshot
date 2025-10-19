@@ -9,7 +9,6 @@ public class MissileLauncher : WeaponBase
     [SerializeField] private float lockOnTime = 2f;
     [SerializeField] private float minLockRange = 500f;
     [SerializeField] private float maxLockRange = 25000f;
-    [SerializeField] private float reloadTime = 5f;
     
     private Transform[] currentTargets;
     private bool[] tubeLoaded;

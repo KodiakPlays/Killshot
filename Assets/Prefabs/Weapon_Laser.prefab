@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: -637268337621829029}
   m_Layer: 0
   m_Name: Weapon_Laser
-  m_TagString: Untagged
+  m_TagString: PlayerProjectile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -28,8 +28,8 @@ Transform:
   m_GameObject: {fileID: 968730919820449257}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.016529275, y: 0.032234002, z: 0.032234002}
+  m_LocalPosition: {x: -0.00037801, y: 0, z: 0}
+  m_LocalScale: {x: 0.008055542, y: 0.01570924, z: 0.01570924}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4514634905619911881}
@@ -74,8 +74,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 039387337feeda54988c3db6cec31cb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 30
-  lifeTime: 3
+  speed: 10
+  lifeTime: 30
   damage: 20
 --- !u!65 &-637268337621829029
 BoxCollider:
@@ -96,8 +96,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 11.733859, y: 1, z: 3.1976817}
-  m_Center: {x: -0.06947555, y: 0, z: 8.765459}
+  m_Size: {x: 11.733859, y: 1, z: 12.174532}
+  m_Center: {x: -0.069475345, y: 0, z: 4.277032}
 --- !u!1 &8546458114973754349
 GameObject:
   m_ObjectHideFlags: 0

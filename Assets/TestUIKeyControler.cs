@@ -22,31 +22,57 @@ public class TestUIKeyControler : MonoBehaviour
 
     void Update()
     {
+        // Get PlayerShip reference for actual values
+        PlayerShip playerShip = FindFirstObjectByType<PlayerShip>();
+        
         //increase speed
         if (Input.GetKey(KeyCode.W))
         {
-
             gridMat.SetFloat("_SpeedMovement", (++movmentSpeed / 100));
 
-            uiContoller.updateSpeedometer(1000f);//this is a made up number
+            // Get actual speed from PlayerShip's Rigidbody if available
+            float actualSpeed = 0f;
+            if (playerShip != null)
+            {
+                Rigidbody rb = playerShip.GetComponent<Rigidbody>();
+                actualSpeed = rb != null ? rb.linearVelocity.magnitude : 0f;
+            }
+            uiContoller.updateSpeedometer(actualSpeed);
         }
         else if (Input.GetKey(KeyCode.S))
         {
             gridMat.SetFloat("_SpeedMovement", (--movmentSpeed / 100));
 
-            uiContoller.updateSpeedometer(-1000f);//this is a made up number
+            // Get actual speed from PlayerShip's Rigidbody if available (negative for reverse)
+            float actualSpeed = 0f;
+            if (playerShip != null)
+            {
+                Rigidbody rb = playerShip.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    // Check if moving backward by comparing velocity direction with forward direction
+                    float forwardDot = Vector3.Dot(rb.linearVelocity.normalized, playerShip.transform.forward);
+                    actualSpeed = rb.linearVelocity.magnitude * (forwardDot < 0 ? -1 : 1);
+                }
+            }
+            uiContoller.updateSpeedometer(actualSpeed);
         }
 
-        //bring speedometer back to 0
-        if (Input.GetKeyUp(KeyCode.W))
+        //bring speedometer back to 0 or show current speed
+        if (Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.S))
         {
-
-            uiContoller.updateSpeedometer(0f);
-        }
-        else if (Input.GetKeyUp(KeyCode.S))
-        {
-
-            uiContoller.updateSpeedometer(0f);
+            // Show current actual speed instead of just 0
+            float currentSpeed = 0f;
+            if (playerShip != null)
+            {
+                Rigidbody rb = playerShip.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    float forwardDot = Vector3.Dot(rb.linearVelocity.normalized, playerShip.transform.forward);
+                    currentSpeed = rb.linearVelocity.magnitude * (forwardDot < 0 ? -1 : 1);
+                }
+            }
+            uiContoller.updateSpeedometer(currentSpeed);
         }
 
         //ship rotates
@@ -54,35 +80,73 @@ public class TestUIKeyControler : MonoBehaviour
         {
             gridMat.SetFloat("_SpeedRotation", (++rotation / 100));
 
-            uiContoller.updateCompass(++rotation / 100f);
+            // Get actual rotation from PlayerShip's Transform (Y-axis rotation for 3D)
+            float actualRotation = playerShip != null ? playerShip.transform.rotation.eulerAngles.y : rotation;
+            uiContoller.updateCompass(actualRotation);
         }
         if (Input.GetKey(KeyCode.D))
         {
             gridMat.SetFloat("_SpeedRotation", (--rotation / 100));
 
-            uiContoller.updateCompass(--rotation / 100f);
+            // Get actual rotation from PlayerShip's Transform (Y-axis rotation for 3D)
+            float actualRotation = playerShip != null ? playerShip.transform.rotation.eulerAngles.y : rotation;
+            uiContoller.updateCompass(actualRotation);
         }
 
         //ship gets hit/takes dmg effect
         if (Input.GetKeyDown(KeyCode.B))
         {
             uiContoller.updateShipHit(1f);
+            
+            // Apply damage to PlayerShip if available
+            if (playerShip != null)
+            {
+                playerShip.TakeDamage(10f); // Test damage amount
+            }
         }
 
-        //load in sensor info
+        // Test dodge mechanics
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            // Left dodge - PlayerShip handles this input internally
+            // UI could show dodge indicator here
+        }
+        else if (Input.GetKeyDown(KeyCode.E))
+        {
+            // Right dodge - PlayerShip handles this input internally
+            // UI could show dodge indicator here
+        }
+
+        // Test power management systems (PlayerShip handles these inputs internally)
+        // Alpha1, Alpha2, Alpha3 are used by PlayerShip for power management
+        // But we can still update UI to show power states
+        if (Input.GetKeyDown(KeyCode.Alpha1) && playerShip != null)
+        {
+            // Engine power toggle - could update UI to show engine status
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2) && playerShip != null)
+        {
+            // Weapon power toggle - could update UI to show weapon status
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha3) && playerShip != null)
+        {
+            // Sensor power toggle - could update UI to show sensor status
+        }
+
+        //load in sensor info (using different keys to avoid conflict with power management)
         if (Input.GetKeyDown(KeyCode.Alpha0))
         {
             uiContoller.updateCompass(false, 3, 0, 0, 0, 0);
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha1))//asteroid
+        else if (Input.GetKeyDown(KeyCode.Alpha4))//asteroid
         {
             uiContoller.updateCompass(true, 0, 25, 25, 25, 25);
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))//orbiter
+        else if (Input.GetKeyDown(KeyCode.Alpha5))//orbiter
         {
             uiContoller.updateCompass(true, 1, 50, 50, 50, 50);
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha3))//enemy ship
+        else if (Input.GetKeyDown(KeyCode.Alpha6))//enemy ship
         {
             uiContoller.updateCompass(true, 2, 100, 100, 100, 100);
         }

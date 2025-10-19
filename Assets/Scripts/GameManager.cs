@@ -2,15 +2,35 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public static GameManager Instance { get; private set; }
+    private void Awake()
     {
-        
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    public GameObject EnemyShipPrefab;
+
+    public void SpawnEnemyShip(Vector3 position, Quaternion rotation)
     {
-        
+        Instantiate(EnemyShipPrefab, position, rotation);
+    }
+
+    void Start()
+    {
+        // Initialize game state
+        //Spawn enemy ships randomly at start
+        for (int i = 0; i < 5; i++)
+        {
+            Vector3 randomPos = new Vector3(Random.Range(-50, 50), 0, Random.Range(-50, 50));
+            SpawnEnemyShip(randomPos, Quaternion.identity);
+        }
     }
 }
