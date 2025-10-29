@@ -10,9 +10,10 @@ public class ShipStability : MonoBehaviour
     [SerializeField] private float speedStabilityDrainMultiplier = 0.5f;
     [SerializeField] private float dodgeStabilityCost = 45f;
 
-    [Header("Turn Severity Thresholds")]
-    [SerializeField] private float greenZoneThreshold = 60f; // Degrees
-    [SerializeField] private float yellowZoneThreshold = 90f; // Degrees
+    [Header("Turn Severity Thresholds (degrees per frame)")]
+    [SerializeField] private float greenZoneThreshold = 1.0f; // Small heading changes within 60° total
+    [SerializeField] private float yellowZoneThreshold = 1.5f; // Moderate turns (~45° arcs)
+    [SerializeField] private float redZoneThreshold = 3.0f; // Large/fast turns (~90°+ or more)
 
     private bool canDodge = true;
     private float lastDodgeTime;
@@ -25,10 +26,18 @@ public class ShipStability : MonoBehaviour
 
     private void Update()
     {
-        // Recover stability over time when above 10%
-        if (currentStability > maxStability * 0.1f)
+        // Recover stability over time, but slower if in critical state
+        if (currentStability < maxStability)
         {
-            currentStability = Mathf.Min(maxStability, currentStability + stabilityRecoveryRate * Time.deltaTime);
+            float recoveryRate = stabilityRecoveryRate;
+            
+            // Slower recovery when in critical state (below 10%)
+            if (IsStabilityCritical())
+            {
+                recoveryRate *= 0.3f; // Much slower recovery when critical
+            }
+            
+            currentStability = Mathf.Min(maxStability, currentStability + recoveryRate * Time.deltaTime);
         }
     }
 
@@ -60,26 +69,48 @@ public class ShipStability : MonoBehaviour
         canDodge = true;
     }
 
-    public float CalculateTurnStabilityDrain(float turnAngle, float currentSpeed)
+    public float CalculateTurnStabilityDrain(float turnAngleThisFrame, float currentSpeed)
     {
-        float normalizedSpeed = Mathf.Clamp01(currentSpeed / 100f); // Assuming 100 is max speed
-        float angleSeverity;
-
-        if (Mathf.Abs(turnAngle) <= greenZoneThreshold)
+        // Normalize speed (assuming max operational speed around 100 units)
+        float normalizedSpeed = Mathf.Clamp01(currentSpeed / 100f);
+        
+        // Determine turn severity zone based on degrees per frame
+        float drainMultiplier;
+        string zone;
+        
+        if (turnAngleThisFrame <= greenZoneThreshold)
         {
-            angleSeverity = 0.5f;
+            // Green Zone: Small heading changes within 60°. Low risk.
+            drainMultiplier = 0.1f;
+            zone = "Green";
         }
-        else if (Mathf.Abs(turnAngle) <= yellowZoneThreshold)
+        else if (turnAngleThisFrame <= yellowZoneThreshold)
         {
-            angleSeverity = 1f;
+            // Yellow Zone: Moderate turns (~45° arcs). Higher stability drain.
+            drainMultiplier = 0.5f;
+            zone = "Yellow";
         }
         else
         {
-            angleSeverity = 2f;
+            // Red Zone: Large or fast turns (~90° or more). Extreme stability drain.
+            drainMultiplier = 2.0f;
+            zone = "Red";
         }
-
-        float drain = turnStabilityDrainMultiplier * angleSeverity * normalizedSpeed;
+        
+        // Sharp turns at high speed drain much more stability
+        float speedMultiplier = 1f + (normalizedSpeed * speedStabilityDrainMultiplier);
+        
+        // Calculate final drain
+        float drain = turnStabilityDrainMultiplier * drainMultiplier * speedMultiplier * Time.fixedDeltaTime;
+        
+        // Apply the drain
         currentStability = Mathf.Max(0, currentStability - drain);
+        
+        // Debug info for testing
+        if (drain > 0.01f)
+        {
+            Debug.Log($"Turn Zone: {zone}, Angle: {turnAngleThisFrame:F2}°, Speed: {currentSpeed:F1}, Drain: {drain:F3}, Stability: {currentStability:F1}%");
+        }
         
         return drain;
     }
@@ -92,5 +123,20 @@ public class ShipStability : MonoBehaviour
     public bool IsStabilityCritical()
     {
         return currentStability <= maxStability * 0.1f;
+    }
+
+    public float GetCurrentStability()
+    {
+        return currentStability;
+    }
+
+    public float GetMaxStability()
+    {
+        return maxStability;
+    }
+
+    public bool CanDodgeAgain()
+    {
+        return canDodge;
     }
 }

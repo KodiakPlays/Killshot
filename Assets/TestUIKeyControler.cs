@@ -8,8 +8,10 @@ public class TestUIKeyControler : MonoBehaviour
     public Image gridBK;
     public Material gridMat;
     [SerializeField] private Shader gridShad;
+    [SerializeField] private Transform cameraTransform; // Reference to camera for compass rotation
     float rotation = 0;
     float movmentSpeed = 100;
+    private float lastCameraRotation = 0f; // Track last camera rotation to detect changes
 
     void Start()
     {
@@ -18,6 +20,22 @@ public class TestUIKeyControler : MonoBehaviour
 
         gridMat.SetFloat("_SpeedMovement", rotation);
         gridMat.SetFloat("_SpeedRotation", movmentSpeed);
+        
+        // Auto-assign camera if not set
+        if (cameraTransform == null)
+        {
+            Camera mainCamera = Camera.main;
+            if (mainCamera != null)
+            {
+                cameraTransform = mainCamera.transform;
+            }
+        }
+        
+        // Initialize last camera rotation
+        if (cameraTransform != null)
+        {
+            lastCameraRotation = cameraTransform.eulerAngles.y;
+        }
     }
 
     void Update()
@@ -75,22 +93,30 @@ public class TestUIKeyControler : MonoBehaviour
             uiContoller.updateSpeedometer(currentSpeed);
         }
 
-        //ship rotates
+        //ship rotates - but compass only updates when camera rotates
         if (Input.GetKey(KeyCode.A))
         {
             gridMat.SetFloat("_SpeedRotation", (++rotation / 100));
-
-            // Get actual rotation from PlayerShip's Transform (Y-axis rotation for 3D)
-            float actualRotation = playerShip != null ? playerShip.transform.rotation.eulerAngles.y : rotation;
-            uiContoller.updateCompass(actualRotation);
+            // Compass update removed - now handled by camera rotation tracking
         }
         if (Input.GetKey(KeyCode.D))
         {
             gridMat.SetFloat("_SpeedRotation", (--rotation / 100));
+            // Compass update removed - now handled by camera rotation tracking
+        }
 
-            // Get actual rotation from PlayerShip's Transform (Y-axis rotation for 3D)
-            float actualRotation = playerShip != null ? playerShip.transform.rotation.eulerAngles.y : rotation;
-            uiContoller.updateCompass(actualRotation);
+        // Update compass based on camera rotation changes
+        if (cameraTransform != null)
+        {
+            float currentCameraRotation = cameraTransform.eulerAngles.y;
+            
+            // Check if camera rotation has changed
+            if (Mathf.Abs(Mathf.DeltaAngle(lastCameraRotation, currentCameraRotation)) > 0.1f)
+            {
+                // Camera has rotated, update compass
+                uiContoller.updateCompass(currentCameraRotation);
+                lastCameraRotation = currentCameraRotation;
+            }
         }
 
         //ship gets hit/takes dmg effect
