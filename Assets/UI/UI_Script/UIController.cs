@@ -52,27 +52,24 @@ public class UIController : MonoBehaviour
 
     [SerializeField] private RectTransform compassRect;
     [SerializeField] private TextMeshProUGUI speedometer;
-
-    [SerializeField] private Image gridBK;
-    public Material gridMat;
-    [SerializeField] private Shader gridShad;
-
-    [SerializeField] private Image weaponScreenImage;
-    public Material weaponScreenMat;
-    [SerializeField] private Shader weaponScreenShad;
-
-    [SerializeField] private Transform enemyShip;
-    [SerializeField] private Transform playerShip;
+    
+    [Header("Speedometer Settings")]
+    [SerializeField] private bool autoUpdateSpeedometer = true;
+    [SerializeField] private float speedometerUpdateRate = 0.1f; // Update every 0.1 seconds
+    private PlayerShip playerShipRef;
+    private Coroutine speedometerUpdateCoroutine;
 
     void Start()
     {
         FrequancyTune(360f);
 
         StartPower();
-
-        StartGrid();
-
-        StartWeaponsScreen();
+        
+        // Find PlayerShip reference and start automatic speedometer updates
+        if (autoUpdateSpeedometer)
+        {
+            StartSpeedometerUpdates();
+        }
     }
 
     private void StartPower()
@@ -309,79 +306,6 @@ public class UIController : MonoBehaviour
 
     }
 
-    private void StartGrid()
-    {
-        gridMat = new Material(gridShad);
-        gridBK.GetComponent<Image>().material = gridMat;
-
-        gridMat.SetFloat("_SpeedMovement", 0f);
-        gridMat.SetFloat("_SpeedRotation", 0f);
-    }
-
-    public void StartWeaponsScreen()
-    {
-        weaponScreenMat = new Material(weaponScreenShad);
-        weaponScreenImage.GetComponent<Image>().material = weaponScreenMat;
-
-        weaponScreenMat.SetFloat("_RangeAngle", 45f);
-
-        weaponScreenMat.SetFloat("_RangeRadius", .5f);
-
-        weaponScreenMat.SetFloat("_LaserDegree", 45f);
-
-        weaponScreenMat.SetFloat("_Fire", 0f);
-
-        weaponScreenMat.SetFloat("_EnemyDistance", .5f);
-    }
-
-    public void UpdateWeaponsScreen(float rangeAngle, float rangeRadius)//update the weapon with this
-    {
-        weaponScreenMat = new Material(weaponScreenShad);
-        weaponScreenImage.GetComponent<Image>().material = weaponScreenMat;
-
-        weaponScreenMat.SetFloat("_RangeAngle", rangeAngle);
-
-        weaponScreenMat.SetFloat("_RangeRadius", rangeRadius);
-    }
-
-    public void FireWeapon()//find a enemy ship to shoot
-    {
-
-        //Vector2 targetDir = enemyShip.localPosition - playerShip.localPosition;
-
-        //float angle = Vector3.Angle(playerShip.localPosition, enemyShip.localPosition);
-
-        float angle = Vector3.Angle(new Vector3(playerShip.localPosition.x, playerShip.localPosition.y, 0f), new Vector3(enemyShip.localPosition.x, enemyShip.localPosition.y, 0f));
-        float sign = Mathf.Sign(Vector3.Dot(Vector3.zero, Vector3.Cross(new Vector3(playerShip.localPosition.x, playerShip.localPosition.y, 0f), new Vector3(enemyShip.localPosition.x, enemyShip.localPosition.y, 0f))));
-        angle =  angle * sign;
-
-        Debug.Log("angle: " + angle);
-
-        //float angle = Vector2.Angle(new Vector2(0, 0), enemyShip.localPosition);
-
-        float dist = Vector2.Distance(new Vector2(0, 0), enemyShip.localPosition);
-
-        dist = (dist - 0) / (970 - 0) - .05f;
-
-        StartCoroutine(FireWeaponC(angle, dist));
-
-    }
-
-    private IEnumerator FireWeaponC(float laserAngle, float enemyDistance)
-    {
-        //Debug.Log("enemyDistance: " + enemyDistance + ", laserAngle: " + laserAngle);
-
-        weaponScreenMat.SetFloat("_LaserDegree", laserAngle);
-
-        weaponScreenMat.SetFloat("_EnemyDistance", enemyDistance);
-
-        weaponScreenMat.SetFloat("_Fire", 1f);
-
-        yield return new WaitForSeconds(.1f);
-
-        weaponScreenMat.SetFloat("_Fire", 0f);
-    }
-
 
     public void updateCompass(float angle)
     {
@@ -390,7 +314,91 @@ public class UIController : MonoBehaviour
 
     public void updateSpeedometer(float speed)
     {
-        speedometer.text = speed.ToString();
+        speedometer.text = speed.ToString("F1");
+    }
+    
+    private void StartSpeedometerUpdates()
+    {
+        // Find PlayerShip in scene
+        playerShipRef = FindFirstObjectByType<PlayerShip>();
+        
+        if (playerShipRef != null)
+        {
+            speedometerUpdateCoroutine = StartCoroutine(UpdateSpeedometerContinuously());
+        }
+        else
+        {
+            Debug.LogWarning("UIController: PlayerShip not found in scene. Speedometer will not auto-update.");
+        }
+    }
+    
+    private IEnumerator UpdateSpeedometerContinuously()
+    {
+        while (playerShipRef != null && autoUpdateSpeedometer)
+        {
+            UpdateSpeedometerFromPlayerShip();
+            yield return new WaitForSeconds(speedometerUpdateRate);
+        }
+    }
+    
+    private void UpdateSpeedometerFromPlayerShip()
+    {
+        if (playerShipRef != null)
+        {
+            Rigidbody shipRigidbody = playerShipRef.GetComponent<Rigidbody>();
+            if (shipRigidbody != null)
+            {
+                // Get velocity magnitude
+                float speed = shipRigidbody.linearVelocity.magnitude;
+                
+                // Optional: Determine if moving forward or backward
+                Vector3 forwardDirection = playerShipRef.transform.forward;
+                Vector3 velocityDirection = shipRigidbody.linearVelocity.normalized;
+                float forwardDot = Vector3.Dot(forwardDirection, velocityDirection);
+                
+                // Apply negative sign if moving backward
+                if (forwardDot < -0.1f)
+                {
+                    speed = -speed;
+                }
+                
+                updateSpeedometer(speed);
+            }
+        }
+    }
+    
+    // Manual method to force speedometer update (for external calls)
+    public void ForceSpeedometerUpdate()
+    {
+        if (playerShipRef != null)
+        {
+            UpdateSpeedometerFromPlayerShip();
+        }
+    }
+    
+    // Method to enable/disable automatic updates
+    public void SetAutoUpdateSpeedometer(bool enabled)
+    {
+        autoUpdateSpeedometer = enabled;
+        
+        if (enabled && speedometerUpdateCoroutine == null)
+        {
+            StartSpeedometerUpdates();
+        }
+        else if (!enabled && speedometerUpdateCoroutine != null)
+        {
+            StopCoroutine(speedometerUpdateCoroutine);
+            speedometerUpdateCoroutine = null;
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        // Clean up coroutine when object is destroyed
+        if (speedometerUpdateCoroutine != null)
+        {
+            StopCoroutine(speedometerUpdateCoroutine);
+        }
     }
 
     public void BtnScannerCloke()
