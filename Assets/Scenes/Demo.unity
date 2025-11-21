@@ -14407,53 +14407,9 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: turnRate
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: dodgeForce
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: dodgeDistance
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: angularDamping
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: cameraOffset.y
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: cameraOffset.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
       propertyPath: cameraTransform
       value: 
       objectReference: {fileID: 10016822}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: accelerationRate
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: cameraFollowSpeed
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: maxAngularVelocity
-      value: 1.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: rateOfAcceleration
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 220314847516505967, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: cameraRotationSpeed
-      value: 15
-      objectReference: {fileID: 0}
     - target: {fileID: 301545260371833355, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -14494,37 +14450,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2537618180004571778, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2828144650140381111, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4563302154394508690, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5726789993091877158, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6740532320193300111, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.7071068
-      objectReference: {fileID: 0}
-    - target: {fileID: 6740532320193300111, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 90
-      objectReference: {fileID: 0}
     - target: {fileID: 8267084971624876295, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
       propertyPath: m_Name
       value: PlayerShip
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: 4410427133432821914, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
+    m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a27f518c2eef8884aae04b26984506b5, type: 3}

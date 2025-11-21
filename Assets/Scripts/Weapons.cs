@@ -1,126 +1,123 @@
 using UnityEngine;
 
-public class Weapons : WeaponBase
+/// <summary>
+/// LEGACY COMPATIBILITY WRAPPER
+/// This class maintains backward compatibility with existing code.
+/// For new implementations, use WeaponManager with specific weapon types (LaserWeapon, Macrocannon, etc.)
+/// 
+/// This wrapper delegates to a LaserWeapon instance for actual functionality.
+/// </summary>
+[System.Obsolete("Use WeaponManager with LaserWeapon instead for modular weapon system")]
+public class Weapons : MonoBehaviour
 {
-    [Header("Weapon Settings")]
+    [Header("Legacy Weapon Settings - Use LaserWeapon Instead")]
     public GameObject laserPrefab;
     public Transform firePoint;
     public float laserSpeed = 50f;
     
     [Header("Power Integration")]
     public float minPowerToFire = 0.2f;
+    
+    [Header("Weapon Stats")]
+    public int maxAmmo = 100;
+    public float reloadTime = 3f;
 
-    private bool isRecharging;
-    private float rechargeTimer;
+    // Internal LaserWeapon instance for delegation
+    private LaserWeapon laserWeapon;
+    private bool isInitialized = false;
 
-    protected override void Start()
+    void Start()
     {
-        base.Start();
+        InitializeLaserWeapon();
+    }
+
+    /// <summary>
+    /// Initialize the internal LaserWeapon component
+    /// </summary>
+    private void InitializeLaserWeapon()
+    {
+        if (isInitialized) return;
+
+        // Add LaserWeapon component if it doesn't exist
+        laserWeapon = GetComponent<LaserWeapon>();
+        if (laserWeapon == null)
+        {
+            laserWeapon = gameObject.AddComponent<LaserWeapon>();
+        }
+
+        isInitialized = true;
         
-        if (firePoint == null)
-        {
-            firePoint = transform;
-        }
+        Debug.LogWarning("Weapons.cs is deprecated. Migrating to modular LaserWeapon. Please use WeaponManager for new implementations.");
     }
 
-    void Update()
-    {
-        if (isRecharging)
-        {
-            rechargeTimer += Time.deltaTime;
-            if (rechargeTimer >= reloadTime)
-            {
-                currentAmmo = maxAmmo;
-                isRecharging = false;
-            }
-        }
-        else if (currentAmmo <= 0)
-        {
-            isRecharging = true;
-            rechargeTimer = 0f;
-        }
-    }
-
+    /// <summary>
+    /// Try to fire the laser weapon with power efficiency check
+    /// </summary>
     public bool TryFire(float weaponPowerEfficiency)
     {
-        if (currentAmmo <= 0 || 
-            Time.time - lastFireTime < fireRate || 
-            isRecharging || 
-            weaponPowerEfficiency < minPowerToFire ||
-            laserPrefab == null)
+        if (!isInitialized) InitializeLaserWeapon();
+        
+        if (laserWeapon != null)
         {
-            return false;
+            return laserWeapon.TryFire(weaponPowerEfficiency);
         }
 
-        FireLaser();
-        return true;
+        return false;
     }
 
-    void FireLaser()
+    /// <summary>
+    /// Fire at a specific target (legacy compatibility)
+    /// </summary>
+    public void Fire(Vector3 target)
     {
-        lastFireTime = Time.time;
-        currentAmmo--;
+        if (!isInitialized) InitializeLaserWeapon();
         
-        // Get spawn position and fire direction
-        Vector3 spawnPos = firePoint.position;
-        Vector3 fireDirection = firePoint.forward;
-        
-        // Instantiate laser
-        GameObject laser = Instantiate(laserPrefab, spawnPos, Quaternion.LookRotation(fireDirection));
-        
-        // Get or add Rigidbody
-        Rigidbody rb = laser.GetComponent<Rigidbody>();
-        if (rb == null)
+        if (laserWeapon != null)
         {
-            rb = laser.AddComponent<Rigidbody>();
-            rb.useGravity = false;
+            laserWeapon.Fire(target);
         }
-        
-        // Apply impulse force
-        rb.AddForce(fireDirection * laserSpeed, ForceMode.Impulse);
-        
-        // Set tag for collision detection
-        laser.tag = "PlayerProjectile";
-        
-        // Destroy after 5 seconds
-        Destroy(laser, 5f);
     }
 
-    // Implement the abstract Fire method from WeaponBase
-    public override void Fire(Vector3 target)
+    /// <summary>
+    /// Check if weapon can fire
+    /// </summary>
+    public bool CanFire()
     {
-        if (!CanFire()) return;
-        
-        lastFireTime = Time.time;
-        currentAmmo--;
-        
-        // Calculate direction to target
-        Vector3 fireDirection = (target - firePoint.position).normalized;
-        
-        // Instantiate laser
-        GameObject laser = Instantiate(laserPrefab, firePoint.position, Quaternion.LookRotation(fireDirection));
-        
-        // Get or add Rigidbody
-        Rigidbody rb = laser.GetComponent<Rigidbody>();
-        if (rb == null)
-        {
-            rb = laser.AddComponent<Rigidbody>();
-            rb.useGravity = false;
-        }
-        
-        // Apply impulse force
-        rb.AddForce(fireDirection * laserSpeed, ForceMode.Impulse);
-        
-        // Set tag for collision detection
-        laser.tag = "PlayerProjectile";
-        
-        // Destroy after 5 seconds
-        Destroy(laser, 5f);
+        if (!isInitialized) InitializeLaserWeapon();
+        return laserWeapon != null && laserWeapon.CanFire();
     }
 
-    // Public getters for UI
-    public int GetCurrentAmmo() => currentAmmo;
-    public int GetMaxAmmo() => maxAmmo;
-    public bool IsRecharging() => isRecharging;
-    public float GetRechargeProgress() => isRecharging ? (rechargeTimer / reloadTime) : 1f;
+    // Public getters for UI (delegate to LaserWeapon)
+    public int GetCurrentAmmo()
+    {
+        if (!isInitialized) InitializeLaserWeapon();
+        return laserWeapon != null ? laserWeapon.GetCurrentAmmo() : 0;
+    }
+
+    public int GetMaxAmmo()
+    {
+        if (!isInitialized) InitializeLaserWeapon();
+        return laserWeapon != null ? laserWeapon.GetMaxAmmo() : maxAmmo;
+    }
+
+    public bool IsRecharging()
+    {
+        if (!isInitialized) InitializeLaserWeapon();
+        return laserWeapon != null && laserWeapon.IsRecharging();
+    }
+
+    public float GetRechargeProgress()
+    {
+        if (!isInitialized) InitializeLaserWeapon();
+        return laserWeapon != null ? laserWeapon.GetRechargeProgress() : 1f;
+    }
+
+    /// <summary>
+    /// Get the underlying LaserWeapon instance for migration
+    /// </summary>
+    public LaserWeapon GetLaserWeapon()
+    {
+        if (!isInitialized) InitializeLaserWeapon();
+        return laserWeapon;
+    }
 }
