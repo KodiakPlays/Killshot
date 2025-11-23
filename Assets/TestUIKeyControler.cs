@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class TestUIKeyControler : MonoBehaviour
 {
     public UIController uiContoller;
+    public Transform playerShipTrans;
     public Image gridBK;
     public Material gridMat;
     [SerializeField] private Shader gridShad;
@@ -18,8 +19,8 @@ public class TestUIKeyControler : MonoBehaviour
         gridMat = new Material(gridShad);
         gridBK.GetComponent<Image>().material = gridMat;
 
-        gridMat.SetFloat("_SpeedMovement", rotation);
-        gridMat.SetFloat("_SpeedRotation", movmentSpeed);
+        gridMat.SetFloat("_ShipRotation", playerShipTrans.rotation.x);
+        gridMat.SetVector("_ShipLocationV2", new Vector2(playerShipTrans.position.x, playerShipTrans.position.y));
         
         // Auto-assign camera if not set
         if (cameraTransform == null)
@@ -38,15 +39,26 @@ public class TestUIKeyControler : MonoBehaviour
         }
     }
 
-    void Update()
+    void FixedUpdate()
     {
+        gridMat.SetFloat("_ShipRotation", playerShipTrans.rotation.y);
+        gridMat.SetVector("_ShipLocationV2", playerShipTrans.position);
+    }
+
+        void Update()
+    {
+        if (Input.GetKey(KeyCode.R))//test for railgun
+        {
+            uiContoller.RailFire();//use this function for rail vfx
+        }
+
         // Get PlayerShip reference for actual values
         PlayerShip playerShip = FindFirstObjectByType<PlayerShip>();
         
         //increase speed
         if (Input.GetKey(KeyCode.W))
         {
-            gridMat.SetFloat("_SpeedMovement", (++movmentSpeed / 100));
+            //gridMat.SetFloat("_SpeedMovement", (++movmentSpeed / 100));
 
             // Get actual speed from PlayerShip's Rigidbody if available
             float actualSpeed = 0f;
@@ -59,7 +71,7 @@ public class TestUIKeyControler : MonoBehaviour
         }
         else if (Input.GetKey(KeyCode.S))
         {
-            gridMat.SetFloat("_SpeedMovement", (--movmentSpeed / 100));
+            //gridMat.SetFloat("_SpeedMovement", (--movmentSpeed / 100));
 
             // Get actual speed from PlayerShip's Rigidbody if available (negative for reverse)
             float actualSpeed = 0f;
@@ -93,17 +105,17 @@ public class TestUIKeyControler : MonoBehaviour
             uiContoller.updateSpeedometer(currentSpeed);
         }
 
-        //ship rotates - but compass only updates when camera rotates
-        if (Input.GetKey(KeyCode.A))
-        {
-            gridMat.SetFloat("_SpeedRotation", (++rotation / 100));
-            // Compass update removed - now handled by camera rotation tracking
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            gridMat.SetFloat("_SpeedRotation", (--rotation / 100));
-            // Compass update removed - now handled by camera rotation tracking
-        }
+        ////ship rotates - but compass only updates when camera rotates
+        //if (Input.GetKey(KeyCode.A))
+        //{
+        //    gridMat.SetFloat("_SpeedRotation", (++rotation / 100));
+        //    // Compass update removed - now handled by camera rotation tracking
+        //}
+        //if (Input.GetKey(KeyCode.D))
+        //{
+        //    gridMat.SetFloat("_SpeedRotation", (--rotation / 100));
+        //    // Compass update removed - now handled by camera rotation tracking
+        //}
 
         // Update compass based on camera rotation changes
         if (cameraTransform != null)

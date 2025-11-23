@@ -20,6 +20,9 @@ public class UIController : MonoBehaviour
     [SerializeField]
     private List<Image> imgPowerMet = new List<Image>();
 
+    [SerializeField]
+    private Material WeaponScreen;
+
     private List<UIPowerClass> uiPowerMetClass = new List<UIPowerClass>();
 
     public Dictionary<int, IEnumerator> powerAnimCoroutine = new Dictionary<int, IEnumerator>();
@@ -58,6 +61,8 @@ public class UIController : MonoBehaviour
     [SerializeField] private float speedometerUpdateRate = 0.1f; // Update every 0.1 seconds
     private PlayerShip playerShipRef;
     private Coroutine speedometerUpdateCoroutine;
+
+    public AnimationCurve animationCurve;
 
     void Start()
     {
@@ -183,6 +188,7 @@ public class UIController : MonoBehaviour
             //powerAnimCoroutine.Add(StartCoroutine(ChargeOnAnim(i, speed)));
         }
     }
+
 
     public void VentBtn()
     {
@@ -391,7 +397,37 @@ public class UIController : MonoBehaviour
             speedometerUpdateCoroutine = null;
         }
     }
-    
+
+    public void RailFire()
+    {
+        StartCoroutine(RailFireCo());
+    }
+
+    private IEnumerator RailFireCo()
+    {
+        float t = 0f;
+        float railStart = .5f;
+        float railEnd = .49f;
+        float speed = 5f;
+        float curWidth = 0f;
+
+        WeaponScreen.SetFloat("_RailWidth", railStart);
+        WeaponScreen.SetFloat("_FireRail", 1f);
+
+        while (t < 1f)
+        {
+            curWidth = Mathf.Lerp(railStart, railEnd, animationCurve.Evaluate(t));
+
+            WeaponScreen.SetFloat("_RailWidth", curWidth);
+
+            t += Time.deltaTime * speed;
+
+            yield return null;
+        }
+
+        WeaponScreen.SetFloat("_FireRail", 0f);
+    }
+
     private void OnDestroy()
     {
         // Clean up coroutine when object is destroyed
