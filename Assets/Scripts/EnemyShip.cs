@@ -29,7 +29,7 @@ public class EnemyShip : MonoBehaviour
         {
             rb = gameObject.AddComponent<Rigidbody>();
             rb.useGravity = false;
-            rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
         }
 
         // Find the player
@@ -55,12 +55,12 @@ public class EnemyShip : MonoBehaviour
             Vector3 directionToPlayer = (playerTransform.position - transform.position).normalized;
             
             // Rotate to face the player (no movement towards player)
-            Quaternion targetRotation = Quaternion.LookRotation(-directionToPlayer, Vector3.up);
+            Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, -directionToPlayer);
             rb.MoveRotation(Quaternion.RotateTowards(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
 
             // Check if we're in combat range and facing the player
             bool inCombatRange = distanceToPlayer <= detectionRadius;
-            bool facingPlayer = Vector3.Dot(-transform.forward, directionToPlayer) > 0.7f; // About 45 degrees or less
+            bool facingPlayer = Vector3.Dot(transform.up, directionToPlayer) > 0.7f; // About 45 degrees or less
 
             // Fire at player if in combat range, facing player, and enough time has passed
             if (inCombatRange && facingPlayer && Time.time - lastFireTime > fireRate)
@@ -70,11 +70,11 @@ public class EnemyShip : MonoBehaviour
         }
 
         // Apply speed limit
-        Vector3 horizontalVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+        Vector3 horizontalVelocity = new Vector3(rb.linearVelocity.x, rb.linearVelocity.y, 0);
         if (horizontalVelocity.magnitude > maxSpeed)
         {
             horizontalVelocity = horizontalVelocity.normalized * maxSpeed;
-            rb.linearVelocity = new Vector3(horizontalVelocity.x, rb.linearVelocity.y, horizontalVelocity.z);
+            rb.linearVelocity = new Vector3(horizontalVelocity.x, horizontalVelocity.y, rb.linearVelocity.z);
         }
     }
 

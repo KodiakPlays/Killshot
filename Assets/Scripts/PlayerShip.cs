@@ -52,7 +52,7 @@ public class PlayerShip : MonoBehaviour
         {
             rb = gameObject.AddComponent<Rigidbody>();
             rb.useGravity = false;
-            rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            rb.constraints = RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY;
             rb.linearDamping = 0;
             rb.angularDamping = 0;
         }
@@ -309,13 +309,13 @@ public class PlayerShip : MonoBehaviour
             if (t >= 1f)
             {
                 isDodging = false;              // Apply forward movement velocity after dodge completes
-                rb.linearVelocity = transform.forward * currentSpeed;
+                rb.linearVelocity = transform.up * currentSpeed;
             }
         }
         else
         {
             // Apply normal forward/backward movement
-            rb.linearVelocity = transform.forward * currentSpeed;
+            rb.linearVelocity = transform.up * currentSpeed;
         }
 
         // Handle A/D input for turning
@@ -341,7 +341,7 @@ public class PlayerShip : MonoBehaviour
         if (Mathf.Abs(currentTurnSpeed) > 0.01f)
         {
             float rotationThisFrame = currentTurnSpeed * Time.fixedDeltaTime;
-            rb.MoveRotation(rb.rotation * Quaternion.Euler(0, rotationThisFrame, 0));
+            rb.MoveRotation(rb.rotation * Quaternion.Euler(0, 0, -rotationThisFrame));
             
             // Calculate stability drain based on turn severity and current speed
             stability.CalculateTurnStabilityDrain(Mathf.Abs(rotationThisFrame), Mathf.Abs(currentSpeed));
@@ -358,7 +358,7 @@ public class PlayerShip : MonoBehaviour
             
             // Lock camera rotation to ship rotation immediately
             Vector3 cameraEuler = cameraTransform.eulerAngles;
-            cameraEuler.y = transform.eulerAngles.y;
+            cameraEuler.z = transform.eulerAngles.z;
             cameraTransform.eulerAngles = cameraEuler;
         }
 
@@ -378,7 +378,7 @@ public class PlayerShip : MonoBehaviour
             Debug.Log($"=== MOVEMENT DEBUG ===");
             Debug.Log($"Engine Power: {enginePower:F2} | Speed: {currentSpeed:F1} ({speedBars:F1} bars) | Target: {targetSpeed:F1}");
             Debug.Log($"Turn Speed: {currentTurnSpeed:F1}°/s | Target: {targetTurnSpeed:F1}°/s | Max Turn Rate: {turnRate:F1}°/s");
-            Debug.Log($"Ship Rotation: {transform.eulerAngles.y:F1}° | Camera Rotation: {(cameraTransform != null ? cameraTransform.eulerAngles.y.ToString("F1") : "No Camera")}°");
+            Debug.Log($"Ship Rotation: {transform.eulerAngles.z:F1}° | Camera Rotation: {(cameraTransform != null ? cameraTransform.eulerAngles.z.ToString("F1") : "No Camera")}°");
             Debug.Log($"Ship Position: {transform.position} | Camera Position: {(cameraTransform != null ? cameraTransform.position.ToString() : "No Camera")}");
             Debug.Log($"Stability: {stabilityPercent:F1}% | Can Dodge: {stability.CanDodgeAgain()} | Critical: {stability.IsStabilityCritical()}");
             Debug.Log($"Weapon Power: {powerManager.GetSystemEfficiency("weapons"):F2} | Ammo: {(weapons != null ? weapons.GetCurrentAmmo() : 0)} | Override: {testMode_IgnoreWeaponPower}");

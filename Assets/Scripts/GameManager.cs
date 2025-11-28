@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviour
         //Spawn enemy ships randomly at start
         for (int i = 0; i < 5; i++)
         {
-            Vector3 randomPos = new Vector3(Random.Range(-50, 50), 0, Random.Range(-50, 50));
+            Vector3 randomPos = new Vector3(Random.Range(-50, 50), Random.Range(-50, 50), 0);
             SpawnEnemyShip(randomPos, Quaternion.identity);
         }
     }

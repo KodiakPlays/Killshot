@@ -9,7 +9,8 @@ public enum WeaponType
     Macrocannon,
     Missile,
     PointDefense,
-    BoardingPod
+    BoardingPod,
+    Railgun
 }
 
 /// <summary>
