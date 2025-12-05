@@ -16,7 +16,7 @@ public class PlayerShip : MonoBehaviour
     // Systems
     private PowerManager powerManager;
     private ShipStability stability;
-    private Weapons weapons;
+    private WeaponManager weaponManager;
     
     // Movement state
     private float currentSpeed; // Current forward/backward speed
@@ -72,10 +72,10 @@ public class PlayerShip : MonoBehaviour
             stability = gameObject.AddComponent<ShipStability>();
         }
 
-        weapons = GetComponent<Weapons>();
-        if (weapons == null)
+        weaponManager = GetComponent<WeaponManager>();
+        if (weaponManager == null)
         {
-            weapons = gameObject.AddComponent<Weapons>();
+            weaponManager = gameObject.AddComponent<WeaponManager>();
         }
 
         // Initialize camera reference if not set
@@ -169,7 +169,7 @@ public class PlayerShip : MonoBehaviour
         }
 
         // Handle weapon firing
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.LeftControl))
+        if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.LeftControl))
         {
             TryFireWeapons();
         }
@@ -212,21 +212,21 @@ public class PlayerShip : MonoBehaviour
 
     private void TryFireWeapons()
     {
-        if (weapons != null)
+        if (weaponManager != null)
         {
             float weaponPower = powerManager.GetSystemEfficiency("weapons");
             
             // Testing override - allow firing without power
             if (testMode_IgnoreWeaponPower)
             {
-                weapons.TryFire(1.0f); // Use maximum power for testing
+                weaponManager.FireActiveWeapon(transform.position + transform.forward * 1000f, 1.0f); // Use maximum power for testing
                 return;
             }
             
             // Normal power check - can only fire if weapons have some power (minimum 20% for emergency firing)
             if (weaponPower > 0.2f)
             {
-                weapons.TryFire(weaponPower);
+                weaponManager.FireActiveWeapon(transform.position + transform.forward * 1000f, weaponPower);
             }
             else
             {
@@ -381,7 +381,7 @@ public class PlayerShip : MonoBehaviour
             Debug.Log($"Ship Rotation: {transform.eulerAngles.z:F1}° | Camera Rotation: {(cameraTransform != null ? cameraTransform.eulerAngles.z.ToString("F1") : "No Camera")}°");
             Debug.Log($"Ship Position: {transform.position} | Camera Position: {(cameraTransform != null ? cameraTransform.position.ToString() : "No Camera")}");
             Debug.Log($"Stability: {stabilityPercent:F1}% | Can Dodge: {stability.CanDodgeAgain()} | Critical: {stability.IsStabilityCritical()}");
-            Debug.Log($"Weapon Power: {powerManager.GetSystemEfficiency("weapons"):F2} | Ammo: {(weapons != null ? weapons.GetCurrentAmmo() : 0)} | Override: {testMode_IgnoreWeaponPower}");
+            Debug.Log($"Weapon Power: {powerManager.GetSystemEfficiency("weapons"):F2} | Active Weapon: {(weaponManager != null ? weaponManager.GetActiveWeaponType().ToString() : "None")} | Override: {testMode_IgnoreWeaponPower}");
         }
     }
 }

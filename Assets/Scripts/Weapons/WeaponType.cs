@@ -10,7 +10,8 @@ public enum WeaponType
     Missile,
     PointDefense,
     BoardingPod,
-    Railgun
+    Railgun,
+    Broadside
 }
 
 /// <summary>
