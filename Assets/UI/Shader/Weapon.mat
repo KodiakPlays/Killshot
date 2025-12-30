@@ -40,19 +40,19 @@ Material:
     - _EnemyDistancePort: 0.3
     - _EnemyDistanceStar: 0.4
     - _FirePort: 0
-    - _FireRail: 1
+    - _FireRail: 0
     - _FireStar: 0
     - _LaserDegreePort: -27.27
     - _LaserDegreeStar: 14.78
     - _LaserWidthPort: 0.498
     - _LaserWidthStar: 0.498
-    - _RailWidth: 0.3
+    - _RailWidth: 0.48088804
     - _RangeAngle: 90
     - _RangeOpacity: 0.5
     - _RangeRadius: 0.5
     m_Colors:
     - _LaserColor: {r: 0.9963673, g: 1, b: 0, a: 0}
-    - _RailColor: {r: 1, g: 0, b: 0, a: 0}
+    - _RailColor: {r: 1, g: 0, b: 0, a: 1}
     - _RangeColor: {r: 0.8078431, g: 0.5960785, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

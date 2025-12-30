@@ -406,13 +406,15 @@ public class UIController : MonoBehaviour
     private IEnumerator RailFireCo()
     {
         float t = 0f;
-        float railStart = .5f;
-        float railEnd = .49f;
+        float railStart = .499f;
+        float railEnd = .48f;
         float speed = 5f;
         float curWidth = 0f;
 
         WeaponScreen.SetFloat("_RailWidth", railStart);
         WeaponScreen.SetFloat("_FireRail", 1f);
+
+        yield return new WaitForSeconds(1f);
 
         while (t < 1f)
         {
