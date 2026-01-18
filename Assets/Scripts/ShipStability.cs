@@ -19,9 +19,13 @@ public class ShipStability : MonoBehaviour
     private float lastDodgeTime;
     private const float DODGE_COOLDOWN = 0.5f; // Time between possible dodges
 
+    public UIController uiController;
+
     private void Start()
     {
         currentStability = maxStability;
+
+        uiController.StabilityMeterStart(currentStability, maxStability);
     }
 
     private void Update()
@@ -38,6 +42,8 @@ public class ShipStability : MonoBehaviour
             }
             
             currentStability = Mathf.Min(maxStability, currentStability + recoveryRate * Time.deltaTime);
+
+            uiController.StabilityMeterUpdate(currentStability);
         }
     }
 

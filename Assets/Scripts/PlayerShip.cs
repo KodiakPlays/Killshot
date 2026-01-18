@@ -3,6 +3,9 @@ using UnityEngine;
 [RequireComponent(typeof(ShipStability))]
 public class PlayerShip : MonoBehaviour
 {
+    [Header("Script Refrence")]
+    public UIController uiControler;
+
     [Header("Movement Settings")]
     [SerializeField] private float rateOfAcceleration = 50f; // Speed change per second
     [SerializeField] private float turnRate = 90f; // Degrees per second (1 decimal place precision)
@@ -360,6 +363,10 @@ public class PlayerShip : MonoBehaviour
             Vector3 cameraEuler = cameraTransform.eulerAngles;
             cameraEuler.z = transform.eulerAngles.z;
             cameraTransform.eulerAngles = cameraEuler;
+
+            uiControler.updateCompass(cameraEuler.z);
+            uiControler.WorldGridRotUpdate(cameraEuler.z);
+            uiControler.WorldGridLocUpdate(cameraTransform.position);
         }
 
         // Damage system disabled for now
