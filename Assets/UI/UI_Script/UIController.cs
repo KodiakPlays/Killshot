@@ -102,6 +102,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private Shader gridSha;
     [SerializeField] private Image gridImg;
     [SerializeField] private Camera sc;
+    private int worldZoom;
 
     [Header("Power Screen")]
     [SerializeField] private Shader powerNodeSha;
@@ -901,7 +902,20 @@ public class UIController : MonoBehaviour
 
     public void WorldGridLocUpdate(Vector2 shipV2)
     {
-        gridImg.material.SetVector("_ShipLocV2", (shipV2/100f));
+        if (worldZoom == 0)
+        {
+            gridImg.material.SetVector("_ShipLocV2", (shipV2 / 100f));
+        }
+        else if (worldZoom == 1)
+        {
+            gridImg.material.SetVector("_ShipLocV2", (shipV2 / 1000f));
+        }
+        else if (worldZoom == 2)
+        {
+            gridImg.material.SetVector("_ShipLocV2", (shipV2 / 5000f));
+        }
+
+
     }
 
     public void WorldGridRotUpdate(float r)
@@ -916,7 +930,7 @@ public class UIController : MonoBehaviour
         {
             gridImg.material.SetInt("_WorldView", 0);
             gridImg.material.SetVector("_CellSize", new Vector2(1,1));
-            gridImg.material.SetFloat("_GridAmmount", 2f);
+            gridImg.material.SetFloat("_GridAmmount", 5f);
             gridImg.material.SetFloat("_GridThickness", .02f);
 
             radarImg.material.SetFloat("_RadarRange", 1f);
@@ -924,12 +938,14 @@ public class UIController : MonoBehaviour
             screenWepGO.transform.localPosition = new Vector2(0f, 0f);
 
             sc.orthographicSize = 50f;
+
+            worldZoom = 0;
         }
         else if (i == 1)//spectral zoom 100x
         {
             gridImg.material.SetInt("_WorldView", 0);
             gridImg.material.SetVector("_CellSize", new Vector2(1, 1));
-            gridImg.material.SetFloat("_GridAmmount", 10f);
+            gridImg.material.SetFloat("_GridAmmount", 20f);
             gridImg.material.SetFloat("_GridThickness", .04f);
 
             radarImg.material.SetFloat("_RadarRange", 1f);
@@ -937,6 +953,8 @@ public class UIController : MonoBehaviour
             screenWepGO.transform.localPosition = new Vector2(10000f, 0f);
 
             sc.orthographicSize = 500f;
+
+            worldZoom = 1;
         }
         else if (i == 2)//spectral zoom 1000x
         {
@@ -950,6 +968,8 @@ public class UIController : MonoBehaviour
             screenWepGO.transform.localPosition = new Vector2(10000f, 0f);
 
             sc.orthographicSize = 5000f;
+
+            worldZoom = 2;
         }
 
     }
