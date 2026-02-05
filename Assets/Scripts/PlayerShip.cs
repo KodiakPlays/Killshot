@@ -8,7 +8,7 @@ public class PlayerShip : MonoBehaviour
 
     [Header("Movement Settings")]
     [SerializeField] private float rateOfAcceleration = 50f; // Speed change per second
-    [SerializeField] private float turnRate = 90f; // Degrees per second (1 decimal place precision)
+    [SerializeField] public float turnRate = 90f; // Degrees per second (1 decimal place precision)
     [SerializeField] private float dodgeDistance = 10f; // Distance to dodge left/right
     [SerializeField] private float dodgeDuration = 0.2f; // Time to complete dodge (quick but smooth)
 
@@ -23,7 +23,7 @@ public class PlayerShip : MonoBehaviour
     
     // Movement state
     private float currentSpeed; // Current forward/backward speed
-    private float targetSpeed; // Target speed based on input
+    public float targetSpeed; // Target speed based on input
     private float currentTurnSpeed; // Current turning speed
     private float targetTurnSpeed; // Target turning speed based on input
     
@@ -364,7 +364,7 @@ public class PlayerShip : MonoBehaviour
             cameraEuler.z = transform.eulerAngles.z;
             cameraTransform.eulerAngles = cameraEuler;
 
-            uiControler.updateCompass(cameraEuler.z);
+            uiControler.UpdateCompass(cameraEuler.z);
             uiControler.WorldGridRotUpdate(cameraEuler.z);
             uiControler.WorldGridLocUpdate(cameraTransform.position);
         }
