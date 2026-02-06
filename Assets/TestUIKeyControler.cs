@@ -67,7 +67,7 @@ public class TestUIKeyControler : MonoBehaviour
                 Rigidbody rb = playerShip.GetComponent<Rigidbody>();
                 actualSpeed = rb != null ? rb.linearVelocity.magnitude : 0f;
             }
-            uiContoller.updateSpeedometer(actualSpeed);
+            uiContoller.UpdateSpeedometer(actualSpeed);
         }
         else if (Input.GetKey(KeyCode.S))
         {
@@ -85,7 +85,7 @@ public class TestUIKeyControler : MonoBehaviour
                     actualSpeed = rb.linearVelocity.magnitude * (forwardDot < 0 ? -1 : 1);
                 }
             }
-            uiContoller.updateSpeedometer(actualSpeed);
+            uiContoller.UpdateSpeedometer(actualSpeed);
         }
 
         //bring speedometer back to 0 or show current speed
@@ -102,7 +102,7 @@ public class TestUIKeyControler : MonoBehaviour
                     currentSpeed = rb.linearVelocity.magnitude * (forwardDot < 0 ? -1 : 1);
                 }
             }
-            uiContoller.updateSpeedometer(currentSpeed);
+            uiContoller.UpdateSpeedometer(currentSpeed);
         }
 
         ////ship rotates - but compass only updates when camera rotates
@@ -126,7 +126,7 @@ public class TestUIKeyControler : MonoBehaviour
             if (Mathf.Abs(Mathf.DeltaAngle(lastCameraRotation, currentCameraRotation)) > 0.1f)
             {
                 // Camera has rotated, update compass
-                uiContoller.updateCompass(currentCameraRotation);
+                uiContoller.UpdateCompass(currentCameraRotation);
                 lastCameraRotation = currentCameraRotation;
             }
         }
@@ -174,19 +174,19 @@ public class TestUIKeyControler : MonoBehaviour
         //load in sensor info (using different keys to avoid conflict with power management)
         if (Input.GetKeyDown(KeyCode.Alpha0))
         {
-            uiContoller.updateCompass(false, 3, 0, 0, 0, 0);
+            uiContoller.UpdateCompass(false, 3, 0, 0, 0, 0);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha4))//asteroid
         {
-            uiContoller.updateCompass(true, 0, 25, 25, 25, 25);
+            uiContoller.UpdateCompass(true, 0, 25, 25, 25, 25);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha5))//orbiter
         {
-            uiContoller.updateCompass(true, 1, 50, 50, 50, 50);
+            uiContoller.UpdateCompass(true, 1, 50, 50, 50, 50);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha6))//enemy ship
         {
-            uiContoller.updateCompass(true, 2, 100, 100, 100, 100);
+            uiContoller.UpdateCompass(true, 2, 100, 100, 100, 100);
         }
     }
 }

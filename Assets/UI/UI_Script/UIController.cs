@@ -63,6 +63,9 @@ public class UIController : MonoBehaviour
     [SerializeField] private float speedometerUpdateRate = 0.1f; // Update every 0.1 seconds
     private PlayerShip playerShipRef;
     private Coroutine speedometerUpdateCoroutine;
+    [SerializeField] private Shader velocityMeterSha;
+    [SerializeField] private Image[] velocityMeterImg;
+    [SerializeField] private TextMeshProUGUI[] velocityMeterTMP;
 
     [Header("Stability Settings")]
     [SerializeField] private Shader stabilityShader;
@@ -99,6 +102,14 @@ public class UIController : MonoBehaviour
     [SerializeField] private Shader gridSha;
     [SerializeField] private Image gridImg;
     [SerializeField] private Camera sc;
+    private int worldZoom;
+
+    [Header("Power Screen")]
+    [SerializeField] private Shader powerNodeSha;
+    [SerializeField] private Image[] powerNodeImg;
+
+    [SerializeField] private List<int> powerState = new List<int>();
+
 
     public AnimationCurve animationCurve;
 
@@ -143,6 +154,8 @@ public class UIController : MonoBehaviour
         {
             BogeySpot(radarDegreeTest);
         }
+
+        UpdateVelocity();
 
     }
 
@@ -279,35 +292,133 @@ public class UIController : MonoBehaviour
         uiPowerMetClass.Add(new UIPowerClass(new Material(shaReactorMet), 15, 15, 0f, false));
 
         imgPowerMet[btnPowerBool.Count-1].material = uiPowerMetClass[btnPowerBool.Count-1].mat;
+
+        for (int i = 0; i < powerNodeImg.Length; i++)//power nodes
+        {
+            powerNodeImg[i].material = new Material(powerNodeSha);
+
+            powerNodeImg[i].material.SetInt("_On", 0);
+        }
+
+        for (int i = 0; i < btnPowerBool.Count - 1; i++)//power nodes
+        {
+            powerAnimCoroutine[i] = null;
+        }
+    }
+
+    private void PowerNodes(int i, int state)
+    {
+
+        if (state == 0) //turn off node
+        {
+            powerNodeImg[i].material.SetInt("_On", 0);
+            powerNodeImg[i].material.SetInt("_Charge", 0);
+            powerNodeImg[i].material.SetInt("_End", 0);
+            //powerNodeImg[i].material.SetInt("_Charge", 0);
+
+        }
+        else if(state > 0)
+        {
+            powerNodeImg[i].material.SetInt("_On", 1);
+        }
+
+        if (state == 1) //move left
+        {
+            powerNodeImg[i].material.SetInt("_Charge", 0);
+            powerNodeImg[i].material.SetFloat("_DegreeHor", 0);
+            powerNodeImg[i].material.SetInt("_End", 0);
+
+        }
+        else if (state == 2) //move left and charge Up
+        {
+            powerNodeImg[i].material.SetInt("_Charge", 1);
+            powerNodeImg[i].material.SetFloat("_DegreeVert", 270);
+            powerNodeImg[i].material.SetFloat("_DegreeHor", 0);
+
+            powerNodeImg[i].material.SetInt("_End", 0);
+        }
+        else if (state == 3) //move left and charge Up, end of chain
+        {
+            powerNodeImg[i].material.SetInt("_Charge", 1);
+            powerNodeImg[i].material.SetFloat("_DegreeVert", 270);
+            powerNodeImg[i].material.SetFloat("_DegreeHor", 0);
+
+            powerNodeImg[i].material.SetInt("_End", 1);
+        }
+
+        if (state == 4) //move right
+        {
+            powerNodeImg[i].material.SetInt("_Charge", 0);
+            powerNodeImg[i].material.SetFloat("_DegreeHor", 180);
+            powerNodeImg[i].material.SetInt("_End", 0);
+        }
+        else if (state == 5) //move left and charge Down
+        {
+            powerNodeImg[i].material.SetInt("_Charge", 1);
+            powerNodeImg[i].material.SetFloat("_DegreeVert", 90);
+            powerNodeImg[i].material.SetFloat("_DegreeHor", 180);
+
+            powerNodeImg[i].material.SetInt("_End", 0);
+        }
+        else if (state == 6) //move left and charge Down, end of chain
+        {
+            powerNodeImg[i].material.SetInt("_Charge", 1);
+            powerNodeImg[i].material.SetFloat("_DegreeVert", 90);
+            powerNodeImg[i].material.SetFloat("_DegreeHor", 180);
+
+            powerNodeImg[i].material.SetInt("_End", 1);
+        }
+
+        else if (state == 7) //reactor left
+        {
+            powerNodeImg[i].material.SetInt("_Charge", 1);
+            powerNodeImg[i].material.SetFloat("_DegreeVert", 90);
+            powerNodeImg[i].material.SetFloat("_DegreeHor", 0);
+
+            powerNodeImg[i].material.SetInt("_Reactor", 1);
+        }
+
+        else if (state == 8) //reactor right
+        {
+            powerNodeImg[i].material.SetInt("_Charge", 1);
+            powerNodeImg[i].material.SetFloat("_DegreeVert", 270);
+            powerNodeImg[i].material.SetFloat("_DegreeHor", 180);
+
+            powerNodeImg[i].material.SetInt("_Reactor", 1);
+        }
     }
 
     public void ChargeBtn(int i)
     {
-        if (uiPowerMetClass[i].charge == false)
+        if (!uiPowerMetClass[i].charge)
         {
-            ChargeOn(i,1);
+            ChargeOn(i);
         }
-        else if (uiPowerMetClass[i].charge == true)
+        else if (uiPowerMetClass[i].charge)
         {
             ChargeOff(i);
         }
     }
 
-    public void ChargeOn(int i, int speed)
+    public void ChargeOn(int i)
     {
         uiPowerMetClass[i].Charge(true);
         //uiPowerMetClass[uiPowerMetClass.Count - 1].Charge(true);
 
-        powerAnimCoroutine[i] = ChargeOnAnim(i, 1);
+        powerAnimCoroutine[i] = ChargeOnAnim(i);
 
         StartCoroutine(powerAnimCoroutine[i]);
 
         btnPowerBoolImage[i].sprite = uiSprite[1];
+
+        ChargeNodeCheck();
     }
 
     public void ChargeOff(int i)
     {
-        Debug.Log("off: " + (i));
+        //int lastCharge = 0;
+        //int noCharge = 0;
+        //Debug.Log("off: " + (i));
 
         uiPowerMetClass[i].Charge(false);
 
@@ -315,35 +426,112 @@ public class UIController : MonoBehaviour
 
         btnPowerBoolImage[i].sprite = uiSprite[0];
 
-        //int chargeTrue = 0;
+        ChargeNodeCheck();
 
-        //for (int j = 0; j < uiPowerMetClass.Count - 1; j++)
-        //{
-        //    if (uiPowerMetClass[j].charge)
-        //    {
-        //        chargeTrue++;
-        //    }
-        //}
-
-        //if (chargeTrue > 0)
-        //{
-        //    uiPowerMetClass[uiPowerMetClass.Count - 1].Charge(true);
-
-        //}else if (chargeTrue <= 0)
-        //{
-        //    uiPowerMetClass[uiPowerMetClass.Count - 1].Charge(false);
-        //}
 
     }
 
-    private void BoolBtn(int i)
+    private void ChargeNodeCheck()
     {
+        int lastCharge = 0;
+        int noCharge = 0;
 
+        PowerNodes(5, 7);
+
+        for (int j = 0; j < uiPowerMetClass.Count - 1; j++)//check each nod for the end of the line
+        {
+            if (uiPowerMetClass[j].charge)
+            {
+                lastCharge = j;
+
+                break;
+            }
+            else if (!uiPowerMetClass[j].charge)
+            {
+                PowerNodes(j, 0);
+                noCharge++;
+            }          
+        }
+
+        if (noCharge == uiPowerMetClass.Count - 1)//if there are no charges end the function
+        {
+            PowerNodes(5, 0);
+            return;
+        }
+
+        for (int j = lastCharge; j < uiPowerMetClass.Count - 1; j++)//add charge nodes where approreate
+        {
+            if (j != lastCharge)
+            {
+                if (!uiPowerMetClass[j].charge)
+                {
+                    PowerNodes(j, 1);
+                }
+                else if (uiPowerMetClass[j].charge)
+                {
+                    PowerNodes(j, 2);
+                }
+            }
+            else if (j == lastCharge)
+            {
+                PowerNodes(j, 3);
+            }
+        }
     }
 
-    public IEnumerator ChargeOnAnim(int i, int speed)
+    private void VentNodeCheck()
     {
-        Debug.Log("i: " + i);
+        int lastVent = 0;
+        int noVent = 0;
+
+        PowerNodes(5, 8);
+
+        for (int j = 0; j < uiPowerMetClass.Count - 1; j++)//check each nod for the end of the line
+        {
+            if (uiPowerMetClass[j].cur > 1)
+            {
+                lastVent = j;
+
+                break;
+            }
+            else if (uiPowerMetClass[j].cur <= 1)
+            {
+                PowerNodes(j, 0);
+                noVent++;
+            }
+        }
+
+        if (noVent == uiPowerMetClass.Count - 1)//if there are no charges end the function
+        {
+            PowerNodes(5, 0);
+            return;
+        }
+
+        for (int j = lastVent; j < uiPowerMetClass.Count - 1; j++)//add charge nodes where approreate
+        {
+            if (j != lastVent)
+            {
+                if (uiPowerMetClass[j].cur <= 1)
+                {
+                    PowerNodes(j, 4);
+                }
+                else if (uiPowerMetClass[j].cur > 1)
+                {
+                    PowerNodes(j, 5);
+                }
+            }
+            else if (j == lastVent)
+            {
+                PowerNodes(j, 6);
+            }
+        }
+    }
+
+    public IEnumerator ChargeOnAnim(int i)
+    {
+        //Debug.Log("i: " + i);
+
+        float speed = 1f;
 
         float time = 0;
 
@@ -372,20 +560,21 @@ public class UIController : MonoBehaviour
             uiPowerMetClass[i].mat.SetFloat("_PowerCur", uiPowerMetClass[i].cur);
             uiPowerMetClass[uiPowerMetClass.Count - 1].mat.SetFloat("_PowerCur", uiPowerMetClass[uiPowerMetClass.Count - 1].cur);
 
-            //shaReactorMet[btnPowerBool.Count - 1].mat.SetFloat("_PowerCur", uiPowerMetClass[i].cur);
-
-            ChargeOn(i, speed);
-            //powerAnimCoroutine.Add(StartCoroutine(ChargeOnAnim(i, speed)));
+            ChargeOn(i);
         }
     }
-
 
     public void VentBtn()
     {
         for (int i = 0; i < uiPowerMetClass.Count - 1; i++)
         {
+            if(powerAnimCoroutine[i] == null)
+            {
+                continue;
+            }
+
            uiPowerMetClass[i].Charge(false);
-            StopCoroutine(powerAnimCoroutine[i]);
+           StopCoroutine(powerAnimCoroutine[i]);
         }
 
         StartCoroutine(VentAnim());
@@ -420,6 +609,8 @@ public class UIController : MonoBehaviour
 
                     yield return new WaitForSeconds(.5f);
                 }
+
+                VentNodeCheck();
             }
         }
     }
@@ -475,7 +666,7 @@ public class UIController : MonoBehaviour
         shipHit.localPosition = startPos;
     }
 
-    public void updateCompass(bool loaded, int icon, float port, float aft, float prow, float starboard)
+    public void UpdateCompass(bool loaded, int icon, float port, float aft, float prow, float starboard)
     {
 
         if (loaded)
@@ -502,12 +693,12 @@ public class UIController : MonoBehaviour
 
     }
 
-    public void updateCompass(float angle)
+    public void UpdateCompass(float angle)
     {
         compassRect.rotation = Quaternion.Euler(0, 0, angle);
     }
 
-    public void updateSpeedometer(float speed)
+    public void UpdateSpeedometer(float speed)
     {
         speedometer.text = speed.ToString("F1");
     }
@@ -525,6 +716,13 @@ public class UIController : MonoBehaviour
         {
             Debug.LogWarning("UIController: PlayerShip not found in scene. Speedometer will not auto-update.");
         }
+
+        velocityMeterImg[0].material = new Material(velocityMeterSha);//player
+        velocityMeterImg[1].material = new Material(velocityMeterSha);//bogie
+
+        velocityMeterImg[0].material.SetFloat("_PowerMax", playerShipRef.turnRate * 2);//set max speed
+
+
     }
     
     private IEnumerator UpdateSpeedometerContinuously()
@@ -534,6 +732,13 @@ public class UIController : MonoBehaviour
             UpdateSpeedometerFromPlayerShip();
             yield return new WaitForSeconds(speedometerUpdateRate);
         }
+    }
+
+    public void UpdateVelocity()
+    {
+        velocityMeterImg[0].material.SetFloat("_PowerCur", Mathf.RoundToInt(playerShipRef.GetCurrentSpeed()));
+
+        velocityMeterTMP[0].text = Mathf.RoundToInt(playerShipRef.GetCurrentSpeed()).ToString();
     }
     
     private void UpdateSpeedometerFromPlayerShip()
@@ -557,7 +762,7 @@ public class UIController : MonoBehaviour
                     speed = -speed;
                 }
                 
-                updateSpeedometer(speed);
+                UpdateSpeedometer(speed);
             }
         }
     }
@@ -685,7 +890,6 @@ public class UIController : MonoBehaviour
         Destroy(go);
     }
 
-
     private void WorldGridStart()
     {
 
@@ -698,7 +902,20 @@ public class UIController : MonoBehaviour
 
     public void WorldGridLocUpdate(Vector2 shipV2)
     {
-        gridImg.material.SetVector("_ShipLocV2", (shipV2/100f));
+        if (worldZoom == 0)
+        {
+            gridImg.material.SetVector("_ShipLocV2", (shipV2 / 100f));
+        }
+        else if (worldZoom == 1)
+        {
+            gridImg.material.SetVector("_ShipLocV2", (shipV2 / 1000f));
+        }
+        else if (worldZoom == 2)
+        {
+            gridImg.material.SetVector("_ShipLocV2", (shipV2 / 5000f));
+        }
+
+
     }
 
     public void WorldGridRotUpdate(float r)
@@ -713,7 +930,7 @@ public class UIController : MonoBehaviour
         {
             gridImg.material.SetInt("_WorldView", 0);
             gridImg.material.SetVector("_CellSize", new Vector2(1,1));
-            gridImg.material.SetFloat("_GridAmmount", 2f);
+            gridImg.material.SetFloat("_GridAmmount", 5f);
             gridImg.material.SetFloat("_GridThickness", .02f);
 
             radarImg.material.SetFloat("_RadarRange", 1f);
@@ -721,12 +938,14 @@ public class UIController : MonoBehaviour
             screenWepGO.transform.localPosition = new Vector2(0f, 0f);
 
             sc.orthographicSize = 50f;
+
+            worldZoom = 0;
         }
         else if (i == 1)//spectral zoom 100x
         {
             gridImg.material.SetInt("_WorldView", 0);
             gridImg.material.SetVector("_CellSize", new Vector2(1, 1));
-            gridImg.material.SetFloat("_GridAmmount", 10f);
+            gridImg.material.SetFloat("_GridAmmount", 20f);
             gridImg.material.SetFloat("_GridThickness", .04f);
 
             radarImg.material.SetFloat("_RadarRange", 1f);
@@ -734,6 +953,8 @@ public class UIController : MonoBehaviour
             screenWepGO.transform.localPosition = new Vector2(10000f, 0f);
 
             sc.orthographicSize = 500f;
+
+            worldZoom = 1;
         }
         else if (i == 2)//spectral zoom 1000x
         {
@@ -747,6 +968,8 @@ public class UIController : MonoBehaviour
             screenWepGO.transform.localPosition = new Vector2(10000f, 0f);
 
             sc.orthographicSize = 5000f;
+
+            worldZoom = 2;
         }
 
     }

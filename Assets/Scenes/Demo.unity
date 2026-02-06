@@ -3559,6 +3559,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiContoller: {fileID: 924790715}
+  playerShipTrans: {fileID: 0}
   gridBK: {fileID: 244928638}
   gridMat: {fileID: 0}
   gridShad: {fileID: -6465566751694194690, guid: c66b883ef0b7d4e36881dfa71dfdada8, type: 3}
@@ -7771,6 +7772,7 @@ MonoBehaviour:
   - {fileID: 179727189}
   - {fileID: 688534879}
   - {fileID: 1507822680}
+  WeaponScreen: {fileID: 0}
   shaPowerMet: {fileID: -6465566751694194690, guid: a44c8534ae1644d489f5bc29f5bd1bba, type: 3}
   shaReactorMet: {fileID: -6465566751694194690, guid: 2ce2029f3c27840d68dd603ac10b8e38, type: 3}
   uiSprite:
@@ -7829,6 +7831,12 @@ MonoBehaviour:
   speedometer: {fileID: 485738785}
   autoUpdateSpeedometer: 1
   speedometerUpdateRate: 0.1
+  animationCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &934598039
 GameObject:
   m_ObjectHideFlags: 0
