@@ -88,6 +88,8 @@ public class UIController : MonoBehaviour
     [SerializeField] private GameObject targetGO;
     [SerializeField] public List<GameObject> bogieList;//also use with weapons
     [SerializeField] public GameObject currentBogieTarget;//also use with weapons
+    [SerializeField] private MeshFilter bogieMesh;//also use with weapons
+
 
 
     [Header("Radar Screen")]
@@ -365,9 +367,12 @@ public class UIController : MonoBehaviour
                 }
             }
         }
+
+        ScanMesh(currentBogieTarget);
+        NewScan();//remove later
     }
 
-    private void ScanTargetLoc(int i)
+    private void ScanTargetSize(int i)
     {
         if (i == 0)
         {
@@ -380,19 +385,19 @@ public class UIController : MonoBehaviour
         }
         else if (i == 2)
         {
-            targetGO.transform.localScale = new Vector3(5f, 5f, 5f);
+            targetGO.transform.localScale = new Vector3(2f, 2f, 2f);
             targetGO.transform.position = new Vector3(1f, 1f, -10f);
         }
         else if (i == 3)
         {
-            targetGO.transform.localScale = new Vector3(50f, 50f, 50f);
+            targetGO.transform.localScale = new Vector3(6f, 6f, 6f);
             targetGO.transform.position = new Vector3(1f, 1f, -10f);
         }
 
         targetGO.transform.localPosition = Vector3.zero;
     }
 
-    private void ScanTargetSize(int i)
+    private void ScanTargetLoc(int i)
     {
         if (i == 0)//player
         {
@@ -402,6 +407,12 @@ public class UIController : MonoBehaviour
         {
             targetGO.transform.parent = currentBogieTarget.transform;
         }
+    }
+
+    private void ScanMesh(GameObject go)
+    {
+        MeshFilter m = go.GetComponent<MeshFilter>();
+        bogieMesh.mesh = m.mesh;
     }
 
     private void StartPower()
@@ -1037,6 +1048,7 @@ public class UIController : MonoBehaviour
             if(currentBogieTarget != null)
             {
                 ScanTargetLoc(1);
+                ScanTargetSize(1);
             }
         }
         else if (worldZoom == 1)
@@ -1046,6 +1058,7 @@ public class UIController : MonoBehaviour
             if (currentBogieTarget != null)
             {
                 ScanTargetLoc(2);
+                ScanTargetSize(2);
             }
         }
         else if (worldZoom == 2)
@@ -1055,6 +1068,7 @@ public class UIController : MonoBehaviour
             if (currentBogieTarget != null)
             {
                 ScanTargetLoc(3);
+                ScanTargetSize(3);
             }
         }
 
