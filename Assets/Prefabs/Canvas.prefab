@@ -1187,8 +1187,6 @@ MonoBehaviour:
   - {fileID: 5115491683578690387}
   - {fileID: 6544374714302972117}
   - {fileID: 6883669977264462575}
-  weaponScreenSha: {fileID: -6465566751694194690, guid: d576685b51ce244e5984d10bdf580924, type: 3}
-  weaponScreenImage: {fileID: 7615294118632695544}
   shaPowerMet: {fileID: -6465566751694194690, guid: a44c8534ae1644d489f5bc29f5bd1bba, type: 3}
   shaReactorMet: {fileID: -6465566751694194690, guid: 2ce2029f3c27840d68dd603ac10b8e38, type: 3}
   uiSprite:
@@ -1231,6 +1229,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  shipPlayer: {fileID: 0}
   sensorLoad: {fileID: 3683321311490580917}
   sensorLoadInfo:
   - {fileID: 8612633042794592179}
@@ -1255,7 +1254,7 @@ MonoBehaviour:
   - {fileID: 4922818725285370242}
   - {fileID: 5372101932969441614}
   stabilityShader: {fileID: -6465566751694194690, guid: 67c2f3ec1e2be423887902ce701b505a, type: 3}
-  stabilityImg: {fileID: 0}
+  stabilityImg: {fileID: 3517564463694056782}
   scannerSlider: {fileID: 2272221215823009377}
   scanSpeed: 10
   scannerSha: {fileID: -6465566751694194690, guid: fa82c3cfacfbf4d598c37318890b6d38, type: 3}
@@ -1266,12 +1265,17 @@ MonoBehaviour:
   - _Aft
   - _Prow
   - _Star
+  currentBogieTarget: {fileID: 0}
   radarSha: {fileID: -6465566751694194690, guid: 61887c57053ab40d8844d798ad944a12, type: 3}
   radarGO: {fileID: 4775070774375313290}
   radarBogeyGO: {fileID: 1761787049100925269}
   radarImg: {fileID: 5407305187793205900}
   radarDegreeTest: 0
+  weaponScreenSha: {fileID: -6465566751694194690, guid: d576685b51ce244e5984d10bdf580924, type: 3}
+  weaponScreenImage: {fileID: 7615294118632695544}
   screenWepGO: {fileID: 4331322044596735765}
+  shipAngleTarget: {fileID: 0}
+  testFloat: 0
   gridSha: {fileID: -6465566751694194690, guid: c66b883ef0b7d4e36881dfa71dfdada8, type: 3}
   gridImg: {fileID: 5386955993360744429}
   sc: {fileID: 0}
