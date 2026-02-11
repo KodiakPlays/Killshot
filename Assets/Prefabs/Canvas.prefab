@@ -1501,7 +1501,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  shipPlayer: {fileID: 0}
   sensorLoad: {fileID: 3683321311490580917}
   sensorLoadInfo:
   - {fileID: 8612633042794592179}
@@ -1516,6 +1515,8 @@ MonoBehaviour:
   - {fileID: 0}
   compassRect: {fileID: 2085549708073025740}
   speedometer: {fileID: 0}
+  shipPlayer: {fileID: 0}
+  shipicon: {fileID: 0}
   autoUpdateSpeedometer: 1
   speedometerUpdateRate: 0.1
   velocityMeterSha: {fileID: -6465566751694194690, guid: 67c2f3ec1e2be423887902ce701b505a, type: 3}
@@ -20890,7 +20891,7 @@ RectTransform:
   m_AnchorMin: {x: 0.25, y: 0}
   m_AnchorMax: {x: 0.75, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: -100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &7940623420429745685
 GameObject:

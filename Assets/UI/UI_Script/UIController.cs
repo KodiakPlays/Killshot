@@ -48,7 +48,6 @@ public class UIController : MonoBehaviour
     public AnimationCurve shipHitCurve;
     private Coroutine shipHitCo;
 
-    [SerializeField] private Transform shipPlayer;
 
     [SerializeField] private Transform sensorLoad;
     [SerializeField] private List<TextMeshProUGUI> sensorLoadInfo = new List<TextMeshProUGUI>();
@@ -57,7 +56,11 @@ public class UIController : MonoBehaviour
 
     [SerializeField] private RectTransform compassRect;
     [SerializeField] private TextMeshProUGUI speedometer;
-    
+
+    [Header("PlayerShip")]
+    [SerializeField] private Transform shipPlayer;
+    [SerializeField] private GameObject shipiconGO;
+
     [Header("Speedometer Settings")]
     [SerializeField] private bool autoUpdateSpeedometer = true;
     [SerializeField] private float speedometerUpdateRate = 0.1f; // Update every 0.1 seconds
@@ -108,7 +111,6 @@ public class UIController : MonoBehaviour
     public float testFloat = 0f;
     private bool fire = false;
 
-
     [Header("World Grid")]
     [SerializeField] private Shader gridSha;
     [SerializeField] private Image gridImg;
@@ -118,7 +120,6 @@ public class UIController : MonoBehaviour
     [Header("Power Screen")]
     [SerializeField] private Shader powerNodeSha;
     [SerializeField] private Image[] powerNodeImg;
-
     [SerializeField] private List<int> powerState = new List<int>();
 
 
@@ -153,16 +154,11 @@ public class UIController : MonoBehaviour
             ScanPlaceHack();
         }
 
-        //ScanMovment();
+        ScanMovment();
 
         //testing purposes of radar
-        //radarDegreeTest = radarDegreeTest + (Time.deltaTime * 10);
 
-        //if (radarDegreeTest >= 360)
-        //{
-        //    radarDegreeTest = 0;
-        //}
-        //RadarUpdate(radarDegreeTest);
+        RadarTest();
 
         if (Input.GetKeyDown("/"))//test change ship
         {
@@ -181,6 +177,17 @@ public class UIController : MonoBehaviour
 
         UpdateVelocity();
 
+    }
+
+    private void RadarTest()
+    {
+        radarDegreeTest = radarDegreeTest - (Time.deltaTime * 10);
+
+        if (radarDegreeTest <= 0)
+        {
+            radarDegreeTest = 360;
+        }
+        RadarUpdate(radarDegreeTest);
     }
 
     public void NewScan()
@@ -283,26 +290,26 @@ public class UIController : MonoBehaviour
         }
     }
 
-    //public void ScanMovment()
-    //{
-    //    if(rightScanner)
-    //    {
-    //        scannerSlider.value = ++scanValue / scanSpeed;
-    //    }
-    //    else if(!rightScanner)
-    //    {
-    //        scannerSlider.value = --scanValue / scanSpeed;
-    //    }
+    public void ScanMovment()
+    {
+        if(rightScanner)
+        {
+            scannerSlider.value = ++scanValue / scanSpeed;
+        }
+        else if(!rightScanner)
+        {
+            scannerSlider.value = --scanValue / scanSpeed;
+        }
 
-    //    if(scannerSlider.value >= scanerMax)
-    //    {
-    //        rightScanner = false;
-    //    }
-    //    else if (scannerSlider.value <= 0)
-    //    {
-    //        rightScanner = true;
-    //    }
-    //}
+        if(scannerSlider.value >= scanerMax)
+        {
+            rightScanner = false;
+        }
+        else if (scannerSlider.value <= 0)
+        {
+            rightScanner = true;
+        }
+    }
 
     public void ScanNewTarget()
     {
@@ -381,17 +388,17 @@ public class UIController : MonoBehaviour
         else if (i == 1)
         {
             targetGO.transform.localScale = new Vector3(1f,1f,1f);
-            targetGO.transform.position = new Vector3(1f, 1f, -10f);
+            //targetGO.transform.position = new Vector3(1f, 1f, -10f);
         }
         else if (i == 2)
         {
-            targetGO.transform.localScale = new Vector3(2f, 2f, 2f);
-            targetGO.transform.position = new Vector3(1f, 1f, -10f);
+            targetGO.transform.localScale = new Vector3(4f, 4f, 4f);
+            //targetGO.transform.position = new Vector3(1f, 1f, -10f);
         }
         else if (i == 3)
         {
-            targetGO.transform.localScale = new Vector3(6f, 6f, 6f);
-            targetGO.transform.position = new Vector3(1f, 1f, -10f);
+            targetGO.transform.localScale = new Vector3(50f, 50f, 50f);
+            //targetGO.transform.position = new Vector3(1f, 1f, -10f);
         }
 
         targetGO.transform.localPosition = Vector3.zero;
@@ -835,7 +842,7 @@ public class UIController : MonoBehaviour
 
     public void UpdateSpeedometer(float speed)
     {
-        speedometer.text = speed.ToString("F1");
+        //speedometer.text = speed.ToString("F1");
     }
     
     private void StartSpeedometerUpdates()
@@ -1050,6 +1057,17 @@ public class UIController : MonoBehaviour
                 ScanTargetLoc(1);
                 ScanTargetSize(1);
             }
+
+            for (int i = 0; i < bogieList.Count; i++)
+            {
+                bogieList[i].GetComponent<MeshRenderer>().enabled = true;
+                bogieList[i].transform.GetChild(0).gameObject.SetActive(false);
+            }
+
+            shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = true;
+            shipiconGO.SetActive(false);
+
+
         }
         else if (worldZoom == 1)
         {
@@ -1060,6 +1078,18 @@ public class UIController : MonoBehaviour
                 ScanTargetLoc(2);
                 ScanTargetSize(2);
             }
+
+            for (int i = 0; i < bogieList.Count; i++)
+            {
+                bogieList[i].GetComponent<MeshRenderer>().enabled = false;
+                bogieList[i].transform.GetChild(0).gameObject.SetActive(true);
+                bogieList[i].transform.GetChild(0).gameObject.transform.localScale = new Vector3(2f, 2f, 2f);
+
+            }
+
+            shipiconGO.SetActive(true);
+            shipiconGO.transform.localScale = new Vector3(2f, 2f, 2f);
+            shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = false;
         }
         else if (worldZoom == 2)
         {
@@ -1070,6 +1100,18 @@ public class UIController : MonoBehaviour
                 ScanTargetLoc(3);
                 ScanTargetSize(3);
             }
+
+            for (int i = 0; i < bogieList.Count; i++)
+            {
+                bogieList[i].GetComponent<MeshRenderer>().enabled = false;
+                bogieList[i].transform.GetChild(0).gameObject.SetActive(true);
+                bogieList[i].transform.GetChild(0).gameObject.transform.localScale = new Vector3(20f, 20f, 20f);
+
+            }
+
+            shipiconGO.SetActive(true);
+            shipiconGO.transform.localScale = new Vector3(20f, 20f, 20f);
+            shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = false;
         }
 
 
