@@ -1516,7 +1516,7 @@ MonoBehaviour:
   compassRect: {fileID: 2085549708073025740}
   speedometer: {fileID: 0}
   shipPlayer: {fileID: 0}
-  shipicon: {fileID: 0}
+  shipiconGO: {fileID: 0}
   autoUpdateSpeedometer: 1
   speedometerUpdateRate: 0.1
   velocityMeterSha: {fileID: -6465566751694194690, guid: 67c2f3ec1e2be423887902ce701b505a, type: 3}
