@@ -2795,30 +2795,6 @@ PrefabInstance:
       propertyPath: currentBogieTarget
       value: 
       objectReference: {fileID: 1085312185}
-    - target: {fileID: 5704859595032562861, guid: b753aaddeccfa4b4d8162a5078846859, type: 3}
-      propertyPath: bogieList.Array.size
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5704859595032562861, guid: b753aaddeccfa4b4d8162a5078846859, type: 3}
-      propertyPath: 'bogieList.Array.data[0]'
-      value: 
-      objectReference: {fileID: 1085312185}
-    - target: {fileID: 5704859595032562861, guid: b753aaddeccfa4b4d8162a5078846859, type: 3}
-      propertyPath: 'bogieList.Array.data[1]'
-      value: 
-      objectReference: {fileID: 372233839}
-    - target: {fileID: 5704859595032562861, guid: b753aaddeccfa4b4d8162a5078846859, type: 3}
-      propertyPath: 'bogieList.Array.data[2]'
-      value: 
-      objectReference: {fileID: 501044121}
-    - target: {fileID: 5704859595032562861, guid: b753aaddeccfa4b4d8162a5078846859, type: 3}
-      propertyPath: 'bogieList.Array.data[3]'
-      value: 
-      objectReference: {fileID: 463275035}
-    - target: {fileID: 5704859595032562861, guid: b753aaddeccfa4b4d8162a5078846859, type: 3}
-      propertyPath: 'bogieList.Array.data[4]'
-      value: 
-      objectReference: {fileID: 1883711883}
     - target: {fileID: 6181711279907275554, guid: b753aaddeccfa4b4d8162a5078846859, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
