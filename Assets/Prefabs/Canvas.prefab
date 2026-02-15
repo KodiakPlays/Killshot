@@ -1481,14 +1481,14 @@ MonoBehaviour:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 141.7711
-      outSlope: 141.7711
+      time: -0.11150358
+      value: 24.751137
+      inSlope: 14.310126
+      outSlope: 14.310126
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.020002453
+      outWeight: 0.058141205
     - serializedVersion: 3
       time: 1
       value: 0
@@ -1539,14 +1539,9 @@ MonoBehaviour:
   - _Prow
   - _Star
   targetGO: {fileID: 0}
+  bogieList: []
   currentBogieTarget: {fileID: 0}
   bogieMesh: {fileID: 0}
-  bogieList:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   radarSha: {fileID: -6465566751694194690, guid: 61887c57053ab40d8844d798ad944a12, type: 3}
   radarGO: {fileID: 4775070774375313290}
   radarBogeyGO: {fileID: 1761787049100925269}
@@ -1557,7 +1552,7 @@ MonoBehaviour:
   screenWepGO: {fileID: 4331322044596735765}
   shipAngleTarget: {fileID: 0}
   testFloat: 0
-  ScreenEnemyWeapon: {fileID: 0}
+  screenEnemyWeapon: {fileID: 8901316255644356539}
   gridSha: {fileID: -6465566751694194690, guid: c66b883ef0b7d4e36881dfa71dfdada8, type: 3}
   gridImg: {fileID: 5386955993360744429}
   sc: {fileID: 0}
@@ -17960,7 +17955,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8901316255644356539}
   - component: {fileID: 5790348693881108876}
-  - component: {fileID: 2716574799908183865}
   m_Layer: 5
   m_Name: ScreenEnemyWeapon
   m_TagString: Untagged
@@ -17995,36 +17989,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6756769855462505911}
   m_CullTransparentMesh: 1
---- !u!114 &2716574799908183865
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6756769855462505911}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: -876546973899608171, guid: d576685b51ce244e5984d10bdf580924, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &6803244837921420539
 GameObject:
   m_ObjectHideFlags: 0
