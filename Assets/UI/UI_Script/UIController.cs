@@ -110,6 +110,8 @@ public class UIController : MonoBehaviour
     private bool fire = false;
     [SerializeField] private RectTransform screenEnemyWeapon;
     private float screenDist;
+    private float scaleSize;
+    [SerializeField] private float testFloat2;
 
 
 
@@ -118,6 +120,8 @@ public class UIController : MonoBehaviour
     [SerializeField] private Image gridImg;
     [SerializeField] private Camera sc;
     private int worldZoom;
+    [SerializeField] private Texture[] viewTex;
+    [SerializeField] private RawImage screenWorld;
 
     [Header("Power Screen")]
     [SerializeField] private Shader powerNodeSha;
@@ -193,6 +197,11 @@ public class UIController : MonoBehaviour
         if (Input.GetKeyDown("p"))//test change ship
         {
             LaserFire();
+        }
+
+        if (Input.GetKeyDown("r"))//test change ship
+        {
+            RailFire();
         }
 
         if (Input.GetKeyDown("]"))//test change ship
@@ -1101,6 +1110,8 @@ public class UIController : MonoBehaviour
 
         weaponScreenImage.material = new Material(weaponScreenSha);
         weaponScreenImage.material.SetInt("_LaserFire", 0);
+
+        screenWorld.texture = viewTex[0];
     }
 
     public void WorldGridLocUpdate(Vector2 shipV2)
@@ -1123,8 +1134,6 @@ public class UIController : MonoBehaviour
 
             shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = true;
             shipiconGO.SetActive(false);
-
-
         }
         else if (worldZoom == 1)
         {
@@ -1150,7 +1159,7 @@ public class UIController : MonoBehaviour
         }
         else if (worldZoom == 2)
         {
-            gridImg.material.SetVector("_ShipLocV2", (shipV2 / 5000f));
+            //gridImg.material.SetVector("_ShipLocV2", (shipV2 / 5000f));
 
             if (currentBogieTarget != null)
             {
@@ -1176,7 +1185,15 @@ public class UIController : MonoBehaviour
 
     public void WorldGridRotUpdate(float r)
     {
-        gridImg.material.SetFloat("_ShipRotation", r);
+        if (worldZoom < 2)
+        {
+            gridImg.material.SetFloat("_ShipRotation", r);
+        }
+
+        //else if (worldZoom >= 2)
+        //{
+        //    gridImg.material.SetFloat("_ShipRotation", 0);
+        //}
     }
 
     public void WorldGridZoom(int i)
@@ -1184,19 +1201,24 @@ public class UIController : MonoBehaviour
 
         if (i == 0)//spectral zoom 10x
         {
+            screenWorld.texture = viewTex[0];
+
             gridImg.material.SetInt("_WorldView", 0);
             gridImg.material.SetVector("_CellSize", new Vector2(1,1));
             gridImg.material.SetFloat("_GridAmmount", 5f);
             gridImg.material.SetFloat("_GridThickness", .02f);
+            gridImg.material.SetFloat("_ShipRotation", shipPlayer.localRotation.z);
 
             radarImg.material.SetFloat("_RadarRange", 1f);
+            radarImg.material.SetInt("_Show", 1);
             weaponScreenImage.material.SetInt("_RangeVisOn", 1);
 
-            screenWepGO.transform.localPosition = new Vector2(0f, 0f);
+            scaleSize = 1f;
+            //screenWepGO.transform.localPosition = new Vector2(0f, 0f);
 
             sc.orthographicSize = 50f;
 
-            radarImg.material.SetInt("_Show", 0);
+            radarImg.material.SetFloat("_VisualRange", 1f);
 
             for (int j = 0; j < bogieList.Count; j++)
             {
@@ -1209,19 +1231,24 @@ public class UIController : MonoBehaviour
         }
         else if (i == 1)//spectral zoom 100x
         {
+            screenWorld.texture = viewTex[0];
+
             gridImg.material.SetInt("_WorldView", 0);
             gridImg.material.SetVector("_CellSize", new Vector2(1, 1));
             gridImg.material.SetFloat("_GridAmmount", 20f);
             gridImg.material.SetFloat("_GridThickness", .04f);
+            gridImg.material.SetFloat("_ShipRotation", shipPlayer.localRotation.z);
 
             radarImg.material.SetFloat("_RadarRange", 1f);
+            radarImg.material.SetInt("_Show", 1);
             weaponScreenImage.material.SetInt("_RangeVisOn", 0);
+            scaleSize = .5f;
 
-            screenWepGO.transform.localPosition = new Vector2(10000f, 0f);
+            //screenWepGO.transform.localPosition = new Vector2(10000f, 0f);
 
             sc.orthographicSize = 500f;
 
-            radarImg.material.SetInt("_Show", 1);
+            radarImg.material.SetFloat("_VisualRange", .1f);
 
             for (int j = 0; j < bogieList.Count; j++)
             {
@@ -1241,19 +1268,24 @@ public class UIController : MonoBehaviour
         }
         else if (i == 2)//spectral zoom 1000x
         {
+            screenWorld.texture = viewTex[1];
+
             gridImg.material.SetInt("_WorldView", 1);
             gridImg.material.SetVector("_CellSize", new Vector2(2, 2));
             gridImg.material.SetFloat("_GridAmmount", 20f);
             gridImg.material.SetFloat("_GridThickness", .025f);
+            gridImg.material.SetFloat("_ShipRotation", 0);
 
             radarImg.material.SetFloat("_RadarRange", .1f);
+            radarImg.material.SetInt("_Show", 0);
             weaponScreenImage.material.SetInt("_RangeVisOn", 0);
+            scaleSize = .25f;
 
-            screenWepGO.transform.localPosition = new Vector2(10000f, 0f);
+            //screenWepGO.transform.localPosition = new Vector2(10000f, 0f);
 
             sc.orthographicSize = 5000f;
 
-            radarImg.material.SetInt("_Show", 1);
+            radarImg.material.SetFloat("_VisualRange", .01f);
 
             for (int j = 0; j < bogieList.Count; j++)
             {
@@ -1281,30 +1313,180 @@ public class UIController : MonoBehaviour
     private IEnumerator RailFireCo()
     {
         float t = 0f;
-        float railStart = .499f;
-        float railEnd = .48f;
-        float speed = 5f;
+        float y = 1f;
+        float laserWidth = 0.498f;
+        float speed = 10f;
         float curWidth = 0f;
+        float sign = 1f;
+        float offset = 0;
+        float zeroDegree = 0;
+        string side = "";
+        float angle = 0f;
+        float distance = 0f;
+        float railStart = .001f;
+        float railEnd = .01f;
+        float start = 0f;
 
-        weaponScreenImage.material.SetFloat("_RailWidth", railStart);
-        weaponScreenImage.material.SetFloat("_FireRail", 1f);
+        Vector3 playerShipTranLoc = Vector3.zero;
 
-        yield return new WaitForSeconds(1f);
+        if (worldZoom < 2)
+        {
+            angle = 90f;
+            playerShipTranLoc = Vector3.zero;
+            //bogieTranLoc = shipPlayer.InverseTransformPoint(bogieTran.position);
+            start = 0f;
+        }
+        else if (worldZoom == 2)
+        {
+            angle = shipPlayer.eulerAngles.z + 90;
+            playerShipTranLoc = new Vector3(shipPlayer.position.x / (screenDist * 2), shipPlayer.position.y / (screenDist * 2), 0f);
+            //bogieTranLoc = new Vector3(bogieTran.position.x / (screenDist * 2), bogieTran.position.y / (screenDist * 2), 0f);
+            start = 0f;
+        }
+
+        //if (s < 0)
+        //{
+        weaponScreenImage.material.SetFloat("_LaserDegree", angle);
+        weaponScreenImage.material.SetVector("_GunLoc", playerShipTranLoc);
+        //}
+        //else if (s >= 0)
+        //{
+        //    bogieList[s].matWep.SetVector("_GunLoc", playerShipTranLoc);
+        //}
+
+        //Vector3 direction = bogieTranLoc - playerShipTranLoc;
+
+        //sign = (direction.y >= 0) ? 1 : -1;
+        //offset = (sign >= 0) ? 0 : 360;
+
+        //zeroDegree = (shipPlayer.position.y / 100f) + .001f;
+
+        //if (zeroDegree < 0)
+        //{
+        //    zeroDegree = zeroDegree * -1f;
+        //}
+
+        //Debug.Log("zeroDegree: " + zeroDegree + ", playerShipTranLoc.y: " + playerShipTranLoc.y);
+
+        //Vector3 vRight = new Vector3(playerShipTranLoc.x + zeroDegree, playerShipTranLoc.y, 0f);
+
+        //distance = Vector2.Distance(vRight, bogieTranLoc);
+
+
+        //Debug.Log("angle: " + angle);
+
+        weaponScreenImage.material.SetFloat("_LaserStart", 0f);
+        weaponScreenImage.material.SetFloat("_LaserEnd", 2f);//end at first game object to come in contact with
+        weaponScreenImage.material.SetFloat("_LaserSize", railStart);
+        weaponScreenImage.material.SetInt("_LaserFire", 1);
 
         while (t < 1f)
         {
-            curWidth = Mathf.Lerp(railStart, railEnd, animationCurve.Evaluate(t));
+            curWidth = Mathf.Lerp(0f * scaleSize, .002f * scaleSize, animationCurve.Evaluate(t));
 
-            weaponScreenImage.material.SetFloat("_RailWidth", curWidth);
+            weaponScreenImage.material.SetFloat("_LaserSize", curWidth);
+
+            t += Time.deltaTime;
+
+            yield return null;
+        }
+
+        t = 0;
+        updateShipHit(.5f);
+
+
+        while (t < 1f)
+        {
+            curWidth = Mathf.Lerp(.002f * scaleSize, .01f * scaleSize, animationCurve.Evaluate(t));
+
+            weaponScreenImage.material.SetFloat("_LaserSize", curWidth);
 
             t += Time.deltaTime * speed;
 
             yield return null;
         }
 
-        weaponScreenImage.material.SetFloat("_RailWidth", 0f);
-        weaponScreenImage.material.SetFloat("_FireRail", 0f);
+        t = 0;
+
+        while (t < 1f)
+        {
+            curWidth = Mathf.Lerp(.01f * scaleSize, 0 * scaleSize, animationCurve.Evaluate(t));
+
+            weaponScreenImage.material.SetFloat("_LaserStart", t);
+
+            weaponScreenImage.material.SetFloat("_LaserSize", y * curWidth);
+
+            y -= Time.deltaTime * speed;
+            t += Time.deltaTime * speed;
+
+            yield return null;
+        }
+
+        weaponScreenImage.material.SetFloat("_LaserSize", 0f);
+        weaponScreenImage.material.SetInt("_LaserFire", 0);
     }
+
+    //private IEnumerator RailFireCo()
+    //{
+    //    float t = 0f;
+    //    float y = 1f;
+    //    float railStart = .001f;
+    //    float railEnd = .01f;
+    //    float speed = 10f;
+    //    float curWidth = 0f;
+
+    //    weaponScreenImage.material.SetFloat("_RailStart", 0f);
+    //    weaponScreenImage.material.SetFloat("_RailEnd", 1f);//end at first game object to come in contact with
+    //    weaponScreenImage.material.SetFloat("_RailWidth", railStart);
+    //    weaponScreenImage.material.SetInt("_FireRail", 1);
+
+    //    while (t < 1f)
+    //    {
+    //        curWidth = Mathf.Lerp(0f * scaleSize, .002f* scaleSize, animationCurve.Evaluate(t));
+
+    //        weaponScreenImage.material.SetFloat("_RailWidth", curWidth);
+
+    //        t += Time.deltaTime;
+
+    //        yield return null;
+    //    }
+
+    //    t = 0;
+    //    updateShipHit(.5f);
+
+
+    //    while (t < 1f)
+    //    {
+    //        curWidth = Mathf.Lerp(.002f* scaleSize, .01f* scaleSize, animationCurve.Evaluate(t));
+
+    //        weaponScreenImage.material.SetFloat("_RailWidth", curWidth);
+
+    //        t += Time.deltaTime * speed;
+
+    //        yield return null;
+    //    }
+
+    //    t = 0;
+
+    //    while (t < 1f)
+    //    {
+    //        curWidth = Mathf.Lerp(.01f* scaleSize, 0* scaleSize, animationCurve.Evaluate(t));
+
+    //        weaponScreenImage.material.SetFloat("_RailStart", t);
+
+    //        weaponScreenImage.material.SetFloat("_RailWidth", y * curWidth);
+
+    //        y -= Time.deltaTime * speed;
+    //        t += Time.deltaTime * speed;
+
+    //        yield return null;
+    //    }
+
+    //    weaponScreenImage.material.SetFloat("_RailWidth", 0f);
+    //    weaponScreenImage.material.SetInt("_FireRail", 0);
+    //}
+
+
 
     public void LaserFire()
     {
@@ -1323,29 +1505,68 @@ public class UIController : MonoBehaviour
     {
         float t = 0f;
         float laserWidth = 0.498f;
-        float speed = 10f;
+        float speed = 5f;//10
         float curWidth = 0f;
         float sign = 1f;
         float offset = 0;
+        float zeroDegree = 0;
         string side = "";
+        float angle = 0f;
+        float distance = 0f;
 
+        float start = 0f;
+
+        Vector3 playerShipTranLoc = Vector3.zero;
+        Vector3 bogieTranLoc = Vector3.zero;
+
+        Transform screenTran = radarGO.GetComponent<Transform>();
         Transform bogieTran = bogie.GetComponent<Transform>();
 
-        Vector3 bogieTranLoc = shipPlayer.InverseTransformPoint(bogieTran.position);
+        if (worldZoom < 2)
+        {
+            playerShipTranLoc = Vector3.zero;
+            bogieTranLoc = shipPlayer.InverseTransformPoint(bogieTran.position);
+            start = 0f;
+        }
+        else if (worldZoom == 2)
+        {
+            playerShipTranLoc = new Vector3(shipPlayer.position.x / (screenDist*2), shipPlayer.position.y / (screenDist*2), 0f);
+            bogieTranLoc = new Vector3(bogieTran.position.x / (screenDist * 2), bogieTran.position.y / (screenDist * 2), 0f);
+            start = 0f;
+        }
+        bogieTranLoc = shipPlayer.InverseTransformPoint(bogieTran.position);
 
-        Vector3 direction = bogieTranLoc - Vector3.zero;
+        if (s < 0)
+        {
+            weaponScreenImage.material.SetVector("_GunLoc", playerShipTranLoc);
+        }
+        else if (s >= 0)
+        {
+            bogieList[s].matWep.SetVector("_GunLoc", playerShipTranLoc);
+        }
 
-        Debug.Log("Bogie Local: " + bogieTranLoc.ToString() + ", Bogie World: " + bogieTran.position.ToString());
+            Vector3 direction = bogieTranLoc - playerShipTranLoc;
 
         sign = (direction.y >= 0) ? 1 : -1;
         offset = (sign >= 0) ? 0 : 360;
 
-        float angle = (Vector2.Angle(Vector3.right, direction) * sign + offset); //shipAngleTarget.position
-        float distance = Vector2.Distance(Vector3.right, shipPlayer.InverseTransformPoint(bogieTran.position));
+        zeroDegree = (shipPlayer.position.y / 100f) + .001f;
+
+        if (zeroDegree < 0)
+        {
+            zeroDegree = zeroDegree * -1f;
+        }
+
+        //Debug.Log("zeroDegree: " + zeroDegree + ", playerShipTranLoc.y: " + playerShipTranLoc.y);
+
+        Vector3 vRight = new Vector3(playerShipTranLoc.x + zeroDegree, playerShipTranLoc.y, 0f);
+
+        angle = (Vector2.Angle(vRight, direction) * sign + offset); //shipAngleTarget.position
+        distance = Vector2.Distance(vRight, bogieTranLoc);
 
         float scaleDistance = distance / screenDist;
 
-        Debug.Log("angle: " + angle);
+        //Debug.Log("angle: " + angle);
 
         if (s < 0)
         {
@@ -1357,10 +1578,10 @@ public class UIController : MonoBehaviour
             weaponScreenImage.material.SetFloat("_LaserSize", .0015f);
 
 
-            weaponScreenImage.material.SetFloat("_LaserStart", 0f);
+            weaponScreenImage.material.SetFloat("_LaserStart", start);
             weaponScreenImage.material.SetFloat("_LaserEnd", scaleDistance);
 
-            weaponScreenImage.material.SetFloat("_LaserRange", 1);
+            weaponScreenImage.material.SetFloat("_LaserRange", 1f);
             t = 0;
             while (t < 1f)
             {
