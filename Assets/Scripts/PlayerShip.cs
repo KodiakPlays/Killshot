@@ -1,11 +1,12 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(ShipStability))]
 public class PlayerShip : MonoBehaviour
 {
-    [Header("Script Refrence")]
-    public UIController uiControler;
-
     [Header("Movement Settings")]
     [SerializeField] private float rateOfAcceleration = 50f; // Speed change per second
     [SerializeField] public float turnRate = 90f; // Degrees per second (1 decimal place precision)
@@ -15,6 +16,27 @@ public class PlayerShip : MonoBehaviour
     [Header("Camera Settings")]
     [SerializeField] private Transform cameraTransform; // Reference to the camera transform
     [SerializeField] private Vector3 cameraOffset = new Vector3(0, 10, -15); // Camera offset from ship
+
+    [Header("Ship Hit")]
+    [SerializeField] private Transform shipHit;
+    public AnimationCurve shipHitCurve;
+    private Coroutine shipHitCo;
+
+    [Header("Compass/Sensors")]
+    [SerializeField] private Transform sensorLoad;
+    [SerializeField] private List<TextMeshProUGUI> sensorLoadInfo = new List<TextMeshProUGUI>();
+    [SerializeField] private Image sensorIcon;
+    [SerializeField] private List<Sprite> sensorLoadSprites = new List<Sprite>();
+    [SerializeField] private RectTransform compassRect;
+
+    [Header("Speedometer Settings")]
+    [SerializeField] private TextMeshProUGUI speedometerTMP;
+    [SerializeField] private bool autoUpdateSpeedometer = true;
+    [SerializeField] private float speedometerUpdateRate = 0.1f;
+    private Coroutine speedometerUpdateCoroutine;
+    [SerializeField] private Shader velocityMeterSha;
+    [SerializeField] private Image[] velocityMeterImg;
+    [SerializeField] private TextMeshProUGUI[] velocityMeterTMP;
 
     // Systems
     private PowerManager powerManager;
@@ -107,6 +129,12 @@ public class PlayerShip : MonoBehaviour
             // Initialize camera position
             targetCameraPosition = transform.position + cameraOffset;
         }
+
+        // Start speedometer updates
+        if (autoUpdateSpeedometer)
+        {
+            StartSpeedometerUpdates();
+        }
     }
 
     public void TakeDamage(float damage)
@@ -183,6 +211,8 @@ public class PlayerShip : MonoBehaviour
             testMode_IgnoreWeaponPower = !testMode_IgnoreWeaponPower;
             Debug.Log($"Weapon Power Override: {(testMode_IgnoreWeaponPower ? "ENABLED" : "DISABLED")}");
         }
+
+        UpdateVelocity();
     }
 
     private void TryDodge(float direction)
@@ -364,9 +394,12 @@ public class PlayerShip : MonoBehaviour
             cameraEuler.z = transform.eulerAngles.z;
             cameraTransform.eulerAngles = cameraEuler;
 
-            uiControler.UpdateCompass(cameraEuler.z);
-            uiControler.WorldGridRotUpdate(cameraEuler.z);
-            uiControler.WorldGridLocUpdate(cameraTransform.position);
+            uiControler_UpdateCompass(cameraEuler.z);
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.WorldGridRotUpdate(cameraEuler.z);
+                GameManager.Instance.WorldGridLocUpdate(cameraTransform.position);
+            }
         }
 
         // Damage system disabled for now
@@ -389,6 +422,148 @@ public class PlayerShip : MonoBehaviour
             Debug.Log($"Ship Position: {transform.position} | Camera Position: {(cameraTransform != null ? cameraTransform.position.ToString() : "No Camera")}");
             Debug.Log($"Stability: {stabilityPercent:F1}% | Can Dodge: {stability.CanDodgeAgain()} | Critical: {stability.IsStabilityCritical()}");
             Debug.Log($"Weapon Power: {powerManager.GetSystemEfficiency("weapons"):F2} | Active Weapon: {(weaponManager != null ? weaponManager.GetActiveWeaponType().ToString() : "None")} | Override: {testMode_IgnoreWeaponPower}");
+        }
+    }
+
+    // ===== Ship Hit / Shake (moved from UIController) =====
+
+    public void updateShipHit(float duration)
+    {
+        if (shipHit == null) return;
+        shipHitCo = StartCoroutine(ShipShake(duration));
+    }
+
+    private IEnumerator ShipShake(float duration)
+    {
+        Vector3 startPos = new Vector3(0f, 0f, 0f);
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            float strength = shipHitCurve.Evaluate(elapsedTime / duration);
+            shipHit.localPosition = startPos + Random.insideUnitSphere * strength;
+            yield return null;
+        }
+
+        shipHit.localPosition = startPos;
+    }
+
+    // ===== Compass / Sensors (moved from UIController) =====
+
+    public void UpdateCompass(bool loaded, int icon, float port, float aft, float prow, float starboard)
+    {
+        if (loaded)
+        {
+            sensorIcon.sprite = sensorLoadSprites[icon];
+            sensorLoadInfo[0].text = port.ToString() + "/ 100";
+            sensorLoadInfo[1].text = aft.ToString() + "/ 100";
+            sensorLoadInfo[2].text = prow.ToString() + "/ 100";
+            sensorLoadInfo[3].text = starboard.ToString() + "/ 100";
+
+            sensorLoad.localPosition = new Vector2(0, 0);
+        }
+        else if (!loaded)
+        {
+            sensorIcon.sprite = null;
+            sensorLoadInfo[0].text = null;
+            sensorLoadInfo[1].text = null;
+            sensorLoadInfo[2].text = null;
+            sensorLoadInfo[3].text = null;
+
+            sensorLoad.localPosition = new Vector2(2000, 0);
+        }
+    }
+
+    private void uiControler_UpdateCompass(float angle)
+    {
+        if (compassRect != null)
+            compassRect.rotation = Quaternion.Euler(0, 0, angle);
+    }
+
+    public void UpdateSpeedometer(float speed)
+    {
+        //speedometerTMP.text = speed.ToString("F1");
+    }
+
+    private void StartSpeedometerUpdates()
+    {
+        if (velocityMeterImg != null && velocityMeterImg.Length >= 2 && velocityMeterSha != null)
+        {
+            velocityMeterImg[0].material = new Material(velocityMeterSha);
+            velocityMeterImg[1].material = new Material(velocityMeterSha);
+
+            velocityMeterImg[0].material.SetFloat("_PowerMax", turnRate * 2);
+        }
+
+        speedometerUpdateCoroutine = StartCoroutine(UpdateSpeedometerContinuously());
+    }
+
+    private IEnumerator UpdateSpeedometerContinuously()
+    {
+        while (autoUpdateSpeedometer)
+        {
+            UpdateSpeedometerFromPlayerShip();
+            yield return new WaitForSeconds(speedometerUpdateRate);
+        }
+    }
+
+    public void UpdateVelocity()
+    {
+        if (velocityMeterImg == null || velocityMeterImg.Length == 0) return;
+        if (velocityMeterImg[0].material == null) return;
+
+        velocityMeterImg[0].material.SetFloat("_PowerCur", Mathf.RoundToInt(GetCurrentSpeed()));
+
+        if (velocityMeterTMP != null && velocityMeterTMP.Length > 0)
+            velocityMeterTMP[0].text = Mathf.RoundToInt(GetCurrentSpeed()).ToString();
+    }
+
+    private void UpdateSpeedometerFromPlayerShip()
+    {
+        Rigidbody shipRigidbody = GetComponent<Rigidbody>();
+        if (shipRigidbody != null)
+        {
+            float speed = shipRigidbody.linearVelocity.magnitude;
+
+            Vector3 forwardDirection = transform.forward;
+            Vector3 velocityDirection = shipRigidbody.linearVelocity.normalized;
+            float forwardDot = Vector3.Dot(forwardDirection, velocityDirection);
+
+            if (forwardDot < -0.1f)
+            {
+                speed = -speed;
+            }
+
+            UpdateSpeedometer(speed);
+        }
+    }
+
+    public void ForceSpeedometerUpdate()
+    {
+        UpdateSpeedometerFromPlayerShip();
+    }
+
+    public void SetAutoUpdateSpeedometer(bool enabled)
+    {
+        autoUpdateSpeedometer = enabled;
+
+        if (enabled && speedometerUpdateCoroutine == null)
+        {
+            StartSpeedometerUpdates();
+        }
+        else if (!enabled && speedometerUpdateCoroutine != null)
+        {
+            StopCoroutine(speedometerUpdateCoroutine);
+            speedometerUpdateCoroutine = null;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (speedometerUpdateCoroutine != null)
+        {
+            StopCoroutine(speedometerUpdateCoroutine);
         }
     }
 }

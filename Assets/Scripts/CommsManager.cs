@@ -36,6 +36,12 @@ public class CommsManager : MonoBehaviour
     [SerializeField] private AudioClip successSound;
     [SerializeField] private AudioClip failureSound;
 
+    [Header("Frequency Tuning")]
+    [SerializeField] TextMeshProUGUI frequancyTMP;
+    [SerializeField] Transform frequancyTrans;
+    private float frequancyFlt = 0f;
+    [SerializeField] List<Transform> tunerTrans = new List<Transform>();
+
     private Signal currentSignal;
     private int currentBand = 1;
     private float currentFrequency = 1.0f;
@@ -204,5 +210,27 @@ public class CommsManager : MonoBehaviour
         };
         
         ReceiveSignal(testSignal);
+    }
+
+    public void FrequancyTune(float speed)
+    {
+        frequancyFlt = frequancyFlt + speed;
+
+        if (frequancyFlt >= 360 * 5)
+        {
+            frequancyFlt = 360 * 5;
+        }
+        else if (frequancyFlt <= 0)
+        {
+            frequancyFlt = 0;
+        }
+
+        frequancyTrans.rotation = Quaternion.Euler(0f, 0f, frequancyFlt * -1);
+
+        frequancyTMP.text = frequancyFlt.ToString();
+
+        float normF = tunerTrans[1].localPosition.x / tunerTrans[2].localPosition.x;
+
+        tunerTrans[0].localPosition = Vector2.Lerp(tunerTrans[1].localPosition, tunerTrans[2].localPosition, frequancyFlt / (360 * 5));
     }
 }
