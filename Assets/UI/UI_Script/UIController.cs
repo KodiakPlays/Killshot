@@ -1534,7 +1534,7 @@ public class UIController : MonoBehaviour
             bogieTranLoc = new Vector3(bogieTran.position.x / (screenDist * 2), bogieTran.position.y / (screenDist * 2), 0f);
             start = 0f;
         }
-        bogieTranLoc = shipPlayer.InverseTransformPoint(bogieTran.position);
+        //bogieTranLoc = shipPlayer.InverseTransformPoint(bogieTran.position);
 
         if (s < 0)
         {
@@ -1545,7 +1545,7 @@ public class UIController : MonoBehaviour
             bogieList[s].matWep.SetVector("_GunLoc", playerShipTranLoc);
         }
 
-            Vector3 direction = bogieTranLoc - playerShipTranLoc;
+        Vector3 direction = bogieTranLoc - playerShipTranLoc;
 
         sign = (direction.y >= 0) ? 1 : -1;
         offset = (sign >= 0) ? 0 : 360;
@@ -1562,11 +1562,14 @@ public class UIController : MonoBehaviour
         Vector3 vRight = new Vector3(playerShipTranLoc.x + zeroDegree, playerShipTranLoc.y, 0f);
 
         angle = (Vector2.Angle(vRight, direction) * sign + offset); //shipAngleTarget.position
-        distance = Vector2.Distance(vRight, bogieTranLoc);
+        distance = Vector2.Distance(playerShipTranLoc, bogieTranLoc);
 
-        float scaleDistance = distance / screenDist;
+        float scaleDistance = 0f;
 
-        //Debug.Log("angle: " + angle);
+        if (worldZoom < 2){ scaleDistance = (distance / screenDist);}
+        else if (worldZoom == 2) { scaleDistance = distance * 2f; }
+
+        //Debug.Log("angle: " + angle + ",distance: " + distance + ", scaleDistance: " + scaleDistance + ", distance * 2f: " + distance*2f);
 
         if (s < 0)
         {

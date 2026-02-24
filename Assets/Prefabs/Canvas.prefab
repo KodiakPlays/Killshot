@@ -1553,6 +1553,7 @@ MonoBehaviour:
   shipAngleTarget: {fileID: 0}
   testFloat: 0
   screenEnemyWeapon: {fileID: 8901316255644356539}
+  testFloat2: 0
   gridSha: {fileID: -6465566751694194690, guid: c66b883ef0b7d4e36881dfa71dfdada8, type: 3}
   gridImg: {fileID: 5386955993360744429}
   sc: {fileID: 0}

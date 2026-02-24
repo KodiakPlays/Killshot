@@ -2350,26 +2350,6 @@ PrefabInstance:
       propertyPath: uiController
       value: 
       objectReference: {fileID: 1946029194}
-    - target: {fileID: 3724157437582417748, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7295117312727389511, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: m_Color.b
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7295117312727389511, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: m_Color.g
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7295117312727389511, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: m_Color.r
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7295117312727389511, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
     - target: {fileID: 8267084971624876295, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
       propertyPath: m_Name
       value: PlayerShip
@@ -2679,10 +2659,6 @@ PrefabInstance:
     - target: {fileID: 721981670705475676, guid: b753aaddeccfa4b4d8162a5078846859, type: 3}
       propertyPath: m_SizeDelta.x
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 752775105683313636, guid: b753aaddeccfa4b4d8162a5078846859, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 911941666431196596, guid: b753aaddeccfa4b4d8162a5078846859, type: 3}
       propertyPath: m_SizeDelta.x
