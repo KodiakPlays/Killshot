@@ -490,4 +490,33 @@ public class Radar : MonoBehaviour
         if (m != null)
             bogieMesh.mesh = m.mesh;
     }
+
+    /// <summary>
+    /// Called by UIController to assign UI references that live on the Canvas prefab.
+    /// </summary>
+    public void AssignUIReferences(
+        Shader radarShaRef,
+        GameObject radarGORef,
+        GameObject radarBogeyGORef,
+        Slider scannerSliderRef,
+        int scanSpeedRef,
+        Shader scannerShaRef,
+        Image scannerImgRef,
+        List<int> scanPipsRef,
+        string[] shipPartsStringRef,
+        GameObject targetGORef,
+        MeshFilter bogieMeshRef)
+    {
+        radarSha = radarShaRef;
+        radarGO = radarGORef;
+        radarBogeyGO = radarBogeyGORef;
+        scannerSlider = scannerSliderRef;
+        scanSpeed = scanSpeedRef;
+        scannerSha = scannerShaRef;
+        scannerImg = scannerImgRef;
+        scanPips = scanPipsRef;
+        shipPartsString = shipPartsStringRef;
+        targetGO = targetGORef;
+        bogieMesh = bogieMeshRef;
+    }
 }

@@ -21,6 +21,11 @@ public class GameManager : MonoBehaviour
 
     public GameObject EnemyShipPrefab;
 
+    [Header("Mission Systems")]
+    [SerializeField] private GameClock gameClock;
+    [SerializeField] private QuestSystem questSystem;
+    [SerializeField] private WorldBoundary worldBoundary;
+
     [Header("Weapon Screen")]
     [SerializeField] private Shader weaponScreenSha;
     [SerializeField] private Image weaponScreenImage;
@@ -63,17 +68,27 @@ public class GameManager : MonoBehaviour
     {
         // Initialize game state
         //Spawn enemy ships randomly at start
-        for (int i = 0; i < 5; i++)
+        if (EnemyShipPrefab != null)
         {
-            Vector3 randomPos = new Vector3(Random.Range(-50, 50), Random.Range(-50, 50), 0);
-            SpawnEnemyShip(randomPos, Quaternion.identity);
+            for (int i = 0; i < 5; i++)
+            {
+                Vector3 randomPos = new Vector3(Random.Range(-50, 50), Random.Range(-50, 50), 0);
+                SpawnEnemyShip(randomPos, Quaternion.identity);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[GameManager] EnemyShipPrefab is not assigned! Cannot spawn enemies.");
         }
 
         // Find player reference
         playerShipRef = FindFirstObjectByType<PlayerShip>();
 
+        // Initialize mission systems
+        InitializeMissionSystems();
+
         // Initialize world grid and weapon screen
-        if (gridImg != null)
+        if (gridImg != null && gridSha != null)
         {
             WorldGridStart();
             WorldGridZoom(0);
@@ -83,8 +98,42 @@ public class GameManager : MonoBehaviour
         NewBogie();
     }
 
+    private void InitializeMissionSystems()
+    {
+        // GameClock
+        if (gameClock == null)
+        {
+            gameClock = GetComponent<GameClock>();
+            if (gameClock == null) gameClock = gameObject.AddComponent<GameClock>();
+        }
+
+        // QuestSystem
+        if (questSystem == null)
+        {
+            questSystem = GetComponent<QuestSystem>();
+            if (questSystem == null) questSystem = gameObject.AddComponent<QuestSystem>();
+        }
+
+        // WorldBoundary
+        if (worldBoundary == null)
+        {
+            worldBoundary = GetComponent<WorldBoundary>();
+            if (worldBoundary == null) worldBoundary = gameObject.AddComponent<WorldBoundary>();
+        }
+
+        // Subscribe to mission events
+        questSystem.OnMissionFailed += (reason) => Debug.Log($"[GameManager] Mission Failed: {reason}");
+        questSystem.OnMissionComplete += () => Debug.Log("[GameManager] Mission Complete!");
+    }
+
     void Update()
     {
+        // Strategic pause per GDD: player may pause at any time, clock stops during pause
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (gameClock != null) gameClock.TogglePause();
+        }
+
         // Weapon test inputs
         if (Input.GetKeyDown("0")) LaserFireEnemy(0);
         if (Input.GetKeyDown("1")) LaserFireEnemy(1);
@@ -99,20 +148,30 @@ public class GameManager : MonoBehaviour
 
     private void WorldGridStart()
     {
-        screenWepRT = screenWepGO.GetComponent<RectTransform>();
-        gridImg.material = new Material(gridSha);
+        if (screenWepGO != null)
+            screenWepRT = screenWepGO.GetComponent<RectTransform>();
+        
+        if (gridImg != null && gridSha != null)
+        {
+            gridImg.material = new Material(gridSha);
+            gridImg.material.SetVector("_ShipLocV2", new Vector2(0f, 0f));
+            gridImg.material.SetFloat("_ShipRotation", 0f);
+        }
 
-        gridImg.material.SetVector("_ShipLocV2", new Vector2(0f, 0f));
-        gridImg.material.SetFloat("_ShipRotation", 0f);
+        if (weaponScreenImage != null && weaponScreenSha != null)
+        {
+            weaponScreenImage.material = new Material(weaponScreenSha);
+            weaponScreenImage.material.SetInt("_LaserFire", 0);
+        }
 
-        weaponScreenImage.material = new Material(weaponScreenSha);
-        weaponScreenImage.material.SetInt("_LaserFire", 0);
-
-        screenWorld.texture = viewTex[0];
+        if (screenWorld != null && viewTex != null && viewTex.Length > 0)
+            screenWorld.texture = viewTex[0];
     }
 
     public void WorldGridLocUpdate(Vector2 shipV2)
     {
+        if (gridImg == null || gridImg.material == null) return;
+
         if (worldZoom == 0)
         {
             gridImg.material.SetVector("_ShipLocV2", (shipV2 / 100f));
@@ -123,8 +182,12 @@ public class GameManager : MonoBehaviour
                 Radar.Instance.ScanTargetSize(1);
             }
 
-            shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = true;
-            shipiconGO.SetActive(false);
+            if (shipPlayer != null && shipPlayer.childCount > 0)
+            {
+                var meshRenderer = shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>();
+                if (meshRenderer != null) meshRenderer.enabled = true;
+            }
+            if (shipiconGO != null) shipiconGO.SetActive(false);
         }
         else if (worldZoom == 1)
         {
@@ -148,6 +211,8 @@ public class GameManager : MonoBehaviour
 
     public void WorldGridRotUpdate(float r)
     {
+        if (gridImg == null || gridImg.material == null) return;
+
         if (worldZoom < 2)
         {
             gridImg.material.SetFloat("_ShipRotation", r);
@@ -156,17 +221,20 @@ public class GameManager : MonoBehaviour
 
     public void WorldGridZoom(int i)
     {
+        if (gridImg == null || gridImg.material == null) return;
+        
         var radar = Radar.Instance;
 
         if (i == 0)
         {
-            screenWorld.texture = viewTex[0];
+            if (screenWorld != null && viewTex != null && viewTex.Length > 0)
+                screenWorld.texture = viewTex[0];
 
             gridImg.material.SetInt("_WorldView", 0);
             gridImg.material.SetVector("_CellSize", new Vector2(1, 1));
             gridImg.material.SetFloat("_GridAmmount", 5f);
             gridImg.material.SetFloat("_GridThickness", .02f);
-            gridImg.material.SetFloat("_ShipRotation", shipPlayer.localRotation.z);
+            gridImg.material.SetFloat("_ShipRotation", shipPlayer != null ? shipPlayer.localRotation.z : 0f);
 
             if (radar != null && radar.radarImg != null)
             {
@@ -174,10 +242,11 @@ public class GameManager : MonoBehaviour
                 radar.radarImg.material.SetInt("_Show", 1);
                 radar.radarImg.material.SetFloat("_VisualRange", 1f);
             }
-            weaponScreenImage.material.SetInt("_RangeVisOn", 1);
+            if (weaponScreenImage != null && weaponScreenImage.material != null)
+                weaponScreenImage.material.SetInt("_RangeVisOn", 1);
 
             scaleSize = 1f;
-            sc.orthographicSize = 50f;
+            if (sc != null) sc.orthographicSize = 50f;
 
             for (int j = 0; j < bogieList.Count; j++)
             {
@@ -190,13 +259,14 @@ public class GameManager : MonoBehaviour
         }
         else if (i == 1)
         {
-            screenWorld.texture = viewTex[0];
+            if (screenWorld != null && viewTex != null && viewTex.Length > 0)
+                screenWorld.texture = viewTex[0];
 
             gridImg.material.SetInt("_WorldView", 0);
             gridImg.material.SetVector("_CellSize", new Vector2(1, 1));
             gridImg.material.SetFloat("_GridAmmount", 20f);
             gridImg.material.SetFloat("_GridThickness", .04f);
-            gridImg.material.SetFloat("_ShipRotation", shipPlayer.localRotation.z);
+            gridImg.material.SetFloat("_ShipRotation", shipPlayer != null ? shipPlayer.localRotation.z : 0f);
 
             if (radar != null && radar.radarImg != null)
             {
@@ -204,9 +274,10 @@ public class GameManager : MonoBehaviour
                 radar.radarImg.material.SetInt("_Show", 1);
                 radar.radarImg.material.SetFloat("_VisualRange", .1f);
             }
-            weaponScreenImage.material.SetInt("_RangeVisOn", 0);
+            if (weaponScreenImage != null && weaponScreenImage.material != null)
+                weaponScreenImage.material.SetInt("_RangeVisOn", 0);
             scaleSize = .5f;
-            sc.orthographicSize = 500f;
+            if (sc != null) sc.orthographicSize = 500f;
 
             for (int j = 0; j < bogieList.Count; j++)
             {
@@ -215,16 +286,21 @@ public class GameManager : MonoBehaviour
                 bogieList[j].go.transform.GetChild(0).gameObject.transform.localScale = new Vector3(2f, 2f, 2f);
             }
 
-            shipiconGO.SetActive(true);
-            shipiconGO.transform.localScale = new Vector3(2f, 2f, 2f);
-            shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = false;
+            if (shipiconGO != null)
+            {
+                shipiconGO.SetActive(true);
+                shipiconGO.transform.localScale = new Vector3(2f, 2f, 2f);
+            }
+            if (shipPlayer != null && shipPlayer.childCount > 0)
+                shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = false;
 
             worldZoom = 1;
             screenDist = 500;
         }
         else if (i == 2)
         {
-            screenWorld.texture = viewTex[1];
+            if (viewTex != null && viewTex.Length > 1 && screenWorld != null)
+                screenWorld.texture = viewTex[1];
 
             gridImg.material.SetInt("_WorldView", 1);
             gridImg.material.SetVector("_CellSize", new Vector2(2, 2));
@@ -238,9 +314,10 @@ public class GameManager : MonoBehaviour
                 radar.radarImg.material.SetInt("_Show", 0);
                 radar.radarImg.material.SetFloat("_VisualRange", .01f);
             }
-            weaponScreenImage.material.SetInt("_RangeVisOn", 0);
+            if (weaponScreenImage != null && weaponScreenImage.material != null)
+                weaponScreenImage.material.SetInt("_RangeVisOn", 0);
             scaleSize = .25f;
-            sc.orthographicSize = 5000f;
+            if (sc != null) sc.orthographicSize = 5000f;
 
             for (int j = 0; j < bogieList.Count; j++)
             {
@@ -249,9 +326,13 @@ public class GameManager : MonoBehaviour
                 bogieList[j].go.transform.GetChild(0).gameObject.transform.localScale = new Vector3(20f, 20f, 20f);
             }
 
-            shipiconGO.SetActive(true);
-            shipiconGO.transform.localScale = new Vector3(20f, 20f, 20f);
-            shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = false;
+            if (shipiconGO != null)
+            {
+                shipiconGO.SetActive(true);
+                shipiconGO.transform.localScale = new Vector3(20f, 20f, 20f);
+            }
+            if (shipPlayer != null && shipPlayer.childCount > 0)
+                shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = false;
 
             worldZoom = 2;
             screenDist = 5000;
@@ -272,25 +353,25 @@ public class GameManager : MonoBehaviour
             go = GameObject.Find("Bogie_" + j.ToString());
             if (go == null) continue;
 
-            bogieList.Add(new BogieClass(go, go.GetComponent<MeshFilter>().mesh, null, new Material(weaponScreenSha)));
+            int idx = bogieList.Count; // Use actual list index, not loop counter
+            bogieList.Add(new BogieClass(go, go.GetComponent<MeshFilter>() != null ? go.GetComponent<MeshFilter>().mesh : null, null, new Material(weaponScreenSha)));
 
-            goImg = Instantiate(new GameObject(), new Vector3(transform.position.x, transform.position.y, transform.position.z), Quaternion.identity);
+            // Create UI image directly (no Instantiate(new GameObject()) to avoid orphan leak)
+            goImg = new GameObject("BogieImg_" + j);
+            goImg.transform.SetParent(screenEnemyWeapon, false);
 
-            goImg.transform.parent = screenEnemyWeapon;
-
-            bogieList[j].wepImage = goImg.AddComponent<Image>();
-
-            bogieList[j].wepImage.material = bogieList[j].matWep;
+            bogieList[idx].wepImage = goImg.AddComponent<Image>();
+            bogieList[idx].wepImage.material = bogieList[idx].matWep;
 
             goImg.transform.localScale = new Vector3(1f, 1f, 1f);
 
-            goImg.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
-            goImg.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
+            RectTransform rt = goImg.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0, 0);
+            rt.anchorMax = new Vector2(1, 1);
+            rt.offsetMin = new Vector2(0, 0);
+            rt.offsetMax = new Vector2(0, 0);
 
-            goImg.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);
-            goImg.GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);
-
-            bogieList[j].WeapStart();
+            bogieList[idx].WeapStart();
         }
     }
 
@@ -530,5 +611,40 @@ public class GameManager : MonoBehaviour
     public void SignalGhost()
     {
         //create a signal elseware
+    }
+
+    /// <summary>
+    /// Called by UIController to assign UI references that live on the Canvas prefab.
+    /// </summary>
+    public void AssignUIReferences(
+        Shader weaponScreenShaRef,
+        Image weaponScreenImageRef,
+        GameObject screenWepGORef,
+        Transform shipAngleTargetRef,
+        RectTransform screenEnemyWeaponRef,
+        Shader gridShaRef,
+        Image gridImgRef,
+        Camera scRef,
+        Texture[] viewTexRef,
+        RawImage screenWorldRef,
+        Transform shipPlayerRef,
+        GameObject shipiconGORef,
+        MeshFilter bogieMeshRef,
+        AnimationCurve animationCurveRef)
+    {
+        weaponScreenSha = weaponScreenShaRef;
+        weaponScreenImage = weaponScreenImageRef;
+        screenWepGO = screenWepGORef;
+        shipAngleTarget = shipAngleTargetRef;
+        screenEnemyWeapon = screenEnemyWeaponRef;
+        gridSha = gridShaRef;
+        gridImg = gridImgRef;
+        sc = scRef;
+        viewTex = viewTexRef;
+        screenWorld = screenWorldRef;
+        shipPlayer = shipPlayerRef;
+        shipiconGO = shipiconGORef;
+        bogieMesh = bogieMeshRef;
+        animationCurve = animationCurveRef;
     }
 }

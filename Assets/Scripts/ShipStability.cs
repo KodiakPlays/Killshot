@@ -189,4 +189,15 @@ public class ShipStability : MonoBehaviour
             stabilityDisplayImg.material.SetColor("_OnColor", col[2]);
         }
     }
+
+    /// <summary>
+    /// Called by UIController to assign UI references that live on the Canvas prefab.
+    /// </summary>
+    public void AssignUIReferences(
+        Shader stabilityShaderRef,
+        Image stabilityImgRef)
+    {
+        stabilityShader = stabilityShaderRef;
+        stabilityImg = stabilityImgRef;
+    }
 }

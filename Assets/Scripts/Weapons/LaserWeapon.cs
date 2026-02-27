@@ -52,7 +52,7 @@ public class LaserWeapon : WeaponBase
             return false;
         }
 
-        FireLaser(firePoint.forward);
+        FireLaser(firePoint.up);
         return true;
     }
 
@@ -64,8 +64,8 @@ public class LaserWeapon : WeaponBase
         // Get spawn position
         Vector3 spawnPos = firePoint.position;
         
-        // Instantiate laser
-        GameObject laser = Instantiate(laserPrefab, spawnPos, Quaternion.LookRotation(fireDirection));
+        // Instantiate laser (2D top-down: orient using up axis)
+        GameObject laser = Instantiate(laserPrefab, spawnPos, Quaternion.LookRotation(Vector3.forward, fireDirection));
         
         // Get Laser component and fire it
         Laser laserScript = laser.GetComponent<Laser>();

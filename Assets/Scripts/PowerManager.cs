@@ -49,9 +49,12 @@ public class PowerManager : MonoBehaviour
 
     private List<PowerSystem> activeSystems = new List<PowerSystem>();
     private Dictionary<PowerSystem, float> powerAccumulator = new Dictionary<PowerSystem, float>();
+    private InternalSubsystems internalSubsystems;
 
     private void Start()
     {
+        internalSubsystems = GetComponent<InternalSubsystems>();
+
         // Initialize power accumulators
         powerAccumulator[engines] = 0f;
         powerAccumulator[weapons] = 0f;
@@ -76,6 +79,18 @@ public class PowerManager : MonoBehaviour
 
     private void UpdatePowerSystems()
     {
+        // GDD: Reactor damage limits total power available
+        int effectiveMaxReactor = reactorMaxPower;
+        if (internalSubsystems != null)
+        {
+            effectiveMaxReactor = Mathf.RoundToInt(reactorMaxPower * internalSubsystems.GetReactorMultiplier());
+            // Clamp current reactor power to effective max
+            if (currentReactorPower > effectiveMaxReactor)
+            {
+                currentReactorPower = effectiveMaxReactor;
+            }
+        }
+
         // Update active systems
         activeSystems.Clear();
         foreach (var system in new[] { engines, weapons, sensors })
@@ -287,7 +302,32 @@ public class PowerManager : MonoBehaviour
     
     public int GetMaxReactorPower()
     {
+        if (internalSubsystems != null)
+        {
+            return Mathf.RoundToInt(reactorMaxPower * internalSubsystems.GetReactorMultiplier());
+        }
         return reactorMaxPower;
+    }
+
+    /// <summary>
+    /// Drain 1 power from a specific system. Used by InternalSubsystems reactor damage effect.
+    /// </summary>
+    public void DrainSystemPower(string systemName)
+    {
+        PowerSystem system = null;
+        switch (systemName.ToLower())
+        {
+            case "engines": system = engines; break;
+            case "weapons": system = weapons; break;
+            case "sensors": system = sensors; break;
+        }
+
+        if (system != null && system.currentPower > 0)
+        {
+            system.currentPower--;
+            currentReactorPower++;
+            Debug.Log($"[PowerManager] Reactor damage drained 1 power from {systemName}");
+        }
     }
 
     // ===== Power UI Methods (moved from UIController) =====
@@ -590,5 +630,30 @@ public class PowerManager : MonoBehaviour
                 VentNodeCheck();
             }
         }
+    }
+
+    /// <summary>
+    /// Called by UIController to assign UI references that live on the Canvas prefab.
+    /// </summary>
+    public void AssignUIReferences(
+        List<Button> btnPowerBoolRef,
+        List<Image> imgPowerMetRef,
+        Shader shaPowerMetRef,
+        Shader shaReactorMetRef,
+        List<Sprite> uiSpriteRef,
+        List<Image> btnPowerBoolImageRef,
+        Shader powerNodeShaRef,
+        Image[] powerNodeImgRef,
+        List<int> powerStateRef)
+    {
+        btnPowerBool = btnPowerBoolRef;
+        imgPowerMet = imgPowerMetRef;
+        shaPowerMet = shaPowerMetRef;
+        shaReactorMet = shaReactorMetRef;
+        uiSprite = uiSpriteRef;
+        btnPowerBoolImage = btnPowerBoolImageRef;
+        powerNodeSha = powerNodeShaRef;
+        powerNodeImg = powerNodeImgRef;
+        powerState = powerStateRef;
     }
 }
