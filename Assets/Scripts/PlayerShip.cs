@@ -1,11 +1,12 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(ShipStability))]
-public class PlayerShip : MonoBehaviour
+public class PlayerShip : MonoBehaviour, IDamageable
 {
-    [Header("Script Refrence")]
-    public UIController uiControler;
-
     [Header("Movement Settings")]
     [SerializeField] private float rateOfAcceleration = 50f; // Speed change per second
     [SerializeField] public float turnRate = 90f; // Degrees per second (1 decimal place precision)
@@ -16,10 +17,33 @@ public class PlayerShip : MonoBehaviour
     [SerializeField] private Transform cameraTransform; // Reference to the camera transform
     [SerializeField] private Vector3 cameraOffset = new Vector3(0, 10, -15); // Camera offset from ship
 
+    [Header("Ship Hit")]
+    [SerializeField] private Transform shipHit;
+    public AnimationCurve shipHitCurve;
+    private Coroutine shipHitCo;
+
+    [Header("Compass/Sensors")]
+    [SerializeField] private Transform sensorLoad;
+    [SerializeField] private List<TextMeshProUGUI> sensorLoadInfo = new List<TextMeshProUGUI>();
+    [SerializeField] private Image sensorIcon;
+    [SerializeField] private List<Sprite> sensorLoadSprites = new List<Sprite>();
+    [SerializeField] private RectTransform compassRect;
+
+    [Header("Speedometer Settings")]
+    [SerializeField] private TextMeshProUGUI speedometerTMP;
+    [SerializeField] private bool autoUpdateSpeedometer = true;
+    [SerializeField] private float speedometerUpdateRate = 0.1f;
+    private Coroutine speedometerUpdateCoroutine;
+    [SerializeField] private Shader velocityMeterSha;
+    [SerializeField] private Image[] velocityMeterImg;
+    [SerializeField] private TextMeshProUGUI[] velocityMeterTMP;
+
     // Systems
     private PowerManager powerManager;
     private ShipStability stability;
     private WeaponManager weaponManager;
+    private HullSystem hullSystem;
+    private InternalSubsystems internalSubsystems;
     
     // Movement state
     private float currentSpeed; // Current forward/backward speed
@@ -39,10 +63,6 @@ public class PlayerShip : MonoBehaviour
     // Constants
     private const float SPEED_UNITS_PER_BAR = 20f; // Each bar represents 20 units of speed
 
-	[Header("Health Settings")]
-	[SerializeField] private float maxHealth = 100f;
-	[SerializeField] private float currentHealth;
-
 	[Header("Testing Overrides")]
 	[SerializeField] private bool testMode_IgnoreWeaponPower = false;
 
@@ -60,8 +80,6 @@ public class PlayerShip : MonoBehaviour
             rb.angularDamping = 0;
         }
         
-        currentHealth = maxHealth;
-        
         // Get system references
         powerManager = GetComponent<PowerManager>();
         if (powerManager == null)
@@ -74,6 +92,21 @@ public class PlayerShip : MonoBehaviour
         {
             stability = gameObject.AddComponent<ShipStability>();
         }
+
+        hullSystem = GetComponent<HullSystem>();
+        if (hullSystem == null)
+        {
+            hullSystem = gameObject.AddComponent<HullSystem>();
+        }
+
+        internalSubsystems = GetComponent<InternalSubsystems>();
+        if (internalSubsystems == null)
+        {
+            internalSubsystems = gameObject.AddComponent<InternalSubsystems>();
+        }
+
+        // Subscribe to ship destruction
+        hullSystem.OnShipDestroyed += HandleShipDestroyed;
 
         weaponManager = GetComponent<WeaponManager>();
         if (weaponManager == null)
@@ -107,17 +140,62 @@ public class PlayerShip : MonoBehaviour
             // Initialize camera position
             targetCameraPosition = transform.position + cameraOffset;
         }
+
+        // Start speedometer updates
+        if (autoUpdateSpeedometer)
+        {
+            StartSpeedometerUpdates();
+        }
     }
 
+    /// <summary>
+    /// Take directional hull damage per GDD spec.
+    /// Damage hits the quadrant determined by the hit direction.
+    /// </summary>
+    public void TakeDamage(float damage, Vector3 hitDirection)
+    {
+        if (hullSystem == null) return;
+        HullSide side = hullSystem.DetermineHitSide(hitDirection);
+        hullSystem.TakeDamage(side, damage);
+    }
+
+    /// <summary>
+    /// Legacy overload - damage hits Prow by default.
+    /// </summary>
     public void TakeDamage(float damage)
     {
-        currentHealth = Mathf.Max(0, currentHealth - damage);
-        
-        if (currentHealth <= 0)
+        if (hullSystem != null)
         {
-            // Handle player death
-            Destroy(gameObject);
+            hullSystem.TakeDamage(HullSide.Prow, damage);
         }
+    }
+
+    // IDamageable implementation
+    float IDamageable.TakeDamage(float amount)
+    {
+        TakeDamage(amount); // Delegates to the Prow-default overload
+        return amount;
+    }
+
+    public float GetCurrentHealth()
+    {
+        return hullSystem != null ? hullSystem.GetTotalHealth() : 0f;
+    }
+
+    public float GetMaxHealth()
+    {
+        return hullSystem != null ? hullSystem.GetTotalMaxHealth() : 150f;
+    }
+
+    public bool CanBeDamaged()
+    {
+        return hullSystem != null;
+    }
+
+    private void HandleShipDestroyed()
+    {
+        Debug.Log("[PlayerShip] Ship destroyed!");
+        Destroy(gameObject);
     }
 
     // Public methods for UI/external systems
@@ -183,6 +261,8 @@ public class PlayerShip : MonoBehaviour
             testMode_IgnoreWeaponPower = !testMode_IgnoreWeaponPower;
             Debug.Log($"Weapon Power Override: {(testMode_IgnoreWeaponPower ? "ENABLED" : "DISABLED")}");
         }
+
+        UpdateVelocity();
     }
 
     private void TryDodge(float direction)
@@ -222,14 +302,14 @@ public class PlayerShip : MonoBehaviour
             // Testing override - allow firing without power
             if (testMode_IgnoreWeaponPower)
             {
-                weaponManager.FireActiveWeapon(transform.position + transform.forward * 1000f, 1.0f); // Use maximum power for testing
+                weaponManager.FireActiveWeapon(transform.position + transform.up * 1000f, 1.0f); // Use maximum power for testing
                 return;
             }
             
             // Normal power check - can only fire if weapons have some power (minimum 20% for emergency firing)
             if (weaponPower > 0.2f)
             {
-                weaponManager.FireActiveWeapon(transform.position + transform.forward * 1000f, weaponPower);
+                weaponManager.FireActiveWeapon(transform.position + transform.up * 1000f, weaponPower);
             }
             else
             {
@@ -263,7 +343,9 @@ public class PlayerShip : MonoBehaviour
         if (Mathf.Abs(thrustInput) > 0.01f)
         {
             // Calculate target speed based on thrust direction
-            float maxThrust = 100f * enginePower; // Engine power affects max thrust
+            // Apply subsystem debuffs per GDD: engine damage reduces max speed
+            float subsystemSpeedMult = internalSubsystems != null ? internalSubsystems.GetSpeedMultiplier() : 1f;
+            float maxThrust = 100f * enginePower * subsystemSpeedMult; // Engine power + subsystem damage affects max thrust
             
             if (thrustInput > 0)
             {
@@ -327,8 +409,9 @@ public class PlayerShip : MonoBehaviour
         if (Mathf.Abs(turnInput) > 0.01f && !stability.IsStabilityDepleted())
         {
             // A turns left (negative), D turns right (positive)
-            // Turn rate is affected by engine power
-            targetTurnSpeed = turnInput * turnRate * enginePower;
+            // Turn rate affected by engine power + subsystem debuffs per GDD (bridge/engine damage increases turn time)
+            float subsystemTurnMult = internalSubsystems != null ? internalSubsystems.GetTurnRateMultiplier() : 1f;
+            targetTurnSpeed = turnInput * turnRate * enginePower * subsystemTurnMult;
         }
         else
         {
@@ -364,9 +447,12 @@ public class PlayerShip : MonoBehaviour
             cameraEuler.z = transform.eulerAngles.z;
             cameraTransform.eulerAngles = cameraEuler;
 
-            uiControler.UpdateCompass(cameraEuler.z);
-            uiControler.WorldGridRotUpdate(cameraEuler.z);
-            uiControler.WorldGridLocUpdate(cameraTransform.position);
+            uiControler_UpdateCompass(cameraEuler.z);
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.WorldGridRotUpdate(cameraEuler.z);
+                GameManager.Instance.WorldGridLocUpdate(cameraTransform.position);
+            }
         }
 
         // Damage system disabled for now
@@ -390,5 +476,186 @@ public class PlayerShip : MonoBehaviour
             Debug.Log($"Stability: {stabilityPercent:F1}% | Can Dodge: {stability.CanDodgeAgain()} | Critical: {stability.IsStabilityCritical()}");
             Debug.Log($"Weapon Power: {powerManager.GetSystemEfficiency("weapons"):F2} | Active Weapon: {(weaponManager != null ? weaponManager.GetActiveWeaponType().ToString() : "None")} | Override: {testMode_IgnoreWeaponPower}");
         }
+    }
+
+    // ===== Ship Hit / Shake (moved from UIController) =====
+
+    public void updateShipHit(float duration)
+    {
+        if (shipHit == null) return;
+        shipHitCo = StartCoroutine(ShipShake(duration));
+    }
+
+    private IEnumerator ShipShake(float duration)
+    {
+        Vector3 startPos = new Vector3(0f, 0f, 0f);
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            float strength = shipHitCurve.Evaluate(elapsedTime / duration);
+            shipHit.localPosition = startPos + Random.insideUnitSphere * strength;
+            yield return null;
+        }
+
+        shipHit.localPosition = startPos;
+    }
+
+    // ===== Compass / Sensors (moved from UIController) =====
+
+    public void UpdateCompass(bool loaded, int icon, float port, float aft, float prow, float starboard)
+    {
+        if (loaded)
+        {
+            sensorIcon.sprite = sensorLoadSprites[icon];
+            // Display hull quadrant health per GDD (max values differ per side: Port=50, Starboard=50, Prow=40, Aft=10)
+            string portMax = hullSystem != null ? hullSystem.port.maxHealth.ToString("F0") : "50";
+            string aftMax = hullSystem != null ? hullSystem.aft.maxHealth.ToString("F0") : "10";
+            string prowMax = hullSystem != null ? hullSystem.prow.maxHealth.ToString("F0") : "40";
+            string starMax = hullSystem != null ? hullSystem.starboard.maxHealth.ToString("F0") : "50";
+
+            sensorLoadInfo[0].text = port.ToString("F0") + "/ " + portMax;
+            sensorLoadInfo[1].text = aft.ToString("F0") + "/ " + aftMax;
+            sensorLoadInfo[2].text = prow.ToString("F0") + "/ " + prowMax;
+            sensorLoadInfo[3].text = starboard.ToString("F0") + "/ " + starMax;
+
+            sensorLoad.localPosition = new Vector2(0, 0);
+        }
+        else if (!loaded)
+        {
+            sensorIcon.sprite = null;
+            sensorLoadInfo[0].text = null;
+            sensorLoadInfo[1].text = null;
+            sensorLoadInfo[2].text = null;
+            sensorLoadInfo[3].text = null;
+
+            sensorLoad.localPosition = new Vector2(2000, 0);
+        }
+    }
+
+    private void uiControler_UpdateCompass(float angle)
+    {
+        if (compassRect != null)
+            compassRect.rotation = Quaternion.Euler(0, 0, angle);
+    }
+
+    public void UpdateSpeedometer(float speed)
+    {
+        //speedometerTMP.text = speed.ToString("F1");
+    }
+
+    private void StartSpeedometerUpdates()
+    {
+        if (velocityMeterImg != null && velocityMeterImg.Length >= 2 && velocityMeterSha != null)
+        {
+            velocityMeterImg[0].material = new Material(velocityMeterSha);
+            velocityMeterImg[1].material = new Material(velocityMeterSha);
+
+            velocityMeterImg[0].material.SetFloat("_PowerMax", turnRate * 2);
+        }
+
+        speedometerUpdateCoroutine = StartCoroutine(UpdateSpeedometerContinuously());
+    }
+
+    private IEnumerator UpdateSpeedometerContinuously()
+    {
+        while (autoUpdateSpeedometer)
+        {
+            UpdateSpeedometerFromPlayerShip();
+            yield return new WaitForSeconds(speedometerUpdateRate);
+        }
+    }
+
+    public void UpdateVelocity()
+    {
+        if (velocityMeterImg == null || velocityMeterImg.Length == 0) return;
+        if (velocityMeterImg[0].material == null) return;
+
+        velocityMeterImg[0].material.SetFloat("_PowerCur", Mathf.RoundToInt(GetCurrentSpeed()));
+
+        if (velocityMeterTMP != null && velocityMeterTMP.Length > 0)
+            velocityMeterTMP[0].text = Mathf.RoundToInt(GetCurrentSpeed()).ToString();
+    }
+
+    private void UpdateSpeedometerFromPlayerShip()
+    {
+        Rigidbody shipRigidbody = GetComponent<Rigidbody>();
+        if (shipRigidbody != null)
+        {
+            float speed = shipRigidbody.linearVelocity.magnitude;
+
+            Vector3 forwardDirection = transform.forward;
+            Vector3 velocityDirection = shipRigidbody.linearVelocity.normalized;
+            float forwardDot = Vector3.Dot(forwardDirection, velocityDirection);
+
+            if (forwardDot < -0.1f)
+            {
+                speed = -speed;
+            }
+
+            UpdateSpeedometer(speed);
+        }
+    }
+
+    public void ForceSpeedometerUpdate()
+    {
+        UpdateSpeedometerFromPlayerShip();
+    }
+
+    public void SetAutoUpdateSpeedometer(bool enabled)
+    {
+        autoUpdateSpeedometer = enabled;
+
+        if (enabled && speedometerUpdateCoroutine == null)
+        {
+            StartSpeedometerUpdates();
+        }
+        else if (!enabled && speedometerUpdateCoroutine != null)
+        {
+            StopCoroutine(speedometerUpdateCoroutine);
+            speedometerUpdateCoroutine = null;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (speedometerUpdateCoroutine != null)
+        {
+            StopCoroutine(speedometerUpdateCoroutine);
+        }
+
+        // Unsubscribe from hull events
+        if (hullSystem != null)
+        {
+            hullSystem.OnShipDestroyed -= HandleShipDestroyed;
+        }
+    }
+
+    /// <summary>
+    /// Called by UIController to assign UI references that live on the Canvas prefab.
+    /// </summary>
+    public void AssignUIReferences(
+        Transform shipHitRef,
+        AnimationCurve shipHitCurveRef,
+        Transform sensorLoadRef,
+        List<TextMeshProUGUI> sensorLoadInfoRef,
+        Image sensorIconRef,
+        List<Sprite> sensorLoadSpritesRef,
+        RectTransform compassRectRef,
+        Shader velocityMeterShaRef,
+        Image[] velocityMeterImgRef,
+        TextMeshProUGUI[] velocityMeterTMPRef)
+    {
+        shipHit = shipHitRef;
+        shipHitCurve = shipHitCurveRef;
+        sensorLoad = sensorLoadRef;
+        sensorLoadInfo = sensorLoadInfoRef;
+        sensorIcon = sensorIconRef;
+        sensorLoadSprites = sensorLoadSpritesRef;
+        compassRect = compassRectRef;
+        velocityMeterSha = velocityMeterShaRef;
+        velocityMeterImg = velocityMeterImgRef;
+        velocityMeterTMP = velocityMeterTMPRef;
     }
 }

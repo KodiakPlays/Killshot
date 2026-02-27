@@ -793,6 +793,9 @@ GameObject:
   - component: {fileID: 8239387001282893838}
   - component: {fileID: 5540153949720075400}
   - component: {fileID: 4656990419768348771}
+  - component: {fileID: 1234567890123456789}
+  - component: {fileID: 1111111111111111111}
+  - component: {fileID: 2222222222222222222}
   m_Layer: 0
   m_Name: PlayerShip
   m_TagString: Player
@@ -1103,3 +1106,74 @@ MonoBehaviour:
   rightFirePoint: {fileID: 2741798403034424658}
   projectilePrefab: {fileID: 968730919820449257, guid: 62faa2a5f451cff43a69075720685447, type: 3}
   projectileSpeed: 100
+--- !u!114 &1234567890123456789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8267084971624876295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0181c9836fbe64942b75ee36c42e7671, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerTransform: {fileID: 0}
+  radarContainer: {fileID: 0}
+  blipPrefab: {fileID: 0}
+  rangeSteps:
+  - 500
+  - 1000
+  - 2000
+  - 4000
+  - 8000
+  toggleKey: 114
+  radarRadius: 100
+  radarSha: {fileID: 0}
+  radarGO: {fileID: 0}
+  radarBogeyGO: {fileID: 0}
+  radarImg: {fileID: 0}
+  radarDegreeTest: 0
+  scannerSlider: {fileID: 0}
+  scanSpeed: 10
+  scannerSha: {fileID: 0}
+  scannerImg: {fileID: 0}
+  scanPips: []
+  shipPartsString:
+  - _Port
+  - _Aft
+  - _Prow
+  - _Star
+  targetGO: {fileID: 0}
+  bogieMesh: {fileID: 0}
+--- !u!114 &1111111111111111111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8267084971624876295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3402094418d074249bcd32936b15a49d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portMaxHealth: 50
+  starboardMaxHealth: 50
+  prowMaxHealth: 40
+  aftMaxHealth: 10
+--- !u!114 &2222222222222222222
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8267084971624876295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec2adaf786cb2674a910a81d5b229c20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  subsystemBaseHealth: 100
+  lifeSupportTimerDuration: 120
+  reactorDrainInterval: 5

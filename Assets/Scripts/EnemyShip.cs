@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class EnemyShip : MonoBehaviour
+public class EnemyShip : MonoBehaviour, IDamageable
 {
     [Header("Detection and Combat")]
     public float detectionRadius = 30f;
@@ -54,9 +54,27 @@ public class EnemyShip : MonoBehaviour
             // Calculate direction to player
             Vector3 directionToPlayer = (playerTransform.position - transform.position).normalized;
             
-            // Rotate to face the player (no movement towards player)
-            Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, -directionToPlayer);
+            // Rotate to face the player (fixed: removed negative sign so ship faces towards player)
+            Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, directionToPlayer);
             rb.MoveRotation(Quaternion.RotateTowards(rb.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime));
+
+            // Move towards optimal combat distance
+            if (distanceToPlayer > optimalCombatDistance * 1.1f)
+            {
+                // Too far — thrust towards player
+                rb.AddForce(transform.up * thrustForce, ForceMode.Force);
+            }
+            else if (distanceToPlayer < optimalCombatDistance * 0.5f)
+            {
+                // Too close — thrust away
+                rb.AddForce(-transform.up * thrustForce, ForceMode.Force);
+            }
+            else
+            {
+                // At optimal range — orbit the player
+                Vector3 orbitDir = Vector3.Cross(directionToPlayer, Vector3.forward).normalized;
+                rb.AddForce(orbitDir * orbitSpeed, ForceMode.Force);
+            }
 
             // Check if we're in combat range and facing the player
             bool inCombatRange = distanceToPlayer <= detectionRadius;
@@ -80,17 +98,17 @@ public class EnemyShip : MonoBehaviour
 
     private void FireLaser()
     {
-        if (playerTransform == null) return;
+        if (playerTransform == null || laserPrefab == null) return;
 
         lastFireTime = Time.time;
         Vector3 spawnPos = firePoint ? firePoint.position : transform.position;
         
-        // Calculate direction to player
+        // Calculate direction to player (2D — use transform.up as forward in top-down)
         Vector3 directionToPlayer = (playerTransform.position - spawnPos).normalized;
-        Quaternion targetRotation = Quaternion.LookRotation(directionToPlayer);
+        Quaternion spawnRotation = Quaternion.LookRotation(Vector3.forward, directionToPlayer);
         
         // Spawn and orient the laser
-        GameObject laserObj = Instantiate(laserPrefab, spawnPos, targetRotation);
+        GameObject laserObj = Instantiate(laserPrefab, spawnPos, spawnRotation);
         Laser laser = laserObj.GetComponent<Laser>();
         if (laser != null)
         {
@@ -106,6 +124,21 @@ public class EnemyShip : MonoBehaviour
             Explode();
         }
     }
+
+    // IDamageable implementation
+    float IDamageable.TakeDamage(float amount)
+    {
+        currentHealth -= Mathf.RoundToInt(amount);
+        if (currentHealth <= 0)
+        {
+            Explode();
+        }
+        return amount;
+    }
+
+    public float GetCurrentHealth() => currentHealth;
+    public float GetMaxHealth() => maxHealth;
+    public bool CanBeDamaged() => currentHealth > 0;
 
     private void Explode()
     {
@@ -139,15 +172,8 @@ public class EnemyShip : MonoBehaviour
         Destroy(gameObject);
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        // Only take damage from player projectiles
-        if (other.CompareTag("PlayerProjectile"))
-        {
-            TakeDamage();
-            Destroy(other.gameObject); // Destroy the laser
-        }
-    }
+    // OnTriggerEnter removed — collision handling is done by projectile scripts (Laser.cs, Shell.cs, etc.)
+    // Having it here caused double-damage and race conditions with Destroy calls.
 
     // Optional: Visualize detection radius in editor
     private void OnDrawGizmosSelected()

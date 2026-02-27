@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ShipStability : MonoBehaviour
 {
@@ -19,13 +20,17 @@ public class ShipStability : MonoBehaviour
     private float lastDodgeTime;
     private const float DODGE_COOLDOWN = 0.5f; // Time between possible dodges
 
-    public UIController uiController;
+    [Header("Stability UI")]
+    [SerializeField] private Shader stabilityShader;
+    [SerializeField] private Image stabilityImg;
+    [SerializeField] private Image stabilityDisplayImg; // Assign same Image as PlayerShip's velocityMeterImg[0]
+    private float stabMax = 1;
 
     private void Start()
     {
         currentStability = maxStability;
 
-        uiController.StabilityMeterStart(currentStability, maxStability);
+        StabilityMeterStart(currentStability, maxStability);
     }
 
     private void Update()
@@ -43,7 +48,7 @@ public class ShipStability : MonoBehaviour
             
             currentStability = Mathf.Min(maxStability, currentStability + recoveryRate * Time.deltaTime);
 
-            uiController.StabilityMeterUpdate(currentStability);
+            StabilityMeterUpdate(currentStability);
         }
     }
 
@@ -144,5 +149,55 @@ public class ShipStability : MonoBehaviour
     public bool CanDodgeAgain()
     {
         return canDodge;
+    }
+
+    public void StabilityMeterStart(float cur, float max)
+    {
+        if (stabilityImg == null) return;
+        stabilityImg.material = new Material(stabilityShader);
+        stabilityImg.material.SetColor("_OnColor", new Color(1f, 1f, 1f));
+
+        stabilityImg.material.SetFloat("_PowerCur", cur);
+        stabilityImg.material.SetFloat("_PowerMax", max);
+
+        stabMax = max;
+    }
+
+    public void StabilityMeterUpdate(float cur)
+    {
+        if (stabilityDisplayImg == null) return;
+        stabilityDisplayImg.material.SetFloat("_PowerCur", cur);
+
+        StabilityMeterColor(cur);
+    }
+
+    public void StabilityMeterColor(float cur)
+    {
+        if (stabilityDisplayImg == null) return;
+        Color[] col = { new Color(1f, 1f, 1f), new Color(0.8117647f, 0.6f, 0f), new Color(1f, 0f, 0f) };
+
+        if (cur >= stabMax * .25)
+        {
+            stabilityDisplayImg.material.SetColor("_OnColor", col[0]);
+        }
+        else if (cur < stabMax * .25 && cur >= stabMax * .1)
+        {
+            stabilityDisplayImg.material.SetColor("_OnColor", col[1]);
+        }
+        else if (cur < stabMax * .1)
+        {
+            stabilityDisplayImg.material.SetColor("_OnColor", col[2]);
+        }
+    }
+
+    /// <summary>
+    /// Called by UIController to assign UI references that live on the Canvas prefab.
+    /// </summary>
+    public void AssignUIReferences(
+        Shader stabilityShaderRef,
+        Image stabilityImgRef)
+    {
+        stabilityShader = stabilityShaderRef;
+        stabilityImg = stabilityImgRef;
     }
 }

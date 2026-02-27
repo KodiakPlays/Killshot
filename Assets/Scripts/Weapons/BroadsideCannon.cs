@@ -76,6 +76,7 @@ public class BroadsideCannon : WeaponBase
 
     private void FindTarget()
     {
+        // Use 3D OverlapSphere but filter by XY distance for 2D game
         Collider[] colliders = Physics.OverlapSphere(transform.position, lockRadius);
         // Filter for EnemyShip
         var enemy = colliders
@@ -113,24 +114,25 @@ public class BroadsideCannon : WeaponBase
 
         GameObject proj = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
         
-        // Point at target
+        // Point at target (2D: orient using up axis toward target)
         if (currentTarget != null)
         {
-            proj.transform.LookAt(currentTarget);
+            Vector3 dir = (currentTarget.position - proj.transform.position).normalized;
+            proj.transform.rotation = Quaternion.LookRotation(Vector3.forward, dir);
         }
         
-        // Add velocity
+        // Add velocity (2D: use transform.up as forward direction)
         Rigidbody rb = proj.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.linearVelocity = proj.transform.forward * projectileSpeed;
+            rb.linearVelocity = proj.transform.up * projectileSpeed;
         }
         
         // Initialize projectile script if it exists (e.g. Shell)
         var shell = proj.GetComponent<Shell>();
         if (shell != null)
         {
-            shell.Initialize(proj.transform.forward * projectileSpeed, baseDamage * damageModifier);
+            shell.Initialize(proj.transform.up * projectileSpeed, baseDamage * damageModifier);
         }
     }
     

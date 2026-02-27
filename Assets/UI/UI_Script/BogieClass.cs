@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BogieClass : MonoBehaviour
+[System.Serializable]
+public class BogieClass
 {
     public GameObject go;
     public Mesh mesh;

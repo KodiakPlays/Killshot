@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class TestUIKeyControler : MonoBehaviour
 {
-    public UIController uiContoller;
+    public PlayerShip playerShipRef;
     public Transform playerShipTrans;
     public Image gridBK;
     public Material gridMat;
@@ -49,7 +49,8 @@ public class TestUIKeyControler : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.R))//test for railgun
         {
-            uiContoller.RailFire();//use this function for rail vfx
+            if (GameManager.Instance != null)
+                GameManager.Instance.RailFire();//use this function for rail vfx
         }
 
         // Get PlayerShip reference for actual values
@@ -67,7 +68,7 @@ public class TestUIKeyControler : MonoBehaviour
                 Rigidbody rb = playerShip.GetComponent<Rigidbody>();
                 actualSpeed = rb != null ? rb.linearVelocity.magnitude : 0f;
             }
-            uiContoller.UpdateSpeedometer(actualSpeed);
+            uiContoller_UpdateSpeedometer(actualSpeed);
         }
         else if (Input.GetKey(KeyCode.S))
         {
@@ -85,7 +86,7 @@ public class TestUIKeyControler : MonoBehaviour
                     actualSpeed = rb.linearVelocity.magnitude * (forwardDot < 0 ? -1 : 1);
                 }
             }
-            uiContoller.UpdateSpeedometer(actualSpeed);
+            uiContoller_UpdateSpeedometer(actualSpeed);
         }
 
         //bring speedometer back to 0 or show current speed
@@ -102,7 +103,7 @@ public class TestUIKeyControler : MonoBehaviour
                     currentSpeed = rb.linearVelocity.magnitude * (forwardDot < 0 ? -1 : 1);
                 }
             }
-            uiContoller.UpdateSpeedometer(currentSpeed);
+            uiContoller_UpdateSpeedometer(currentSpeed);
         }
 
         ////ship rotates - but compass only updates when camera rotates
@@ -126,7 +127,8 @@ public class TestUIKeyControler : MonoBehaviour
             if (Mathf.Abs(Mathf.DeltaAngle(lastCameraRotation, currentCameraRotation)) > 0.1f)
             {
                 // Camera has rotated, update compass
-                uiContoller.UpdateCompass(currentCameraRotation);
+                if (playerShipRef != null)
+                    playerShipRef.UpdateSpeedometer(currentCameraRotation);
                 lastCameraRotation = currentCameraRotation;
             }
         }
@@ -134,7 +136,8 @@ public class TestUIKeyControler : MonoBehaviour
         //ship gets hit/takes dmg effect
         if (Input.GetKeyDown(KeyCode.B))
         {
-            uiContoller.updateShipHit(1f);
+            if (playerShipRef != null)
+                playerShipRef.updateShipHit(1f);
             
             // Apply damage to PlayerShip if available
             if (playerShip != null)
@@ -174,19 +177,29 @@ public class TestUIKeyControler : MonoBehaviour
         //load in sensor info (using different keys to avoid conflict with power management)
         if (Input.GetKeyDown(KeyCode.Alpha0))
         {
-            uiContoller.UpdateCompass(false, 3, 0, 0, 0, 0);
+            if (playerShipRef != null)
+                playerShipRef.UpdateCompass(false, 3, 0, 0, 0, 0);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha4))//asteroid
         {
-            uiContoller.UpdateCompass(true, 0, 25, 25, 25, 25);
+            if (playerShipRef != null)
+                playerShipRef.UpdateCompass(true, 0, 25, 25, 25, 25);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha5))//orbiter
         {
-            uiContoller.UpdateCompass(true, 1, 50, 50, 50, 50);
+            if (playerShipRef != null)
+                playerShipRef.UpdateCompass(true, 1, 50, 50, 50, 50);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha6))//enemy ship
         {
-            uiContoller.UpdateCompass(true, 2, 100, 100, 100, 100);
+            if (playerShipRef != null)
+                playerShipRef.UpdateCompass(true, 2, 100, 100, 100, 100);
         }
+    }
+
+    private void uiContoller_UpdateSpeedometer(float speed)
+    {
+        if (playerShipRef != null)
+            playerShipRef.UpdateSpeedometer(speed);
     }
 }
