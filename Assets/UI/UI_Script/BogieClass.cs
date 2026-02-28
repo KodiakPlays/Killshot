@@ -21,6 +21,7 @@ public class BogieClass
     {
         matWep.SetInt("_LaserFire", 0);
         matWep.SetInt("_RangeVisOn", 0);
+        matWep.SetInt("_StabilityBool", 0);
         matWep.SetVector("_RangeColor", new Vector3(1f, 0f,0f));
     }
 

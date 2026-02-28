@@ -20,9 +20,6 @@ public class UIController : MonoBehaviour
     [SerializeField]
     private List<Image> imgPowerMet = new List<Image>();
 
-
-    //[SerializeField] private Material WeaponScreen;
-
     private List<UIPowerClass> uiPowerMetClass = new List<UIPowerClass>();
 
     public Dictionary<int, IEnumerator> powerAnimCoroutine = new Dictionary<int, IEnumerator>();
@@ -76,6 +73,7 @@ public class UIController : MonoBehaviour
     private float stabMax = 1;
 
     [Header("Scanner Hack")]
+    [SerializeField] private Transform[] bogieTabTran;
     [SerializeField] private Slider scannerSlider;
     private float scanValue = 0;
     private float placeValue = 0;
@@ -113,14 +111,13 @@ public class UIController : MonoBehaviour
     private float scaleSize;
     [SerializeField] private float testFloat2;
 
-
-
     [Header("World Grid")]
     [SerializeField] private Shader gridSha;
     [SerializeField] private Image gridImg;
-    [SerializeField] private Camera sc;
+    [SerializeField] private Camera[] sc;
     private int worldZoom;
     [SerializeField] private Texture[] viewTex;
+    [SerializeField] private Canvas[] canvasUI;
     [SerializeField] private RawImage screenWorld;
 
     [Header("Power Screen")]
@@ -152,6 +149,7 @@ public class UIController : MonoBehaviour
 
         ScanTargetLoc(0);
         ScanTargetSize(0);
+        BtnBogieTab(0);
     }
 
     void Update()
@@ -286,8 +284,6 @@ public class UIController : MonoBehaviour
                     }
                 }
 
-                //Debug.Log(shipPartsString[i] + ", " + checkPlace + ", " + scanerPipsV2[i] + ", " + placable);
-
                 if (placable)//these spots are empty, place pips type and color and move onto the next ship side.
                 {
                     for (int j = startI; j < startI + size[i]; j++)
@@ -355,7 +351,6 @@ public class UIController : MonoBehaviour
             currentBogieTarget = null;
 
             ScanTargetLoc(0);
-            //ScanTargetLoc(0);
 
             return;
         }else if (bogieList.Count > 0)
@@ -419,17 +414,14 @@ public class UIController : MonoBehaviour
         else if (i == 1)
         {
             targetGO.transform.localScale = new Vector3(1f,1f,1f);
-            //targetGO.transform.position = new Vector3(1f, 1f, -10f);
         }
         else if (i == 2)
         {
             targetGO.transform.localScale = new Vector3(4f, 4f, 4f);
-            //targetGO.transform.position = new Vector3(1f, 1f, -10f);
         }
         else if (i == 3)
         {
             targetGO.transform.localScale = new Vector3(50f, 50f, 50f);
-            //targetGO.transform.position = new Vector3(1f, 1f, -10f);
         }
 
         targetGO.transform.localPosition = Vector3.zero;
@@ -576,7 +568,6 @@ public class UIController : MonoBehaviour
     public void ChargeOn(int i)
     {
         uiPowerMetClass[i].Charge(true);
-        //uiPowerMetClass[uiPowerMetClass.Count - 1].Charge(true);
 
         powerAnimCoroutine[i] = ChargeOnAnim(i);
 
@@ -589,10 +580,6 @@ public class UIController : MonoBehaviour
 
     public void ChargeOff(int i)
     {
-        //int lastCharge = 0;
-        //int noCharge = 0;
-        //Debug.Log("off: " + (i));
-
         uiPowerMetClass[i].Charge(false);
 
         StopCoroutine(powerAnimCoroutine[i]);
@@ -777,9 +764,6 @@ public class UIController : MonoBehaviour
                     uiPowerMetClass[i].mat.SetFloat("_PowerCur", uiPowerMetClass[i].cur);
                     uiPowerMetClass[uiPowerMetClass.Count - 1].mat.SetFloat("_PowerCur", uiPowerMetClass[uiPowerMetClass.Count - 1].cur);
 
-                    //Mathf.MoveTowards(0, crgAmt, time);
-                    //time += (Time.deltaTime) * (speed);
-
                     yield return new WaitForSeconds(.5f);
                 }
 
@@ -801,15 +785,9 @@ public class UIController : MonoBehaviour
             frequancyFlt = 0;
         }
 
-        //float multi = Mathf.Pow(100, 3);
-
-        //float roundedFrequancy = MathF.Round(frequancyFlt * multi) / multi;
-
         frequancyTrans.rotation = Quaternion.Euler(0f, 0f, frequancyFlt * -1);
 
         frequancyTMP.text = frequancyFlt.ToString();
-
-        //frequancyFlt = roundedFrequancy;
 
         float normF = tunerTrans[1].localPosition.x / tunerTrans[2].localPosition.x;
 
@@ -868,7 +846,7 @@ public class UIController : MonoBehaviour
 
     public void UpdateCompass(float angle)
     {
-        compassRect.rotation = Quaternion.Euler(0, 0, angle);
+        compassRect.localRotation = Quaternion.Euler(0, 0, angle);
     }
 
     public void UpdateSpeedometer(float speed)
@@ -1047,6 +1025,7 @@ public class UIController : MonoBehaviour
             bogieList[j].wepImage.material = bogieList[j].matWep;
 
             goImg.transform.localScale = new Vector3(1f, 1f, 1f);
+            goImg.transform.localPosition = new Vector3(0f, 0f, 0f);
 
             goImg.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
             goImg.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
@@ -1056,8 +1035,6 @@ public class UIController : MonoBehaviour
 
 
             bogieList[j].WeapStart();
-            //bogieList[j].matWep.SetInt("_LaserFire", 0);
-            //bogieList[j].matWep.SetInt("_RangeVisOn", 0);
         }
 
     }
@@ -1112,6 +1089,7 @@ public class UIController : MonoBehaviour
         weaponScreenImage.material.SetInt("_LaserFire", 0);
 
         screenWorld.texture = viewTex[0];
+        canvasUI[0].worldCamera = sc[0];
     }
 
     public void WorldGridLocUpdate(Vector2 shipV2)
@@ -1126,12 +1104,6 @@ public class UIController : MonoBehaviour
                 ScanTargetSize(1);
             }
 
-            //for (int i = 0; i < bogieList.Count; i++)
-            //{
-            //    bogieList[i].go.GetComponent<MeshRenderer>().enabled = true;
-            //    bogieList[i].go.transform.GetChild(0).gameObject.SetActive(false);
-            //}
-
             shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = true;
             shipiconGO.SetActive(false);
         }
@@ -1144,40 +1116,14 @@ public class UIController : MonoBehaviour
                 ScanTargetLoc(2);
                 ScanTargetSize(2);
             }
-
-            //for (int i = 0; i < bogieList.Count; i++)
-            //{
-            //    bogieList[i].go.GetComponent<MeshRenderer>().enabled = false;
-            //    bogieList[i].go.transform.GetChild(0).gameObject.SetActive(true);
-            //    bogieList[i].go.transform.GetChild(0).gameObject.transform.localScale = new Vector3(2f, 2f, 2f);
-
-            //}
-
-            //shipiconGO.SetActive(true);
-            //shipiconGO.transform.localScale = new Vector3(2f, 2f, 2f);
-            //shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = false;
         }
         else if (worldZoom == 2)
         {
-            //gridImg.material.SetVector("_ShipLocV2", (shipV2 / 5000f));
-
             if (currentBogieTarget != null)
             {
                 ScanTargetLoc(3);
                 ScanTargetSize(3);
             }
-
-            //for (int i = 0; i < bogieList.Count; i++)
-            //{
-            //    bogieList[i].go.GetComponent<MeshRenderer>().enabled = false;
-            //    bogieList[i].go.transform.GetChild(0).gameObject.SetActive(true);
-            //    bogieList[i].go.transform.GetChild(0).gameObject.transform.localScale = new Vector3(20f, 20f, 20f);
-
-            //}
-
-            //shipiconGO.SetActive(true);
-            //shipiconGO.transform.localScale = new Vector3(20f, 20f, 20f);
-            //shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = false;
         }
 
 
@@ -1189,11 +1135,6 @@ public class UIController : MonoBehaviour
         {
             gridImg.material.SetFloat("_ShipRotation", r);
         }
-
-        //else if (worldZoom >= 2)
-        //{
-        //    gridImg.material.SetFloat("_ShipRotation", 0);
-        //}
     }
 
     public void WorldGridZoom(int i)
@@ -1214,9 +1155,9 @@ public class UIController : MonoBehaviour
             weaponScreenImage.material.SetInt("_RangeVisOn", 1);
 
             scaleSize = 1f;
-            //screenWepGO.transform.localPosition = new Vector2(0f, 0f);
 
-            sc.orthographicSize = 50f;
+            canvasUI[1].worldCamera = sc[6];
+            sc[6].orthographicSize = 50f;
 
             radarImg.material.SetFloat("_VisualRange", 1f);
 
@@ -1245,8 +1186,8 @@ public class UIController : MonoBehaviour
             scaleSize = .5f;
 
             //screenWepGO.transform.localPosition = new Vector2(10000f, 0f);
-
-            sc.orthographicSize = 500f;
+            canvasUI[1].worldCamera = sc[6];
+            sc[6].orthographicSize = 500f;
 
             radarImg.material.SetFloat("_VisualRange", .1f);
 
@@ -1268,7 +1209,7 @@ public class UIController : MonoBehaviour
         }
         else if (i == 2)//spectral zoom 1000x
         {
-            screenWorld.texture = viewTex[1];
+            screenWorld.texture = viewTex[5];
 
             gridImg.material.SetInt("_WorldView", 1);
             gridImg.material.SetVector("_CellSize", new Vector2(2, 2));
@@ -1282,8 +1223,8 @@ public class UIController : MonoBehaviour
             scaleSize = .25f;
 
             //screenWepGO.transform.localPosition = new Vector2(10000f, 0f);
-
-            sc.orthographicSize = 5000f;
+            canvasUI[1].worldCamera = sc[5];
+            sc[5].orthographicSize = 5000f;
 
             radarImg.material.SetFloat("_VisualRange", .01f);
 
@@ -1344,36 +1285,8 @@ public class UIController : MonoBehaviour
             start = 0f;
         }
 
-        //if (s < 0)
-        //{
         weaponScreenImage.material.SetFloat("_LaserDegree", angle);
         weaponScreenImage.material.SetVector("_GunLoc", playerShipTranLoc);
-        //}
-        //else if (s >= 0)
-        //{
-        //    bogieList[s].matWep.SetVector("_GunLoc", playerShipTranLoc);
-        //}
-
-        //Vector3 direction = bogieTranLoc - playerShipTranLoc;
-
-        //sign = (direction.y >= 0) ? 1 : -1;
-        //offset = (sign >= 0) ? 0 : 360;
-
-        //zeroDegree = (shipPlayer.position.y / 100f) + .001f;
-
-        //if (zeroDegree < 0)
-        //{
-        //    zeroDegree = zeroDegree * -1f;
-        //}
-
-        //Debug.Log("zeroDegree: " + zeroDegree + ", playerShipTranLoc.y: " + playerShipTranLoc.y);
-
-        //Vector3 vRight = new Vector3(playerShipTranLoc.x + zeroDegree, playerShipTranLoc.y, 0f);
-
-        //distance = Vector2.Distance(vRight, bogieTranLoc);
-
-
-        //Debug.Log("angle: " + angle);
 
         weaponScreenImage.material.SetFloat("_LaserStart", 0f);
         weaponScreenImage.material.SetFloat("_LaserEnd", 2f);//end at first game object to come in contact with
@@ -1426,68 +1339,6 @@ public class UIController : MonoBehaviour
         weaponScreenImage.material.SetInt("_LaserFire", 0);
     }
 
-    //private IEnumerator RailFireCo()
-    //{
-    //    float t = 0f;
-    //    float y = 1f;
-    //    float railStart = .001f;
-    //    float railEnd = .01f;
-    //    float speed = 10f;
-    //    float curWidth = 0f;
-
-    //    weaponScreenImage.material.SetFloat("_RailStart", 0f);
-    //    weaponScreenImage.material.SetFloat("_RailEnd", 1f);//end at first game object to come in contact with
-    //    weaponScreenImage.material.SetFloat("_RailWidth", railStart);
-    //    weaponScreenImage.material.SetInt("_FireRail", 1);
-
-    //    while (t < 1f)
-    //    {
-    //        curWidth = Mathf.Lerp(0f * scaleSize, .002f* scaleSize, animationCurve.Evaluate(t));
-
-    //        weaponScreenImage.material.SetFloat("_RailWidth", curWidth);
-
-    //        t += Time.deltaTime;
-
-    //        yield return null;
-    //    }
-
-    //    t = 0;
-    //    updateShipHit(.5f);
-
-
-    //    while (t < 1f)
-    //    {
-    //        curWidth = Mathf.Lerp(.002f* scaleSize, .01f* scaleSize, animationCurve.Evaluate(t));
-
-    //        weaponScreenImage.material.SetFloat("_RailWidth", curWidth);
-
-    //        t += Time.deltaTime * speed;
-
-    //        yield return null;
-    //    }
-
-    //    t = 0;
-
-    //    while (t < 1f)
-    //    {
-    //        curWidth = Mathf.Lerp(.01f* scaleSize, 0* scaleSize, animationCurve.Evaluate(t));
-
-    //        weaponScreenImage.material.SetFloat("_RailStart", t);
-
-    //        weaponScreenImage.material.SetFloat("_RailWidth", y * curWidth);
-
-    //        y -= Time.deltaTime * speed;
-    //        t += Time.deltaTime * speed;
-
-    //        yield return null;
-    //    }
-
-    //    weaponScreenImage.material.SetFloat("_RailWidth", 0f);
-    //    weaponScreenImage.material.SetInt("_FireRail", 0);
-    //}
-
-
-
     public void LaserFire()
     {
         if (!fire)
@@ -1534,7 +1385,6 @@ public class UIController : MonoBehaviour
             bogieTranLoc = new Vector3(bogieTran.position.x / (screenDist * 2), bogieTran.position.y / (screenDist * 2), 0f);
             start = 0f;
         }
-        //bogieTranLoc = shipPlayer.InverseTransformPoint(bogieTran.position);
 
         if (s < 0)
         {
@@ -1557,8 +1407,6 @@ public class UIController : MonoBehaviour
             zeroDegree = zeroDegree * -1f;
         }
 
-        //Debug.Log("zeroDegree: " + zeroDegree + ", playerShipTranLoc.y: " + playerShipTranLoc.y);
-
         Vector3 vRight = new Vector3(playerShipTranLoc.x + zeroDegree, playerShipTranLoc.y, 0f);
 
         angle = (Vector2.Angle(vRight, direction) * sign + offset); //shipAngleTarget.position
@@ -1569,8 +1417,6 @@ public class UIController : MonoBehaviour
         if (worldZoom < 2){ scaleDistance = (distance / screenDist);}
         else if (worldZoom == 2) { scaleDistance = distance * 2f; }
 
-        //Debug.Log("angle: " + angle + ",distance: " + distance + ", scaleDistance: " + scaleDistance + ", distance * 2f: " + distance*2f);
-
         if (s < 0)
         {
             fire = true;
@@ -1579,12 +1425,9 @@ public class UIController : MonoBehaviour
             weaponScreenImage.material.SetFloat("_LaserDegree", angle);
             weaponScreenImage.material.SetInt("_LaserFire", 1);
             weaponScreenImage.material.SetFloat("_LaserSize", .0015f);
-
-
             weaponScreenImage.material.SetFloat("_LaserStart", start);
             weaponScreenImage.material.SetFloat("_LaserEnd", scaleDistance);
 
-            weaponScreenImage.material.SetFloat("_LaserRange", 1f);
             t = 0;
             while (t < 1f)
             {
@@ -1608,11 +1451,8 @@ public class UIController : MonoBehaviour
             bogieList[s].matWep.SetInt("_LaserFire", 1);
             bogieList[s].matWep.SetFloat("_LaserSize", .0015f);
 
-
             bogieList[s].matWep.SetFloat("_LaserStart", 0f);
             bogieList[s].matWep.SetFloat("_LaserEnd", scaleDistance);
-
-            bogieList[s].matWep.SetFloat("_LaserRange", 1);
 
             if (scaleDistance > 1)
             {
@@ -1647,6 +1487,33 @@ public class UIController : MonoBehaviour
         if (speedometerUpdateCoroutine != null)
         {
             StopCoroutine(speedometerUpdateCoroutine);
+        }
+    }
+
+    public void StabilityMeter(float i)
+    {
+        weaponScreenImage.material.SetFloat("_Stability", i);
+    }
+
+    public void BtnBogieTab(int i)
+    {
+        
+
+        for (int j = 0; j < bogieTabTran.Length; j++)
+        {
+            if (j != i)
+            {
+                bogieTabTran[j].localPosition = new Vector3(1000000f, 0f, 0f);
+            }
+            else if (j == i)
+            {
+                RectTransform rt = bogieTabTran[j].GetComponent<RectTransform>();
+
+                bogieTabTran[j].localPosition = new Vector3(0f, 0f, 0f);
+
+                rt.offsetMin = new Vector2(0f, 0f);
+                rt.offsetMax = new Vector2(0f, 0f);
+            }
         }
     }
 
