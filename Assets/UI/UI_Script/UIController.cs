@@ -14,6 +14,16 @@ using Vector3 = UnityEngine.Vector3;
 
 public class UIController : MonoBehaviour
 {
+    public static UIController Instance { get; private set; }
+
+    void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+    }
+
     [SerializeField]
     private List<Button> btnPowerBool = new List<Button>();
 
@@ -128,8 +138,45 @@ public class UIController : MonoBehaviour
 
     public AnimationCurve animationCurve;
 
+    [Header("Comms UI")]
+    [SerializeField] private GameObject signalInterceptPanel;
+    [SerializeField] private Slider commsFrequencySlider;
+    [SerializeField] private Image commsSignalStrengthIndicator;
+    [SerializeField] private TextMeshProUGUI commsBandDisplay;
+    [SerializeField] private TextMeshProUGUI commsFrequencyDisplay;
+    [SerializeField] private Button commsLockButton;
+    [SerializeField] private Image[] commsBandIndicators;
+    [SerializeField] private TextMeshProUGUI commsLogText;
+
+    [Header("Radar Blips")]
+    [SerializeField] private RectTransform radarBlipContainer;
+    [SerializeField] private GameObject radarBlipPrefab;
+    [SerializeField] private float radarBlipRadius = 100f;
+    private Dictionary<RadarTarget, RectTransform> radarBlips = new Dictionary<RadarTarget, RectTransform>();
+
+    [Header("Weapon Display UI")]
+    [SerializeField] private TextMeshProUGUI weaponNameText;
+    [SerializeField] private TextMeshProUGUI weaponTypeText;
+    [SerializeField] private TextMeshProUGUI weaponAmmoText;
+    [SerializeField] private TextMeshProUGUI weaponStatusText;
+    [SerializeField] private Image weaponRechargeBar;
+    [SerializeField] private Image weaponIconImage;
+    [SerializeField] private Sprite laserIcon;
+    [SerializeField] private Sprite macrocannonIcon;
+    [SerializeField] private Sprite missileIcon;
+    [SerializeField] private Sprite pointDefenseIcon;
+    [SerializeField] private Sprite boardingPodIcon;
+    [SerializeField] private Sprite railgunIcon;
+
     void Start()
     {
+        // Auto-find player ship if not assigned in inspector
+        if (shipPlayer == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) shipPlayer = player.transform;
+        }
+
         //FrequancyTune(360f);
 
         NewBogie();//test
@@ -1530,5 +1577,125 @@ public class UIController : MonoBehaviour
     public void SignalGhost()
     {
         //create a signal elseware
+    }
+
+    // ===== Comms UI Methods =====
+
+    public void ShowCommsPanel(bool show)
+    {
+        if (signalInterceptPanel != null)
+            signalInterceptPanel.SetActive(show);
+    }
+
+    public void SetCommsBand(int band)
+    {
+        if (commsBandDisplay != null)
+            commsBandDisplay.text = $"Band: {band}";
+
+        if (commsBandIndicators != null)
+        {
+            for (int i = 0; i < commsBandIndicators.Length; i++)
+                commsBandIndicators[i].color = (i + 1 == band) ? Color.green : Color.gray;
+        }
+    }
+
+    public void SetCommsFrequency(float freq)
+    {
+        if (commsFrequencySlider != null)
+            commsFrequencySlider.value = freq;
+        if (commsFrequencyDisplay != null)
+            commsFrequencyDisplay.text = $"Frequency: {freq:F1}";
+    }
+
+    public void SetCommsSignalStrength(Color color)
+    {
+        if (commsSignalStrengthIndicator != null)
+            commsSignalStrengthIndicator.color = color;
+    }
+
+    public void AddCommsLog(string message)
+    {
+        if (commsLogText != null)
+            commsLogText.text = message;
+    }
+
+    public void SetupCommsListeners(UnityEngine.Events.UnityAction<float> onFreqChanged, UnityEngine.Events.UnityAction onLock)
+    {
+        if (commsFrequencySlider != null)
+        {
+            commsFrequencySlider.minValue = 1.0f;
+            commsFrequencySlider.maxValue = 99.9f;
+            commsFrequencySlider.onValueChanged.AddListener(onFreqChanged);
+        }
+        if (commsLockButton != null)
+            commsLockButton.onClick.AddListener(onLock);
+    }
+
+    // ===== Radar Blip Methods =====
+
+    public float RadarBlipRadius => radarBlipRadius;
+
+    public RectTransform CreateOrGetRadarBlip(RadarTarget target)
+    {
+        if (radarBlips.TryGetValue(target, out RectTransform existing))
+            return existing;
+
+        if (radarBlipPrefab == null || radarBlipContainer == null) return null;
+
+        GameObject blipObj = Instantiate(radarBlipPrefab, radarBlipContainer);
+        RectTransform blipRect = blipObj.GetComponent<RectTransform>();
+
+        Image img = blipObj.GetComponent<Image>();
+        if (img != null)
+        {
+            if (target.icon != null) img.sprite = target.icon;
+            img.color = target.color;
+        }
+
+        radarBlips[target] = blipRect;
+        return blipRect;
+    }
+
+    public void DestroyRadarBlip(RadarTarget target)
+    {
+        if (radarBlips.TryGetValue(target, out RectTransform rt))
+        {
+            if (rt != null) Destroy(rt.gameObject);
+            radarBlips.Remove(target);
+        }
+    }
+
+    // ===== Weapon Display Methods =====
+
+    public void UpdateWeaponDisplay(string weapName, string weapType, Sprite icon, string status, Color statusColor, string ammo, float rechargeProgress, Color rechargeColor)
+    {
+        if (weaponNameText != null) weaponNameText.text = weapName;
+        if (weaponTypeText != null) weaponTypeText.text = weapType;
+        if (weaponIconImage != null) weaponIconImage.sprite = icon;
+        if (weaponStatusText != null)
+        {
+            weaponStatusText.text = status;
+            weaponStatusText.color = statusColor;
+        }
+        if (weaponAmmoText != null) weaponAmmoText.text = ammo;
+        if (weaponRechargeBar != null)
+        {
+            weaponRechargeBar.fillAmount = rechargeProgress;
+            weaponRechargeBar.color = rechargeColor;
+        }
+    }
+
+    public Sprite GetWeaponIcon(WeaponType type)
+    {
+        return type switch
+        {
+            WeaponType.Laser => laserIcon,
+            WeaponType.Macrocannon => macrocannonIcon,
+            WeaponType.Missile => missileIcon,
+            WeaponType.PointDefense => pointDefenseIcon,
+            WeaponType.BoardingPod => boardingPodIcon,
+            WeaponType.Railgun => railgunIcon,
+            _ => null
+        };
     }
 }
