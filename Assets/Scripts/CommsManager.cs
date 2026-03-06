@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -20,27 +18,11 @@ public class CommsManager : MonoBehaviour
     [SerializeField] private float maxSignalRange = 200000f; // 200k units
     [SerializeField] private float signalLockTolerance = 1.0f; // +/- 1.0 for successful lock
     
-    [Header("UI References")]
-    [SerializeField] private GameObject signalInterceptPanel;
-    [SerializeField] private Slider frequencySlider;
-    [SerializeField] private Image signalStrengthIndicator;
-    [SerializeField] private TextMeshProUGUI bandDisplay;
-    [SerializeField] private TextMeshProUGUI frequencyDisplay;
-    [SerializeField] private Button lockButton;
-    [SerializeField] private Image[] bandIndicators; // 3 indicator lights for bands
-    [SerializeField] private AudioSource signalToneSource;
-    [SerializeField] private TextMeshProUGUI commsLog;
-    
     [Header("Audio")]
+    [SerializeField] private AudioSource signalToneSource;
     [SerializeField] private AudioClip signalTone;
     [SerializeField] private AudioClip successSound;
     [SerializeField] private AudioClip failureSound;
-
-    [Header("Frequency Tuning")]
-    [SerializeField] TextMeshProUGUI frequancyTMP;
-    [SerializeField] Transform frequancyTrans;
-    private float frequancyFlt = 0f;
-    [SerializeField] List<Transform> tunerTrans = new List<Transform>();
 
     private Signal currentSignal;
     private int currentBand = 1;
@@ -50,16 +32,7 @@ public class CommsManager : MonoBehaviour
 
     private void Start()
     {
-        signalInterceptPanel.SetActive(false);
-        SetupUI();
-    }
-
-    private void SetupUI()
-    {
-        frequencySlider.minValue = 1.0f;
-        frequencySlider.maxValue = 99.9f;
-        frequencySlider.onValueChanged.AddListener(OnFrequencyChanged);
-        lockButton.onClick.AddListener(TryLockSignal);
+        UIController.Instance?.ShowCommsPanel(false);
     }
 
     public void ReceiveSignal(Signal signal)
@@ -68,7 +41,7 @@ public class CommsManager : MonoBehaviour
         
         currentSignal = signal;
         isIntercepting = true;
-        signalInterceptPanel.SetActive(true);
+        UIController.Instance?.ShowCommsPanel(true);
         Time.timeScale = 0f; // Pause the game
         StartCoroutine(SignalInterceptionTimer());
     }
@@ -94,26 +67,19 @@ public class CommsManager : MonoBehaviour
     private void SwitchBand(int band)
     {
         currentBand = band;
-        bandDisplay.text = $"Band: {band}";
-        
-        // Update band indicators
-        for (int i = 0; i < bandIndicators.Length; i++)
-        {
-            bandIndicators[i].color = (i + 1 == band) ? Color.green : Color.gray;
-        }
+        UIController.Instance?.SetCommsBand(band);
     }
 
     private void AdjustFrequency(float delta)
     {
         currentFrequency = Mathf.Clamp(currentFrequency + delta, 1.0f, 99.9f);
-        frequencySlider.value = currentFrequency;
-        frequencyDisplay.text = $"Frequency: {currentFrequency:F1}";
+        UIController.Instance?.SetCommsFrequency(currentFrequency);
     }
 
-    private void OnFrequencyChanged(float value)
+    public void OnFrequencyChanged(float value)
     {
         currentFrequency = value;
-        frequencyDisplay.text = $"Frequency: {currentFrequency:F1}";
+        UIController.Instance?.SetCommsFrequency(currentFrequency);
         UpdateSignalStrength();
     }
 
@@ -123,21 +89,23 @@ public class CommsManager : MonoBehaviour
 
         if (currentBand != currentSignal.bandType)
         {
-            signalStrengthIndicator.color = Color.grey;
-            if (signalToneSource.isPlaying) signalToneSource.Stop();
+            UIController.Instance?.SetCommsSignalStrength(Color.grey);
+            if (signalToneSource != null && signalToneSource.isPlaying) signalToneSource.Stop();
             return;
         }
 
         float distance = Mathf.Abs(currentFrequency - currentSignal.frequency);
-        float strength = 1f - (distance / 10f); // Strength decreases as distance increases
+        float strength = 1f - (distance / 10f);
         strength = Mathf.Clamp01(strength);
 
-        signalStrengthIndicator.color = Color.Lerp(Color.red, Color.green, strength);
+        UIController.Instance?.SetCommsSignalStrength(Color.Lerp(Color.red, Color.green, strength));
         
-        // Update audio feedback
-        signalToneSource.pitch = 0.5f + strength;
-        if (!signalToneSource.isPlaying)
-            signalToneSource.Play();
+        if (signalToneSource != null)
+        {
+            signalToneSource.pitch = 0.5f + strength;
+            if (!signalToneSource.isPlaying)
+                signalToneSource.Play();
+        }
     }
 
     private void TryLockSignal()
@@ -150,33 +118,26 @@ public class CommsManager : MonoBehaviour
 
         if (correctBand && frequencyMatch)
         {
-            // Success!
             AudioSource.PlayClipAtPoint(successSound, Camera.main.transform.position);
-            AddToLog(currentSignal.message);
+            interceptedMessages.Add(currentSignal.message);
+            UIController.Instance?.AddCommsLog(currentSignal.message);
             CloseInterceptPanel(true);
         }
         else
         {
-            // Failure
             AudioSource.PlayClipAtPoint(failureSound, Camera.main.transform.position);
             CloseInterceptPanel(false);
         }
-    }
-
-    private void AddToLog(string message)
-    {
-        interceptedMessages.Add(message);
-        commsLog.text = string.Join("\n", interceptedMessages);
     }
 
     private void CloseInterceptPanel(bool success)
     {
         isIntercepting = false;
         currentSignal = null;
-        signalInterceptPanel.SetActive(false);
-        Time.timeScale = 1f; // Resume game
+        UIController.Instance?.ShowCommsPanel(false);
+        Time.timeScale = 1f;
         
-        if (signalToneSource.isPlaying)
+        if (signalToneSource != null && signalToneSource.isPlaying)
             signalToneSource.Stop();
     }
 
@@ -214,23 +175,6 @@ public class CommsManager : MonoBehaviour
 
     public void FrequancyTune(float speed)
     {
-        frequancyFlt = frequancyFlt + speed;
-
-        if (frequancyFlt >= 360 * 5)
-        {
-            frequancyFlt = 360 * 5;
-        }
-        else if (frequancyFlt <= 0)
-        {
-            frequancyFlt = 0;
-        }
-
-        frequancyTrans.rotation = Quaternion.Euler(0f, 0f, frequancyFlt * -1);
-
-        frequancyTMP.text = frequancyFlt.ToString();
-
-        float normF = tunerTrans[1].localPosition.x / tunerTrans[2].localPosition.x;
-
-        tunerTrans[0].localPosition = Vector2.Lerp(tunerTrans[1].localPosition, tunerTrans[2].localPosition, frequancyFlt / (360 * 5));
+        UIController.Instance?.FrequancyTune(speed);
     }
 }

@@ -1,28 +1,17 @@
 using System.Diagnostics;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class TestUIKeyControler : MonoBehaviour
 {
     public PlayerShip playerShipRef;
     public Transform playerShipTrans;
-    public Image gridBK;
-    public Material gridMat;
-    [SerializeField] private Shader gridShad;
-    [SerializeField] private Transform cameraTransform; // Reference to camera for compass rotation
+    [SerializeField] private Transform cameraTransform;
     float rotation = 0;
     float movmentSpeed = 100;
-    private float lastCameraRotation = 0f; // Track last camera rotation to detect changes
+    private float lastCameraRotation = 0f;
 
     void Start()
     {
-        gridMat = new Material(gridShad);
-        gridBK.GetComponent<Image>().material = gridMat;
-
-        gridMat.SetFloat("_ShipRotation", playerShipTrans.rotation.x);
-        gridMat.SetVector("_ShipLocationV2", new Vector2(playerShipTrans.position.x, playerShipTrans.position.y));
-        
-        // Auto-assign camera if not set
         if (cameraTransform == null)
         {
             Camera mainCamera = Camera.main;
@@ -32,25 +21,17 @@ public class TestUIKeyControler : MonoBehaviour
             }
         }
         
-        // Initialize last camera rotation
         if (cameraTransform != null)
         {
             lastCameraRotation = cameraTransform.eulerAngles.y;
         }
     }
 
-    void FixedUpdate()
-    {
-        gridMat.SetFloat("_ShipRotation", playerShipTrans.rotation.y);
-        gridMat.SetVector("_ShipLocationV2", playerShipTrans.position);
-    }
-
         void Update()
     {
         if (Input.GetKey(KeyCode.R))//test for railgun
         {
-            if (GameManager.Instance != null)
-                GameManager.Instance.RailFire();//use this function for rail vfx
+            UIController.Instance?.RailFire();
         }
 
         // Get PlayerShip reference for actual values
@@ -68,7 +49,7 @@ public class TestUIKeyControler : MonoBehaviour
                 Rigidbody rb = playerShip.GetComponent<Rigidbody>();
                 actualSpeed = rb != null ? rb.linearVelocity.magnitude : 0f;
             }
-            uiContoller_UpdateSpeedometer(actualSpeed);
+            UIController.Instance?.UpdateSpeedometer(actualSpeed);
         }
         else if (Input.GetKey(KeyCode.S))
         {
@@ -86,7 +67,7 @@ public class TestUIKeyControler : MonoBehaviour
                     actualSpeed = rb.linearVelocity.magnitude * (forwardDot < 0 ? -1 : 1);
                 }
             }
-            uiContoller_UpdateSpeedometer(actualSpeed);
+            UIController.Instance?.UpdateSpeedometer(actualSpeed);
         }
 
         //bring speedometer back to 0 or show current speed
@@ -103,7 +84,7 @@ public class TestUIKeyControler : MonoBehaviour
                     currentSpeed = rb.linearVelocity.magnitude * (forwardDot < 0 ? -1 : 1);
                 }
             }
-            uiContoller_UpdateSpeedometer(currentSpeed);
+            UIController.Instance?.UpdateSpeedometer(currentSpeed);
         }
 
         ////ship rotates - but compass only updates when camera rotates
@@ -126,9 +107,7 @@ public class TestUIKeyControler : MonoBehaviour
             // Check if camera rotation has changed
             if (Mathf.Abs(Mathf.DeltaAngle(lastCameraRotation, currentCameraRotation)) > 0.1f)
             {
-                // Camera has rotated, update compass
-                if (playerShipRef != null)
-                    playerShipRef.UpdateSpeedometer(currentCameraRotation);
+                UIController.Instance?.UpdateSpeedometer(currentCameraRotation);
                 lastCameraRotation = currentCameraRotation;
             }
         }
@@ -136,8 +115,7 @@ public class TestUIKeyControler : MonoBehaviour
         //ship gets hit/takes dmg effect
         if (Input.GetKeyDown(KeyCode.B))
         {
-            if (playerShipRef != null)
-                playerShipRef.updateShipHit(1f);
+            UIController.Instance?.updateShipHit(1f);
             
             // Apply damage to PlayerShip if available
             if (playerShip != null)
@@ -177,29 +155,19 @@ public class TestUIKeyControler : MonoBehaviour
         //load in sensor info (using different keys to avoid conflict with power management)
         if (Input.GetKeyDown(KeyCode.Alpha0))
         {
-            if (playerShipRef != null)
-                playerShipRef.UpdateCompass(false, 3, 0, 0, 0, 0);
+            UIController.Instance?.UpdateCompass(false, 3, 0, 0, 0, 0);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha4))//asteroid
         {
-            if (playerShipRef != null)
-                playerShipRef.UpdateCompass(true, 0, 25, 25, 25, 25);
+            UIController.Instance?.UpdateCompass(true, 0, 25, 25, 25, 25);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha5))//orbiter
         {
-            if (playerShipRef != null)
-                playerShipRef.UpdateCompass(true, 1, 50, 50, 50, 50);
+            UIController.Instance?.UpdateCompass(true, 1, 50, 50, 50, 50);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha6))//enemy ship
         {
-            if (playerShipRef != null)
-                playerShipRef.UpdateCompass(true, 2, 100, 100, 100, 100);
+            UIController.Instance?.UpdateCompass(true, 2, 100, 100, 100, 100);
         }
-    }
-
-    private void uiContoller_UpdateSpeedometer(float speed)
-    {
-        if (playerShipRef != null)
-            playerShipRef.UpdateSpeedometer(speed);
     }
 }
