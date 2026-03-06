@@ -70,3 +70,5 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+Starwolf_Demo_Build_v0.1.zip
+Starwolf_Demo_Build_v0.1/Starwolf_BurstDebugInformation_DoNotShip/Data/Plugins/x86_64/lib_burst_generated.txt

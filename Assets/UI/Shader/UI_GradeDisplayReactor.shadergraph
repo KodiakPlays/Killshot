@@ -472,7 +472,7 @@
                 "m_Node": {
                     "m_Id": "352ec79dffb5439bbcccd407ad11b232"
                 },
-                "m_SlotId": 1
+                "m_SlotId": 2
             },
             "m_InputSlot": {
                 "m_Node": {
@@ -486,7 +486,7 @@
                 "m_Node": {
                     "m_Id": "352ec79dffb5439bbcccd407ad11b232"
                 },
-                "m_SlotId": 1
+                "m_SlotId": 2
             },
             "m_InputSlot": {
                 "m_Node": {
@@ -500,7 +500,7 @@
                 "m_Node": {
                     "m_Id": "352ec79dffb5439bbcccd407ad11b232"
                 },
-                "m_SlotId": 1
+                "m_SlotId": 2
             },
             "m_InputSlot": {
                 "m_Node": {
@@ -1465,6 +1465,9 @@
     "m_AlphaClip": false,
     "m_CastShadows": true,
     "m_ReceiveShadows": true,
+    "m_DisableTint": false,
+    "m_AdditionalMotionVectorMode": 0,
+    "m_AlembicMotionVectors": false,
     "m_SupportsLODCrossFade": false,
     "m_CustomEditorGUI": "",
     "m_SupportVFX": false
@@ -3614,10 +3617,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1171.0,
-            "y": 198.5,
-            "width": 208.0,
-            "height": 278.0
+            "x": -1049.9998779296875,
+            "y": 196.5000457763672,
+            "width": 207.99993896484376,
+            "height": 277.9998779296875
         }
     },
     "m_Slots": [
@@ -4641,7 +4644,7 @@
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "isMainTexture": false,
@@ -5780,8 +5783,8 @@
     "m_Value": {
         "r": 1.0,
         "g": 0.0,
-        "b": 0.0,
-        "a": 0.0
+        "b": 0.08880376815795899,
+        "a": 1.0
     },
     "isMainColor": false,
     "m_ColorMode": 0
@@ -6814,7 +6817,7 @@
     "m_StageCapability": 3,
     "m_BareResource": false,
     "m_Texture": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "m_DefaultType": 0

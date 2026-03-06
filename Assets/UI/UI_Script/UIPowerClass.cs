@@ -13,6 +13,7 @@ public class UIPowerClass : MonoBehaviour
     public int max, cur;
     public float pwr;
     public bool charge;
+    public bool pwrShift;
 
     public UIPowerClass(Material mat, int max, int cur, float pwr, bool charge)
     {
@@ -21,6 +22,7 @@ public class UIPowerClass : MonoBehaviour
         this.cur = cur;
         this.pwr = pwr;
         this.charge = charge;
+        this.pwrShift = pwrShift;
 
         UpdateMat();
     }
@@ -38,14 +40,14 @@ public class UIPowerClass : MonoBehaviour
       
         if (!chg)
         {
-            Debug.Log("off: " + (max - 6));
+            //Debug.Log("off: " + (max - 6));
 
             mat.SetFloat("_Charge", 0f);
             charge = false;
         }
         else if (chg)
         {
-            Debug.Log("on: " + (max - 6));
+            //Debug.Log("on: " + (max - 6));
             mat.SetFloat("_Charge", 1f);
             charge = true;
         }
