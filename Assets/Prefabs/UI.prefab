@@ -2075,8 +2075,8 @@ GameObject:
   - component: {fileID: 576132242117343696}
   - component: {fileID: 6266924610647237246}
   m_Layer: 0
-  m_Name: ShipCam
-  m_TagString: MainCamera
+  m_Name: Camera-ShipStats
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2137,7 +2137,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 8400000, guid: 199ee4b66ff62454197f0c0fca45b6d9, type: 2}
+  m_TargetTexture: {fileID: 8400000, guid: faedf5fcc70804796894a4c47bf05c07, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1

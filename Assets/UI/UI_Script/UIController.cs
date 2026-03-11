@@ -173,13 +173,13 @@ public class UIController : MonoBehaviour
         // Auto-find player ship if not assigned in inspector
         if (shipPlayer == null)
         {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            GameObject player = this.gameObject;//GameObject.FindGameObjectWithTag("Player");
             if (player != null) shipPlayer = player.transform;
         }
 
         //FrequancyTune(360f);
 
-        NewBogie();//test
+        //NewBogie();//test
 
         StartPower();
         WorldGridStart();
@@ -254,7 +254,7 @@ public class UIController : MonoBehaviour
             ScanNewTarget();
         }
 
-        UpdateVelocity();
+        //UpdateVelocity();
 
     }
 
@@ -1052,38 +1052,88 @@ public class UIController : MonoBehaviour
         StartCoroutine(BogeyStart(d));
     }
 
-    public void NewBogie()//test for now, should be used to add bogies to list once they are in range for scaning
+    //public void NewBogie()//test for now, should be used to add bogies to list once they are in range for scaning
+    //{
+    //    GameObject go = null;
+    //    GameObject goImg = null;
+
+    //    for (int j = 0; j < 5; j++)
+    //    {
+    //        go = GameObject.Find("Bogie_" + j.ToString());
+
+    //        //bogieList.Add(new BogieClass(go, go.GetComponent<MeshFilter>().mesh, null, new Material(weaponScreenSha)));
+
+    //        goImg = Instantiate(new GameObject(), new Vector3(transform.position.x, transform.position.y, transform.position.z), Quaternion.identity);
+
+    //        goImg.transform.parent = screenEnemyWeapon;
+
+    //        bogieList[j].wepImage = goImg.AddComponent<Image>();
+
+    //        bogieList[j].wepImage.material = bogieList[j].matWep;
+
+    //        goImg.transform.localScale = new Vector3(1f, 1f, 1f);
+    //        goImg.transform.localPosition = new Vector3(0f, 0f, 0f);
+
+    //        goImg.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
+    //        goImg.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
+
+    //        goImg.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);//new Vector2(screenEnemyWeapon.GetComponent<RectTransform>().offsetMin.x, screenEnemyWeapon.GetComponent<RectTransform>().offsetMin.y);
+    //        goImg.GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);//new Vector2(-screenEnemyWeapon.GetComponent<RectTransform>().offsetMax.x, -screenEnemyWeapon.GetComponent<RectTransform>().offsetMax.y);
+
+
+    //        bogieList[j].WeapStart();
+    //    }
+    //}
+
+    public void AddBogie(BogieClass bc)
     {
-        GameObject go = null;
-        GameObject goImg = null;
+        bogieList.Add(bc);
 
-        for (int j = 0; j < 5; j++)
+        int j = 0;
+
+        if (bogieList.Count != 0)
         {
-            go = GameObject.Find("Bogie_" + j.ToString());
-
-            bogieList.Add(new BogieClass(go, go.GetComponent<MeshFilter>().mesh, null, new Material(weaponScreenSha)));
-
-            goImg = Instantiate(new GameObject(), new Vector3(transform.position.x, transform.position.y, transform.position.z), Quaternion.identity);
-
-            goImg.transform.parent = screenEnemyWeapon;
-
-            bogieList[j].wepImage = goImg.AddComponent<Image>();
-
-            bogieList[j].wepImage.material = bogieList[j].matWep;
-
-            goImg.transform.localScale = new Vector3(1f, 1f, 1f);
-            goImg.transform.localPosition = new Vector3(0f, 0f, 0f);
-
-            goImg.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
-            goImg.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
-
-            goImg.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);//new Vector2(screenEnemyWeapon.GetComponent<RectTransform>().offsetMin.x, screenEnemyWeapon.GetComponent<RectTransform>().offsetMin.y);
-            goImg.GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);//new Vector2(-screenEnemyWeapon.GetComponent<RectTransform>().offsetMax.x, -screenEnemyWeapon.GetComponent<RectTransform>().offsetMax.y);
-
-
-            bogieList[j].WeapStart();
+            j = bogieList.Count - 1;
+        }
+        else if (bogieList.Count == 0)
+        {
+            j = 0;
         }
 
+        if (bogieList[j].wepImageGo = null)
+        {
+            bogieList[j].wepImageGo = Instantiate(new GameObject(), new Vector3(0f, 0f, 0f), Quaternion.identity);
+        }
+
+        bogieList[j].wepImageGo.transform.parent = screenEnemyWeapon;
+
+        bogieList[j].wepImageGo.AddComponent<Image>().material = bogieList[j].matWep;
+
+        //bogieList[j].wepImageGo.image.material = bogieList[j].matWep;
+
+        bogieList[j].wepImageGo.transform.localScale = new Vector3(1f, 1f, 1f);
+        bogieList[j].wepImageGo.transform.localPosition = new Vector3(0f, 0f, 0f);
+
+        bogieList[j].wepImageGo.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
+        bogieList[j].wepImageGo.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
+
+        bogieList[j].wepImageGo.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);
+        bogieList[j].wepImageGo.GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);
+
+        bogieList[j].WeapStart();
+    }
+
+    public void RemoveBogie(BogieClass bc)
+    {
+        int j = 0;
+
+        for (int i = 0; i < bogieList.Count; i++){if (bogieList[i] == bc) {j = i;}}
+
+        Destroy(bogieList[j].wepImageGo);
+
+        bogieList[j].wepImageGo = null;
+
+        bogieList.RemoveAt(j);
     }
 
     private IEnumerator BogeyStart(float d)
