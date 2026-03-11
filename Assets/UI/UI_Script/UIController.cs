@@ -84,6 +84,8 @@ public class UIController : MonoBehaviour
 
     [Header("Scanner Hack")]
     [SerializeField] private Transform[] bogieTabTran;
+    private int bogieTabInt = 1;
+    [SerializeField] private Transform bogieTabBtn;
     [SerializeField] private Slider scannerSlider;
     private float scanValue = 0;
     private float placeValue = 0;
@@ -155,6 +157,8 @@ public class UIController : MonoBehaviour
     private Dictionary<RadarTarget, RectTransform> radarBlips = new Dictionary<RadarTarget, RectTransform>();
 
     [Header("Weapon Display UI")]
+    private int btnTabCur = 0;
+    [SerializeField] private Transform btnTabTran;
     [SerializeField] private TextMeshProUGUI weaponNameText;
     [SerializeField] private TextMeshProUGUI weaponTypeText;
     [SerializeField] private TextMeshProUGUI weaponAmmoText;
@@ -196,7 +200,7 @@ public class UIController : MonoBehaviour
 
         ScanTargetLoc(0);
         ScanTargetSize(0);
-        BtnBogieTab(0);
+        BtnBogieTab();
     }
 
     void Update()
@@ -254,7 +258,7 @@ public class UIController : MonoBehaviour
             ScanNewTarget();
         }
 
-        //UpdateVelocity();
+        UpdateVelocity();
 
     }
 
@@ -1592,26 +1596,44 @@ public class UIController : MonoBehaviour
         weaponScreenImage.material.SetFloat("_Stability", i);
     }
 
-    public void BtnBogieTab(int i)
+    public void BtnBogieTab()
     {
-        
-
-        for (int j = 0; j < bogieTabTran.Length; j++)
+        if(bogieTabInt == 0)
         {
-            if (j != i)
-            {
-                bogieTabTran[j].localPosition = new Vector3(1000000f, 0f, 0f);
-            }
-            else if (j == i)
-            {
-                RectTransform rt = bogieTabTran[j].GetComponent<RectTransform>();
-
-                bogieTabTran[j].localPosition = new Vector3(0f, 0f, 0f);
-
-                rt.offsetMin = new Vector2(0f, 0f);
-                rt.offsetMax = new Vector2(0f, 0f);
-            }
+            bogieTabTran[0].localPosition = new Vector3(1000000f, 0f, 0f);
+            bogieTabInt = 1;
         }
+        else if (bogieTabInt == 1)
+        {
+            bogieTabTran[1].localPosition = new Vector3(1000000f, 0f, 0f);
+            bogieTabInt = 0;
+        }
+
+        BtnTunerTab(bogieTabBtn, bogieTabInt, 2);
+        RectTransform rt = bogieTabTran[bogieTabInt].GetComponent<RectTransform>();
+
+        bogieTabTran[bogieTabInt].localPosition = new Vector3(0f, 0f, 0f);
+
+        rt.offsetMin = new Vector2(0f, 0f);
+        rt.offsetMax = new Vector2(0f, 0f);
+
+
+        //for (int j = 0; j < bogieTabTran.Length; j++)
+        //{
+        //    if (j != i)
+        //    {
+        //        bogieTabTran[j].localPosition = new Vector3(1000000f, 0f, 0f);
+        //    }
+        //    else if (j == i)
+        //    {
+        //        RectTransform rt = bogieTabTran[j].GetComponent<RectTransform>();
+
+        //        bogieTabTran[j].localPosition = new Vector3(0f, 0f, 0f);
+
+        //        rt.offsetMin = new Vector2(0f, 0f);
+        //        rt.offsetMax = new Vector2(0f, 0f);
+        //    }
+        //}
     }
 
     public void BtnScannerCloke()
@@ -1717,6 +1739,20 @@ public class UIController : MonoBehaviour
 
     // ===== Weapon Display Methods =====
 
+    public void BtnWepTab()
+    {
+        int tabMax = 3;
+
+        btnTabCur++;
+
+        if (btnTabCur > tabMax)
+        {
+            btnTabCur = 0;
+        }
+
+        BtnTunerTab(btnTabTran, btnTabCur, tabMax);
+    }
+
     public void UpdateWeaponDisplay(string weapName, string weapType, Sprite icon, string status, Color statusColor, string ammo, float rechargeProgress, Color rechargeColor)
     {
         if (weaponNameText != null) weaponNameText.text = weapName;
@@ -1747,5 +1783,12 @@ public class UIController : MonoBehaviour
             WeaponType.Railgun => railgunIcon,
             _ => null
         };
+    }
+
+    private void BtnTunerTab(Transform tran, int cur, int max)
+    {
+        float degree = (360 / max) * cur;
+
+        tran.eulerAngles = new Vector3(0f, 0f, degree);
     }
 }
