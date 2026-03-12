@@ -684,6 +684,34 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3114988292056650727, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3114988292056650727, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3114988292056650727, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1516561724}
+    - target: {fileID: 3114988292056650727, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3114988292056650727, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: BtnWeaponLoad
+      objectReference: {fileID: 0}
+    - target: {fileID: 3114988292056650727, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: UIController, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 3114988292056650727, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 3219801186439353856, guid: a92639a73e92f4d49aef75067647476a, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -763,6 +791,34 @@ PrefabInstance:
     - target: {fileID: 4343062005982075094, guid: a92639a73e92f4d49aef75067647476a, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4482142796168174779, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4482142796168174779, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4482142796168174779, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1516561724}
+    - target: {fileID: 4482142796168174779, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4482142796168174779, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: BtnWeaponFire
+      objectReference: {fileID: 0}
+    - target: {fileID: 4482142796168174779, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: UIController, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4482142796168174779, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 4709761844420045182, guid: a92639a73e92f4d49aef75067647476a, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -1895,10 +1951,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 305560e959f33054599419b62e1340ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  EnemyShipPrefab: {fileID: 6481234909750645136, guid: 6539169bc4b7ed1488e3e77df5926ae7, type: 3}
-  gameClock: {fileID: 1009219473}
-  questSystem: {fileID: 1009219474}
-  worldBoundary: {fileID: 1009219475}
+  enemyGroups: []
+  spawnCentre: {fileID: 0}
+  minScatterDistance: 30
+  maxScatterDistance: 80
+  minSeparation: 5
+  maxSpawnAttempts: 20
+  playerSpawnPoint: {fileID: 0}
+  playerShipPrefab: {fileID: 0}
+  winOnAllEnemiesDestroyed: 1
+  endSequenceDelay: 3
+  totalEnemiesAlive: 0
+  gameOver: 0
+  playerAlive: 1
 --- !u!4 &1009219472
 Transform:
   m_ObjectHideFlags: 0

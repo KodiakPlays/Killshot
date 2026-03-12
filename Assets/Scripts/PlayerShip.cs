@@ -201,13 +201,13 @@ public class PlayerShip : MonoBehaviour, IDamageable
         {
             powerManager.ToggleSystemState(powerManager.engines);
         }
-        if (Input.GetKeyDown(KeyCode.Alpha2)) // Weapon power
+        if (Input.GetKeyDown(KeyCode.Alpha2)) // Arms power
         {
-            powerManager.ToggleSystemState(powerManager.weapons);
+            powerManager.ToggleSystemState(powerManager.arms);
         }
-        if (Input.GetKeyDown(KeyCode.Alpha3)) // Sensor power
+        if (Input.GetKeyDown(KeyCode.Alpha3)) // Sig power
         {
-            powerManager.ToggleSystemState(powerManager.sensors);
+            powerManager.ToggleSystemState(powerManager.sig);
         }
 
         // Handle dodge input - Q goes left, E goes right
@@ -398,8 +398,9 @@ public class PlayerShip : MonoBehaviour, IDamageable
             float rotationThisFrame = currentTurnSpeed * Time.fixedDeltaTime;
             rb.MoveRotation(rb.rotation * Quaternion.Euler(0, 0, -rotationThisFrame));
             
-            // Calculate stability drain based on turn severity and current speed
-            stability.CalculateTurnStabilityDrain(Mathf.Abs(rotationThisFrame), Mathf.Abs(currentSpeed));
+            // Spec: engine power reduces stability decay by 5% per PWR-1
+            float stabilityDecayMult = powerManager != null ? powerManager.GetEngineStabilityDecayMultiplier() : 1f;
+            stability.CalculateTurnStabilityDrain(Mathf.Abs(rotationThisFrame), Mathf.Abs(currentSpeed), stabilityDecayMult);
         }
 
         // Camera locked to ship - follows position and rotation immediately
@@ -424,14 +425,10 @@ public class PlayerShip : MonoBehaviour, IDamageable
             }
         }
 
-        // Damage system disabled for now
-        // Apply damage if stability is critical
-        // if (stability.IsStabilityCritical() && Time.frameCount % 30 == 0) // Check every 30 frames
-        // {
-        //     TakeDamage(1);
-        // }
-        
-        // Debug info (remove this later)
+        // Spec: when stability is fully depleted, the ship incurs internal damage to hull and systems
+        if (stability.IsStabilityDepleted())
+            hullSystem.TakeDamage(hullSystem.DetermineHitSide(-transform.up), 5f * Time.fixedDeltaTime);
+
         if (Input.GetKey(KeyCode.F1))
         {
             float speedBars = currentSpeed / SPEED_UNITS_PER_BAR;

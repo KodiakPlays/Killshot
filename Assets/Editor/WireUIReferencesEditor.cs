@@ -136,6 +136,12 @@ public static class WireUIReferencesEditor
                 }
                 else if (typeName.Contains("PowerManager"))
                 {
+                    // Covers all PowerManager methods:
+                    // ToggleEngines, ToggleArms, ToggleBay, ToggleSupport, ToggleSig
+                    // ToggleWeapons, ToggleSensors, ToggleCrew, ToggleShields (legacy prefab names)
+                    // AddEnginesPower, AddArmsPower, AddBayPower, AddSupportPower, AddSigPower
+                    // RemoveEnginesPower, RemoveArmsPower, RemoveBayPower, RemoveSupportPower, RemoveSigPower
+                    // VentAllSystems, EmergencyVent, BlackAlert
                     resolvedTarget = powerManager;
                 }
 
@@ -207,6 +213,19 @@ public static class WireUIReferencesEditor
                         Debug.Log($"[WireButtons] {name} → PowerManager.BlackAlert()");
                     }
                     break;
+
+                // +/- power allocation buttons (named convention: btn_add_eng, btn_remove_eng, etc.)
+                case "btn_add_eng":    if (powerManager != null) { UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityAction(powerManager.AddEnginesPower));   EditorUtility.SetDirty(btn); addedListeners++; } break;
+                case "btn_add_arms":   if (powerManager != null) { UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityAction(powerManager.AddArmsPower));      EditorUtility.SetDirty(btn); addedListeners++; } break;
+                case "btn_add_bay":    if (powerManager != null) { UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityAction(powerManager.AddBayPower));       EditorUtility.SetDirty(btn); addedListeners++; } break;
+                case "btn_add_spprt": if (powerManager != null) { UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityAction(powerManager.AddSupportPower));    EditorUtility.SetDirty(btn); addedListeners++; } break;
+                case "btn_add_sig":    if (powerManager != null) { UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityAction(powerManager.AddSigPower));       EditorUtility.SetDirty(btn); addedListeners++; } break;
+
+                case "btn_remove_eng":    if (powerManager != null) { UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityAction(powerManager.RemoveEnginesPower));   EditorUtility.SetDirty(btn); addedListeners++; } break;
+                case "btn_remove_arms":   if (powerManager != null) { UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityAction(powerManager.RemoveArmsPower));      EditorUtility.SetDirty(btn); addedListeners++; } break;
+                case "btn_remove_bay":    if (powerManager != null) { UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityAction(powerManager.RemoveBayPower));       EditorUtility.SetDirty(btn); addedListeners++; } break;
+                case "btn_remove_spprt": if (powerManager != null) { UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityAction(powerManager.RemoveSupportPower));    EditorUtility.SetDirty(btn); addedListeners++; } break;
+                case "btn_remove_sig":    if (powerManager != null) { UnityEventTools.AddVoidPersistentListener(btn.onClick, new UnityAction(powerManager.RemoveSigPower));       EditorUtility.SetDirty(btn); addedListeners++; } break;
 
                 default:
                     skippedGeneric++;
