@@ -125,4 +125,14 @@ public class MissileLauncher : WeaponBase
     {
         return lockProgress[tubeIndex] / lockOnTime;
     }
+
+    /// <summary>
+    /// Attempts to lock all loaded, unlocked tubes onto the given target.
+    /// Called by the UI load button.
+    /// </summary>
+    public void LockAllTubes(Transform target)
+    {
+        for (int i = 0; i < launchTubes.Length; i++)
+            AttemptLock(target, i);
+    }
 }

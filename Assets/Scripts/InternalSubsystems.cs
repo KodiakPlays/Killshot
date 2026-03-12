@@ -238,7 +238,7 @@ public class InternalSubsystems : MonoBehaviour
         if (powerManager == null) return;
 
         // Pick a random active system to drain per GDD: "Drains power from random active system"
-        string[] systems = { "engines", "weapons", "sensors" };
+        string[] systems = { "engines", "arms", "bay", "support", "sig" };
         string target = systems[UnityEngine.Random.Range(0, systems.Length)];
         
         powerManager.DrainSystemPower(target);

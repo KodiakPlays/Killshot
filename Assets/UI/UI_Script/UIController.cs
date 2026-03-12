@@ -157,6 +157,7 @@ public class UIController : MonoBehaviour
     private Dictionary<RadarTarget, RectTransform> radarBlips = new Dictionary<RadarTarget, RectTransform>();
 
     [Header("Weapon Display UI")]
+    [SerializeField] private WeaponManager weaponManager;
     private int btnTabCur = 0;
     [SerializeField] private Transform btnTabTran;
     [SerializeField] private TextMeshProUGUI weaponNameText;
@@ -201,6 +202,9 @@ public class UIController : MonoBehaviour
         ScanTargetLoc(0);
         ScanTargetSize(0);
         BtnBogieTab();
+
+        if (weaponManager == null)
+            weaponManager = FindFirstObjectByType<WeaponManager>();
     }
 
     void Update()
@@ -1008,7 +1012,7 @@ public class UIController : MonoBehaviour
 
     public void StabilityMeterUpdate(float cur)
     {
-        velocityMeterImg[0].material.SetFloat("_PowerCur", cur);
+        stabilityImg.material.SetFloat("_PowerCur", cur);
 
         StabilityMeterColor(cur);
     }
@@ -1019,15 +1023,15 @@ public class UIController : MonoBehaviour
 
         if(cur >= stabMax *.25)
         {
-            velocityMeterImg[0].material.SetColor("_OnColor", col[0]);
+            stabilityImg.material.SetColor("_OnColor", col[0]);
         }
         else if (cur < stabMax * .25 && cur >= stabMax * .1)
         {
-            velocityMeterImg[0].material.SetColor("_OnColor", col[1]);
+            stabilityImg.material.SetColor("_OnColor", col[1]);
         }
         else if (cur < stabMax * .1)
         {
-            velocityMeterImg[0].material.SetColor("_OnColor", col[2]);
+            stabilityImg.material.SetColor("_OnColor", col[2]);
         }
     }
 
@@ -1751,6 +1755,46 @@ public class UIController : MonoBehaviour
         }
 
         BtnTunerTab(btnTabTran, btnTabCur, tabMax);
+    }
+
+    /// <summary>
+    /// Called by the fire_btn. Plays the weapon-type-specific UI animation and fires through WeaponManager.
+    /// </summary>
+    public void BtnWeaponFire()
+    {
+        if (weaponManager == null) return;
+
+        Vector3 targetPos = currentBogieTarget != null
+            ? currentBogieTarget.transform.position
+            : transform.position + transform.forward * 1000f;
+
+        // Play weapon-type-specific UI animations
+        switch (weaponManager.GetActiveWeaponType())
+        {
+            case WeaponType.Laser:
+                LaserFire();
+                break;
+            case WeaponType.Railgun:
+                RailFire();
+                break;
+        }
+
+        weaponManager.FireActiveWeapon(targetPos, 1f);
+    }
+
+    /// <summary>
+    /// Called by the load_btn. Primes or targets the active weapon depending on its type.
+    /// Missile: locks all tubes onto the current bogie target.
+    /// Macrocannon: arms (loads) one shell into the barrel.
+    /// BoardingPod: sets the current bogie as the boarding target.
+    /// Other weapon types auto-manage their own loading.
+    /// </summary>
+    public void BtnWeaponLoad()
+    {
+        if (weaponManager == null) return;
+
+        Transform target = currentBogieTarget != null ? currentBogieTarget.transform : null;
+        weaponManager.LoadActiveWeapon(target);
     }
 
     public void UpdateWeaponDisplay(string weapName, string weapType, Sprite icon, string status, Color statusColor, string ammo, float rechargeProgress, Color rechargeColor)

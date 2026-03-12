@@ -259,6 +259,40 @@ public class WeaponManager : MonoBehaviour
                currentWeapon.weaponInstance.CanFire();
     }
 
+    /// <summary>
+    /// Primes or targets the active weapon depending on its type.
+    /// Missile: locks all tubes onto <paramref name="target"/>.
+    /// Macrocannon: arms (loads) one shell into the barrel.
+    /// BoardingPod: sets <paramref name="target"/> as the boarding target.
+    /// Laser / Railgun / PointDefense self-manage loading — call is a no-op.
+    /// </summary>
+    /// <param name="target">Required for Missile and BoardingPod; ignored otherwise.</param>
+    public void LoadActiveWeapon(Transform target = null)
+    {
+        WeaponBase weapon = currentWeapon?.weaponInstance;
+        if (weapon == null) return;
+
+        if (weapon is MissileLauncher missileLauncher)
+        {
+            if (target != null)
+                missileLauncher.LockAllTubes(target);
+            else
+                Debug.LogWarning("[WeaponManager] LoadActiveWeapon: no target provided for MissileLauncher.");
+        }
+        else if (weapon is Macrocannon macrocannon)
+        {
+            macrocannon.ArmWeapon();
+        }
+        else if (weapon is BoardingPodLauncher boarding)
+        {
+            if (target != null)
+                boarding.SetTarget(target);
+            else
+                Debug.LogWarning("[WeaponManager] LoadActiveWeapon: no target provided for BoardingPodLauncher.");
+        }
+        // Laser, Railgun, and PointDefense self-reload — no action needed.
+    }
+
     // Public getters for UI and other systems
     public int GetActiveWeaponIndex() => activeWeaponIndex;
     public int GetWeaponCount() => weaponSlots.Count;
