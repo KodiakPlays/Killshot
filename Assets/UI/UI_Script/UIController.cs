@@ -157,7 +157,6 @@ public class UIController : MonoBehaviour
     private Dictionary<RadarTarget, RectTransform> radarBlips = new Dictionary<RadarTarget, RectTransform>();
 
     [Header("Weapon Display UI")]
-    private int btnTabCur = 0;
     [SerializeField] private Transform btnTabTran;
     [SerializeField] private TextMeshProUGUI weaponNameText;
     [SerializeField] private TextMeshProUGUI weaponTypeText;
@@ -171,6 +170,10 @@ public class UIController : MonoBehaviour
     [SerializeField] private Sprite pointDefenseIcon;
     [SerializeField] private Sprite boardingPodIcon;
     [SerializeField] private Sprite railgunIcon;
+    private int btnTabCur = 0;
+    [SerializeField] private Sprite[] tabSprite;
+    [SerializeField] private Image[] tabFrame;
+    [SerializeField] private TextMeshProUGUI[] tabWepName;
 
     void Start()
     {
@@ -365,7 +368,7 @@ public class UIController : MonoBehaviour
             {
                 //show relavent ship info
 
-                scannerImg.material.SetColor(shipPartsString[i]+"Color", pipCol[1]);
+                scannerImg.material.SetColor(shipPartsString[i] + "Color", pipCol[1]);
 
             }
         }
@@ -373,16 +376,16 @@ public class UIController : MonoBehaviour
 
     public void ScanMovment()
     {
-        if(rightScanner)
+        if (rightScanner)
         {
             scannerSlider.value = ++scanValue / scanSpeed;
         }
-        else if(!rightScanner)
+        else if (!rightScanner)
         {
             scannerSlider.value = --scanValue / scanSpeed;
         }
 
-        if(scannerSlider.value >= scanerMax)
+        if (scannerSlider.value >= scanerMax)
         {
             rightScanner = false;
         }
@@ -404,7 +407,7 @@ public class UIController : MonoBehaviour
             ScanTargetLoc(0);
 
             return;
-        }else if (bogieList.Count > 0)
+        } else if (bogieList.Count > 0)
         {
             for (int j = 0; j < bogieList.Count - 1; j++) //loop to find empty pips
             {
@@ -464,7 +467,7 @@ public class UIController : MonoBehaviour
         }
         else if (i == 1)
         {
-            targetGO.transform.localScale = new Vector3(1f,1f,1f);
+            targetGO.transform.localScale = new Vector3(1f, 1f, 1f);
         }
         else if (i == 2)
         {
@@ -498,7 +501,7 @@ public class UIController : MonoBehaviour
 
     private void StartPower()
     {
-        for (int i = 0; i < btnPowerBool.Count-1; i++)
+        for (int i = 0; i < btnPowerBool.Count - 1; i++)
         {
             uiPowerMetClass.Add(new UIPowerClass(new Material(shaPowerMet), 6, 1, 0f, false));
 
@@ -507,7 +510,7 @@ public class UIController : MonoBehaviour
 
         uiPowerMetClass.Add(new UIPowerClass(new Material(shaReactorMet), 15, 15, 0f, false));
 
-        imgPowerMet[btnPowerBool.Count-1].material = uiPowerMetClass[btnPowerBool.Count-1].mat;
+        imgPowerMet[btnPowerBool.Count - 1].material = uiPowerMetClass[btnPowerBool.Count - 1].mat;
 
         for (int i = 0; i < powerNodeImg.Length; i++)//power nodes
         {
@@ -533,7 +536,7 @@ public class UIController : MonoBehaviour
             //powerNodeImg[i].material.SetInt("_Charge", 0);
 
         }
-        else if(state > 0)
+        else if (state > 0)
         {
             powerNodeImg[i].material.SetInt("_On", 1);
         }
@@ -661,7 +664,7 @@ public class UIController : MonoBehaviour
             {
                 PowerNodes(j, 0);
                 noCharge++;
-            }          
+            }
         }
 
         if (noCharge == uiPowerMetClass.Count - 1)//if there are no charges end the function
@@ -779,13 +782,13 @@ public class UIController : MonoBehaviour
     {
         for (int i = 0; i < uiPowerMetClass.Count - 1; i++)
         {
-            if(powerAnimCoroutine[i] == null)
+            if (powerAnimCoroutine[i] == null)
             {
                 continue;
             }
 
-           uiPowerMetClass[i].Charge(false);
-           StopCoroutine(powerAnimCoroutine[i]);
+            uiPowerMetClass[i].Charge(false);
+            StopCoroutine(powerAnimCoroutine[i]);
         }
 
         StartCoroutine(VentAnim());
@@ -842,7 +845,7 @@ public class UIController : MonoBehaviour
 
         float normF = tunerTrans[1].localPosition.x / tunerTrans[2].localPosition.x;
 
-        tunerTrans[0].localPosition = Vector2.Lerp(tunerTrans[1].localPosition, tunerTrans[2].localPosition, frequancyFlt/(360*5));
+        tunerTrans[0].localPosition = Vector2.Lerp(tunerTrans[1].localPosition, tunerTrans[2].localPosition, frequancyFlt / (360 * 5));
 
 
     }//not in game currently
@@ -879,7 +882,7 @@ public class UIController : MonoBehaviour
             sensorLoadInfo[2].text = prow.ToString() + "/ 100";
             sensorLoadInfo[3].text = starboard.ToString() + "/ 100";
 
-            sensorLoad.localPosition = new Vector2(0,0);
+            sensorLoad.localPosition = new Vector2(0, 0);
         }
         else if (!loaded)
         {
@@ -904,12 +907,12 @@ public class UIController : MonoBehaviour
     {
         //speedometer.text = speed.ToString("F1");
     }
-    
+
     private void StartSpeedometerUpdates()
     {
         // Find PlayerShip in scene
         playerShipRef = FindFirstObjectByType<PlayerShip>();
-        
+
         if (playerShipRef != null)
         {
             speedometerUpdateCoroutine = StartCoroutine(UpdateSpeedometerContinuously());
@@ -926,7 +929,7 @@ public class UIController : MonoBehaviour
 
 
     }
-    
+
     private IEnumerator UpdateSpeedometerContinuously()
     {
         while (playerShipRef != null && autoUpdateSpeedometer)
@@ -942,7 +945,7 @@ public class UIController : MonoBehaviour
 
         velocityMeterTMP[0].text = Mathf.RoundToInt(playerShipRef.GetCurrentSpeed()).ToString();
     }
-    
+
     private void UpdateSpeedometerFromPlayerShip()
     {
         if (playerShipRef != null)
@@ -952,23 +955,23 @@ public class UIController : MonoBehaviour
             {
                 // Get velocity magnitude
                 float speed = shipRigidbody.linearVelocity.magnitude;
-                
+
                 // Optional: Determine if moving forward or backward
                 Vector3 forwardDirection = playerShipRef.transform.forward;
                 Vector3 velocityDirection = shipRigidbody.linearVelocity.normalized;
                 float forwardDot = Vector3.Dot(forwardDirection, velocityDirection);
-                
+
                 // Apply negative sign if moving backward
                 if (forwardDot < -0.1f)
                 {
                     speed = -speed;
                 }
-                
+
                 UpdateSpeedometer(speed);
             }
         }
     }
-    
+
     // Manual method to force speedometer update (for external calls)
     public void ForceSpeedometerUpdate()
     {
@@ -977,12 +980,12 @@ public class UIController : MonoBehaviour
             UpdateSpeedometerFromPlayerShip();
         }
     }
-    
+
     // Method to enable/disable automatic updates
     public void SetAutoUpdateSpeedometer(bool enabled)
     {
         autoUpdateSpeedometer = enabled;
-        
+
         if (enabled && speedometerUpdateCoroutine == null)
         {
             StartSpeedometerUpdates();
@@ -1017,7 +1020,7 @@ public class UIController : MonoBehaviour
     {
         Color[] col = { new Color(1f, 1f, 1f), new Color(0.8117647f, 0.6f, 0f), new Color(1f, 0f, 0f) };
 
-        if(cur >= stabMax *.25)
+        if (cur >= stabMax * .25)
         {
             velocityMeterImg[0].material.SetColor("_OnColor", col[0]);
         }
@@ -1131,7 +1134,7 @@ public class UIController : MonoBehaviour
     {
         int j = 0;
 
-        for (int i = 0; i < bogieList.Count; i++){if (bogieList[i] == bc) {j = i;}}
+        for (int i = 0; i < bogieList.Count; i++) { if (bogieList[i] == bc) { j = i; } }
 
         Destroy(bogieList[j].wepImageGo);
 
@@ -1183,7 +1186,7 @@ public class UIController : MonoBehaviour
         screenWepRT = screenWepGO.GetComponent<RectTransform>();
         gridImg.material = new Material(gridSha);
 
-        gridImg.material.SetVector("_ShipLocV2", new Vector2(0f,0f));
+        gridImg.material.SetVector("_ShipLocV2", new Vector2(0f, 0f));
         gridImg.material.SetFloat("_ShipRotation", 0f);
 
         weaponScreenImage.material = new Material(weaponScreenSha);
@@ -1199,7 +1202,7 @@ public class UIController : MonoBehaviour
         {
             gridImg.material.SetVector("_ShipLocV2", (shipV2 / 100f));
 
-            if(currentBogieTarget != null)
+            if (currentBogieTarget != null)
             {
                 ScanTargetLoc(1);
                 ScanTargetSize(1);
@@ -1246,7 +1249,7 @@ public class UIController : MonoBehaviour
             screenWorld.texture = viewTex[0];
 
             gridImg.material.SetInt("_WorldView", 0);
-            gridImg.material.SetVector("_CellSize", new Vector2(1,1));
+            gridImg.material.SetVector("_CellSize", new Vector2(1, 1));
             gridImg.material.SetFloat("_GridAmmount", 5f);
             gridImg.material.SetFloat("_GridThickness", .02f);
             gridImg.material.SetFloat("_ShipRotation", shipPlayer.localRotation.z);
@@ -1482,7 +1485,7 @@ public class UIController : MonoBehaviour
         }
         else if (worldZoom == 2)
         {
-            playerShipTranLoc = new Vector3(shipPlayer.position.x / (screenDist*2), shipPlayer.position.y / (screenDist*2), 0f);
+            playerShipTranLoc = new Vector3(shipPlayer.position.x / (screenDist * 2), shipPlayer.position.y / (screenDist * 2), 0f);
             bogieTranLoc = new Vector3(bogieTran.position.x / (screenDist * 2), bogieTran.position.y / (screenDist * 2), 0f);
             start = 0f;
         }
@@ -1515,7 +1518,7 @@ public class UIController : MonoBehaviour
 
         float scaleDistance = 0f;
 
-        if (worldZoom < 2){ scaleDistance = (distance / screenDist);}
+        if (worldZoom < 2) { scaleDistance = (distance / screenDist); }
         else if (worldZoom == 2) { scaleDistance = distance * 2f; }
 
         if (s < 0)
@@ -1546,7 +1549,7 @@ public class UIController : MonoBehaviour
 
             fire = false;
         }
-        else if (s>=0)
+        else if (s >= 0)
         {
             bogieList[s].matWep.SetFloat("_LaserDegree", angle);
             bogieList[s].matWep.SetInt("_LaserFire", 1);
@@ -1564,7 +1567,7 @@ public class UIController : MonoBehaviour
                 t = scaleDistance;
             }
 
-                updateShipHit(t);
+            updateShipHit(t);
 
             while (t > 0f)
             {
@@ -1598,7 +1601,7 @@ public class UIController : MonoBehaviour
 
     public void BtnBogieTab()
     {
-        if(bogieTabInt == 0)
+        if (bogieTabInt == 0)
         {
             bogieTabTran[0].localPosition = new Vector3(1000000f, 0f, 0f);
             bogieTabInt = 1;
@@ -1741,16 +1744,31 @@ public class UIController : MonoBehaviour
 
     public void BtnWepTab()
     {
-        int tabMax = 3;
+        //int tabMax = 3;
 
         btnTabCur++;
 
-        if (btnTabCur > tabMax)
+        if (btnTabCur > tabWepName.Length-1)
         {
             btnTabCur = 0;
         }
 
-        BtnTunerTab(btnTabTran, btnTabCur, tabMax);
+        for (int j = 0; j < tabWepName.Length; j++)
+        {
+            if (j != btnTabCur)
+            {
+                tabWepName[j].color = new Color(0.8235294f, 0.5019608f, 0f);
+                tabFrame[j].sprite = tabSprite[0];
+            }
+            else if (j == btnTabCur)
+            {
+                tabWepName[j].color = new Color(0f, 0f, 0f);
+                tabFrame[j].sprite = tabSprite[1];
+            }
+        }
+
+
+        BtnTunerTab(btnTabTran, btnTabCur, tabWepName.Length);
     }
 
     public void UpdateWeaponDisplay(string weapName, string weapType, Sprite icon, string status, Color statusColor, string ammo, float rechargeProgress, Color rechargeColor)
@@ -1790,5 +1808,8 @@ public class UIController : MonoBehaviour
         float degree = (360 / max) * cur;
 
         tran.eulerAngles = new Vector3(0f, 0f, degree);
+
+
     }
+
 }
