@@ -172,6 +172,9 @@ public class UIController : MonoBehaviour
     [SerializeField] private Sprite pointDefenseIcon;
     [SerializeField] private Sprite boardingPodIcon;
     [SerializeField] private Sprite railgunIcon;
+    [SerializeField] private Sprite[] tabSprite;
+    [SerializeField] private TextMeshProUGUI[] tabWepName;
+    [SerializeField] private Image[] tabFrame;
 
     void Start()
     {
@@ -1745,16 +1748,31 @@ public class UIController : MonoBehaviour
 
     public void BtnWepTab()
     {
-        int tabMax = 3;
+        //int tabMax = 3;
 
         btnTabCur++;
 
-        if (btnTabCur > tabMax)
+        if (btnTabCur > tabWepName.Length - 1)
         {
             btnTabCur = 0;
         }
 
-        BtnTunerTab(btnTabTran, btnTabCur, tabMax);
+        for (int j = 0; j < tabWepName.Length; j++)
+        {
+            if (j != btnTabCur)
+            {
+                tabWepName[j].color = new Color(0.8235294f, 0.5019608f, 0f);
+                tabFrame[j].sprite = tabSprite[0];
+            }
+            else if (j == btnTabCur)
+            {
+                tabWepName[j].color = new Color(0f, 0f, 0f);
+                tabFrame[j].sprite = tabSprite[1];
+            }
+        }
+
+
+        BtnTunerTab(btnTabTran, btnTabCur, tabWepName.Length);
     }
 
     /// <summary>
