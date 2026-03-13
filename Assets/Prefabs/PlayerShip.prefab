@@ -27,13 +27,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 289899518535000198}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: 1, w: 0.0000029653306}
+  m_LocalPosition: {x: 1.935731, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 301545260371833355}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 180}
 --- !u!222 &705978849121018986
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -358,7 +358,7 @@ Transform:
   m_GameObject: {fileID: 2830193068332808896}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 8.34, z: 0}
+  m_LocalPosition: {x: 0, y: 5.15, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -932,7 +932,6 @@ MonoBehaviour:
   dodgeStabilityCost: 45
   greenZoneThreshold: 60
   yellowZoneThreshold: 90
-  redZoneThreshold: 3
 --- !u!114 &2828144650140381111
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -950,19 +949,36 @@ MonoBehaviour:
     currentState: 0
     maxPower: 5
     currentPower: 0
-    isDrawing: 0
-  weapons:
-    name: Weapons
+    readyToVent: 0
+    finishingCurrentBar: 0
+  arms:
+    name: Arms
     currentState: 0
     maxPower: 5
     currentPower: 0
-    isDrawing: 0
-  sensors:
-    name: Sensors
+    readyToVent: 0
+    finishingCurrentBar: 0
+  bay:
+    name: Bay
     currentState: 0
     maxPower: 5
     currentPower: 0
-    isDrawing: 0
+    readyToVent: 0
+    finishingCurrentBar: 0
+  support:
+    name: Support
+    currentState: 0
+    maxPower: 5
+    currentPower: 0
+    readyToVent: 0
+    finishingCurrentBar: 0
+  sig:
+    name: Sig
+    currentState: 0
+    maxPower: 5
+    currentPower: 0
+    readyToVent: 0
+    finishingCurrentBar: 0
   powerFillRate: 0.5
   ventRate: 1
   reactorMaxPower: 8
@@ -1043,8 +1059,11 @@ MonoBehaviour:
   maxAmmo: 0
   baseDamage: 0
   damageModifier: 1
-  missilePrefab: {fileID: 0}
-  launchTubes: []
+  missilePrefab: {fileID: 2718158806618401375, guid: 67391a6f4428e7f42a81e3b993e6d3f2, type: 3}
+  launchTubes:
+  - {fileID: 2741798403034424658}
+  - {fileID: 6160183282695477346}
+  - {fileID: 4910870370238773696}
   lockOnTime: 2
   minLockRange: 500
   maxLockRange: 25000
@@ -1237,7 +1256,7 @@ MonoBehaviour:
   compassRect: {fileID: 0}
   speedometer: {fileID: 0}
   shipPlayer: {fileID: 0}
-  shipiconGO: {fileID: 0}
+  shipiconGO: {fileID: 3724157437582417748}
   autoUpdateSpeedometer: 1
   speedometerUpdateRate: 0.1
   velocityMeterSha: {fileID: -6465566751694194690, guid: 67c2f3ec1e2be423887902ce701b505a, type: 3}
@@ -1252,6 +1271,7 @@ MonoBehaviour:
   bogieTabTran:
   - {fileID: 0}
   - {fileID: 0}
+  bogieTabBtn: {fileID: 0}
   scannerSlider: {fileID: 0}
   scanSpeed: 10
   scannerSha: {fileID: -6465566751694194690, guid: fa82c3cfacfbf4d598c37318890b6d38, type: 3}
@@ -1347,15 +1367,17 @@ MonoBehaviour:
   radarBlipContainer: {fileID: 0}
   radarBlipPrefab: {fileID: 0}
   radarBlipRadius: 100
+  weaponManager: {fileID: 0}
+  btnTabTran: {fileID: 0}
   weaponNameText: {fileID: 0}
   weaponTypeText: {fileID: 0}
   weaponAmmoText: {fileID: 0}
   weaponStatusText: {fileID: 0}
   weaponRechargeBar: {fileID: 0}
   weaponIconImage: {fileID: 0}
-  laserIcon: {fileID: 0}
-  macrocannonIcon: {fileID: 0}
-  missileIcon: {fileID: 0}
-  pointDefenseIcon: {fileID: 0}
-  boardingPodIcon: {fileID: 0}
-  railgunIcon: {fileID: 0}
+  laserIcon: {fileID: 21300000, guid: 80c19f48c81184898962a5d6048cc49f, type: 3}
+  macrocannonIcon: {fileID: 21300000, guid: 80c19f48c81184898962a5d6048cc49f, type: 3}
+  missileIcon: {fileID: 21300000, guid: 80c19f48c81184898962a5d6048cc49f, type: 3}
+  pointDefenseIcon: {fileID: 21300000, guid: 80c19f48c81184898962a5d6048cc49f, type: 3}
+  boardingPodIcon: {fileID: 21300000, guid: 80c19f48c81184898962a5d6048cc49f, type: 3}
+  railgunIcon: {fileID: 21300000, guid: 80c19f48c81184898962a5d6048cc49f, type: 3}

@@ -10,10 +10,10 @@ public class ShipStability : MonoBehaviour
     [SerializeField] private float speedStabilityDrainMultiplier = 0.5f;
     [SerializeField] private float dodgeStabilityCost = 45f;
 
-    [Header("Turn Severity Thresholds (degrees per frame)")]
-    [SerializeField] private float greenZoneThreshold = 1.0f; // Small heading changes within 60° total
-    [SerializeField] private float yellowZoneThreshold = 1.5f; // Moderate turns (~45° arcs)
-    [SerializeField] private float redZoneThreshold = 3.0f; // Large/fast turns (~90°+ or more)
+    [Header("Turn Severity Thresholds (degrees per frame at 50 Hz)")]
+    [SerializeField] private float greenZoneThreshold = 0.6f;  // <=60 deg arc — small heading changes
+    [SerializeField] private float yellowZoneThreshold = 1.1f; // ~45 deg arc — moderate turns
+    // Red zone is anything above yellowZoneThreshold (~90+ deg arc)
 
     private bool canDodge = true;
     private float lastDodgeTime;
@@ -66,7 +66,10 @@ public class ShipStability : MonoBehaviour
             currentStability -= dodgeStabilityCost;
             canDodge = false;
             lastDodgeTime = Time.time;
-            
+
+            if (UIController.Instance != null)
+                UIController.Instance.StabilityMeterUpdate(currentStability);
+
             // Reset dodge ability after cooldown
             Invoke(nameof(ResetDodge), DODGE_COOLDOWN);
         }
@@ -77,48 +80,43 @@ public class ShipStability : MonoBehaviour
         canDodge = true;
     }
 
-    public float CalculateTurnStabilityDrain(float turnAngleThisFrame, float currentSpeed)
+    // powerDecayMultiplier: pass PowerManager.GetEngineStabilityDecayMultiplier() — spec: -5% per engine PWR-1
+    public float CalculateTurnStabilityDrain(float turnAngleThisFrame, float currentSpeed, float powerDecayMultiplier = 1f)
     {
-        // Normalize speed (assuming max operational speed around 100 units)
         float normalizedSpeed = Mathf.Clamp01(currentSpeed / 100f);
         
-        // Determine turn severity zone based on degrees per frame
         float drainMultiplier;
         string zone;
         
         if (turnAngleThisFrame <= greenZoneThreshold)
         {
-            // Green Zone: Small heading changes within 60°. Low risk.
             drainMultiplier = 0.1f;
             zone = "Green";
         }
         else if (turnAngleThisFrame <= yellowZoneThreshold)
         {
-            // Yellow Zone: Moderate turns (~45° arcs). Higher stability drain.
             drainMultiplier = 0.5f;
             zone = "Yellow";
         }
         else
         {
-            // Red Zone: Large or fast turns (~90° or more). Extreme stability drain.
+            // Red Zone: large or fast turns (~90+ deg). Extreme stability drain.
             drainMultiplier = 2.0f;
             zone = "Red";
         }
         
-        // Sharp turns at high speed drain much more stability
         float speedMultiplier = 1f + (normalizedSpeed * speedStabilityDrainMultiplier);
         
-        // Calculate final drain
-        float drain = turnStabilityDrainMultiplier * drainMultiplier * speedMultiplier * Time.fixedDeltaTime;
+        // Engine power bonus reduces decay (spec: -5% per PWR-1)
+        float drain = turnStabilityDrainMultiplier * drainMultiplier * speedMultiplier * powerDecayMultiplier * Time.fixedDeltaTime;
         
-        // Apply the drain
         currentStability = Mathf.Max(0, currentStability - drain);
         
-        // Debug info for testing
+        if (UIController.Instance != null)
+            UIController.Instance.StabilityMeterUpdate(currentStability);
+        
         if (drain > 0.01f)
-        {
-            Debug.Log($"Turn Zone: {zone}, Angle: {turnAngleThisFrame:F2}°, Speed: {currentSpeed:F1}, Drain: {drain:F3}, Stability: {currentStability:F1}%");
-        }
+            Debug.Log($"Turn Zone: {zone}, Angle: {turnAngleThisFrame:F2} deg, Speed: {currentSpeed:F1}, Drain: {drain:F3}, Stability: {currentStability:F1}%");
         
         return drain;
     }
