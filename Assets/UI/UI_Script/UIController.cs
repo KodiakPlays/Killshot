@@ -176,6 +176,10 @@ public class UIController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI[] tabWepName;
     [SerializeField] private Image[] tabFrame;
 
+    [Header("Screen Static")]
+    [SerializeField] private Shader staticSha;
+    [SerializeField] private Image[] staticImg;
+
     void Start()
     {
         // Auto-find player ship if not assigned in inspector
@@ -205,6 +209,8 @@ public class UIController : MonoBehaviour
         ScanTargetLoc(0);
         ScanTargetSize(0);
         BtnBogieTab();
+
+        GlitchStart();
 
         if (weaponManager == null)
             weaponManager = FindFirstObjectByType<WeaponManager>();
@@ -401,6 +407,8 @@ public class UIController : MonoBehaviour
 
     public void ScanNewTarget()
     {
+        StartCoroutine(GlitchEffect(0f, .25f, 2));
+
         int current = 0;
         //send all data to scan screen
 
@@ -615,6 +623,7 @@ public class UIController : MonoBehaviour
     {
         if (!uiPowerMetClass[i].charge)
         {
+            StartCoroutine(GlitchEffect(0f, .75f, 4));
             ChargeOn(i);
         }
         else if (uiPowerMetClass[i].charge)
@@ -625,6 +634,7 @@ public class UIController : MonoBehaviour
 
     public void ChargeOn(int i)
     {
+
         uiPowerMetClass[i].Charge(true);
 
         powerAnimCoroutine[i] = ChargeOnAnim(i);
@@ -784,6 +794,8 @@ public class UIController : MonoBehaviour
 
     public void VentBtn()
     {
+        StartCoroutine(GlitchEffect(0f, .75f, 4));
+
         for (int i = 0; i < uiPowerMetClass.Count - 1; i++)
         {
             if(powerAnimCoroutine[i] == null)
@@ -1247,6 +1259,7 @@ public class UIController : MonoBehaviour
 
     public void WorldGridZoom(int i)
     {
+        StartCoroutine(GlitchEffect(.5f, 1f, 0));
 
         if (i == 0)//spectral zoom 10x
         {
@@ -1605,7 +1618,9 @@ public class UIController : MonoBehaviour
 
     public void BtnBogieTab()
     {
-        if(bogieTabInt == 0)
+        StartCoroutine(GlitchEffect(.25f, 1f, 2));
+
+        if (bogieTabInt == 0)
         {
             bogieTabTran[0].localPosition = new Vector3(1000000f, 0f, 0f);
             bogieTabInt = 1;
@@ -1750,6 +1765,8 @@ public class UIController : MonoBehaviour
     {
         //int tabMax = 3;
 
+        StartCoroutine(GlitchEffect(.25f, 1f, 3));
+
         btnTabCur++;
 
         if (btnTabCur > tabWepName.Length - 1)
@@ -1800,14 +1817,60 @@ public class UIController : MonoBehaviour
         weaponManager.FireActiveWeapon(targetPos, 1f);
     }
 
-    /// <summary>
-    /// Called by the load_btn. Primes or targets the active weapon depending on its type.
-    /// Missile: locks all tubes onto the current bogie target.
-    /// Macrocannon: arms (loads) one shell into the barrel.
-    /// BoardingPod: sets the current bogie as the boarding target.
-    /// Other weapon types auto-manage their own loading.
-    /// </summary>
-    public void BtnWeaponLoad()
+    private void GlitchStart()
+    {
+        for (int i = 0; i < staticImg.Length; i++)
+        {
+            staticImg[i].material = new Material(staticSha);
+
+            staticImg[i].material.SetInt("_Glitch", 0);
+
+            if (i > 0)
+            {
+                staticImg[i].material.SetFloat("_LineSize", 50f);
+            }
+            else if (i == 0)
+            {
+                staticImg[i].material.SetFloat("_LineSize", 100f);
+            }
+
+            Debug.Log(staticImg[i].material.ToString());
+        }
+    }
+
+    private IEnumerator GlitchEffect(float t, float o, int s)
+    {
+        float speed = 1f;
+
+        staticImg[s].material.SetInt("_Glitch", 1);
+
+        while (o > 0f)
+        {
+            staticImg[s].material.SetFloat("_GlitchOpacity", o);
+
+            o -= Time.deltaTime * speed;
+
+            yield return null;
+        }
+
+        while (t > 0f)
+        {
+            t -= Time.deltaTime * speed;
+
+            yield return null;
+        }
+
+        staticImg[s].material.SetFloat("_Glitch", 0);
+    }
+
+        /// <summary>
+        /// Called by the load_btn. Primes or targets the active weapon depending on its type.
+        /// Missile: locks all tubes onto the current bogie target.
+        /// Macrocannon: arms (loads) one shell into the barrel.
+        /// BoardingPod: sets the current bogie as the boarding target.
+        /// Other weapon types auto-manage their own loading.
+        /// </summary>
+        public void BtnWeaponLoad()
     {
         if (weaponManager == null) return;
 
