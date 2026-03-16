@@ -876,6 +876,21 @@ public class UIController : MonoBehaviour
         Vector3 startPos = new Vector3(0f, 0f, 0f);
         float elapsedTime = 0f;
 
+        float glitchO = 0f;
+        float glitchT = 0f;
+
+
+
+        for (int i = 0; i < staticImg.Length; i++)
+        {
+            glitchO = Random.Range(.25f, 1f);
+
+            glitchT = Random.Range(duration/4f, duration/2f);
+
+            StartCoroutine(GlitchEffect(glitchT, glitchO, i));
+        }
+        
+
         while (elapsedTime < duration)
         {
             elapsedTime += Time.deltaTime;
