@@ -14,6 +14,9 @@ public class EnemyGroup
     [Tooltip("How many of this enemy type to spawn at start.")]
     [Min(0)] public int count = 3;
 
+    [Tooltip("If true, the enemy wanders via its patrol behaviour. Disable to keep the enemy stationary until the player is detected.")]
+    public bool patrol = true;
+
     [Tooltip("If true, a new enemy of this type respawns when one is destroyed.")]
     public bool respawnOnDeath = false;
 
@@ -142,8 +145,12 @@ public class GameManager : MonoBehaviour
         group.activeCount++;
         totalEnemiesAlive++;
 
-        // Subscribe to death so we can track it
+        // Apply group settings to the spawned enemy
         EnemyShip es = enemy.GetComponent<EnemyShip>();
+        if (es != null)
+            es.patrolEnabled = group.patrol;
+
+        // Subscribe to death so we can track it
         if (es != null)
         {
             HullSystem hull = enemy.GetComponent<HullSystem>();

@@ -17,6 +17,12 @@ public class MissileLauncher : WeaponBase
 
     protected override void Start()
     {
+        // Apply defaults for fields left at 0 in the Inspector
+        if (maxAmmo == 0)      maxAmmo     = 5;
+        if (angleOfFire == 0f) angleOfFire = 360f;  // guided — fire in any direction
+        if (reloadTime == 0f)  reloadTime  = 5f;    // 5s between salvos
+        if (baseDamage == 0f)  baseDamage  = 150f;
+
         base.Start();
         range = maxLockRange;
         

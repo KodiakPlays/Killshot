@@ -61,7 +61,7 @@ public class Laser : MonoBehaviour
         else if (CompareTag("PlayerProjectile"))
         {
             // Player projectiles can only damage enemies
-            EnemyShip enemyShip = other.GetComponent<EnemyShip>();
+            EnemyShip enemyShip = other.GetComponentInParent<EnemyShip>();
             if (enemyShip != null)
             {
                 enemyShip.TakeDamage(Mathf.RoundToInt(damage));

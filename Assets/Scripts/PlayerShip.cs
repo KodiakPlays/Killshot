@@ -45,6 +45,9 @@ public class PlayerShip : MonoBehaviour, IDamageable
 
 	private Rigidbody rb;
 
+    // Railgun standby state
+    public bool IsOnStandby { get; private set; }
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -196,6 +199,8 @@ public class PlayerShip : MonoBehaviour, IDamageable
 
     private void Update()
     {
+        if (IsOnStandby) return; // Block all input during railgun standby
+
         // Handle power input
         if (Input.GetKeyDown(KeyCode.Alpha1)) // Engine power
         {
@@ -287,8 +292,42 @@ public class PlayerShip : MonoBehaviour, IDamageable
         }
     }
 
+    /// <summary>Disables all ship input for <paramref name="duration"/> seconds, then reboots essential systems.</summary>
+    public void EnterRailgunStandby(float duration)
+    {
+        if (!IsOnStandby)
+            StartCoroutine(RailgunStandbyCoroutine(duration));
+    }
+
+    private System.Collections.IEnumerator RailgunStandbyCoroutine(float duration)
+    {
+        IsOnStandby = true;
+        currentSpeed = 0f;
+        targetSpeed = 0f;
+        Debug.Log("[PlayerShip] Railgun fired — entering standby...");
+
+        yield return new WaitForSeconds(duration);
+
+        // Reboot: restart engine and arms power draw
+        if (powerManager != null)
+        {
+            powerManager.engines.currentState = PowerState.Draw;
+            powerManager.arms.currentState = PowerState.Draw;
+        }
+
+        IsOnStandby = false;
+        Debug.Log("[PlayerShip] Ship rebooted — back to normal");
+    }
+
     private void FixedUpdate()
     {
+        if (IsOnStandby)
+        {
+            // Ship coasts on existing momentum during standby
+            rb.linearVelocity = transform.up * currentSpeed;
+            return;
+        }
+
         float enginePower = powerManager.GetSystemEfficiency("engines");
         
         // Ensure minimum engine power for basic movement (emergency power)

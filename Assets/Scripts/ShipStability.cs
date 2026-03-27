@@ -146,4 +146,12 @@ public class ShipStability : MonoBehaviour
         return canDodge;
     }
 
+    public void ApplyStabilityDrain(float amount)
+    {
+        currentStability = Mathf.Max(0, currentStability - amount);
+
+        if (UIController.Instance != null)
+            UIController.Instance.StabilityMeterUpdate(currentStability);
+    }
+
 }

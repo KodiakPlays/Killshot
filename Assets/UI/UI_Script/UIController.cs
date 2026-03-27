@@ -180,6 +180,15 @@ public class UIController : MonoBehaviour
     [SerializeField] private Shader staticSha;
     [SerializeField] private Image[] staticImg;
 
+    [Header("Hull Display")]
+    private HullSystem hullSystem;
+    private float hullDisplayTimer;
+    private const float HullDisplayInterval = 0.1f;
+
+    [Header("Power Manager Sync")]
+    [SerializeField] private PowerManager powerManager;
+    private PowerSystem[] _pmSystems; // maps UI button index → PowerSystem (engines, arms, bay, support, sig)
+
     void Start()
     {
         // Auto-find player ship if not assigned in inspector
@@ -189,9 +198,12 @@ public class UIController : MonoBehaviour
             if (player != null) shipPlayer = player.transform;
         }
 
-        //FrequancyTune(360f);
-
-        //NewBogie();//test
+        // Find PowerManager FIRST so StartPower() can seed from inspector values.
+        // PowerManager has [DefaultExecutionOrder(-10)] so its Start() always runs before this.
+        if (powerManager == null)
+            powerManager = FindFirstObjectByType<PowerManager>();
+        if (powerManager != null)
+            _pmSystems = new PowerSystem[] { powerManager.engines, powerManager.arms, powerManager.bay, powerManager.support, powerManager.sig };
 
         StartPower();
         WorldGridStart();
@@ -214,6 +226,24 @@ public class UIController : MonoBehaviour
 
         if (weaponManager == null)
             weaponManager = FindFirstObjectByType<WeaponManager>();
+
+        hullSystem = GetComponent<HullSystem>();
+        if (hullSystem == null)
+            hullSystem = FindFirstObjectByType<HullSystem>();
+        if (hullSystem != null)
+            PollHullDisplay(); // populate immediately on start
+    }
+
+    private void PollHullDisplay()
+    {
+        if (hullSystem == null) return;
+        UpdateCompass(
+            true, 0,
+            hullSystem.port.GetHealthPercentage() * 100f,
+            hullSystem.aft.GetHealthPercentage() * 100f,
+            hullSystem.prow.GetHealthPercentage() * 100f,
+            hullSystem.starboard.GetHealthPercentage() * 100f
+        );
     }
 
     void Update()
@@ -273,6 +303,14 @@ public class UIController : MonoBehaviour
 
         UpdateVelocity();
 
+        hullDisplayTimer += Time.deltaTime;
+        if (hullDisplayTimer >= HullDisplayInterval)
+        {
+            hullDisplayTimer = 0f;
+            PollHullDisplay();
+        }
+
+        SyncPowerBarsFromManager();
     }
 
     private void RadarTest()
@@ -513,25 +551,29 @@ public class UIController : MonoBehaviour
 
     private void StartPower()
     {
-        for (int i = 0; i < btnPowerBool.Count-1; i++)
+        for (int i = 0; i < btnPowerBool.Count - 1; i++)
         {
-            uiPowerMetClass.Add(new UIPowerClass(new Material(shaPowerMet), 6, 1, 0f, false));
+            // Seed directly from PowerManager inspector values, fall back to safe defaults
+            int maxPwr = (_pmSystems != null && i < _pmSystems.Length) ? _pmSystems[i].maxPower    : 5;
+            int curPwr = (_pmSystems != null && i < _pmSystems.Length) ? _pmSystems[i].currentPower : 0;
 
+            uiPowerMetClass.Add(new UIPowerClass(new Material(shaPowerMet), maxPwr, curPwr, 0f, false));
             imgPowerMet[i].material = uiPowerMetClass[i].mat;
         }
 
-        uiPowerMetClass.Add(new UIPowerClass(new Material(shaReactorMet), 15, 15, 0f, false));
+        // Seed reactor bar from PowerManager
+        int reactorMax = (powerManager != null) ? powerManager.GetMaxReactorPower() : 15;
+        int reactorCur = (powerManager != null) ? powerManager.GetReactorPower()    : 15;
+        uiPowerMetClass.Add(new UIPowerClass(new Material(shaReactorMet), reactorMax, reactorCur, 0f, false));
+        imgPowerMet[btnPowerBool.Count - 1].material = uiPowerMetClass[btnPowerBool.Count - 1].mat;
 
-        imgPowerMet[btnPowerBool.Count-1].material = uiPowerMetClass[btnPowerBool.Count-1].mat;
-
-        for (int i = 0; i < powerNodeImg.Length; i++)//power nodes
+        for (int i = 0; i < powerNodeImg.Length; i++) // power nodes
         {
             powerNodeImg[i].material = new Material(powerNodeSha);
-
             powerNodeImg[i].material.SetInt("_On", 0);
         }
 
-        for (int i = 0; i < btnPowerBool.Count - 1; i++)//power nodes
+        for (int i = 0; i < btnPowerBool.Count - 1; i++) // power nodes
         {
             powerAnimCoroutine[i] = null;
         }
@@ -621,14 +663,76 @@ public class UIController : MonoBehaviour
 
     public void ChargeBtn(int i)
     {
-        if (!uiPowerMetClass[i].charge)
+        // Just toggle the PM draw state. SyncPowerBarsFromManager owns all UI visuals.
+        if (powerManager != null && _pmSystems != null && i < _pmSystems.Length)
+            powerManager.ToggleDrawState(_pmSystems[i]);
+    }
+
+    /// <summary>
+    /// Polls PowerManager every frame and mirrors its state into the UI power bars.
+    /// This keeps the display in sync regardless of whether changes came from keyboard,
+    /// game code, or the UI buttons themselves.
+    /// </summary>
+    private void SyncPowerBarsFromManager()
+    {
+        if (powerManager == null || _pmSystems == null || uiPowerMetClass.Count == 0) return;
+
+        int sysCount = Mathf.Min(_pmSystems.Length, uiPowerMetClass.Count - 1);
+        for (int i = 0; i < sysCount; i++)
         {
-            StartCoroutine(GlitchEffect(0f, .75f, 4));
-            ChargeOn(i);
+            PowerSystem ps = _pmSystems[i];
+            UIPowerClass ui = uiPowerMetClass[i];
+
+            // Always push the true PM values into the shader — no condition check
+            ui.cur = ps.currentPower;
+            ui.max = ps.maxPower;
+            ui.mat.SetFloat("_PowerCur", ps.currentPower);
+            ui.mat.SetFloat("_PowerMax", ps.maxPower);
+
+            // Mirror the charging animation state
+            bool pmIsCharging = ps.currentState == PowerState.Draw || ps.finishingCurrentBar;
+
+            if (pmIsCharging)
+            {
+                if (!ui.charge)
+                {
+                    ui.charge = true;
+                    if (i < btnPowerBoolImage.Count)
+                        btnPowerBoolImage[i].sprite = uiSprite[1];
+                    ChargeNodeCheck();
+                }
+                // Restart the animation loop when the previous one finished
+                if (!powerAnimCoroutine.ContainsKey(i) || powerAnimCoroutine[i] == null)
+                {
+                    powerAnimCoroutine[i] = ChargeOnAnim(i);
+                    StartCoroutine(powerAnimCoroutine[i]);
+                }
+            }
+            else if (!pmIsCharging && ui.charge)
+            {
+                ui.charge = false;
+                if (powerAnimCoroutine.ContainsKey(i) && powerAnimCoroutine[i] != null)
+                {
+                    StopCoroutine(powerAnimCoroutine[i]);
+                    powerAnimCoroutine[i] = null;
+                }
+                if (i < btnPowerBoolImage.Count)
+                    btnPowerBoolImage[i].sprite = uiSprite[0];
+                ChargeNodeCheck();
+            }
         }
-        else if (uiPowerMetClass[i].charge)
+
+        // Always push reactor values unconditionally
+        int reactorIdx = uiPowerMetClass.Count - 1;
+        if (reactorIdx >= 0)
         {
-            ChargeOff(i);
+            int reactorPwr = powerManager.GetReactorPower();
+            int reactorMax = powerManager.GetMaxReactorPower();
+            UIPowerClass reactorUI = uiPowerMetClass[reactorIdx];
+            reactorUI.cur = reactorPwr;
+            reactorUI.max = reactorMax;
+            reactorUI.mat.SetFloat("_PowerCur", reactorPwr);
+            reactorUI.mat.SetFloat("_PowerMax", reactorMax);
         }
     }
 
@@ -757,39 +861,19 @@ public class UIController : MonoBehaviour
 
     public IEnumerator ChargeOnAnim(int i)
     {
-        //Debug.Log("i: " + i);
-
-        float speed = 1f;
-
         float time = 0;
-
         float crgAmt = 5f;
 
         while (time < crgAmt)
         {
-
-            Mathf.MoveTowards(0, crgAmt, time);
-
-            time += (Time.deltaTime) * (speed);
-
+            time += Time.deltaTime;
             yield return null;
-
         }
 
-        if (uiPowerMetClass[i].cur >= uiPowerMetClass[i].max || uiPowerMetClass[btnPowerBool.Count - 1].cur <= 0)
-        {
-            ChargeOff(i);
-        }
-        else if (uiPowerMetClass[i].cur < uiPowerMetClass[i].max && uiPowerMetClass[btnPowerBool.Count - 1].cur > 0)
-        {
-            uiPowerMetClass[i].cur++;
-            uiPowerMetClass[uiPowerMetClass.Count - 1].cur--;
-
-            uiPowerMetClass[i].mat.SetFloat("_PowerCur", uiPowerMetClass[i].cur);
-            uiPowerMetClass[uiPowerMetClass.Count - 1].mat.SetFloat("_PowerCur", uiPowerMetClass[uiPowerMetClass.Count - 1].cur);
-
-            ChargeOn(i);
-        }
+        // Animation loop finished — clear the reference so SyncPowerBarsFromManager
+        // restarts it on the next frame if the system is still charging.
+        // Do NOT modify ui.cur or shader values here; SyncPowerBarsFromManager owns those.
+        powerAnimCoroutine[i] = null;
     }
 
     public void VentBtn()
@@ -1805,6 +1889,9 @@ public class UIController : MonoBehaviour
 
 
         BtnTunerTab(btnTabTran, btnTabCur, tabWepName.Length);
+
+        if (weaponManager != null)
+            weaponManager.SwitchToWeapon(btnTabCur);
     }
 
     /// <summary>

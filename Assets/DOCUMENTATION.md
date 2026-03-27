@@ -52,7 +52,7 @@ Starwolf is a top-down 2D space combat game built in Unity. The game world is or
 
 **Key design rules present throughout the code:**
 - Damage is always **directional** — it hits the hull quadrant facing the impact.
-- **Power** is a shared reactor resource distributed among engines, weapons, and sensors.
+- **Power** is a shared reactor resource distributed among five systems: **Engines**, **Arms**, **Bay**, **Support**, and **Sig**. The reactor passively regenerates and is the single source of truth; the UI always mirrors inspector values.
 - **Stability** is consumed by sharp turns and dodging; depleting it prevents further maneuvers.
 - **Mission failure** can be triggered by player destruction, desertion, time expiry, or life support failure.
 - **`UIController`** is a singleton accessed everywhere via `UIController.Instance`. Backend scripts call it to push data into the HUD — the UI does not poll the game state.
@@ -94,7 +94,7 @@ The `?.` null-conditional is used defensively — the UI may not exist in test s
 | `GetWeaponIcon(WeaponType)` | `WeaponUIDisplay` | Returns the `Sprite` assigned for a given weapon type. |
 | `LaserFire()` | UIController (test, `p` key) | Plays the laser beam animation on the weapon screen toward the current target. |
 | `LaserFireEnemy(int i)` | UIController (test, `0`–`4` keys) | Plays a laser fire animation originating from bogie `i`. |
-| `RailFire()` | UIController (test, `r` key) | Plays the full railgun charge-and-fire beam animation on the weapon screen. |
+| `RailFire()` | `Railgun` (on fire) / UIController (test, `r` key) | Plays the full railgun charge-and-fire beam animation on the weapon screen. |
 | `WorldGridZoom(int i)` | UI buttons | Switches between the three zoom levels (0 = 10×, 1 = 100×, 2 = 1000×). |
 | `BogeySpot(float degree)` | UIController radar test | Briefly lights up a bogey blip on the radar at the given angle. |
 | `ScanNewTarget()` | UI button / `]` key | Cycles `currentBogieTarget` to the next entry in `bogieList`. |
@@ -313,19 +313,28 @@ dodgeTargetPosition = transform.position + dodgeOffset;
 
 | Control | Action |
 |---|---|
-| `Space` or `Left Ctrl` | Fire active weapon |
+| `Space` or `Left Ctrl` | Fire active weapon (not Railgun — see below) |
 | `1` | Toggle Engine power state |
-| `2` | Toggle Weapon power state |
-| `3` | Toggle Sensor power state |
+| `2` | Toggle Arms (weapon) power state |
+| `3` | Toggle Sig (sensor) power state |
 | `F2` | Toggle test mode (fire weapons without checking power) |
 
 **Weapon firing with power check:**
 ```csharp
-float weaponPower = powerManager.GetSystemEfficiency("weapons");
+float weaponPower = powerManager.GetSystemEfficiency("arms");
 if (weaponPower > 0.2f)
     weaponManager.FireActiveWeapon(transform.position + transform.up * 1000f, weaponPower);
 ```
-> Minimum 20% weapon efficiency required. Test mode (`F2`) bypasses this entirely.
+> Minimum 20% arms efficiency required. Test mode (`F2`) bypasses this entirely.
+
+**Railgun standby:** When the railgun fires, `PlayerShip` enters a read-only standby state for the reboot duration — all movement and weapon input is blocked:
+```csharp
+// Called by Railgun.PostFireStandby()
+playerShip.EnterRailgunStandby(float duration);
+
+// Guards in Update() / FixedUpdate():
+if (IsOnStandby) return;
+```
 
 #### Camera
 
@@ -424,7 +433,9 @@ currentStability = Mathf.Max(0, currentStability - drain);
 
 **File:** `Assets/Scripts/PowerManager.cs`
 
-Manages a shared reactor power pool distributed across three systems: **Engines**, **Weapons**, and **Sensors**. Each system has a capacity of 5 bars; the reactor pool starts at 8 bars.
+`[DefaultExecutionOrder(-10)]` — guaranteed to initialise before `UIController`.
+
+Manages a shared reactor power pool distributed across **five** systems: **Engines**, **Arms**, **Bay**, **Support**, and **Sig**. Each system has a capacity of 5 bars; the reactor max is 15 bars. At game start all five systems are in Draw state at **1 bar each**, with the reactor holding **3 free bars** (8 total in the system). As the reactor regenerates, drawing systems fill automatically. UI buttons toggle individual systems between Draw/Standby/Vent so the player controls where reactor power flows.
 
 **Power states per system:**
 
@@ -434,35 +445,50 @@ Manages a shared reactor power pool distributed across three systems: **Engines*
 | `Draw` | System actively draws power from the reactor. |
 | `Vent` | System releases its stored power back to the reactor. |
 
-Toggling a system cycles: Standby → Draw → Vent → Standby.
+The toggle cycle is fixed: **Standby → Draw → Standby → Vent → Standby**. Venting cannot be cancelled once triggered.
 
 **Cycling a system's state (player input in PlayerShip):**
 ```csharp
 // Keys 1/2/3 in PlayerShip.Update()
 if (Input.GetKeyDown(KeyCode.Alpha1)) powerManager.ToggleSystemState(powerManager.engines);
-if (Input.GetKeyDown(KeyCode.Alpha2)) powerManager.ToggleSystemState(powerManager.weapons);
-if (Input.GetKeyDown(KeyCode.Alpha3)) powerManager.ToggleSystemState(powerManager.sensors);
+if (Input.GetKeyDown(KeyCode.Alpha2)) powerManager.ToggleSystemState(powerManager.arms);
+if (Input.GetKeyDown(KeyCode.Alpha3)) powerManager.ToggleSystemState(powerManager.sig);
 ```
 
 **Checking power efficiency (used before firing weapons and applying thrust):**
 ```csharp
 float engineEfficiency = powerManager.GetSystemEfficiency("engines"); // 0.0 – 1.0
-float weaponEfficiency = powerManager.GetSystemEfficiency("weapons");
+float armsEfficiency   = powerManager.GetSystemEfficiency("arms");
 ```
 
-**UI integration:** The UIController drives the power UI via its own `ChargeBtn(int)` and `VentBtn()` methods (called from UI buttons), which animate the power meter shaders and node chain visuals. The `PowerManager` is the authoritative data source; `UIController` reflects its state visually.
+**Reactor passive regeneration:** The reactor always ticks back up toward `reactorMaxPower` at `reactorRegenRate` bars/sec (default 1), which in turn feeds any systems in Draw state. Regeneration is suspended while `reactorOnline == false` (during railgun post-fire reboot).
 
-- When multiple systems are in `Draw`, the fill rate is shared equally.
-- If the Reactor subsystem is damaged, `effectiveMaxReactor` is reduced proportionally.
-- The game starts with 3 bars of Engine power pre-loaded.
+**UI integration:** `ChargeBtn(int)` calls `ToggleSystemState()` on the corresponding `PowerSystem`. `SyncPowerBarsFromManager()` runs every `Update()` in `UIController`, unconditionally pushing `currentPower`/`maxPower` to the power bar shaders — the inspector is always the source of truth.
+
+- When multiple systems are in `Draw`, the fill rate is divided equally among them.
+- If the Reactor internal subsystem is damaged, `GetReactorMultiplier()` caps the effective reactor max.
+- Partial bars in progress when switching to Standby are completed before the system holds.
+
+**Bonus effects per system (applied per bar above the minimum of 1):**
+| System | Bonus per extra bar |
+|---|---|
+| Engines | +10% acceleration; −5% stability decay; MAX = Supercruise |
+| Arms | −2.5% cannon load time |
+| Bay | +10% boarding pod range |
+| Support | −5% ability cooldown |
+| Sig | +1% scanner perfect-hit window; +1 s comms intercept |
 
 **Key methods:**
 | Method | Description |
 |---|---|
-| `ToggleSystemState(system)` | Advances the state cycle for the given system. |
-| `GetSystemEfficiency(name)` | Returns 0.0–1.0 for `"engines"`, `"weapons"`, or `"sensors"`. |
-| `ToggleEngines()` / `ToggleWeapons()` / `ToggleSensors()` | Convenience wrappers for UI buttons. |
-| `EmergencyVent()` | Instantly vents all systems to Standby. |
+| `ToggleSystemState(system)` | Advances the fixed state cycle for the given system. |
+| `GetSystemEfficiency(name)` | Returns 0.0–1.0 for `"engines"`, `"arms"`, `"bay"`, `"support"`, or `"sig"`. |
+| `ToggleEngines()` / `ToggleArms()` / `ToggleBay()` / `ToggleSupport()` / `ToggleSig()` | Convenience wrappers for UI buttons. |
+| `VentAllSystems()` | Sets all powered systems to Vent state. |
+| `DrainAllPowerInstantly()` | Instantly zeros all system power **and** the reactor; sets `reactorOnline = false` (used by railgun on fire). |
+| `RebootReactor()` | Sets `reactorOnline = true`, re-enables regen, and puts Engines + Arms back into Draw (called after railgun standby ends). |
+| `AddPower(system)` / `RemovePower(system)` | Manual single-bar allocation from UI. |
+| `GetReactorPower()` / `GetMaxReactorPower()` | Current and maximum reactor bar values. |
 
 ---
 
@@ -869,13 +895,17 @@ missileLauncher.Fire(Vector3.zero); // target parameter unused for lock-based la
 
 **File:** `Assets/Scripts/Weapons/Railgun.cs`
 
-A high-damage, slow-firing weapon that fires an **instant beam** capable of penetrating multiple targets.
+A charge-and-release weapon gated on Arms power. Manages its own input in `Update()` — bypasses the standard `WeaponManager.FireActiveWeapon()` path entirely (`CanFire()` always returns `false`; `Fire()` is a no-op).
 
-**Firing sequence:**
-1. `Fire()` starts a charge coroutine (default 2 seconds).
-2. After charging, `FireRailgun()` casts sequential raycasts, piercing objects.
-3. Each hit object takes damage reduced by 15% per prior penetration.
-4. Penetration stops at `maxPenetrations` (default 5) or when the beam is blocked.
+**Full firing lifecycle:**
+
+| Step | What happens |
+|---|---|
+| Hold `Space` | `TryStartCharging()` — requires Arms efficiency > 90%. Calls `VentAllSystems()` so power is drained during the hold. |
+| Release `Space` | `FireRailgun()` is called immediately (no extra delay). |
+| Fire | Sequential penetrating raycast fires in `shipTransform.up` direction. Enemies hit take 9999 damage (instant kill). `DrainAllPowerInstantly()` zeros all system and reactor power; reactor goes offline. |
+| Post-fire standby | `PostFireStandby()` coroutine blocks all ship input for `standbyDuration` seconds (default 4 s) via `PlayerShip.EnterRailgunStandby()`. |
+| Reboot | After standby, `PowerManager.RebootReactor()` brings the reactor back online, enabling passive regen and putting Engines + Arms into Draw. |
 
 **Penetrating raycast loop:**
 ```csharp
@@ -886,26 +916,32 @@ while (remainingRange > 0 && penetrationCount <= maxPenetrations)
         ApplyDamage(hit, currentDamage);
         currentDamage *= (1f - damageDropoffPerPenetration); // 15% less per hit
 
-        if (ShouldStopBeam(hit)) break;  // Non-asteroid solids stop the beam
+        if (ShouldStopBeam(hit)) break;  // HeavyArmor / Station tags stop the beam
 
         currentOrigin = hit.point + fireDirection * 0.1f; // Step past the hit object
-        remainingRange -= hit.distance;
+        remainingRange -= hit.distance + 0.1f;
         penetrationCount++;
     }
-    else break; // Nothing else in range
+    else break;
 }
 ```
 
-**Visual beam:** A `LineRenderer` is enabled briefly (`beamDuration` seconds) after firing.
+**Visual beam:** A `LineRenderer` fades out over `beamDuration` seconds.
 
 **UIController — weapon-screen visual:**
 ```csharp
-// Triggers the animated railgun beam shader on the weapon screen
+// Called automatically in FireRailgun() after the beam is drawn
 UIController.Instance.RailFire();
 ```
-The `RailFireCo` coroutine in `UIController` animates `_LaserFire`, `_LaserSize`, `_LaserStart`, and `_LaserEnd` shader properties with an `AnimationCurve` for the charge-up and fade effects.
 
-**`FireInstant()`** skips the charge phase (for AI or testing use).
+**`FireInstant()`** triggers `FireRailgun()` immediately if not already charging or on standby (for AI / testing).
+
+**Public state accessors (for UI):**
+```csharp
+bool  charging  = railgun.IsCharging();
+bool  standby   = railgun.IsOnStandby();
+float progress  = railgun.GetChargeProgress(); // 0.0–1.0
+```
 
 ---
 
