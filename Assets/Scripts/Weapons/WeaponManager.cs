@@ -18,11 +18,23 @@ public class WeaponManager : MonoBehaviour
     [SerializeField] private float minPowerForWeapons = 0.1f;
     
     private WeaponSlot currentWeapon;
+    private float displayRefreshTimer;
+    private const float DisplayRefreshInterval = 0.1f;
 
     void Start()
     {
         InitializeWeapons();
         SwitchToWeapon(activeWeaponIndex);
+    }
+
+    void Update()
+    {
+        displayRefreshTimer += Time.deltaTime;
+        if (displayRefreshTimer >= DisplayRefreshInterval)
+        {
+            displayRefreshTimer = 0f;
+            RefreshWeaponDisplay();
+        }
     }
 
     /// <summary>
@@ -124,25 +136,17 @@ public class WeaponManager : MonoBehaviour
     public bool FireActiveWeapon(Vector3 target, float weaponPowerEfficiency = 1f)
     {
         if (currentWeapon == null || currentWeapon.weaponInstance == null)
-        {
             return false;
-        }
 
         if (requiresPower && weaponPowerEfficiency < minPowerForWeapons)
-        {
             return false;
-        }
 
         if (!currentWeapon.weaponInstance.CanFire())
-        {
             return false;
-        }
 
         // Special handling for LaserWeapon with power requirements
         if (currentWeapon.weaponInstance is LaserWeapon laserWeapon)
-        {
             return laserWeapon.TryFire(weaponPowerEfficiency);
-        }
 
         // Standard weapon firing
         currentWeapon.weaponInstance.Fire(target);
@@ -247,6 +251,55 @@ public class WeaponManager : MonoBehaviour
     protected virtual void OnWeaponSwitched(WeaponSlot newWeapon)
     {
         Debug.Log($"Switched to weapon: {newWeapon.slotName} ({newWeapon.weaponType})");
+        RefreshWeaponDisplay();
+    }
+
+    /// <summary>
+    /// Pushes the current weapon's stats to UIController.UpdateWeaponDisplay.
+    /// Safe to call at any time; no-ops if UIController or currentWeapon is null.
+    /// </summary>
+    public void RefreshWeaponDisplay()
+    {
+        if (UIController.Instance == null || currentWeapon == null) return;
+
+        WeaponBase wb    = currentWeapon.weaponInstance;
+        string    name   = currentWeapon.slotName;
+        string    type   = currentWeapon.weaponType.ToString();
+        Sprite    icon   = UIController.Instance.GetWeaponIcon(currentWeapon.weaponType);
+
+        string status;
+        Color  statusColor;
+        string ammo;
+        float  rechargeProgress;
+        Color  rechargeColor;
+
+        if (wb != null)
+        {
+            int maxA = wb.GetMaxAmmo();
+            ammo            = maxA > 0 ? $"{wb.GetCurrentAmmo()}/{maxA}" : "---";
+            rechargeProgress = wb.GetReloadProgress();
+
+            if (!currentWeapon.isActive)
+            {
+                status = "Offline";  statusColor = Color.red;    rechargeColor = Color.red;
+            }
+            else if (wb.CanFire())
+            {
+                status = "Ready";    statusColor = Color.green;  rechargeColor = Color.green;
+            }
+            else
+            {
+                status = "Reloading"; statusColor = Color.yellow; rechargeColor = Color.yellow;
+            }
+        }
+        else
+        {
+            ammo = "---"; rechargeProgress = 0f;
+            status = "Offline"; statusColor = Color.red; rechargeColor = Color.red;
+        }
+
+        UIController.Instance.UpdateWeaponDisplay(
+            name, type, icon, status, statusColor, ammo, rechargeProgress, rechargeColor);
     }
 
     /// <summary>

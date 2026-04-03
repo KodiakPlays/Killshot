@@ -22,6 +22,7 @@ public class PowerSystem
     public bool finishingCurrentBar = false;
 }
 
+[DefaultExecutionOrder(-10)] // Ensures PowerManager.Start() runs before UIController.Start()
 public class PowerManager : MonoBehaviour
 {
     [Header("Power Systems")]
@@ -34,12 +35,15 @@ public class PowerManager : MonoBehaviour
     [Header("Power Settings")]
     [SerializeField] private float powerFillRate = 0.5f; // bars/sec base rate, divided evenly across active systems
     [SerializeField] private float ventRate = 1f;        // 1 bar per second
-    [SerializeField] private int reactorMaxPower = 8;
-    [SerializeField] private int currentReactorPower = 8;
+    [SerializeField] private float reactorRegenRate = 1f; // bars/sec the reactor passively regenerates
+    [SerializeField] private int reactorMaxPower = 15;
+    [SerializeField] private int currentReactorPower = 15;
 
     private PowerSystem[] allSystems;
     private List<PowerSystem> activeSystems = new List<PowerSystem>();
     private Dictionary<PowerSystem, float> powerAccumulator = new Dictionary<PowerSystem, float>();
+    private float reactorRegenAccumulator = 0f;
+    private bool reactorOnline = true; // false during railgun post-fire reboot; blocks passive regen
     private InternalSubsystems internalSubsystems;
 
     private void Awake()
@@ -54,10 +58,16 @@ public class PowerManager : MonoBehaviour
         foreach (var system in allSystems)
             powerAccumulator[system] = 0f;
 
-        // Start with engines drawing
-        engines.currentState = PowerState.Draw;
-        engines.currentPower = 3;
-        currentReactorPower -= 3;
+        // All systems start in Standby at 0 power. Reactor starts full.
+        // The player uses the charge buttons to direct power to individual systems.
+        foreach (var system in allSystems)
+        {
+            system.currentState = PowerState.Standby;
+            system.currentPower = 0;
+            system.readyToVent = false;
+            system.finishingCurrentBar = false;
+        }
+        currentReactorPower = reactorMaxPower;
     }
 
     private void Update()
@@ -67,12 +77,28 @@ public class PowerManager : MonoBehaviour
 
     private void UpdatePowerSystems()
     {
-        // Reactor damage limits total power available
-        if (internalSubsystems != null)
+        // Reactor passively regenerates only when online
+        if (reactorOnline)
         {
-            int effectiveMax = Mathf.RoundToInt(reactorMaxPower * internalSubsystems.GetReactorMultiplier());
-            if (currentReactorPower > effectiveMax)
-                currentReactorPower = effectiveMax;
+            int regenMax = reactorMaxPower;
+            if (internalSubsystems != null)
+                regenMax = Mathf.RoundToInt(reactorMaxPower * internalSubsystems.GetReactorMultiplier());
+
+            if (currentReactorPower < regenMax)
+            {
+                reactorRegenAccumulator += reactorRegenRate * Time.deltaTime;
+                while (reactorRegenAccumulator >= 1f)
+                {
+                    reactorRegenAccumulator -= 1f;
+                    currentReactorPower = Mathf.Min(currentReactorPower + 1, regenMax);
+                }
+            }
+            else
+            {
+                reactorRegenAccumulator = 0f;
+                if (currentReactorPower > regenMax)
+                    currentReactorPower = regenMax;
+            }
         }
 
         // Separate drawing/finishing systems from venting systems
@@ -130,7 +156,6 @@ public class PowerManager : MonoBehaviour
     // Spec state cycle (fixed): Standby → Draw → Standby → Vent → Standby
     public void ToggleSystemState(PowerSystem system)
     {
-        Debug.Log($"[PowerManager] ToggleSystemState called for {system.name}");
         switch (system.currentState)
         {
             case PowerState.Standby:
@@ -162,6 +187,27 @@ public class PowerManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Simple Draw ↔ Standby toggle used by the charge/discharge UI buttons.
+    /// Never triggers Vent — that is reserved for VentBtn / VentAllSystems.
+    /// </summary>
+    public void ToggleDrawState(PowerSystem system)
+    {
+        if (system.currentState == PowerState.Draw)
+        {
+            system.currentState = PowerState.Standby;
+            system.readyToVent = false; // reset so next button press starts Draw, not Vent
+            if (powerAccumulator.ContainsKey(system) && powerAccumulator[system] > 0f)
+                system.finishingCurrentBar = true;
+        }
+        else if (system.currentState == PowerState.Standby)
+        {
+            system.currentState = PowerState.Draw;
+            system.finishingCurrentBar = false;
+        }
+        // Vent state: ignore — let the vent complete naturally
+    }
+
     private void VentPower(PowerSystem system)
     {
         if (system.currentPower > 0)
@@ -188,27 +234,27 @@ public class PowerManager : MonoBehaviour
     private int BonusBars(PowerSystem system) => Mathf.Max(0, system.currentPower - 1);
 
     // Engines: +10% acceleration per bonus bar; -5% stability decay per bonus bar; MAX PWR = Supercruise
-    public float GetEngineAccelerationMultiplier() { Debug.Log("[PowerManager] GetEngineAccelerationMultiplier called"); return 1f + BonusBars(engines) * 0.10f; }
-    public float GetEngineStabilityDecayMultiplier() { Debug.Log("[PowerManager] GetEngineStabilityDecayMultiplier called"); return 1f - BonusBars(engines) * 0.05f; }
-    public bool IsSupercruiseUnlocked() { Debug.Log("[PowerManager] IsSupercruiseUnlocked called"); return engines.currentPower >= engines.maxPower; }
+    public float GetEngineAccelerationMultiplier() { return 1f + BonusBars(engines) * 0.10f; }
+    public float GetEngineStabilityDecayMultiplier() { return 1f - BonusBars(engines) * 0.05f; }
+    public bool IsSupercruiseUnlocked() { return engines.currentPower >= engines.maxPower; }
 
     // Arms: -2.5% cannon load time per bonus bar
-    public float GetCannonLoadTimeMultiplier() { Debug.Log("[PowerManager] GetCannonLoadTimeMultiplier called"); return 1f - BonusBars(arms) * 0.025f; }
+    public float GetCannonLoadTimeMultiplier() { return 1f - BonusBars(arms) * 0.025f; }
 
     // Bay: +10% boarding pod range per bonus bar
-    public float GetBoardingPodRangeMultiplier() { Debug.Log("[PowerManager] GetBoardingPodRangeMultiplier called"); return 1f + BonusBars(bay) * 0.10f; }
+    public float GetBoardingPodRangeMultiplier() { return 1f + BonusBars(bay) * 0.10f; }
 
     // Support: -5% ability cooldown per bonus bar
-    public float GetAbilityCooldownMultiplier() { Debug.Log("[PowerManager] GetAbilityCooldownMultiplier called"); return 1f - BonusBars(support) * 0.05f; }
+    public float GetAbilityCooldownMultiplier() { return 1f - BonusBars(support) * 0.05f; }
 
     // Sig: +1% perfect-hit window per bonus bar; +1s comms intercept per bonus bar
-    public float GetScannerPerfectHitBonus() { Debug.Log("[PowerManager] GetScannerPerfectHitBonus called"); return BonusBars(sig) * 0.01f; }
-    public float GetCommsInterceptTimeBonus() { Debug.Log("[PowerManager] GetCommsInterceptTimeBonus called"); return BonusBars(sig) * 1f; }
+    public float GetScannerPerfectHitBonus() { return BonusBars(sig) * 0.01f; }
+    public float GetCommsInterceptTimeBonus() { return BonusBars(sig) * 1f; }
 
     // Legacy efficiency accessor (0–1). Kept so existing callers don't break.
     public float GetSystemEfficiency(string systemName)
     {
-        Debug.Log($"[PowerManager] GetSystemEfficiency called for {systemName}");
+        //Debug.Log($"[PowerManager] GetSystemEfficiency called for {systemName}");
         PowerSystem system = GetSystemByName(systemName);
         return system != null ? (float)system.currentPower / system.maxPower : 0f;
     }
@@ -217,7 +263,6 @@ public class PowerManager : MonoBehaviour
 
     public void AddPower(PowerSystem system)
     {
-        Debug.Log($"[PowerManager] AddPower called for {system.name}");
         if (currentReactorPower > 0 && system.currentPower < system.maxPower)
         {
             system.currentPower++;
@@ -227,7 +272,6 @@ public class PowerManager : MonoBehaviour
 
     public void RemovePower(PowerSystem system)
     {
-        Debug.Log($"[PowerManager] RemovePower called for {system.name}");
         if (system.currentPower > 0)
         {
             system.currentPower--;
@@ -235,37 +279,73 @@ public class PowerManager : MonoBehaviour
         }
     }
 
-    public void AddEnginesPower()  { Debug.Log("[PowerManager] AddEnginesPower called"); AddPower(engines); }
-    public void AddArmsPower()     { Debug.Log("[PowerManager] AddArmsPower called"); AddPower(arms); }
-    public void AddBayPower()      { Debug.Log("[PowerManager] AddBayPower called"); AddPower(bay); }
-    public void AddSupportPower()  { Debug.Log("[PowerManager] AddSupportPower called"); AddPower(support); }
-    public void AddSigPower()      { Debug.Log("[PowerManager] AddSigPower called"); AddPower(sig); }
+    public void AddEnginesPower()  { AddPower(engines); }
+    public void AddArmsPower()     { AddPower(arms); }
+    public void AddBayPower()      { AddPower(bay); }
+    public void AddSupportPower()  { AddPower(support); }
+    public void AddSigPower()      { AddPower(sig); }
 
-    public void RemoveEnginesPower()  { Debug.Log("[PowerManager] RemoveEnginesPower called"); RemovePower(engines); }
-    public void RemoveArmsPower()     { Debug.Log("[PowerManager] RemoveArmsPower called"); RemovePower(arms); }
-    public void RemoveBayPower()      { Debug.Log("[PowerManager] RemoveBayPower called"); RemovePower(bay); }
-    public void RemoveSupportPower()  { Debug.Log("[PowerManager] RemoveSupportPower called"); RemovePower(support); }
-    public void RemoveSigPower()      { Debug.Log("[PowerManager] RemoveSigPower called"); RemovePower(sig); }
+    public void RemoveEnginesPower()  { RemovePower(engines); }
+    public void RemoveArmsPower()     { RemovePower(arms); }
+    public void RemoveBayPower()      { RemovePower(bay); }
+    public void RemoveSupportPower()  { RemovePower(support); }
+    public void RemoveSigPower()      { RemovePower(sig); }
 
     // --- Toggle helpers ------------------------------------------------------
 
-    public void ToggleEngines() { Debug.Log("[PowerManager] ToggleEngines called"); ToggleSystemState(engines); }
-    public void ToggleArms()    { Debug.Log("[PowerManager] ToggleArms called"); ToggleSystemState(arms); }
-    public void ToggleBay()     { Debug.Log("[PowerManager] ToggleBay called"); ToggleSystemState(bay); }
-    public void ToggleSupport() { Debug.Log("[PowerManager] ToggleSupport called"); ToggleSystemState(support); }
-    public void ToggleSig()     { Debug.Log("[PowerManager] ToggleSig called"); ToggleSystemState(sig); }
+    public void ToggleEngines() { ToggleSystemState(engines); }
+    public void ToggleArms()    { ToggleSystemState(arms); }
+    public void ToggleBay()     { ToggleSystemState(bay); }
+    public void ToggleSupport() { ToggleSystemState(support); }
+    public void ToggleSig()     { ToggleSystemState(sig); }
 
     // Legacy names kept for existing prefab references
-    public void ToggleWeapons() { Debug.Log("[PowerManager] ToggleWeapons called"); ToggleSystemState(arms); }
-    public void ToggleSensors() { Debug.Log("[PowerManager] ToggleSensors called"); ToggleSystemState(sig); }
-    public void ToggleCrew()    { Debug.Log("[PowerManager] ToggleCrew called"); ToggleSystemState(support); }  // key_CRW button
-    public void ToggleShields() { Debug.Log("[PowerManager] ToggleShields called"); ToggleSystemState(bay); }      // key_SHD button
+    public void ToggleWeapons() { ToggleSystemState(arms); }
+    public void ToggleSensors() { ToggleSystemState(sig); }
+    public void ToggleCrew()    { ToggleSystemState(support); }  // key_CRW button
+    public void ToggleShields() { ToggleSystemState(bay); }      // key_SHD button
 
     // --- Vent all / Emergency ------------------------------------------------
 
+    /// <summary>Immediately removes up to <paramref name="bars"/> of power from the Arms system (returns removed bars to the reactor).</summary>
+    public void DrainArmsPower(int bars)
+    {
+        int toDrain = Mathf.Min(bars, arms.currentPower);
+        arms.currentPower -= toDrain;
+        currentReactorPower += toDrain;
+    }
+
+    /// <summary>Instantly zeros all system power AND the reactor (used by railgun after firing). Call RebootReactor() to bring it back online.</summary>
+    public void DrainAllPowerInstantly()
+    {
+        foreach (var system in allSystems)
+        {
+            system.currentPower = 0;
+            system.currentState = PowerState.Standby;
+            system.readyToVent = false;
+            system.finishingCurrentBar = false;
+            if (powerAccumulator.ContainsKey(system))
+                powerAccumulator[system] = 0f;
+        }
+        // Drain reactor completely — ship goes fully dark
+        currentReactorPower = 0;
+        reactorRegenAccumulator = 0f;
+        reactorOnline = false;
+    }
+
+    /// <summary>Brings the reactor back online after a railgun standby reboot. Re-engages engines and arms in Draw state.</summary>
+    public void RebootReactor()
+    {
+        reactorOnline = true;
+        reactorRegenAccumulator = 0f;
+
+        // Restore default drawing systems so they fill as reactor replenishes
+        engines.currentState = PowerState.Draw;
+        arms.currentState    = PowerState.Draw;
+    }
+
     public void VentAllSystems()
     {
-        Debug.Log("[PowerManager] VentAllSystems called");
         foreach (var system in allSystems)
         {
             if (system.currentPower > 0)
@@ -278,11 +358,10 @@ public class PowerManager : MonoBehaviour
         }
     }
 
-    public void EmergencyVent() { Debug.Log("[PowerManager] EmergencyVent called"); VentAllSystems(); }
+    public void EmergencyVent() { VentAllSystems(); }
 
     public void BlackAlert()
     {
-        Debug.Log("[PowerManager] BlackAlert called");
         VentAllSystems();
         StartCoroutine(ActivateBlackAlertSystems());
     }
@@ -301,27 +380,23 @@ public class PowerManager : MonoBehaviour
 
     public PowerState GetSystemState(string systemName)
     {
-        Debug.Log($"[PowerManager] GetSystemState called for {systemName}");
         return GetSystemByName(systemName)?.currentState ?? PowerState.Standby;
     }
 
     public int GetSystemPower(string systemName)
     {
-        Debug.Log($"[PowerManager] GetSystemPower called for {systemName}");
         return GetSystemByName(systemName)?.currentPower ?? 0;
     }
 
     public int GetSystemMaxPower(string systemName)
     {
-        Debug.Log($"[PowerManager] GetSystemMaxPower called for {systemName}");
         return GetSystemByName(systemName)?.maxPower ?? 0;
     }
 
-    public int GetReactorPower() { Debug.Log("[PowerManager] GetReactorPower called"); return currentReactorPower; }
+    public int GetReactorPower() { return currentReactorPower; }
 
     public int GetMaxReactorPower()
     {
-        Debug.Log("[PowerManager] GetMaxReactorPower called");
         return internalSubsystems != null
             ? Mathf.RoundToInt(reactorMaxPower * internalSubsystems.GetReactorMultiplier())
             : reactorMaxPower;
@@ -329,13 +404,11 @@ public class PowerManager : MonoBehaviour
 
     public void DrainSystemPower(string systemName)
     {
-        Debug.Log($"[PowerManager] DrainSystemPower called for {systemName}");
         PowerSystem system = GetSystemByName(systemName);
         if (system != null && system.currentPower > 0)
         {
             system.currentPower--;
             currentReactorPower++;
-            Debug.Log($"[PowerManager] Reactor damage drained 1 power from {systemName}");
         }
     }
 

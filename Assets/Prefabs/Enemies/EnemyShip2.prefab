@@ -80,10 +80,16 @@ MonoBehaviour:
   firePoint: {fileID: 8669799461649134034}
   fireRate: 1
   maxHealth: 1
-  thrustForce: 1.5
-  rotationSpeed: 1
-  maxSpeed: 0.25
-  orbitSpeed: 0.15
+  patrolRadius: 40
+  waypointReachedThreshold: 3
+  obstacleAvoidanceDistance: 8
+  obstacleLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  thrustForce: 15
+  rotationSpeed: 50
+  maxSpeed: 20
+  orbitForce: 5
 --- !u!114 &5665490769396349850
 MonoBehaviour:
   m_ObjectHideFlags: 0
