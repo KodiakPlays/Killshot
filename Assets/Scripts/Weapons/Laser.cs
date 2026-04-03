@@ -50,7 +50,9 @@ public class Laser : MonoBehaviour
                 PlayerShip playerShip = other.GetComponent<PlayerShip>();
                 if (playerShip != null)
                 {
-                    playerShip.TakeDamage(damage);
+                    // Pass hit direction for directional hull damage per GDD
+                    Vector3 hitDirection = rb.linearVelocity.normalized;
+                    playerShip.TakeDamage(damage, hitDirection);
                     shouldDamage = true;
                 }
             }
@@ -59,10 +61,10 @@ public class Laser : MonoBehaviour
         else if (CompareTag("PlayerProjectile"))
         {
             // Player projectiles can only damage enemies
-            EnemyShip enemyShip = other.GetComponent<EnemyShip>();
+            EnemyShip enemyShip = other.GetComponentInParent<EnemyShip>();
             if (enemyShip != null)
             {
-                enemyShip.TakeDamage();
+                enemyShip.TakeDamage(Mathf.RoundToInt(damage));
                 shouldDamage = true;
             }
         }

@@ -14,6 +14,16 @@ using Vector3 = UnityEngine.Vector3;
 
 public class UIController : MonoBehaviour
 {
+    public static UIController Instance { get; private set; }
+
+    void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+    }
+
     [SerializeField]
     private List<Button> btnPowerBool = new List<Button>();
 
@@ -74,6 +84,8 @@ public class UIController : MonoBehaviour
 
     [Header("Scanner Hack")]
     [SerializeField] private Transform[] bogieTabTran;
+    private int bogieTabInt = 1;
+    [SerializeField] private Transform bogieTabBtn;
     [SerializeField] private Slider scannerSlider;
     private float scanValue = 0;
     private float placeValue = 0;
@@ -128,11 +140,70 @@ public class UIController : MonoBehaviour
 
     public AnimationCurve animationCurve;
 
+    [Header("Comms UI")]
+    [SerializeField] private GameObject signalInterceptPanel;
+    [SerializeField] private Slider commsFrequencySlider;
+    [SerializeField] private Image commsSignalStrengthIndicator;
+    [SerializeField] private TextMeshProUGUI commsBandDisplay;
+    [SerializeField] private TextMeshProUGUI commsFrequencyDisplay;
+    [SerializeField] private Button commsLockButton;
+    [SerializeField] private Image[] commsBandIndicators;
+    [SerializeField] private TextMeshProUGUI commsLogText;
+
+    [Header("Radar Blips")]
+    [SerializeField] private RectTransform radarBlipContainer;
+    [SerializeField] private GameObject radarBlipPrefab;
+    [SerializeField] private float radarBlipRadius = 100f;
+    private Dictionary<RadarTarget, RectTransform> radarBlips = new Dictionary<RadarTarget, RectTransform>();
+
+    [Header("Weapon Display UI")]
+    [SerializeField] private WeaponManager weaponManager;
+    private int btnTabCur = 0;
+    [SerializeField] private Transform btnTabTran;
+    [SerializeField] private TextMeshProUGUI weaponNameText;
+    [SerializeField] private TextMeshProUGUI weaponTypeText;
+    [SerializeField] private TextMeshProUGUI weaponAmmoText;
+    [SerializeField] private TextMeshProUGUI weaponStatusText;
+    [SerializeField] private Image weaponRechargeBar;
+    [SerializeField] private Image weaponIconImage;
+    [SerializeField] private Sprite laserIcon;
+    [SerializeField] private Sprite macrocannonIcon;
+    [SerializeField] private Sprite missileIcon;
+    [SerializeField] private Sprite pointDefenseIcon;
+    [SerializeField] private Sprite boardingPodIcon;
+    [SerializeField] private Sprite railgunIcon;
+    [SerializeField] private Sprite[] tabSprite;
+    [SerializeField] private TextMeshProUGUI[] tabWepName;
+    [SerializeField] private Image[] tabFrame;
+
+    [Header("Screen Static")]
+    [SerializeField] private Shader staticSha;
+    [SerializeField] private Image[] staticImg;
+
+    [Header("Hull Display")]
+    private HullSystem hullSystem;
+    private float hullDisplayTimer;
+    private const float HullDisplayInterval = 0.1f;
+
+    [Header("Power Manager Sync")]
+    [SerializeField] private PowerManager powerManager;
+    private PowerSystem[] _pmSystems; // maps UI button index → PowerSystem (engines, arms, bay, support, sig)
+
     void Start()
     {
-        //FrequancyTune(360f);
+        // Auto-find player ship if not assigned in inspector
+        if (shipPlayer == null)
+        {
+            GameObject player = this.gameObject;//GameObject.FindGameObjectWithTag("Player");
+            if (player != null) shipPlayer = player.transform;
+        }
 
-        NewBogie();//test
+        // Find PowerManager FIRST so StartPower() can seed from inspector values.
+        // PowerManager has [DefaultExecutionOrder(-10)] so its Start() always runs before this.
+        if (powerManager == null)
+            powerManager = FindFirstObjectByType<PowerManager>();
+        if (powerManager != null)
+            _pmSystems = new PowerSystem[] { powerManager.engines, powerManager.arms, powerManager.bay, powerManager.support, powerManager.sig };
 
         StartPower();
         WorldGridStart();
@@ -149,7 +220,30 @@ public class UIController : MonoBehaviour
 
         ScanTargetLoc(0);
         ScanTargetSize(0);
-        BtnBogieTab(0);
+        BtnBogieTab();
+
+        GlitchStart();
+
+        if (weaponManager == null)
+            weaponManager = FindFirstObjectByType<WeaponManager>();
+
+        hullSystem = GetComponent<HullSystem>();
+        if (hullSystem == null)
+            hullSystem = FindFirstObjectByType<HullSystem>();
+        if (hullSystem != null)
+            PollHullDisplay(); // populate immediately on start
+    }
+
+    private void PollHullDisplay()
+    {
+        if (hullSystem == null) return;
+        UpdateCompass(
+            true, 0,
+            hullSystem.port.GetHealthPercentage() * 100f,
+            hullSystem.aft.GetHealthPercentage() * 100f,
+            hullSystem.prow.GetHealthPercentage() * 100f,
+            hullSystem.starboard.GetHealthPercentage() * 100f
+        );
     }
 
     void Update()
@@ -209,6 +303,14 @@ public class UIController : MonoBehaviour
 
         UpdateVelocity();
 
+        hullDisplayTimer += Time.deltaTime;
+        if (hullDisplayTimer >= HullDisplayInterval)
+        {
+            hullDisplayTimer = 0f;
+            PollHullDisplay();
+        }
+
+        SyncPowerBarsFromManager();
     }
 
     private void RadarTest()
@@ -343,6 +445,8 @@ public class UIController : MonoBehaviour
 
     public void ScanNewTarget()
     {
+        StartCoroutine(GlitchEffect(0f, .25f, 2));
+
         int current = 0;
         //send all data to scan screen
 
@@ -447,25 +551,29 @@ public class UIController : MonoBehaviour
 
     private void StartPower()
     {
-        for (int i = 0; i < btnPowerBool.Count-1; i++)
+        for (int i = 0; i < btnPowerBool.Count - 1; i++)
         {
-            uiPowerMetClass.Add(new UIPowerClass(new Material(shaPowerMet), 6, 1, 0f, false));
+            // Seed directly from PowerManager inspector values, fall back to safe defaults
+            int maxPwr = (_pmSystems != null && i < _pmSystems.Length) ? _pmSystems[i].maxPower    : 5;
+            int curPwr = (_pmSystems != null && i < _pmSystems.Length) ? _pmSystems[i].currentPower : 0;
 
+            uiPowerMetClass.Add(new UIPowerClass(new Material(shaPowerMet), maxPwr, curPwr, 0f, false));
             imgPowerMet[i].material = uiPowerMetClass[i].mat;
         }
 
-        uiPowerMetClass.Add(new UIPowerClass(new Material(shaReactorMet), 15, 15, 0f, false));
+        // Seed reactor bar from PowerManager
+        int reactorMax = (powerManager != null) ? powerManager.GetMaxReactorPower() : 15;
+        int reactorCur = (powerManager != null) ? powerManager.GetReactorPower()    : 15;
+        uiPowerMetClass.Add(new UIPowerClass(new Material(shaReactorMet), reactorMax, reactorCur, 0f, false));
+        imgPowerMet[btnPowerBool.Count - 1].material = uiPowerMetClass[btnPowerBool.Count - 1].mat;
 
-        imgPowerMet[btnPowerBool.Count-1].material = uiPowerMetClass[btnPowerBool.Count-1].mat;
-
-        for (int i = 0; i < powerNodeImg.Length; i++)//power nodes
+        for (int i = 0; i < powerNodeImg.Length; i++) // power nodes
         {
             powerNodeImg[i].material = new Material(powerNodeSha);
-
             powerNodeImg[i].material.SetInt("_On", 0);
         }
 
-        for (int i = 0; i < btnPowerBool.Count - 1; i++)//power nodes
+        for (int i = 0; i < btnPowerBool.Count - 1; i++) // power nodes
         {
             powerAnimCoroutine[i] = null;
         }
@@ -555,18 +663,82 @@ public class UIController : MonoBehaviour
 
     public void ChargeBtn(int i)
     {
-        if (!uiPowerMetClass[i].charge)
+        // Just toggle the PM draw state. SyncPowerBarsFromManager owns all UI visuals.
+        if (powerManager != null && _pmSystems != null && i < _pmSystems.Length)
+            powerManager.ToggleDrawState(_pmSystems[i]);
+    }
+
+    /// <summary>
+    /// Polls PowerManager every frame and mirrors its state into the UI power bars.
+    /// This keeps the display in sync regardless of whether changes came from keyboard,
+    /// game code, or the UI buttons themselves.
+    /// </summary>
+    private void SyncPowerBarsFromManager()
+    {
+        if (powerManager == null || _pmSystems == null || uiPowerMetClass.Count == 0) return;
+
+        int sysCount = Mathf.Min(_pmSystems.Length, uiPowerMetClass.Count - 1);
+        for (int i = 0; i < sysCount; i++)
         {
-            ChargeOn(i);
+            PowerSystem ps = _pmSystems[i];
+            UIPowerClass ui = uiPowerMetClass[i];
+
+            // Always push the true PM values into the shader — no condition check
+            ui.cur = ps.currentPower;
+            ui.max = ps.maxPower;
+            ui.mat.SetFloat("_PowerCur", ps.currentPower);
+            ui.mat.SetFloat("_PowerMax", ps.maxPower);
+
+            // Mirror the charging animation state
+            bool pmIsCharging = ps.currentState == PowerState.Draw || ps.finishingCurrentBar;
+
+            if (pmIsCharging)
+            {
+                if (!ui.charge)
+                {
+                    ui.charge = true;
+                    if (i < btnPowerBoolImage.Count)
+                        btnPowerBoolImage[i].sprite = uiSprite[1];
+                    ChargeNodeCheck();
+                }
+                // Restart the animation loop when the previous one finished
+                if (!powerAnimCoroutine.ContainsKey(i) || powerAnimCoroutine[i] == null)
+                {
+                    powerAnimCoroutine[i] = ChargeOnAnim(i);
+                    StartCoroutine(powerAnimCoroutine[i]);
+                }
+            }
+            else if (!pmIsCharging && ui.charge)
+            {
+                ui.charge = false;
+                if (powerAnimCoroutine.ContainsKey(i) && powerAnimCoroutine[i] != null)
+                {
+                    StopCoroutine(powerAnimCoroutine[i]);
+                    powerAnimCoroutine[i] = null;
+                }
+                if (i < btnPowerBoolImage.Count)
+                    btnPowerBoolImage[i].sprite = uiSprite[0];
+                ChargeNodeCheck();
+            }
         }
-        else if (uiPowerMetClass[i].charge)
+
+        // Always push reactor values unconditionally
+        int reactorIdx = uiPowerMetClass.Count - 1;
+        if (reactorIdx >= 0)
         {
-            ChargeOff(i);
+            int reactorPwr = powerManager.GetReactorPower();
+            int reactorMax = powerManager.GetMaxReactorPower();
+            UIPowerClass reactorUI = uiPowerMetClass[reactorIdx];
+            reactorUI.cur = reactorPwr;
+            reactorUI.max = reactorMax;
+            reactorUI.mat.SetFloat("_PowerCur", reactorPwr);
+            reactorUI.mat.SetFloat("_PowerMax", reactorMax);
         }
     }
 
     public void ChargeOn(int i)
     {
+
         uiPowerMetClass[i].Charge(true);
 
         powerAnimCoroutine[i] = ChargeOnAnim(i);
@@ -689,43 +861,25 @@ public class UIController : MonoBehaviour
 
     public IEnumerator ChargeOnAnim(int i)
     {
-        //Debug.Log("i: " + i);
-
-        float speed = 1f;
-
         float time = 0;
-
         float crgAmt = 5f;
 
         while (time < crgAmt)
         {
-
-            Mathf.MoveTowards(0, crgAmt, time);
-
-            time += (Time.deltaTime) * (speed);
-
+            time += Time.deltaTime;
             yield return null;
-
         }
 
-        if (uiPowerMetClass[i].cur >= uiPowerMetClass[i].max || uiPowerMetClass[btnPowerBool.Count - 1].cur <= 0)
-        {
-            ChargeOff(i);
-        }
-        else if (uiPowerMetClass[i].cur < uiPowerMetClass[i].max && uiPowerMetClass[btnPowerBool.Count - 1].cur > 0)
-        {
-            uiPowerMetClass[i].cur++;
-            uiPowerMetClass[uiPowerMetClass.Count - 1].cur--;
-
-            uiPowerMetClass[i].mat.SetFloat("_PowerCur", uiPowerMetClass[i].cur);
-            uiPowerMetClass[uiPowerMetClass.Count - 1].mat.SetFloat("_PowerCur", uiPowerMetClass[uiPowerMetClass.Count - 1].cur);
-
-            ChargeOn(i);
-        }
+        // Animation loop finished — clear the reference so SyncPowerBarsFromManager
+        // restarts it on the next frame if the system is still charging.
+        // Do NOT modify ui.cur or shader values here; SyncPowerBarsFromManager owns those.
+        powerAnimCoroutine[i] = null;
     }
 
     public void VentBtn()
     {
+        StartCoroutine(GlitchEffect(0f, .75f, 4));
+
         for (int i = 0; i < uiPowerMetClass.Count - 1; i++)
         {
             if(powerAnimCoroutine[i] == null)
@@ -805,6 +959,21 @@ public class UIController : MonoBehaviour
     {
         Vector3 startPos = new Vector3(0f, 0f, 0f);
         float elapsedTime = 0f;
+
+        float glitchO = 0f;
+        float glitchT = 0f;
+
+
+
+        for (int i = 0; i < staticImg.Length; i++)
+        {
+            glitchO = Random.Range(.25f, 1f);
+
+            glitchT = Random.Range(duration/4f, duration/2f);
+
+            StartCoroutine(GlitchEffect(glitchT, glitchO, i));
+        }
+        
 
         while (elapsedTime < duration)
         {
@@ -957,7 +1126,7 @@ public class UIController : MonoBehaviour
 
     public void StabilityMeterUpdate(float cur)
     {
-        velocityMeterImg[0].material.SetFloat("_PowerCur", cur);
+        stabilityImg.material.SetFloat("_PowerCur", cur);
 
         StabilityMeterColor(cur);
     }
@@ -968,15 +1137,15 @@ public class UIController : MonoBehaviour
 
         if(cur >= stabMax *.25)
         {
-            velocityMeterImg[0].material.SetColor("_OnColor", col[0]);
+            stabilityImg.material.SetColor("_OnColor", col[0]);
         }
         else if (cur < stabMax * .25 && cur >= stabMax * .1)
         {
-            velocityMeterImg[0].material.SetColor("_OnColor", col[1]);
+            stabilityImg.material.SetColor("_OnColor", col[1]);
         }
         else if (cur < stabMax * .1)
         {
-            velocityMeterImg[0].material.SetColor("_OnColor", col[2]);
+            stabilityImg.material.SetColor("_OnColor", col[2]);
         }
     }
 
@@ -1005,38 +1174,88 @@ public class UIController : MonoBehaviour
         StartCoroutine(BogeyStart(d));
     }
 
-    public void NewBogie()//test for now, should be used to add bogies to list once they are in range for scaning
+    //public void NewBogie()//test for now, should be used to add bogies to list once they are in range for scaning
+    //{
+    //    GameObject go = null;
+    //    GameObject goImg = null;
+
+    //    for (int j = 0; j < 5; j++)
+    //    {
+    //        go = GameObject.Find("Bogie_" + j.ToString());
+
+    //        //bogieList.Add(new BogieClass(go, go.GetComponent<MeshFilter>().mesh, null, new Material(weaponScreenSha)));
+
+    //        goImg = Instantiate(new GameObject(), new Vector3(transform.position.x, transform.position.y, transform.position.z), Quaternion.identity);
+
+    //        goImg.transform.parent = screenEnemyWeapon;
+
+    //        bogieList[j].wepImage = goImg.AddComponent<Image>();
+
+    //        bogieList[j].wepImage.material = bogieList[j].matWep;
+
+    //        goImg.transform.localScale = new Vector3(1f, 1f, 1f);
+    //        goImg.transform.localPosition = new Vector3(0f, 0f, 0f);
+
+    //        goImg.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
+    //        goImg.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
+
+    //        goImg.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);//new Vector2(screenEnemyWeapon.GetComponent<RectTransform>().offsetMin.x, screenEnemyWeapon.GetComponent<RectTransform>().offsetMin.y);
+    //        goImg.GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);//new Vector2(-screenEnemyWeapon.GetComponent<RectTransform>().offsetMax.x, -screenEnemyWeapon.GetComponent<RectTransform>().offsetMax.y);
+
+
+    //        bogieList[j].WeapStart();
+    //    }
+    //}
+
+    public void AddBogie(BogieClass bc)
     {
-        GameObject go = null;
-        GameObject goImg = null;
+        bogieList.Add(bc);
 
-        for (int j = 0; j < 5; j++)
+        int j = 0;
+
+        if (bogieList.Count != 0)
         {
-            go = GameObject.Find("Bogie_" + j.ToString());
-
-            bogieList.Add(new BogieClass(go, go.GetComponent<MeshFilter>().mesh, null, new Material(weaponScreenSha)));
-
-            goImg = Instantiate(new GameObject(), new Vector3(transform.position.x, transform.position.y, transform.position.z), Quaternion.identity);
-
-            goImg.transform.parent = screenEnemyWeapon;
-
-            bogieList[j].wepImage = goImg.AddComponent<Image>();
-
-            bogieList[j].wepImage.material = bogieList[j].matWep;
-
-            goImg.transform.localScale = new Vector3(1f, 1f, 1f);
-            goImg.transform.localPosition = new Vector3(0f, 0f, 0f);
-
-            goImg.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
-            goImg.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
-
-            goImg.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);//new Vector2(screenEnemyWeapon.GetComponent<RectTransform>().offsetMin.x, screenEnemyWeapon.GetComponent<RectTransform>().offsetMin.y);
-            goImg.GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);//new Vector2(-screenEnemyWeapon.GetComponent<RectTransform>().offsetMax.x, -screenEnemyWeapon.GetComponent<RectTransform>().offsetMax.y);
-
-
-            bogieList[j].WeapStart();
+            j = bogieList.Count - 1;
+        }
+        else if (bogieList.Count == 0)
+        {
+            j = 0;
         }
 
+        if (bogieList[j].wepImageGo = null)
+        {
+            bogieList[j].wepImageGo = Instantiate(new GameObject(), new Vector3(0f, 0f, 0f), Quaternion.identity);
+        }
+
+        bogieList[j].wepImageGo.transform.parent = screenEnemyWeapon;
+
+        bogieList[j].wepImageGo.AddComponent<Image>().material = bogieList[j].matWep;
+
+        //bogieList[j].wepImageGo.image.material = bogieList[j].matWep;
+
+        bogieList[j].wepImageGo.transform.localScale = new Vector3(1f, 1f, 1f);
+        bogieList[j].wepImageGo.transform.localPosition = new Vector3(0f, 0f, 0f);
+
+        bogieList[j].wepImageGo.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
+        bogieList[j].wepImageGo.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
+
+        bogieList[j].wepImageGo.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);
+        bogieList[j].wepImageGo.GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);
+
+        bogieList[j].WeapStart();
+    }
+
+    public void RemoveBogie(BogieClass bc)
+    {
+        int j = 0;
+
+        for (int i = 0; i < bogieList.Count; i++){if (bogieList[i] == bc) {j = i;}}
+
+        Destroy(bogieList[j].wepImageGo);
+
+        bogieList[j].wepImageGo = null;
+
+        bogieList.RemoveAt(j);
     }
 
     private IEnumerator BogeyStart(float d)
@@ -1139,6 +1358,7 @@ public class UIController : MonoBehaviour
 
     public void WorldGridZoom(int i)
     {
+        StartCoroutine(GlitchEffect(.5f, 1f, 0));
 
         if (i == 0)//spectral zoom 10x
         {
@@ -1495,26 +1715,46 @@ public class UIController : MonoBehaviour
         weaponScreenImage.material.SetFloat("_Stability", i);
     }
 
-    public void BtnBogieTab(int i)
+    public void BtnBogieTab()
     {
-        
+        StartCoroutine(GlitchEffect(.25f, 1f, 2));
 
-        for (int j = 0; j < bogieTabTran.Length; j++)
+        if (bogieTabInt == 0)
         {
-            if (j != i)
-            {
-                bogieTabTran[j].localPosition = new Vector3(1000000f, 0f, 0f);
-            }
-            else if (j == i)
-            {
-                RectTransform rt = bogieTabTran[j].GetComponent<RectTransform>();
-
-                bogieTabTran[j].localPosition = new Vector3(0f, 0f, 0f);
-
-                rt.offsetMin = new Vector2(0f, 0f);
-                rt.offsetMax = new Vector2(0f, 0f);
-            }
+            bogieTabTran[0].localPosition = new Vector3(1000000f, 0f, 0f);
+            bogieTabInt = 1;
         }
+        else if (bogieTabInt == 1)
+        {
+            bogieTabTran[1].localPosition = new Vector3(1000000f, 0f, 0f);
+            bogieTabInt = 0;
+        }
+
+        BtnTunerTab(bogieTabBtn, bogieTabInt, 2);
+        RectTransform rt = bogieTabTran[bogieTabInt].GetComponent<RectTransform>();
+
+        bogieTabTran[bogieTabInt].localPosition = new Vector3(0f, 0f, 0f);
+
+        rt.offsetMin = new Vector2(0f, 0f);
+        rt.offsetMax = new Vector2(0f, 0f);
+
+
+        //for (int j = 0; j < bogieTabTran.Length; j++)
+        //{
+        //    if (j != i)
+        //    {
+        //        bogieTabTran[j].localPosition = new Vector3(1000000f, 0f, 0f);
+        //    }
+        //    else if (j == i)
+        //    {
+        //        RectTransform rt = bogieTabTran[j].GetComponent<RectTransform>();
+
+        //        bogieTabTran[j].localPosition = new Vector3(0f, 0f, 0f);
+
+        //        rt.offsetMin = new Vector2(0f, 0f);
+        //        rt.offsetMax = new Vector2(0f, 0f);
+        //    }
+        //}
     }
 
     public void BtnScannerCloke()
@@ -1530,5 +1770,252 @@ public class UIController : MonoBehaviour
     public void SignalGhost()
     {
         //create a signal elseware
+    }
+
+    // ===== Comms UI Methods =====
+
+    public void ShowCommsPanel(bool show)
+    {
+        if (signalInterceptPanel != null)
+            signalInterceptPanel.SetActive(show);
+    }
+
+    public void SetCommsBand(int band)
+    {
+        if (commsBandDisplay != null)
+            commsBandDisplay.text = $"Band: {band}";
+
+        if (commsBandIndicators != null)
+        {
+            for (int i = 0; i < commsBandIndicators.Length; i++)
+                commsBandIndicators[i].color = (i + 1 == band) ? Color.green : Color.gray;
+        }
+    }
+
+    public void SetCommsFrequency(float freq)
+    {
+        if (commsFrequencySlider != null)
+            commsFrequencySlider.value = freq;
+        if (commsFrequencyDisplay != null)
+            commsFrequencyDisplay.text = $"Frequency: {freq:F1}";
+    }
+
+    public void SetCommsSignalStrength(Color color)
+    {
+        if (commsSignalStrengthIndicator != null)
+            commsSignalStrengthIndicator.color = color;
+    }
+
+    public void AddCommsLog(string message)
+    {
+        if (commsLogText != null)
+            commsLogText.text = message;
+    }
+
+    public void SetupCommsListeners(UnityEngine.Events.UnityAction<float> onFreqChanged, UnityEngine.Events.UnityAction onLock)
+    {
+        if (commsFrequencySlider != null)
+        {
+            commsFrequencySlider.minValue = 1.0f;
+            commsFrequencySlider.maxValue = 99.9f;
+            commsFrequencySlider.onValueChanged.AddListener(onFreqChanged);
+        }
+        if (commsLockButton != null)
+            commsLockButton.onClick.AddListener(onLock);
+    }
+
+    // ===== Radar Blip Methods =====
+
+    public float RadarBlipRadius => radarBlipRadius;
+
+    public RectTransform CreateOrGetRadarBlip(RadarTarget target)
+    {
+        if (radarBlips.TryGetValue(target, out RectTransform existing))
+            return existing;
+
+        if (radarBlipPrefab == null || radarBlipContainer == null) return null;
+
+        GameObject blipObj = Instantiate(radarBlipPrefab, radarBlipContainer);
+        RectTransform blipRect = blipObj.GetComponent<RectTransform>();
+
+        Image img = blipObj.GetComponent<Image>();
+        if (img != null)
+        {
+            if (target.icon != null) img.sprite = target.icon;
+            img.color = target.color;
+        }
+
+        radarBlips[target] = blipRect;
+        return blipRect;
+    }
+
+    public void DestroyRadarBlip(RadarTarget target)
+    {
+        if (radarBlips.TryGetValue(target, out RectTransform rt))
+        {
+            if (rt != null) Destroy(rt.gameObject);
+            radarBlips.Remove(target);
+        }
+    }
+
+    // ===== Weapon Display Methods =====
+
+    public void BtnWepTab()
+    {
+        //int tabMax = 3;
+
+        StartCoroutine(GlitchEffect(.25f, 1f, 3));
+
+        btnTabCur++;
+
+        if (btnTabCur > tabWepName.Length - 1)
+        {
+            btnTabCur = 0;
+        }
+
+        for (int j = 0; j < tabWepName.Length; j++)
+        {
+            if (j != btnTabCur)
+            {
+                tabWepName[j].color = new Color(0.8235294f, 0.5019608f, 0f);
+                tabFrame[j].sprite = tabSprite[0];
+            }
+            else if (j == btnTabCur)
+            {
+                tabWepName[j].color = new Color(0f, 0f, 0f);
+                tabFrame[j].sprite = tabSprite[1];
+            }
+        }
+
+
+        BtnTunerTab(btnTabTran, btnTabCur, tabWepName.Length);
+
+        if (weaponManager != null)
+            weaponManager.SwitchToWeapon(btnTabCur);
+    }
+
+    /// <summary>
+    /// Called by the fire_btn. Plays the weapon-type-specific UI animation and fires through WeaponManager.
+    /// </summary>
+    public void BtnWeaponFire()
+    {
+        if (weaponManager == null) return;
+
+        Vector3 targetPos = currentBogieTarget != null
+            ? currentBogieTarget.transform.position
+            : transform.position + transform.forward * 1000f;
+
+        // Play weapon-type-specific UI animations
+        switch (weaponManager.GetActiveWeaponType())
+        {
+            case WeaponType.Laser:
+                LaserFire();
+                break;
+            case WeaponType.Railgun:
+                RailFire();
+                break;
+        }
+
+        weaponManager.FireActiveWeapon(targetPos, 1f);
+    }
+
+    private void GlitchStart()
+    {
+        for (int i = 0; i < staticImg.Length; i++)
+        {
+            staticImg[i].material = new Material(staticSha);
+
+            staticImg[i].material.SetInt("_Glitch", 0);
+
+            if (i > 0)
+            {
+                staticImg[i].material.SetFloat("_LineSize", 50f);
+            }
+            else if (i == 0)
+            {
+                staticImg[i].material.SetFloat("_LineSize", 100f);
+            }
+
+            Debug.Log(staticImg[i].material.ToString());
+        }
+    }
+
+    private IEnumerator GlitchEffect(float t, float o, int s)
+    {
+        float speed = 1f;
+
+        staticImg[s].material.SetInt("_Glitch", 1);
+
+        while (o > 0f)
+        {
+            staticImg[s].material.SetFloat("_GlitchOpacity", o);
+
+            o -= Time.deltaTime * speed;
+
+            yield return null;
+        }
+
+        while (t > 0f)
+        {
+            t -= Time.deltaTime * speed;
+
+            yield return null;
+        }
+
+        staticImg[s].material.SetFloat("_Glitch", 0);
+    }
+
+        /// <summary>
+        /// Called by the load_btn. Primes or targets the active weapon depending on its type.
+        /// Missile: locks all tubes onto the current bogie target.
+        /// Macrocannon: arms (loads) one shell into the barrel.
+        /// BoardingPod: sets the current bogie as the boarding target.
+        /// Other weapon types auto-manage their own loading.
+        /// </summary>
+        public void BtnWeaponLoad()
+    {
+        if (weaponManager == null) return;
+
+        Transform target = currentBogieTarget != null ? currentBogieTarget.transform : null;
+        weaponManager.LoadActiveWeapon(target);
+    }
+
+    public void UpdateWeaponDisplay(string weapName, string weapType, Sprite icon, string status, Color statusColor, string ammo, float rechargeProgress, Color rechargeColor)
+    {
+        if (weaponNameText != null) weaponNameText.text = weapName;
+        if (weaponTypeText != null) weaponTypeText.text = weapType;
+        if (weaponIconImage != null) weaponIconImage.sprite = icon;
+        if (weaponStatusText != null)
+        {
+            weaponStatusText.text = status;
+            weaponStatusText.color = statusColor;
+        }
+        if (weaponAmmoText != null) weaponAmmoText.text = ammo;
+        if (weaponRechargeBar != null)
+        {
+            weaponRechargeBar.fillAmount = rechargeProgress;
+            weaponRechargeBar.color = rechargeColor;
+        }
+    }
+
+    public Sprite GetWeaponIcon(WeaponType type)
+    {
+        return type switch
+        {
+            WeaponType.Laser => laserIcon,
+            WeaponType.Macrocannon => macrocannonIcon,
+            WeaponType.Missile => missileIcon,
+            WeaponType.PointDefense => pointDefenseIcon,
+            WeaponType.BoardingPod => boardingPodIcon,
+            WeaponType.Railgun => railgunIcon,
+            _ => null
+        };
+    }
+
+    private void BtnTunerTab(Transform tran, int cur, int max)
+    {
+        float degree = (360 / max) * cur;
+
+        tran.eulerAngles = new Vector3(0f, 0f, degree);
     }
 }

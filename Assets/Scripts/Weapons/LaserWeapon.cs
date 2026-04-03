@@ -15,8 +15,16 @@ public class LaserWeapon : WeaponBase
 
     protected override void Start()
     {
+        // Apply defaults for fields left at 0 in the Inspector
+        if (maxAmmo == 0)      maxAmmo     = 30;
+        if (range == 0f)       range       = 500f;
+        if (angleOfFire == 0f) angleOfFire = 45f;
+        if (reloadTime == 0f)  reloadTime  = 3f;   // full magazine recharge time
+        if (baseDamage == 0f)  baseDamage  = 10f;
+        fireRate = 1f;
+
         base.Start();
-        
+
         if (firePoint == null)
         {
             firePoint = transform;
@@ -52,7 +60,7 @@ public class LaserWeapon : WeaponBase
             return false;
         }
 
-        FireLaser(firePoint.forward);
+        FireLaser(firePoint.up);
         return true;
     }
 
@@ -64,8 +72,10 @@ public class LaserWeapon : WeaponBase
         // Get spawn position
         Vector3 spawnPos = firePoint.position;
         
-        // Instantiate laser
-        GameObject laser = Instantiate(laserPrefab, spawnPos, Quaternion.LookRotation(fireDirection));
+        // Instantiate laser (2D top-down: orient using up axis, with 90° X rotation)
+        Quaternion baseRot = Quaternion.LookRotation(Vector3.forward, fireDirection);
+        Quaternion spawnRot = baseRot * Quaternion.Euler(90f, 0f, 0f);
+        GameObject laser = Instantiate(laserPrefab, spawnPos, spawnRot);
         
         // Get Laser component and fire it
         Laser laserScript = laser.GetComponent<Laser>();
@@ -100,7 +110,9 @@ public class LaserWeapon : WeaponBase
 
     public override bool CanFire()
     {
-        return base.CanFire() && !isRecharging && laserPrefab != null;
+        return !isReloading && currentAmmo > 0 &&
+               Time.time - lastFireTime >= fireRate &&
+               !isRecharging && laserPrefab != null;
     }
 
     // Public getters for UI

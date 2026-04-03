@@ -1,11 +1,10 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(ShipStability))]
-public class PlayerShip : MonoBehaviour
+public class PlayerShip : MonoBehaviour, IDamageable
 {
-    [Header("Script Refrence")]
-    public UIController uiControler;
-
     [Header("Movement Settings")]
     [SerializeField] private float rateOfAcceleration = 50f; // Speed change per second
     [SerializeField] public float turnRate = 90f; // Degrees per second (1 decimal place precision)
@@ -20,6 +19,8 @@ public class PlayerShip : MonoBehaviour
     private PowerManager powerManager;
     private ShipStability stability;
     private WeaponManager weaponManager;
+    private HullSystem hullSystem;
+    private InternalSubsystems internalSubsystems;
     
     // Movement state
     private float currentSpeed; // Current forward/backward speed
@@ -39,14 +40,13 @@ public class PlayerShip : MonoBehaviour
     // Constants
     private const float SPEED_UNITS_PER_BAR = 20f; // Each bar represents 20 units of speed
 
-	[Header("Health Settings")]
-	[SerializeField] private float maxHealth = 100f;
-	[SerializeField] private float currentHealth;
-
 	[Header("Testing Overrides")]
 	[SerializeField] private bool testMode_IgnoreWeaponPower = false;
 
 	private Rigidbody rb;
+
+    // Railgun standby state
+    public bool IsOnStandby { get; private set; }
 
     private void Awake()
     {
@@ -60,8 +60,6 @@ public class PlayerShip : MonoBehaviour
             rb.angularDamping = 0;
         }
         
-        currentHealth = maxHealth;
-        
         // Get system references
         powerManager = GetComponent<PowerManager>();
         if (powerManager == null)
@@ -74,6 +72,21 @@ public class PlayerShip : MonoBehaviour
         {
             stability = gameObject.AddComponent<ShipStability>();
         }
+
+        hullSystem = GetComponent<HullSystem>();
+        if (hullSystem == null)
+        {
+            hullSystem = gameObject.AddComponent<HullSystem>();
+        }
+
+        internalSubsystems = GetComponent<InternalSubsystems>();
+        if (internalSubsystems == null)
+        {
+            internalSubsystems = gameObject.AddComponent<InternalSubsystems>();
+        }
+
+        // Subscribe to ship destruction
+        hullSystem.OnShipDestroyed += HandleShipDestroyed;
 
         weaponManager = GetComponent<WeaponManager>();
         if (weaponManager == null)
@@ -109,15 +122,54 @@ public class PlayerShip : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Take directional hull damage per GDD spec.
+    /// Damage hits the quadrant determined by the hit direction.
+    /// </summary>
+    public void TakeDamage(float damage, Vector3 hitDirection)
+    {
+        if (hullSystem == null) return;
+        HullSide side = hullSystem.DetermineHitSide(hitDirection);
+        hullSystem.TakeDamage(side, damage);
+    }
+
+    /// <summary>
+    /// Legacy overload - damage hits Prow by default.
+    /// </summary>
     public void TakeDamage(float damage)
     {
-        currentHealth = Mathf.Max(0, currentHealth - damage);
-        
-        if (currentHealth <= 0)
+        if (hullSystem != null)
         {
-            // Handle player death
-            Destroy(gameObject);
+            hullSystem.TakeDamage(HullSide.Prow, damage);
         }
+    }
+
+    // IDamageable implementation
+    float IDamageable.TakeDamage(float amount)
+    {
+        TakeDamage(amount); // Delegates to the Prow-default overload
+        return amount;
+    }
+
+    public float GetCurrentHealth()
+    {
+        return hullSystem != null ? hullSystem.GetTotalHealth() : 0f;
+    }
+
+    public float GetMaxHealth()
+    {
+        return hullSystem != null ? hullSystem.GetTotalMaxHealth() : 150f;
+    }
+
+    public bool CanBeDamaged()
+    {
+        return hullSystem != null;
+    }
+
+    private void HandleShipDestroyed()
+    {
+        Debug.Log("[PlayerShip] Ship destroyed!");
+        Destroy(gameObject);
     }
 
     // Public methods for UI/external systems
@@ -147,18 +199,20 @@ public class PlayerShip : MonoBehaviour
 
     private void Update()
     {
+        if (IsOnStandby) return; // Block all input during railgun standby
+
         // Handle power input
         if (Input.GetKeyDown(KeyCode.Alpha1)) // Engine power
         {
             powerManager.ToggleSystemState(powerManager.engines);
         }
-        if (Input.GetKeyDown(KeyCode.Alpha2)) // Weapon power
+        if (Input.GetKeyDown(KeyCode.Alpha2)) // Arms power
         {
-            powerManager.ToggleSystemState(powerManager.weapons);
+            powerManager.ToggleSystemState(powerManager.arms);
         }
-        if (Input.GetKeyDown(KeyCode.Alpha3)) // Sensor power
+        if (Input.GetKeyDown(KeyCode.Alpha3)) // Sig power
         {
-            powerManager.ToggleSystemState(powerManager.sensors);
+            powerManager.ToggleSystemState(powerManager.sig);
         }
 
         // Handle dodge input - Q goes left, E goes right
@@ -222,14 +276,14 @@ public class PlayerShip : MonoBehaviour
             // Testing override - allow firing without power
             if (testMode_IgnoreWeaponPower)
             {
-                weaponManager.FireActiveWeapon(transform.position + transform.forward * 1000f, 1.0f); // Use maximum power for testing
+                weaponManager.FireActiveWeapon(transform.position + transform.up * 1000f, 1.0f); // Use maximum power for testing
                 return;
             }
             
             // Normal power check - can only fire if weapons have some power (minimum 20% for emergency firing)
             if (weaponPower > 0.2f)
             {
-                weaponManager.FireActiveWeapon(transform.position + transform.forward * 1000f, weaponPower);
+                weaponManager.FireActiveWeapon(transform.position + transform.up * 1000f, weaponPower);
             }
             else
             {
@@ -238,8 +292,42 @@ public class PlayerShip : MonoBehaviour
         }
     }
 
+    /// <summary>Disables all ship input for <paramref name="duration"/> seconds, then reboots essential systems.</summary>
+    public void EnterRailgunStandby(float duration)
+    {
+        if (!IsOnStandby)
+            StartCoroutine(RailgunStandbyCoroutine(duration));
+    }
+
+    private System.Collections.IEnumerator RailgunStandbyCoroutine(float duration)
+    {
+        IsOnStandby = true;
+        currentSpeed = 0f;
+        targetSpeed = 0f;
+        Debug.Log("[PlayerShip] Railgun fired — entering standby...");
+
+        yield return new WaitForSeconds(duration);
+
+        // Reboot: restart engine and arms power draw
+        if (powerManager != null)
+        {
+            powerManager.engines.currentState = PowerState.Draw;
+            powerManager.arms.currentState = PowerState.Draw;
+        }
+
+        IsOnStandby = false;
+        Debug.Log("[PlayerShip] Ship rebooted — back to normal");
+    }
+
     private void FixedUpdate()
     {
+        if (IsOnStandby)
+        {
+            // Ship coasts on existing momentum during standby
+            rb.linearVelocity = transform.up * currentSpeed;
+            return;
+        }
+
         float enginePower = powerManager.GetSystemEfficiency("engines");
         
         // Ensure minimum engine power for basic movement (emergency power)
@@ -263,7 +351,9 @@ public class PlayerShip : MonoBehaviour
         if (Mathf.Abs(thrustInput) > 0.01f)
         {
             // Calculate target speed based on thrust direction
-            float maxThrust = 100f * enginePower; // Engine power affects max thrust
+            // Apply subsystem debuffs per GDD: engine damage reduces max speed
+            float subsystemSpeedMult = internalSubsystems != null ? internalSubsystems.GetSpeedMultiplier() : 1f;
+            float maxThrust = 100f * enginePower * subsystemSpeedMult; // Engine power + subsystem damage affects max thrust
             
             if (thrustInput > 0)
             {
@@ -327,8 +417,9 @@ public class PlayerShip : MonoBehaviour
         if (Mathf.Abs(turnInput) > 0.01f && !stability.IsStabilityDepleted())
         {
             // A turns left (negative), D turns right (positive)
-            // Turn rate is affected by engine power
-            targetTurnSpeed = turnInput * turnRate * enginePower;
+            // Turn rate affected by engine power + subsystem debuffs per GDD (bridge/engine damage increases turn time)
+            float subsystemTurnMult = internalSubsystems != null ? internalSubsystems.GetTurnRateMultiplier() : 1f;
+            targetTurnSpeed = turnInput * turnRate * enginePower * subsystemTurnMult;
         }
         else
         {
@@ -346,8 +437,9 @@ public class PlayerShip : MonoBehaviour
             float rotationThisFrame = currentTurnSpeed * Time.fixedDeltaTime;
             rb.MoveRotation(rb.rotation * Quaternion.Euler(0, 0, -rotationThisFrame));
             
-            // Calculate stability drain based on turn severity and current speed
-            stability.CalculateTurnStabilityDrain(Mathf.Abs(rotationThisFrame), Mathf.Abs(currentSpeed));
+            // Spec: engine power reduces stability decay by 5% per PWR-1
+            float stabilityDecayMult = powerManager != null ? powerManager.GetEngineStabilityDecayMultiplier() : 1f;
+            stability.CalculateTurnStabilityDrain(Mathf.Abs(rotationThisFrame), Mathf.Abs(currentSpeed), stabilityDecayMult);
         }
 
         // Camera locked to ship - follows position and rotation immediately
@@ -364,19 +456,18 @@ public class PlayerShip : MonoBehaviour
             cameraEuler.z = transform.eulerAngles.z;
             cameraTransform.eulerAngles = cameraEuler;
 
-            uiControler.UpdateCompass(cameraEuler.z);
-            uiControler.WorldGridRotUpdate(cameraEuler.z);
-            uiControler.WorldGridLocUpdate(cameraTransform.position);
+            if (UIController.Instance != null)
+            {
+                UIController.Instance.UpdateCompass(cameraEuler.z);
+                UIController.Instance.WorldGridRotUpdate(cameraEuler.z);
+                UIController.Instance.WorldGridLocUpdate(cameraTransform.position);
+            }
         }
 
-        // Damage system disabled for now
-        // Apply damage if stability is critical
-        // if (stability.IsStabilityCritical() && Time.frameCount % 30 == 0) // Check every 30 frames
-        // {
-        //     TakeDamage(1);
-        // }
-        
-        // Debug info (remove this later)
+        // Spec: when stability is fully depleted, the ship incurs internal damage to hull and systems
+        if (stability.IsStabilityDepleted())
+            hullSystem.TakeDamage(hullSystem.DetermineHitSide(-transform.up), 5f * Time.fixedDeltaTime);
+
         if (Input.GetKey(KeyCode.F1))
         {
             float speedBars = currentSpeed / SPEED_UNITS_PER_BAR;
@@ -389,6 +480,15 @@ public class PlayerShip : MonoBehaviour
             Debug.Log($"Ship Position: {transform.position} | Camera Position: {(cameraTransform != null ? cameraTransform.position.ToString() : "No Camera")}");
             Debug.Log($"Stability: {stabilityPercent:F1}% | Can Dodge: {stability.CanDodgeAgain()} | Critical: {stability.IsStabilityCritical()}");
             Debug.Log($"Weapon Power: {powerManager.GetSystemEfficiency("weapons"):F2} | Active Weapon: {(weaponManager != null ? weaponManager.GetActiveWeaponType().ToString() : "None")} | Override: {testMode_IgnoreWeaponPower}");
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe from hull events
+        if (hullSystem != null)
+        {
+            hullSystem.OnShipDestroyed -= HandleShipDestroyed;
         }
     }
 }

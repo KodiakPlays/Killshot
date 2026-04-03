@@ -1,18 +1,19 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BogieClass : MonoBehaviour
+[System.Serializable]
+public class BogieClass
 {
     public GameObject go;
     public Mesh mesh;
-    public Image wepImage;
+    public GameObject wepImageGo;
     public Material matWep;
 
-    public BogieClass(GameObject go, Mesh mesh, Image wepImage, Material matWep)//need more data like stats etc
+    public BogieClass(GameObject go, Mesh mesh, GameObject wepImageGo, Material matWep)//need more data like stats etc
     {
         this.go = go;
         this.mesh = mesh;
-        this.wepImage = wepImage;
+        this.wepImageGo = wepImageGo;
         this.matWep = matWep;
     }
 
