@@ -991,7 +991,7 @@ public class UIController : MonoBehaviour
 
         if (loaded)
         {
-            sensorIcon.sprite = sensorLoadSprites[icon];
+            //sensorIcon.sprite = sensorLoadSprites[icon];
             sensorLoadInfo[0].text = port.ToString() + "/ 100";
             sensorLoadInfo[1].text = aft.ToString() + "/ 100";
             sensorLoadInfo[2].text = prow.ToString() + "/ 100";
@@ -1001,7 +1001,7 @@ public class UIController : MonoBehaviour
         }
         else if (!loaded)
         {
-            sensorIcon.sprite = null;
+            //sensorIcon.sprite = sensorLoadSprites[3];
             sensorLoadInfo[0].text = null;
             sensorLoadInfo[1].text = null;
             sensorLoadInfo[2].text = null;
