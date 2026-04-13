@@ -611,6 +611,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1634123098960750288, guid: a92639a73e92f4d49aef75067647476a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1697449705065025151, guid: a92639a73e92f4d49aef75067647476a, type: 3}
       propertyPath: m_SizeDelta.x
       value: 0
@@ -1940,7 +1944,7 @@ MonoBehaviour:
     activeCount: 0
   - prefab: {fileID: 2425813438196732502, guid: eb68783de48f8b94a92386e8d5507137, type: 3}
     count: 2
-    patrol: 0
+    patrol: 1
     respawnOnDeath: 0
     respawnDelay: 0
     activeCount: 0
@@ -3211,11 +3215,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4781585786589172677, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
       propertyPath: laserSpeed
-      value: 200
+      value: 750
       objectReference: {fileID: 0}
     - target: {fileID: 4910870370238773696, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
       propertyPath: m_LocalPosition.y
       value: 5.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 5245476819411542834, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1.919
+      objectReference: {fileID: 0}
+    - target: {fileID: 5245476819411542834, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5245476819411542834, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5245476819411542834, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.0000029504295
+      objectReference: {fileID: 0}
+    - target: {fileID: 5245476819411542834, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5540153949720075400, guid: a27f518c2eef8884aae04b26984506b5, type: 3}
       propertyPath: powerDrainOnFire

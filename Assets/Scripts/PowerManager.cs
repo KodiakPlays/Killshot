@@ -333,15 +333,16 @@ public class PowerManager : MonoBehaviour
         reactorOnline = false;
     }
 
-    /// <summary>Brings the reactor back online after a railgun standby reboot. Re-engages engines and arms in Draw state.</summary>
+    /// <summary>
+    /// Brings the reactor back online after a railgun standby reboot.
+    /// All ship systems remain in hard Standby — the player must manually
+    /// restart each one. The reactor must be online before any system can draw.
+    /// </summary>
     public void RebootReactor()
     {
         reactorOnline = true;
         reactorRegenAccumulator = 0f;
-
-        // Restore default drawing systems so they fill as reactor replenishes
-        engines.currentState = PowerState.Draw;
-        arms.currentState    = PowerState.Draw;
+        // No systems are auto-engaged — manual startup required.
     }
 
     public void VentAllSystems()
