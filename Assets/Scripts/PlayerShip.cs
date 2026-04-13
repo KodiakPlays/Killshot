@@ -11,6 +11,14 @@ public class PlayerShip : MonoBehaviour, IDamageable
     [SerializeField] private float dodgeDistance = 10f; // Distance to dodge left/right
     [SerializeField] private float dodgeDuration = 0.2f; // Time to complete dodge (quick but smooth)
 
+    [Header("Engine Power Settings")]
+    [SerializeField] private float enginePowerDrainRate = 0.2f; // Engine power bars drained per second at full speed (100 units/s)
+
+    [Header("Drift Settings")]
+    [SerializeField] private float driftCompensationRate = 8f;      // Lateral correction strength (units/s), scaled by stability ratio
+    [SerializeField] private float maxLateralDrift = 40f;            // Maximum lateral drift speed (units/s)
+    [SerializeField] private float driftStabilityDrainRate = 0.4f;  // Stability drained per unit of lateral speed per second
+
     [Header("Camera Settings")]
     [SerializeField] private Transform cameraTransform; // Reference to the camera transform
     [SerializeField] private Vector3 cameraOffset = new Vector3(0, 10, -15); // Camera offset from ship
@@ -31,6 +39,9 @@ public class PlayerShip : MonoBehaviour, IDamageable
     // Camera state
     private Vector3 targetCameraPosition; // Target camera position
     
+    // Engine drain accumulator
+    private float engineDrainAccumulator = 0f;
+
     // Dodge state
     private bool isDodging; // Whether ship is currently dodging
     private float dodgeStartTime; // When dodge started
@@ -304,19 +315,16 @@ public class PlayerShip : MonoBehaviour, IDamageable
         IsOnStandby = true;
         currentSpeed = 0f;
         targetSpeed = 0f;
-        Debug.Log("[PlayerShip] Railgun fired — entering standby...");
+        Debug.Log("[PlayerShip] Railgun fired — entering standby. All systems offline. Manual startup required.");
 
         yield return new WaitForSeconds(duration);
 
-        // Reboot: restart engine and arms power draw
+        // Bring reactor back online — all other systems must be started manually by the player.
         if (powerManager != null)
-        {
-            powerManager.engines.currentState = PowerState.Draw;
-            powerManager.arms.currentState = PowerState.Draw;
-        }
+            powerManager.RebootReactor();
 
         IsOnStandby = false;
-        Debug.Log("[PlayerShip] Ship rebooted — back to normal");
+        Debug.Log("[PlayerShip] Reactor online — awaiting manual system startup.");
     }
 
     private void FixedUpdate()
@@ -329,9 +337,6 @@ public class PlayerShip : MonoBehaviour, IDamageable
         }
 
         float enginePower = powerManager.GetSystemEfficiency("engines");
-        
-        // Ensure minimum engine power for basic movement (emergency power)
-        enginePower = Mathf.Max(0.2f, enginePower);
         
         // Handle W/S input for thrust - W accelerates, S decelerates/reverses
         float thrustInput = 0f;
@@ -348,7 +353,12 @@ public class PlayerShip : MonoBehaviour, IDamageable
         }
         // No input = maintain current speed (no deceleration)
         
-        if (Mathf.Abs(thrustInput) > 0.01f)
+        if (enginePower <= 0f)
+        {
+            // No engine power - ship decelerates to a stop
+            targetSpeed = 0f;
+        }
+        else if (Mathf.Abs(thrustInput) > 0.01f)
         {
             // Calculate target speed based on thrust direction
             // Apply subsystem debuffs per GDD: engine damage reduces max speed
@@ -381,34 +391,48 @@ public class PlayerShip : MonoBehaviour, IDamageable
             targetSpeed = currentSpeed;
         }
         
-        // Gradually change current speed towards target speed
+        // --- Drift Physics ---
+        // Decompose the existing Rigidbody velocity into ship-local components so lateral
+        // momentum (drift) persists between frames rather than being force-aligned each tick.
+        Vector3 existingVelocity = rb.linearVelocity;
+        float forwardComponent = Vector3.Dot(existingVelocity, transform.up);
+        float lateralComponent = Vector3.Dot(existingVelocity, transform.right);
+        lateralComponent = Mathf.Clamp(lateralComponent, -maxLateralDrift, maxLateralDrift);
+
+        // Apply thrust: push forward component toward targetSpeed
         float speedChangeRate = rateOfAcceleration * Time.fixedDeltaTime;
-        currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, speedChangeRate);
-        
-        // Handle dodge movement (smooth interpolation)
+        forwardComponent = Mathf.MoveTowards(forwardComponent, targetSpeed, speedChangeRate);
+        currentSpeed = forwardComponent;
+
+        // Drift compensation: stability ratio (0–1) scales how aggressively lateral drift is
+        // corrected. Always active — full stability = fast correction, zero stability = free drift.
+        float stabilityRatio = stability.GetStabilityPercentage();
+        float lateralCorrection = driftCompensationRate * stabilityRatio * Time.fixedDeltaTime;
+        // Add a small velocity-proportional term so large drifts correct proportionally faster
+        lateralCorrection += driftCompensationRate * stabilityRatio * Mathf.Abs(lateralComponent) * 0.05f * Time.fixedDeltaTime;
+        lateralComponent = Mathf.MoveTowards(lateralComponent, 0f, lateralCorrection);
+
+        // Passive stability drain from uncompensated lateral drift — keeps stability always relevant
+        if (Mathf.Abs(lateralComponent) > 1f)
+        {
+            float driftDrain = driftStabilityDrainRate * Mathf.Abs(lateralComponent) * Time.fixedDeltaTime;
+            stability.ApplyStabilityDrain(driftDrain);
+        }
+
+        // Reconstruct velocity from forward + lateral components
+        rb.linearVelocity = transform.up * forwardComponent + transform.right * lateralComponent;
+
+        // Handle dodge movement (smooth positional interpolation) — velocity is handled above
         if (isDodging)
         {
             float elapsedTime = Time.time - dodgeStartTime;
             float t = Mathf.Clamp01(elapsedTime / dodgeDuration);
-            
-            // Use smooth interpolation for natural movement
             float smoothT = Mathf.SmoothStep(0f, 1f, t);
             Vector3 dodgePosition = Vector3.Lerp(dodgeStartPosition, dodgeTargetPosition, smoothT);
-            
-            // Apply dodge position while maintaining forward velocity
             rb.MovePosition(dodgePosition);
-            
-            // Check if dodge is complete
+
             if (t >= 1f)
-            {
-                isDodging = false;              // Apply forward movement velocity after dodge completes
-                rb.linearVelocity = transform.up * currentSpeed;
-            }
-        }
-        else
-        {
-            // Apply normal forward/backward movement
-            rb.linearVelocity = transform.up * currentSpeed;
+                isDodging = false;
         }
 
         // Handle A/D input for turning
@@ -440,6 +464,18 @@ public class PlayerShip : MonoBehaviour, IDamageable
             // Spec: engine power reduces stability decay by 5% per PWR-1
             float stabilityDecayMult = powerManager != null ? powerManager.GetEngineStabilityDecayMultiplier() : 1f;
             stability.CalculateTurnStabilityDrain(Mathf.Abs(rotationThisFrame), Mathf.Abs(currentSpeed), stabilityDecayMult);
+        }
+
+        // Speed-based engine power drain — higher speed consumes engine bars faster
+        if (Mathf.Abs(currentSpeed) > 1f && enginePower > 0f)
+        {
+            float speedRatio = Mathf.Abs(currentSpeed) / 100f;
+            engineDrainAccumulator += speedRatio * enginePowerDrainRate * Time.fixedDeltaTime;
+            while (engineDrainAccumulator >= 1f)
+            {
+                engineDrainAccumulator -= 1f;
+                powerManager.RemoveEnginesPower();
+            }
         }
 
         // Camera locked to ship - follows position and rotation immediately

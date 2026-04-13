@@ -74,12 +74,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7196b823b451b7d408d8b3e0b69f0b8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyType: 2
   detectionRadius: 100
   optimalCombatDistance: 50
   laserPrefab: {fileID: 968730919820449257, guid: 62faa2a5f451cff43a69075720685447, type: 3}
   firePoint: {fileID: 572232184623186259}
   fireRate: 1
   maxHealth: 1
+  patrolEnabled: 0
   patrolRadius: 40
   waypointReachedThreshold: 3
   obstacleAvoidanceDistance: 8
@@ -116,7 +118,7 @@ GameObject:
   - component: {fileID: 8586036078211907609}
   - component: {fileID: 4650074125816909756}
   - component: {fileID: 7452497020735830902}
-  - component: {fileID: 7905422169045494669}
+  - component: {fileID: 3476983944503898441}
   m_Layer: 0
   m_Name: StarWolf_TroopShip
   m_TagString: Untagged
@@ -193,8 +195,8 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &7905422169045494669
-MeshCollider:
+--- !u!65 &3476983944503898441
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -211,10 +213,9 @@ MeshCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 7249828880369405855, guid: 094c9cf3192c6dd41bd768d847c867b5, type: 3}
+  serializedVersion: 3
+  m_Size: {x: 71.03957, y: 94.51957, z: 21.755999}
+  m_Center: {x: -0.014514923, y: -5.582279, z: 13.112655}
 --- !u!1 &9086684151957545064
 GameObject:
   m_ObjectHideFlags: 0
