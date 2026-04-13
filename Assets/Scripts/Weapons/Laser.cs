@@ -31,8 +31,9 @@ public class Laser : MonoBehaviour
         Destroy(gameObject, lifeTime);
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnCollisionEnter(Collision collision)
     {
+        Collider other = collision.collider;
         bool shouldDamage = false;
 
         // Handle enemy projectiles
@@ -42,6 +43,7 @@ public class Laser : MonoBehaviour
             Shields shields = other.GetComponent<Shields>();
             if (shields != null)
             {
+                Debug.Log($"[Laser] EnemyProjectile hit player shields on '{other.name}', dealing {damage} damage.");
                 shields.TakeDamage(damage);
                 shouldDamage = true;
             }
@@ -50,6 +52,7 @@ public class Laser : MonoBehaviour
                 PlayerShip playerShip = other.GetComponent<PlayerShip>();
                 if (playerShip != null)
                 {
+                    Debug.Log($"[Laser] EnemyProjectile hit PlayerShip '{other.name}', dealing {damage} damage.");
                     // Pass hit direction for directional hull damage per GDD
                     Vector3 hitDirection = rb.linearVelocity.normalized;
                     playerShip.TakeDamage(damage, hitDirection);
@@ -64,7 +67,9 @@ public class Laser : MonoBehaviour
             EnemyShip enemyShip = other.GetComponentInParent<EnemyShip>();
             if (enemyShip != null)
             {
+                Debug.Log($"[Laser] PlayerProjectile hit EnemyShip '{other.name}', dealing {damage} damage.");
                 enemyShip.TakeDamage(Mathf.RoundToInt(damage));
+                Debug.Log($"[Laser] EnemyShip '{enemyShip.name}' remaining health: {enemyShip.GetCurrentHealth()}/{enemyShip.GetMaxHealth()}");
                 shouldDamage = true;
             }
         }
@@ -72,6 +77,8 @@ public class Laser : MonoBehaviour
         // Destroy the laser if it hit something it can damage, or if it hit environment
         if (shouldDamage || !other.CompareTag("PlayerProjectile") && !other.CompareTag("EnemyProjectile"))
         {
+            if (!shouldDamage)
+                Debug.Log($"[Laser] Hit non-damageable object '{other.name}' (tag: {other.tag}), destroying laser.");
             Destroy(gameObject);
         }
     }

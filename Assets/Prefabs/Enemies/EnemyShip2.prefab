@@ -74,12 +74,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7196b823b451b7d408d8b3e0b69f0b8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyType: 3
   detectionRadius: 100
   optimalCombatDistance: 50
   laserPrefab: {fileID: 968730919820449257, guid: 62faa2a5f451cff43a69075720685447, type: 3}
   firePoint: {fileID: 8669799461649134034}
   fireRate: 1
   maxHealth: 1
+  patrolEnabled: 1
   patrolRadius: 40
   waypointReachedThreshold: 3
   obstacleAvoidanceDistance: 8
@@ -147,7 +149,7 @@ GameObject:
   - component: {fileID: 9193045621976617686}
   - component: {fileID: 5204922964728831347}
   - component: {fileID: 8061283448037288377}
-  - component: {fileID: 5608890622781896397}
+  - component: {fileID: 602274019679548188}
   m_Layer: 0
   m_Name: StarWolf_LightFighter
   m_TagString: Untagged
@@ -224,8 +226,8 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &5608890622781896397
-MeshCollider:
+--- !u!65 &602274019679548188
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -242,7 +244,6 @@ MeshCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 2947803507121911812, guid: 7812e28579c367b4e87288b971d10b36, type: 3}
+  serializedVersion: 3
+  m_Size: {x: 16.95384, y: 19.751368, z: 5.6142564}
+  m_Center: {x: 0.00009107589, y: -0.000112533555, z: -0.00012767313}

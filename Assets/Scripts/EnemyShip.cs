@@ -2,10 +2,29 @@ using UnityEngine;
 
 public class EnemyShip : MonoBehaviour, IDamageable
 {
+    // ── Enemy type ────────────────────────────────────────────────────────────
+    public enum EnemyType
+    {
+        /// <summary>Standard ship that patrols and engages at medium range.</summary>
+        Patrol,
+        /// <summary>Immobile turret — can't move but has high health and fast fire rate.</summary>
+        StationaryDefender,
+        /// <summary>Heavily armoured brawler with massive health but sluggish movement.</summary>
+        Tank,
+        /// <summary>Light, fast interceptor that chases aggressively but has low health.</summary>
+        Interceptor,
+        /// <summary>Long-range sniper with a large detection radius but fragile hull.</summary>
+        Sniper,
+    }
+
     // ── State machine ─────────────────────────────────────────────────────────
     private enum EnemyState { Patrol, Chase, Combat }
 
     // ── Inspector ─────────────────────────────────────────────────────────────
+    [Header("Enemy Type")]
+    [Tooltip("Selects a stat preset. Individual fields below can still be tweaked afterwards.")]
+    public EnemyType enemyType = EnemyType.Patrol;
+
     [Header("Detection and Combat")]
     public float detectionRadius = 30f;
     public float optimalCombatDistance = 15f;
@@ -57,6 +76,7 @@ public class EnemyShip : MonoBehaviour, IDamageable
         if (player != null)
             playerTransform = player.transform;
 
+        ApplyTypePreset();
         currentHealth = maxHealth;
         patrolOrigin = transform.position;
         PickNewPatrolWaypoint();
@@ -120,6 +140,61 @@ public class EnemyShip : MonoBehaviour, IDamageable
         }
     }
 
+    // ── Type presets ──────────────────────────────────────────────────────────
+    /// <summary>
+    /// Overwrites inspector fields with sensible defaults for the chosen type.
+    /// Call this before initialising health so maxHealth is already overridden.
+    /// </summary>
+    private void ApplyTypePreset()
+    {
+        switch (enemyType)
+        {
+            case EnemyType.Patrol:
+                // Default values — no overrides needed.
+                break;
+
+            case EnemyType.StationaryDefender:
+                patrolEnabled          = false;
+                maxHealth              = 20;
+                fireRate               = 0.2f;   // fires very rapidly
+                detectionRadius        = 50f;     // wide awareness
+                optimalCombatDistance  = 20f;
+                thrustForce            = 0f;      // completely immobile
+                maxSpeed               = 0f;
+                break;
+
+            case EnemyType.Tank:
+                maxHealth              = 50;
+                thrustForce            = 4f;      // slow
+                maxSpeed               = 6f;
+                rotationSpeed          = 45f;     // sluggish turning
+                fireRate               = 1.2f;    // slow but deliberate fire
+                optimalCombatDistance  = 10f;     // gets close
+                patrolRadius           = 20f;
+                break;
+
+            case EnemyType.Interceptor:
+                maxHealth              = 2;
+                thrustForce            = 18f;     // very fast
+                maxSpeed               = 28f;
+                rotationSpeed          = 150f;    // agile
+                fireRate               = 0.35f;
+                detectionRadius        = 40f;
+                optimalCombatDistance  = 8f;
+                patrolRadius           = 60f;
+                break;
+
+            case EnemyType.Sniper:
+                maxHealth              = 2;
+                detectionRadius        = 80f;     // spots player from far away
+                optimalCombatDistance  = 40f;     // keeps its distance
+                fireRate               = 0.8f;
+                thrustForce            = 6f;
+                maxSpeed               = 10f;
+                break;
+        }
+    }
+
     // ── Patrol behavior ───────────────────────────────────────────────────────
     private void PickNewPatrolWaypoint()
     {
@@ -162,22 +237,25 @@ public class EnemyShip : MonoBehaviour, IDamageable
         dirToPlayer.z = 0f;
         dirToPlayer.Normalize();
 
-        // Always face the player
-        RotateTowards(dirToPlayer);
-
-        // Maintain combat distance: back off if too close, orbit if at range
+        Vector3 moveDir;
         if (distToPlayer < optimalCombatDistance * 0.7f)
         {
-            rb.AddForce(-transform.up * thrustForce, ForceMode.Force);
+            // Too close — turn away and thrust forward to create distance
+            moveDir = -dirToPlayer;
         }
         else
         {
-            // Strafe perpendicular to the player to orbit
-            Vector3 orbitDir = Vector3.Cross(dirToPlayer, Vector3.forward).normalized;
-            rb.AddForce(orbitDir * orbitForce, ForceMode.Force);
+            // Orbit: blend toward-player with a tangential component so the ship
+            // arcs around the player while mostly facing it
+            Vector3 tangent = Vector3.Cross(dirToPlayer, Vector3.forward).normalized;
+            moveDir = (dirToPlayer + tangent * 0.5f).normalized;
         }
 
-        // Fire when facing the player and cooldown has elapsed
+        // Physically rotate toward the desired travel direction, then thrust forward
+        RotateTowards(moveDir);
+        rb.AddForce(transform.up * thrustForce, ForceMode.Force);
+
+        // Fire when facing close enough to the player
         bool facingPlayer = Vector3.Dot(transform.up, dirToPlayer) > 0.7f;
         if (facingPlayer && Time.time - lastFireTime > fireRate)
             FireLaser();
