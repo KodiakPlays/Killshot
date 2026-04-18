@@ -14,6 +14,11 @@ public class PlayerShip : MonoBehaviour, IDamageable
     [Header("Engine Power Settings")]
     [SerializeField] private float enginePowerDrainRate = 0.2f; // Engine power bars drained per second at full speed (100 units/s)
 
+    [Header("Hyperspeed Settings")]
+    [SerializeField] private float hyperspeedEngineThreshold = 0.8f;  // Min engine efficiency (0-1) required to engage hyperspeed
+    [SerializeField] private float hyperspeedSpeedMultiplier = 4f;    // Speed multiplier while in hyperspeed
+    [SerializeField] private float hyperspeedDrainRate = 2f;          // Engine bars drained per second (exceeds reactor regen)
+
     [Header("Drift Settings")]
     [SerializeField] private float driftCompensationRate = 8f;      // Lateral correction strength (units/s), scaled by stability ratio
     [SerializeField] private float maxLateralDrift = 40f;            // Maximum lateral drift speed (units/s)
@@ -42,6 +47,10 @@ public class PlayerShip : MonoBehaviour, IDamageable
     // Engine drain accumulator
     private float engineDrainAccumulator = 0f;
 
+    // Hyperspeed state
+    private bool isInHyperspeed = false;
+    private float hyperspeedDrainAccumulator = 0f;
+
     // Dodge state
     private bool isDodging; // Whether ship is currently dodging
     private float dodgeStartTime; // When dodge started
@@ -58,6 +67,9 @@ public class PlayerShip : MonoBehaviour, IDamageable
 
     // Railgun standby state
     public bool IsOnStandby { get; private set; }
+
+    // Hyperspeed state
+    public bool IsInHyperspeed => isInHyperspeed;
 
     private void Awake()
     {
@@ -226,20 +238,53 @@ public class PlayerShip : MonoBehaviour, IDamageable
             powerManager.ToggleSystemState(powerManager.sig);
         }
 
-        // Handle dodge input - Q goes left, E goes right
-        if (Input.GetKeyDown(KeyCode.Q))
+        // Hyperspeed — Left Shift to engage / disengage
+        if (Input.GetKeyDown(KeyCode.LeftShift))
         {
-            TryDodge(-1f); // Left dodge
-        }
-        else if (Input.GetKeyDown(KeyCode.E))
-        {
-            TryDodge(1f); // Right dodge
+            float engineEff = powerManager.GetSystemEfficiency("engines");
+            if (!isInHyperspeed && engineEff > hyperspeedEngineThreshold)
+            {
+                isInHyperspeed = true;
+                Debug.Log("[PlayerShip] Hyperspeed engaged.");
+            }
+            else if (isInHyperspeed)
+            {
+                isInHyperspeed = false;
+                hyperspeedDrainAccumulator = 0f;
+                Debug.Log("[PlayerShip] Hyperspeed disengaged.");
+            }
+            else
+            {
+                Debug.Log($"[PlayerShip] Cannot engage hyperspeed — engine power at {engineEff * 100f:F0}% (need > {hyperspeedEngineThreshold * 100f:F0}%).");
+            }
         }
 
-        // Handle weapon firing
-        if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.LeftControl))
+        // Auto-disengage when engine power is fully depleted
+        if (isInHyperspeed && powerManager.GetSystemEfficiency("engines") <= 0f)
         {
-            TryFireWeapons();
+            isInHyperspeed = false;
+            hyperspeedDrainAccumulator = 0f;
+            Debug.Log("[PlayerShip] Hyperspeed lost — engine power depleted.");
+        }
+
+        // Dodge and weapons are unavailable during hyperspeed
+        if (!isInHyperspeed)
+        {
+            // Handle dodge input - Q goes left, E goes right
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                TryDodge(-1f); // Left dodge
+            }
+            else if (Input.GetKeyDown(KeyCode.E))
+            {
+                TryDodge(1f); // Right dodge
+            }
+
+            // Handle weapon firing
+            if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.LeftControl))
+            {
+                TryFireWeapons();
+            }
         }
 
         // Testing controls
@@ -355,15 +400,16 @@ public class PlayerShip : MonoBehaviour, IDamageable
         
         if (enginePower <= 0f)
         {
-            // No engine power - ship decelerates to a stop
-            targetSpeed = 0f;
+            // No engine power - ship crawls at 5% max speed to hint the player should power engines
+            targetSpeed = thrustInput < -0.01f ? 0f : 5f;
         }
         else if (Mathf.Abs(thrustInput) > 0.01f)
         {
             // Calculate target speed based on thrust direction
             // Apply subsystem debuffs per GDD: engine damage reduces max speed
             float subsystemSpeedMult = internalSubsystems != null ? internalSubsystems.GetSpeedMultiplier() : 1f;
-            float maxThrust = 100f * enginePower * subsystemSpeedMult; // Engine power + subsystem damage affects max thrust
+            float hyperspeedMult = isInHyperspeed ? hyperspeedSpeedMultiplier : 1f;
+            float maxThrust = 100f * enginePower * subsystemSpeedMult * hyperspeedMult; // Engine power + subsystem damage affects max thrust
             
             if (thrustInput > 0)
             {
@@ -474,6 +520,17 @@ public class PlayerShip : MonoBehaviour, IDamageable
             while (engineDrainAccumulator >= 1f)
             {
                 engineDrainAccumulator -= 1f;
+                powerManager.RemoveEnginesPower();
+            }
+        }
+
+        // Hyperspeed drain — outpaces reactor regeneration, forcing power depletion over time
+        if (isInHyperspeed)
+        {
+            hyperspeedDrainAccumulator += hyperspeedDrainRate * Time.fixedDeltaTime;
+            while (hyperspeedDrainAccumulator >= 1f)
+            {
+                hyperspeedDrainAccumulator -= 1f;
                 powerManager.RemoveEnginesPower();
             }
         }

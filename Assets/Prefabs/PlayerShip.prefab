@@ -27,13 +27,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 289899518535000198}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: 1, w: 0.0000029653306}
-  m_LocalPosition: {x: 1.935731, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0.0000029504295, w: 1}
+  m_LocalPosition: {x: -1.919, y: -0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 301545260371833355}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 180}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!222 &705978849121018986
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -358,7 +358,7 @@ Transform:
   m_GameObject: {fileID: 2830193068332808896}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 5.15, z: 0}
+  m_LocalPosition: {x: 0, y: 5.35, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -594,13 +594,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4402071983965442785}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0.70710576, y: -0, z: -0, w: 0.70710784}
+  m_LocalPosition: {x: 0, y: 7.91, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 6740532320193300111}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!120 &7504543114468821836
 LineRenderer:
   serializedVersion: 2
@@ -625,7 +625,7 @@ LineRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+  - {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -646,12 +646,10 @@ LineRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Positions:
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 1}
+  m_Positions: []
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.1
+    widthMultiplier: 1.1568152
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -669,7 +667,7 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 1}
+      key0: {r: 0, g: 1, b: 0.94636536, a: 1}
       key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
@@ -677,7 +675,7 @@ LineRenderer:
       key5: {r: 0, g: 0, b: 0, a: 0}
       key6: {r: 0, g: 0, b: 0, a: 0}
       key7: {r: 0, g: 0, b: 0, a: 0}
-      ctime0: 0
+      ctime0: 37201
       ctime1: 65535
       ctime2: 0
       ctime3: 0
@@ -694,13 +692,13 @@ LineRenderer:
       atime6: 0
       atime7: 0
       m_Mode: 0
-      m_ColorSpace: -1
+      m_ColorSpace: 0
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     numCornerVertices: 0
     numCapVertices: 0
     alignment: 0
-    textureMode: 0
+    textureMode: 1
     textureScale: {x: 1, y: 1}
     shadowBias: 0.5
     generateLightingData: 0
@@ -783,7 +781,6 @@ GameObject:
   m_Component:
   - component: {fileID: 301545260371833355}
   - component: {fileID: 3934220524471790749}
-  - component: {fileID: 9048201820694985861}
   - component: {fileID: 220314847516505967}
   - component: {fileID: 5726789993091877158}
   - component: {fileID: 2537618180004571778}
@@ -791,12 +788,14 @@ GameObject:
   - component: {fileID: 2415757949525661879}
   - component: {fileID: 4781585786589172677}
   - component: {fileID: 8239387001282893838}
+  - component: {fileID: 7374560316731401758}
   - component: {fileID: 5540153949720075400}
   - component: {fileID: 4656990419768348771}
   - component: {fileID: 1234567890123456789}
   - component: {fileID: 1111111111111111111}
   - component: {fileID: 2222222222222222222}
   - component: {fileID: 3399169571307816946}
+  - component: {fileID: 5729885003684302731}
   m_Layer: 0
   m_Name: PlayerShip
   m_TagString: Player
@@ -850,27 +849,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!135 &9048201820694985861
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8267084971624876295}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.88
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &220314847516505967
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -885,8 +863,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rateOfAcceleration: 5
   turnRate: 20
-  dodgeDistance: 0.5
+  dodgeDistance: 50
   dodgeDuration: 0.2
+  enginePowerDrainRate: 0.2
+  hyperspeedEngineThreshold: 0.8
+  hyperspeedSpeedMultiplier: 4
+  hyperspeedDrainRate: 2
+  driftCompensationRate: 8
+  maxLateralDrift: 40
+  driftStabilityDrainRate: 0.4
   cameraTransform: {fileID: 0}
   cameraOffset: {x: 0, y: 0, z: -10}
   targetSpeed: 0
@@ -981,6 +966,7 @@ MonoBehaviour:
     finishingCurrentBar: 0
   powerFillRate: 0.5
   ventRate: 1
+  reactorRegenRate: 0.2
   reactorMaxPower: 8
   currentReactorPower: 8
 --- !u!114 &2415757949525661879
@@ -1000,22 +986,22 @@ MonoBehaviour:
     weaponInstance: {fileID: 4781585786589172677}
     isActive: 1
     slotIndex: 0
-    slotName: 
-  - weaponType: 2
-    weaponInstance: {fileID: 8239387001282893838}
-    isActive: 0
-    slotIndex: 1
-    slotName: 
+    slotName: Lasers
   - weaponType: 5
     weaponInstance: {fileID: 5540153949720075400}
-    isActive: 0
+    isActive: 1
     slotIndex: 2
-    slotName: 
-  - weaponType: 6
+    slotName: Railgun
+  - weaponType: 2
+    weaponInstance: {fileID: 8239387001282893838}
+    isActive: 1
+    slotIndex: 1
+    slotName: Missile
+  - weaponType: 4
     weaponInstance: {fileID: 4656990419768348771}
-    isActive: 0
+    isActive: 1
     slotIndex: 2
-    slotName: 
+    slotName: Borading Pod
   activeWeaponIndex: 0
   requiresPower: 1
   minPowerForWeapons: 0.1
@@ -1039,7 +1025,7 @@ MonoBehaviour:
   damageModifier: 1
   laserPrefab: {fileID: 968730919820449257, guid: 62faa2a5f451cff43a69075720685447, type: 3}
   firePoint: {fileID: 4910870370238773696}
-  laserSpeed: 50
+  laserSpeed: 750
   minPowerToFire: 0.2
 --- !u!114 &8239387001282893838
 MonoBehaviour:
@@ -1067,6 +1053,29 @@ MonoBehaviour:
   lockOnTime: 2
   minLockRange: 500
   maxLockRange: 25000
+--- !u!114 &7374560316731401758
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8267084971624876295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d16db5dc0115dd141a643b02c018fc2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  range: 0
+  angleOfFire: 0
+  reloadTime: 0
+  maxAmmo: 0
+  baseDamage: 0
+  damageModifier: 1
+  boardingPodPrefab: {fileID: 0}
+  launchTube: {fileID: 0}
+  podVelocity: 500
+  maxLaunchRange: 5000
+  minLaunchRange: 200
 --- !u!114 &5540153949720075400
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1089,6 +1098,7 @@ MonoBehaviour:
   chargeTime: 2
   maxPenetrations: 5
   damageDropoffPerPenetration: 0.15
+  standbyDuration: 4
   beamRenderer: {fileID: 7504543114468821836}
   beamDuration: 0.3
   beamWidth: 0.5
@@ -1268,6 +1278,7 @@ MonoBehaviour:
   - {fileID: 0}
   stabilityShader: {fileID: -6465566751694194690, guid: 67c2f3ec1e2be423887902ce701b505a, type: 3}
   stabilityImg: {fileID: 0}
+  alertTextGO: {fileID: 0}
   bogieTabTran:
   - {fileID: 0}
   - {fileID: 0}
@@ -1367,7 +1378,7 @@ MonoBehaviour:
   radarBlipContainer: {fileID: 0}
   radarBlipPrefab: {fileID: 0}
   radarBlipRadius: 100
-  weaponManager: {fileID: 0}
+  weaponManager: {fileID: 2415757949525661879}
   btnTabTran: {fileID: 0}
   weaponNameText: {fileID: 0}
   weaponTypeText: {fileID: 0}
@@ -1381,3 +1392,45 @@ MonoBehaviour:
   pointDefenseIcon: {fileID: 21300000, guid: 80c19f48c81184898962a5d6048cc49f, type: 3}
   boardingPodIcon: {fileID: 21300000, guid: 80c19f48c81184898962a5d6048cc49f, type: 3}
   railgunIcon: {fileID: 21300000, guid: 80c19f48c81184898962a5d6048cc49f, type: 3}
+  tabSprite:
+  - {fileID: 21300000, guid: ae912266d325b4d189c68ede6d603437, type: 3}
+  - {fileID: 21300000, guid: 08d955b8ed31e492a9667ca46cd0d842, type: 3}
+  tabWepName:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  tabFrame:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  staticSha: {fileID: -6465566751694194690, guid: 15c815775537f4a3aa617df68c988ec5, type: 3}
+  staticImg:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  powerManager: {fileID: 0}
+--- !u!65 &5729885003684302731
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8267084971624876295}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 4.62, y: 9.47, z: 1.69}
+  m_Center: {x: 0.06, y: 0, z: 0.85}
