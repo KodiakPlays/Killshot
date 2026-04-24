@@ -59,11 +59,18 @@ public class WeaponUIDisplay : MonoBehaviour
         float fill = 1f;
         Color fillColor = Color.white;
 
-        if (activeSlot.weaponInstance is LaserWeapon laser)
+        if (activeSlot.weaponInstance is BroadsideCannon broadside)
         {
-            ammo = $"{laser.GetCurrentAmmo()}/{laser.GetMaxAmmo()}";
-            fill = laser.GetRechargeProgress();
-            fillColor = laser.IsRecharging() ? Color.yellow : Color.cyan;
+            ammo = $"{broadside.GetCurrentAmmo()}/{broadside.GetMaxAmmo()}";
+            bool portReady = broadside.HasPortTarget();
+            bool starboardReady = broadside.HasStarboardTarget();
+            if (portReady && starboardReady)      status = "BOTH SIDES";
+            else if (portReady)                   status = "PORT";
+            else if (starboardReady)              status = "STARBOARD";
+            else                                  status = "SCANNING";
+            statusColor = (portReady || starboardReady) ? Color.green : Color.yellow;
+            fill = (float)broadside.GetCurrentAmmo() / broadside.GetMaxAmmo();
+            fillColor = Color.cyan;
         }
         else if (activeSlot.weaponInstance is Macrocannon macrocannon)
         {

@@ -141,6 +141,13 @@ public class PowerManager : MonoBehaviour
                         currentReactorPower--;
                         if (system.finishingCurrentBar)
                             system.finishingCurrentBar = false;
+                        // Auto-stop drawing when the system is full; the UI switch will flip off automatically
+                        if (system.currentState == PowerState.Draw && system.currentPower >= system.maxPower)
+                        {
+                            system.currentState = PowerState.Standby;
+                            system.readyToVent = false;
+                            powerAccumulator[system] = 0f;
+                        }
                     }
                 }
                 else if (system.finishingCurrentBar)
@@ -174,11 +181,11 @@ public class PowerManager : MonoBehaviour
                 break;
 
             case PowerState.Draw:
-                // Stop drawing; finish the current partial bar then hold in standby
+                // Stop drawing instantly
                 system.currentState = PowerState.Standby;
                 system.readyToVent = true;
-                if (powerAccumulator[system] > 0f)
-                    system.finishingCurrentBar = true;
+                system.finishingCurrentBar = false;
+                powerAccumulator[system] = 0f;
                 break;
 
             case PowerState.Vent:
@@ -197,8 +204,9 @@ public class PowerManager : MonoBehaviour
         {
             system.currentState = PowerState.Standby;
             system.readyToVent = false; // reset so next button press starts Draw, not Vent
-            if (powerAccumulator.ContainsKey(system) && powerAccumulator[system] > 0f)
-                system.finishingCurrentBar = true;
+            system.finishingCurrentBar = false;
+            if (powerAccumulator.ContainsKey(system))
+                powerAccumulator[system] = 0f;
         }
         else if (system.currentState == PowerState.Standby)
         {
@@ -241,8 +249,8 @@ public class PowerManager : MonoBehaviour
     // Arms: -2.5% cannon load time per bonus bar
     public float GetCannonLoadTimeMultiplier() { return 1f - BonusBars(arms) * 0.025f; }
 
-    // Bay: +10% boarding pod range per bonus bar
-    public float GetBoardingPodRangeMultiplier() { return 1f + BonusBars(bay) * 0.10f; }
+    // Arms/Weapons: +10% boarding pod range per bonus bar
+    public float GetBoardingPodRangeMultiplier() { return 1f + BonusBars(arms) * 0.10f; }
 
     // Support: -5% ability cooldown per bonus bar
     public float GetAbilityCooldownMultiplier() { return 1f - BonusBars(support) * 0.05f; }

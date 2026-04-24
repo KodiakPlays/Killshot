@@ -81,6 +81,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private Shader stabilityShader;
     [SerializeField] private Image stabilityImg;
     private float stabMax = 1;
+    [SerializeField] private GameObject alertTextGO;
 
     [Header("Scanner Hack")]
     [SerializeField] private Transform[] bogieTabTran;
@@ -1110,6 +1111,12 @@ public class UIController : MonoBehaviour
             StopCoroutine(speedometerUpdateCoroutine);
             speedometerUpdateCoroutine = null;
         }
+    }
+
+    public void SetAlertActive(bool active)
+    {
+        if (alertTextGO != null)
+            alertTextGO.SetActive(active);
     }
 
     public void StabilityMeterStart(float cur, float max)
