@@ -1,147 +1,131 @@
 using UnityEngine;
+using System.Collections.Generic;
 using System.Linq;
 
 public class BroadsideCannon : WeaponBase
 {
     [Header("Broadside Settings")]
-    [SerializeField] private float lockRadius = 100f;
-    [SerializeField] private float lockTime = 2f;
-    [SerializeField] private Transform leftFirePoint;
-    [SerializeField] private Transform rightFirePoint;
-    [SerializeField] private GameObject projectilePrefab;
-    [SerializeField] private float projectileSpeed = 100f;
+    [SerializeField] private Transform portFirePoint;       // Left / port side
+    [SerializeField] private Transform starboardFirePoint;  // Right / starboard side
+    [SerializeField] private GameObject shellPrefab;
+    [SerializeField] private float shellSpeed = 100f;
 
-    private Transform currentTarget;
-    private float currentLockTime;
-    private bool isLocked;
-    private float lastFireCallTime;
+    // Per-side fire tracking (reloadTime from WeaponBase controls the rate)
+    private float portLastFireTime = -999f;
+    private float starboardLastFireTime = -999f;
+
+    // Per-side current targets (set each frame)
+    private EnemyShip portTarget;
+    private EnemyShip starboardTarget;
 
     protected override void Start()
     {
         base.Start();
-        // Ensure range is set from lockRadius if not manually set
-        if (range < lockRadius) range = lockRadius;
     }
 
     private void Update()
     {
-        // Reset lock if we haven't tried to fire (held button) for a short time
-        if (Time.time - lastFireCallTime > 0.2f)
-        {
-            ResetLock();
-        }
+        ScanForTargets();
+        AutoFire();
     }
 
-    public override void Fire(Vector3 targetPos) // targetPos is ignored for auto-targeting
+    // Required by WeaponBase — proxies into the auto-fire logic
+    public override void Fire(Vector3 targetPos)
     {
-        lastFireCallTime = Time.time;
+        ScanForTargets();
+        AutoFire();
+    }
 
-        if (currentTarget == null)
+    private void ScanForTargets()
+    {
+        portTarget = null;
+        starboardTarget = null;
+
+        Collider[] hits = Physics.OverlapSphere(transform.position, range);
+
+        float portBestDist = float.MaxValue;
+        float starboardBestDist = float.MaxValue;
+
+        foreach (Collider col in hits)
         {
-            FindTarget();
-        }
+            EnemyShip enemy = col.GetComponentInParent<EnemyShip>();
+            if (enemy == null) continue;
 
-        if (currentTarget != null)
-        {
-            // Check distance
-            float dist = Vector3.Distance(transform.position, currentTarget.position);
-            if (dist > lockRadius)
-            {
-                ResetLock();
-                return;
-            }
+            Vector3 toEnemy = enemy.transform.position - transform.position;
+            float dist = toEnemy.magnitude;
 
-            // Process locking
-            if (!isLocked)
+            // Only consider enemies in the broadside arc (45°–135° from bow).
+            // Enemies within 45° of the ship's heading (forward or aft) are ignored.
+            float forwardDot = Vector3.Dot(transform.up, toEnemy.normalized);
+            if (Mathf.Abs(forwardDot) > 0.707f) continue; // < 45° from bow/stern
+
+            float sideDot = Vector3.Dot(transform.right, toEnemy);
+
+            if (sideDot < 0f) // port
             {
-                currentLockTime += Time.deltaTime;
-                // Optional: UI feedback for locking progress could go here
-                
-                if (currentLockTime >= lockTime)
+                if (dist < portBestDist)
                 {
-                    isLocked = true;
-                    Debug.Log("Broadside Locked!");
+                    portBestDist = dist;
+                    portTarget = enemy;
                 }
             }
-            else
+            else // starboard
             {
-                // Fire if locked
-                if (CanFire())
+                if (dist < starboardBestDist)
                 {
-                    Shoot();
+                    starboardBestDist = dist;
+                    starboardTarget = enemy;
                 }
             }
         }
     }
 
-    private void FindTarget()
+    private void AutoFire()
     {
-        // Use 3D OverlapSphere but filter by XY distance for 2D game
-        Collider[] colliders = Physics.OverlapSphere(transform.position, lockRadius);
-        // Filter for EnemyShip
-        var enemy = colliders
-            .Select(c => c.GetComponentInParent<EnemyShip>())
-            .Where(e => e != null)
-            .OrderBy(e => Vector3.Distance(transform.position, e.transform.position))
-            .FirstOrDefault();
-
-        if (enemy != null)
+        if (portTarget != null && currentAmmo > 0 && Time.time - portLastFireTime >= reloadTime)
         {
-            currentTarget = enemy.transform;
+            FireProjectile(portFirePoint, -transform.right);
+            portLastFireTime = Time.time;
+            currentAmmo--;
+            ControllerHaptics.BroadsideFired();
+        }
+
+        if (starboardTarget != null && currentAmmo > 0 && Time.time - starboardLastFireTime >= reloadTime)
+        {
+            FireProjectile(starboardFirePoint, transform.right);
+            starboardLastFireTime = Time.time;
+            currentAmmo--;
+            ControllerHaptics.BroadsideFired();
         }
     }
 
-    private void ResetLock()
+    private void FireProjectile(Transform firePoint, Vector3 fireDirection)
     {
-        currentTarget = null;
-        currentLockTime = 0f;
-        isLocked = false;
-    }
+        if (firePoint == null || shellPrefab == null) return;
 
-    private void Shoot()
-    {
-        // Fire from both sides
-        FireProjectile(leftFirePoint);
-        FireProjectile(rightFirePoint);
-        
-        lastFireTime = Time.time;
-        currentAmmo--;
-    }
+        Quaternion rot = Quaternion.LookRotation(Vector3.forward, fireDirection);
+        GameObject proj = Instantiate(shellPrefab, firePoint.position, rot);
 
-    private void FireProjectile(Transform firePoint)
-    {
-        if (firePoint == null || projectilePrefab == null) return;
-
-        GameObject proj = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
-        
-        // Point at target (2D: orient using up axis toward target)
-        if (currentTarget != null)
+        // Support both Laser-based and Shell-based prefabs
+        Laser laser = proj.GetComponent<Laser>();
+        if (laser != null)
         {
-            Vector3 dir = (currentTarget.position - proj.transform.position).normalized;
-            proj.transform.rotation = Quaternion.LookRotation(Vector3.forward, dir);
+            laser.speed = shellSpeed;
+            laser.Fire(fireDirection.normalized, false);
         }
-        
-        // Add velocity (2D: use transform.up as forward direction)
-        Rigidbody rb = proj.GetComponent<Rigidbody>();
-        if (rb != null)
+        else
         {
-            rb.linearVelocity = proj.transform.up * projectileSpeed;
-        }
-        
-        // Initialize projectile script if it exists (e.g. Shell)
-        var shell = proj.GetComponent<Shell>();
-        if (shell != null)
-        {
-            shell.Initialize(proj.transform.up * projectileSpeed, baseDamage * damageModifier);
+            Rigidbody rb = proj.GetComponent<Rigidbody>();
+            if (rb != null)
+                rb.linearVelocity = fireDirection * shellSpeed;
+
+            Shell shell = proj.GetComponent<Shell>();
+            if (shell != null)
+                shell.Initialize(fireDirection * shellSpeed, baseDamage * damageModifier);
         }
     }
-    
-    // Public getter for UI
-    public float GetLockProgress()
-    {
-        if (isLocked) return 1f;
-        return Mathf.Clamp01(currentLockTime / lockTime);
-    }
-    
-    public bool IsLocked() => isLocked;
+
+    // UI helpers
+    public bool HasPortTarget()      => portTarget != null;
+    public bool HasStarboardTarget() => starboardTarget != null;
 }

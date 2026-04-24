@@ -38,7 +38,7 @@ public class Radar : MonoBehaviour
 
     private void HandleInput()
     {
-        if (Input.GetKeyDown(toggleKey))
+        if (Input.GetKeyDown(toggleKey) || Input.GetKeyDown(KeyCode.JoystickButton2))
         {
             currentRangeIndex = (currentRangeIndex + 1) % rangeSteps.Length;
             Debug.Log($"Radar Range: {GetCurrentRange()}");

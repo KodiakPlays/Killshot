@@ -68,6 +68,8 @@ public class LaserWeapon : WeaponBase
     {
         lastFireTime = Time.time;
         currentAmmo--;
+
+        ControllerHaptics.LaserFired();
         
         // Get spawn position
         Vector3 spawnPos = firePoint.position;

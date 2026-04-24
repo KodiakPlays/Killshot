@@ -144,12 +144,19 @@ public class WeaponManager : MonoBehaviour
         if (!currentWeapon.weaponInstance.CanFire())
             return false;
 
-        // Special handling for LaserWeapon with power requirements
-        if (currentWeapon.weaponInstance is LaserWeapon laserWeapon)
-            return laserWeapon.TryFire(weaponPowerEfficiency);
-
-        // Standard weapon firing
+        // Standard weapon firing (BroadsideCannon also auto-fires in Update)
         currentWeapon.weaponInstance.Fire(target);
+
+        switch (currentWeapon.weaponType)
+        {
+            case WeaponType.PointDefense:ControllerHaptics.PDCFired();         break;
+            case WeaponType.Macrocannon: ControllerHaptics.MacrocannonFired(); break;
+            case WeaponType.Missile:     ControllerHaptics.MissileFired();     break;
+            case WeaponType.BoardingPod: ControllerHaptics.BoardingPodFired(); break;
+            case WeaponType.Broadside:   ControllerHaptics.BroadsideFired();   break;
+            // Laser and Railgun handle their own haptics
+        }
+
         return true;
     }
 
