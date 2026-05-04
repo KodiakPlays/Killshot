@@ -27,6 +27,8 @@ public class PlayerShip : MonoBehaviour, IDamageable
     [Header("Camera Settings")]
     [SerializeField] private Transform cameraTransform; // Reference to the camera transform
     [SerializeField] private Vector3 cameraOffset = new Vector3(0, 10, -15); // Camera offset from ship
+    [SerializeField] private float maxCameraRollOffset = 4f;   // Max extra degrees the camera tilts when turning
+    [SerializeField] private float cameraRollSpeed = 5f;       // How quickly the camera roll offset ramps up / springs back
 
     // Systems
     private PowerManager powerManager;
@@ -43,6 +45,7 @@ public class PlayerShip : MonoBehaviour, IDamageable
     
     // Camera state
     private Vector3 targetCameraPosition; // Target camera position
+    private float cameraRollOffset = 0f;  // Current additional roll applied to camera when turning
     
     // Engine drain accumulator
     private float engineDrainAccumulator = 0f;
@@ -562,36 +565,14 @@ public class PlayerShip : MonoBehaviour, IDamageable
             targetSpeed = currentSpeed;
         }
         
-        // --- Drift Physics ---
-        // Decompose the existing Rigidbody velocity into ship-local components so lateral
-        // momentum (drift) persists between frames rather than being force-aligned each tick.
-        Vector3 existingVelocity = rb.linearVelocity;
-        float forwardComponent = Vector3.Dot(existingVelocity, transform.up);
-        float lateralComponent = Vector3.Dot(existingVelocity, transform.right);
-        lateralComponent = Mathf.Clamp(lateralComponent, -maxLateralDrift, maxLateralDrift);
-
-        // Apply thrust: push forward component toward targetSpeed
+        // --- Forward-only movement ---
+        // Speed is smoothly ramped toward targetSpeed; velocity is always locked to the
+        // ship's facing direction (transform.up). Turning immediately redirects movement —
+        // the ship never slides sideways.
         float speedChangeRate = rateOfAcceleration * Time.fixedDeltaTime;
-        forwardComponent = Mathf.MoveTowards(forwardComponent, targetSpeed, speedChangeRate);
-        currentSpeed = forwardComponent;
+        currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, speedChangeRate);
 
-        // Drift compensation: stability ratio (0–1) scales how aggressively lateral drift is
-        // corrected. Always active — full stability = fast correction, zero stability = free drift.
-        float stabilityRatio = stability.GetStabilityPercentage();
-        float lateralCorrection = driftCompensationRate * stabilityRatio * Time.fixedDeltaTime;
-        // Add a small velocity-proportional term so large drifts correct proportionally faster
-        lateralCorrection += driftCompensationRate * stabilityRatio * Mathf.Abs(lateralComponent) * 0.05f * Time.fixedDeltaTime;
-        lateralComponent = Mathf.MoveTowards(lateralComponent, 0f, lateralCorrection);
-
-        // Passive stability drain from uncompensated lateral drift — keeps stability always relevant
-        if (Mathf.Abs(lateralComponent) > 1f)
-        {
-            float driftDrain = driftStabilityDrainRate * Mathf.Abs(lateralComponent) * Time.fixedDeltaTime;
-            stability.ApplyStabilityDrain(driftDrain);
-        }
-
-        // Reconstruct velocity from forward + lateral components
-        rb.linearVelocity = transform.up * forwardComponent + transform.right * lateralComponent;
+        rb.linearVelocity = transform.up * currentSpeed;
 
         // Handle dodge movement (smooth positional interpolation) — velocity is handled above
         if (isDodging)
@@ -672,19 +653,33 @@ public class PlayerShip : MonoBehaviour, IDamageable
         {
             // Update target camera position to follow ship
             targetCameraPosition = transform.position + cameraOffset;
-            
+
             // Follow position immediately
             cameraTransform.position = targetCameraPosition;
-            
-            // Lock camera rotation to ship rotation immediately
+
+            // --- Turn-feel camera roll ---
+            // Normalise currentTurnSpeed against the max possible turn speed so the offset
+            // is always in the [-1, 1] range regardless of turnRate setting.
+            float maxPossibleTurn = turnRate; // degrees/s — same scale as currentTurnSpeed
+            float normalisedTurn  = maxPossibleTurn > 0f ? Mathf.Clamp(currentTurnSpeed / maxPossibleTurn, -1f, 1f) : 0f;
+
+            // Target roll: lean into the turn direction (negative because ship turns CW when roll is negative in Z)
+            float targetRoll = -normalisedTurn * maxCameraRollOffset;
+
+            // Smoothly move toward the target roll offset
+            cameraRollOffset = Mathf.Lerp(cameraRollOffset, targetRoll, cameraRollSpeed * Time.fixedDeltaTime);
+
+            // Apply ship rotation + roll offset to camera
             Vector3 cameraEuler = cameraTransform.eulerAngles;
-            cameraEuler.z = transform.eulerAngles.z;
+            cameraEuler.z = transform.eulerAngles.z + cameraRollOffset;
             cameraTransform.eulerAngles = cameraEuler;
 
+            // Pass the *ship's* true rotation to the UI (not the offset angle) so the compass stays accurate
+            float shipZ = transform.eulerAngles.z;
             if (UIController.Instance != null)
             {
-                UIController.Instance.UpdateCompass(cameraEuler.z);
-                UIController.Instance.WorldGridRotUpdate(cameraEuler.z);
+                UIController.Instance.UpdateCompass(shipZ);
+                UIController.Instance.WorldGridRotUpdate(shipZ);
                 UIController.Instance.WorldGridLocUpdate(cameraTransform.position);
             }
         }
