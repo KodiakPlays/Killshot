@@ -369,6 +369,28 @@ public class PowerManager : MonoBehaviour
 
     public void EmergencyVent() { VentAllSystems(); }
 
+    /// <summary>
+    /// Instantly zeros every system's power and returns it all to the reactor.
+    /// Unlike <see cref="DrainAllPowerInstantly"/>, the reactor itself is NOT drained
+    /// and stays online — the player can immediately start redirecting power.
+    /// All systems are placed into a clean Standby (no Draw, no Vent, no pending bars).
+    /// </summary>
+    public void EmergencyVentSystemsOnly()
+    {
+        foreach (var system in allSystems)
+        {
+            currentReactorPower += system.currentPower; // return power to reactor
+            system.currentPower = 0;
+            system.currentState = PowerState.Standby;
+            system.readyToVent = false;
+            system.finishingCurrentBar = false;
+            if (powerAccumulator.ContainsKey(system))
+                powerAccumulator[system] = 0f;
+        }
+        // Clamp to max in case of floating point drift
+        currentReactorPower = Mathf.Min(currentReactorPower, reactorMaxPower);
+    }
+
     public void BlackAlert()
     {
         VentAllSystems();

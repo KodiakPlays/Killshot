@@ -80,6 +80,7 @@ public class UIController : MonoBehaviour
     [Header("Stability Settings")]
     [SerializeField] private Shader stabilityShader;
     [SerializeField] private Image stabilityImg;
+    [SerializeField] private TextMeshProUGUI stabilityTxt; // Assign StabilityTxt TMP in inspector
     private float stabMax = 1;
     [SerializeField] private GameObject alertTextGO;
 
@@ -877,54 +878,69 @@ public class UIController : MonoBehaviour
         powerAnimCoroutine[i] = null;
     }
 
+    /// <summary>
+    /// Gradual vent: stops all charging animations, resets all switch sprites to "off",
+    /// then tells PowerManager to bleed each powered system back to the reactor over time.
+    /// </summary>
     public void VentBtn()
     {
         StartCoroutine(GlitchEffect(0f, .75f, 4));
 
+        // Stop all charge coroutines and reset every switch sprite regardless of current state
         for (int i = 0; i < uiPowerMetClass.Count - 1; i++)
         {
-            if(powerAnimCoroutine[i] == null)
+            uiPowerMetClass[i].Charge(false);
+
+            if (powerAnimCoroutine.ContainsKey(i) && powerAnimCoroutine[i] != null)
             {
-                continue;
+                StopCoroutine(powerAnimCoroutine[i]);
+                powerAnimCoroutine[i] = null;
             }
 
-           uiPowerMetClass[i].Charge(false);
-           StopCoroutine(powerAnimCoroutine[i]);
+            // Reset switch sprite to "off" for every button
+            if (i < btnPowerBoolImage.Count)
+                btnPowerBoolImage[i].sprite = uiSprite[0];
         }
 
-        StartCoroutine(VentAnim());
+        // Update power node visuals to reflect the new vent state
+        VentNodeCheck();
+
+        // Delegate the actual power bleed to PowerManager (gradual, rate-based)
+        if (powerManager != null)
+            powerManager.VentAllSystems();
     }
 
-    private IEnumerator VentAnim()
+    /// <summary>
+    /// Emergency vent: instantly zeroes all system power (returned to reactor),
+    /// stops all charge coroutines, and hard-resets every switch sprite and power node.
+    /// </summary>
+    public void EmergencyVentBtn()
     {
-        float time = 0;
+        StartCoroutine(GlitchEffect(0f, 1f, 4));
 
-        float speed = 1;
-
-        float crgAmt = 5f;
-
-        while (time < crgAmt)
+        // Stop all charge coroutines and reset every switch sprite
+        for (int i = 0; i < uiPowerMetClass.Count - 1; i++)
         {
-            Mathf.MoveTowards(0, crgAmt, time);
+            uiPowerMetClass[i].Charge(false);
 
-            time += (Time.deltaTime) * (speed);
-
-            for (int i = 0; i < uiPowerMetClass.Count - 1; i++)
+            if (powerAnimCoroutine.ContainsKey(i) && powerAnimCoroutine[i] != null)
             {
-                if (uiPowerMetClass[i].cur > 1)
-                {
-                    uiPowerMetClass[i].cur--;
-                    uiPowerMetClass[uiPowerMetClass.Count - 1].cur++;
-
-                    uiPowerMetClass[i].mat.SetFloat("_PowerCur", uiPowerMetClass[i].cur);
-                    uiPowerMetClass[uiPowerMetClass.Count - 1].mat.SetFloat("_PowerCur", uiPowerMetClass[uiPowerMetClass.Count - 1].cur);
-
-                    yield return new WaitForSeconds(.5f);
-                }
-
-                VentNodeCheck();
+                StopCoroutine(powerAnimCoroutine[i]);
+                powerAnimCoroutine[i] = null;
             }
+
+            if (i < btnPowerBoolImage.Count)
+                btnPowerBoolImage[i].sprite = uiSprite[0];
         }
+
+        // Instantly drain all system power back into the reactor via PowerManager
+        if (powerManager != null)
+            powerManager.EmergencyVentSystemsOnly();
+
+        // Force all power nodes off immediately
+        for (int i = 0; i < powerNodeImg.Length; i++)
+            PowerNodes(i, 0);
+        PowerNodes(5, 0); // reactor node off
     }
 
     public void FrequancyTune(float speed)
@@ -1129,11 +1145,16 @@ public class UIController : MonoBehaviour
 
         stabMax = max;
 
+        if (stabilityTxt != null)
+            stabilityTxt.text = $"Stability - {Mathf.RoundToInt(cur)}%";
     }
 
     public void StabilityMeterUpdate(float cur)
     {
         stabilityImg.material.SetFloat("_PowerCur", cur);
+
+        if (stabilityTxt != null)
+            stabilityTxt.text = $"Stability - {Mathf.RoundToInt(cur)}%";
 
         StabilityMeterColor(cur);
     }
