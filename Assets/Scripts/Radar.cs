@@ -38,7 +38,8 @@ public class Radar : MonoBehaviour
 
     private void HandleInput()
     {
-        if (Input.GetKeyDown(toggleKey) || Input.GetKeyDown(KeyCode.JoystickButton2))
+        // Keyboard shortcut for dev convenience — controller X button is now handled in PlayerShip
+        if (Input.GetKeyDown(toggleKey))
         {
             currentRangeIndex = (currentRangeIndex + 1) % rangeSteps.Length;
             Debug.Log($"Radar Range: {GetCurrentRange()}");
