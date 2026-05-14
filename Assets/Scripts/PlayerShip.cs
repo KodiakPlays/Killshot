@@ -387,10 +387,11 @@ public class PlayerShip : MonoBehaviour, IDamageable
         bool dpadLeft  = dpadX < -0.5f;
         bool dpadRight = dpadX >  0.5f;
 
-        if (dpadUp    && !_dpadUpPrev)    { powerManager.ToggleSystemState(powerManager.engines); ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Engines"); }
-        if (dpadDown  && !_dpadDownPrev)  { powerManager.ToggleSystemState(powerManager.arms);    ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Arms"); }
-        if (dpadLeft  && !_dpadLeftPrev)  { powerManager.ToggleSystemState(powerManager.sig);     ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Sig"); }
-        if (dpadRight && !_dpadRightPrev) { powerManager.ToggleSystemState(powerManager.bay);     ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Bay"); }
+        // D-Pad → the 4 power-panel toggles: Up=ENG, Down=WEP, Left=CRW, Right=SEN
+        if (dpadUp    && !_dpadUpPrev)    { powerManager.ToggleDrawState(powerManager.engines); ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Engines"); }
+        if (dpadDown  && !_dpadDownPrev)  { powerManager.ToggleDrawState(powerManager.arms);    ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Arms"); }
+        if (dpadLeft  && !_dpadLeftPrev)  { powerManager.ToggleDrawState(powerManager.support);  ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Support (CRW)"); }
+        if (dpadRight && !_dpadRightPrev) { powerManager.ToggleDrawState(powerManager.sig);      ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Sig (SEN)"); }
 
         _dpadUpPrev    = dpadUp;
         _dpadDownPrev  = dpadDown;
@@ -405,7 +406,15 @@ public class PlayerShip : MonoBehaviour, IDamageable
             Debug.Log("[PlayerShip] Toggled Support");
         }
 
-        // X button (joystick button 2): cycle radar zoom — handled in Radar.cs
+        // X button (joystick button 2): cycle world-grid zoom — 10x → 100x → 1000x
+        if (Input.GetKeyDown(KeyCode.JoystickButton2))
+        {
+            int nextZoom = (UIController.Instance != null)
+                ? ((UIController.Instance.GetWorldZoom() + 1) % 3)
+                : 0;
+            UIController.Instance?.WorldGridZoom(nextZoom);
+            Debug.Log($"[PlayerShip] Radar zoom → {new int[]{10, 100, 1000}[nextZoom]}x");
+        }
 
         // Select button (joystick button 6): Emergency Vent
         if (Input.GetKeyDown(KeyCode.JoystickButton6))
@@ -618,17 +627,7 @@ public class PlayerShip : MonoBehaviour, IDamageable
             stability.CalculateTurnStabilityDrain(Mathf.Abs(rotationThisFrame), Mathf.Abs(currentSpeed), stabilityDecayMult);
         }
 
-        // Speed-based engine power drain — higher speed consumes engine bars faster
-        if (Mathf.Abs(currentSpeed) > 1f && enginePower > 0f)
-        {
-            float speedRatio = Mathf.Abs(currentSpeed) / 100f;
-            engineDrainAccumulator += speedRatio * enginePowerDrainRate * Time.fixedDeltaTime;
-            while (engineDrainAccumulator >= 1f)
-            {
-                engineDrainAccumulator -= 1f;
-                powerManager.RemoveEnginesPower();
-            }
-        }
+        // Engine power is NOT depleted by travelling — only hyperspeed drains it.
 
         // Hyperspeed drain — outpaces reactor regeneration, forcing power depletion over time
         if (isInHyperspeed)

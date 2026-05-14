@@ -1384,6 +1384,9 @@ public class UIController : MonoBehaviour
         }
     }
 
+    /// <summary>Returns the current world-grid zoom level (0 = 10x, 1 = 100x, 2 = 1000x).</summary>
+    public int GetWorldZoom() => worldZoom;
+
     public void WorldGridZoom(int i)
     {
         StartCoroutine(GlitchEffect(.5f, 1f, 0));

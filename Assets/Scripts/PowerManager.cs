@@ -173,10 +173,18 @@ public class PowerManager : MonoBehaviour
                 }
                 else
                 {
-                    // Second standby (after draw) → start venting; cannot be cancelled
-                    system.currentState = PowerState.Vent;
-                    system.readyToVent = false;
-                    powerAccumulator[system] = 0f;
+                    // Second standby (after draw) → start venting, unless already at full power
+                    if (system.currentPower >= system.maxPower)
+                    {
+                        // System is full — reset the vent flag so the next press draws again
+                        system.readyToVent = false;
+                    }
+                    else
+                    {
+                        system.currentState = PowerState.Vent;
+                        system.readyToVent = false;
+                        powerAccumulator[system] = 0f;
+                    }
                 }
                 break;
 
