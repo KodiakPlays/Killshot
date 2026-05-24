@@ -34,6 +34,7 @@ public class PlayerShip : MonoBehaviour, IDamageable
     private PowerManager powerManager;
     private ShipStability stability;
     private WeaponManager weaponManager;
+    private TargetingSystem targetingSystem;
     private HullSystem hullSystem;
     private InternalSubsystems internalSubsystems;
     
@@ -125,6 +126,8 @@ public class PlayerShip : MonoBehaviour, IDamageable
         {
             weaponManager = gameObject.AddComponent<WeaponManager>();
         }
+
+        targetingSystem = FindObjectOfType<TargetingSystem>();
 
         // Initialize camera reference if not set
         if (cameraTransform == null)
@@ -469,7 +472,16 @@ public class PlayerShip : MonoBehaviour, IDamageable
             // Normal power check - can only fire if weapons have some power (minimum 20% for emergency firing)
             if (weaponPower > 0.2f)
             {
-                weaponManager.FireActiveWeapon(transform.position + transform.up * 1000f, weaponPower);
+                // If a target is locked by the targeting system, fire at that Transform
+                Transform locked = targetingSystem != null ? targetingSystem.GetLockedTargetTransform() : null;
+                if (locked != null)
+                {
+                    weaponManager.FireActiveWeapon(locked, weaponPower);
+                }
+                else
+                {
+                    weaponManager.FireActiveWeapon(transform.position + transform.up * 1000f, weaponPower);
+                }
             }
             else
             {
