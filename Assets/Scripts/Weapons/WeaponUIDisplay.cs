@@ -62,15 +62,58 @@ public class WeaponUIDisplay : MonoBehaviour
         if (activeSlot.weaponInstance is BroadsideCannon broadside)
         {
             ammo = $"{broadside.GetCurrentAmmo()}/{broadside.GetMaxAmmo()}";
-            bool portReady = broadside.HasPortTarget();
-            bool starboardReady = broadside.HasStarboardTarget();
-            if (portReady && starboardReady)      status = "BOTH SIDES";
-            else if (portReady)                   status = "PORT";
-            else if (starboardReady)              status = "STARBOARD";
-            else                                  status = "SCANNING";
-            statusColor = (portReady || starboardReady) ? Color.green : Color.yellow;
-            fill = (float)broadside.GetCurrentAmmo() / broadside.GetMaxAmmo();
-            fillColor = Color.cyan;
+            
+            bool portLocked = broadside.IsPortLocked();
+            bool starboardLocked = broadside.IsStarboardLocked();
+            bool portPainting = broadside.HasPortTarget() && !portLocked;
+            bool starboardPainting = broadside.HasStarboardTarget() && !starboardLocked;
+
+            if (portLocked && starboardLocked)
+            {
+                status = "LOCKED BOTH";
+                statusColor = Color.green;
+            }
+            else if (portLocked)
+            {
+                status = "LOCKED PORT";
+                statusColor = Color.green;
+            }
+            else if (starboardLocked)
+            {
+                status = "LOCKED STBD";
+                statusColor = Color.green;
+            }
+            else if (portPainting && starboardPainting)
+            {
+                status = "PAINTING BOTH";
+                statusColor = Color.yellow;
+            }
+            else if (portPainting)
+            {
+                status = "PAINTING PORT";
+                statusColor = Color.yellow;
+            }
+            else if (starboardPainting)
+            {
+                status = "PAINTING STBD";
+                statusColor = Color.yellow;
+            }
+            else
+            {
+                status = "SCANNING";
+                statusColor = Color.red;
+            }
+
+            if (portPainting || starboardPainting)
+            {
+                fill = broadside.GetLockProgress();
+                fillColor = Color.yellow;
+            }
+            else
+            {
+                fill = (float)broadside.GetCurrentAmmo() / broadside.GetMaxAmmo();
+                fillColor = Color.cyan;
+            }
         }
         else if (activeSlot.weaponInstance is Macrocannon macrocannon)
         {

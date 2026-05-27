@@ -1,69 +1,37 @@
-# Starwolf — Codebase Documentation
+# Starwolf — Short Code Reference
 
-> **Scope:** All game scripts under `Assets/Scripts/`, the `UIController` (`Assets/UI/UI_Script/UIController.cs`), and supporting UI classes.
+Scope: quick reference for the code structure and main systems. Simple, kept short.
 
----
+Core folders
+- `Assets/Scripts/` — game logic (PlayerShip, EnemyShip, GameManager, etc.)
+- `Assets/Scripts/Weapons/` — all weapons and projectiles (Railgun, Laser, Missile, Broadside, Macrocannon, PDC, BoardingPod)
+- `Assets/UI/UI_Script/` — UIController, BogieClass, UIPowerClass
+- `Assets/Prefabs/`, `Assets/Scenes/`, `Assets/Materials/` — art & scenes
+- `Assets/TestUIKeyControler.cs` — simple test driver (keyboard shortcuts)
 
-## Table of Contents
+Main systems (one-line descriptions)
+- `GameManager` (`Assets/Scripts/GameManager.cs`) — session bootstrap, spawns player/enemies, mission wiring.
+- `GameClock` (`Assets/Scripts/GameClock.cs`) — global mission time + pause handling.
+- `QuestSystem` (`Assets/Scripts/QuestSystem.cs`) — mission state machine (Locate → Eliminate → Exit).
+- `WorldBoundary` (`Assets/Scripts/WorldBoundary.cs`) — playable-area enforcement, desertion flow.
+- `PlayerShip` (`Assets/Scripts/PlayerShip.cs`) — movement, input, weapons interface, camera follow.
+- `PowerManager` (`Assets/Scripts/PowerManager.cs`) — reactor + five systems (Engines/Arms/Bay/Support/Sig).
+- `HullSystem` (`Assets/Scripts/HullSystem.cs`) & `InternalSubsystems` — quadrant health and internal damage mapping.
+- `ShipStability` (`Assets/Scripts/ShipStability.cs`) — stability drain/recover and dodge gating.
+- `Radar` / `RadarTarget` (`Assets/Scripts/Radar.cs`, `RadarTarget.cs`) — radar blips and UI integration.
+- `CommsManager` (`Assets/Scripts/CommsManager.cs`) — signal intercept mini-game.
+- Weapons: `WeaponManager`, `WeaponBase`, `Railgun`, `LaserWeapon`, `MissileLauncher`, `BroadsideCannon`, `Macrocannon`, `PointDefenseCanon`, `BoardingPod` (see `Assets/Scripts/Weapons/`).
 
-1. [Architecture Overview](#architecture-overview)
-2. [UIController — The UI Bridge](#uicontroller--the-ui-bridge)
-3. [Core Game Systems](#core-game-systems)
-   - [GameManager](#gamemanager)
-   - [GameClock](#gameclock)
-   - [QuestSystem](#questsystem)
-   - [WorldBoundary](#worldboundary)
-4. [Player Ship](#player-ship)
-   - [PlayerShip](#playership)
-   - [ShipStability](#shipstability)
-   - [PowerManager](#powermanager)
-   - [HullSystem](#hullsystem)
-   - [InternalSubsystems](#internalsubsystems)
-   - [Shields](#shields)
-   - [Autopilot](#autopilot)
-5. [Enemy](#enemy)
-   - [EnemyShip](#enemyship)
-6. [Weapons System](#weapons-system)
-   - [WeaponBase](#weaponbase)
-   - [WeaponManager](#weaponmanager)
-   - [WeaponUIDisplay](#weaponuidisplay)
-   - [Laser / LaserWeapon](#laser--laserweapon)
-   - [Missile / MissileLauncher](#missile--missilelauncher)
-   - [Railgun](#railgun)
-   - [BroadsideCannon](#broadsidecannon)
-   - [Macrocannon](#macrocannon)
-   - [PointDefenseCanon / PDCBullet](#pointdefensecanon--pdcbullet)
-   - [BoardingPod / BoardingPodLauncher](#boardingpod--boardingpodlauncher)
-   - [Shell](#shell)
-7. [Radar System](#radar-system)
-   - [Radar](#radar)
-   - [RadarTarget](#radartarget)
-8. [Communications System](#communications-system)
-   - [CommsManager / Signal](#commsmanager--signal)
-9. [Environment](#environment)
-   - [Asteroid](#asteroid)
-10. [Interfaces](#interfaces)
-    - [IDamageable](#idamageable)
-11. [UI References](#ui-references)
-    - [BogieClass](#bogieclass)
-    - [UIPowerClass](#uipowerclass)
-    - [Shader Property Reference](#shader-property-reference)
-    - [TestUIKeyController](#testuikeycontroller)
+UI
+- `UIController` (`Assets/UI/UI_Script/UIController.cs`) is the HUD singleton. Backend scripts push updates; UI does not poll game state.
 
----
+Quick run / test notes
+- Open the Unity project (Starwolf.sln). Load a scene in `Assets/Scenes/` and press Play.
+- Use `TestUIKeyControler.cs` for keyboard-driven UI tests (speedometer, railgun UI, stability, bogie tests).
+- Common keys: `W/S/A/D` move, `Space` / `Left Ctrl` fire, `1/2/3` toggle power systems, `R` cycles radar range / railgun test in TestUI.
 
-## Architecture Overview
+If you want a longer, annotated reference, I can expand sections (UI, weapons, power) next.
 
-Starwolf is a top-down 2D space combat game built in Unity. The game world is oriented on the XY plane — the ship moves forward along its local `transform.up` axis and the Z axis is frozen for all Rigidbodies.
-
-**Key design rules present throughout the code:**
-- Damage is always **directional** — it hits the hull quadrant facing the impact.
-- **Power** is a shared reactor resource distributed among five systems: **Engines**, **Arms**, **Bay**, **Support**, and **Sig**. The reactor passively regenerates and is the single source of truth; the UI always mirrors inspector values.
-- **Stability** is consumed by sharp turns and dodging; depleting it prevents further maneuvers.
-- **Mission failure** can be triggered by player destruction, desertion, time expiry, or life support failure.
-- **`UIController`** is a singleton accessed everywhere via `UIController.Instance`. Backend scripts call it to push data into the HUD — the UI does not poll the game state.
-
----
 
 ## UIController — The UI Bridge
 

@@ -28,8 +28,8 @@ Transform:
   m_GameObject: {fileID: 289899518535000198}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0.0000029504295, w: 1}
-  m_LocalPosition: {x: -1.919, y: -0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 0}
+  m_LocalScale: {x: 0.11612, y: 0.11612, z: 0.11612}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 301545260371833355}
@@ -49,7 +49,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 289899518535000198}
-  m_Mesh: {fileID: -1370759931307350873, guid: 4f902600fa2fb8945b759d10ff589b16, type: 3}
+  m_Mesh: {fileID: -7850399309569402174, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
 --- !u!23 &1604966267839804807
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -358,7 +358,7 @@ Transform:
   m_GameObject: {fileID: 2830193068332808896}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 5.35, z: 0}
+  m_LocalPosition: {x: 0, y: 8.68, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -389,7 +389,7 @@ Transform:
   m_GameObject: {fileID: 2971094710789848604}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.70710707, w: 0.70710653}
-  m_LocalPosition: {x: -4.45, y: -0.43, z: 0}
+  m_LocalPosition: {x: -4.45, y: 0.43, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -731,7 +731,7 @@ Transform:
   m_GameObject: {fileID: 5365511233024745249}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: -0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 4.45, y: -0.43, z: 0}
+  m_LocalPosition: {x: 4.45, y: 0.43, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -787,7 +787,6 @@ GameObject:
   - component: {fileID: 2828144650140381111}
   - component: {fileID: 2415757949525661879}
   - component: {fileID: 4781585786589172677}
-  - component: {fileID: 8239387001282893838}
   - component: {fileID: 7374560316731401758}
   - component: {fileID: 5540153949720075400}
   - component: {fileID: 4656990419768348771}
@@ -874,6 +873,8 @@ MonoBehaviour:
   driftStabilityDrainRate: 0.4
   cameraTransform: {fileID: 0}
   cameraOffset: {x: 0, y: 0, z: -10}
+  maxCameraRollOffset: 4
+  cameraRollSpeed: 5
   targetSpeed: 0
   testMode_IgnoreWeaponPower: 0
 --- !u!114 &5726789993091877158
@@ -966,7 +967,6 @@ MonoBehaviour:
     finishingCurrentBar: 0
   powerFillRate: 0.5
   ventRate: 1
-  reactorRegenRate: 0.2
   reactorMaxPower: 8
   currentReactorPower: 8
 --- !u!114 &2415757949525661879
@@ -992,8 +992,8 @@ MonoBehaviour:
     isActive: 1
     slotIndex: 2
     slotName: Railgun
-  - weaponType: 2
-    weaponInstance: {fileID: 8239387001282893838}
+  - weaponType: 6
+    weaponInstance: {fileID: 4781585786589172677}
     isActive: 1
     slotIndex: 1
     slotName: Missile
@@ -1027,32 +1027,6 @@ MonoBehaviour:
   firePoint: {fileID: 4910870370238773696}
   laserSpeed: 750
   minPowerToFire: 0.2
---- !u!114 &8239387001282893838
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8267084971624876295}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b0268a7559facb41b33fc2306adf4cd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  range: 0
-  angleOfFire: 0
-  reloadTime: 0
-  maxAmmo: 0
-  baseDamage: 0
-  damageModifier: 1
-  missilePrefab: {fileID: 2718158806618401375, guid: 67391a6f4428e7f42a81e3b993e6d3f2, type: 3}
-  launchTubes:
-  - {fileID: 2741798403034424658}
-  - {fileID: 6160183282695477346}
-  - {fileID: 4910870370238773696}
-  lockOnTime: 2
-  minLockRange: 500
-  maxLockRange: 25000
 --- !u!114 &7374560316731401758
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1126,12 +1100,11 @@ MonoBehaviour:
   maxAmmo: 0
   baseDamage: 0
   damageModifier: 1
-  lockRadius: 100
+  portFirePoint: {fileID: 6160183282695477346}
+  starboardFirePoint: {fileID: 2741798403034424658}
+  shellPrefab: {fileID: 968730919820449257, guid: 62faa2a5f451cff43a69075720685447, type: 3}
+  shellSpeed: 100
   lockTime: 2
-  leftFirePoint: {fileID: 6160183282695477346}
-  rightFirePoint: {fileID: 2741798403034424658}
-  projectilePrefab: {fileID: 968730919820449257, guid: 62faa2a5f451cff43a69075720685447, type: 3}
-  projectileSpeed: 100
 --- !u!114 &1234567890123456789
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1278,6 +1251,7 @@ MonoBehaviour:
   - {fileID: 0}
   stabilityShader: {fileID: -6465566751694194690, guid: 67c2f3ec1e2be423887902ce701b505a, type: 3}
   stabilityImg: {fileID: 0}
+  stabilityTxt: {fileID: 0}
   alertTextGO: {fileID: 0}
   bogieTabTran:
   - {fileID: 0}
@@ -1412,7 +1386,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  powerManager: {fileID: 0}
+  powerManager: {fileID: 2828144650140381111}
 --- !u!65 &5729885003684302731
 BoxCollider:
   m_ObjectHideFlags: 0
