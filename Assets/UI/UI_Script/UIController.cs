@@ -890,29 +890,29 @@ public class UIController : MonoBehaviour
                 continue;
             }
 
-<<<<<<< Updated upstream
+//<<<<<<< Updated upstream
            uiPowerMetClass[i].Charge(false);
            StopCoroutine(powerAnimCoroutine[i]);
         }
 
         StartCoroutine(VentAnim());
-=======
-            // Reset switch sprite to "off" for every button
-            if (i <= btnPowerBoolImage.Count)
-            {
-                btnPowerBoolImage[i].sprite = uiSprite[0];
-            }
-        }
+//=======
+        //    // Reset switch sprite to "off" for every button
+        //    if (i <= btnPowerBoolImage.Count)
+        //    {
+        //        btnPowerBoolImage[i].sprite = uiSprite[0];
+        //    }
+        //}
 
-        // Update power node visuals to reflect the new vent state
-        VentNodeCheck();
+        //// Update power node visuals to reflect the new vent state
+        //VentNodeCheck();
 
-        // Delegate the actual power bleed to PowerManager (gradual, rate-based)
-        if (powerManager != null)
-        {
-            powerManager.VentAllSystems();
-        }
->>>>>>> Stashed changes
+        //// Delegate the actual power bleed to PowerManager (gradual, rate-based)
+        //if (powerManager != null)
+        //{
+        //    powerManager.VentAllSystems();
+        //}
+//>>>>>>> Stashed changes
     }
 
     private IEnumerator VentAnim()
