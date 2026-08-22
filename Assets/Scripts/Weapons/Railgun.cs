@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Hold Space to charge the railgun (requires Arms power > 90%).
@@ -42,6 +43,8 @@ public class Railgun : WeaponBase
     private ShipStability shipStability;
     private PlayerShip playerShip;
     private WeaponManager weaponManager;
+    private bool _ltRtBothPrevFrame = false;
+    private Coroutine _chargeRumbleCoroutine;
 
     protected override void Start()
     {
@@ -86,6 +89,7 @@ public class Railgun : WeaponBase
         // Only handle input when this is the active weapon
         if (weaponManager != null && weaponManager.GetActiveWeapon() != this) return;
 
+        // Keyboard: Space to charge and release to fire
         if (Input.GetKeyDown(KeyCode.Space))
             TryStartCharging();
 
@@ -94,6 +98,23 @@ public class Railgun : WeaponBase
             if (chargeEffect != null) chargeEffect.SetActive(false);
             FireRailgun();
         }
+
+        // Controller: hold LT + RT to charge, release RT (while LT held) to fire
+        float ltAxis = Input.GetAxis("LeftTrigger");
+        float rtAxis = Input.GetAxis("RightTrigger");
+        bool ltRtBoth = ltAxis > 0.5f && rtAxis > 0.5f;
+
+        if (ltRtBoth && !_ltRtBothPrevFrame)
+            TryStartCharging();
+
+        if (!ltRtBoth && _ltRtBothPrevFrame && isCharging && ltAxis > 0.5f)
+        {
+            // RT released while LT still held → fire
+            if (chargeEffect != null) chargeEffect.SetActive(false);
+            FireRailgun();
+        }
+
+        _ltRtBothPrevFrame = ltRtBoth;
     }
 
     private void TryStartCharging()
@@ -124,7 +145,54 @@ public class Railgun : WeaponBase
         if (audioSource != null && chargeSound != null)
             audioSource.PlayOneShot(chargeSound);
 
+        _chargeRumbleCoroutine = StartCoroutine(ChargeRumble());
+
         Debug.Log("[Railgun] Charging...");
+    }
+
+    // --- Haptics ---
+
+    private IEnumerator ChargeRumble()
+    {
+        var gamepad = Gamepad.current;
+        if (gamepad == null) yield break;
+
+        while (isCharging)
+        {
+            float t = Mathf.Clamp01((Time.time - chargeStartTime) / chargeTime);
+            // Left motor: low-frequency rumble escalates 0.05 → 0.55
+            // Right motor: high-frequency buzz escalates 0.1 → 0.4
+            gamepad.SetMotorSpeeds(Mathf.Lerp(0.05f, 0.55f, t), Mathf.Lerp(0.1f, 0.4f, t));
+            yield return null;
+        }
+
+        StopChargeRumble();
+    }
+
+    private void StopChargeRumble()
+    {
+        if (_chargeRumbleCoroutine != null)
+        {
+            StopCoroutine(_chargeRumbleCoroutine);
+            _chargeRumbleCoroutine = null;
+        }
+        Gamepad.current?.SetMotorSpeeds(0f, 0f);
+    }
+
+    private IEnumerator FireRumble()
+    {
+        var gamepad = Gamepad.current;
+        if (gamepad == null) yield break;
+
+        // Sharp full-power kick for 0.15 s
+        gamepad.SetMotorSpeeds(1f, 1f);
+        yield return new WaitForSeconds(0.15f);
+
+        // Decay to medium rumble for another 0.25 s (recoil echo)
+        gamepad.SetMotorSpeeds(0.4f, 0.2f);
+        yield return new WaitForSeconds(0.25f);
+
+        gamepad.SetMotorSpeeds(0f, 0f);
     }
 
     private void SetupLineRenderer()
@@ -155,6 +223,9 @@ public class Railgun : WeaponBase
     {
         isCharging = false;
         lastFireTime = Time.time;
+
+        StopChargeRumble();
+        StartCoroutine(FireRumble());
 
         if (audioSource != null && fireSound != null)
             audioSource.PlayOneShot(fireSound);

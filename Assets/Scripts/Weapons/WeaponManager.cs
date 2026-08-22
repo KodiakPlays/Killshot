@@ -18,6 +18,8 @@ public class WeaponManager : MonoBehaviour
     [SerializeField] private float minPowerForWeapons = 0.1f;
     
     private WeaponSlot currentWeapon;
+    public GameObject targetingReticlePrefab; // Assign in Inspector
+    private GameObject activeReticle;
     private float displayRefreshTimer;
     private const float DisplayRefreshInterval = 0.1f;
 
@@ -52,6 +54,19 @@ public class WeaponManager : MonoBehaviour
                     weaponSlots[i].slotName = $"{weaponSlots[i].weaponType} {i + 1}";
                 }
             }
+        }
+    }
+
+    public void SetTargetingReticle(GameObject reticlePrefab)
+    {
+        if (activeReticle != null)
+        {
+            Destroy(activeReticle);
+        }
+
+        if (reticlePrefab != null)
+        {
+            activeReticle = Instantiate(reticlePrefab, transform);
         }
     }
 
@@ -144,13 +159,29 @@ public class WeaponManager : MonoBehaviour
         if (!currentWeapon.weaponInstance.CanFire())
             return false;
 
-        // Special handling for LaserWeapon with power requirements
-        if (currentWeapon.weaponInstance is LaserWeapon laserWeapon)
-            return laserWeapon.TryFire(weaponPowerEfficiency);
-
-        // Standard weapon firing
+        // Standard weapon firing (BroadsideCannon also auto-fires in Update)
         currentWeapon.weaponInstance.Fire(target);
+
+        switch (currentWeapon.weaponType)
+        {
+            case WeaponType.PointDefense:ControllerHaptics.PDCFired();         break;
+            case WeaponType.Macrocannon: ControllerHaptics.MacrocannonFired(); break;
+            case WeaponType.Missile:     ControllerHaptics.MissileFired();     break;
+            case WeaponType.BoardingPod: ControllerHaptics.BoardingPodFired(); break;
+            case WeaponType.Broadside:   ControllerHaptics.BroadsideFired();   break;
+            // Laser and Railgun handle their own haptics
+        }
+
         return true;
+    }
+
+    /// <summary>
+    /// Convenience overload to fire the active weapon at a Transform target.
+    /// </summary>
+    public bool FireActiveWeapon(Transform targetTransform, float weaponPowerEfficiency = 1f)
+    {
+        if (targetTransform == null) return false;
+        return FireActiveWeapon(targetTransform.position, weaponPowerEfficiency);
     }
 
     /// <summary>

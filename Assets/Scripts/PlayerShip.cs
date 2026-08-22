@@ -14,6 +14,11 @@ public class PlayerShip : MonoBehaviour, IDamageable
     [Header("Engine Power Settings")]
     [SerializeField] private float enginePowerDrainRate = 0.2f; // Engine power bars drained per second at full speed (100 units/s)
 
+    [Header("Hyperspeed Settings")]
+    [SerializeField] private float hyperspeedEngineThreshold = 0.8f;  // Min engine efficiency (0-1) required to engage hyperspeed
+    [SerializeField] private float hyperspeedSpeedMultiplier = 4f;    // Speed multiplier while in hyperspeed
+    [SerializeField] private float hyperspeedDrainRate = 2f;          // Engine bars drained per second (exceeds reactor regen)
+
     [Header("Drift Settings")]
     [SerializeField] private float driftCompensationRate = 8f;      // Lateral correction strength (units/s), scaled by stability ratio
     [SerializeField] private float maxLateralDrift = 40f;            // Maximum lateral drift speed (units/s)
@@ -22,11 +27,14 @@ public class PlayerShip : MonoBehaviour, IDamageable
     [Header("Camera Settings")]
     [SerializeField] private Transform cameraTransform; // Reference to the camera transform
     [SerializeField] private Vector3 cameraOffset = new Vector3(0, 10, -15); // Camera offset from ship
+    [SerializeField] private float maxCameraRollOffset = 4f;   // Max extra degrees the camera tilts when turning
+    [SerializeField] private float cameraRollSpeed = 5f;       // How quickly the camera roll offset ramps up / springs back
 
     // Systems
     private PowerManager powerManager;
     private ShipStability stability;
     private WeaponManager weaponManager;
+    private TargetingSystem targetingSystem;
     private HullSystem hullSystem;
     private InternalSubsystems internalSubsystems;
     
@@ -38,9 +46,14 @@ public class PlayerShip : MonoBehaviour, IDamageable
     
     // Camera state
     private Vector3 targetCameraPosition; // Target camera position
+    private float cameraRollOffset = 0f;  // Current additional roll applied to camera when turning
     
     // Engine drain accumulator
     private float engineDrainAccumulator = 0f;
+
+    // Hyperspeed state
+    private bool isInHyperspeed = false;
+    private float hyperspeedDrainAccumulator = 0f;
 
     // Dodge state
     private bool isDodging; // Whether ship is currently dodging
@@ -56,8 +69,17 @@ public class PlayerShip : MonoBehaviour, IDamageable
 
 	private Rigidbody rb;
 
+    // Controller d-pad edge detection
+    private bool _dpadUpPrev    = false;
+    private bool _dpadDownPrev  = false;
+    private bool _dpadLeftPrev  = false;
+    private bool _dpadRightPrev = false;
+
     // Railgun standby state
     public bool IsOnStandby { get; private set; }
+
+    // Hyperspeed state
+    public bool IsInHyperspeed => isInHyperspeed;
 
     private void Awake()
     {
@@ -105,6 +127,8 @@ public class PlayerShip : MonoBehaviour, IDamageable
             weaponManager = gameObject.AddComponent<WeaponManager>();
         }
 
+        targetingSystem = FindObjectOfType<TargetingSystem>();
+
         // Initialize camera reference if not set
         if (cameraTransform == null)
         {
@@ -142,6 +166,7 @@ public class PlayerShip : MonoBehaviour, IDamageable
         if (hullSystem == null) return;
         HullSide side = hullSystem.DetermineHitSide(hitDirection);
         hullSystem.TakeDamage(side, damage);
+        ControllerHaptics.TookDamage();
     }
 
     /// <summary>
@@ -216,30 +241,81 @@ public class PlayerShip : MonoBehaviour, IDamageable
         if (Input.GetKeyDown(KeyCode.Alpha1)) // Engine power
         {
             powerManager.ToggleSystemState(powerManager.engines);
+            ControllerHaptics.PowerToggled();
         }
         if (Input.GetKeyDown(KeyCode.Alpha2)) // Arms power
         {
             powerManager.ToggleSystemState(powerManager.arms);
+            ControllerHaptics.PowerToggled();
         }
         if (Input.GetKeyDown(KeyCode.Alpha3)) // Sig power
         {
             powerManager.ToggleSystemState(powerManager.sig);
+            ControllerHaptics.PowerToggled();
         }
 
-        // Handle dodge input - Q goes left, E goes right
-        if (Input.GetKeyDown(KeyCode.Q))
+        // Emergency Vent — V: vent all systems immediately
+        if (Input.GetKeyDown(KeyCode.V))
         {
-            TryDodge(-1f); // Left dodge
-        }
-        else if (Input.GetKeyDown(KeyCode.E))
-        {
-            TryDodge(1f); // Right dodge
+            powerManager.EmergencyVent();
+            ControllerHaptics.Instance?.Pulse(0.60f, 0.30f, 0.25f);
         }
 
-        // Handle weapon firing
-        if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.LeftControl))
+        // Black Alert — N: vent all, then auto-engage Engines + Arms
+        if (Input.GetKeyDown(KeyCode.N))
         {
-            TryFireWeapons();
+            powerManager.BlackAlert();
+            ControllerHaptics.Instance?.Pulse(0.80f, 0.50f, 0.40f);
+        }
+
+        // Hyperspeed — Left Shift to engage / disengage
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            float engineEff = powerManager.GetSystemEfficiency("engines");
+            if (!isInHyperspeed && engineEff > hyperspeedEngineThreshold)
+            {
+                isInHyperspeed = true;
+                Debug.Log("[PlayerShip] Hyperspeed engaged.");
+            }
+            else if (isInHyperspeed)
+            {
+                isInHyperspeed = false;
+                hyperspeedDrainAccumulator = 0f;
+                Debug.Log("[PlayerShip] Hyperspeed disengaged.");
+            }
+            else
+            {
+                Debug.Log($"[PlayerShip] Cannot engage hyperspeed — engine power at {engineEff * 100f:F0}% (need > {hyperspeedEngineThreshold * 100f:F0}%).");
+            }
+        }
+
+        // Auto-disengage when engine power is fully depleted
+        if (isInHyperspeed && powerManager.GetSystemEfficiency("engines") <= 0f)
+        {
+            isInHyperspeed = false;
+            hyperspeedDrainAccumulator = 0f;
+            ControllerHaptics.HyperspeedLost();
+            Debug.Log("[PlayerShip] Hyperspeed lost — engine power depleted.");
+        }
+
+        // Dodge and weapons are unavailable during hyperspeed
+        if (!isInHyperspeed)
+        {
+            // Handle dodge input - Q goes left, E goes right
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                TryDodge(-1f); // Left dodge
+            }
+            else if (Input.GetKeyDown(KeyCode.E))
+            {
+                TryDodge(1f); // Right dodge
+            }
+
+            // Handle weapon firing
+            if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.LeftControl))
+            {
+                TryFireWeapons();
+            }
         }
 
         // Testing controls
@@ -247,6 +323,107 @@ public class PlayerShip : MonoBehaviour, IDamageable
         {
             testMode_IgnoreWeaponPower = !testMode_IgnoreWeaponPower;
             Debug.Log($"Weapon Power Override: {(testMode_IgnoreWeaponPower ? "ENABLED" : "DISABLED")}");
+        }
+
+        // === Xbox Controller Input ===
+        float rtAxis = Input.GetAxis("RightTrigger");
+        float ltAxis = Input.GetAxis("LeftTrigger");
+        bool rtPressed = rtAxis > 0.5f;
+        bool ltPressed = ltAxis > 0.5f;
+
+        // B button (joystick button 1): tap to toggle boost / hyperspeed
+        if (Input.GetKeyDown(KeyCode.JoystickButton1))
+        {
+            float engineEff = powerManager.GetSystemEfficiency("engines");
+            if (!isInHyperspeed)
+            {
+                if (engineEff > hyperspeedEngineThreshold)
+                {
+                    isInHyperspeed = true;
+                    ControllerHaptics.HyperspeedOn();
+                    Debug.Log("[PlayerShip] Hyperspeed engaged (B).");
+                }
+                else
+                {
+                    Debug.Log($"[PlayerShip] Cannot engage hyperspeed — engine power at {engineEff * 100f:F0}%.");
+                }
+            }
+            else
+            {
+                isInHyperspeed = false;
+                hyperspeedDrainAccumulator = 0f;
+                ControllerHaptics.HyperspeedOff();
+                Debug.Log("[PlayerShip] Hyperspeed disengaged (B).");
+            }
+        }
+
+        // Fire: RT (LT+RT is reserved for railgun charging in Railgun.cs)
+        if (!isInHyperspeed && rtPressed && !ltPressed)
+        {
+            TryFireWeapons();
+        }
+
+        // LB (joystick button 4): dodge left
+        if (!isInHyperspeed && Input.GetKeyDown(KeyCode.JoystickButton4))
+        {
+            TryDodge(-1f);
+        }
+
+        // RB (joystick button 5): dodge right
+        if (!isInHyperspeed && Input.GetKeyDown(KeyCode.JoystickButton5))
+        {
+            TryDodge(1f);
+        }
+
+        // Y button (joystick button 3): cycle weapons
+        if (Input.GetKeyDown(KeyCode.JoystickButton3))
+        {
+            weaponManager?.SwitchToNextWeapon();
+            ControllerHaptics.WeaponSwitched();
+        }
+
+        // D-Pad: direct power system toggles
+        float dpadX = Input.GetAxis("DPadX");
+        float dpadY = Input.GetAxis("DPadY");
+        bool dpadUp    = dpadY >  0.5f;
+        bool dpadDown  = dpadY < -0.5f;
+        bool dpadLeft  = dpadX < -0.5f;
+        bool dpadRight = dpadX >  0.5f;
+
+        // D-Pad → the 4 power-panel toggles: Up=ENG, Down=WEP, Left=CRW, Right=SEN
+        if (dpadUp    && !_dpadUpPrev)    { powerManager.ToggleDrawState(powerManager.engines); ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Engines"); }
+        if (dpadDown  && !_dpadDownPrev)  { powerManager.ToggleDrawState(powerManager.arms);    ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Arms"); }
+        if (dpadLeft  && !_dpadLeftPrev)  { powerManager.ToggleDrawState(powerManager.support);  ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Support (CRW)"); }
+        if (dpadRight && !_dpadRightPrev) { powerManager.ToggleDrawState(powerManager.sig);      ControllerHaptics.PowerToggled(); Debug.Log("[PlayerShip] Toggled Sig (SEN)"); }
+
+        _dpadUpPrev    = dpadUp;
+        _dpadDownPrev  = dpadDown;
+        _dpadLeftPrev  = dpadLeft;
+        _dpadRightPrev = dpadRight;
+
+        // A button (joystick button 0): toggle Support
+        if (Input.GetKeyDown(KeyCode.JoystickButton0))
+        {
+            powerManager.ToggleSystemState(powerManager.support);
+            ControllerHaptics.PowerToggled();
+            Debug.Log("[PlayerShip] Toggled Support");
+        }
+
+        // X button (joystick button 2): cycle world-grid zoom — 10x → 100x → 1000x
+        if (Input.GetKeyDown(KeyCode.JoystickButton2))
+        {
+            int nextZoom = (UIController.Instance != null)
+                ? ((UIController.Instance.GetWorldZoom() + 1) % 3)
+                : 0;
+            UIController.Instance?.WorldGridZoom(nextZoom);
+            Debug.Log($"[PlayerShip] Radar zoom → {new int[]{10, 100, 1000}[nextZoom]}x");
+        }
+
+        // Select button (joystick button 6): Emergency Vent
+        if (Input.GetKeyDown(KeyCode.JoystickButton6))
+        {
+            powerManager.EmergencyVent();
+            ControllerHaptics.Instance?.Pulse(0.60f, 0.30f, 0.25f);
         }
     }
 
@@ -265,7 +442,8 @@ public class PlayerShip : MonoBehaviour, IDamageable
             // Calculate target position based on ship's right vector
             Vector3 dodgeOffset = transform.right * direction * dodgeDistance;
             dodgeTargetPosition = dodgeStartPosition + dodgeOffset;
-            
+
+            ControllerHaptics.DodgeExecuted();
             Debug.Log($"Emergency dodge {(direction < 0 ? "LEFT" : "RIGHT")} - Stability: {stability.GetCurrentStability():F1}%");
         }
         else if (isDodging)
@@ -294,7 +472,16 @@ public class PlayerShip : MonoBehaviour, IDamageable
             // Normal power check - can only fire if weapons have some power (minimum 20% for emergency firing)
             if (weaponPower > 0.2f)
             {
-                weaponManager.FireActiveWeapon(transform.position + transform.up * 1000f, weaponPower);
+                // If a target is locked by the targeting system, fire at that Transform
+                Transform locked = targetingSystem != null ? targetingSystem.GetLockedTargetTransform() : null;
+                if (locked != null)
+                {
+                    weaponManager.FireActiveWeapon(locked, weaponPower);
+                }
+                else
+                {
+                    weaponManager.FireActiveWeapon(transform.position + transform.up * 1000f, weaponPower);
+                }
             }
             else
             {
@@ -351,19 +538,27 @@ public class PlayerShip : MonoBehaviour, IDamageable
             // S decelerates or accelerates backward
             thrustInput = -1f;
         }
-        // No input = maintain current speed (no deceleration)
+
+        // Controller left stick Y for thrust (only if no keyboard input)
+        if (thrustInput == 0f)
+        {
+            float stickThrust = Input.GetAxis("ControllerThrust");
+            if (Mathf.Abs(stickThrust) > 0.1f)
+                thrustInput = stickThrust;
+        }
         
         if (enginePower <= 0f)
         {
-            // No engine power - ship decelerates to a stop
-            targetSpeed = 0f;
+            // No engine power - ship crawls at 5% max speed to hint the player should power engines
+            targetSpeed = thrustInput < -0.01f ? 0f : 5f;
         }
         else if (Mathf.Abs(thrustInput) > 0.01f)
         {
             // Calculate target speed based on thrust direction
             // Apply subsystem debuffs per GDD: engine damage reduces max speed
             float subsystemSpeedMult = internalSubsystems != null ? internalSubsystems.GetSpeedMultiplier() : 1f;
-            float maxThrust = 100f * enginePower * subsystemSpeedMult; // Engine power + subsystem damage affects max thrust
+            float hyperspeedMult = isInHyperspeed ? hyperspeedSpeedMultiplier : 1f;
+            float maxThrust = 100f * enginePower * subsystemSpeedMult * hyperspeedMult; // Engine power + subsystem damage affects max thrust
             
             if (thrustInput > 0)
             {
@@ -391,36 +586,14 @@ public class PlayerShip : MonoBehaviour, IDamageable
             targetSpeed = currentSpeed;
         }
         
-        // --- Drift Physics ---
-        // Decompose the existing Rigidbody velocity into ship-local components so lateral
-        // momentum (drift) persists between frames rather than being force-aligned each tick.
-        Vector3 existingVelocity = rb.linearVelocity;
-        float forwardComponent = Vector3.Dot(existingVelocity, transform.up);
-        float lateralComponent = Vector3.Dot(existingVelocity, transform.right);
-        lateralComponent = Mathf.Clamp(lateralComponent, -maxLateralDrift, maxLateralDrift);
-
-        // Apply thrust: push forward component toward targetSpeed
+        // --- Forward-only movement ---
+        // Speed is smoothly ramped toward targetSpeed; velocity is always locked to the
+        // ship's facing direction (transform.up). Turning immediately redirects movement —
+        // the ship never slides sideways.
         float speedChangeRate = rateOfAcceleration * Time.fixedDeltaTime;
-        forwardComponent = Mathf.MoveTowards(forwardComponent, targetSpeed, speedChangeRate);
-        currentSpeed = forwardComponent;
+        currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, speedChangeRate);
 
-        // Drift compensation: stability ratio (0–1) scales how aggressively lateral drift is
-        // corrected. Always active — full stability = fast correction, zero stability = free drift.
-        float stabilityRatio = stability.GetStabilityPercentage();
-        float lateralCorrection = driftCompensationRate * stabilityRatio * Time.fixedDeltaTime;
-        // Add a small velocity-proportional term so large drifts correct proportionally faster
-        lateralCorrection += driftCompensationRate * stabilityRatio * Mathf.Abs(lateralComponent) * 0.05f * Time.fixedDeltaTime;
-        lateralComponent = Mathf.MoveTowards(lateralComponent, 0f, lateralCorrection);
-
-        // Passive stability drain from uncompensated lateral drift — keeps stability always relevant
-        if (Mathf.Abs(lateralComponent) > 1f)
-        {
-            float driftDrain = driftStabilityDrainRate * Mathf.Abs(lateralComponent) * Time.fixedDeltaTime;
-            stability.ApplyStabilityDrain(driftDrain);
-        }
-
-        // Reconstruct velocity from forward + lateral components
-        rb.linearVelocity = transform.up * forwardComponent + transform.right * lateralComponent;
+        rb.linearVelocity = transform.up * currentSpeed;
 
         // Handle dodge movement (smooth positional interpolation) — velocity is handled above
         if (isDodging)
@@ -466,16 +639,24 @@ public class PlayerShip : MonoBehaviour, IDamageable
             stability.CalculateTurnStabilityDrain(Mathf.Abs(rotationThisFrame), Mathf.Abs(currentSpeed), stabilityDecayMult);
         }
 
-        // Speed-based engine power drain — higher speed consumes engine bars faster
-        if (Mathf.Abs(currentSpeed) > 1f && enginePower > 0f)
+        // Engine power is NOT depleted by travelling — only hyperspeed drains it.
+
+        // Hyperspeed drain — outpaces reactor regeneration, forcing power depletion over time
+        if (isInHyperspeed)
         {
-            float speedRatio = Mathf.Abs(currentSpeed) / 100f;
-            engineDrainAccumulator += speedRatio * enginePowerDrainRate * Time.fixedDeltaTime;
-            while (engineDrainAccumulator >= 1f)
+            hyperspeedDrainAccumulator += hyperspeedDrainRate * Time.fixedDeltaTime;
+            while (hyperspeedDrainAccumulator >= 1f)
             {
-                engineDrainAccumulator -= 1f;
+                hyperspeedDrainAccumulator -= 1f;
                 powerManager.RemoveEnginesPower();
             }
+
+            // Continuous low rumble while in hyperspeed
+            ControllerHaptics.SetContinuous(0.20f, 0.10f);
+        }
+        else
+        {
+            ControllerHaptics.StopAll();
         }
 
         // Camera locked to ship - follows position and rotation immediately
@@ -483,19 +664,33 @@ public class PlayerShip : MonoBehaviour, IDamageable
         {
             // Update target camera position to follow ship
             targetCameraPosition = transform.position + cameraOffset;
-            
+
             // Follow position immediately
             cameraTransform.position = targetCameraPosition;
-            
-            // Lock camera rotation to ship rotation immediately
+
+            // --- Turn-feel camera roll ---
+            // Normalise currentTurnSpeed against the max possible turn speed so the offset
+            // is always in the [-1, 1] range regardless of turnRate setting.
+            float maxPossibleTurn = turnRate; // degrees/s — same scale as currentTurnSpeed
+            float normalisedTurn  = maxPossibleTurn > 0f ? Mathf.Clamp(currentTurnSpeed / maxPossibleTurn, -1f, 1f) : 0f;
+
+            // Target roll: lean into the turn direction (negative because ship turns CW when roll is negative in Z)
+            float targetRoll = -normalisedTurn * maxCameraRollOffset;
+
+            // Smoothly move toward the target roll offset
+            cameraRollOffset = Mathf.Lerp(cameraRollOffset, targetRoll, cameraRollSpeed * Time.fixedDeltaTime);
+
+            // Apply ship rotation + roll offset to camera
             Vector3 cameraEuler = cameraTransform.eulerAngles;
-            cameraEuler.z = transform.eulerAngles.z;
+            cameraEuler.z = transform.eulerAngles.z + cameraRollOffset;
             cameraTransform.eulerAngles = cameraEuler;
 
+            // Pass the *ship's* true rotation to the UI (not the offset angle) so the compass stays accurate
+            float shipZ = transform.eulerAngles.z;
             if (UIController.Instance != null)
             {
-                UIController.Instance.UpdateCompass(cameraEuler.z);
-                UIController.Instance.WorldGridRotUpdate(cameraEuler.z);
+                UIController.Instance.UpdateCompass(shipZ);
+                UIController.Instance.WorldGridRotUpdate(shipZ);
                 UIController.Instance.WorldGridLocUpdate(cameraTransform.position);
             }
         }
