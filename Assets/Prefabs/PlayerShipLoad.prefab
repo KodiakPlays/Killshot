@@ -168,6 +168,7 @@ Transform:
   m_Children:
   - {fileID: 4967368261941185482}
   - {fileID: 1602577104197971629}
+  - {fileID: 8000691604585877886}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1276706859358193990
@@ -236,15 +237,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4745310939494401931, guid: 4f902600fa2fb8945b759d10ff589b16, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: -4745310939494401931, guid: 4f902600fa2fb8945b759d10ff589b16, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: -4745310939494401931, guid: 4f902600fa2fb8945b759d10ff589b16, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: -4745310939494401931, guid: 4f902600fa2fb8945b759d10ff589b16, type: 3}
       propertyPath: m_LocalPosition.x
@@ -262,10 +263,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: StarWolf_Battleship
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 4f902600fa2fb8945b759d10ff589b16, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4779703150609519241, guid: 4f902600fa2fb8945b759d10ff589b16, type: 3}
       propertyPath: m_Mesh
       value: 
-      objectReference: {fileID: -1370759931307350873, guid: 4f902600fa2fb8945b759d10ff589b16, type: 3}
+      objectReference: {fileID: -1618372970813015036, guid: f4f93ba40a4fa0a44a60b0d1a1389bfa, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -275,4 +280,78 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4f902600fa2fb8945b759d10ff589b16, type: 3}
   m_PrefabInstance: {fileID: 1276706859358193990}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &7530744128044791445
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 92308768656592685}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+      propertyPath: m_Name
+      value: StarWolf_Destroyer_PlayerShip
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+--- !u!4 &8000691604585877886 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
+  m_PrefabInstance: {fileID: 7530744128044791445}
   m_PrefabAsset: {fileID: 0}

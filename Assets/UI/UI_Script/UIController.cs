@@ -109,6 +109,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private GameObject radarBogeyGO;
     [SerializeField] private Image radarImg;
     [SerializeField] private float radarDegreeTest;
+    [SerializeField] private RectTransform turnRadias;
 
     [Header("Weapon Screen")]
     [SerializeField] private Shader weaponScreenSha;
@@ -191,6 +192,9 @@ public class UIController : MonoBehaviour
 
     void Start()
     {
+        bogieTabInt = 1;
+        BtnBogieTab();
+
         // Auto-find player ship if not assigned in inspector
         if (shipPlayer == null)
         {
@@ -220,7 +224,6 @@ public class UIController : MonoBehaviour
 
         ScanTargetLoc(0);
         ScanTargetSize(0);
-        BtnBogieTab();
 
         GlitchStart();
 
@@ -887,11 +890,29 @@ public class UIController : MonoBehaviour
                 continue;
             }
 
+<<<<<<< Updated upstream
            uiPowerMetClass[i].Charge(false);
            StopCoroutine(powerAnimCoroutine[i]);
         }
 
         StartCoroutine(VentAnim());
+=======
+            // Reset switch sprite to "off" for every button
+            if (i <= btnPowerBoolImage.Count)
+            {
+                btnPowerBoolImage[i].sprite = uiSprite[0];
+            }
+        }
+
+        // Update power node visuals to reflect the new vent state
+        VentNodeCheck();
+
+        // Delegate the actual power bleed to PowerManager (gradual, rate-based)
+        if (powerManager != null)
+        {
+            powerManager.VentAllSystems();
+        }
+>>>>>>> Stashed changes
     }
 
     private IEnumerator VentAnim()
@@ -1016,6 +1037,11 @@ public class UIController : MonoBehaviour
     public void UpdateCompass(float angle)
     {
         compassRect.localRotation = Quaternion.Euler(0, 0, angle);
+    }
+
+    public void UpdateTurnRadias(float angle)
+    {
+        turnRadias.localRotation = Quaternion.Euler(0, 0, angle);
     }
 
     public void UpdateSpeedometer(float speed)
@@ -1420,7 +1446,7 @@ public class UIController : MonoBehaviour
             }
 
             shipiconGO.SetActive(true);
-            shipiconGO.transform.localScale = new Vector3(2f, 2f, 2f);
+            shipiconGO.transform.localScale = new Vector3(10f, 10f, 10f);
             shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = false;
 
             worldZoom = 1;
@@ -1457,7 +1483,7 @@ public class UIController : MonoBehaviour
             }
 
             shipiconGO.SetActive(true);
-            shipiconGO.transform.localScale = new Vector3(20f, 20f, 20f);
+            shipiconGO.transform.localScale = new Vector3(100f, 100f, 100f);
             shipPlayer.GetChild(0).gameObject.GetComponent<MeshRenderer>().enabled = false;
 
             worldZoom = 2;
@@ -2011,6 +2037,7 @@ public class UIController : MonoBehaviour
             _ => null
         };
     }
+
 
     private void BtnTunerTab(Transform tran, int cur, int max)
     {
