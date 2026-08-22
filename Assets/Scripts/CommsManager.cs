@@ -29,18 +29,15 @@ public class CommsManager : MonoBehaviour
     private float currentFrequency = 1.0f;
     private bool isIntercepting = false;
     private List<string> interceptedMessages = new List<string>();
-    private PlayerShip playerShip;
 
     private void Start()
     {
         UIController.Instance?.ShowCommsPanel(false);
-        playerShip = FindObjectOfType<PlayerShip>();
     }
 
     public void ReceiveSignal(Signal signal)
     {
         if (isIntercepting) return;
-        if (playerShip != null && playerShip.IsInHyperspeed) return; // Comms unavailable at hyperspeed
         
         currentSignal = signal;
         isIntercepting = true;
@@ -52,7 +49,6 @@ public class CommsManager : MonoBehaviour
     private void Update()
     {
         if (!isIntercepting) return;
-        if (playerShip != null && playerShip.IsInHyperspeed) return; // Block comms input during hyperspeed
 
         // Band selection with number keys 1,2,3
         if (Input.GetKeyDown(KeyCode.Alpha1)) SwitchBand(1);

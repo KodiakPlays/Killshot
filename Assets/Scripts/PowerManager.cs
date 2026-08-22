@@ -35,13 +35,15 @@ public class PowerManager : MonoBehaviour
     [Header("Power Settings")]
     [SerializeField] private float powerFillRate = 0.5f; // bars/sec base rate, divided evenly across active systems
     [SerializeField] private float ventRate = 1f;        // 1 bar per second
+    [SerializeField] private float reactorRegenRate = 1f; // bars/sec the reactor passively regenerates
     [SerializeField] private int reactorMaxPower = 15;
-    [SerializeField] private float currentReactorPower = 15f;
+    [SerializeField] private int currentReactorPower = 15;
 
     private PowerSystem[] allSystems;
     private List<PowerSystem> activeSystems = new List<PowerSystem>();
     private Dictionary<PowerSystem, float> powerAccumulator = new Dictionary<PowerSystem, float>();
-    private bool reactorOnline = true; // false during railgun post-fire reboot; blocks drawing
+    private float reactorRegenAccumulator = 0f;
+    private bool reactorOnline = true; // false during railgun post-fire reboot; blocks passive regen
     private InternalSubsystems internalSubsystems;
 
     private void Awake()
@@ -75,12 +77,28 @@ public class PowerManager : MonoBehaviour
 
     private void UpdatePowerSystems()
     {
-        // Reactor power is clamped if internal subsystems are damaged
-        if (internalSubsystems != null)
+        // Reactor passively regenerates only when online
+        if (reactorOnline)
         {
-            int regenMax = Mathf.RoundToInt(reactorMaxPower * internalSubsystems.GetReactorMultiplier());
-            if (currentReactorPower > regenMax)
-                currentReactorPower = regenMax;
+            int regenMax = reactorMaxPower;
+            if (internalSubsystems != null)
+                regenMax = Mathf.RoundToInt(reactorMaxPower * internalSubsystems.GetReactorMultiplier());
+
+            if (currentReactorPower < regenMax)
+            {
+                reactorRegenAccumulator += reactorRegenRate * Time.deltaTime;
+                while (reactorRegenAccumulator >= 1f)
+                {
+                    reactorRegenAccumulator -= 1f;
+                    currentReactorPower = Mathf.Min(currentReactorPower + 1, regenMax);
+                }
+            }
+            else
+            {
+                reactorRegenAccumulator = 0f;
+                if (currentReactorPower > regenMax)
+                    currentReactorPower = regenMax;
+            }
         }
 
         // Separate drawing/finishing systems from venting systems
@@ -113,24 +131,16 @@ public class PowerManager : MonoBehaviour
             {
                 float rate = system.finishingCurrentBar ? powerFillRate : baseRate;
 
-                // Only allow drawing if reactor is online
-                if (reactorOnline && currentReactorPower >= 0.5f && system.currentPower < system.maxPower)
+                if (currentReactorPower > 0 && system.currentPower < system.maxPower)
                 {
                     powerAccumulator[system] += rate * Time.deltaTime;
                     if (powerAccumulator[system] >= 1f)
                     {
                         powerAccumulator[system] = 0f;
                         system.currentPower++;
-                        currentReactorPower -= 0.5f;
+                        currentReactorPower--;
                         if (system.finishingCurrentBar)
                             system.finishingCurrentBar = false;
-                        // Auto-stop drawing when the system is full; the UI switch will flip off automatically
-                        if (system.currentState == PowerState.Draw && system.currentPower >= system.maxPower)
-                        {
-                            system.currentState = PowerState.Standby;
-                            system.readyToVent = false;
-                            powerAccumulator[system] = 0f;
-                        }
                     }
                 }
                 else if (system.finishingCurrentBar)
@@ -156,27 +166,19 @@ public class PowerManager : MonoBehaviour
                 }
                 else
                 {
-                    // Second standby (after draw) → start venting, unless already at full power
-                    if (system.currentPower >= system.maxPower)
-                    {
-                        // System is full — reset the vent flag so the next press draws again
-                        system.readyToVent = false;
-                    }
-                    else
-                    {
-                        system.currentState = PowerState.Vent;
-                        system.readyToVent = false;
-                        powerAccumulator[system] = 0f;
-                    }
+                    // Second standby (after draw) → start venting; cannot be cancelled
+                    system.currentState = PowerState.Vent;
+                    system.readyToVent = false;
+                    powerAccumulator[system] = 0f;
                 }
                 break;
 
             case PowerState.Draw:
-                // Stop drawing instantly
+                // Stop drawing; finish the current partial bar then hold in standby
                 system.currentState = PowerState.Standby;
                 system.readyToVent = true;
-                system.finishingCurrentBar = false;
-                powerAccumulator[system] = 0f;
+                if (powerAccumulator[system] > 0f)
+                    system.finishingCurrentBar = true;
                 break;
 
             case PowerState.Vent:
@@ -195,9 +197,8 @@ public class PowerManager : MonoBehaviour
         {
             system.currentState = PowerState.Standby;
             system.readyToVent = false; // reset so next button press starts Draw, not Vent
-            system.finishingCurrentBar = false;
-            if (powerAccumulator.ContainsKey(system))
-                powerAccumulator[system] = 0f;
+            if (powerAccumulator.ContainsKey(system) && powerAccumulator[system] > 0f)
+                system.finishingCurrentBar = true;
         }
         else if (system.currentState == PowerState.Standby)
         {
@@ -216,7 +217,7 @@ public class PowerManager : MonoBehaviour
             {
                 powerAccumulator[system] = 0f;
                 system.currentPower--;
-                currentReactorPower += 0.5f;
+                currentReactorPower++;
             }
         }
         else
@@ -240,8 +241,8 @@ public class PowerManager : MonoBehaviour
     // Arms: -2.5% cannon load time per bonus bar
     public float GetCannonLoadTimeMultiplier() { return 1f - BonusBars(arms) * 0.025f; }
 
-    // Arms/Weapons: +10% boarding pod range per bonus bar
-    public float GetBoardingPodRangeMultiplier() { return 1f + BonusBars(arms) * 0.10f; }
+    // Bay: +10% boarding pod range per bonus bar
+    public float GetBoardingPodRangeMultiplier() { return 1f + BonusBars(bay) * 0.10f; }
 
     // Support: -5% ability cooldown per bonus bar
     public float GetAbilityCooldownMultiplier() { return 1f - BonusBars(support) * 0.05f; }
@@ -262,10 +263,10 @@ public class PowerManager : MonoBehaviour
 
     public void AddPower(PowerSystem system)
     {
-        if (reactorOnline && currentReactorPower >= 0.5f && system.currentPower < system.maxPower)
+        if (currentReactorPower > 0 && system.currentPower < system.maxPower)
         {
             system.currentPower++;
-            currentReactorPower -= 0.5f;
+            currentReactorPower--;
         }
     }
 
@@ -274,7 +275,7 @@ public class PowerManager : MonoBehaviour
         if (system.currentPower > 0)
         {
             system.currentPower--;
-            currentReactorPower += 0.5f;
+            currentReactorPower++;
         }
     }
 
@@ -311,15 +312,14 @@ public class PowerManager : MonoBehaviour
     {
         int toDrain = Mathf.Min(bars, arms.currentPower);
         arms.currentPower -= toDrain;
-        currentReactorPower += toDrain * 0.5f;
+        currentReactorPower += toDrain;
     }
 
-    /// <summary>Instantly zeros all system power, returning it to the reactor. Reactor goes offline (used by railgun after firing). Call RebootReactor() to bring it back online.</summary>
+    /// <summary>Instantly zeros all system power AND the reactor (used by railgun after firing). Call RebootReactor() to bring it back online.</summary>
     public void DrainAllPowerInstantly()
     {
         foreach (var system in allSystems)
         {
-            currentReactorPower += system.currentPower * 0.5f;
             system.currentPower = 0;
             system.currentState = PowerState.Standby;
             system.readyToVent = false;
@@ -327,8 +327,9 @@ public class PowerManager : MonoBehaviour
             if (powerAccumulator.ContainsKey(system))
                 powerAccumulator[system] = 0f;
         }
-        currentReactorPower = Mathf.Min(currentReactorPower, reactorMaxPower);
-        // Reactor goes offline — ship systems go fully dark
+        // Drain reactor completely — ship goes fully dark
+        currentReactorPower = 0;
+        reactorRegenAccumulator = 0f;
         reactorOnline = false;
     }
 
@@ -340,6 +341,7 @@ public class PowerManager : MonoBehaviour
     public void RebootReactor()
     {
         reactorOnline = true;
+        reactorRegenAccumulator = 0f;
         // No systems are auto-engaged — manual startup required.
     }
 
@@ -358,28 +360,6 @@ public class PowerManager : MonoBehaviour
     }
 
     public void EmergencyVent() { VentAllSystems(); }
-
-    /// <summary>
-    /// Instantly zeros every system's power and returns it all to the reactor.
-    /// Unlike <see cref="DrainAllPowerInstantly"/>, the reactor itself is NOT drained
-    /// and stays online — the player can immediately start redirecting power.
-    /// All systems are placed into a clean Standby (no Draw, no Vent, no pending bars).
-    /// </summary>
-    public void EmergencyVentSystemsOnly()
-    {
-        foreach (var system in allSystems)
-        {
-            currentReactorPower += system.currentPower * 0.5f; // return power to reactor
-            system.currentPower = 0;
-            system.currentState = PowerState.Standby;
-            system.readyToVent = false;
-            system.finishingCurrentBar = false;
-            if (powerAccumulator.ContainsKey(system))
-                powerAccumulator[system] = 0f;
-        }
-        // Clamp to max in case of floating point drift
-        currentReactorPower = Mathf.Min(currentReactorPower, reactorMaxPower);
-    }
 
     public void BlackAlert()
     {
@@ -414,7 +394,7 @@ public class PowerManager : MonoBehaviour
         return GetSystemByName(systemName)?.maxPower ?? 0;
     }
 
-    public int GetReactorPower() { return Mathf.FloorToInt(currentReactorPower); }
+    public int GetReactorPower() { return currentReactorPower; }
 
     public int GetMaxReactorPower()
     {
@@ -429,7 +409,7 @@ public class PowerManager : MonoBehaviour
         if (system != null && system.currentPower > 0)
         {
             system.currentPower--;
-            currentReactorPower += 0.5f;
+            currentReactorPower++;
         }
     }
 

@@ -1,43 +1,69 @@
-# Starwolf — Short Code Reference
+# Starwolf — Codebase Documentation
 
-Scope: quick reference for the code structure and main systems. Simple, kept short.
+> **Scope:** All game scripts under `Assets/Scripts/` and the `UIController` (`Assets/UI/UI_Script/UIController.cs`).
 
-Core folders
-- `Assets/Scripts/` — game logic (PlayerShip, EnemyShip, GameManager, etc.)
-- `Assets/Scripts/Weapons/` — all weapons and projectiles (Railgun, Laser, Missile, Broadside, Macrocannon, PDC, BoardingPod)
-- `Assets/UI/UI_Script/` — UIController, BogieClass, UIPowerClass
-- `Assets/Prefabs/`, `Assets/Scenes/`, `Assets/Materials/` — art & scenes
-- `Assets/TestUIKeyControler.cs` — simple test driver (keyboard shortcuts)
+---
 
-Main systems (one-line descriptions)
-- `GameManager` (`Assets/Scripts/GameManager.cs`) — session bootstrap, spawns player/enemies, mission wiring.
-- `GameClock` (`Assets/Scripts/GameClock.cs`) — global mission time + pause handling.
-- `QuestSystem` (`Assets/Scripts/QuestSystem.cs`) — mission state machine (Locate → Eliminate → Exit).
-- `WorldBoundary` (`Assets/Scripts/WorldBoundary.cs`) — playable-area enforcement, desertion flow.
-- `PlayerShip` (`Assets/Scripts/PlayerShip.cs`) — movement, input, weapons interface, camera follow.
-- `PowerManager` (`Assets/Scripts/PowerManager.cs`) — reactor + five systems (Engines/Arms/Bay/Support/Sig).
-- `HullSystem` (`Assets/Scripts/HullSystem.cs`) & `InternalSubsystems` — quadrant health and internal damage mapping.
-- `ShipStability` (`Assets/Scripts/ShipStability.cs`) — stability drain/recover and dodge gating.
-- `Radar` / `RadarTarget` (`Assets/Scripts/Radar.cs`, `RadarTarget.cs`) — radar blips and UI integration.
-- `CommsManager` (`Assets/Scripts/CommsManager.cs`) — signal intercept mini-game.
-- Weapons: `WeaponManager`, `WeaponBase`, `Railgun`, `LaserWeapon`, `MissileLauncher`, `BroadsideCannon`, `Macrocannon`, `PointDefenseCanon`, `BoardingPod` (see `Assets/Scripts/Weapons/`).
+## Table of Contents
 
-UI
-- `UIController` (`Assets/UI/UI_Script/UIController.cs`) is the HUD singleton. Backend scripts push updates; UI does not poll game state.
+1. [Architecture Overview](#architecture-overview)
+2. [UIController — The UI Bridge](#uicontroller--the-ui-bridge)
+3. [Core Game Systems](#core-game-systems)
+   - [GameManager](#gamemanager)
+   - [GameClock](#gameclock)
+   - [QuestSystem](#questsystem)
+   - [WorldBoundary](#worldboundary)
+4. [Player Ship](#player-ship)
+   - [PlayerShip](#playership)
+   - [ShipStability](#shipstability)
+   - [PowerManager](#powermanager)
+   - [HullSystem](#hullsystem)
+   - [InternalSubsystems](#internalsubsystems)
+   - [Shields](#shields)
+   - [Autopilot](#autopilot)
+5. [Enemy](#enemy)
+   - [EnemyShip](#enemyship)
+6. [Weapons System](#weapons-system)
+   - [WeaponBase](#weaponbase)
+   - [WeaponManager](#weaponmanager)
+   - [Laser / LaserWeapon](#laser--laserweapon)
+   - [Missile / MissileLauncher](#missile--missilelauncher)
+   - [Railgun](#railgun)
+   - [BroadsideCannon](#broadsidecannon)
+   - [Macrocannon](#macrocannon)
+   - [PointDefenseCanon / PDCBullet](#pointdefensecanon--pdcbullet)
+   - [BoardingPod / BoardingPodLauncher](#boardingpod--boardingpodlauncher)
+   - [Shell](#shell)
+7. [Radar System](#radar-system)
+   - [Radar](#radar)
+   - [RadarTarget](#radartarget)
+8. [Communications System](#communications-system)
+   - [CommsManager / Signal](#commsmanager--signal)
+9. [Environment](#environment)
+   - [Asteroid](#asteroid)
+10. [Interfaces](#interfaces)
+    - [IDamageable](#idamageable)
 
-Quick run / test notes
-- Open the Unity project (Starwolf.sln). Load a scene in `Assets/Scenes/` and press Play.
-- Use `TestUIKeyControler.cs` for keyboard-driven UI tests (speedometer, railgun UI, stability, bogie tests).
-- Common keys: `W/S/A/D` move, `Space` / `Left Ctrl` fire, `1/2/3` toggle power systems, `R` cycles radar range / railgun test in TestUI.
+---
 
-If you want a longer, annotated reference, I can expand sections (UI, weapons, power) next.
+## Architecture Overview
 
+Starwolf is a top-down 2D space combat game built in Unity. The game world is oriented on the XY plane — the ship moves forward along its local `transform.up` axis and the Z axis is frozen for all Rigidbodies.
+
+**Key design rules present throughout the code:**
+- Damage is always **directional** — it hits the hull quadrant facing the impact.
+- **Power** is a shared reactor resource distributed among five systems: **Engines**, **Arms**, **Bay**, **Support**, and **Sig**. The reactor passively regenerates and is the single source of truth; the UI always mirrors inspector values.
+- **Stability** is consumed by sharp turns and dodging; depleting it prevents further maneuvers.
+- **Mission failure** can be triggered by player destruction, desertion, time expiry, or life support failure.
+- **`UIController`** is a singleton accessed everywhere via `UIController.Instance`. Backend scripts call it to push data into the HUD — the UI does not poll the game state.
+
+---
 
 ## UIController — The UI Bridge
 
 **File:** `Assets/UI/UI_Script/UIController.cs`
 
-`UIController` is the central singleton that owns every piece of on-screen UI. Backend game scripts call its methods to update the HUD; the UI itself does not poll game state (except for power bars and hull display, which are polled on timers).
+`UIController` is the central singleton that owns every piece of on-screen UI. Backend game scripts call its methods to update the HUD; the UI itself does not poll game state.
 
 **Singleton access pattern used throughout the codebase:**
 ```csharp
@@ -51,113 +77,27 @@ The `?.` null-conditional is used defensively — the UI may not exist in test s
 |---|---|---|
 | `StabilityMeterStart(cur, max)` | `ShipStability` | Initialises the stability bar shader with starting values. |
 | `StabilityMeterUpdate(cur)` | `ShipStability` | Pushes the current stability value to the bar every frame. |
-| `SetAlertActive(bool)` | `ShipStability` | Shows/hides the stability alert text. |
 | `UpdateCompass(float angle)` | `PlayerShip` | Rotates the compass ring to match the ship's Z rotation. |
-| `UpdateCompass(loaded, icon, port, aft, prow, starboard)` | Scanner system | Updates compass with hull quadrant data from a scanned target. |
 | `WorldGridRotUpdate(float r)` | `PlayerShip` | Rotates the world grid overlay with the ship. |
 | `WorldGridLocUpdate(Vector2 pos)` | `PlayerShip` | Moves the ship icon on the world grid. |
-| `UpdateSpeedometer(float speed)` | `TestUIKeyController` / auto | Updates the speedometer text display. |
-| `UpdateVelocity()` | Internal | Updates velocity meter shaders for player and bogie. |
-| `updateShipHit(float duration)` | Damage system | Triggers a screen-shake coroutine driven by an `AnimationCurve`. |
+| `updateShipHit(float duration)` | `UIController` (weapon coroutines) | Triggers a screen-shake coroutine driven by an `AnimationCurve`. |
 | `ShowCommsPanel(bool)` | `CommsManager` | Shows or hides the signal intercept panel. |
 | `SetCommsBand(int)` | `CommsManager` | Highlights the active frequency band indicator. |
 | `SetCommsFrequency(float)` | `CommsManager` | Updates the frequency slider and text display. |
 | `SetCommsSignalStrength(Color)` | `CommsManager` | Tints the signal strength indicator (grey/red/green). |
 | `AddCommsLog(string)` | `CommsManager` | Writes an intercepted message to the comms log. |
-| `SetupCommsListeners(onFreqChanged, onLock)` | `CommsManager` | Wires slider/button callbacks for comms panel. |
 | `FrequancyTune(float speed)` | `CommsManager` | Rotates the analogue frequency dial and moves the tuner marker. |
 | `CreateOrGetRadarBlip(target)` | `Radar` | Spawns or retrieves the `RectTransform` blip for a `RadarTarget`. |
 | `DestroyRadarBlip(target)` | `Radar` | Destroys the blip and removes it from the internal dictionary. |
 | `RadarBlipRadius` | `Radar` | Read-only property; the pixel radius of the radar circle. |
-| `RadarRange(float)` | `Radar` | Sets the visual radar range via shader property. |
-| `UpdateWeaponDisplay(...)` | `WeaponUIDisplay` | Updates the weapon name, type, icon, status, status colour, ammo, recharge bar, and recharge colour. |
+| `UpdateWeaponDisplay(...)` | `WeaponUIDisplay` | Updates the weapon name, ammo, recharge bar, and icon all at once. |
 | `GetWeaponIcon(WeaponType)` | `WeaponUIDisplay` | Returns the `Sprite` assigned for a given weapon type. |
-| `BtnWeaponFire()` | UI button | Plays the weapon UI animation and fires the active weapon. |
-| `BtnWeaponLoad()` | UI button | Primes the active weapon (e.g. missile lock, macrocannon arm). |
 | `LaserFire()` | UIController (test, `p` key) | Plays the laser beam animation on the weapon screen toward the current target. |
 | `LaserFireEnemy(int i)` | UIController (test, `0`–`4` keys) | Plays a laser fire animation originating from bogie `i`. |
 | `RailFire()` | `Railgun` (on fire) / UIController (test, `r` key) | Plays the full railgun charge-and-fire beam animation on the weapon screen. |
 | `WorldGridZoom(int i)` | UI buttons | Switches between the three zoom levels (0 = 10×, 1 = 100×, 2 = 1000×). |
 | `BogeySpot(float degree)` | UIController radar test | Briefly lights up a bogey blip on the radar at the given angle. |
 | `ScanNewTarget()` | UI button / `]` key | Cycles `currentBogieTarget` to the next entry in `bogieList`. |
-| `ScanTargetSize(int)` | Scanner | Sets the target mesh display scale. |
-| `ScanTargetLoc(int)` | Scanner | Sets the target's location indicator. |
-| `ScanMesh(GameObject)` | Scanner | Loads the target's mesh into the 3D target display. |
-| `AddBogie(BogieClass)` | Enemy detection | Adds a new enemy to the bogie list. |
-| `RemoveBogie(BogieClass)` | Enemy destroyed | Removes a bogie from the list. |
-| `PollHullDisplay()` | Internal (timed) | Polls `HullSystem` and updates hull quadrant shader values. |
-| `GlitchStart()` | Various (damage, effects) | Triggers a static glitch effect on UI screens. |
-| `GlitchEffect(t, o, s)` | Coroutine | Runs the glitch with time, opacity, and line size params. |
-| `SyncPowerBarsFromManager()` | Internal (`Update()`) | Pushes power bar values from `PowerManager` to shaders every frame. |
-| `ChargeBtn(int)` | UI button | Toggles a power system's state. |
-| `VentBtn()` | UI button | Triggers the vent animation and vents all systems. |
-| `BtnBogieTab()` | UI button | Toggles the bogie (enemy) tab panel. |
-| `BtnScannerCloke()` | UI button | Toggles scanner cloak mode. |
-| `BtnRepair()` | UI button | Triggers repair action. |
-| `SignalGhost()` | UI button | Places a ghost signal on radar. |
-| `BtnWepTab()` | UI button | Cycles through weapon display tabs. |
-| `BtnTunerTab(tran, cur, max)` | UI button | Cycles through tuner frequency tabs. |
-
-### Power System UI
-
-The power UI displays five system bars (Engines, Arms, Bay, Support, Sig) plus a reactor bar. Each bar is driven by a shader material via `UIPowerClass`.
-
-**UI elements:**
-- `btnPowerBool` — List of 5 `Button` components for toggling system states.
-- `imgPowerMet` — List of `Image` components holding the power bar shader materials.
-- `btnPowerBoolImage` — Display images on the power toggle buttons.
-
-`SyncPowerBarsFromManager()` runs every `Update()`, unconditionally pushing `currentPower`/`maxPower` from the `PowerManager` inspector values to the `_PowerCur` and `_PowerMax` shader properties.
-
-### Speedometer & Velocity Display
-
-**UI elements:**
-- `speedometer` — `TextMeshProUGUI` showing current ship speed.
-- `velocityMeterImg` — Array of `Image` components (player and bogie velocity bars).
-- `velocityMeterTMP` — Array of `TextMeshProUGUI` showing velocity numbers.
-
-When `autoUpdateSpeedometer` is true, a coroutine polls `PlayerShip` speed at `speedometerUpdateRate` intervals.
-
-### Scanner / Sensor System
-
-**UI elements:**
-- `sensorLoad` — Transform container for the scanner display.
-- `sensorLoadInfo` — 4 `TextMeshProUGUI` elements for hull section data (Port, Aft, Prow, Starboard).
-- `sensorIcon` — `Image` for the scan target type icon.
-- `sensorLoadSprites` — Sprites for different target types.
-- `scannerImg` / `scannerSha` / `scannerSlider` — Scanner sweep display.
-- `targetGO` — GameObject for the 3D target mesh display.
-- `bogieMesh` — `MeshFilter` for rendering the target ship model.
-- `shipPartsString` — `{ "_Port", "_Aft", "_Prow", "_Star" }` shader property names.
-
-The scanner uses a slider-based sweep mechanic with configurable "pips" (hit zones). Successful scans reveal hull data.
-
-### Weapon Screen (Firing VFX)
-
-The weapon screen renders combat visuals using shader-driven animations:
-
-**UI elements:**
-- `weaponScreenImage` — `Image` with the weapon screen shader material.
-- `screenWepGO` — The weapon screen container GameObject.
-- `shipAngleTarget` — Transform tracking the ship's orientation for screen effects.
-- `screenEnemyWeapon` — `RectTransform` for enemy weapon origin on screen.
-
-**Weapon tab system:**
-- `tabSprite` — Array of 2 sprites (inactive, active) for weapon tab states.
-- `tabWepName` — `TextMeshProUGUI` array for weapon slot names.
-- `tabFrame` — `Image` array for weapon slot frame highlights.
-- `weaponNameText` / `weaponTypeText` / `weaponAmmoText` / `weaponStatusText` — Text displays.
-- `weaponRechargeBar` — `Image` fill bar for reload/recharge.
-- `weaponIconImage` — `Image` for the weapon type icon.
-- Weapon icon sprites: `laserIcon`, `macrocannonIcon`, `missileIcon`, `pointDefenseIcon`, `boardingPodIcon`, `railgunIcon`.
-
-### Bogie Management
-
-**UI elements:**
-- `bogieList` — `List<BogieClass>` of tracked enemies.
-- `currentBogieTarget` — The currently selected enemy `GameObject`.
-- `bogieTabTran` — `Transform[]` for bogie tab UI positions.
-- `bogieTabBtn` — Tab button transform.
 
 ### World Grid Zoom Levels
 
@@ -166,20 +106,6 @@ The weapon screen renders combat visuals using shader-driven animations:
 | 0 | 10× (tactical) | 50 units |
 | 1 | 100× (sector) | 500 units |
 | 2 | 1000× (strategic) | 5000 units |
-
-**UI elements:**
-- `gridImg` — `Image` with the grid shader.
-- `sc` — Array of `Camera` instances for each zoom level.
-- `viewTex` — Array of `Texture` for each zoom view.
-- `canvasUI` — Array of `Canvas` layers.
-- `screenWorld` — `RawImage` for the world view.
-
-### Visual Effects
-
-- **Screen shake:** `updateShipHit(float)` → `ShipShake()` coroutine using `shipHitCurve` AnimationCurve.
-- **Compass:** `compassRect` RectTransform rotated to match ship heading.
-- **Frequency dial:** `frequancyTrans` Transform + `tunerTrans` markers animated by `FrequancyTune()`.
-- **Static glitch:** `staticImg` Image array with `_Glitch`, `_GlitchOpacity`, `_LineSize` shader properties.
 
 ---
 
@@ -192,38 +118,19 @@ The weapon screen renders combat visuals using shader-driven animations:
 The central singleton that bootstraps the game session. It persists across scene loads via `DontDestroyOnLoad`.
 
 **Responsibilities:**
-- Spawns enemy ships in configurable groups using the `EnemyGroup` system.
-- Spawns the player ship at a designated spawn point.
+- Spawns 5 enemy ships at random positions on start.
 - Initialises and wires together the three mission systems: `GameClock`, `QuestSystem`, and `WorldBoundary`.
 - Listens for mission success/failure events and logs them.
 - Handles the **Escape** key to toggle the strategic pause via `GameClock`.
-- Tracks total enemies alive and checks win conditions.
-
-#### EnemyGroup Configuration
-
-Enemy spawning is driven by a list of `EnemyGroup` entries, each configuring a prefab, count, patrol behaviour, and respawn settings:
-
-```csharp
-[System.Serializable]
-public class EnemyGroup
-{
-    public GameObject prefab;
-    public int count;
-    public bool patrol;
-    public bool respawnOnDeath;
-    public float respawnDelay;
-    [ReadOnly] public int activeCount;
-}
-```
 
 **Enemy spawning on Start:**
 ```csharp
-SpawnAllEnemyGroups(); // Iterates enemyGroups, calling SpawnEnemy for each entry
+for (int i = 0; i < 5; i++)
+{
+    Vector3 randomPos = new Vector3(Random.Range(-50, 50), Random.Range(-50, 50), 0);
+    SpawnEnemyShip(randomPos, Quaternion.identity);
+}
 ```
-
-Enemies spawn within a configurable scatter radius (`minScatterDistance` / `maxScatterDistance`) from `spawnCentre`, with a minimum `minSeparation` between ships. The system retries up to `maxSpawnAttempts` times to find a valid position via `FindSpawnPosition()` and `IsClearPosition()`.
-
-**Win condition:** When `winOnAllEnemiesDestroyed` is true, `CheckWinCondition()` fires when `totalEnemiesAlive` reaches 0. The `EndSequence(bool won)` coroutine runs after `endSequenceDelay` seconds.
 
 **Subscribing to mission events:**
 ```csharp
@@ -231,22 +138,10 @@ questSystem.OnMissionFailed  += (reason) => Debug.Log($"Mission Failed: {reason}
 questSystem.OnMissionComplete += () => Debug.Log("Mission Complete!");
 ```
 
-**Key methods:**
+**Key method:**
 | Method | Description |
 |---|---|
-| `SpawnPlayer()` | Instantiates the player ship at `playerSpawnPoint`. |
-| `SpawnAllEnemyGroups()` | Spawns all configured enemy groups. |
-| `SpawnEnemy(EnemyGroup)` | Spawns a single enemy from a group configuration. |
-| `SpawnEnemyFromGroup(int)` | Spawns an enemy by group index (for respawn). |
 | `SpawnEnemyShip(position, rotation)` | Instantiates an enemy ship prefab at a given location. |
-| `FindSpawnPosition()` | Finds a valid spawn position with scatter and separation checks. |
-| `IsClearPosition(Vector3)` | Returns true if a position is far enough from existing entities. |
-| `CheckWinCondition()` | Checks if all enemies are dead and triggers end sequence. |
-| `OnPlayerDestroyed()` | Handles player death — sets `playerAlive = false`. |
-| `EndSequence(bool)` | Coroutine that triggers win/loss sequence after a delay. |
-| `GetTotalEnemiesAlive()` | Returns the current count of living enemies. |
-| `IsGameOver()` | Returns true if the game is over. |
-| `IsPlayerAlive()` | Returns true if the player ship is alive. |
 
 ---
 
@@ -285,10 +180,6 @@ string display = GameClock.FormatTime(eta); // "00:08:32"
 | `GetRemainingTime()` | Returns seconds remaining; `-1` if there is no time limit. |
 | `CalculateETA(from, to, speed)` | Returns travel time in seconds between two positions at a given speed. |
 | `FormatTime(seconds)` | Static helper that returns a `HH:MM:SS` string. |
-| `IsPaused()` | Returns true if the clock is currently paused. |
-| `IsMissionActive()` | Returns true if a mission is running. |
-| `GetTimeScale()` | Returns the current time scale multiplier. |
-| `SetTimeScale(float)` | Sets the time scale multiplier. |
 
 **Events:**
 | Event | When it fires |
@@ -336,16 +227,6 @@ QuestSystem.Instance.StartMission(enemyShipTransform);
 |---|---|
 | `StartMission(target)` | Begins the mission with the given ship as the objective. |
 | `ConfirmTargetOnRadar()` | Manual trigger to advance from *Locate* to *Eliminate* (e.g. when scanner confirms target). |
-| `UpdateLocateStage()` | Checks distance to target for auto-advancement. |
-| `UpdateEliminateStage()` | Checks if target is destroyed. |
-| `UpdateExitStage()` | Checks if player reached the jump point. |
-| `RevealJumpPoint()` | Spawns a jump point at a random edge of the playable area. |
-| `CompleteMission()` | Marks mission as complete and fires `OnMissionComplete`. |
-| `FailMission(reason)` | Marks mission as failed with a `MissionFailReason`. |
-| `GetCurrentStage()` | Returns the current `QuestStage` enum value. |
-| `IsTargetLocated()` | Returns true if the target has been found. |
-| `IsTargetDestroyed()` | Returns true if the target ship is destroyed. |
-| `GetJumpPointPosition()` | Returns the world position of the jump point. |
 
 ---
 
@@ -379,15 +260,6 @@ boundary.OnReturnedToBounds      += HideCountdownDisplay;
 | `OnReturnedToBounds` | Player returned in time. |
 | `OnDesertion` | Timer expired; ship is destroyed. |
 
-**Public getters:**
-| Method | Description |
-|---|---|
-| `IsOutOfBounds()` | Returns true if the player is outside the boundary. |
-| `IsWarning()` | Returns true if the player is in the warning zone. |
-| `GetDesertionTimeRemaining()` | Returns seconds left on the desertion timer. |
-| `GetPlayableAreaRadius()` | Returns the radius of the playable area. |
-| `HasDeserted()` | Returns true if the player has deserted. |
-
 ---
 
 ## Player Ship
@@ -408,10 +280,10 @@ The main player-controlled component. Requires `ShipStability` on the same GameO
 | `Q` | Emergency dodge left |
 | `E` | Emergency dodge right |
 
-- Speed changes are gradual via `rateOfAcceleration` (default 50) — there is no instant speed change.
+- Speed changes are gradual via `rateOfAcceleration` — there is no instant speed change.
 - Maximum speed scales with Engine power and any Engines/Bridge subsystem debuffs.
 - **No automatic deceleration** — the ship holds its current speed when no thrust key is held.
-- Dodge is a quick lateral position shift (not a rotation) using smooth interpolation over `dodgeDuration` seconds (default 0.2).
+- Dodge is a quick lateral position shift (not a rotation) using smooth interpolation over `dodgeDuration` seconds.
 
 **Core movement logic (FixedUpdate — simplified):**
 ```csharp
@@ -436,28 +308,6 @@ Vector3 dodgeOffset = transform.right * direction * dodgeDistance;
 dodgeTargetPosition = transform.position + dodgeOffset;
 // Smooth interpolation applied in FixedUpdate while isDodging == true
 ```
-
-#### Hyperspeed
-
-When engine efficiency exceeds `hyperspeedEngineThreshold` (default 0.8), the ship can enter hyperspeed mode. While active:
-- Speed is multiplied by `hyperspeedSpeedMultiplier` (default 4×).
-- Engine power drains at `hyperspeedDrainRate` (default 2) per second.
-- Auto-disengages when engine efficiency drops below the threshold.
-
-```csharp
-// Public property:
-bool inHyperspeed = playerShip.IsInHyperspeed;
-```
-
-#### Drift Physics
-
-The ship accumulates lateral drift when turning at speed. Drift is the perpendicular velocity component that persists after direction changes.
-
-| Field | Default | Description |
-|---|---|---|
-| `driftCompensationRate` | 8 | Rate at which lateral drift is corrected. |
-| `maxLateralDrift` | 40 | Maximum allowed lateral velocity. |
-| `driftStabilityDrainRate` | 0.4 | Stability drain applied while drifting. |
 
 #### Weapons
 
@@ -519,17 +369,6 @@ public void TakeDamage(float damage, Vector3 hitDirection)
 ```
 The legacy single-argument overload always hits the Prow.
 
-**Key properties and methods:**
-| Member | Description |
-|---|---|
-| `IsOnStandby` | Property; true during railgun standby. |
-| `IsInHyperspeed` | Property; true when hyperspeed is active. |
-| `GetCurrentSpeed()` | Returns the current forward speed. |
-| `GetCurrentSpeedInBars()` | Returns speed normalised to a bar display range. |
-| `GetTurnRate()` | Returns the current turn rate. |
-| `SetCameraTransform(Transform)` | Assigns the camera for the follow system. |
-| `EnterRailgunStandby(float)` | Blocks all input for the given duration (called by Railgun). |
-
 ---
 
 ### ShipStability
@@ -555,9 +394,9 @@ UIController.Instance?.StabilityMeterUpdate(currentStability);
 
 | Zone | Degrees rotated this frame | Drain multiplier |
 |---|---|---|
-| Green | ≤ 0.6° | 0.1× |
-| Yellow | ≤ 1.1° | 0.5× |
-| Red | > 1.1° | 2.0× |
+| Green | ≤ 1.0° | 0.1× |
+| Yellow | ≤ 1.5° | 0.5× |
+| Red | > 1.5° | 2.0× |
 
 High speed further amplifies drain within each zone.
 
@@ -585,16 +424,8 @@ currentStability = Mathf.Max(0, currentStability - drain);
 |---|---|
 | `CanPerformDodge()` | Returns true if cooldown is done and stability is sufficient. |
 | `ApplyDodge()` | Consumes stability and starts cooldown. |
-| `ResetDodge()` | Resets the dodge cooldown timer. |
-| `CalculateTurnStabilityDrain(angle, speed, powerDecay)` | Applies drain with zone-based multiplier and power decay factor. Returns the amount drained. |
+| `CalculateTurnStabilityDrain(angle, speed)` | Applies drain and returns the amount drained. |
 | `IsStabilityCritical()` | Returns true if stability is below 10%. |
-| `IsStabilityDepleted()` | Returns true if stability is at 0. |
-| `GetStabilityPercentage()` | Returns 0.0–1.0 representing current/max stability. |
-| `GetCurrentStability()` | Returns the raw current stability value. |
-| `GetMaxStability()` | Returns the max stability value. |
-| `CanDodgeAgain()` | Returns true if the dodge cooldown has elapsed. |
-| `ApplyStabilityDrain(float)` | Directly drains the given amount from stability. |
-| `ShowAlert()` | Triggers the stability alert UI via `UIController`. |
 
 ---
 
@@ -654,29 +485,10 @@ float armsEfficiency   = powerManager.GetSystemEfficiency("arms");
 | `GetSystemEfficiency(name)` | Returns 0.0–1.0 for `"engines"`, `"arms"`, `"bay"`, `"support"`, or `"sig"`. |
 | `ToggleEngines()` / `ToggleArms()` / `ToggleBay()` / `ToggleSupport()` / `ToggleSig()` | Convenience wrappers for UI buttons. |
 | `VentAllSystems()` | Sets all powered systems to Vent state. |
-| `EmergencyVent()` | Forces an immediate vent of all systems. |
-| `BlackAlert()` | Coroutine that vents all systems and auto-engages Engines + Arms. |
 | `DrainAllPowerInstantly()` | Instantly zeros all system power **and** the reactor; sets `reactorOnline = false` (used by railgun on fire). |
-| `DrainArmsPower(int)` | Drains a specific number of bars from the Arms system. |
-| `RebootReactor()` | Sets `reactorOnline = true`, re-enables regen (called after railgun standby ends). |
+| `RebootReactor()` | Sets `reactorOnline = true`, re-enables regen, and puts Engines + Arms back into Draw (called after railgun standby ends). |
 | `AddPower(system)` / `RemovePower(system)` | Manual single-bar allocation from UI. |
 | `GetReactorPower()` / `GetMaxReactorPower()` | Current and maximum reactor bar values. |
-| `GetSystemState(name)` | Returns the `PowerState` of a named system. |
-| `GetSystemPower(name)` | Returns the current power of a named system. |
-| `GetSystemMaxPower(name)` | Returns the max power of a named system. |
-
-**Bonus calculation methods (per bar above minimum 1):**
-| Method | Description |
-|---|---|
-| `BonusBars(system)` | Returns extra bars above the base 1. |
-| `GetEngineAccelerationMultiplier()` | +10% per bar. |
-| `GetEngineStabilityDecayMultiplier()` | −5% per bar. |
-| `IsSupercruiseUnlocked()` | Returns true if Engines is at max power. |
-| `GetCannonLoadTimeMultiplier()` | −2.5% per bar. |
-| `GetBoardingPodRangeMultiplier()` | +10% per bar. |
-| `GetAbilityCooldownMultiplier()` | −5% per bar. |
-| `GetScannerPerfectHitBonus()` | +1% per bar. |
-| `GetCommsInterceptTimeBonus()` | +1 s per bar. |
 
 ---
 
@@ -873,50 +685,29 @@ private bool HasManualInput()
 
 **File:** `Assets/Scripts/EnemyShip.cs`
 
-An AI ship with typed presets, a state machine, patrol waypoints, and obstacle avoidance.
+A simple AI ship that detects, pursues, orbits, and fires at the player.
 
-#### Enemy Types
-
-```csharp
-public enum EnemyType { Patrol, StationaryDefender, Tank, Interceptor, Sniper }
-```
-
-Each type applies stat overrides via `ApplyTypePreset()` on `Start()`:
-
-| Type | Health | Thrust | Max Speed | Rotation | Fire Rate | Detection | Combat Range | Notes |
-|---|---|---|---|---|---|---|---|---|
-| Patrol | 3 | 8 | 15 | 90°/s | 0.5 s | 30 | 15 | Balanced default |
-| StationaryDefender | 20 | 0 | 0 | 90°/s | 0.2 s | 50 | 15 | Static turret |
-| Tank | 50 | 4 | 6 | 45°/s | 1.2 s | 30 | 15 | Slow, heavy |
-| Interceptor | 2 | 18 | 28 | 150°/s | 0.35 s | 30 | 15 | Fast, fragile |
-| Sniper | 2 | 8 | 15 | 90°/s | 0.8 s | 80 | 40 | Long range |
-
-#### AI State Machine
-
-```csharp
-private enum EnemyState { Patrol, Chase, Combat }
-```
-
-**State transitions (runs in FixedUpdate via `UpdateState()`):**
-
-| From | Condition | To |
-|---|---|---|
-| Patrol | Player within detection radius | Chase |
-| Chase | Player within combat distance × 1.1 | Combat |
-| Chase | Player leaves detection radius | Patrol |
-| Combat | Player outside detection radius | Patrol |
-
-**Patrol behaviour:** When `patrolEnabled`, the ship picks random waypoints within `patrolRadius` of its spawn origin. It navigates to each waypoint and picks a new one when within `waypointReachedThreshold`.
-
-**Obstacle avoidance:** A 5-ray fan cast (`obstacleAvoidanceDistance`, `obstacleLayerMask`) steers the ship around obstacles via `GetObstacleAvoidedDirection()`.
-
-**Combat behaviour (runs in `UpdateCombat()`):**
+**AI behaviour (runs in FixedUpdate):**
 
 | Condition | Action |
 |---|---|
-| Player too far (> 1.1× optimal distance) | Thrust toward player |
-| Player too close (< 0.5× optimal distance) | Thrust away from player |
+| Player outside detection radius | Idle |
+| Player detected, too far (> 1.1× optimal distance) | Thrust toward player |
+| Player detected, too close (< 0.5× optimal distance) | Thrust away from player |
 | Player at optimal distance | Apply perpendicular force to orbit the player |
+
+**AI movement logic:**
+```csharp
+if (distanceToPlayer > optimalCombatDistance * 1.1f)
+    rb.AddForce(transform.up * thrustForce, ForceMode.Force);       // Approach
+else if (distanceToPlayer < optimalCombatDistance * 0.5f)
+    rb.AddForce(-transform.up * thrustForce, ForceMode.Force);      // Retreat
+else
+{
+    Vector3 orbitDir = Vector3.Cross(directionToPlayer, Vector3.forward).normalized;
+    rb.AddForce(orbitDir * orbitSpeed, ForceMode.Force);            // Orbit
+}
+```
 
 **Firing condition:**
 ```csharp
@@ -928,22 +719,17 @@ if (inCombatRange && facingPlayer && Time.time - lastFireTime > fireRate)
 
 **When destroyed:** `Explode()` spawns a particle system completely in code (no prefab required) and destroys the GameObject. The particle explosion destroys itself after 2 seconds.
 
-Implements `IDamageable` with both `TakeDamage(int)` and `TakeDamage(float)` overloads. When health reaches 0, `Explode()` is called.
+Implements `IDamageable`. When health reaches 0, `Explode()` is called.
 
-**Key methods:**
-| Method | Description |
-|---|---|
-| `ApplyTypePreset()` | Applies stat overrides based on `EnemyType`. |
-| `UpdateState(float)` | Main state machine tick. |
-| `UpdatePatrol()` | Navigate to patrol waypoints. |
-| `UpdateChase()` | Pursue the player. |
-| `UpdateCombat(float)` | Combat manoeuvring and firing. |
-| `PickNewPatrolWaypoint()` | Picks a random waypoint within patrol radius. |
-| `GetObstacleAvoidedDirection(Vector3)` | Returns a steered direction to avoid obstacles. |
-| `RotateTowards(Vector3)` | Smoothly rotates toward a target direction. |
-| `EnforceSpeedLimit()` | Caps velocity to `maxSpeed`. |
-| `FireLaser()` | Spawns a laser projectile. |
-| `Explode()` | Destroys the ship with a procedural particle effect. |
+**Inspector settings:**
+| Field | Default | Description |
+|---|---|---|
+| `detectionRadius` | 30 | Range at which the enemy notices the player |
+| `optimalCombatDistance` | 15 | Preferred engagement range |
+| `fireRate` | 0.5 s | Minimum time between shots |
+| `maxHealth` | 3 | Hit points |
+| `thrustForce` | 8 | Engine force applied each frame |
+| `maxSpeed` | 15 | Speed cap |
 
 ---
 
@@ -958,24 +744,18 @@ Abstract base class every weapon inherits from.
 ```csharp
 public abstract class WeaponBase : MonoBehaviour
 {
-    [SerializeField] protected float range = 500f;
-    [SerializeField] protected float angleOfFire = 45f;
-    [SerializeField] protected float reloadTime = 1f;
-    [SerializeField] protected int   maxAmmo = 30;
-    [SerializeField] protected float baseDamage = 10f;
+    [SerializeField] protected float range;
+    [SerializeField] protected float reloadTime;
+    [SerializeField] protected int   maxAmmo;
+    [SerializeField] protected float baseDamage;
     [SerializeField] protected float damageModifier = 1f;
 
-    protected float fireRate = 0.2f; // 5 shots/sec
     protected int   currentAmmo;
     protected bool  isReloading;
     protected float lastFireTime;
 
     public virtual bool CanFire()
         => !isReloading && currentAmmo > 0 && Time.time - lastFireTime >= reloadTime;
-
-    public int   GetCurrentAmmo()    => currentAmmo;
-    public int   GetMaxAmmo()        => maxAmmo;
-    public float GetReloadProgress() => /* 0..1, where 1 = fully ready */;
 
     public abstract void Fire(Vector3 target);
 }
@@ -992,11 +772,6 @@ public abstract class WeaponBase : MonoBehaviour
 Manages a list of `WeaponSlot`s and exposes a unified firing interface to `PlayerShip`.
 
 **`WeaponSlot`** links a `WeaponType` enum, a `WeaponBase` instance, an active flag, an index, and a display name.
-
-**WeaponType enum:**
-```csharp
-public enum WeaponType { Laser, Macrocannon, Missile, PointDefense, BoardingPod, Railgun, Broadside }
-```
 
 **Firing the active weapon (called from PlayerShip):**
 ```csharp
@@ -1030,39 +805,6 @@ if (currentWeapon.weaponInstance is LaserWeapon laserWeapon)
 | `AddWeapon(type, instance)` | Dynamically adds a weapon at runtime. |
 | `RemoveWeapon(index)` | Removes a slot and re-indexes. |
 | `SetWeaponActive(index, active)` | Enables or disables a slot. |
-| `GetActiveWeapon()` | Returns the current `WeaponBase` instance. |
-| `GetActiveWeaponSlot()` | Returns the current `WeaponSlot`. |
-| `GetAllWeaponSlots()` | Returns the full list of weapon slots. |
-| `GetWeaponsByType(type)` | Returns all `WeaponBase` instances matching a type. |
-| `RefreshWeaponDisplay()` | Pushes current weapon stats to UIController. |
-| `CanActiveWeaponFire()` | Returns true if the active weapon can fire. |
-| `LoadActiveWeapon(target)` | Primes/targets the active weapon (e.g. missile lock, macrocannon arm). |
-| `GetActiveWeaponIndex()` | Returns the current weapon slot index. |
-| `GetWeaponCount()` | Returns the total number of weapon slots. |
-| `GetActiveWeaponType()` | Returns the `WeaponType` of the active weapon. |
-
----
-
-### WeaponUIDisplay
-
-**File:** `Assets/Scripts/Weapons/WeaponUIDisplay.cs`
-
-A component that periodically polls `WeaponManager` and pushes the active weapon's stats to `UIController.Instance.UpdateWeaponDisplay()`.
-
-**Inspector fields:**
-| Field | Default | Description |
-|---|---|---|
-| `weaponManager` | — | Reference to the ship's `WeaponManager`. |
-| `autoFindWeaponManager` | true | Auto-locates the manager on the same GameObject if not assigned. |
-| `updateInterval` | 0.1 s | How often the display refreshes. |
-
-**Key methods:**
-| Method | Description |
-|---|---|
-| `SetWeaponManager(WeaponManager)` | Assigns the weapon manager at runtime. |
-| `ForceUpdate()` | Immediately refreshes the weapon display. |
-
-Handles display formatting for `LaserWeapon`, `Macrocannon`, `MissileLauncher`, and `Railgun` with type-specific status strings and colours.
 
 ---
 
@@ -1112,22 +854,7 @@ These calls animate a shader on `weaponScreenImage` using `_LaserFire`, `_LaserD
 
 **Files:** `Assets/Scripts/Weapons/Missile.cs` / `MissileLauncher.cs`
 
-**`Missile`** is a homing projectile with a proximity fuse. It steers toward its assigned target each fixed frame using `Quaternion.RotateTowards` and applies continuous forward thrust.
-
-**Inspector fields:**
-| Field | Default | Description |
-|---|---|---|
-| `thrust` | 1000 | Forward force applied each frame. |
-| `turnRate` | 180°/s | Maximum steering rate. |
-| `armedDistance` | 100 | Distance travelled before the fuse is active. |
-| `proximityFuseRadius` | 50 | Detonation proximity threshold. |
-| `maxLifetime` | 30 s | Self-destruct timer. |
-| `explosionRadius` | 100 | AoE damage radius on detonation. |
-
-**Initialisation:**
-```csharp
-missile.Initialize(targetTransform, damageAmount);
-```
+**`Missile`** is a homing projectile. It steers toward its assigned target each fixed frame using `Quaternion.RotateTowards` and applies continuous forward thrust.
 
 **Detonation (area-of-effect with distance falloff):**
 ```csharp
@@ -1153,9 +880,6 @@ private void Detonate()
 ```csharp
 // Begin locking a tube onto a target:
 missileLauncher.AttemptLock(enemyTransform, tubeIndex: 0);
-
-// Lock all tubes at once (called by UI load button):
-missileLauncher.LockAllTubes(enemyTransform);
 
 // Fire all tubes that have achieved lock:
 missileLauncher.Fire(Vector3.zero); // target parameter unused for lock-based launcher
@@ -1216,12 +940,7 @@ UIController.Instance.RailFire();
 ```csharp
 bool  charging  = railgun.IsCharging();
 bool  standby   = railgun.IsOnStandby();
-float progress  = railgun.GetChargeProgress();    // 0.0–1.0
-float chargeT   = railgun.GetChargeTime();        // configured charge seconds
-int   maxPen    = railgun.GetMaxPenetrations();    // max objects the beam penetrates
-float maxRange  = railgun.GetMaxRange();           // beam range in units
-int   curAmmo   = railgun.GetCurrentAmmo();
-int   maxAmmo   = railgun.GetMaxAmmo();
+float progress  = railgun.GetChargeProgress(); // 0.0–1.0
 ```
 
 ---
@@ -1264,9 +983,6 @@ A multi-barrel gun that requires a **manual arming** step before each salvo.
 
 **Usage flow:**
 ```csharp
-// 0. Enter the viewfinder (optional — for targeting UI):
-macrocannon.EnterViewfinder();
-
 // 1. Arm the weapon (loads one shell per call, 1 second each):
 macrocannon.ArmWeapon(); // Repeat up to numBarrels times
 
@@ -1582,171 +1298,3 @@ IDamageable target = hitCollider.GetComponent<IDamageable>();
 if (target != null && target.CanBeDamaged())
     target.TakeDamage(damage);
 ```
-
----
-
-## UI References
-
-### BogieClass
-
-**File:** `Assets/UI/UI_Script/BogieClass.cs`
-
-A serialisable data structure representing an enemy ship on the UI. Each tracked enemy has a `BogieClass` instance in `UIController.bogieList`.
-
-```csharp
-[System.Serializable]
-public class BogieClass
-{
-    public GameObject go;          // The enemy GameObject in the scene
-    public Mesh       mesh;        // The enemy's mesh (for scanner 3D display)
-    public GameObject wepImageGo;  // Weapon screen UI element for this bogie
-    public Material   matWep;      // Weapon screen material instance
-
-    public BogieClass(GameObject go, Mesh mesh, GameObject wepImageGo, Material matWep);
-}
-```
-
-**`WeapStart()`** initialises the weapon material with default shader values:
-```csharp
-public void WeapStart()
-{
-    matWep.SetFloat("_LaserFire", 0);
-    matWep.SetFloat("_RangeVisOn", 0);
-    matWep.SetFloat("_StabilityBool", 0);
-    matWep.SetColor("_RangeColor", Color.white);
-}
-```
-
----
-
-### UIPowerClass
-
-**File:** `Assets/UI/UI_Script/UIPowerClass.cs`
-
-A MonoBehaviour that binds a power bar `Image` to its shader material and manages charge animations.
-
-**Public fields:**
-| Field | Type | Description |
-|---|---|---|
-| `mat` | `Material` | Shader material for the power bar. |
-| `max` | `int` | Maximum power level for this system. |
-| `cur` | `int` | Current power level. |
-| `pwr` | `float` | Raw power value. |
-| `charge` | `bool` | Whether this system is currently charging. |
-| `pwrShift` | `bool` | Whether a power shift is in progress. |
-
-**Key methods:**
-| Method | Description |
-|---|---|
-| `UpdateMat()` | Pushes `cur` and `max` to `_PowerCur` and `_PowerMax` shader properties. |
-| `Charge(bool)` | Sets the `_Charge` shader property to 1 (charging) or 0 (idle). |
-
-**Shader properties driven:**
-- `_PowerCur` — Current power level (int).
-- `_PowerMax` — Maximum power level (int).
-- `_ChargeVelocity` — Controls the speed of the charge animation.
-- `_Charge` — Boolean flag (0 or 1) for charge visual state.
-
----
-
-### Shader Property Reference
-
-A complete reference of shader properties used across the UI.
-
-#### Power System Shaders
-| Property | Type | Used By | Description |
-|---|---|---|---|
-| `_PowerCur` | float | Power bars, velocity meters, stability | Current value. |
-| `_PowerMax` | float | Power bars, velocity meters, stability | Maximum value. |
-| `_Charge` | float | Power bars | 0/1 flag — is charging. |
-| `_ChargeVelocity` | float | Power bars | Animation speed for charge effect. |
-| `_DegreeHor` | float | Power bar layout | Horizontal degree offset. |
-| `_DegreeVert` | float | Power bar layout | Vertical degree offset. |
-| `_End` | float | Power bar layout | End position. |
-| `_On` | float | Power bars | System active flag. |
-| `_Reactor` | float | Reactor bar | Reactor power level. |
-
-#### Radar Shaders
-| Property | Type | Description |
-|---|---|---|
-| `_RangeDegree` | float | Angular position of a radar element. |
-| `_Bogey` | float | Bogey presence flag. |
-| `_Show` | float | Show/hide flag. |
-| `_RadarColor` | Color | Tint colour for blips. |
-| `_RadarRange` | float | Current radar range value. |
-| `_VisualRange` | float | Visual range indicator scale. |
-| `_LineSizeV2` | Vector2 | Line size for radar sweep. |
-
-#### Weapon Screen Shaders
-| Property | Type | Description |
-|---|---|---|
-| `_LaserDegree` | float | Angle of laser beam on the weapon screen. |
-| `_LaserFire` | float | 0/1 flag — laser beam visible. |
-| `_LaserStart` | float | Start position of laser beam. |
-| `_LaserEnd` | float | End position of laser beam. |
-| `_LaserSize` | float | Thickness of the laser beam. |
-| `_GunLoc` | float | Gun location on screen. |
-| `_RangeVisOn` | float | Range indicator visibility. |
-| `_StabilityBool` | float | Stability visual flag. |
-| `_RangeColor` | Color | Range indicator colour. |
-| `_Stability` | float | Stability value for display. |
-
-#### World Grid Shaders
-| Property | Type | Description |
-|---|---|---|
-| `_ShipLocV2` | Vector2 | Ship position on the grid. |
-| `_ShipRotation` | float | Ship rotation angle. |
-| `_WorldView` | float | Current zoom level. |
-| `_CellSize` | float | Grid cell size. |
-| `_GridAmmount` | float | Grid line count. |
-| `_GridThickness` | float | Grid line thickness. |
-
-#### Static / Glitch Shaders
-| Property | Type | Description |
-|---|---|---|
-| `_Glitch` | float | Glitch intensity. |
-| `_GlitchOpacity` | float | Glitch opacity. |
-| `_LineSize` | float | Scan line size for glitch effect. |
-
-#### Stability Shader
-| Property | Type | Description |
-|---|---|---|
-| `_PowerCur` | float | Current stability value. |
-| `_PowerMax` | float | Maximum stability value. |
-| `_OnColor` | Color | Bar tint (white/amber/red by threshold). |
-
-#### Scanner / Hull Display
-| Property | Type | Description |
-|---|---|---|
-| `_Port` | float | Port hull integrity (0.0–1.0). |
-| `_Aft` | float | Aft hull integrity (0.0–1.0). |
-| `_Prow` | float | Prow hull integrity (0.0–1.0). |
-| `_Star` | float | Starboard hull integrity (0.0–1.0). |
-
----
-
-### TestUIKeyController
-
-**File:** `Assets/TestUIKeyControler.cs`
-
-A test-only script for driving UI elements from keyboard input without the full game loop.
-
-**Key bindings:**
-| Key | Action |
-|---|---|
-| `R` | Trigger railgun fire UI (`RailFire()`) |
-| `W` / `S` | Increase/decrease speed and update speedometer |
-| `B` | Trigger ship-hit screen shake and apply test damage |
-| `Q` / `E` | Left/right dodge (delegated to `PlayerShip`) |
-| `1` / `2` / `3` | Toggle power systems (delegated to `PlayerShip`) |
-| `0` | Update compass with unloaded state |
-| `4` | Scan target with 25% hull on all sides (asteroid) |
-| `5` | Scan target with 50% hull on all sides (orbiter) |
-| `6` | Scan target with 100% hull on all sides (enemy ship) |
-
-**References:**
-- `playerShipRef` — `PlayerShip` instance for delegated input.
-- `playerShipTrans` — Ship `Transform` for position/rotation queries.
-- `cameraTransform` — Camera `Transform` for compass tracking.
-
-Tracks camera rotation changes to update the compass display and reads the actual Rigidbody velocity from the `PlayerShip` for speedometer updates.

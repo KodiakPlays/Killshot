@@ -38,7 +38,6 @@ public class Radar : MonoBehaviour
 
     private void HandleInput()
     {
-        // Keyboard shortcut for dev convenience — controller X button is now handled in PlayerShip
         if (Input.GetKeyDown(toggleKey))
         {
             currentRangeIndex = (currentRangeIndex + 1) % rangeSteps.Length;

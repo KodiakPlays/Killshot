@@ -21,17 +21,12 @@ public class ShipStability : MonoBehaviour
 
 
 
-    private bool alertActive = false;
-
     private void Start()
     {
         currentStability = maxStability;
 
         if (UIController.Instance != null)
-        {
             UIController.Instance.StabilityMeterStart(currentStability, maxStability);
-            UIController.Instance.SetAlertActive(false);
-        }
     }
 
     private void Update()
@@ -51,13 +46,6 @@ public class ShipStability : MonoBehaviour
 
             if (UIController.Instance != null)
                 UIController.Instance.StabilityMeterUpdate(currentStability);
-
-            // Hide alert when stability fully restores
-            if (alertActive && currentStability >= maxStability)
-            {
-                alertActive = false;
-                UIController.Instance?.SetAlertActive(false);
-            }
         }
     }
 
@@ -81,8 +69,6 @@ public class ShipStability : MonoBehaviour
 
             if (UIController.Instance != null)
                 UIController.Instance.StabilityMeterUpdate(currentStability);
-
-            ShowAlert();
 
             // Reset dodge ability after cooldown
             Invoke(nameof(ResetDodge), DODGE_COOLDOWN);
@@ -128,12 +114,9 @@ public class ShipStability : MonoBehaviour
         
         if (UIController.Instance != null)
             UIController.Instance.StabilityMeterUpdate(currentStability);
-
+        
         if (drain > 0.01f)
-        {
-            ShowAlert();
             Debug.Log($"Turn Zone: {zone}, Angle: {turnAngleThisFrame:F2} deg, Speed: {currentSpeed:F1}, Drain: {drain:F3}, Stability: {currentStability:F1}%");
-        }
         
         return drain;
     }
@@ -169,16 +152,6 @@ public class ShipStability : MonoBehaviour
 
         if (UIController.Instance != null)
             UIController.Instance.StabilityMeterUpdate(currentStability);
-
-        ShowAlert();
     }
 
-    private void ShowAlert()
-    {
-        if (!alertActive)
-        {
-            alertActive = true;
-            UIController.Instance?.SetAlertActive(true);
-        }
-    }
 }
