@@ -2045,4 +2045,13 @@ public class UIController : MonoBehaviour
 
         tran.eulerAngles = new Vector3(0f, 0f, degree);
     }
+
+    /// <summary>Returns the current world-grid zoom level (0 = 10x, 1 = 100x, 2 = 1000x).</summary>
+    public int GetWorldZoom() => worldZoom;
+
+    public void SetAlertActive(bool active)
+    {
+        if (alertTextGO != null)
+            alertTextGO.SetActive(active);
+    }
 }
