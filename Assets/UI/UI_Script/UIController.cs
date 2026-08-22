@@ -81,7 +81,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private Shader stabilityShader;
     [SerializeField] private Image stabilityImg;
     private float stabMax = 1;
-
+    [SerializeField] private GameObject alertTextGO;
     [Header("Scanner Hack")]
     [SerializeField] private Transform[] bogieTabTran;
     private int bogieTabInt = 1;
