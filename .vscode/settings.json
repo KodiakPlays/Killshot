@@ -66,5 +66,5 @@
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj"
     },
-    "dotnet.defaultSolution": "Starwolf.sln"
+    "dotnet.defaultSolution": "Killshot.slnx"
 }
