@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bec1ff18b34c94a33817b4adf07efb60, type: 3}
+  m_Name: TacticalArtProfile
+  m_EditorClassIdentifier: Assembly-CSharp::TacticalArtProfile
+  metalPlate: {fileID: 21300000, guid: 03e65272261b4407d9091213d406cf0a, type: 3}
+  panelFrame: {fileID: 21300000, guid: 32b6a9197c16401c9f6a6dc9340444d3, type: 3}
+  hullFilled: {fileID: 21300000, guid: 7fc5a43c97454d0296938c78e51e9739, type: 3}
+  hullOutline: {fileID: 21300000, guid: ef7c6cc4ecf94a9e93b84a6b55c082de, type: 3}
+  plotBackground: {r: 0.055, g: 0.043, b: 0.031, a: 1}
+  gridFine: {r: 0.816, g: 0.608, b: 0.204, a: 0.05}
+  gridMinor: {r: 0.816, g: 0.608, b: 0.204, a: 0.1}
+  gridMajor: {r: 0.816, g: 0.608, b: 0.204, a: 0.26}
+  iconTint: {r: 0.816, g: 0.608, b: 0.204, a: 1}
+  iconTintActive: {r: 0.984, g: 0.792, b: 0.353, a: 1}
+  frameTint: {r: 0.816, g: 0.608, b: 0.204, a: 0.4}
+  panelWell: {r: 0.039, g: 0.059, b: 0.067, a: 0.86}

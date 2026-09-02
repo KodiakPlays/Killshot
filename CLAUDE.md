@@ -23,11 +23,33 @@ Deliberately **not** here, because it would rot:
 
 ## Orientation
 
+**Start with `Assets/CONTEXT_INDEX.md`.** It routes you to the right document for the question you have. Read it before opening anything else.
+
+### The sources are a timeline, not rivals
+
+```
+GDD  →  HTML prototype  →  Silent Shark  →  the spec
+```
+
+- **`References/Starwolf GDD.pdf`** — the original vision. **What the game is and why.** Nothing overrides it on intent. Read it before designing anything. (`pdftotext` is not installed; use `uv run --with pypdf python`.)
+- **`References/starwolf-prototype.html`** — that vision as working code. **How systems behave**, with real numbers.
+- **Silent Shark** — a released tactical submarine sim the team is adapting toward. **How the game should be presented.** Not a change of direction; the GDD already asks for a control-panel game with no outside view.
+- **The Unity build** — a partial, older attempt. It tells you what exists. **It decides nothing.**
+
+A session once wrote the whole specification without opening the GDD. The result had no win condition and missed the game's central mechanic. Don't repeat it.
+
 Read what's relevant before non-trivial work. These sources are **rolling** — treat them as current, and never mirror their contents into this file.
 
 | What | Where |
 |---|---|
+| **Start here** — routes you to everything else | `Assets/CONTEXT_INDEX.md` |
+| **The specification** (how the game works) | `Assets/TACTICAL_BOARD_SPEC.md` |
+| **Decision log** (why, and what was rejected) | `Assets/TACTICAL_BOARD_PLAN.md` |
 | **Verified code baseline** (every script read line by line) | `Assets/CODEBASE_BASELINE.md` |
+| **Build log** (what was built, in order, and every trap hit) | `Assets/Scenes/Tactical/BUILD_LOG.md` |
+| **Reference simulation** (turret arming and radar tracks, in TS) | `docs/reference-sim/` |
+| **Prototype baseline** (the playable build, read line by line) | `Assets/PROTOTYPE_BASELINE.md` |
+| **Unity→prototype parity plan** (work items, decisions, traps) | `Assets/PARITY_PLAN.md` |
 | Code structure & main systems | `Assets/DOCUMENTATION.md` |
 | Game overview & design intent | `Assets/STAKEHOLDER_DOCUMENTATION.md` |
 | Weapon system architecture | `Assets/Scripts/Weapons/WEAPON_SYSTEM_README.md` |
@@ -48,7 +70,8 @@ Docs may lag the code. **Code and live Editor state win.**
 
 - **Do** read the relevant reference before building or changing a system it covers. A prototype is the owner's intent expressed as working code — feel, pacing, numbers, UI layout, state flow.
 - **Do** treat a prototype as a **specification of behaviour, not of implementation.** Rebuild the mechanic in idiomatic Unity and the conventions below; never transliterate its DOM, canvas, or global-variable structure into C#.
-- **Do** expect the Unity build to move past a reference and stay there. Where the two differ, the Unity build is usually **ahead** — never "correct" it back toward the prototype, and never scope a feature down to what the prototype happened to do. Ask the owner if the intent is genuinely unclear.
+- **Do** treat references as a floor. Never scope a Unity feature down to what a reference happened to do, and never "correct" the Unity build back toward a prototype just because they differ.
+- **Don't** assume either build is ahead — check per system. Unity and the prototype were built **in parallel**. Unity was intended to lead but is unfinished; the prototype is a fully playable experience and currently holds much of the core playability. See `Assets/PARITY_PLAN.md` for the current mapping.
 - **Don't** mirror a reference's contents into this file or into docs. Link the path.
 - **Don't** edit anything in `References/`. It is owner-authored input, not a build artifact.
 

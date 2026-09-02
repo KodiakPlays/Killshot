@@ -410,6 +410,9 @@ public class UIController : MonoBehaviour
 
     public void ScanPlaceHack()
     {
+        // Not present in the Tactical scenes — the scanner canvas is not loaded.
+        if (scannerSlider == null || scannerImg == null) return;
+
         placeValue = scannerSlider.value;
 
         for (int i = 0; i < scanerPipsV2.Count; i++)
@@ -426,6 +429,9 @@ public class UIController : MonoBehaviour
 
     public void ScanMovment()
     {
+        // Not present in the Tactical scenes — the scanner canvas is not loaded.
+        if (scannerSlider == null) return;
+
         if(rightScanner)
         {
             scannerSlider.value = ++scanValue / scanSpeed;
@@ -1008,6 +1014,9 @@ public class UIController : MonoBehaviour
 
         if (loaded)
         {
+            // Not present in the Tactical scenes — the interior canvas is not loaded.
+            if (sensorLoadInfo == null || sensorLoadInfo.Count < 4 || sensorLoadInfo[0] == null) return;
+
             //sensorIcon.sprite = sensorLoadSprites[icon];
             sensorLoadInfo[0].text = port.ToString() + "/ 100";
             sensorLoadInfo[1].text = aft.ToString() + "/ 100";
@@ -1032,6 +1041,8 @@ public class UIController : MonoBehaviour
 
     public void UpdateCompass(float angle)
     {
+        // Not present in the Tactical scenes — the navigation canvas is not loaded.
+        if (compassRect == null) return;
         compassRect.localRotation = Quaternion.Euler(0, 0, angle);
     }
 
@@ -1073,6 +1084,11 @@ public class UIController : MonoBehaviour
 
     public void UpdateVelocity()
     {
+        // Not present in the Tactical scenes — these live in the interior canvas.
+        if (playerShipRef == null) return;
+        if (velocityMeterImg == null || velocityMeterImg.Length == 0 || velocityMeterImg[0] == null) return;
+        if (velocityMeterTMP == null || velocityMeterTMP.Length == 0 || velocityMeterTMP[0] == null) return;
+
         velocityMeterImg[0].material.SetFloat("_PowerCur", Mathf.RoundToInt(playerShipRef.GetCurrentSpeed()));
 
         velocityMeterTMP[0].text = Mathf.RoundToInt(playerShipRef.GetCurrentSpeed()).ToString();
@@ -1137,6 +1153,8 @@ public class UIController : MonoBehaviour
 
     public void StabilityMeterStart(float cur, float max)
     {
+        // Not present in the Tactical scenes — the interior canvas is not loaded.
+        if (stabilityImg == null || stabilityShader == null) return;
         stabilityImg.material = new Material(stabilityShader);
         stabilityImg.material.SetColor("_OnColor", new Color(1f, 1f, 1f));
 
@@ -1194,6 +1212,8 @@ public class UIController : MonoBehaviour
 
     public void RadarUpdate(float d)
     {
+        // Not present in the Tactical scenes — the navigation canvas is not loaded.
+        if (radarImg == null || radarImg.material == null) return;
         radarImg.material.SetFloat("_RangeDegree", d);
     }
 

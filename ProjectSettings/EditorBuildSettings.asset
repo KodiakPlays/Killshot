@@ -6,6 +6,15 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Tactical/00_Start.unity
+    guid: e50db2cd323304012ba3e7afb4e531cb
+  - enabled: 1
+    path: Assets/Scenes/Tactical/01_Briefing.unity
+    guid: 326d3f3159fcb4965bebcf61495595c6
+  - enabled: 1
+    path: Assets/Scenes/Tactical/02_Grid.unity
+    guid: 7590f86ac5cb446509ffb65be8bb2360
+  - enabled: 1
     path: Assets/Scenes/Prototype Dev.unity
     guid: ea23deeb671a2214cab61c57d774c647
   m_configObjects:

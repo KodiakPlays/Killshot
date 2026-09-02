@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8998ecd624a64459e9f264f4b18b3275, type: 3}
+  m_Name: TacticalTuning
+  m_EditorClassIdentifier: Assembly-CSharp::TacticalTuning
+  accelerationRate: 50
+  turnRate: 90
+  dodgeDistance: 50
+  dodgeDuration: 0.2
+  enginePowerDrainRate: 0.2
+  powerFillRate: 0.5
+  ventRate: 1
+  reactorMaxPower: 8
+  maxStability: 100
+  stabilityRecoveryRate: 5
+  turnStabilityDrainMultiplier: 1
+  speedStabilityDrainMultiplier: 0.5
+  dodgeStabilityCost: 45
+  zoomMin: 300
+  zoomMax: 250000
+  zoomDefault: 30000
+  zoomStepPerNotch: 1.22
+  zoomSmoothing: 14
+  followSmoothing: 8
+  shipMinPixels: 170
+  shipMaxPixels: 0
+  gridCellSize: 2000
+  gridFineDivisions: 5
+  gridMajorEvery: 5
+  gridLineWidthPixels: 1.1
+  gridMajorWidthScale: 1.8
+  gridFineWidthScale: 0.8
+  gridFadeMinPixels: 6
+  gridFadeMaxPixels: 26
