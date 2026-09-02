@@ -78,3 +78,7 @@ Starwolf_Demo_Build_v0.1/Starwolf_BurstDebugInformation_DoNotShip/Data/Plugins/x
 /Starwolf_Demo_Build_v0.2
 Starwolf_Demo_Build_v0.3.zip
 /Starwolf_Demo_Build_v0.3
+
+# Agent tooling - not part of the game
+/.agents/
+/skills-lock.json
