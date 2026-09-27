@@ -1,16 +1,17 @@
 using UnityEngine;
 
 /// <summary>
-/// The seven plotting instruments on the left rail.
+/// The plotting instruments on the left rail.
 ///
-/// Five are MODES — you select one and it stays selected. Two, UNDO and CLEAR
-/// ALL, are immediate ACTIONS: they do their job on press and never become the
-/// active tool. The rail has to treat those differently or the board ends up
-/// stuck in a tool that does nothing.
+/// Five buttons, all modes. MOUSE is the default and means "no tool": the plot
+/// is just something you look at.
+///
+/// Clear-all is nested in the eraser: press ERASE a second time while it is
+/// already live and the plot is wiped. It does not get a button of its own.
 /// </summary>
 public class PlotTools : MonoBehaviour
 {
-    public enum Tool { None, Point, Line, Ruler, Compass, Erase }
+    public enum Tool { Mouse, Point, Ruler, Compass, Erase }
 
     [SerializeField] private PlotSurface surface;
     [SerializeField] private PlotOverlay overlay;
@@ -26,22 +27,39 @@ public class PlotTools : MonoBehaviour
     [Tooltip("How near, in pixels, ERASE has to be to remove a mark.")]
     [SerializeField] private float erasePixelRadius = 14f;
 
-    /// <summary>Raised when the active tool changes, so the rail can light up.</summary>
+    /// <summary>Raised when the live tool changes, so the rail can light up.</summary>
     public event System.Action<Tool> ToolChanged;
 
-    /// <summary>Raised with a live readout while measuring. Empty when nothing to say.</summary>
+    /// <summary>Live readout. Empty string means there is nothing to say.</summary>
     public event System.Action<string> Readout;
 
-    private Tool active = Tool.None;
+    private Tool active = Tool.Mouse;
+    private int pointCount;
+
     public Tool Active { get { return active; } }
+
+    /// <summary>The BoardAction id of the live tool, for the rail highlight.</summary>
+    public string ActiveId
+    {
+        get
+        {
+            switch (active)
+            {
+                case Tool.Point:   return "point";
+                case Tool.Ruler:   return "ruler";
+                case Tool.Compass: return "compass";
+                case Tool.Erase:   return "erase";
+                default:           return "mouse";
+            }
+        }
+    }
 
     public void SetTool(Tool t)
     {
         if (overlay == null) return;
-        if (active == t) t = Tool.None;         // pressing the live tool puts it away
         active = t;
         overlay.SetPreview(null);
-        Say("");
+        Say(t == Tool.Mouse ? "" : t.ToString().ToUpper() + " READY");
         if (ToolChanged != null) ToolChanged(active);
     }
 
@@ -60,19 +78,21 @@ public class PlotTools : MonoBehaviour
 
         switch (id)
         {
+            case "mouse":   SetTool(Tool.Mouse);   break;
             case "point":   SetTool(Tool.Point);   break;
-            case "line":    SetTool(Tool.Line);    break;
             case "ruler":   SetTool(Tool.Ruler);   break;
             case "compass": SetTool(Tool.Compass); break;
-            case "erase":   SetTool(Tool.Erase);   break;
 
-            // Actions, not modes. They never become the active tool.
-            case "undo":
-                Say(overlay.Undo() ? "UNDONE" : "NOTHING TO UNDO");
-                break;
-            case "clear":
-                overlay.Clear();
-                Say("PLOT CLEARED");
+            case "erase":
+                // Pressing the eraser when it is already live wipes the plot.
+                // Clear-all lives here rather than taking a button of its own.
+                if (active == Tool.Erase)
+                {
+                    overlay.Clear();
+                    pointCount = 0;
+                    Say("PLOT CLEARED");
+                }
+                else SetTool(Tool.Erase);
                 break;
         }
     }
@@ -90,6 +110,7 @@ public class PlotTools : MonoBehaviour
                 "— no tool will do anything.", this);
             return;
         }
+
         surface.Clicked   += OnClick;
         surface.Dragged   += OnDrag;
         surface.DragEnded += OnDragEnd;
@@ -108,9 +129,14 @@ public class PlotTools : MonoBehaviour
         switch (active)
         {
             case Tool.Point:
-                overlay.Add(PlotAnnotation.Point(world, markColour));
-                Say(Position(world));
+                pointCount++;
+                var mark = PlotAnnotation.Point(world, markColour, "P" + pointCount, MissionClock.Now);
+                overlay.Add(mark);
+                Say(mark.designator + " " + MissionClock.Stamp(mark.stampedAt) +
+                    "   X " + Mathf.RoundToInt(world.x).ToString("N0") +
+                    "   Y " + Mathf.RoundToInt(world.y).ToString("N0"));
                 break;
+
             case Tool.Erase:
                 Say(overlay.EraseNear(world, erasePixelRadius) ? "ERASED" : "NOTHING THERE");
                 break;
@@ -140,8 +166,6 @@ public class PlotTools : MonoBehaviour
     {
         switch (active)
         {
-            case Tool.Line:
-                return PlotAnnotation.Between(PlotAnnotation.Kind.Line, from, to, markColour);
             case Tool.Ruler:
                 return PlotAnnotation.Between(PlotAnnotation.Kind.Ruler, from, to, measureColour);
             case Tool.Compass:
@@ -161,11 +185,6 @@ public class PlotTools : MonoBehaviour
             return "RADIUS " + Mathf.RoundToInt(m.Range).ToString("N0") + " u";
         return "RNG " + Mathf.RoundToInt(m.Range).ToString("N0") + " u" +
                "   BRG " + Mathf.RoundToInt(m.Bearing).ToString("000") + "°";
-    }
-
-    private static string Position(Vector2 w)
-    {
-        return "X " + Mathf.RoundToInt(w.x).ToString("N0") + "   Y " + Mathf.RoundToInt(w.y).ToString("N0");
     }
 
     private void Say(string s) { if (Readout != null) Readout(s); }

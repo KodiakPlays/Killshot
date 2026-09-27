@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -11,12 +10,18 @@ using UnityEngine;
 [System.Serializable]
 public class PlotAnnotation
 {
-    public enum Kind { Point, Line, Ruler, Ring }
+    public enum Kind { Point, Ruler, Ring }
 
     public Kind kind;
-    public Vector2 a;          // world
-    public Vector2 b;          // world — unused for Point
+    public Vector2 a;              // world
+    public Vector2 b;              // world — same as a for a Point
     public Color colour = Color.white;
+
+    /// <summary>Short name shown on the plot, e.g. P3.</summary>
+    public string designator = "";
+
+    /// <summary>Mission time this was dropped, in seconds. Points only.</summary>
+    public float stampedAt = -1f;
 
     /// <summary>Range from a to b, in world units.</summary>
     public float Range { get { return Vector2.Distance(a, b); } }
@@ -35,9 +40,41 @@ public class PlotAnnotation
         }
     }
 
-    public static PlotAnnotation Point(Vector2 world, Color c)
+    /// <summary>What this mark says on the plot. Empty means draw no label.</summary>
+    public string Label
     {
-        return new PlotAnnotation { kind = Kind.Point, a = world, b = world, colour = c };
+        get
+        {
+            switch (kind)
+            {
+                case Kind.Point:
+                    return stampedAt >= 0f
+                        ? designator + "  " + MissionClock.Stamp(stampedAt)
+                        : designator;
+
+                case Kind.Ruler:
+                    return "RNG " + Mathf.RoundToInt(Range).ToString("N0") + " u\n" +
+                           "BRG " + Mathf.RoundToInt(Bearing).ToString("000") + "°";
+
+                case Kind.Ring:
+                    return "R " + Mathf.RoundToInt(Range).ToString("N0") + " u";
+            }
+            return "";
+        }
+    }
+
+    /// <summary>Where the label sits, in world coordinates.</summary>
+    public Vector2 LabelAnchor
+    {
+        get { return kind == Kind.Point ? a : b; }
+    }
+
+    public static PlotAnnotation Point(Vector2 world, Color c, string designator, float missionTime)
+    {
+        return new PlotAnnotation {
+            kind = Kind.Point, a = world, b = world, colour = c,
+            designator = designator, stampedAt = missionTime
+        };
     }
 
     public static PlotAnnotation Between(Kind k, Vector2 from, Vector2 to, Color c)

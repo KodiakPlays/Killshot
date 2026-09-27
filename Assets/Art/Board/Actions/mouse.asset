@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a548fe8ce2fe64e8898b5a469ea49748, type: 3}
-  m_Name: undo
+  m_Name: mouse
   m_EditorClassIdentifier: Assembly-CSharp::BoardAction
-  id: undo
-  label: UNDO
+  id: mouse
+  label: MOUSE
   kind: 0
-  icon: {fileID: 21300000, guid: b0f0088bfdbd04b6da986172ac24c76b, type: 3}
+  icon: {fileID: 21300000, guid: eb6ab55f966d54d6ba7636189c361309, type: 3}
   tintIcon: 1
   tint: {r: 1, g: 1, b: 1, a: 1}
   panel: 0

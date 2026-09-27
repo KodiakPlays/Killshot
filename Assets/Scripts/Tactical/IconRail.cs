@@ -21,6 +21,32 @@ public class IconRail : MonoBehaviour
     /// <summary>Raised when a rail button is pressed.</summary>
     public event System.Action<BoardAction> Clicked;
 
+    [Header("Active state (handoff 6.1)")]
+    [Tooltip("Handoff: active gains a lighter face and a 3px left bar.")]
+    [SerializeField] private Color activeFaceTint = new Color(0.16f, 0.19f, 0.22f, 0.95f);
+    [SerializeField] private float activeBarWidth = 3f;
+
+    private readonly System.Collections.Generic.Dictionary<string, Image> faces =
+        new System.Collections.Generic.Dictionary<string, Image>();
+    private readonly System.Collections.Generic.Dictionary<string, GameObject> bars =
+        new System.Collections.Generic.Dictionary<string, GameObject>();
+
+    /// <summary>
+    /// Light up one button and dim the rest. Pass an id this rail does not have
+    /// and everything goes dark, which is what you want when the live tool
+    /// belongs to the other rail.
+    /// </summary>
+    public void SetActiveId(string id)
+    {
+        foreach (var kv in faces)
+            if (kv.Value != null)
+                kv.Value.color = kv.Key == id ? activeFaceTint : style.buttonFaceTint;
+
+        foreach (var kv in bars)
+            if (kv.Value != null)
+                kv.Value.SetActive(kv.Key == id);
+    }
+
     public RailStyle Style { get { return style; } set { style = value; } }
     public TacticalArtProfile Art { get { return art; } set { art = value; } }
     public Side WhichSide { get { return side; } set { side = value; } }
@@ -40,6 +66,9 @@ public class IconRail : MonoBehaviour
             Debug.LogWarning("[IconRail] No RailStyle on " + name, this);
             return;
         }
+
+        faces.Clear();
+        bars.Clear();
 
         var self = (RectTransform)transform;
         for (int i = self.childCount - 1; i >= 0; i--)
@@ -93,6 +122,23 @@ public class IconRail : MonoBehaviour
             button.targetGraphic = face;
             var captured = a;
             button.onClick.AddListener(() => { if (Clicked != null) Clicked(captured); });
+
+            // The 3px left bar that marks the live tool. Built once, shown and
+            // hidden by SetActiveId rather than rebuilt.
+            var bar = NewRect("ActiveBar", btn, new Vector2(activeBarWidth, style.cell));
+            bar.anchorMin = new Vector2(0f, 0.5f);
+            bar.anchorMax = new Vector2(0f, 0.5f);
+            bar.anchoredPosition = new Vector2(activeBarWidth * 0.5f, 0f);
+            var barImg = bar.gameObject.AddComponent<Image>();
+            barImg.color = a.tintIcon && art != null ? art.iconTint : a.tint;
+            barImg.raycastTarget = false;
+            bar.gameObject.SetActive(false);
+
+            if (!string.IsNullOrEmpty(a.id))
+            {
+                faces[a.id] = face;
+                bars[a.id] = bar.gameObject;
+            }
 
             var glyph = NewRect("Icon", btn, new Vector2(style.iconSize, style.iconSize));
             var img = glyph.gameObject.AddComponent<Image>();

@@ -119,10 +119,6 @@ public class PlotOverlay : MaskableGraphic
                 Cross(vh, a, pointSize, m.colour);
                 break;
 
-            case PlotAnnotation.Kind.Line:
-                Segment(vh, a, ToLocal(m.b), lineWidth, m.colour);
-                break;
-
             case PlotAnnotation.Kind.Ruler:
                 Dashed(vh, a, ToLocal(m.b), lineWidth, m.colour);
                 Cross(vh, a, pointSize * 0.7f, m.colour);

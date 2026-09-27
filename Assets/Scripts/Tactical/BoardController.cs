@@ -49,12 +49,27 @@ public class BoardController : MonoBehaviour
         rail.Rebuild();
         rail.Clicked -= OnAction;
         rail.Clicked += OnAction;
+
+        if (tools != null)
+        {
+            tools.ToolChanged -= OnToolChanged;
+            tools.ToolChanged += OnToolChanged;
+            rail.SetActiveId(tools.ActiveId);   // show the default straight away
+        }
+    }
+
+    private void OnToolChanged(PlotTools.Tool t)
+    {
+        string id = tools != null ? tools.ActiveId : "";
+        if (leftRail != null) leftRail.SetActiveId(id);
+        if (rightRail != null) rightRail.SetActiveId(id);
     }
 
     private void OnDisable()
     {
         if (leftRail != null) leftRail.Clicked -= OnAction;
         if (rightRail != null) rightRail.Clicked -= OnAction;
+        if (tools != null) tools.ToolChanged -= OnToolChanged;
     }
 
     private void OnAction(BoardAction a)
