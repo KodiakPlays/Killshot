@@ -6,18 +6,32 @@ A running record of the new scene flow being built under `Assets/Scenes/Tactical
 exists, what is wired to what, which step we are on, and what to do next. You should not have to
 work any of that out again.
 
-Last updated: 2026-09-02. Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
+Last updated: 2026-10-05. Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
 
 ---
 
 ## 1 · Where we are
 
-**Steps 1 to 23 are done.**
+**Steps 1 to 33 are done, plus a final QA pass.**
 
-All three scenes are built. The intro flow runs end to end. The tactical grid is on screen in amber,
-with the corner panels and both icon rails on top of it, and the outer metal frame around all of it.
-The targeting drawer slides open from the right rail. The ship draws power and moves. The rest of the
-board is not wired up yet.
+The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
+the briefing, Enter leads to the board in `02.1_Grid`.
+
+The board looks and clicks right, but **there is no game behind it yet**. No enemies, no world, no
+mission. See **Road to a playable demo** at the top of section 8.
+
+The older board in `02_Grid` (Steps 5–26) is out of the play flow. It had an amber grid, corner
+panels, two icon rails, a targeting drawer, power, WASD movement and five plot tools.
+
+**Changed direction on 2026-10-04.** A new Claude Design handoff arrived at
+`Assets/UI2/Claude Design handoff/export/`. It is now fully built into `02.1_Grid`, and the final QA
+passed. Every control is clickable and shows its states. Nothing is wired to game systems yet. The
+flow is `00_Start` → `01_Briefing` → `02.1_Grid`. `02_Grid` is still in Build Settings, but nothing
+leads to it. The full record is `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
+
+**Next up: the owner's decisions** in section 8, "Road to a playable demo". Then the game systems,
+in the order listed there. The UI asset audit is done (`ASSET_AUDIT.md`). The Claude Design request still
+stands, but placeholder art is fine, so it does not block a demo.
 
 The owner is building this one step at a time and checking each step before starting the next one.
 Do not run ahead. Do one step, show it, wait.
@@ -46,23 +60,30 @@ Do not run ahead. Do one step, show it, wait.
 | 20 | Why the power bars never moved | **Done** — checked in play mode |
 | 21 | Plot layer, part one: camera, zoom range and input | **Done** |
 | 22 | Own ship glyph: minimum size instead of constant size | **Done** |
-| 23 | Plot layer, part two: annotation rendering and the seven tools | **Done** — every tool checked in play mode |
+| 23 | Plot layer, part two: annotation rendering and the tools | **Done** — every tool checked in play mode |
+| 24 | Cut to five tools, MOUSE as default, active-tool highlight | **Done** — checked on screen |
+| 25 | Plot labels — measurements shown on the board | **Done** — checked in play mode |
+| 26 | Ship readout — speed and heading | **Done** — checked in play mode |
+| 27 | Intro and menu wired into the flow, and four rendering bugs in the intro package | **Done** — flow checked in play mode; CRT treatment not yet seen on screen |
+| 28 | New scene `02.1_Grid` for the new handoff, wired after the briefing | **Done** — flow checked in play mode |
+| 29–33 | The new handoff built into `02.1_Grid`: import, builder, static board, movement, clickable controls (33a–33j), final QA | **Done** — FINAL QA: PASS. Detail in `UI_INTEGRATION_LOG.md` |
 
-Steps 6 to 23 are written up in section 6. What is still not done is in **Open items**, at the very
+Steps 6 to 28 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
 
 ## 2 · Scenes
 
-All three scenes live in `Assets/Scenes/Tactical/`. The play order is `00_Start` → `01_Briefing` →
-`02_Grid`. They were added to Build Settings in that order and all three enabled.
+All scenes live in `Assets/Scenes/Tactical/`. The play order is now `00_Start` → `01_Briefing` →
+`02.1_Grid`. It was `02_Grid` until Step 28. They were added to Build Settings in that order and all three enabled.
 
 | Scene | GUID | State |
 |---|---|---|
 | `00_Start.unity` | `e50db2cd323304012ba3e7afb4e531cb` | Built |
 | `01_Briefing.unity` | `326d3f3159fcb4965bebcf61495595c6` | Built |
-| `02_Grid.unity` | `7590f86ac5cb446509ffb65be8bb2360` | Built — grid surface only |
+| `02_Grid.unity` | `7590f86ac5cb446509ffb65be8bb2360` | Built — no longer in the play flow |
+| `02.1_Grid.unity` | — | Built — the new handoff board, Steps 28–33. In the play flow after `01_Briefing` |
 
 ### `00_Start` — built in Step 2
 
@@ -100,6 +121,25 @@ panels are put together.
 The scene stays 3D and top-down. That is deliberate — collision and physics will work later without
 having to redo any of this.
 
+### `02.1_Grid` — made in Step 28, board built in Steps 29–33
+
+The board from the new Claude Design handoff. The briefing's Enter now leads here. The board is
+built and verified, but not wired to game systems.
+
+- Built by two menus: `Starwolf/Handoff/1 · Apply import settings` (`Assets/Editor/HandoffImport.cs`)
+  and `Starwolf/Handoff/2 · Build static board in 02.1_Grid` (`Assets/Editor/HandoffBoardBuilder.cs`).
+- Runtime code: `Assets/Scripts/Tactical/Handoff*.cs`, `GammaBoardPresenter.cs`, `CssEase.cs`.
+- The full record: `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
+- What the package left out: `Assets/Scenes/Tactical/HANDOFF_GAPS.md` (105 rows).
+- What Claude Design must still provide, verified: `Assets/Scenes/Tactical/CLAUDE_DESIGN_NEEDS.md`.
+
+The setup from Step 28:
+
+- `Main Camera` — orthographic, clears to `board.ground` `#0A0C0E`, with an `AudioListener`.
+- `EventSystem` with a `StandaloneInputModule`.
+- `Board` — Canvas, Screen Space **Camera**, plane distance 5, CanvasScaler 1920x1080, match 0.5,
+  reference pixels per unit 100. These are the handoff README's canvas numbers.
+
 ### Deleted in Step 1
 
 These were leftovers from an earlier attempt that was abandoned. They are gone on purpose. Do not
@@ -130,12 +170,30 @@ Where it is attached:
 | Scene | Sits on | `nextScene` | `advanceOnEnter` | How it fires |
 |---|---|---|---|---|
 | `00_Start` | Its own root object, named `ScreenFlow` | `01_Briefing` | off | `StartButton`'s Button `onClick` calls `Advance()` |
-| `01_Briefing` | Its own root object | `02_Grid` | on | Enter key |
+| `01_Briefing` | Its own root object | `02.1_Grid` (was `02_Grid` until Step 28) | on | Enter key |
 
 Note the script sits on **its own root GameObject**, not on the button or the canvas.
 
-The chain was run in play mode twice: `00_Start` → click → `01_Briefing` → advance → `02_Grid`.
-Both times it worked.
+The chain was run in play mode twice in Step 4: `00_Start` → click → `01_Briefing` → advance →
+`02_Grid`. Both times it worked. Since Step 28 the chain ends at `02.1_Grid` instead, also checked in
+play mode.
+
+### The handoff board — new in Steps 29–33
+
+Everything on the `02.1_Grid` board. Detail is in `UI_INTEGRATION_LOG.md`; do not copy it here.
+
+| File | What it is |
+|---|---|
+| `Assets/Editor/HandoffImport.cs` | Menu `Starwolf/Handoff/1`. Import settings for the handoff images and fonts. |
+| `Assets/Editor/HandoffBoardBuilder.cs` | Menu `Starwolf/Handoff/2`. Builds the board into `02.1_Grid`. |
+| `Assets/Scripts/Tactical/HandoffBoardState.cs` | The board's data. A port of the handoff's `board-logic.js`. Every panel reads and writes only this. |
+| `Assets/Scripts/Tactical/HandoffBoardControls.cs` | Runs the 0.42 s tick and the board's own clock. |
+| `Assets/Scripts/Tactical/Handoff*Panel.cs` | One per panel: power, sensors, comms, engineering, hangar, fire control, helm, orders, periscope, plot. |
+| `Assets/Scripts/Tactical/Handoff*.cs` (the rest) | Shared pieces: motion, easing, hit testing, shapes, marks, plot grid, scope sight. |
+| `Assets/Scripts/Tactical/GammaBoardPresenter.cs` | Shows the board in gamma space. See decision 15. |
+| `Assets/Scripts/Tactical/CssEase.cs` | The handoff's CSS easing curves. |
+
+**Nothing here touches a game system.** See section 8 for what that means for a demo.
 
 ### Grid shader and material — new in Step 5
 
@@ -223,7 +281,7 @@ Reference these. Never edit them.
 |---|---|
 | `QuestSystem` | Its stages — `NotStarted` → `LocateTarget` → `EliminateTarget` → `ExitRegion` → `MissionComplete` / `Failed` — already match the design's win condition. Keep as-is. |
 | `WorldBoundary` | Reused. |
-| `PowerManager` | Reused. Step 7 will read from it. |
+| `PowerManager` | Used by `02_Grid` only. Its five systems clash with the new board's four buses. Whether to use it again is an open question in section 8. |
 | UI shaders: `UI_PowerArrow`, `UI_ShipHack`, `ScanLines`, `UI_GradeDisplay*` | Reused. |
 | Rail icons in `Assets/Art/Icons/` | 15 icons already extracted. Step 8 uses them. |
 
@@ -260,6 +318,15 @@ These are settled. Do not reopen them.
    - Plot glass `#0A1719`
 9. **The grid is a world-space plane, not a UI element.** `TacticalGrid.shader`, not `NavGrid`.
 10. **The scene stays 3D top-down**, so collision and physics work later without rework.
+11. **The new handoff wins on weapons and power** (owner, 2026-10-04, editable later): two railgun
+    turrets, two PDC groups, one missile launcher, four power buses (ENG, WEP, SEN, AUX). Its fire
+    sequence and the missile salvo knob are wanted.
+12. **Grid tint toggles white and amber**, not white and red. Something to tune.
+13. **Distances are kilometres. One world unit is one kilometre.**
+14. **The handoff is built in order:** static board first, then movement, then interactions with
+    no game wiring, then the wiring.
+15. **The board loads undamaged** (all green, rooms sealed) **and is gamma-space only.** See
+    `UI_INTEGRATION_LOG.md`, section 3, and its Step 31.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -411,7 +478,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 23, in detail
+## 6 · Steps 6 to 26, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -921,6 +988,156 @@ with `MonoBehaviour.Invoke(string, float)` and every reflection lookup threw an
 
 ---
 
+### Step 24 — Cut to five tools, MOUSE as the default
+
+The owner cut the tool set down, twice, firmly. LINE merged into RULER — a line that does not tell
+you its range and bearing is decoration. UNDO and CLEAR ALL were dropped entirely.
+
+**Clear-all is nested in the eraser.** Press ERASE a second time while it is already live and the
+plot wipes. It does not get a button.
+
+Five buttons: MOUSE, POINT, RULER, COMPASS, ERASE. MOUSE is the default and means "no tool" — the
+plot is something you look at. `line.asset`, `undo.asset` and `clear.asset` were deleted.
+
+`RailStyle.plateCells` set to **6**, the larger rail's count, so both plates stay the same height and
+the rails read as a mirrored pair. Both are now 64 x 361.
+
+Active state follows the handoff: a lighter face plus a 3px left bar in the icon's own colour. Built
+once per button and shown or hidden by `IconRail.SetActiveId`, driven from `BoardController` off
+`PlotTools.ToolChanged`.
+
+### Step 25 — Plot labels
+
+`PlotLabels.cs`. A pool of TextMeshProUGUI objects, repositioned every frame from world coordinates,
+so a label stays stuck to its mark through pan and zoom. Text cannot come out of `PlotOverlay`'s mesh
+— that is one Graphic drawing lines.
+
+POINT reads `P1  T+0:13`, RULER reads `RNG 34,000 u / BRG 118°`, COMPASS reads `R 18,000 u`.
+
+`MissionClock.cs` added as the one place that answers what time it is. It is `Time.timeSinceLevelLoad`
+for now. **When there is a real clock that can pause, only this changes** — otherwise pausing would
+drift every timestamp against the clock the player sees.
+
+**Two traps.** `RectTransformUtility.ScreenPointToLocalPointInRectangle` with a null camera silently
+returns zero on a Screen Space - Camera canvas, and every label stacks in the middle — pass
+`canvas.worldCamera`. And a point and a ruler end can share a coordinate exactly, so labels now stack
+rather than printing over each other.
+
+### Step 26 — Ship readout
+
+`ShipReadout.cs`. One TMP line at the top of the board: `SPD 5 u/s    HDG 062°`.
+
+**The UIController speedometer is dead and was not reused.** `UpdateSpeedometer` has its only line
+commented out, and `velocityMeterImg` points into the interior canvas these scenes do not load.
+`PlayerShip.GetCurrentSpeed()` already exists, so one label reading it was cheaper than extracting a
+meter that never worked.
+
+Heading is compass degrees off `transform.eulerAngles.z` — Unity's 298 is heading 062.
+
+
+### Step 27 — The intro and menu, wired into the flow
+
+The owner asked for one chain: SECTION 36, then STARWOLF, both on their own with no keypress, then a
+menu, then NEW GAME to the beta message, then Enter to the board.
+
+**Almost none of this needed new code.** `Assets/StarwolfIntro/` already held the whole sequence —
+`StarwolfIntroController` plays SECTION 36 → INITIALISING... → STARWOLF → a pull-back → a menu of
+NEW GAME / LOAD GAME / SETTINGS, on its own clock, and exposes a `newGame` UnityEvent. So the work
+was wiring, not building. **No new script was written for this step.**
+
+What went into `00_Start`:
+
+- `STARWOLF Intro`, a root object with `StarwolfIntroController` on it, with `glyphData`,
+  `displayShader` and `hardwareHum` assigned from `Assets/StarwolfIntro/`.
+- `newGame` wired to the existing `ScreenFlow.Advance()`, which already pointed at `01_Briefing`.
+- `loadGameAvailable` off. There is no save system, so LOAD GAME draws dimmed and is skipped when
+  you arrow through the menu.
+- An `AudioListener` on `Main Camera`. There was none, so the hardware hum had nothing to play into.
+- `Title` and `StartButton` **deactivated, not deleted.** The intro draws its own title and menu over
+  the top. They are left in the scene so the old screen can come back if the intro is dropped.
+  Delete them once the owner is happy.
+
+The chain was walked in play mode: intro → menu → NEW GAME → `01_Briefing` → `02_Grid`.
+
+**Pacing.** The package shipped at 2.5 / 1.2 / 2.0 / 3.0 seconds, 8.7 in total, which the owner found
+too fast. Now 4 / 2 / 4 / 4, 14 in total. These are inspector fields on `STARWOLF Intro`.
+
+#### Four rendering bugs in the intro package
+
+The package was written against a Gamma project. This one is Linear, and it showed.
+
+1. **Double gamma encode.** The render target was sRGB, so the blit encoded on write and the
+   backbuffer encoded again. The `#010601` CRT field measured `(63,113,63)` on screen — mid green.
+   Fixed by making the target linear. It is now `ARGBHalf`, not `ARGB32`, because the unlit field
+   sits a few thousandths above black and eight bits cannot hold that.
+2. **Grain on the black field.** `grain * .003` is below what eight bits can represent near black, so
+   it quantised up to a visible green on *every unlit pixel*. That, not the background colour, was
+   most of the green. Grain now modulates the lit phosphor instead.
+3. **Shader uniforms dropped on reload.** `_Pitch`, `_Phosphor`, `_Background` and the six mask sizes
+   were never declared in the shader's `Properties` block. Any shader reload dropped them, the mask
+   sizes came back zero, `mask()` divided by zero and **the whole intro drew pure black.** This is
+   why SECTION 36 looked missing. They are now declared *and* re-applied every frame by
+   `ApplyStaticUniforms`. Declaring alone is not enough — a reload resets a declared property to its
+   default, and a default mask size of zero is just as fatal.
+4. **The grid washing the screen.** The package draws a full-screen phosphor grid at a 9px pitch. The
+   pull-back zooms it 5x, which puts the cells below one pixel, and it aliased into a flat green
+   field. Two changes: each tier now fades out as its lines close to within a pixel, and the grid
+   only appears during the pull-back, swelling and going again.
+
+#### Why it still does not look like the reference
+
+`References/Company Logo.png` is the canonical image. Measured against our render:
+
+| | reference | ours |
+|---|---|---|
+| phosphor peak | `(214,255,229)` | `(213,255,212)` |
+| unlit field | `(0,19,1)` | `(0,0,0)` before Step 27's CRT work |
+
+**The colour was never the real difference.** The reference is not a logo, it is a whole terminal:
+CRT bezel, screen curvature, strong scanlines, a vignette, a faintly lit field, and four corners of
+microtext (`UC-FLEET`, `// CLASSIFIED`, `S38-PR-001 / REV A / 1993.11.04`,
+`RESEARCH / DEVELOPMENT / OPERATIONS`, `CLEARANCE LEVEL 3` with five boxes, three lit).
+
+The package renders only the core mark. That is defensible — `References/LogoREADME.md` §7 separates
+the "core studio mark" from "terminal presentation" and says the bezel, microtext, revision codes,
+clearance levels, scanlines and curvature are **not** part of the permanent logo. But it is why the
+two look nothing alike side by side.
+
+Added in this step: a lit field, scanlines across the whole screen, a stronger vignette, and a
+rounded screen edge, as four tunable shader properties — `_ScanDepth`, `_FieldGlow`, `_Vignette`,
+`_ScreenInset`. **This is tone only. No geometry is warped**, deliberately, because `HandleMenu`
+hit-tests the menu against fixed rectangles in 1920x1080 space and warping the picture would move
+the text away from its own hit boxes.
+
+**Not yet seen on screen.** The Unity MCP bridge dropped before this could be checked. Verify the
+CRT treatment and the menu-on-black change before trusting either.
+
+#### Traps
+
+- **`execute_code` and any asset refresh reload shaders, which used to blank the intro.** Bug 3
+  above. Fixed now, but it is why so many screenshots in this step came back black.
+- **A tool round trip takes roughly fifteen seconds.** You cannot screenshot a beat that lasts four.
+  To photograph one, set its duration to 120 at runtime and call `RestartIntro()`.
+- **Do not hand-author new glyphs into `glyphs.json`.** The microtext needs `U P V H / - 0 1 4 8 9`,
+  none of which exist. `LogoREADME.md` §5 says the glyph tables are canonical and must match the web
+  implementation exactly. §11 allows TextMeshPro for terminal metadata — use that, not new glyphs.
+- The intro package sits in `Starwolf.Intro`, a namespace. The rest of the project has none. It is
+  vendored, owner-supplied code. Left as it is on purpose; do not restyle it.
+
+### Step 28 — A new scene for the new handoff
+
+The owner chose the new Claude Design handoff (`Assets/UI2/Claude Design handoff/export/`) as the
+board to build. It was read in full first: README, asset map, tokens, layout, state spec and logic.
+
+`02.1_Grid.unity` was made with a camera, an EventSystem and a `Board` canvas set to the handoff's
+numbers. It was added to Build Settings after `02_Grid`. The briefing's `ScreenFlow.nextScene` was
+changed from `02_Grid` to `02.1_Grid` — one line in `01_Briefing`.
+
+Checked in play mode: `ScreenFlow.Advance()` in `01_Briefing` lands in `02.1_Grid`, no console
+errors.
+
+---
+
 ## 7 · How to keep this log
 
 This file is the handoff. Update it at the end of every step:
@@ -939,31 +1156,159 @@ Nothing else in the repo gets written by the log keeper. Only this file.
 
 ## 8 · Open items
 
-Still not done. This is the list to work from.
+Still not done. **This is the list to work from.** Read it before picking up any work.
+
+### Road to a playable demo — overview (2026-10-05)
+
+**This is an overview only.** Each workstream gets its own deep dive later, before work starts on it.
+
+**Where we are.** The `02.1_Grid` board looks and clicks right. Every panel reads and writes only
+`HandoffBoardState`, and nothing touches a game system. There is no ship in a world, no enemies, no
+mission and no way to win or lose. Contacts are fixed mock-ups. FIRE only drains the capacitor.
+Hangar launch spawns nothing. The board's clock is its own and never pauses the game. You cannot
+pick a target from the plot (`PickTarget` has no caller, gap 95). PDC and missile controls are not
+drawn (gaps 73, 76).
+
+**What the demo level is.** One mission, about 15–25 minutes, from the GDD and the prototype:
+
+- Drop in under a false ID.
+- Find the flagship. In the prototype that is a command carrier with two destroyers and a cruiser.
+- Kill it, then reach the jump point.
+- The loop: hide, gather, act, get found, break away. Power raises your signature. Enemy awareness
+  only goes up. Firing starts a 59 s alert net, then reinforcements arrive.
+- You lose if the hull is gone, you stay outside the area for 30 s, the timer runs out, or life
+  support fails.
+
+**Workstreams.**
+
+| Workstream | What it means | What we can reuse | Size | In demo? |
+|---|---|---|---|---|
+| World and contacts (DRADIS) | Real ships in a world, shown on the plot as tracks | `docs/reference-sim/radar.ts`, `world.ts`. Not `Radar.cs`, it reads true positions | L | Essential |
+| Detection, signature, alert net | Enemies notice you from your signature; firing raises the alarm | `docs/reference-sim/` | M | Essential |
+| Enemy AI and escorts | Patrol, alert, engage; escorts guard the flagship | Prototype behaviour. `EnemyShip.cs` is a skeleton only | M–L | Essential |
+| Own ship moves from the helm | The helm and ENG power steer a real ship | `docs/reference-sim/ship.ts`. Not `PlayerShip` | M | Essential |
+| Weapons in the world | Railgun slugs fly and hit; enemies shoot back | `docs/reference-sim/weapons.ts`. Not legacy `WeaponBase`/`WeaponManager` (see `Assets/Scenes/Tactical/TARGETING_AUDIT.md`) | L | Essential |
+| Damage model | Hits damage the ship and show on the board | `HullSystem`, `InternalSubsystems` — but they do not match the board's 6 compartments | M, once chosen | Essential |
+| Power wiring | Buses change speed, signature and charge | `HandoffBoardState` buses | S | Essential |
+| AUX | The charge pool spent on abilities | `HandoffBoardState` | S | Owner decides |
+| Comms payoff | A decoded intercept marks the carrier's zone | Comms panel | S | Essential |
+| Mission script and level | Locate, eliminate, exit; place the ships | `QuestSystem` (nothing calls `StartMission` yet), `WorldBoundary` | S wire, M author | Essential |
+| Win and lose screens | End the run and say why | `ScreenFlow` | S | Essential |
+| Audio cues | Alerts, fire, hits | — | S | Essential |
+| Hangar and fighters | Launch your own craft | Hangar panel only | M–L | Cut |
+| Disguise | The false ID as a mechanic | — | — | Owner decides |
+
+Also cut for a first demo: cloak, loadouts, the scanner minigame, terrain, most compartment side
+effects, the mission timer, and missiles and PDC unless enemy fighters stay in.
+
+Placeholder art is fine, so the 105 rows in `HANDOFF_GAPS.md` and the 8 buckets in
+`CLAUDE_DESIGN_NEEDS.md` do not block a demo. The design blockers there are 8.1 (contacts on the km
+scale), 8.2 and 8.3. The Claude Design request is still unsent.
+
+**Clashes with the old `02_Grid` code.** Its rails and drawers (`BoardController`, `IconRail`,
+`DrawerPanel`) are replaced; do not reuse them. `PlotTools` and its family duplicate the handoff's
+marks; pick one. `PowerManager`'s five systems clash with the board's four buses. `PlayerShip`'s A/D
+and Shift clash with the helm and comms. `PlotCamera`'s scroll wheel clashes with the board's zoom.
+There are two clocks (`MissionClock` and the board's own), and `GameClock` is unused. `GameClock`
+pauses through `Time.timeScale`, which would freeze the board's animation.
+
+**Decisions the owner must make first.**
+
+1. Damage model: hull sides, or the board's compartments?
+2. Scale: one unit is one km, or the prototype's numbers?
+3. What does firing cost?
+4. Signature scale: the sum of the bars, or 0–100?
+5. Is the prototype's enemy AI the floor?
+6. Which ship is the flagship: a carrier, or the board's cruiser, corvette or frigate?
+7. The two alerts: the player's CONDITION and the enemy alert net. How do they relate?
+8. Which lose conditions, and what shape is the arena?
+9. Disguise: in or out?
+10. Who owns game state? Recommended: a new world sim feeds `HandoffBoardState`. Do not revive
+    `PowerManager` or `PlayerShip`.
+11. Does the CLAUDE.md `WeaponBase` rule still apply?
+12. Do panels pause the game?
+
+**Suggested order.**
+
+1. The decisions above.
+2. World sim skeleton, with contacts on the plot.
+3. The helm drives the ship.
+4. Power drives speed and signature.
+5. Enemy AI and the alert net.
+6. Railgun in the world, and damage.
+7. Mission, win and lose.
+8. Audio and polish.
+
+### Unfinished from Step 27
+
+1. **Nothing from Step 27's CRT work has been seen on screen.** The MCP bridge dropped first. Check
+   the scanlines, the lit field, the screen edge, and that the menu now sits on black.
+2. **The four corners of microtext are not built.** See Step 27 for why, and for the rule against
+   inventing glyphs to do it.
+3. **`Title` and `StartButton` in `00_Start` are deactivated, not deleted.** Delete them once the
+   owner is happy with the intro.
+4. **SETTINGS on the menu does nothing.** There is no settings panel. It logs and returns.
+5. **LOAD GAME is dimmed** because `loadGameAvailable` is off. Turn it on when there is a save system.
+6. `Assets/Screenshots/` collected a pile of verification PNGs during this step. Clear it out.
+
+### Board follow-ups
+
+From `UI_INTEGRATION_LOG.md`, section 10. In order:
+
+1. **Audit the project's existing UI assets** against `CLAUDE_DESIGN_NEEDS.md`. **Done 2026-10-05,
+   verified:** `ASSET_AUDIT.md`. Of 28 items, 5 fit as-is, 7 fit after a small change, 10 get partial
+   help, 6 have nothing. Nothing is used yet; each use needs the owner's yes.
+2. **The short Claude Design request**, when the owner asks.
+
+### Later — DRADIS (superseded for now)
+
+**Superseded by the 2026-10-04 decision: DRADIS stays as the handoff has it, for now.** The notes
+below are from before the handoff. Keep them for the deep dive.
+
+Radar is called **DRADIS**. Use that name in the UI and in code.
+
+- A circle around the ship with a radius. Anything inside gets tagged a **bogey**.
+- It gives you a **position and a bearing**, refreshed on each sweep pass. **Not** bearing-only, so
+  no two-bearing triangulation. Between passes the mark is stale — a ship doing 100 u/s has moved
+  400 units since a four-second-old sweep. `docs/reference-sim/radar.ts` already has `predicted()`,
+  `age()` and `uncertainty()` for this.
+- **Switchable. Costs 1 power minimum. More power buys a bigger radius**, set by a dial on its pane.
+- **Detection and identification are separate jobs.** DRADIS tells you *where*. Scanners tell you
+  *what*. A contact stays an unidentified bogey until scanned.
+
+### After that, in order
+
+1. **Scanners** — identify a bogey that DRADIS has found.
+2. **Targeting computer contents** — the old spec is
+   `Assets/Scenes/Tactical/TARGETING_COMPUTER_SPEC.md`. The handoff's fire control drawer now covers
+   most of it.
+3. **Turrets and firing** — two railgun turrets, two PDC groups and one missile launcher (decision 11,
+   2026-10-04; the handoff wins). Already written in TypeScript at `docs/reference-sim/weapons.ts`;
+   needs porting to C# and changing to match.
+
+### Carried over
 
 1. **`UIController` references still need reconnecting.** The menu item is
    `Starwolf/Wire UI References`.
-2. **The Scanner panel is still a corner panel.** Only Weapons has been moved to a drawer.
-3. **The targeting drawer's lower half is empty.** The handoff specifies mount rows, three
-   interlocks and a FIRE button there.
-4. **Five of the six systems have no panel:** SENSORS, REACTOR, HANGAR, COMMS, ENGINEERING. The
-   handoff lists these as open items too.
-5. **Annotations have no on-plot text labels.** Range and bearing only come out through the
-   `Readout` event, and nothing displays it yet.
-6. **The tool rail buttons do not show an active state.** Nothing on the rail tells you which tool is
-   live.
-7. **Two pre-existing bugs, found and deliberately not fixed:**
+2. **Roughly 100 `UIController` references are unassigned in `02_Grid`.** The power bars were fixed
+   by binding them directly. Other panels may still be showing static placeholder art for the same
+   reason. **Weapons and ShipStats have not been checked.**
+3. **The Scanner corner panel is switched off.** It will come back as the scanners system.
+4. **Five of the six right-rail systems have no panel:** SENSORS, REACTOR, HANGAR, COMMS,
+   ENGINEERING. The handoff lists these as open items too.
+5. **The targeting drawer's lower half is empty.**
+6. **Two pre-existing bugs, found and deliberately not fixed:**
    - The green plates `btn_emergencyVent` and `btn_blackAlert` have empty `onClick` lists, and
      `UIController.EmergencyVentBtn()` is never called.
    - Each power toggle fires two different state changes per click:
      `PowerManager.ToggleDrawState` via `ChargeBtn`, plus `ToggleSystemState` via a second
      persistent call.
-8. **`sc[3]` and `sc[4]` both point at `Camera-Power`.** That looks like a mis-drag.
-9. **W, S, A and D are not yet confirmed under a real keypress.** Someone has to press them in the
-    editor.
-10. **`UIController` still has roughly 100 unassigned references in `02_Grid`.** Other panels driven
-    by it may be showing static placeholder art for the same reason the power bars were. **The
-    Weapons and ShipStats panels have not been checked.**
-11. **The handoff's industrial layer is not built:** the left gutter conduit bundle, the right gutter
-    access hatch, and the frame stencils `TCB-1 / REV D` and `CL II EQUIP — 480V DC`. All of it is
-    20 to 26 percent opacity detail, confined to the frame gutters.
+7. **`sc[3]` and `sc[4]` both point at `Camera-Power`.** That looks like a mis-drag.
+8. **The handoff's industrial layer is not built:** the left gutter conduit bundle, the right gutter
+   access hatch, and the frame stencils `TCB-1 / REV D` and `CL II EQUIP — 480V DC`. All of it is
+   20 to 26 percent opacity detail, confined to the frame gutters.
+
+### Done since this list was last cut
+
+Removed because they are no longer true: plot labels now exist, the rail shows the live tool, and
+W/S/A/D were confirmed by the owner at the keyboard.

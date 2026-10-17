@@ -23,7 +23,12 @@ Deliberately **not** here, because it would rot:
 
 ## Orientation
 
-**Start with `Assets/CONTEXT_INDEX.md`.** It routes you to the right document for the question you have. Read it before opening anything else.
+**Building on the tactical board? Start with `Assets/Scenes/Tactical/BUILD_LOG.md`.** It is the
+pickup point: what exists, what is wired to what, which step we are on, and what to do next. It is
+kept current as the single living record — do not start a second status document.
+
+**For anything else, start with `Assets/CONTEXT_INDEX.md`.** It routes you to the right document for
+the question you have.
 
 ### The sources are a timeline, not rivals
 
@@ -42,11 +47,12 @@ Read what's relevant before non-trivial work. These sources are **rolling** — 
 
 | What | Where |
 |---|---|
+| **What the game is, how to run it, the controls** | `README.md` |
+| **Tactical board pickup point** — state, next step, traps | `Assets/Scenes/Tactical/BUILD_LOG.md` |
 | **Start here** — routes you to everything else | `Assets/CONTEXT_INDEX.md` |
 | **The specification** (how the game works) | `Assets/TACTICAL_BOARD_SPEC.md` |
 | **Decision log** (why, and what was rejected) | `Assets/TACTICAL_BOARD_PLAN.md` |
 | **Verified code baseline** (every script read line by line) | `Assets/CODEBASE_BASELINE.md` |
-| **Build log** (what was built, in order, and every trap hit) | `Assets/Scenes/Tactical/BUILD_LOG.md` |
 | **Reference simulation** (turret arming and radar tracks, in TS) | `docs/reference-sim/` |
 | **Prototype baseline** (the playable build, read line by line) | `Assets/PROTOTYPE_BASELINE.md` |
 | **Unity→prototype parity plan** (work items, decisions, traps) | `Assets/PARITY_PLAN.md` |

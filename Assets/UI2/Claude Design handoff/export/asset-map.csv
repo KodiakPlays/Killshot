@@ -1,0 +1,228 @@
+file,used_for,region,width_px,height_px,nine_slice_left,nine_slice_right,nine_slice_top,nine_slice_bottom,tint_token,notes
+sprites/knob_rotary.png,"Rotary selector body, no pointer. One sprite for all sizes: draw at 64 px for a 40 px knob and scale proportionally (knob diameter = RectTransform size × 0.625).",shared,64,64,0,0,0,0,none,12 px shadow margin each side. Pointer and detent ticks are separate sprites.
+sprites/@2x/knob_rotary.png,"Rotary selector body, no pointer. One sprite for all sizes: draw at 64 px for a 40 px knob and scale proportionally (knob diameter = RectTransform size × 0.625).",shared,128,128,0,0,0,0,none,2x of sprites/knob_rotary.png.
+sprites/knob_pointer.png,Pointer bar for rotary selectors and knurled knobs; rotate about the knob centre.,shared,21,30,0,0,0,0,ink.data,Sprite is white; tint to ink.data (as on every knob on the board). 9 px glow margin. Pivot at the bar base.
+sprites/@2x/knob_pointer.png,Pointer bar for rotary selectors and knurled knobs; rotate about the knob centre.,shared,42,60,0,0,0,0,ink.data,2x of sprites/knob_pointer.png.
+sprites/knob_tick.png,Detent tick beside rotary selectors.,shared,2,4,0,0,0,0,ink.frameStencil,White; tint to ink.frameStencil at 40% alpha (as on the board). Every tick position and angle is in layout.json.
+sprites/@2x/knob_tick.png,Detent tick beside rotary selectors.,shared,4,8,0,0,0,0,ink.frameStencil,2x of sprites/knob_tick.png.
+sprites/knob_knurl.png,"Knurled knob, 10 degree knurl, no pointer.",shared,60,60,0,0,0,0,none,"12 px shadow margin. Used for continuous adjustment: periscope MAG, fire control solution, console SCALE."
+sprites/@2x/knob_knurl.png,"Knurled knob, 10 degree knurl, no pointer.",shared,120,120,0,0,0,0,none,2x of sprites/knob_knurl.png.
+sprites/knob_knurl_fine.png,"Knurled knob, 3 degree knurl, no pointer.",comms,58,58,0,0,0,0,none,10 px shadow margin. Comms tuning.
+sprites/@2x/knob_knurl_fine.png,"Knurled knob, 3 degree knurl, no pointer.",comms,116,116,0,0,0,0,none,2x of sprites/knob_knurl_fine.png.
+sprites/bolt_round.png,Round bolt.,shared,28,28,0,0,0,0,none,6 px shadow margin. One sprite for every bolt size (3 to 16 px); scale.
+sprites/@2x/bolt_round.png,Round bolt.,shared,56,56,0,0,0,0,none,2x of sprites/bolt_round.png.
+sprites/bolt_slotted.png,"Slotted bolt, slot horizontal.",shared,28,28,0,0,0,0,none,6 px shadow margin. Panel corners.
+sprites/@2x/bolt_slotted.png,"Slotted bolt, slot horizontal.",shared,56,56,0,0,0,0,none,2x of sprites/bolt_slotted.png.
+sprites/button_push.png,"Pushbutton key, 40 x 22.",shared,56,38,0,0,0,0,none,8 px shadow margin. Lamp is lamp_dot centred on top. Pressed state: offset the key 1 px down.
+sprites/@2x/button_push.png,"Pushbutton key, 40 x 22.",shared,112,76,0,0,0,0,none,2x of sprites/button_push.png.
+sprites/lamp_dot.png,State lamp.,shared,16,16,0,0,0,0,state,"White; tint to the lamp state token (tokens.json lamp.*, accent.* and phosphor.*; default tint per lamp in layout.json). Drawn at 6 to 9 px on the board."
+sprites/@2x/lamp_dot.png,State lamp.,shared,32,32,0,0,0,0,state,2x of sprites/lamp_dot.png.
+sprites/lamp_glow.png,Soft glow behind a lit lamp.,shared,32,32,0,0,0,0,state,"White; tint to the same token as its lamp (tokens.json lamp.*, accent.* and phosphor.*; default tint per lamp in layout.json). Hidden when the lamp is off."
+sprites/@2x/lamp_glow.png,Soft glow behind a lit lamp.,shared,64,64,0,0,0,0,state,2x of sprites/lamp_glow.png.
+sprites/lamp_bezel.png,Machined bezel around a large lamp.,console,27,27,0,0,0,0,none,6 px shadow margin. Console PWR lamp.
+sprites/@2x/lamp_bezel.png,Machined bezel around a large lamp.,console,54,54,0,0,0,0,none,2x of sprites/lamp_bezel.png.
+sprites/plate_legend.png,"Engraved aluminium legend plate, blank.",shared,32,21,6,6,10,10,none,Text is TextMesh Pro over the plate. Stretch horizontally only; plate height is fixed at 13 px.
+sprites/@2x/plate_legend.png,"Engraved aluminium legend plate, blank.",shared,64,42,12,12,20,20,none,2x of sprites/plate_legend.png.
+sprites/screen_r5.png,"Screen: bezel with black glass inside, 5 px outer radius.",shared,44,44,12,12,14,12,none,4 px margin. Readouts are TextMesh Pro inside. Scanline and vignette overlays for large screens are separate (see README).
+sprites/@2x/screen_r5.png,"Screen: bezel with black glass inside, 5 px outer radius.",shared,88,88,24,24,28,24,none,2x of sprites/screen_r5.png.
+sprites/screen_r4.png,"Small screen chip: bezel with black glass, 4 px outer radius.",shared,36,30,10,10,12,10,none,4 px margin. Chips and the periscope sight name.
+sprites/@2x/screen_r4.png,"Small screen chip: bezel with black glass, 4 px outer radius.",shared,72,60,20,20,24,20,none,2x of sprites/screen_r4.png.
+sprites/panel_cast.png,Painted cast panel body.,console,144,144,47,47,47,47,none,40 px shadow margin. Console strip.
+sprites/@2x/panel_cast.png,Painted cast panel body.,console,288,288,94,94,94,94,none,2x of sprites/panel_cast.png.
+sprites/latch.png,Drawer latch.,drawers,38,25,0,0,0,0,none,6 px shadow margin.
+sprites/@2x/latch.png,Drawer latch.,drawers,76,50,0,0,0,0,none,2x of sprites/latch.png.
+sprites/gauge_housing.png,Gauge housing with black face.,sensors,106,106,0,0,0,0,none,12 px shadow margin. The coverage wedge and needle on the face are drawn live.
+sprites/@2x/gauge_housing.png,Gauge housing with black face.,sensors,212,212,0,0,0,0,none,2x of sprites/gauge_housing.png.
+sprites/rocker_30x38_up.png,"Red rocker, 30x38 well, two grooves. Used by the sensor masters, the fire control arming ladder, the power load shed and the comms LOCK. Up, live: can be thrown.","sensors, fire control",58,66,0,0,0,0,none,"Sensor masters (DRADIS, ACTIVE SCAN) and the fire control arming ladder. 14 px margin for ring and glow."
+sprites/@2x/rocker_30x38_up.png,"Red rocker, 30x38 well, two grooves. Used by the sensor masters, the fire control arming ladder, the power load shed and the comms LOCK. Up, live: can be thrown.","sensors, fire control",116,132,0,0,0,0,none,2x of sprites/rocker_30x38_up.png.
+sprites/rocker_30x38_locked.png,"Red rocker, 30x38 well, two grooves. Used by the sensor masters, the fire control arming ladder, the power load shed and the comms LOCK. Up, gated: the switch is refused; the lamp and glass carry the reason.",fire control,58,66,0,0,0,0,none,Gated state appears on the arming ladder and the comms LOCK. 14 px margin for ring and glow.
+sprites/@2x/rocker_30x38_locked.png,"Red rocker, 30x38 well, two grooves. Used by the sensor masters, the fire control arming ladder, the power load shed and the comms LOCK. Up, gated: the switch is refused; the lamp and glass carry the reason.",fire control,116,132,0,0,0,0,none,2x of sprites/rocker_30x38_locked.png.
+sprites/rocker_30x38_thrown.png,"Red rocker, 30x38 well, two grooves. Used by the sensor masters, the fire control arming ladder, the power load shed and the comms LOCK. Thrown: paddle sits low with a red glow. Baked state; swap sprite on change (paddle travel eases over .14 s on the board).","sensors, fire control",58,66,0,0,0,0,none,"Sensor masters (DRADIS, ACTIVE SCAN) and the fire control arming ladder. 14 px margin for ring and glow."
+sprites/@2x/rocker_30x38_thrown.png,"Red rocker, 30x38 well, two grooves. Used by the sensor masters, the fire control arming ladder, the power load shed and the comms LOCK. Thrown: paddle sits low with a red glow. Baked state; swap sprite on change (paddle travel eases over .14 s on the board).","sensors, fire control",116,132,0,0,0,0,none,2x of sprites/rocker_30x38_thrown.png.
+sprites/rocker_24x32_up.png,"Launch sequence rocker, 24x32, one groove. Up, live: can be thrown.",hangar,52,60,0,0,0,0,none,14 px margin. Sits in rocker_housing.
+sprites/@2x/rocker_24x32_up.png,"Launch sequence rocker, 24x32, one groove. Up, live: can be thrown.",hangar,104,120,0,0,0,0,none,2x of sprites/rocker_24x32_up.png.
+sprites/rocker_24x32_locked.png,"Launch sequence rocker, 24x32, one groove. Up, gated: the switch is refused; the lamp and glass carry the reason.",hangar,52,60,0,0,0,0,none,14 px margin. Sits in rocker_housing.
+sprites/@2x/rocker_24x32_locked.png,"Launch sequence rocker, 24x32, one groove. Up, gated: the switch is refused; the lamp and glass carry the reason.",hangar,104,120,0,0,0,0,none,2x of sprites/rocker_24x32_locked.png.
+sprites/rocker_24x32_thrown.png,"Launch sequence rocker, 24x32, one groove. Thrown: paddle sits low with a red glow. Baked state; swap sprite on change (paddle travel eases over .14 s on the board).",hangar,52,60,0,0,0,0,none,14 px margin. Sits in rocker_housing.
+sprites/@2x/rocker_24x32_thrown.png,"Launch sequence rocker, 24x32, one groove. Thrown: paddle sits low with a red glow. Baked state; swap sprite on change (paddle travel eases over .14 s on the board).",hangar,104,120,0,0,0,0,none,2x of sprites/rocker_24x32_thrown.png.
+sprites/rocker_22x30_up.png,"Rocker, 22x30, two grooves. Used by the orders station and the engineering repair switches (not REBOOT). Up, live: can be thrown.",orders,50,58,0,0,0,0,none,Throw is momentary: flicks back after 400 ms. 14 px margin. Sits in rocker_housing_r3.
+sprites/@2x/rocker_22x30_up.png,"Rocker, 22x30, two grooves. Used by the orders station and the engineering repair switches (not REBOOT). Up, live: can be thrown.",orders,100,116,0,0,0,0,none,2x of sprites/rocker_22x30_up.png.
+sprites/rocker_22x30_locked.png,"Rocker, 22x30, two grooves. Used by the orders station and the engineering repair switches (not REBOOT). Up, gated: the switch is refused; the lamp and glass carry the reason.",orders,50,58,0,0,0,0,none,Throw is momentary: flicks back after 400 ms. 14 px margin. Sits in rocker_housing_r3.
+sprites/@2x/rocker_22x30_locked.png,"Rocker, 22x30, two grooves. Used by the orders station and the engineering repair switches (not REBOOT). Up, gated: the switch is refused; the lamp and glass carry the reason.",orders,100,116,0,0,0,0,none,2x of sprites/rocker_22x30_locked.png.
+sprites/rocker_22x30_thrown.png,"Rocker, 22x30, two grooves. Used by the orders station and the engineering repair switches (not REBOOT). Thrown: paddle sits low with a red glow. Baked state; swap sprite on change (paddle travel eases over .14 s on the board).",orders,50,58,0,0,0,0,none,Throw is momentary: flicks back after 400 ms. 14 px margin. Sits in rocker_housing_r3.
+sprites/@2x/rocker_22x30_thrown.png,"Rocker, 22x30, two grooves. Used by the orders station and the engineering repair switches (not REBOOT). Thrown: paddle sits low with a red glow. Baked state; swap sprite on change (paddle travel eases over .14 s on the board).",orders,100,116,0,0,0,0,none,2x of sprites/rocker_22x30_thrown.png.
+sprites/rocker_blank.png,"Blanking plate where no rocker is fitted, 22x30.","engineering, orders",50,58,0,0,0,0,none,"Engineering DUMMY 1-2, orders FIRE, BLKHD, SCRUB. Not interactive. 14 px margin."
+sprites/@2x/rocker_blank.png,"Blanking plate where no rocker is fitted, 22x30.","engineering, orders",100,116,0,0,0,0,none,2x of sprites/rocker_blank.png.
+sprites/rocker_housing.png,"Bevelled housing behind a rocker, its lamp and plates, radius 4.","fire control, hangar",48,48,13,13,13,13,none,Arming ladder and launch sequence. 8 px shadow margin.
+sprites/@2x/rocker_housing.png,"Bevelled housing behind a rocker, its lamp and plates, radius 4.","fire control, hangar",96,96,26,26,26,26,none,2x of sprites/rocker_housing.png.
+sprites/rocker_housing_r3.png,"Bevelled housing behind a rocker, radius 3.","engineering, orders",48,48,12,12,12,12,none,8 px shadow margin.
+sprites/@2x/rocker_housing_r3.png,"Bevelled housing behind a rocker, radius 3.","engineering, orders",96,96,24,24,24,24,none,2x of sprites/rocker_housing_r3.png.
+sprites/plate_dark.png,"Dark engraved legend plate, blank.","engineering, orders",32,18,6,6,6,6,none,Under each engineering and orders rocker. Text is TextMesh Pro. Height set by layout.
+sprites/@2x/plate_dark.png,"Dark engraved legend plate, blank.","engineering, orders",64,36,12,12,12,12,none,2x of sprites/plate_dark.png.
+sprites/plate_rail.png,"Rail key legend plate, blank.","tool rail, systems rail",32,18,6,6,6,6,none,"Carries PNT, SENS etc. in TextMesh Pro. Height set by layout."
+sprites/@2x/plate_rail.png,"Rail key legend plate, blank.","tool rail, systems rail",64,36,12,12,12,12,none,2x of sprites/plate_rail.png.
+sprites/rocker_reboot_up.png,"Engineering REBOOT rocker, 90x30, two grooves (its own variant, by the user's decision). Up, live: can be thrown.",engineering,118,58,0,0,0,0,none,"Fixed size, not sliced. Grooves stay 5/9 and 9/13 px as on the board. 14 px margin."
+sprites/@2x/rocker_reboot_up.png,"Engineering REBOOT rocker, 90x30, two grooves (its own variant, by the user's decision). Up, live: can be thrown.",engineering,236,116,0,0,0,0,none,2x of sprites/rocker_reboot_up.png.
+sprites/rocker_reboot_locked.png,"Engineering REBOOT rocker, 90x30, two grooves (its own variant, by the user's decision). Up, gated: the switch is refused; the lamp and glass carry the reason.",engineering,118,58,0,0,0,0,none,"Fixed size, not sliced. Grooves stay 5/9 and 9/13 px as on the board. 14 px margin."
+sprites/@2x/rocker_reboot_locked.png,"Engineering REBOOT rocker, 90x30, two grooves (its own variant, by the user's decision). Up, gated: the switch is refused; the lamp and glass carry the reason.",engineering,236,116,0,0,0,0,none,2x of sprites/rocker_reboot_locked.png.
+sprites/rocker_reboot_thrown.png,"Engineering REBOOT rocker, 90x30, two grooves (its own variant, by the user's decision). Thrown: paddle sits low with a red glow. Momentary: flicks back after 400 ms.",engineering,118,58,0,0,0,0,none,"Fixed size, not sliced. Grooves stay 5/9 and 9/13 px as on the board. 14 px margin."
+sprites/@2x/rocker_reboot_thrown.png,"Engineering REBOOT rocker, 90x30, two grooves (its own variant, by the user's decision). Thrown: paddle sits low with a red glow. Momentary: flicks back after 400 ms.",engineering,236,116,0,0,0,0,none,2x of sprites/rocker_reboot_thrown.png.
+sprites/button_recall_up.png,"Hangar RECALL key in its rubber well, 52x34, at rest.",hangar,76,58,0,0,0,0,none,12 px margin.
+sprites/@2x/button_recall_up.png,"Hangar RECALL key in its rubber well, 52x34, at rest.",hangar,152,116,0,0,0,0,none,2x of sprites/button_recall_up.png.
+sprites/button_recall_pressed.png,"Hangar RECALL key, pressed: cap 4 px lower, shadow tighter.",hangar,76,58,0,0,0,0,none,Shown only while held (the board uses a pressed style; .1 s ease). 12 px margin.
+sprites/@2x/button_recall_pressed.png,"Hangar RECALL key, pressed: cap 4 px lower, shadow tighter.",hangar,152,116,0,0,0,0,none,2x of sprites/button_recall_pressed.png.
+sprites/lever_slot_fire.png,"Fire lever slot, 58 high, without the live hazard track.",fire control,128,66,13,13,16,16,none,Width varies; stretch horizontally. The red hazard fill left of the cap is drawn live. 4 px margin.
+sprites/@2x/lever_slot_fire.png,"Fire lever slot, 58 high, without the live hazard track.",fire control,256,132,26,26,32,32,none,2x of sprites/lever_slot_fire.png.
+sprites/lever_slot_launch.png,"Launch lever slot, 58 high, without the live hazard track.",hangar,128,66,13,13,16,16,none,Inset shadow is deeper than the fire slot (10 px .95 vs 9 px .9); exported as found. The green hazard fill is drawn live.
+sprites/@2x/lever_slot_launch.png,"Launch lever slot, 58 high, without the live hazard track.",hangar,256,132,26,26,32,32,none,2x of sprites/lever_slot_launch.png.
+sprites/lever_cap_red.png,"Fire lever cap, 58x46.",fire control,82,70,0,0,0,0,none,Travels along the slot (spec 8.2). 12 px shadow margin.
+sprites/@2x/lever_cap_red.png,"Fire lever cap, 58x46.",fire control,164,140,0,0,0,0,none,2x of sprites/lever_cap_red.png.
+sprites/lever_cap_silver.png,"Launch lever cap, 58x46.",hangar,82,70,0,0,0,0,none,Travels along the slot (spec 8.2). 12 px shadow margin.
+sprites/@2x/lever_cap_silver.png,"Launch lever cap, 58x46.",hangar,164,140,0,0,0,0,none,2x of sprites/lever_cap_silver.png.
+sprites/fader_gain_well.png,"Array gain fader well, 46x136, groove and detent ticks.",sensors,62,152,0,0,0,0,none,Numerals 1-5 are TextMesh Pro. The lit fill in the groove is drawn live. 8 px margin.
+sprites/@2x/fader_gain_well.png,"Array gain fader well, 46x136, groove and detent ticks.",sensors,124,304,0,0,0,0,none,2x of sprites/fader_gain_well.png.
+sprites/fader_gain_cap.png,"Array gain fader cap, 36x20.",sensors,52,36,0,0,0,0,none,Moves 23.6 px per step (spec 8.2). 8 px margin.
+sprites/@2x/fader_gain_cap.png,"Array gain fader cap, 36x20.",sensors,104,72,0,0,0,0,none,2x of sprites/fader_gain_cap.png.
+sprites/fader_thrust_well.png,"Helm throttle well, 44x78, groove and ticks.",helm,60,94,0,0,0,0,none,F and 0 legends are TextMesh Pro. The lit fill is drawn live. 8 px margin.
+sprites/@2x/fader_thrust_well.png,"Helm throttle well, 44x78, groove and ticks.",helm,120,188,0,0,0,0,none,2x of sprites/fader_thrust_well.png.
+sprites/fader_thrust_cap.png,"Helm throttle cap, 36x17.",helm,52,33,0,0,0,0,none,8 px margin.
+sprites/@2x/fader_thrust_cap.png,"Helm throttle cap, 36x17.",helm,104,66,0,0,0,0,none,2x of sprites/fader_thrust_cap.png.
+sprites/latch_track_orders.png,"Header latch track, 30x11, with inset shadow.",orders,38,19,0,0,0,0,none,4 px margin.
+sprites/@2x/latch_track_orders.png,"Header latch track, 30x11, with inset shadow.",orders,76,38,0,0,0,0,none,2x of sprites/latch_track_orders.png.
+sprites/latch_track_helm.png,"Header latch track, 30x11, flat.",helm,38,19,7,7,7,7,none,"No inset shadow, unlike the orders track; exported as found. 4 px margin. Used at several sizes on the board (layout.json), so 9-sliced."
+sprites/@2x/latch_track_helm.png,"Header latch track, 30x11, flat.",helm,76,38,14,14,14,14,none,2x of sprites/latch_track_helm.png.
+sprites/latch_slider.png,"Header latch slider, 13x9.","orders, helm",25,21,0,0,0,0,none,Sits at 1 px (stowed) or 16 px (out) in its track. 6 px margin.
+sprites/@2x/latch_slider.png,"Header latch slider, 13x9.","orders, helm",50,42,0,0,0,0,none,2x of sprites/latch_slider.png.
+sprites/rail_key.png,"Rail key body, 52x52, two bolts.","tool rail, systems rail",60,60,0,0,0,0,none,"Glyph (Group 4), lamp and plate sit on top. 4 px margin."
+sprites/@2x/rail_key.png,"Rail key body, 52x52, two bolts.","tool rail, systems rail",120,120,0,0,0,0,none,2x of sprites/rail_key.png.
+sprites/rail_lamp_bezel.png,"Rail key lamp bezel, 9 px.","tool rail, systems rail",17,17,0,0,0,0,none,4 px margin.
+sprites/@2x/rail_lamp_bezel.png,"Rail key lamp bezel, 9 px.","tool rail, systems rail",34,34,0,0,0,0,none,2x of sprites/rail_lamp_bezel.png.
+sprites/rail_lamp_lens.png,"Rail key lamp lens, 5 px.","tool rail, systems rail",5,5,0,0,0,0,state,White centre to dark edge; tint to the lamp colour. Centred in rail_lamp_bezel.
+sprites/@2x/rail_lamp_lens.png,"Rail key lamp lens, 5 px.","tool rail, systems rail",10,10,0,0,0,0,state,2x of sprites/rail_lamp_lens.png.
+sprites/rail_key_selected.png,Selected-tool frame over a rail key.,tool rail,60,60,0,0,0,0,none,Shown on the selected tool only. The systems rail marks an open drawer by its lamp alone. 4 px margin.
+sprites/@2x/rail_key_selected.png,Selected-tool frame over a rail key.,tool rail,120,120,0,0,0,0,none,2x of sprites/rail_key_selected.png.
+sprites/rail_frame.png,Rail housing behind the keys.,"tool rail, systems rail",68,68,9,9,9,9,none,Translucent over the steel. 2 px margin.
+sprites/@2x/rail_frame.png,Rail housing behind the keys.,"tool rail, systems rail",136,136,18,18,18,18,none,2x of sprites/rail_frame.png.
+sprites/hinge_pin.png,"Drawer hinge pin, 7 wide.",power,15,48,0,0,8,8,none,Stretch vertically. 4 px margin.
+sprites/@2x/hinge_pin.png,"Drawer hinge pin, 7 wide.",power,30,96,0,0,16,16,none,2x of sprites/hinge_pin.png.
+sprites/hinge_knuckle.png,"Drawer hinge knuckle, 11x9.",power,19,17,0,0,0,0,none,Three on the pin. 4 px margin.
+sprites/@2x/hinge_knuckle.png,"Drawer hinge knuckle, 11x9.",power,38,34,0,0,0,0,none,2x of sprites/hinge_knuckle.png.
+sprites/helm_collapsed.png,"Helm, collapsed: tapered plate with its edge highlights and the empty header window.",helm,764,120,0,0,0,0,none,"Full size 700x68, not sliced. Header figures are TextMesh Pro. The helm column shadow (drop-shadow 0 -12 30 at .55) is baked: 44 px margin top, 32 px sides, 8 px bottom. Draw after helm_body."
+sprites/@2x/helm_collapsed.png,"Helm, collapsed: tapered plate with its edge highlights and the empty header window.",helm,1528,240,0,0,0,0,none,2x of sprites/helm_collapsed.png.
+sprites/helm_body.png,"Helm, expanded body plate below the header, 700x206 as rendered.",helm,764,258,0,0,0,0,none,"Same column shadow baked; draw before helm_collapsed so its upper shadow sits under the header. Bolts are bolt_slotted; screens, plates and faders are their own sprites. Height measured from the render with the default content."
+sprites/@2x/helm_body.png,"Helm, expanded body plate below the header, 700x206 as rendered.",helm,1528,516,0,0,0,0,none,2x of sprites/helm_body.png.
+sprites/orders_body_closed.png,"Orders station body, stowed, 392x122 as rendered.",orders,424,150,24,24,16,28,none,"Painted casting: its own recipe, not panel_cast or panel_drawer. Bolts are bolt_slotted. 8/16/20 px shadow margin. 9-sliced (alert condition well and orders body are used at more than one size)."
+sprites/@2x/orders_body_closed.png,"Orders station body, stowed, 392x122 as rendered.",orders,848,300,48,48,32,56,none,2x of sprites/orders_body_closed.png.
+sprites/orders_body_open.png,"Orders station body, out, 392x268 as rendered.",orders,424,296,24,24,16,28,none,"Same recipe at the open height; swap with orders_body_closed as the latch moves. 9-sliced, as orders_body_closed."
+sprites/@2x/orders_body_open.png,"Orders station body, out, 392x268 as rendered.",orders,848,592,48,48,32,56,none,2x of sprites/orders_body_open.png.
+sprites/alert_well.png,"Alert condition section on the orders face, 342x71.",orders,346,75,6,6,6,6,none,"Translucent sheen and double inset ring over the casting. 2 px margin. Used at several sizes on the board (layout.json), so 9-sliced."
+sprites/@2x/alert_well.png,"Alert condition section on the orders face, 342x71.",orders,692,150,12,12,12,12,none,2x of sprites/alert_well.png.
+sprites/periscope_carriage.png,"Periscope carriage stub, 328x44, with its two rails and lens housing.",periscope,352,64,0,0,0,0,none,"The lens centre is lamp_dot at 8 px, tinted from the board (#C9D2D8 lowered, #5E6870 housed) with lamp_glow. PERISCOPE and LOWERED/HOUSED are TextMesh Pro."
+sprites/@2x/periscope_carriage.png,"Periscope carriage stub, 328x44, with its two rails and lens housing.",periscope,704,128,0,0,0,0,none,2x of sprites/periscope_carriage.png.
+sprites/periscope_housing.png,"Periscope housing, 420x580 as rendered, with the ribbed skirt baked at the foot.",periscope,512,652,0,0,0,0,none,"Drops from the deckhead: the board reveals it by animating a clip height 44 to 656 px over .5 s. Bolts are bolt_round at 9 px. Margins 8 top, 46 sides, 64 bottom for its shadow."
+sprites/@2x/periscope_housing.png,"Periscope housing, 420x580 as rendered, with the ribbed skirt baked at the foot.",periscope,1024,1304,0,0,0,0,none,2x of sprites/periscope_housing.png.
+sprites/periscope_aperture_idle.png,"Periscope aperture: black glass, 340 px circle, with its rim.",periscope,392,392,0,0,0,0,none,The sight picture is drawn live on top (canvas in the board). 26 px margin.
+sprites/@2x/periscope_aperture_idle.png,"Periscope aperture: black glass, 340 px circle, with its rim.",periscope,784,784,0,0,0,0,none,2x of sprites/periscope_aperture_idle.png.
+sprites/periscope_aperture_slewing.png,Periscope aperture rim while slewing: amber inner ring and glow.,periscope,392,392,0,0,0,0,none,Shown while the operator drags the sight. 26 px margin.
+sprites/@2x/periscope_aperture_slewing.png,Periscope aperture rim while slewing: amber inner ring and glow.,periscope,784,784,0,0,0,0,none,2x of sprites/periscope_aperture_slewing.png.
+sprites/periscope_vignette.png,"Periscope aperture vignette, 340 px.",periscope,340,340,0,0,0,0,none,Tube artefact over the sight picture; no pointer input.
+sprites/@2x/periscope_vignette.png,"Periscope aperture vignette, 340 px.",periscope,680,680,0,0,0,0,none,2x of sprites/periscope_vignette.png.
+sprites/time_plate.png,"Time control plate, 400x57, translucent.",time control,404,61,0,0,0,0,none,"Not ship hardware on the board: no bolts, no casting. 2 px margin."
+sprites/@2x/time_plate.png,"Time control plate, 400x57, translucent.",time control,808,122,0,0,0,0,none,2x of sprites/time_plate.png.
+sprites/pause_key_run.png,"Pause key, 118x36, running.",time control,122,40,0,0,0,0,none,Lamp is lamp_dot tinted #5E6870; legend PAUSE is TextMesh Pro.
+sprites/@2x/pause_key_run.png,"Pause key, 118x36, running.",time control,244,80,0,0,0,0,none,2x of sprites/pause_key_run.png.
+sprites/pause_key_paused.png,"Pause key, 118x36, paused: amber ground and edge.",time control,122,40,0,0,0,0,none,Lamp is lamp_dot tinted #E0A020.
+sprites/@2x/pause_key_paused.png,"Pause key, 118x36, paused: amber ground and edge.",time control,244,80,0,0,0,0,none,2x of sprites/pause_key_paused.png.
+sprites/rate_key_off.png,"Time rate key, unselected.",time control,44,24,5,5,5,5,none,Four keys share the row (flex); stretch horizontally. Label is TextMesh Pro.
+sprites/@2x/rate_key_off.png,"Time rate key, unselected.",time control,88,48,10,10,10,10,none,2x of sprites/rate_key_off.png.
+sprites/rate_key_on.png,"Time rate key, selected: lighter face, green edge.",time control,44,24,5,5,5,5,none,Stretch horizontally.
+sprites/@2x/rate_key_on.png,"Time rate key, selected: lighter face, green edge.",time control,88,48,10,10,10,10,none,2x of sprites/rate_key_on.png.
+sprites/alarm_strip.png,"Alarm strip on the plot top edge, 24 high.",plot,100,28,8,8,0,0,none,"Shown until acknowledged. Stretches to 1712 px on the board. Lamp is lamp_dot tinted #E04B3C, blinking (spec 9.2). Text is TextMesh Pro."
+sprites/@2x/alarm_strip.png,"Alarm strip on the plot top edge, 24 high.",plot,200,56,16,16,0,0,none,2x of sprites/alarm_strip.png.
+sprites/conduit_left.png,"Conduit bundle rising into the tool rail, 88x172.",frame,96,180,0,0,0,0,none,"Fixed composition, placed as one piece. Stencil text is TextMesh Pro. 4 px margin."
+sprites/@2x/conduit_left.png,"Conduit bundle rising into the tool rail, 88x172.",frame,192,360,0,0,0,0,none,2x of sprites/conduit_left.png.
+sprites/conduit_mid.png,"Cable run under the order panels, 1390x34.",frame,1398,42,0,0,0,0,none,Fixed composition. The stencil CONSOLE HARNESS line is TextMesh Pro.
+sprites/@2x/conduit_mid.png,"Cable run under the order panels, 1390x34.",frame,2796,84,0,0,0,0,none,2x of sprites/conduit_mid.png.
+sprites/conduit_right.png,"Conduit and access hatch under the systems rail, 294x50.",frame,302,58,0,0,0,0,none,Fixed composition. Stencil ACC 07 is TextMesh Pro.
+sprites/@2x/conduit_right.png,"Conduit and access hatch under the systems rail, 294x50.",frame,604,116,0,0,0,0,none,2x of sprites/conduit_right.png.
+sprites/key_flat_a.png,"Flat textured key, highlight .2.",sensors,48,28,8,8,8,8,none,Label is TextMesh Pro. No pressed state on the board. Board: 02 ACTIVE SCAN.
+sprites/@2x/key_flat_a.png,"Flat textured key, highlight .2.",sensors,96,56,16,16,16,16,none,2x of sprites/key_flat_a.png.
+sprites/key_flat_b.png,"Flat textured key, highlight .22.",helm,48,28,8,8,8,8,none,Differs from key_flat_a only in top highlight (.22 vs .2); exported as found. Board: 03 APPROACH.
+sprites/@2x/key_flat_b.png,"Flat textured key, highlight .22.",helm,96,56,16,16,16,16,none,2x of sprites/key_flat_b.png.
+sprites/screen_thick_r4.png,"Thick-bezel screen, 5 px bezel, radius 4, glass #03060A.",sensors,64,56,16,16,16,16,none,"Glass is #03060A, not #000000, on the board; exported as found. Board: 03 CONTACT BOARD."
+sprites/@2x/screen_thick_r4.png,"Thick-bezel screen, 5 px bezel, radius 4, glass #03060A.",sensors,128,112,32,32,32,32,none,2x of sprites/screen_thick_r4.png.
+sprites/screen_thick_r3.png,"Thick-bezel screen, radius 3.",comms,64,56,16,16,16,16,none,Radius differs from screen_thick_r4; exported as found. Board: 02 DECRYPT.
+sprites/@2x/screen_thick_r3.png,"Thick-bezel screen, radius 3.",comms,128,112,32,32,32,32,none,2x of sprites/screen_thick_r3.png.
+sprites/screen_thick_round.png,"Round thick-bezel dial, 70 px, with its black glass.",helm,86,86,0,0,0,0,none,"Heading ring (drawn live, rotating), glass_round_44, figures, scanlines and vignette sit inside. Board: 01 FLIGHT."
+sprites/@2x/screen_thick_round.png,"Round thick-bezel dial, 70 px, with its black glass.",helm,172,172,0,0,0,0,none,2x of sprites/screen_thick_round.png.
+sprites/well_reactor.png,"Reactor allocation well, radius 5.",power,56,56,18,18,18,18,none,Bars and figures sit inside. Board: REACTOR.
+sprites/@2x/well_reactor.png,"Reactor allocation well, radius 5.",power,112,112,36,36,36,36,none,2x of sprites/well_reactor.png.
+sprites/bus_terminal.png,"Bus column terminal strip, 9 high, with two 3 px bolts.",power,60,17,13,13,0,0,none,Stretch horizontally only. Board: BUS COLUMNS.
+sprites/@2x/bus_terminal.png,"Bus column terminal strip, 9 high, with two 3 px bolts.",power,120,34,26,26,0,0,none,2x of sprites/bus_terminal.png.
+sprites/knob_knurl_tune.png,"Comms tuning knob, 56 px: rotary body, 8-degree knurl ring, cap.",comms,80,80,0,0,0,0,none,Missing from the first inventory. Sits at the centre of the round scope. Drag rule in spec 8.2. Board: 01 RECEIVER.
+sprites/@2x/knob_knurl_tune.png,"Comms tuning knob, 56 px: rotary body, 8-degree knurl ring, cap.",comms,160,160,0,0,0,0,none,2x of sprites/knob_knurl_tune.png.
+sprites/glass_r3.png,"Bare glass, radius 3, inset 0 2 7 with a .07 hairline.",time control,36,36,10,10,10,10,none,Mission clock readout. Board: TIME CONTROL.
+sprites/@2x/glass_r3.png,"Bare glass, radius 3, inset 0 2 7 with a .07 hairline.",time control,72,72,20,20,20,20,none,2x of sprites/glass_r3.png.
+sprites/well_r4.png,"Recessed well #080A0B, radius 4.",power,36,36,10,10,10,10,none,Holds segmented bars. Board: REACTOR; BUS COLUMNS.
+sprites/@2x/well_r4.png,"Recessed well #080A0B, radius 4.",power,72,72,20,20,20,20,none,2x of sprites/well_r4.png.
+sprites/well_r3.png,"Recessed well #080A0B, radius 3, deeper inset.",sensors,36,36,10,10,10,10,none,Own emissions block. Board: OWN EMISSIONS.
+sprites/@2x/well_r3.png,"Recessed well #080A0B, radius 3, deeper inset.",sensors,72,72,20,20,20,20,none,2x of sprites/well_r3.png.
+sprites/well_round_64.png,"Round well #060809, 64 px, green hairline.",sensors,68,68,0,0,0,0,none,Active scan cone control face; the cone is drawn live on it. Board: 02 ACTIVE SCAN.
+sprites/@2x/well_round_64.png,"Round well #060809, 64 px, green hairline.",sensors,136,136,0,0,0,0,none,2x of sprites/well_round_64.png.
+sprites/glass_round_126.png,"Round black glass, 126 px.",comms,130,130,0,0,0,0,none,"Comms scope; the 56-bar trace is drawn live, knob_knurl_tune at its centre. Board: 01 RECEIVER."
+sprites/@2x/glass_round_126.png,"Round black glass, 126 px.",comms,260,260,0,0,0,0,none,2x of sprites/glass_round_126.png.
+sprites/glass_r3_b.png,"Bare glass chip, 26x20, with a 2 px #2C3237 ring.",comms,34,28,0,0,0,0,none,"Decrypt key letters, one per dial. Board: 02 DECRYPT."
+sprites/@2x/glass_r3_b.png,"Bare glass chip, 26x20, with a 2 px #2C3237 ring.",comms,68,56,0,0,0,0,none,2x of sprites/glass_r3_b.png.
+sprites/glass_r3_c.png,"Bare glass, radius 3, inset 0 2 6.","engineering, fire control, orders",36,36,10,10,10,10,none,"Inner glass of the engineering screen, the orders acting-on screen and the arming ladder hint chips. Board: THE SCREEN; 03 CAPACITOR; what the party is acting on, and the AUX charge that pays for it."
+sprites/@2x/glass_r3_c.png,"Bare glass, radius 3, inset 0 2 6.","engineering, fire control, orders",72,72,20,20,20,20,none,2x of sprites/glass_r3_c.png.
+sprites/well_r2.png,"Recessed well #080A0B, radius 2.",hangar,36,36,5,5,4,4,none,"Thin bar wells (bay status, launch stage telemetry). Board: 01 BAY STATUS; 04 LAUNCH SEQUENCE."
+sprites/@2x/well_r2.png,"Recessed well #080A0B, radius 2.",hangar,72,72,10,10,8,8,none,2x of sprites/well_r2.png.
+sprites/glass_r3_d.png,"Bare glass, radius 3, red hairline.",periscope,36,36,8,8,8,8,none,Periscope bearing tape; ticks are drawn live. Board: BEARING TAPE.
+sprites/@2x/glass_r3_d.png,"Bare glass, radius 3, red hairline.",periscope,72,72,16,16,16,16,none,2x of sprites/glass_r3_d.png.
+sprites/glass_r3_e.png,"Bare glass, radius 3, inset 0 1 3 with a .07 hairline.",periscope,36,36,8,8,8,8,none,Periscope subject readout. Board: SUBJECT.
+sprites/@2x/glass_r3_e.png,"Bare glass, radius 3, inset 0 1 3 with a .07 hairline.",periscope,72,72,16,16,16,16,none,2x of sprites/glass_r3_e.png.
+sprites/glass_round_44.png,"Round black glass, 44 px, green hairline.",helm,48,48,0,0,0,0,none,"Inner face of the helm heading dial, above the rotating ring. Board: 01 FLIGHT."
+sprites/@2x/glass_round_44.png,"Round black glass, 44 px, green hairline.",helm,96,96,0,0,0,0,none,2x of sprites/glass_round_44.png.
+sprites/bay_r4.png,"Translucent bay behind one bus column, radius 4, 70% dark over the casting.",power,36,36,10,10,10,10,none,"One per bus column (4). Found by the token scan: translucent grounds were outside the first coverage audit, which now includes them. Board: BUS COLUMNS."
+sprites/@2x/bay_r4.png,"Translucent bay behind one bus column, radius 4, 70% dark over the casting.",power,72,72,20,20,20,20,none,2x of sprites/bay_r4.png.
+sprites/bay_r4_b.png,"Translucent section plate behind the capacitor bar, radius 4, 34% black.",fire control,36,36,10,10,10,10,none,"Found by the token scan, as bay_r4. Board: 03 CAPACITOR."
+sprites/@2x/bay_r4_b.png,"Translucent section plate behind the capacitor bar, radius 4, 34% black.",fire control,72,72,20,20,20,20,none,2x of sprites/bay_r4_b.png.
+sprites/icon_select.png,Rail key glyph: SELECT.,tool rail,32,32,0,0,0,0,tint.tool,"White on transparent; tint #A8B2B9 (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box."
+sprites/@2x/icon_select.png,Rail key glyph: SELECT.,tool rail,64,64,0,0,0,0,tint.tool,2x of sprites/icon_select.png.
+sprites/icon_point.png,Rail key glyph: POINT.,tool rail,32,32,0,0,0,0,tint.tool,"White on transparent; tint #A8B2B9 (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box."
+sprites/@2x/icon_point.png,Rail key glyph: POINT.,tool rail,64,64,0,0,0,0,tint.tool,2x of sprites/icon_point.png.
+sprites/icon_ruler.png,Rail key glyph: RULER.,tool rail,32,32,0,0,0,0,tint.tool,"White on transparent; tint #A8B2B9 (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box."
+sprites/@2x/icon_ruler.png,Rail key glyph: RULER.,tool rail,64,64,0,0,0,0,tint.tool,2x of sprites/icon_ruler.png.
+sprites/icon_compass.png,Rail key glyph: COMPASS.,tool rail,32,32,0,0,0,0,tint.tool,"White on transparent; tint #A8B2B9 (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box."
+sprites/@2x/icon_compass.png,Rail key glyph: COMPASS.,tool rail,64,64,0,0,0,0,tint.tool,2x of sprites/icon_compass.png.
+sprites/icon_erase.png,Rail key glyph: ERASE.,tool rail,32,32,0,0,0,0,tint.tool,"White on transparent; tint #A8B2B9 (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box."
+sprites/@2x/icon_erase.png,Rail key glyph: ERASE.,tool rail,64,64,0,0,0,0,tint.tool,2x of sprites/icon_erase.png.
+sprites/icon_fire_control.png,Rail key glyph: FIRE CONTROL.,systems rail,32,32,0,0,0,0,accent.alarm,"White on transparent; tint #E04B3C (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box."
+sprites/@2x/icon_fire_control.png,Rail key glyph: FIRE CONTROL.,systems rail,64,64,0,0,0,0,accent.alarm,2x of sprites/icon_fire_control.png.
+sprites/icon_sensors.png,"Rail key glyph: SENSORS, blue layer (the two dishes and mast).",systems rail,32,32,0,0,0,0,accent.ownForce,"White on transparent; tint #4A9FD8 (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box. Stack icon_sensors_layer2 on top at the same position."
+sprites/@2x/icon_sensors.png,"Rail key glyph: SENSORS, blue layer (the two dishes and mast).",systems rail,64,64,0,0,0,0,accent.ownForce,2x of sprites/icon_sensors.png.
+sprites/icon_sensors_layer2.png,"Rail key glyph: SENSORS, outer arc layer.",systems rail,32,32,0,0,0,0,ink.data,"White mask at 70% alpha, as on the board; tint #E8EDF0. Same size and position as icon_sensors, drawn above it. The only glyph with two colours, so it ships as two layers."
+sprites/@2x/icon_sensors_layer2.png,"Rail key glyph: SENSORS, outer arc layer.",systems rail,64,64,0,0,0,0,ink.data,2x of sprites/icon_sensors_layer2.png.
+sprites/icon_reactor.png,Rail key glyph: REACTOR.,systems rail,32,32,0,0,0,0,accent.nominal,"White on transparent; tint #8FC33A (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box."
+sprites/@2x/icon_reactor.png,Rail key glyph: REACTOR.,systems rail,64,64,0,0,0,0,accent.nominal,2x of sprites/icon_reactor.png.
+sprites/icon_hangar.png,Rail key glyph: HANGAR.,systems rail,32,32,0,0,0,0,accent.ownForce,"White on transparent; tint #4A9FD8 (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box."
+sprites/@2x/icon_hangar.png,Rail key glyph: HANGAR.,systems rail,64,64,0,0,0,0,accent.ownForce,2x of sprites/icon_hangar.png.
+sprites/icon_engineering.png,Rail key glyph: ENGINEERING.,systems rail,32,32,0,0,0,0,accent.caution,"White on transparent; tint #E0A020 (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box."
+sprites/@2x/icon_engineering.png,Rail key glyph: ENGINEERING.,systems rail,64,64,0,0,0,0,accent.caution,2x of sprites/icon_engineering.png.
+sprites/icon_comms.png,Rail key glyph: COMMS.,systems rail,32,32,0,0,0,0,accent.ownForce,"White on transparent; tint #4A9FD8 (the board colour). Centred in rail_key, 7 px above centre. 6 px margin holds strokes that overrun the 20 px box."
+sprites/@2x/icon_comms.png,Rail key glyph: COMMS.,systems rail,64,64,0,0,0,0,accent.ownForce,2x of sprites/icon_comms.png.
+sprites/mark_point.png,"Plot mark: POINT dot, 7 px, with glow.",plot,23,23,0,0,0,0,accent.ownForce,"White on transparent; tint #4A9FD8. Keeps screen size across zoom (spec 8.4). Label is TextMesh Pro, Share Tech Mono 11. 8 px margin holds the glow."
+sprites/@2x/mark_point.png,"Plot mark: POINT dot, 7 px, with glow.",plot,46,46,0,0,0,0,accent.ownForce,2x of sprites/mark_point.png.
+sprites/mark_line.png,"Plot mark: RULER and COMPASS line, 1.5 px stroke.",plot,16,3,0,0,0,0,accent.ownForce,"White on transparent; tint #4A9FD8. A 3 px strip whose rows are 25% / 100% / 25% alpha: coverage is exactly 1.5 px at 1x (3 px at 2x), matching the board stroke. Stretch to length and rotate; pivot at the left end, vertical centre."
+sprites/@2x/mark_line.png,"Plot mark: RULER and COMPASS line, 1.5 px stroke.",plot,32,6,0,0,0,0,accent.ownForce,2x of sprites/mark_line.png.
+sprites/mark_end.png,"Plot mark: RULER end dot, 6 px.",plot,6,6,0,0,0,0,accent.ownForce,White on transparent; tint #4A9FD8. One at each end of the ruler line.
+sprites/@2x/mark_end.png,"Plot mark: RULER end dot, 6 px.",plot,12,12,0,0,0,0,accent.ownForce,2x of sprites/mark_end.png.
+sprites/mark_dash.png,"Plot mark: COMPASS ring dash tile, 3 x 1.5 px.",plot,3,3,0,0,0,0,accent.ownForce,"White on transparent; tint #4A9FD8. Same 1.5 px coverage strip as mark_line. Measured from the rendered ring: 3 px dash, 2 px gap (5 px pitch). Place round the circle at 5 px arc spacing, rotated to the tangent."
+sprites/@2x/mark_dash.png,"Plot mark: COMPASS ring dash tile, 3 x 1.5 px.",plot,6,6,0,0,0,0,accent.ownForce,2x of sprites/mark_dash.png.
+textures/steel_frame.png,Brushed-steel frame behind the whole board.,frame,1024,512,0,0,0,0,none,"The board's own WebGL shader, source copied verbatim and rendered at 1024x512. Stretch to the full 1920x1080 board, as the board stretches its 960x540 buffer. Checked against the live canvas: mean difference 0.4 of 255."
+textures/casting_power.png,"Power drawer body, exact.",power,512,1024,0,0,0,0,none,"Texture 512x1024; body rect x 72, y 56, w 378, h 570.5. Use the whole texture as the sprite and place it at board 1368, 199 so the body lands at 1440, 255; the margin carries the drawer shadows (68 px left, 50 px above and below). Includes the ribbed edges. Paint copied from the board, line 407."
+textures/casting_sensors.png,"Sensors drawer body, exact.",sensors,512,1024,0,0,0,0,none,"Texture 512x1024; body rect x 72, y 56, w 378, h 748. Use the whole texture as the sprite and place it at board 1368, 110 so the body lands at 1440, 166; the margin carries the drawer shadows (68 px left, 50 px above and below). Includes the ribbed edges. Paint copied from the board, line 614."
+textures/casting_comms.png,"Comms drawer body, exact.",comms,512,1024,0,0,0,0,none,"Texture 512x1024; body rect x 72, y 56, w 378, h 536.5. Use the whole texture as the sprite and place it at board 1368, 216 so the body lands at 1440, 272; the margin carries the drawer shadows (68 px left, 50 px above and below). Includes the ribbed edges. Paint copied from the board, line 808."
+textures/casting_engineering.png,"Engineering drawer body, exact.",engineering,512,1024,0,0,0,0,none,"Texture 512x1024; body rect x 72, y 56, w 376, h 550. Use the whole texture as the sprite and place it at board 1368, 209 so the body lands at 1440, 265; the margin carries the drawer shadows (68 px left, 50 px above and below). Includes the ribbed edges. Paint copied from the board, line 950."
+textures/casting_hangar.png,"Hangar drawer body, exact.",hangar,512,1024,0,0,0,0,none,"Texture 512x1024; body rect x 72, y 56, w 378, h 815. Use the whole texture as the sprite and place it at board 1368, 76.5 so the body lands at 1440, 132.5; the margin carries the drawer shadows (68 px left, 50 px above and below). Includes the ribbed edges. Paint copied from the board, line 1082."
+textures/casting_fire_control.png,"Fire control drawer body, exact.",fire control,512,1024,0,0,0,0,none,"Texture 512x1024; body rect x 72, y 56, w 378, h 701.5. Use the whole texture as the sprite and place it at board 1368, 133.5 so the body lands at 1440, 189.5; the margin carries the drawer shadows (68 px left, 50 px above and below). Includes the ribbed edges. Paint copied from the board, line 1439."

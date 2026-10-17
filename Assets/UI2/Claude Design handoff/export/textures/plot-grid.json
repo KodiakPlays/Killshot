@@ -1,0 +1,98 @@
+{
+ "meta": {
+  "source": "Star Wolf Board Live.dc.html",
+  "generated": "2026-09-27",
+  "generator": "handoff/tools/gen-textures.js",
+  "note": "The plot is not a texture: a black ground with two grid layers drawn live, a glow, and tube artefacts on top. Every value is read from the board source."
+ },
+ "rect": {
+  "x": 104,
+  "y": 100,
+  "w": 1712,
+  "h": 890,
+  "radius": "6px",
+  "shadow": "inset 0 0 0 1px rgba(255,255,255,.13), inset 0 4px 22px rgba(0,0,0,.9), 0 0 0 6px rgba(0,0,0,.35)"
+ },
+ "ground": {
+  "token": "black",
+  "alpha": 1
+ },
+ "scale": {
+  "pxPer1000kmAt1x": 60.9,
+  "zoom": {
+   "min": 0.1,
+   "max": 1
+  },
+  "steps_km": [
+   5000,
+   2000,
+   1000,
+   500,
+   200,
+   100,
+   50,
+   20
+  ],
+  "rule": "minor cell is the step whose on-screen size (pxPer1000kmAt1x x zoom / 1000 x km) is nearest 61 px"
+ },
+ "layers": {
+  "lineWidthPx": 1,
+  "minor": {
+   "cellW": "cell",
+   "cellH": "cell x 0.9557"
+  },
+  "major": {
+   "cellW": "cell x 5",
+   "cellH": "cell x 5 x 0.9557"
+  },
+  "anchor": "both layers centred on the plot: lines at x = (plotW - cellW) / 2 + n x cellW, y = (plotH - cellH) / 2 + n x cellH (CSS background-position 50% 50%)"
+ },
+ "tints": {
+  "WHITE": {
+   "minor": {
+    "token": "ink.data",
+    "alpha": 0.13
+   },
+   "major": {
+    "token": "ink.data",
+    "alpha": 0.26
+   },
+   "glow": {
+    "token": "ink.data",
+    "alpha": 0.05,
+    "shape": "radial ellipse at 50% 48%, transparent at 68%"
+   }
+  },
+  "RED": {
+   "minor": {
+    "token": "grid.redMinor",
+    "alpha": 0.34
+   },
+   "major": {
+    "token": "grid.redMajor",
+    "alpha": 0.62
+   },
+   "glow": {
+    "token": "grid.redGlow",
+    "alpha": 0.14,
+    "shape": "radial ellipse at 50% 48%, transparent at 72%"
+   },
+   "alsoOn": "the white glow layer stays on under the red tint"
+  }
+ },
+ "tube": {
+  "enabledByDefault": true,
+  "above": "grid and contacts; no pointer input",
+  "scanlines": {
+   "rule": "1 px black line every 3 px; alpha = crtScan / 100 x 0.9",
+   "crtScanDefault": 34,
+   "alphaAtDefault": 0.306
+  },
+  "vignette": {
+   "rule": "radial ellipse at 50% 48%; clear to (72 - crtVignette x 0.35)%, black to alpha crtVignette / 100 x 0.95 at the edge",
+   "crtVignetteDefault": 46,
+   "clearToPercent": 56,
+   "edgeAlpha": 0.437
+  }
+ }
+}

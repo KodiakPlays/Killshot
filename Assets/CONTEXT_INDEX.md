@@ -42,12 +42,13 @@ game exists.       Historical.     expression.                    system.       
 | Rank | Source | Decides |
 |---|---|---|
 | **1** | **What the owner says, most recently** | **Everything.** Overrides all of the below. |
-| 2 | `References/Tactical spaceship UI planning.zip` (Claude Design handoff) | The visual system — colour, type, layout, marker shapes |
-| 3 | Silent Shark (released tactical submarine sim) | How the game should present itself |
-| 4 | `References/starwolf-prototype.html` | How systems behave, and **every number** |
-| 5 | `References/Starwolf GDD.pdf` | **Why** the game exists. Old. Never numbers. |
-| 6 | `References/Starwolf_ Art Spec.pdf` | Ship design language only. Superseded on visuals. |
-| 7 | The Unity build | What code exists today. **Decides nothing.** |
+| 2 | `Assets/UI2/Claude Design handoff/export/` (the newer Claude Design handoff) | The visual system, and the board built into `02.1_Grid`. The owner ruled it wins on weapons, power and distances |
+| 3 | `References/Tactical spaceship UI planning.zip` (the older Claude Design handoff) | The visual system — colour, type, layout, marker shapes — where the newer export is silent |
+| 4 | Silent Shark (released tactical submarine sim) | How the game should present itself |
+| 5 | `References/starwolf-prototype.html` | How systems behave, and **every number** |
+| 6 | `References/Starwolf GDD.pdf` | **Why** the game exists. Old. Never numbers. |
+| 7 | `References/Starwolf_ Art Spec.pdf` | Ship design language only. Superseded on visuals. |
+| 8 | The Unity build | What code exists today. **Decides nothing.** |
 
 **The GDD is the oldest document, not the authority.** It is the first thing that was written, 74
 pages, and most of it has been overtaken.
@@ -63,7 +64,13 @@ pages, and most of it has been overtaken.
 | Why the game exists, the fantasy, the tone | `References/Starwolf GDD.pdf` |
 | What a system does and what number it uses | `Assets/TACTICAL_BOARD_SPEC.md`, then `References/starwolf-prototype.html` |
 | Why a design decision was made, and what was rejected | `Assets/TACTICAL_BOARD_PLAN.md` |
-| What the board looks like — colour, type, spacing, markers | the handoff zip's `README.md` |
+| What the board looks like — colour, type, spacing, markers | `Assets/UI2/Claude Design handoff/export/README.md`, then the older handoff zip's `README.md` |
+| How each control on the new board behaves, state by state | `export/reference/UIStateSpec.md` and `export/reference/board-logic.js` |
+| Where every element sits on the new board, in pixels | `export/layout/layout.json` |
+| How the new handoff was built into `02.1_Grid`, step by step | `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md` |
+| What the handoff package left out | `Assets/Scenes/Tactical/HANDOFF_GAPS.md` |
+| What Claude Design must still provide, verified | `Assets/Scenes/Tactical/CLAUDE_DESIGN_NEEDS.md` |
+| Which of those needs our own assets can fill | `Assets/Scenes/Tactical/ASSET_AUDIT.md` |
 | How the prototype actually behaves, without opening 4,472 lines | `Assets/PROTOTYPE_BASELINE.md` |
 | What C# exists today | `Assets/CODEBASE_BASELINE.md` |
 | What is built in the tactical scene, and the traps already hit | `Assets/Scenes/Tactical/BUILD_LOG.md` |
@@ -80,7 +87,8 @@ pages, and most of it has been overtaken.
 
 ### References — owner-authored input. Never edit anything in `References/`.
 
-**`References/Tactical spaceship UI planning.zip`** — the Claude Design handoff. A 430-line README
+**`References/Tactical spaceship UI planning.zip`** — the older Claude Design handoff. **The newer
+export in `Assets/UI2/Claude Design handoff/export/` is the one built into `02.1_Grid`.** A 430-line README
 plus four `.dc.html` reference builds, a metal-plate WebGL shader, and a baked PNG.
 *Good for:* exact hex values, type, px layout, easings, marker shapes, icon designs.
 *Not good for:* the time model. Its README describes a paused-time, plan-then-EXECUTE game. **That is
@@ -110,6 +118,16 @@ take from it is written up in `Assets/TACTICAL_BOARD_PLAN.md`: the plot is inhab
 instruments are stations not a HUD, information costs time, uncertainty is drawn. What we reject: its
 10000× time compression.
 
+### The new Claude Design handoff — `Assets/UI2/Claude Design handoff/export/`
+
+The newer handoff, and the one built into `02.1_Grid`. The full board cut into images, fonts and
+measurements. Treat it as owner input: read it, do not edit it.
+
+- `README.md` — what the package is and how to use it.
+- `reference/UIStateSpec.md` — every control's states.
+- `reference/board-logic.js` — the board's behaviour, as code.
+- `layout/layout.json` — where every element sits, in pixels.
+
 ### Project documents — ours, and editable.
 
 **`Assets/TACTICAL_BOARD_SPEC.md`** — ~1,750 lines. **The specification.** What the game does, system
@@ -135,7 +153,7 @@ as historical.
 
 ### The tactical scene — `Assets/Scenes/Tactical/`
 
-**`BUILD_LOG.md`** — ~970 lines. The build history of the tactical board, step by step: what exists,
+**`BUILD_LOG.md`** — ~1,200 lines. The build history of the tactical board, step by step: what exists,
 what is wired to what, which step we are on, what to do next. It ends with a long **Known issues**
 list of traps already hit. **Read it before touching that scene.**
 
@@ -145,6 +163,14 @@ panel and button.
 **`TARGETING_AUDIT.md`** — what already exists for weapons, tracks and contacts, and what has to be
 built. Short answer: almost nothing is reusable, and the mechanic is already written in
 `docs/reference-sim/`.
+
+**`UI_INTEGRATION_LOG.md`** — the full record of building the new handoff into `02.1_Grid`, Steps
+28–33 and the final QA. `BUILD_LOG.md` stays the pickup point.
+
+**`HANDOFF_GAPS.md`** — 105 rows of what the handoff package left out.
+
+**`CLAUDE_DESIGN_NEEDS.md`** — the verified, bucketed list of everything Claude Design must still
+provide. Checked against every source. The basis for the Claude Design request.
 
 **`TARGETING_COMPUTER_SPEC.md`** — the measured build spec for the targeting drawer. Every pixel
 figure comes from rendering the handoff's `Star Wolf Board Live.dc.html` in Chrome.
@@ -193,6 +219,10 @@ document, and do not quietly design around them.
 | **Damage shows on the forward screen only** | The plot glyph never shows damage. It stays a symbol. |
 | **Units are world units** | The kilometre figures in the handoff are display only. They do not set the numbers the game runs on. |
 
+**Owner rulings on 2026-10-04 override parts of this table** for the new board: the new handoff wins
+on weapons and power, and distances are kilometres. See `Assets/Scenes/Tactical/BUILD_LOG.md`,
+section 4.
+
 ---
 
 ## 5 · How the owner wants to work
@@ -222,10 +252,11 @@ ceiling.
 
 **The current effort is the Unity tactical board, in `Assets/Scenes/Tactical/`.**
 
-Three scenes — `00_Start`, `01_Briefing`, `02_Grid`. The intro flow runs end to end. The grid is on
-screen in amber with the corner panels, both icon rails and the outer metal frame. The targeting
-drawer slides open from the right rail. The ship draws power and moves. The rest of the board is not
-wired up yet.
+The flow is `00_Start` → `01_Briefing` → `02.1_Grid`. The new Claude Design handoff is fully built
+into `02.1_Grid` and passed its final QA. Every control is clickable and shows its states. Nothing is
+wired to game systems yet. The older board in `02_Grid` is still in Build Settings, but nothing leads
+to it. Next: an audit of existing UI assets against `CLAUDE_DESIGN_NEEDS.md`, then the Claude Design
+request, then wiring.
 
 **Read `Assets/Scenes/Tactical/BUILD_LOG.md` before you touch that scene.** The owner builds one step
 at a time and checks each step on screen before the next one starts. Do one step, show it, wait.

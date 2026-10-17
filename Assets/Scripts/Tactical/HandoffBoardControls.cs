@@ -1,0 +1,320 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+/// <summary>
+/// Step 33a. The board frame's controls, clickable with no game wiring: tool rail, systems keys
+/// and drawer latches, helm and orders headers, periscope carriage, pause and rate keys with the
+/// mission clock, the alarm strip, and the console's SCALE knob and grid-tint selector.
+/// Behaviour and every value are from the handoff's reference/UIStateSpec.md and board-logic.js
+/// (renderVals); colours are the design's sRGB values and are pre-encoded when applied, because
+/// the board blends in gamma space (GammaBoardPresenter). Later this state is fed by the game.
+/// </summary>
+public class HandoffBoardControls : MonoBehaviour
+{
+    [System.Serializable]
+    public class Dial
+    {
+        public RectTransform pointer;
+        [Tooltip("Knob centre, in the pointer's parent anchored space.")]
+        public Vector2 centre;
+        public Vector2 homePosition;
+        [Tooltip("CSS angle the pointer was laid out at, degrees clockwise.")]
+        public float homeAngle;
+
+        [Tooltip("The pointer's CSS transition (UIStateSpec §9.1); 0 s = none, it jumps.")]
+        public HandoffEased motion = new HandoffEased();
+        [System.NonSerialized] private System.Action<float> apply;
+
+        // CSS rotate() is clockwise on screen; in Unity's y-up space that is a negative z turn.
+        // The transition interpolates the angle as a number, as CSS does (no shortest-way wrap).
+        public void Set(float cssDeg)
+        {
+            if (!pointer) return;
+            if (motion == null) motion = new HandoffEased();
+            if (apply == null) apply = Apply;
+            motion.Set(cssDeg, apply);
+        }
+
+        void Apply(float cssDeg)
+        {
+            float d = (cssDeg - homeAngle) * Mathf.Deg2Rad, c = Mathf.Cos(d), s = Mathf.Sin(d);
+            Vector2 v = homePosition - centre;
+            pointer.anchoredPosition = centre + new Vector2(v.x * c + v.y * s, -v.x * s + v.y * c);
+            pointer.localEulerAngles = new Vector3(0, 0, -cssDeg);
+        }
+    }
+
+    [Tooltip("The board's own state and rules (board-logic.js). Panels read it.")]
+    [SerializeField] private HandoffBoardState state = new HandoffBoardState();
+    [SerializeField] private HandoffBoardMotion motion;
+    [SerializeField] private HandoffPlotGrid grid;
+    [SerializeField] private Canvas canvas;
+
+    [Header("Tool rail — TOOLS, UIStateSpec §8.4")]
+    [SerializeField] private string[] tools = { "CURSOR", "POINT", "RULER", "COMPASS", "ERASE" };
+    [SerializeField] private RectTransform[] toolKeys;
+    [SerializeField] private Image[] toolLamps;
+    [SerializeField] private RectTransform selectedFrame;
+    [SerializeField] private RectTransform selectedBar;
+    [SerializeField] private Color toolLampOn = new Color32(0xB6, 0xF0, 0x4A, 0xFF);
+    [SerializeField] private Color toolLampOff = new Color32(0x1A, 0x1F, 0x23, 0xFF);
+
+    [Header("Systems rail — one key per drawer, lamp lit while it is out")]
+    [SerializeField] private string[] systemDrawers = { "fire control", "sensors", "power", "hangar", "engineering", "comms" };
+    [SerializeField] private Image[] systemLamps;
+
+    [Header("Time control")]
+    [SerializeField] private TMP_Text clock;
+    [SerializeField] private float missionSeconds = 7412f;
+    [Tooltip("tickPower runs every 420 ms; the clock advances by the rate in seconds each tick while running.")]
+    [SerializeField] private float tickSeconds = 0.42f;
+    [SerializeField] private bool paused = true;
+    [SerializeField] private float rate = 1f;
+    [SerializeField] private Image pauseKey;
+    [SerializeField] private Sprite pauseKeyRun, pauseKeyPaused;
+    [SerializeField] private TMP_Text pauseLabel;
+    [SerializeField] private Image pauseLamp, pauseGlow;
+    [SerializeField] private Color pauseInkOn = new Color32(0xE0, 0xA0, 0x20, 0xFF), pauseInkOff = new Color32(0x8A, 0x95, 0x9D, 0xFF);
+    [SerializeField] private Color pauseLampOn = new Color32(0xE0, 0xA0, 0x20, 0xFF), pauseLampOff = new Color32(0x5E, 0x68, 0x70, 0xFF);
+    [SerializeField] private float[] rates = { 0.25f, 1f, 5f, 10f };
+    [SerializeField] private Image[] rateKeys;
+    [SerializeField] private TMP_Text[] rateLabels;
+    [SerializeField] private Sprite rateKeyOn, rateKeyOff;
+    [SerializeField] private Color rateInkOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), rateInkOff = new Color32(0x8A, 0x95, 0x9D, 0xFF);
+
+    [Header("Alarm strip — shown until acknowledged")]
+    [SerializeField] private GameObject[] alarmParts;
+
+    [Header("Console — SCALE knob and grid tint")]
+    [SerializeField, Range(0.1f, 1f)] private float zoom = 1f;
+    [Tooltip("SCALE knob: zoom x10 per this many px of drag (UIStateSpec §8.2).")]
+    [SerializeField] private float zoomDragPxPerDecade = 160f;
+    [Tooltip("Plot wheel: zoom x this per notch (§8.3).")]
+    [SerializeField] private float wheelStep = 1.12f;
+    [SerializeField] private Dial scaleDial;
+    [SerializeField] private TMP_Text zoomLabel;
+    [SerializeField] private Dial tintDial;
+    [SerializeField] private Image tintLampWhite, tintLampAmber;
+    [SerializeField] private TMP_Text tintLabelWhite, tintLabelAmber;
+    [SerializeField] private Color tintInkOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), tintInkOff = new Color32(0x77, 0x82, 0x8A, 0xFF);
+    [SerializeField] private Color tintLampOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), tintLampOff = new Color32(0x1B, 0x20, 0x24, 0xFF);
+
+    public HandoffBoardState State => state;
+    public HandoffBoardMotion Motion => motion;
+    public string Tool { get; private set; }
+    public bool Paused { get { return paused; } }
+    public float Rate { get { return rate; } }
+    public float Zoom { get { return zoom; } }
+    /// <summary>The zoom as the browser holds it (a double, rounded to 0.01).</summary>
+    public double ZoomExact { get { return zoomExact; } }
+    private double zoomExact = 1;
+    public float MissionSeconds { get { return missionSeconds; } }
+    /// <summary>The board's second grid tint ("RED" in the design, amber here).</summary>
+    public bool GridAmber { get { return grid && grid.GridTint == HandoffPlotGrid.Tint.Amber; } }
+
+    private Vector2 barHome, frameHome;
+    private float nextTick;
+    private HandoffPanel[] panels = new HandoffPanel[0];
+
+    private void Start()
+    {
+        frameHome = selectedFrame ? selectedFrame.anchoredPosition : Vector2.zero;
+        barHome = selectedBar ? selectedBar.anchoredPosition : Vector2.zero;
+        if (motion) motion.Changed += ShowSystems;
+        panels = GetComponents<HandoffPanel>();
+        foreach (var p in panels) p.Bind(this);
+        RefreshPanels();
+        PickTool(tools[0]);
+        ShowTime();
+        ShowSystems();
+        SetZoom(zoom);
+        ShowTint();
+        nextTick = Time.unscaledTime + tickSeconds;
+    }
+
+    private void OnDestroy() { if (motion) motion.Changed -= ShowSystems; HandoffEased.ClearAll(); }
+
+    private void Update()
+    {
+        // The board's single timer (tickPower). Only the mission clock is board-local so far.
+        // thrown repair and order rockers fall back after 400 ms (flickBack)
+        if (state.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
+        HandoffEased.TickAll(); // control transitions (Step 33j)
+        // setInterval drops ticks it missed during a stall; do the same rather than bursting
+        if (Time.unscaledTime - nextTick > tickSeconds) nextTick = Time.unscaledTime;
+        while (Time.unscaledTime >= nextTick)
+        {
+            nextTick += tickSeconds;
+            if (!paused) { missionSeconds += rate; ShowClock(); }
+            // tickPower runs whether or not time is paused (UIStateSpec §11)
+            state.TickPower();
+            state.TickAux();
+            state.TickHelm(); // reads the engine room before a repair lands this tick, as tickPower does
+            state.TickParty();
+            state.TickLaunch();
+            state.TickWeapons();
+            state.TickSensors();
+            RefreshPanels();
+        }
+    }
+
+    // ---- input from HandoffHit -----------------------------------------------------------
+
+    public void Click(string action, string arg)
+    {
+        switch (action)
+        {
+            case "tool": if (arg == "ERASE") PressErase(); else PickTool(arg); RefreshPanels(); break;
+            case "drawer": motion.ToggleDrawer(arg); break;
+            case "helm": motion.ToggleHelm(); break;
+            case "orders": motion.ToggleOrders(); break;
+            case "scope": motion.ToggleScope(); RefreshPanels(); break;
+            case "pause": paused = !paused; ShowTime(); break;
+            case "rate": rate = float.Parse(arg, System.Globalization.CultureInfo.InvariantCulture); paused = false; ShowTime(); break;
+            case "ack": foreach (var p in alarmParts) if (p) p.SetActive(false); break;
+            case "tint": grid.GridTint = grid.GridTint == HandoffPlotGrid.Tint.White ? HandoffPlotGrid.Tint.Amber : HandoffPlotGrid.Tint.White; ShowTint(); RefreshPanels(); break;
+            default:
+                foreach (var p in panels) if (p.Click(action, arg)) break;
+                RefreshPanels();
+                break;
+        }
+    }
+
+    void RefreshPanels() { foreach (var p in panels) p.Refresh(); }
+
+    /// <summary>A screen point in board px (1920x1080 layout space, top-left origin, y down).</summary>
+    public Vector2 BoardPoint(Vector2 screen)
+    {
+        var rt = (RectTransform)transform;
+        Vector2 local;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(rt, screen, canvas ? canvas.worldCamera : null, out local);
+        return new Vector2(local.x + rt.rect.width / 2f, rt.rect.height / 2f - local.y);
+    }
+
+    private double dragZoom0;
+
+    public void Down(string action, string arg, Vector2 screen)
+    {
+        if (action == "zoom") { dragZoom0 = zoomExact; return; }
+        foreach (var p in panels) if (p.Down(action, arg, BoardPoint(screen))) { RefreshPanels(); return; }
+    }
+
+    public void Up(string action, string arg, Vector2 screen)
+    {
+        foreach (var p in panels) if (p.Up(action, arg, BoardPoint(screen))) { RefreshPanels(); return; }
+    }
+
+    // scaleDown: zoom = z0 x 10^((x - x0) / 160), measured from the press, not frame to frame —
+    // per-frame steps would be rounded away by setZoom's 0.01 rounding (Step 33a verification).
+    public void Drag(string action, string arg, Vector2 sincePress, Vector2 screen)
+    {
+        if (action != "zoom")
+        {
+            foreach (var p in panels) if (p.Drag(action, arg, BoardPoint(screen))) { RefreshPanels(); return; }
+            return;
+        }
+        float px = sincePress.x / (canvas ? canvas.scaleFactor : 1f); // board px
+        SetZoom(dragZoom0 * System.Math.Pow(10, px / (double)zoomDragPxPerDecade));
+    }
+
+    public void Scroll(string action, string arg, float notches)
+    {
+        // marks and plot labels sit inside the plot element, so the wheel still zooms over them
+        if ((action != "plot" && !action.StartsWith("plot.")) || notches == 0f) return;
+        // in double, as the browser does: 0.70 / 1.12 is 0.62499… and rounds to 0.62 (Step 33i verification)
+        double step = System.Math.Round((double)wheelStep, 6);
+        SetZoom(zoomExact * (notches > 0f ? step : 1 / step));
+    }
+
+    // ---- tool rail -----------------------------------------------------------------------
+
+    public void PickTool(string tool)
+    {
+        Tool = tool;
+        state.draft = null; // pickTool clears any draft
+        int sel = System.Array.IndexOf(tools, tool);
+        for (int i = 0; i < toolLamps.Length; i++) Tint(toolLamps[i], i == sel ? toolLampOn : toolLampOff);
+        if (sel >= 0 && toolKeys.Length > sel && toolKeys[0])
+        {
+            Vector2 step = toolKeys[sel].anchoredPosition - toolKeys[0].anchoredPosition;
+            if (selectedFrame) selectedFrame.anchoredPosition = frameHome + step;
+            if (selectedBar) selectedBar.anchoredPosition = barHome + step;
+        }
+    }
+
+    // ERASE again while ERASE is live clears the plot and returns to CURSOR (§8.4).
+    void PressErase()
+    {
+        if (Tool == "ERASE") { state.marks.Clear(); PickTool(tools[0]); }
+        else PickTool("ERASE");
+    }
+
+    // ---- systems rail --------------------------------------------------------------------
+
+    void ShowSystems()
+    {
+        string open = motion ? motion.OpenDrawerName : null;
+        for (int i = 0; i < systemLamps.Length && i < systemDrawers.Length; i++)
+            Tint(systemLamps[i], systemDrawers[i] == open ? toolLampOn : toolLampOff);
+    }
+
+    // ---- time control --------------------------------------------------------------------
+
+    void ShowTime()
+    {
+        if (pauseKey) pauseKey.sprite = paused ? pauseKeyPaused : pauseKeyRun;
+        if (pauseLabel) { pauseLabel.text = paused ? "PAUSED" : "RUNNING"; Tint(pauseLabel, paused ? pauseInkOn : pauseInkOff); }
+        Tint(pauseLamp, paused ? pauseLampOn : pauseLampOff);
+        if (pauseGlow) pauseGlow.gameObject.SetActive(paused);
+        for (int i = 0; i < rateKeys.Length && i < rates.Length; i++)
+        {
+            bool on = !paused && Mathf.Approximately(rate, rates[i]);
+            if (rateKeys[i]) rateKeys[i].sprite = on ? rateKeyOn : rateKeyOff;
+            if (i < rateLabels.Length) Tint(rateLabels[i], on ? rateInkOn : rateInkOff);
+        }
+        ShowClock();
+    }
+
+    void ShowClock()
+    {
+        if (!clock) return;
+        int t = Mathf.FloorToInt(missionSeconds);
+        clock.text = (t / 3600 % 100).ToString("00") + ":" + (t / 60 % 60).ToString("00") + ":" + (t % 60).ToString("00");
+    }
+
+    // ---- console -------------------------------------------------------------------------
+
+    public void SetZoom(double z)
+    {
+        // z*100 in double, as the browser does, so near-half products round the same way; the
+        // exact double is kept for the next step, the float only for display and the grid
+        zoomExact = System.Math.Max(0.1, System.Math.Min(1, System.Math.Floor(z * 100.0 + 0.5) / 100));
+        zoom = (float)zoomExact;
+        if (grid) grid.Zoom = zoom;
+        if (zoomLabel) zoomLabel.text = "x" + (zoom >= 1f ? "1.0" : zoom.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+        scaleDial.Set(-140f + Mathf.Log10(zoom / 0.1f) * 280f); // knobAngle
+    }
+
+    void ShowTint()
+    {
+        bool white = !grid || grid.GridTint == HandoffPlotGrid.Tint.White;
+        tintDial.Set(white ? 60f : 120f); // tintAngle
+        Tint(tintLampWhite, white ? tintLampOn : tintLampOff);
+        Tint(tintLampAmber, white ? tintLampOff : tintLampOn);
+        Tint(tintLabelWhite, white ? tintInkOn : tintInkOff);
+        Tint(tintLabelAmber, white ? tintInkOff : tintInkOn);
+    }
+
+    // ---- colour --------------------------------------------------------------------------
+
+    // Design colours are sRGB; pre-encode so the canvas's linear conversion lands on them,
+    // keeping the graphic's own alpha.
+    static void Tint(Graphic g, Color design)
+    {
+        if (!g) return;
+        var c = design.gamma;
+        c.a = g.color.a;
+        g.color = c;
+    }
+}
