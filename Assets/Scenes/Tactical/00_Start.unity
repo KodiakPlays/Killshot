@@ -119,6 +119,80 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &875863680
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 875863682}
+  - component: {fileID: 875863681}
+  m_Layer: 0
+  m_Name: STARWOLF Intro
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &875863681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 875863680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e22b0be2be252fbb5aefb5efc8197d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Starwolf.Intro.StarwolfIntroController
+  glyphData: {fileID: 4900000, guid: 4895633ed68552d1a45e79cea10526f5, type: 3}
+  displayShader: {fileID: 4800000, guid: 322627cc3a3e54c8bdaa4dc899202abd, type: 3}
+  hardwareHum: {fileID: 8300000, guid: 4473273f2b9f5b8282c49378ffbdd299, type: 3}
+  sectionDuration: 4
+  initialisingDuration: 2
+  titleDuration: 4
+  pullbackDuration: 4
+  humVolume: 0.12
+  newGame:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1675068442}
+        m_TargetAssemblyTypeName: ScreenFlow, Assembly-CSharp
+        m_MethodName: Advance
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  loadGame:
+    m_PersistentCalls:
+      m_Calls: []
+  settings:
+    m_PersistentCalls:
+      m_Calls: []
+  loadGameAvailable: 0
+--- !u!4 &875863682
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 875863680}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1219007352
 GameObject:
   m_ObjectHideFlags: 0
@@ -370,6 +444,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1523461054}
   - component: {fileID: 1523461053}
+  - component: {fileID: 1523461055}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -443,6 +518,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!81 &1523461055
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1523461052}
+  m_Enabled: 1
 --- !u!1 &1675068441
 GameObject:
   m_ObjectHideFlags: 0
@@ -507,7 +590,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1799336810
 RectTransform:
   m_ObjectHideFlags: 0
@@ -707,7 +790,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2037631302
 RectTransform:
   m_ObjectHideFlags: 0
@@ -837,3 +920,4 @@ SceneRoots:
   - {fileID: 1976350275}
   - {fileID: 1219007356}
   - {fileID: 1675068443}
+  - {fileID: 875863682}
