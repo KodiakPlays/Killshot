@@ -35,6 +35,9 @@ public class HandoffPlotPanel : HandoffPanel
            + "and never above the maximum (owner 2026-10-17).")]
     [Tune("Plot & our ship")]
     [SerializeField] private float ownShipMinPx = 30f, ownShipMaxPx = 120f;
+    [Tune("Plot & our ship")]
+    [Tooltip("Our ship's line colour on the plot (owner 2026-10-18: white; the design's ink.data #E8EDF0).")]
+    [SerializeField] private Color ownShipColor = new Color(0xE8 / 255f, 0xED / 255f, 0xF0 / 255f, 1f);
     private ShipView shipView;
 
     [Header("Contacts on the plot (Step 34): identified hostiles at their true range and bearing")]
@@ -185,6 +188,7 @@ public class HandoffPlotPanel : HandoffPanel
             if (!shipView) shipView = FindAnyObjectByType<ShipView>();
             ownShipImage.texture = shipView ? shipView.Texture : null;
             ownShipImage.enabled = shipView && shipView.Texture;
+            ownShipImage.color = ownShipColor.gamma; // the board canvas linearises vertex colours; pre-encode
             float shipPx = Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx);
             float side = shipPx / (shipView ? shipView.ShipFill : 1f);
             ownShipImage.rectTransform.sizeDelta = new Vector2(side, side);

@@ -1462,9 +1462,11 @@ public static class HandoffBoardBuilder
         // heading/speed line (#42–44) and the SENSOR RANGE label (#37–38) go: the player learns these
         // through the tools (the sensors panel still positions #37–38). The PDC GROUP A arc and label
         // (#39–41) show only once the PDCs are activated, wired in the fire-control step. BOARD POINT
-        // ALPHA and its × (#49–50) were a mock waypoint.
+        // ALPHA and its × (#49–50) were a mock waypoint. #33 is an empty circle; #35 a frozen piece of the
+        // radar sweep, which is built for real in the sensors step (HANDOFF_GAPS row 105).
         foreach (var id in new[] { "text#37 ", "text#38 ", "text#42 ", "text#43 ", "text#44 ",
-                                   "drawn#39 ", "drawn#40 ", "text#40 ", "text#41 ", "text#49 ", "text#50 " })
+                                   "drawn#39 ", "drawn#40 ", "text#40 ", "text#41 ", "text#49 ", "text#50 ",
+                                   "drawn#33 ", "drawn#35 " })
         {
             Named(root, "Plot/Mockup", id).gameObject.SetActive(false);
             Count("hidden: standing plot text and art");

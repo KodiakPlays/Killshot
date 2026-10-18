@@ -1440,9 +1440,12 @@ with zoom). It had been left as placeholder rectangles. That was our miss.
 - It survives a rebuild.
 - Evidence: `Logs/HandoffQA/step37/v/` and `Logs/HandoffQA/step38/`.
 
-**Open question to the owner.** The ship draws as red vector lines. That is the old build's
-VectorModel full-screen effect. Red means "hostile" in the design palette. Keep red, or switch our
-ship to the own-force colour?
+**Our ship is white** (owner, 2026-10-18). The camera image is drawn by the old build's VectorModel
+full-screen effect as red lines on black, and red means "hostile" in the design palette. The effect
+itself stays red: other cameras use it. `BoardLinearImage.shader` instead uses the lines as a mask
+and fills them with the image's colour. That colour is `HandoffPlotPanel.ownShipColor`, in the
+tuning window under Plot & our ship. Its default is the design's white, `ink.data` #E8EDF0, the
+colour of the design's own-ship glyph.
 
 ### Step 38 — Every tunable value in one window
 
@@ -1486,7 +1489,12 @@ The player learns these things through the tools.
   - our ship's name and call sign (STARWOLF, SW-01);
   - the mock heading and speed line under it (HDG 062°, V 1.84 km/s);
   - the SENSOR RANGE label on the envelope ring (the ring stays);
-  - BOARD POINT ALPHA and its ×, a mock waypoint.
+  - BOARD POINT ALPHA and its ×, a mock waypoint;
+  - `drawn#33`, an empty circle that drew nothing;
+  - `STAND-IN drawn#35`, a frozen grey line pointing north-west. It is probably part of the
+    design's radar sweep: it has the same −58° angle as the sweep disc `drawn#34`, already hidden
+    (`HANDOFF_GAPS.md` rows 7, 12, 105). The design's sweep turns round our ship while DRADIS
+    (passive sweep) is on, which is the default. It is built for real in the sensors step.
 - **Hidden until real:**
   - The PDC GROUP A arc and its label show only once the PDCs are activated. They are wired in
     the fire-control step.
@@ -1496,16 +1504,8 @@ The player learns these things through the tools.
 - The builder hides them (`WirePlot`, and the alarm strip in the time-control wiring), so a
   rebuild keeps them hidden.
 
-**Still on the plot from the design:**
-
-- `drawn#33`, a circle with no fill that draws nothing.
-- `STAND-IN drawn#35`, a frozen grey line pointing north-west. It is probably part of the
-  design's radar sweep: it has the same −58° angle as the sweep disc `drawn#34`, which is hidden
-  (`HANDOFF_GAPS.md` rows 7, 12, 105). The design's sweep turns round our ship while DRADIS
-  (passive sweep) is on, which is the default. Ours does not turn yet.
-
-**Checked.** After a rebuild, only those two remain under `Plot/Mockup` and nothing under
-`AlarmStrip`. The World is still linked and the scene saved clean. Playtest: 37/37 PASS, console clean, with the tuning window open (`Logs/Playtests/2026-10-18_210547/`).
+**Checked.** After a rebuild, nothing under `Plot/Mockup` or `AlarmStrip` shows. The World is
+still linked and the scene saved clean. Playtest: 37/37 PASS, console clean, our ship white (`Logs/Playtests/2026-10-18_225433/`).
 
 ---
 

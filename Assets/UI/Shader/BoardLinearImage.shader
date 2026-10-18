@@ -1,14 +1,15 @@
 // A live camera image (linear colour) shown on the handoff board, which stores sRGB values and
 // converts them once at the end (BoardGammaToLinear). This encodes the image to sRGB first, so it
 // comes out as rendered. Keeps the plot's RectMask2D clipping. Used for our ship's 3D view, which the
-// VectorModel full-screen pass draws as lines on black: black is made see-through.
+// VectorModel full-screen pass draws as lines on black: black is made see-through and the lines
+// take the Tint (the image's colour), so our ship can be white while the effect itself stays red.
 Shader "Starwolf/UI/BoardLinearImage"
 {
     Properties
     {
         [PerRendererData] _MainTex ("Image", 2D) = "black" {}
         _Color ("Tint", Color) = (1,1,1,1)
-        [Toggle] _KeyBlack ("Black is see-through (line-art views)", Float) = 1
+        [Toggle] _KeyBlack ("Line art: black see-through, lines take the Tint", Float) = 1
     }
     SubShader
     {
@@ -47,8 +48,9 @@ Shader "Starwolf/UI/BoardLinearImage"
             {
                 fixed4 c = tex2D(_MainTex, i.uv);
                 c.rgb = LinearToGammaSpace(saturate(c.rgb));
-                // the VectorModel full-screen pass draws lines on solid black; let the black go
-                if (_KeyBlack > 0.5) c.a *= saturate(max(c.r, max(c.g, c.b)));
+                // the VectorModel full-screen pass draws lines on solid black; let the black go and
+                // use the lines as a mask for the tint
+                if (_KeyBlack > 0.5) { c.a *= saturate(max(c.r, max(c.g, c.b))); c.rgb = 1; }
                 c *= i.color;
                 #ifdef UNITY_UI_CLIP_RECT
                 c.a *= UnityGet2DClipping(i.world.xy, _ClipRect);
