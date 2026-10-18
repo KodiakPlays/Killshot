@@ -26,6 +26,7 @@ using UnityEngine.SceneManagement;
 public static class PlaytestRunner
 {
     const string PendingKey = "Starwolf.Playtest.Run", ReturnSceneKey = "Starwolf.Playtest.ReturnScene";
+    const string GameViewSizeKey = "Starwolf.Playtest.GameViewSize";
     const string StartScene = "Assets/Scenes/Tactical/00_Start.unity";
 
     static IEnumerator routine;
@@ -47,6 +48,7 @@ public static class PlaytestRunner
         if (EditorApplication.isPlayingOrWillChangePlaymode) { Debug.LogWarning("[Playtest] Stop play mode first."); return; }
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
         SessionState.SetString(ReturnSceneKey, SceneManager.GetActiveScene().path);
+        SessionState.SetInt(GameViewSizeKey, GameViewSize(-1));
         EditorSceneManager.OpenScene(StartScene, OpenSceneMode.Single);
         SessionState.SetString(PendingKey, DateTime.Now.ToString("yyyy-MM-dd_HHmmss"));
         EditorApplication.isPlaying = true;
@@ -69,7 +71,27 @@ public static class PlaytestRunner
         {
             string back = SessionState.GetString(ReturnSceneKey, "");
             if (back.Length > 0) { SessionState.EraseString(ReturnSceneKey); EditorSceneManager.OpenScene(back, OpenSceneMode.Single); }
+            int size = SessionState.GetInt(GameViewSizeKey, -1);
+            if (size >= 0) { SessionState.EraseInt(GameViewSizeKey); GameViewSize(size); }
         }
+    }
+
+    // The recorder switches the Game view to its own 1920x1080 size and leaves it there; give the owner
+    // theirs back. Reads the Game view's size choice (set < 0) or sets it. Internal API, so guarded.
+    static int GameViewSize(int set)
+    {
+        var t = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView");
+        var views = t != null ? Resources.FindObjectsOfTypeAll(t) : null;
+        if (views == null || views.Length == 0) return -1;
+        const System.Reflection.BindingFlags F = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
+        var index = t.GetProperty("selectedSizeIndex", F);
+        if (index == null) return -1;
+        if (set < 0) return (int)index.GetValue(views[0]);
+        var pick = t.GetMethod("SizeSelectionCallback", F); // what the size menu itself calls
+        if (pick != null) pick.Invoke(views[0], new object[] { set, null });
+        else index.SetValue(views[0], set);
+        ((EditorWindow)views[0]).Repaint();
+        return set;
     }
 
     // ---- run --------------------------------------------------------------------------------

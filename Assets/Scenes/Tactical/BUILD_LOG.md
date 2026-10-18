@@ -1591,7 +1591,17 @@ and says so in the report. Board controls are clicked for real, through the Even
 
 Traps found setting it up: the recorder needs a moment after it stops before play mode ends, or
 the MP4 has no index and won't play; and it must record at a **constant** frame rate — variable
-rate fed the Mac encoder duplicate timestamps and it dropped frames.
+rate fed the Mac encoder duplicate timestamps and it dropped frames. And the recorder switches
+the Game view to its own "Recording Resolution (1920x1080)" and leaves it there, so the Game view
+stopped filling the window. Since 2026-10-18 the playtest notes the Game view's size choice before
+the run and puts it back afterwards.
+
+**Game view size (owner, 2026-10-18).** Use **16:9 Aspect** in the Game view's size menu (top
+left of the Game view). The board draws at the window's real pixel size, and its layout is designed
+for 16:9. **Free Aspect** fills any window, but other shapes have not been checked. A fixed size like
+1920x1080 gets shrunk to fit. For a bigger view, set the Game view's **Play Focused** menu to **Play
+Maximized**. For true full screen, make a build: Player Settings are already Fullscreen Window at
+the display's native resolution.
 
 ### Road to a playable demo — overview (2026-10-05)
 
