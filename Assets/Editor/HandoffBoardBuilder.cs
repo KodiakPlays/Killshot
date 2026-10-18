@@ -1484,6 +1484,15 @@ public static class HandoffBoardBuilder
             Named(root, "Plot/Mockup", id).gameObject.SetActive(false);
             Count("hidden: standing plot text and art");
         }
+        // Step 42 (owner 2026-10-18): the sensor circle, DRADIS's hearing range around our ship,
+        // under our ship and everything else on the plot
+        var ringRt = layer("Sensor ring (drawn)");
+        ringRt.gameObject.AddComponent<CanvasRenderer>();
+        var ringG = ringRt.gameObject.AddComponent<HandoffMarksGraphic>();
+        ringG.color = Hex("ink.data", 1f);
+        ringG.raycastTarget = false;
+        so.FindProperty("sensorRing").objectReferenceValue = ringG;
+
         var shipRt = layer("Own ship (3D view)");
         shipRt.gameObject.AddComponent<CanvasRenderer>();
         var shipImg = shipRt.gameObject.AddComponent<RawImage>();

@@ -377,6 +377,7 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => !rockers.Moving("fc.flip", "0"));
         Check("After the nudge the rocker is back at rest, still locked", rung.sprite.name.EndsWith("_locked") && !rung.transform.Find("Pad cover").GetComponent<Image>().enabled, rung.sprite.name);
         Shot("13_refused");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
 
         var track = (RectTransform)Hit("fc.track", null).transform;
         var trackLamp = (RectTransform)track.parent.Find(FirstChildName(track.parent, "lamp#82 "));
@@ -400,6 +401,7 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => (eased |= overlay.enabled && overlay.color.a > 0f && overlay.color.a < 1f) && recall.sprite.name == "button_recall_pressed" && !overlay.enabled);
         Check("RECALL eases down while held (.1 s)", eased && recall.sprite.name == "button_recall_pressed" && !overlay.enabled, recall.sprite.name + (eased ? ", ease seen" : ", no ease seen"));
         Shot("15_recall_held");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("hangar.recall", null, "RECALL (released)", down: false)) yield break;
         yield return (Func<bool>)(() => recall.sprite.name == "button_recall_up" && !overlay.enabled);
         Check("RECALL comes back up on release", recall.sprite.name == "button_recall_up" && !overlay.enabled, recall.sprite.name);
@@ -426,6 +428,7 @@ public static class PlaytestRunner
               moved.ToString("0.0") + " km, course " + s.CourseDeg.ToString("000") + "°, heading " + s.hdg.ToString("000") + "°");
         Check("Our ship's image moves; the grid stays put", shipImg.anchoredPosition != img0 && board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx == grid0, "");
         Shot("16_under_way");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
 
         //     A hard turn: the hull swings, the ship slides on its old course, then lines up.
         s.ordHdg = (s.hdg + 90) % 360; // stand-in: set the ordered heading (the helm dial is a drag)
@@ -433,6 +436,7 @@ public static class PlaytestRunner
         double lag = System.Math.Abs(((s.CourseDeg - s.hdg + 540) % 360) - 180);
         Check("After a turn the ship slides: course lags the heading", lag > 5, "heading " + s.hdg.ToString("000") + "°, course " + s.CourseDeg.ToString("000") + "°");
         Shot("17_sliding");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
 
         //     Pause freezes the ship.
         if (!Click("pause", null, "PAUSE key")) yield break;
@@ -452,7 +456,28 @@ public static class PlaytestRunner
         Check("Dragging the grid pans the plot", Mathf.Abs(plotPanel.View.x - (v0.x - dragKm)) < 1f && Mathf.Abs(board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx.x - gridA.x - 100f) < 0.5f,
               "view moved " + (plotPanel.View.x - v0.x).ToString("0") + " km (expected " + (-dragKm).ToString("0") + ")");
         Shot("18_panned");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("rate", "1", "x1 rate key")) yield break;
+
+        // 16. The sensor circle (Step 42): while DRADIS is on, a circle round our ship at the hearing range.
+        Check("DRADIS on: the sensor circle shows at the hearing range", s.dradis && Mathf.Abs(plotPanel.SensorRingKm - s.PassiveRangeKm) < 1f,
+              plotPanel.SensorRingKm.ToString("N0") + " km (hearing range " + s.PassiveRangeKm.ToString("N0") + " km)");
+        if (!Click("drawer", "sensors", "SENS key")) yield break;
+        board.SetZoom(0.3); // 19,000 km is wider than the plot at x1; zoom out to see the whole circle
+        yield return 0.8f;
+        Shot("19_sensor_circle");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        if (!Click("sensors.dradis", null, "DRADIS rocker (off)")) yield break;
+        yield return 0.3f;
+        Check("DRADIS off: the circle goes", !s.dradis && plotPanel.SensorRingKm == 0f, "dradis " + s.dradis);
+        Shot("20_dradis_off");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        if (!Click("sensors.dradis", null, "DRADIS rocker (on)")) yield break;
+        yield return 0.8f;
+        Check("DRADIS on again: the circle is back", s.dradis && Mathf.Abs(plotPanel.SensorRingKm - s.PassiveRangeKm) < 1f, plotPanel.SensorRingKm.ToString("N0") + " km");
+        Shot("21_dradis_on_again");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        board.SetZoom(1.0);
         yield return 1f;
     }
 

@@ -43,6 +43,9 @@ public class HandoffMarksGraphic : MaskableGraphic
             var c = color; c.a *= s.alpha;
             if (s.kind == "point") Dot(s.a, pointDot / 2f, c);
             else if (s.kind == "ruler") { Line(s.a, s.b, c); Dot(s.a, endDot / 2f, c); Dot(s.b, endDot / 2f, c); }
+            // Step 42: the sensor circle — a solid ring, and the faint fill inside it
+            else if (s.kind == "circle") Ring(s.a, (s.b - s.a).magnitude, c, false);
+            else if (s.kind == "disc") Dot(s.a, (s.b - s.a).magnitude, c);
             else { Line(s.a, s.b, c); Ring(s.a, (s.b - s.a).magnitude, c); }
         }
     }
@@ -62,7 +65,7 @@ public class HandoffMarksGraphic : MaskableGraphic
     void Dot(Vector2 at, float r, Color c)
     {
         Vector2 p = L(at);
-        const int seg = 16;
+        int seg = Mathf.Clamp(Mathf.CeilToInt(r / 3f), 16, 720); // smooth at any size
         int i0 = vh.currentVertCount;
         vh.AddVert(p, c, Vector2.zero);
         for (int k = 0; k <= seg; k++)
@@ -73,14 +76,14 @@ public class HandoffMarksGraphic : MaskableGraphic
         for (int k = 1; k <= seg; k++) vh.AddTriangle(i0, i0 + k, i0 + k + 1);
     }
 
-    void Ring(Vector2 centre, float r, Color c)
+    void Ring(Vector2 centre, float r, Color c, bool dashed = true)
     {
         if (r <= 0f) return;
         Vector2 p = L(centre);
         float rin = r - lineWidth / 2f, rout = r + lineWidth / 2f;
         float circ = 2f * Mathf.PI * r;
-        int n = Mathf.Max(1, Mathf.FloorToInt(circ / (dash + dashGap)));
-        float step = Mathf.PI * 2f / n, on = step * dash / (dash + dashGap);
+        int n = dashed ? Mathf.Max(1, Mathf.FloorToInt(circ / (dash + dashGap))) : 1;
+        float step = Mathf.PI * 2f / n, on = dashed ? step * dash / (dash + dashGap) : step;
         for (int k = 0; k < n; k++)
         {
             float a0 = k * step;

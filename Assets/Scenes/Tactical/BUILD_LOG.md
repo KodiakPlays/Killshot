@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 41 are done, plus a final QA pass.**
+**Steps 1 to 42 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -81,8 +81,9 @@ Do not run ahead. Do one step, show it, wait.
 | 39 | Nothing standing on the plot | **Done** — checked after a rebuild and a playtest |
 | 40 | Press and click: switches slide, refuse, and click | **Done** — playtest 48/48, slide measured in play |
 | 41 | The helm: our ship moves, and the plot pans | **Done** — playtest 57/57 |
+| 42 | The sensor circle: DRADIS's hearing range around our ship | **Done** — playtest 60/60 |
 
-Steps 6 to 28 and Steps 34 to 41 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 42 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -573,11 +574,16 @@ The new layout throws that split away:
     frames on its own clock, so a 0.14 s slide shows as a few small steps and then a jump. In play it
     is smooth: logged frame by frame in Step 40. Judge feel in play, not from the video.
 
-34. Nothing else. The Unity console is clean: no errors, no warnings.
+34. **A playtest screenshot shows the end of the frame.** `ScreenCapture` writes the frame once
+    it is finished, so anything the playtest does before its next wait lands in the picture. Wait
+    after a shot (`yield return 0.2f`) before the next action. Step 42 caught a "DRADIS on"
+    shot that showed DRADIS off.
+
+35. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 41, in detail
+## 6 · Steps 6 to 28, and 34 to 42, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1642,6 +1648,34 @@ is the newest source.
   centre, not world position.
 - Nothing recentres the plot on our ship. Panning is the only way to follow it.
 
+### Step 42 — The sensor circle: DRADIS's hearing range around our ship
+
+**Owner direction (2026-10-18).** When DRADIS is on, a circle shows around our ship. Its radius is
+the sensor range.
+
+**What happened before.** The design's sensor ring was `drawn#33`, a 398 px circle round the plot
+centre: 150 + gain × 48 layer px, the radius the SENSOR RANGE label rode on. The export gave it no
+fill and no line, so it never drew in Unity. It was removed in Step 39 as "an empty circle"; nothing
+visible was lost.
+
+**What was built.**
+
+- A `Sensor ring (drawn)` layer under our ship (a `HandoffMarksGraphic`, which gains a solid
+  `circle` and a filled `disc`).
+- `HandoffPlotPanel` draws it around our ship's true position at the true hearing range,
+  `PassiveRangeKm`: the range at which `Heard()` takes a contact while DRADIS is on. That is
+  12,000 km + 7,000 km per gain step, ×0.55 on UV. So 19,000 km at gain 1.
+- It is drawn only while DRADIS is on.
+- The colours are the design's `senEdge` and `senGlow`: the edge in data white at 26% and a faint
+  fill at 4%. On the amber grid, alarm red at 30% and 5%.
+- It eases to a new size over 0.5 s when the gain changes (UIStateSpec §9.1, lines 204 and 210).
+  The ease is in the tuning window under Sensors.
+- The radius is true to scale, not the design's fixed px. At ×1 a 19,000 km circle is wider than
+  the plot, so zoom out to see it (×0.3 fits it).
+
+**Checked.** Playtest 60/60 PASS, console clean (`Logs/Playtests/2026-10-19_001410/`). The circle matches the hearing range with DRADIS on, goes with
+DRADIS off, and comes back. A screenshot at ×0.3 shows it centred on our ship.
+
 ---
 
 ## 7 · How to keep this log
@@ -1744,6 +1778,11 @@ Maximized**. For true full screen, make a build: Player Settings are already Ful
 the display's native resolution.
 
 ### Road to a playable demo — overview (2026-10-05)
+
+**Superseded (2026-10-19).** Kept for its system inventory only. The live plan is the wiring order
+above plus `FTUE_PLAN.md`. Where they differ, they win. In particular, the carrier and escorts, the
+alert net, reinforcements, the jump point and a separate `WorldSim` are all out. The first mission
+is one frigate, our ship with different stats, with `TacticalWorld` stepping inside the board tick.
 
 **This is an overview only.** Each workstream gets its own deep dive later, before work starts on it.
 

@@ -40,6 +40,18 @@ public class HandoffPlotPanel : HandoffPanel
     [SerializeField] private Color ownShipColor = new Color(0xE8 / 255f, 0xED / 255f, 0xF0 / 255f, 1f);
     private ShipView shipView;
 
+    [Header("Sensor circle (Step 42): what DRADIS can hear, around our ship")]
+    [Tooltip("Owner 2026-10-18: while DRADIS is on, a circle around our ship at the sensor (hearing) range.")]
+    [SerializeField] private HandoffMarksGraphic sensorRing;
+    [Tooltip("The circle eases to a new range (UIStateSpec §9.1, lines 204 and 210: .5 s).")]
+    [Tune("Sensors")] [SerializeField] private HandoffEased sensorRingMotion = new HandoffEased(0.5f, CssEase.Ease);
+    [Tooltip("senEdge / senGlow: the ring and the fill inside it; white grid ink.data .26 / .04, amber grid alarm .3 / .05.")]
+    [SerializeField] private float senEdgeAlpha = 0.26f, senGlowAlpha = 0.04f, senEdgeAlphaAmber = 0.3f, senGlowAlphaAmber = 0.05f;
+    private float sensorKm;
+    private System.Action<float> setSensorKm;
+    /// <summary>The sensor circle's radius now, km (it eases), or 0 while DRADIS is off.</summary>
+    public float SensorRingKm => State != null && State.dradis ? sensorKm : 0f;
+
     [Header("Contacts on the plot (Step 34): identified hostiles at their true range and bearing")]
     [Tooltip("Stand-in art until Claude Design's contact glyphs arrive (CLAUDE_DESIGN_NEEDS 1.2).")]
     [SerializeField] private HandoffMarksGraphic contactMarks;
@@ -242,6 +254,13 @@ public class HandoffPlotPanel : HandoffPanel
             Put(ownShipImage.rectTransform, Screen(s.ownX, s.ownY), 0f);
         }
 
+        if (sensorRing)
+        {
+            if (setSensorKm == null) setSensorKm = km => { sensorKm = km; DrawSensorRing(); };
+            sensorRingMotion.Set(s.PassiveRangeKm, setSensorKm);
+            DrawSensorRing();
+        }
+
         // identified hostile contacts at their true spot (res_* in the board: a mark only once
         // identified). km to plot px at 1x: 60.9 px per 1000 km, then the zoom.
         var dots = new List<HandoffMarksGraphic.Shape>();
@@ -276,6 +295,22 @@ public class HandoffPlotPanel : HandoffPanel
             if (passiveVisibility) p.label.gameObject.SetActive(s.Heard(t) && !s.identified.Contains(t.key));
             Paint(p.label, s.ScopeOn(t, down) ? caution : Controls.GridAmber ? alarm : data);
         }
+    }
+
+    // The hearing range: Heard() takes a contact inside it while DRADIS is on (PassiveRangeKm).
+    void DrawSensorRing()
+    {
+        var s = State;
+        var shapes = new List<HandoffMarksGraphic.Shape>();
+        if (s.dradis && sensorKm > 0f)
+        {
+            bool amber = Controls.GridAmber;
+            Paint(sensorRing, amber ? alarm : data);
+            Vector2 c = Screen(s.ownX, s.ownY), e = c + new Vector2((float)(sensorKm / KmPerPx * Controls.ZoomExact), 0f);
+            shapes.Add(new HandoffMarksGraphic.Shape { kind = "disc", a = c, b = e, alpha = amber ? senGlowAlphaAmber : senGlowAlpha });
+            shapes.Add(new HandoffMarksGraphic.Shape { kind = "circle", a = c, b = e, alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
+        }
+        sensorRing.Set(shapes);
     }
 
     TMP_Text ContactLabel(int i)
