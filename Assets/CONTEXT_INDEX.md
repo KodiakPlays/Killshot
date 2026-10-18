@@ -77,6 +77,7 @@ pages, and most of it has been overtaken.
 | Which canvas, camera, render texture and GameObject feeds each panel and button | `Assets/Scenes/Tactical/UICONTROLLER_PARTS.md` |
 | What exists for weapons, tracks and contacts, and what still has to be built | `Assets/Scenes/Tactical/TARGETING_AUDIT.md` |
 | How the targeting drawer is built, to the pixel | `Assets/Scenes/Tactical/TARGETING_COMPUTER_SPEC.md` |
+| The first mission, the tutorial walkthrough, and the first enemy AI — the plan | `Assets/Scenes/Tactical/FTUE_PLAN.md` |
 | A mechanic that is already written, before you port it to C# | `docs/reference-sim/` |
 | Ship silhouettes, class size table, obstacle tiers | `References/Starwolf_ Art Spec.pdf` |
 | Working rules — MCP, C# style, repo hygiene | `CLAUDE.md` |
