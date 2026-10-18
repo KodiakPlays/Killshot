@@ -6,31 +6,36 @@ A running record of the new scene flow being built under `Assets/Scenes/Tactical
 exists, what is wired to what, which step we are on, and what to do next. You should not have to
 work any of that out again.
 
-Last updated: 2026-10-05. Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
+Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
 
 ---
 
 ## 1 · Where we are
 
-**Steps 1 to 33 are done, plus a final QA pass.**
+**Steps 1 to 39 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
 
-The board looks and clicks right, but **there is no game behind it yet**. No enemies, no world, no
-mission. See **Road to a playable demo** at the top of section 8.
+The board looks and clicks right. **Wiring to real game systems began in Step 34.** One dummy enemy
+now sits in a real world at TRACK 07's spot, and the board reads it. It does not move or fire. There
+is no mission yet. Since Step 35, power makes the ship loud (signal), and nothing real changes while
+paused. Since Step 36 the plot tools mark world positions; since Step 37 our ship shows on the plot as
+its 3D model seen from above. Every tunable value is in **Starwolf → Tuning** (Step 38). The plot
+carries no standing text (Step 39). The wiring order is at the top of section 8.
 
 The older board in `02_Grid` (Steps 5–26) is out of the play flow. It had an amber grid, corner
 panels, two icon rails, a targeting drawer, power, WASD movement and five plot tools.
 
 **Changed direction on 2026-10-04.** A new Claude Design handoff arrived at
 `Assets/UI2/Claude Design handoff/export/`. It is now fully built into `02.1_Grid`, and the final QA
-passed. Every control is clickable and shows its states. Nothing is wired to game systems yet. The
+passed. Every control is clickable and shows its states. Wiring to game systems began in Step 34. The
 flow is `00_Start` → `01_Briefing` → `02.1_Grid`. `02_Grid` is still in Build Settings, but nothing
 leads to it. The full record is `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
 
-**Next up: the owner's decisions** in section 8, "Road to a playable demo". Then the game systems,
-in the order listed there. The UI asset audit is done (`ASSET_AUDIT.md`). The Claude Design request still
+**Next up: the design's press and click interactions** (switch slides, a "refused" nudge on locked
+switches, click sounds), then the helm, sensors, periscope and fire control, fire, hit — the owner's
+wiring order, top of section 8. Power P1 (Step 35) and the plot tools (Step 36) are done. The UI asset audit is done (`ASSET_AUDIT.md`). The Claude Design request still
 stands, but placeholder art is fine, so it does not block a demo.
 
 The owner is building this one step at a time and checking each step before starting the next one.
@@ -67,8 +72,14 @@ Do not run ahead. Do one step, show it, wait.
 | 27 | Intro and menu wired into the flow, and four rendering bugs in the intro package | **Done** — flow checked in play mode; CRT treatment not yet seen on screen |
 | 28 | New scene `02.1_Grid` for the new handoff, wired after the briefing | **Done** — flow checked in play mode |
 | 29–33 | The new handoff built into `02.1_Grid`: import, builder, static board, movement, clickable controls (33a–33j), final QA | **Done** — FINAL QA: PASS. Detail in `UI_INTEGRATION_LOG.md` |
+| 34 | Wiring begins: the dummy enemy exists and the board reads it | **Done** — verified (STEP 34: VERIFIED on the second pass) |
+| 35 | Power makes the ship loud (signal), and nothing real changes while paused | **Done** — verified (STEP 35: VERIFIED, first pass) |
+| 36 | Plot tools: marks stay put in space | **Done** — verified (STEP 36: VERIFIED, third pass) |
+| 37 | Our ship on the plot, as the 3D model seen from above | **Done** — verified (STEP 37: VERIFIED, second pass) |
+| 38 | Every tunable value in one window (Starwolf → Tuning) | **Done** — checked; one defect fixed and re-checked |
+| 39 | Nothing standing on the plot | **Done** — checked after a rebuild and a playtest |
 
-Steps 6 to 28 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 39 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -121,16 +132,16 @@ panels are put together.
 The scene stays 3D and top-down. That is deliberate — collision and physics will work later without
 having to redo any of this.
 
-### `02.1_Grid` — made in Step 28, board built in Steps 29–33
+### `02.1_Grid` — made in Step 28, board built in Steps 29–33, World added in Step 34
 
 The board from the new Claude Design handoff. The briefing's Enter now leads here. The board is
-built and verified, but not wired to game systems.
+built and verified. Step 34 added the first game state: a `World` root object (below).
 
 - Built by two menus: `Starwolf/Handoff/1 · Apply import settings` (`Assets/Editor/HandoffImport.cs`)
   and `Starwolf/Handoff/2 · Build static board in 02.1_Grid` (`Assets/Editor/HandoffBoardBuilder.cs`).
 - Runtime code: `Assets/Scripts/Tactical/Handoff*.cs`, `GammaBoardPresenter.cs`, `CssEase.cs`.
 - The full record: `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
-- What the package left out: `Assets/Scenes/Tactical/HANDOFF_GAPS.md` (105 rows).
+- What the package left out: `Assets/Scenes/Tactical/HANDOFF_GAPS.md` (106 rows).
 - What Claude Design must still provide, verified: `Assets/Scenes/Tactical/CLAUDE_DESIGN_NEEDS.md`.
 
 The setup from Step 28:
@@ -139,6 +150,16 @@ The setup from Step 28:
 - `EventSystem` with a `StandaloneInputModule`.
 - `Board` — Canvas, Screen Space **Camera**, plane distance 5, CanvasScaler 1920x1080, match 0.5,
   reference pixels per unit 100. These are the handoff README's canvas numbers.
+
+Added in Step 34:
+
+- `World` — a root object, **outside** the Board canvas, with `TacticalWorld` on it. Children:
+  - `OwnShip` at (0, 0, 0), with a `Model` child: `StarWolf_Destroyer_PlayerShip.fbx`, same model
+    and placement as the old `Prefabs/PlayerShip.prefab`.
+  - `Dummy · TRACK 07` at (18058.42, 16259.87, 0), with `WorldContact` (trackKey `t07`) and a
+    `Model` child: `StarWolf_Cruiser.fbx`.
+  - Both models at scale 0.11612, about 12–14 km long. Models only, no old scripts.
+- The 26 mock contact art objects on the plot are hidden, not deleted.
 
 ### Deleted in Step 1
 
@@ -193,7 +214,28 @@ Everything on the `02.1_Grid` board. Detail is in `UI_INTEGRATION_LOG.md`; do no
 | `Assets/Scripts/Tactical/GammaBoardPresenter.cs` | Shows the board in gamma space. See decision 15. |
 | `Assets/Scripts/Tactical/CssEase.cs` | The handoff's CSS easing curves. |
 
-**Nothing here touches a game system.** See section 8 for what that means for a demo.
+Until Step 34 nothing here touched a game system. Now the World feeds `HandoffBoardState` (below).
+Since Step 35, `HandoffBoardState` turns power into `signal`, and `HandoffBoardControls` holds the
+whole tick while paused. Details in section 6, Step 35.
+
+### `TacticalWorld.cs` and `WorldContact.cs` — new in Step 34
+
+| File | On what | What it is |
+|---|---|---|
+| `Assets/Scripts/Tactical/TacticalWorld.cs` | the `World` root object | Owns the game state. Each board tick it writes true bearing and range into `HandoffBoardState.tracks`. |
+| `Assets/Scripts/Tactical/WorldContact.cs` | each contact in the World | Holds `trackKey`, the board track it feeds. |
+
+Changed for it:
+
+- `HandoffBoardControls.Ticked` — fires once per board tick, after the state ticks, before the
+  panels redraw. The world steps inside the board's single timer.
+- `HandoffBoardState.KeepTracks` — drops tracks with no world contact, and prunes identified and
+  classified.
+- `HandoffPlotPanel` — draws identified hostile contacts at their true km position.
+- `HandoffBoardBuilder` — new `Contacts (drawn)` and `Contact labels` layers, hides the mock contact
+  art, and `RelinkWorld` re-points the World at the new board after every rebuild.
+
+Details in section 6, Step 34.
 
 ### Grid shader and material — new in Step 5
 
@@ -281,7 +323,7 @@ Reference these. Never edit them.
 |---|---|
 | `QuestSystem` | Its stages — `NotStarted` → `LocateTarget` → `EliminateTarget` → `ExitRegion` → `MissionComplete` / `Failed` — already match the design's win condition. Keep as-is. |
 | `WorldBoundary` | Reused. |
-| `PowerManager` | Used by `02_Grid` only. Its five systems clash with the new board's four buses. Whether to use it again is an open question in section 8. |
+| `PowerManager` | Used by `02_Grid` only. Its five systems clash with the new board's four buses. **Not revived for `02.1_Grid`** (decision 16). |
 | UI shaders: `UI_PowerArrow`, `UI_ShipHack`, `ScanLines`, `UI_GradeDisplay*` | Reused. |
 | Rail icons in `Assets/Art/Icons/` | 15 icons already extracted. Step 8 uses them. |
 
@@ -327,6 +369,28 @@ These are settled. Do not reopen them.
     no game wiring, then the wiring.
 15. **The board loads undamaged** (all green, rooms sealed) **and is gamma-space only.** See
     `UI_INTEGRATION_LOG.md`, section 3, and its Step 31.
+16. **A new World object owns the game state and feeds the board** (owner, 2026-10-17). The old
+    `Radar.cs`, `EnemyShip`, `PlayerShip` and `PowerManager` scripts are not revived.
+17. **Wire one feature at a time** (owner, 2026-10-17). Plan each feature with the owner. Don't
+    invent: follow the sources. Each feature must work before the next starts.
+18. **The North Star is a dummy enemy at a fixed position** (owner, 2026-10-17). It sits at TRACK
+    07's spot, bearing 048, 24,300 km. It does not move or fire. It is there to check the radar,
+    moving around it, and shooting at it. Its plot dot shows only once identified.
+19. **Ships are real 3D objects seen top-down** (owner, 2026-10-17), so future external viewport
+    cameras can look at them. Their real scale is decided when those cameras come.
+20. **Power makes the ship loud** (owner, 2026-10-17). Every unit drawn to a bus adds signal, and so
+    does ACTIVE SCAN. The internal value is **signal**, on a 0–100.0 scale. Every amount is an
+    Inspector field. It climbs and falls gradually, and never jumps straight to 100. The player sees
+    only a whole percent. Details in Step 35.
+21. **Nothing real changes while paused** (owner, 2026-10-17). The board tick, the world and the
+    mission clock all wait until RUN. Controls still work.
+22. **Plot marks stay put in space** (owner, 2026-10-17). POINT is a timestamp, RULER a distance,
+    COMPASS sits around our ship. Plots feed fire control later. Details in Step 36.
+23. **Every tunable value is in one window**, Starwolf → Tuning (owner, 2026-10-17). Tag every new
+    tunable with `[Tune("Section")]`. Details in Step 38.
+24. **Nothing standing on the plot** (owner, 2026-10-18). No always-on labels. Readouts come from
+    using a tool. The PDC arcs show once the PDCs are activated; the alarm strip shows only for a
+    real alert. Details in Step 39.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -474,11 +538,32 @@ The new layout throws that split away:
 25. **UNDO and CLEAR ALL are actions, not modes.** Treat them as tools you can select and the board
     gets stuck in a tool that does nothing. `PlotTools` never makes them the active tool.
 
-26. Nothing else. The Unity console is clean: no errors, no warnings.
+26. **A board rebuild drops the World's link to the board.** The World sits outside the canvas the
+    builder replaces. `HandoffBoardBuilder.RelinkWorld` re-points it after every rebuild. The first
+    Step 34 check caught this.
+
+27. **Keep QA evidence in `Logs/`, not `Temp/`.** `Logs/` is git-ignored and survives Unity
+    restarts. `Temp/` does not.
+
+28. **The board loads PAUSED.** Since Step 35 nothing real changes until RUN: no fills, no charge,
+    no signal, no clock. A check that forgets to press RUN sees nothing move.
+
+29. **The reactor serves buses first come, first served.** A bus sent to DRAW late can find it
+    already spent. The playtest sets every bus to DRAW while paused, so the reactor shares out evenly.
+
+30. **A playtest control with no argument is saved as "", not null.** Check for empty, not null.
+31. **Never call `InternalEditorUtility.ReadScreenPixel` from MCP `execute_code`.** On this Mac it
+  crashed Unity outright (NSBitmapImageRep, `cgImage != NULL`) while a checker tried to photograph
+  the tuning window (2026-10-18). Use the Game view or a camera render texture for pictures.
+32. **An editor window must draw the same controls in Unity's Layout and Repaint passes.** Decide
+    what to draw on the Layout pass only (play mode, the list). The tuning window broke this once
+    when the playtest entered play between the two passes.
+
+33. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
-## 6 · Steps 6 to 26, in detail
+## 6 · Steps 6 to 28, and 34 to 39, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1136,6 +1221,292 @@ changed from `02_Grid` to `02.1_Grid` — one line in `01_Briefing`.
 Checked in play mode: `ScreenFlow.Advance()` in `01_Briefing` lands in `02.1_Grid`, no console
 errors.
 
+Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`.
+
+### Step 34 — Wiring begins: the dummy enemy exists and the board reads it
+
+**Owner direction (2026-10-17).** Start wiring real game systems, one feature at a time. Plan each
+feature with the owner. Don't invent: follow the sources. Each feature must work before the next
+starts. The North Star is a dummy enemy at a fixed position. It doesn't move or fire. We use it to
+check the radar, moving around it, and shooting at it.
+
+**Owner decisions for this step.**
+
+- The dummy sits at TRACK 07's spot: bearing 048, 24,300 km.
+- Its plot dot shows only once identified. That is the board's rule.
+- The other four mock contacts (CONTACT 17, CONTACT 22, FTR-2, BC-01) are removed. Their plot art is
+  hidden, not deleted.
+- A new World object owns the game state and feeds the board. The old `Radar.cs`, `EnemyShip`,
+  `PlayerShip` and `PowerManager` scripts are not revived.
+- 1 unit = 1 km, already ruled (decision 13).
+- Keep real 3D objects seen top-down, for future external viewport cameras.
+
+**What was built.**
+
+- `TacticalWorld.cs` on a root `World` object, outside the Board canvas. Children: `OwnShip` at
+  (0, 0, 0) and `Dummy · TRACK 07` at (18058.42, 16259.87, 0).
+  - It uses the x/y plane, x east, y north. This matches the old build's 3D plane (rotation about z,
+    +y forward).
+  - Each tick it writes true bearing (whole degrees, `JsRound`) and range (whole km) into
+    `HandoffBoardState.tracks`.
+- `WorldContact.cs`, which holds a `trackKey`.
+- `HandoffBoardControls.Ticked`: fires once per board tick, after the state ticks, before the panels
+  redraw. The world steps inside the board's single timer.
+- `HandoffBoardState.KeepTracks` drops tracks with no world contact, and prunes identified and
+  classified.
+- `HandoffPlotPanel` draws identified hostile contacts at their true km position. For now that is a
+  red dot plus a `NAME / RNG n km` label.
+- `HandoffBoardBuilder`:
+  - new `Contacts (drawn)` and `Contact labels` layers;
+  - hides the mock contact art (26 objects);
+  - `RelinkWorld` re-points the World at the new board after every rebuild. The first check caught
+    the link being dropped.
+- 3D models as `Model` children. OwnShip uses `StarWolf_Destroyer_PlayerShip.fbx`, the same model and
+  placement as the old `Prefabs/PlayerShip.prefab`. TRACK 07 uses `StarWolf_Cruiser.fbx`. Scale
+  0.11612, so about 12–14 km long at 1 unit = 1 km. Their real scale is to be decided when viewport
+  cameras come. Models only, no old scripts.
+
+**Verified.**
+
+- Only t07 is tracked.
+- Bearing and range through real ticks: 048 / 24,300 at load, and 000 / 090 / 180 / 270 at the four
+  compass points.
+- Contact board: unidentified at SEN gain 2, `TRACK 07 · 048 · 24k` after the real cone identify,
+  gone with SEN empty.
+- The dot is exact to 0.0001 px at zoom 1, 0.5 and 0.1, and clipped to the plot.
+- The RULER from our ship to the dot reads `RNG 24,300 km · BRG 048°`.
+- No mock contacts anywhere.
+- The board outside the plot is pixel-identical to before.
+- Fire control TRACK and periscope SLEW use the real numbers.
+- One control per drawer works.
+- The World survives two rebuilds, still linked.
+- Console clean.
+- Evidence is in `Logs/HandoffQA/step34/`. `Logs/` is git-ignored and survives Unity restarts;
+  `Temp/` does not.
+
+**How to see it in play.**
+
+1. Power: SEN to DRAW until 2 units.
+2. Sensors: gain to 2.
+3. Active scan on, cone to 048, release.
+4. Zoom the plot to about ×0.4. The red TRACK 07 dot is top right.
+
+### Step 35 — Power makes the ship loud (signal), and nothing real changes while paused
+
+**Owner decisions (2026-10-17).**
+
+- Every unit drawn to a bus makes us louder, and so does ACTIVE SCAN. Sources: GDD p18, spec
+  3.1.b, and the prototype's `getSig`. The design board only counted ACTIVE SCAN; the owner
+  overrode that.
+- The internal value is called **signal**, on a 0–100.0 scale.
+  - Each action adds a tweakable amount. Every amount is an Inspector field.
+  - It never jumps straight to 100.
+  - The decimals are internal only. The player sees a whole percent on the OWN EMISSIONS meter,
+    the 10 cells (white, then amber, then red), the blinking lamp and the alert line.
+- The meter climbs and falls gradually.
+- Freeze while paused: nothing real changes until RUN. Controls still work.
+
+**What was built.**
+
+- `HandoffBoardState`:
+  - `signal`, renamed from `ownSig`. `FormerlySerializedAs` keeps saved values.
+  - `signalRise` 9 and `signalFall` 6 per tick.
+  - `signalTrackedAt` 45.
+  - `Bus.signalPerUnit`, default 10 per bus, so a full 10-unit reactor reads 100.
+  - `activeScanSignal` 35 (the reference sim's 3.5 units).
+  - `SignalTarget` = clamp(Σ fill × signalPerUnit + scan, 0, 100). `TickSensors` moves toward it
+    with no overshoot.
+- The sensors note:
+  - "RUNNING SILENT" at 0.
+  - "EMISSIONS DECAYING — NOT YET RESOLVED" while falling.
+  - "POWER SIGNATURE — NOT YET RESOLVED" while rising or steady below 45. This is a stand-in: the
+    design has no line for it (`HANDOFF_GAPS.md` row 106).
+  - "N HOSTILE SET(S) HAVE YOUR RANGE" at 45 or more.
+- `HandoffBoardControls`: the whole tick waits while paused. That includes the world's `Ticked`
+  event and the mission clock. The design ran its power tick while paused; the owner overrode that.
+
+**Verified.** STEP 35: VERIFIED, first pass.
+
+- 54 ticks matched an independent model exactly: fill mixes, scan, LOAD SHED, the reactor cap of
+  4, and the clamps.
+- Tunable values take effect on the next tick.
+- The meter, note and blink states are correct.
+- Pause froze everything for about 25 s: fills, charges, signal, heading, party, launch, clock and
+  the world sync. Everything resumed on RUN.
+- Step 34's checks, sensors, fire control and the drawers are unchanged.
+- Console clean.
+- Evidence is in `Logs/HandoffQA/step35/`.
+
+**Known.**
+
+- "1 HOSTILE SET HAS YOUR RANGE" counts every hostile once we are loud, even far away. The
+  enemy-notices-you feature (Power P3, parked) fixes that.
+- The board loads PAUSED, so nothing fills until the player presses RUN.
+- The reactor serves buses first come, first served. A bus sent to DRAW late can find it already
+  spent.
+
+**Playtest grown.** `Assets/Editor/Playtest/PlaytestRunner.cs` now also checks that:
+
+- the board starts paused;
+- buses set to DRAW don't fill while paused;
+- RUN starts time;
+- the signal climbs to its target and reads "1 HOSTILE SET HAS YOUR RANGE";
+- LOAD SHED vents everything back to "RUNNING SILENT".
+
+It runs 27/27 checks with a 35 s video. Two playtest fixes went in:
+
+- A control with no argument is saved as "", not null.
+- All buses are now set to DRAW while paused, so the reactor shares out evenly.
+
+### Step 36 — Plot tools: marks stay put in space
+
+**Owner decisions (2026-10-17).**
+
+- **POINT** is a timestamp. It stays where it was dropped and shows the mission time at the drop.
+- **RULER** draws a distance, typically between two points.
+- **COMPASS** sits around our own ship.
+- Marks stay put in space. They do not move with our ship.
+- Plots feed fire control later. That belongs to the fire-control step.
+
+**What was built.**
+
+- `HandoffBoardState`:
+  - Marks store world km (`x, y, x2, y2`), not screen px.
+  - `ownX` / `ownY`, our ship's world position, written by `TacticalWorld` every tick.
+  - `MarkDown(tool, x, y, missionT)`. A COMPASS always starts at our ship.
+  - `MarkUp(minLenKm)` keeps a mark of exactly the minimum length (a tiny tolerance).
+- `HandoffPlotPanel` turns km into screen px through the zoom, both ways. A POINT label is its
+  mission time. A RULER label is its range and bearing. A COMPASS ring is re-measured from our
+  ship.
+- Contact dots are drawn at the contact's exact world position, not its rounded bearing and range.
+- The first check found three defects, all fixed: a ruler of exactly the minimum length was
+  dropped; the contact dot used rounded numbers; the ruler label's rounding. The second check found
+  the label still 1 px off on exact half pixels (km to px leaves float dust). It now trims to 6
+  decimals before rounding.
+
+**Verified.** STEP 36: VERIFIED on the third pass (2026-10-18).
+
+- 2,016 rulers and 672 compass rings over 4 ship positions and 3 zooms: none wrong. Rulers of
+  exactly 4 px are kept.
+- A replay of 914 design-board steps matched label text, shapes and hit boxes. No ruler label was
+  off (935 were before the last fix).
+- The contact dot sits within 0.0001 px of its true world spot.
+- Marks stay put when the ship moves; the COMPASS re-measures.
+- Evidence: `Logs/HandoffQA/step37/v/` and `Logs/HandoffQA/step38/`.
+
+**Playtest grown.** It now drops a POINT, a RULER and a COMPASS, moves our ship 5,000 km east
+(a stand-in for the helm), and checks the POINT and RULER stay put in space with their labels
+unchanged while the COMPASS is re-measured. ERASE clears them. 37/37 PASS.
+
+**Known, for the helm step.**
+
+- The grid does not scroll with the world yet.
+- While moving, marks step at the board tick (2.4 a second), not smoothly.
+- The COMPASS erase area is a square.
+
+### Step 37 — Our ship on the plot, as the 3D model seen from above
+
+**Owner direction (2026-10-17).** Our ship must appear on the plot. It is the 3D model seen from
+above. Its size is true to scale, with a minimum and a maximum so it never vanishes or swamps the
+plot. The design handoff already specified the glyph (34 × 76 hull, turned to heading, shrinks
+with zoom). It had been left as placeholder rectangles. That was our miss.
+
+**What was built.**
+
+- `ShipView.cs` on a new `Ship View Camera`. It looks straight down at `OwnShip`, north up, and
+  renders only the `WorldShips` layer into a 256 px texture. It measures the ship once, so the
+  ship fills 80% of the frame.
+- `OwnShip` turns to the board's heading every tick (`TacticalWorld`).
+- A `Ship Light`, lighting only `WorldShips`.
+- `Own ship (3D view)`, a RawImage at the plot centre. Size: 76 px at zoom 1, scaled by zoom,
+  held between 30 and 120 px.
+- `BoardLinearImage.shader` and its material. The board works in sRGB values, so the shader
+  converts the camera image first. The VectorModel pass draws lines on black, so it makes black
+  see-through.
+- The builder hides the old placeholder rectangles and adds the image, switched off. It turns on in
+  play once the ship view has a picture. An image with no picture draws a white square.
+- Both ship models are turned 180° about their length. The camera looks from below the world
+  plane, so unturned we saw the belly.
+- The bow is the wide hammerhead end (turrets point that way; the Art Spec says "hammerhead
+  prow"). It leads along the heading.
+
+**Verified.** STEP 37: VERIFIED on the second pass (2026-10-18).
+
+- Red line art at the plot centre, no square, in play. Nothing in edit mode.
+- Size matches clamp(76 × zoom, 30, 120) at every zoom tried.
+- The top side shows, and the bow leads at six headings, within 0.5°. The ship holds still while
+  paused.
+- Marks and the contact dot draw over it; the periscope covers it; nothing leaks out of the plot.
+- It survives a rebuild.
+- Evidence: `Logs/HandoffQA/step37/v/` and `Logs/HandoffQA/step38/`.
+
+**Open question to the owner.** The ship draws as red vector lines. That is the old build's
+VectorModel full-screen effect. Red means "hostile" in the design palette. Keep red, or switch our
+ship to the own-force colour?
+
+### Step 38 — Every tunable value in one window
+
+**Owner direction (2026-10-17).** Every tunable value lives in the Inspector, gathered in one
+place, so the owner doesn't have to hunt through objects. A web app or spreadsheet was raised; one
+window inside Unity was chosen: nothing to sync, and it edits the real values.
+
+**What was built.**
+
+- `TuneAttribute.cs`: `[Tune("Section")]` marks a value as tunable.
+- `Assets/Editor/StarwolfTuningWindow.cs`, menu **Starwolf → Tuning**. It lists every tagged value
+  on the open scene's components, including inside lists (each bus's signal per unit), grouped by
+  section. Edits go to the real values and can be undone.
+- In play mode it warns that changes are lost when play stops. Tick **Keep play-mode changes** to
+  copy them back afterwards. Then save the scene.
+- 49 declarations tagged, 65 values shown, in nine sections: Power & signal, Sensors, Helm, Plot
+  tools, Plot & our ship, Periscope & fire control, Engineering & orders, Board & time, Motion.
+
+**Rule from now on:** tag every new tunable value with `[Tune("Section")]`.
+
+**Verified.** STEP 38 checked on 2026-10-18.
+
+- 65 values; every one resolves. Labels are unique within each section. Each tag shows exactly once.
+- Edits change the real value and undo cleanly.
+- In play: without the tick, changes go back when play stops. With it, they are kept. A change
+  takes effect on the next board tick.
+- The checker found one defect: with the window open, a playtest put two layout errors in the
+  console. The window decided what to draw separately in Unity's two drawing passes. It now
+  decides once per frame. Re-checked by running the playtest with the window open: 37/37 PASS,
+  console clean.
+
+**Known.** `ShipView`'s three values are read when play starts. Changing them mid-play does
+nothing until the next run.
+
+### Step 39 — Nothing standing on the plot
+
+**Owner decision (2026-10-18).** The plot carries no standing text or mock art. "It's too much."
+The player learns these things through the tools.
+
+- **Gone for good:**
+  - our ship's name and call sign (STARWOLF, SW-01);
+  - the mock heading and speed line under it (HDG 062°, V 1.84 km/s);
+  - the SENSOR RANGE label on the envelope ring (the ring stays);
+  - BOARD POINT ALPHA and its ×, a mock waypoint.
+- **Hidden until real:**
+  - The PDC GROUP A arc and its label show only once the PDCs are activated. They are wired in
+    the fire-control step.
+  - The alarm strip ("3 NEW CONTACTS SINCE COMMIT") shows only for a real alert. The board loads
+    quiet, as if already acknowledged. The sensors step gives it a real trigger: a new contact
+    identified.
+- The builder hides them (`WirePlot`, and the alarm strip in the time-control wiring), so a
+  rebuild keeps them hidden.
+
+**Still on the plot from the design:**
+
+- `drawn#33`, a circle with no fill that draws nothing.
+- `STAND-IN drawn#35`, a frozen grey line pointing north-west. It is probably part of the
+  design's radar sweep: it has the same −58° angle as the sweep disc `drawn#34`, which is hidden
+  (`HANDOFF_GAPS.md` rows 7, 12, 105). The design's sweep turns round our ship while DRADIS
+  (passive sweep) is on, which is the default. Ours does not turn yet.
+
+**Checked.** After a rebuild, only those two remain under `Plot/Mockup` and nothing under
+`AlarmStrip`. The World is still linked and the scene saved clean. Playtest: 37/37 PASS, console clean, with the tuning window open (`Logs/Playtests/2026-10-18_210547/`).
+
 ---
 
 ## 7 · How to keep this log
@@ -1158,14 +1529,80 @@ Nothing else in the repo gets written by the log keeper. Only this file.
 
 Still not done. **This is the list to work from.** Read it before picking up any work.
 
+### Wiring order (owner, 2026-10-17)
+
+One feature at a time, planned with the owner, each working before the next (decision 17). Step 34
+put the dummy enemy in place. The goal: **use every tool to fight the dummy enemy for real.** The
+order:
+
+1. **Power P1.** "Raw power is the basis of everything." **Done in Step 35.**
+2. **The plot tools.** **Done in Step 36.** Then, at the owner's request: our ship on the plot
+   (Step 37), the tuning window (Step 38), nothing standing on the plot (Step 39).
+3. **Next: the design's press and click interactions.** Switch pads slide from cut-out art, locked
+   switches give a small "refused" nudge (owner addition, not in the design), click sounds, the TRACK
+   1 px press and the RECALL ease.
+4. Then back into the sequence: the helm, then sensors, periscope and fire control against the
+   dummy, then fire, then hit.
+   - **Sensors step:** give the alarm strip a real trigger (a new contact identified). Build the
+     radar sweep (`drawn#34`, and probably `drawn#35`): it turns while DRADIS is on and hides
+     while it is off (`HANDOFF_GAPS.md` row 105).
+   - **Fire-control step:** show the PDC arcs and their label once the PDCs are activated.
+
+**Parked.** Both fold into the sensors step later:
+
+- Power P2: the hearing-range ring on the plot, plus the BRG bearing line.
+- Power P3: the enemy notices you (UNEASY, SEARCHING, ALERT).
+
+**The plot tools, as the owner defined them (2026-10-17):**
+
+- **POINT** is a timestamp. It stays where it was dropped in space and shows the mission time at
+  the drop. No range or bearing.
+- **RULER** draws a distance, typically between two points.
+- **COMPASS** sits around our own ship, to see where things are relative to us.
+- Marks stay put in space. They are not pinned to our ship.
+- Plots feed fire control later. For example, two timed points give a target's course and speed
+  for the solution. That belongs to the fire-control step.
+
+**For the tools step:** store marks in world km, so they stay put when the ship moves. Open
+question to the owner: should a RULER snap to a nearby POINT?
+
+For the helm later: the owner values the old build's **art**, not its code. That means a shader he
+liked and the orange nav-wheel art.
+
+**Standing end-of-feature check — the playtest (working, 2026-10-17).** Run it after every
+feature: menu **Starwolf → Playtest → Run power-up playtest** (`Assets/Editor/Playtest/PlaytestRunner.cs`).
+It:
+
+- goes through the user flow: intro → menu NEW GAME → briefing → board;
+- sets up the ship: opens Power from the systems rail, sends ENG/WEP/SEN/AUX to DRAW, waits for fill;
+- checks readings at each step, and fails a step if its control is blocked on screen;
+- films the run with Unity Recorder (package `com.unity.recorder` 5.1.7, owner's choice).
+
+Each run writes `Logs/Playtests/<date_time>/`: `playtest.mp4`, `report.md` (pass/fail per step)
+and `shots/`. It leaves play mode and reopens the scene you were in. First good run: 18/18 PASS,
+22 s of 1080p video. Since Step 35: 27/27 PASS, 35 s, and it also checks pause, RUN, signal and
+LOAD SHED. Since Step 36: 37/37 PASS, 37 s, and it also drops a POINT, a RULER and a COMPASS, moves
+our ship and checks the marks stay put. It grows as features land: add steps to `PowerUpRun()`. There is only one
+Unity editor, so it runs when no other agent is using Unity.
+
+What it can't do yet: the intro menu and the briefing's Enter read Unity's old Input class, which
+a script cannot press, so it calls what those presses call (`Activate(0)`, `ScreenFlow.Advance`)
+and says so in the report. Board controls are clicked for real, through the EventSystem.
+
+Traps found setting it up: the recorder needs a moment after it stops before play mode ends, or
+the MP4 has no index and won't play; and it must record at a **constant** frame rate — variable
+rate fed the Mac encoder duplicate timestamps and it dropped frames.
+
 ### Road to a playable demo — overview (2026-10-05)
 
 **This is an overview only.** Each workstream gets its own deep dive later, before work starts on it.
 
 **Where we are.** The `02.1_Grid` board looks and clicks right. Every panel reads and writes only
 `HandoffBoardState`, and nothing touches a game system. There is no ship in a world, no enemies, no
-mission and no way to win or lose. Contacts are fixed mock-ups. FIRE only drains the capacitor.
-Hangar launch spawns nothing. The board's clock is its own and never pauses the game. You cannot
+mission and no way to win or lose. Contacts are fixed mock-ups. *(Since Step 34: a World with own
+ship and one dummy enemy feeds the board; the mock contacts are gone.)* FIRE only drains the capacitor.
+Hangar launch spawns nothing. The board's clock is its own and never pauses the game. *(Since Step 35: pause freezes the board
+tick, the world and the clock.)* You cannot
 pick a target from the plot (`PickTarget` has no caller, gap 95). PDC and missile controls are not
 drawn (gaps 73, 76).
 
@@ -1201,7 +1638,7 @@ drawn (gaps 73, 76).
 Also cut for a first demo: cloak, loadouts, the scanner minigame, terrain, most compartment side
 effects, the mission timer, and missiles and PDC unless enemy fighters stay in.
 
-Placeholder art is fine, so the 105 rows in `HANDOFF_GAPS.md` and the 8 buckets in
+Placeholder art is fine, so the 106 rows in `HANDOFF_GAPS.md` and the 8 buckets in
 `CLAUDE_DESIGN_NEEDS.md` do not block a demo. The design blockers there are 8.1 (contacts on the km
 scale), 8.2 and 8.3. The Claude Design request is still unsent.
 
@@ -1215,20 +1652,21 @@ pauses through `Time.timeScale`, which would freeze the board's animation.
 **Decisions the owner must make first.**
 
 1. Damage model: hull sides, or the board's compartments?
-2. Scale: one unit is one km, or the prototype's numbers?
+2. Scale: one unit is one km, or the prototype's numbers? **Answered: 1 unit = 1 km (decision 13).**
 3. What does firing cost?
-4. Signature scale: the sum of the bars, or 0–100?
+4. Signature scale: the sum of the bars, or 0–100? **Answered 2026-10-17: signal, 0–100.0, fed by
+   every unit of power plus ACTIVE SCAN (decision 20).**
 5. Is the prototype's enemy AI the floor?
 6. Which ship is the flagship: a carrier, or the board's cruiser, corvette or frigate?
 7. The two alerts: the player's CONDITION and the enemy alert net. How do they relate?
 8. Which lose conditions, and what shape is the arena?
 9. Disguise: in or out?
 10. Who owns game state? Recommended: a new world sim feeds `HandoffBoardState`. Do not revive
-    `PowerManager` or `PlayerShip`.
+    `PowerManager` or `PlayerShip`. **Answered 2026-10-17: a new World object (decision 16).**
 11. Does the CLAUDE.md `WeaponBase` rule still apply?
 12. Do panels pause the game?
 
-**Suggested order.**
+**Suggested order.** *Superseded by the owner's wiring order at the top of this section.*
 
 1. The decisions above.
 2. World sim skeleton, with contacts on the plot.

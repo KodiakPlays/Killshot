@@ -184,6 +184,7 @@ public static class HandoffBoardBuilder
         WireOrders(root);
         WirePeriscope(root);
         WirePlot(root);
+        RelinkWorld(root);
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
@@ -263,6 +264,19 @@ public static class HandoffBoardBuilder
         if (mat == null)
         {
             mat = new Material(Shader.Find("Starwolf/UI/BoardGammaToLinear"));
+            AssetDatabase.CreateAsset(mat, path);
+        }
+        return mat;
+    }
+
+    // Our ship's live 3D view on the plot (Step 37): encodes the camera image the way the board stores colour.
+    static Material ShipImageMaterial()
+    {
+        const string path = Gen + "/BoardLinearImage.mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (mat == null)
+        {
+            mat = new Material(Shader.Find("Starwolf/UI/BoardLinearImage"));
             AssetDatabase.CreateAsset(mat, path);
         }
         return mat;
@@ -542,6 +556,10 @@ public static class HandoffBoardBuilder
             Named(root, "AlarmStrip", "glow · lamp#1 ").gameObject, Named(root, "AlarmStrip", "text#14 ").gameObject,
             Named(root, "AlarmStrip", "text#15 ").gameObject);
         Hit(Named(root, "AlarmStrip", "sprite#18 "), "ack", null);
+        // Owner, 2026-10-18: the strip shows only for a real alert; the board loads quiet (already acked).
+        // ponytail: hidden at build; a real alert needs a show path (sensors step, new contact identified)
+        var alarm = so.FindProperty("alarmParts");
+        for (int i = 0; i < alarm.arraySize; i++) ((GameObject)alarm.GetArrayElementAtIndex(i).objectReferenceValue).SetActive(false);
 
         // Periscope carriage (line 1318), helm header (1862), orders header (1757).
         Hit(Named(root, "Periscope", "sprite#55 "), "scope", null);
@@ -1384,6 +1402,18 @@ public static class HandoffBoardBuilder
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 
+    // The tactical world (Step 34) sits outside the board, so a rebuild keeps it, but its link to
+    // the board it feeds points at the board just destroyed. Point it at the new one.
+    static void RelinkWorld(RectTransform root)
+    {
+        var world = Object.FindAnyObjectByType<TacticalWorld>(FindObjectsInactive.Include);
+        if (world == null) return;
+        var so = new SerializedObject(world);
+        so.FindProperty("board").objectReferenceValue = root.GetComponent<HandoffBoardControls>();
+        so.ApplyModifiedPropertiesWithoutUndo();
+        Count("relinked: tactical world");
+    }
+
     // ---- Plot tools (Step 33i) -------------------------------------------------------------
 
     static void WirePlot(RectTransform root)
@@ -1405,6 +1435,70 @@ public static class HandoffBoardBuilder
             return rt;
         };
 
+        // a hidden copy of a plot label (text #47, TMP 11 px), cloned at run time for labels
+        System.Func<RectTransform, string, TMPro.TMP_Text> labelTemplate = (parent, name) =>
+        {
+            var go = Object.Instantiate(Named(root, "Plot/Mockup", "text#47 ").gameObject, parent);
+            go.name = name;
+            var t = go.GetComponent<TMPro.TMP_Text>();
+            t.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
+            t.overflowMode = TMPro.TextOverflowModes.Overflow;
+            t.raycastTarget = false;
+            var r = (RectTransform)go.transform;
+            r.anchorMin = r.anchorMax = new Vector2(0, 1);
+            go.SetActive(false);
+            return t;
+        };
+
+        // Step 37: our ship is the 3D model seen from above (ShipView), not the design's placeholder
+        // rectangles (drawn #41–45, which also carried a heading line at a fixed mock angle). The
+        // design's glyph is a 34×76 hull turned to heading that shrinks with zoom; the panel sizes it.
+        foreach (var id in new[] { "drawn#41 ", "drawn#42 ", "drawn#43 ", "drawn#44 ", "drawn#45 " })
+        {
+            Named(root, "Plot/Mockup", id).gameObject.SetActive(false);
+            Count("hidden: own-ship placeholder");
+        }
+        // Owner, 2026-10-18: nothing standing on the plot. Our ship's name, call sign and mock
+        // heading/speed line (#42–44) and the SENSOR RANGE label (#37–38) go: the player learns these
+        // through the tools (the sensors panel still positions #37–38). The PDC GROUP A arc and label
+        // (#39–41) show only once the PDCs are activated, wired in the fire-control step. BOARD POINT
+        // ALPHA and its × (#49–50) were a mock waypoint.
+        foreach (var id in new[] { "text#37 ", "text#38 ", "text#42 ", "text#43 ", "text#44 ",
+                                   "drawn#39 ", "drawn#40 ", "text#40 ", "text#41 ", "text#49 ", "text#50 " })
+        {
+            Named(root, "Plot/Mockup", id).gameObject.SetActive(false);
+            Count("hidden: standing plot text and art");
+        }
+        var shipRt = layer("Own ship (3D view)");
+        shipRt.gameObject.AddComponent<CanvasRenderer>();
+        var shipImg = shipRt.gameObject.AddComponent<RawImage>();
+        shipImg.material = ShipImageMaterial();
+        shipImg.raycastTarget = false;
+        shipImg.enabled = false; // no texture until play (a RawImage with none draws white); the panel turns it on
+        shipRt.pivot = new Vector2(0.5f, 0.5f);
+        shipRt.sizeDelta = new Vector2(95, 95);
+        shipRt.anchoredPosition = new Vector2(960 - 104, -(545 - 100));
+        so.FindProperty("ownShipImage").objectReferenceValue = shipImg;
+
+        // Step 34: identified hostile contacts at their true range and bearing. Stand-in red dots
+        // and name labels until the contact glyphs arrive (CLAUDE_DESIGN_NEEDS 1.2). Under the marks.
+        var cm = layer("Contacts (drawn)");
+        cm.gameObject.AddComponent<CanvasRenderer>();
+        var cg = cm.gameObject.AddComponent<HandoffMarksGraphic>();
+        cg.color = Hex("accent.alarm", 1f);
+        cg.raycastTarget = false;
+        so.FindProperty("contactMarks").objectReferenceValue = cg;
+        so.FindProperty("contactLabelTemplate").objectReferenceValue = labelTemplate(layer("Contact labels"), "Contact label (template)");
+
+        // Step 34 (owner 2026-10-17): the four mock-up contacts are gone, so their plot art is hidden,
+        // not deleted: CONTACT 22's BRG 149 line, FTR-2's wing, BC-01, the predicted-position ghost,
+        // the contact vectors and the asteroid field.
+        string[] mock = { "text#39 ", "text#45 ", "text#46 ", "text#47 ", "text#48 ", "text#51 ", "text#52 ", "text#53 ",
+                          "drawn#36 ", "drawn#37 ", "drawn#46 ", "drawn#47 ", "drawn#48 ", "drawn#49 ", "drawn#50 ",
+                          "drawn#51 ", "drawn#52 ", "drawn#53 ", "drawn#54 ", "drawn#55 ",
+                          "lamp#7 ", "lamp#8 ", "lamp#9 ", "lamp#10 ", "lamp#11 ", "lamp#12 " };
+        foreach (var id in mock) { Named(root, "Plot/Mockup", id).gameObject.SetActive(false); Count("hidden: mock-up contact art"); }
+
         // plotCapture: takes the pointer only for POINT, RULER, COMPASS (the panel switches it)
         var cap = layer("Marks capture");
         var capImg = cap.gameObject.AddComponent<Image>();
@@ -1420,18 +1514,8 @@ public static class HandoffBoardBuilder
         g.raycastTarget = false;
         so.FindProperty("marks").objectReferenceValue = g;
 
-        // labels: TMP at 11 px, cloned at run time from a hidden copy of a plot label (text #47)
-        var labelsRt = layer("Mark labels");
-        var tpl = Object.Instantiate(Named(root, "Plot/Mockup", "text#47 ").gameObject, labelsRt);
-        tpl.name = "Mark label (template)";
-        var tmp = tpl.GetComponent<TMPro.TMP_Text>();
-        tmp.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
-        tmp.overflowMode = TMPro.TextOverflowModes.Overflow;
-        tmp.raycastTarget = false;
-        var trt = (RectTransform)tpl.transform;
-        trt.anchorMin = trt.anchorMax = new Vector2(0, 1);
-        tpl.SetActive(false);
-        so.FindProperty("labelTemplate").objectReferenceValue = tmp;
+        // mark labels: TMP at 11 px, cloned at run time
+        so.FindProperty("labelTemplate").objectReferenceValue = labelTemplate(layer("Mark labels"), "Mark label (template)");
         so.FindProperty("hitLayer").objectReferenceValue = layer("Mark hits (ERASE)");
 
         // the passive bearing label in the export (BRG 149 = CONTACT 22) puts the scope on it

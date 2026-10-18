@@ -117,7 +117,7 @@ public class HandoffCommsPanel : HandoffPanel
         if (Controls == null) return;
         if (sigLamp)
         {
-            bool tracked = State.ownSig >= State.ownSigTracked;
+            bool tracked = State.signal >= State.signalTrackedAt;
             bool lit = !tracked || (Time.unscaledTime % blinkSeconds) / blinkSeconds < blinkLitFraction;
             var c = sigLamp.color; c.a = lit ? 1f : blinkLowAlpha; sigLamp.color = c;
             // opacity on the lamp element dims its box-shadow glow too

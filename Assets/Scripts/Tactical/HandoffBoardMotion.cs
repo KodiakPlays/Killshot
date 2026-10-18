@@ -39,9 +39,12 @@ public class HandoffBoardMotion : MonoBehaviour
 
     [Header("Drawers — one open at a time")]
     [SerializeField] private Drawer[] drawers;
+    [Tune("Motion")]
     [SerializeField] private float drawerTravelPx = 376f;
+    [Tune("Motion")]
     [SerializeField] private float drawerSlideSeconds = 0.42f;
     [SerializeField] private CssEase drawerSlideEase = new CssEase(0.2f, 0.85f, 0.25f, 1f);
+    [Tune("Motion")]
     [SerializeField] private float drawerFadeSeconds = 0.3f;
     [SerializeField] private CssEase drawerFadeEase = new CssEase(0.25f, 0.1f, 0.25f, 1f);
 
@@ -49,6 +52,7 @@ public class HandoffBoardMotion : MonoBehaviour
     [SerializeField] private RectTransform periscopeClip;
     [SerializeField] private float scopeHousedPx = 44f;
     [SerializeField] private float scopeLoweredPx = 656f;
+    [Tune("Motion")]
     [SerializeField] private float scopeSeconds = 0.5f;
     [SerializeField] private CssEase scopeEase = new CssEase(0.24f, 0.9f, 0.26f, 1f);
     [SerializeField] private GameObject scopeHousedOnly;
@@ -60,6 +64,7 @@ public class HandoffBoardMotion : MonoBehaviour
     [SerializeField] private RectTransform helmLatchClosed;
     [SerializeField] private RectTransform helmLatchOpen;
     [SerializeField] private float helmLatchTravelPx = 15f;
+    [Tune("Motion")]
     [SerializeField] private float helmLatchSeconds = 0.3f;
     [SerializeField] private CssEase helmLatchEase = new CssEase(0.3f, 1.2f, 0.5f, 1f);
 
@@ -69,12 +74,14 @@ public class HandoffBoardMotion : MonoBehaviour
     [SerializeField] private RectTransform ordersLatchClosed;
     [SerializeField] private RectTransform ordersLatchOpen;
     [SerializeField] private float ordersLatchTravelPx = 15f;
+    [Tune("Motion")]
     [SerializeField] private float ordersLatchSeconds = 0.22f;
     [SerializeField] private CssEase ordersLatchEase = new CssEase(0.3f, 1.4f, 0.5f, 1f);
 
     [Header("Loops")]
     [Tooltip("bd-blink: '0%,48% opacity:1 · 52%,100% opacity:.2' with steps(1) — lit for the first 52%.")]
     [SerializeField] private Graphic[] blinkers;
+    [Tune("Motion")]
     [SerializeField] private float blinkSeconds = 1.1f;
     [SerializeField, Range(0f, 1f)] private float blinkLitFraction = 0.52f;
     [SerializeField] private float blinkLowAlpha = 0.2f;

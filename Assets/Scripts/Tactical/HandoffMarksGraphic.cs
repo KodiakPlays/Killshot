@@ -17,9 +17,12 @@ public class HandoffMarksGraphic : MaskableGraphic
     }
 
     [Tooltip("Point dot, ruler end dots (px).")]
+    [Tune("Plot tools")]
     [SerializeField] private float pointDot = 7f, endDot = 6f;
+    [Tune("Plot tools")]
     [SerializeField] private float lineWidth = 1.5f;
     [Tooltip("Dashed ring: dash and gap along the ring (px), from asset-map.csv mark_dash (3 px dash, 2 px gap).")]
+    [Tune("Plot tools")]
     [SerializeField] private float dash = 3f, dashGap = 2f;
     [Tooltip("Board px of this rect's top-left (the plot sits at 104,100).")]
     public Vector2 origin = new Vector2(104, 100);

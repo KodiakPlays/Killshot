@@ -68,6 +68,7 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private TMP_Text clock;
     [SerializeField] private float missionSeconds = 7412f;
     [Tooltip("tickPower runs every 420 ms; the clock advances by the rate in seconds each tick while running.")]
+    [Tune("Board & time")]
     [SerializeField] private float tickSeconds = 0.42f;
     [SerializeField] private bool paused = true;
     [SerializeField] private float rate = 1f;
@@ -89,8 +90,10 @@ public class HandoffBoardControls : MonoBehaviour
     [Header("Console — SCALE knob and grid tint")]
     [SerializeField, Range(0.1f, 1f)] private float zoom = 1f;
     [Tooltip("SCALE knob: zoom x10 per this many px of drag (UIStateSpec §8.2).")]
+    [Tune("Board & time")]
     [SerializeField] private float zoomDragPxPerDecade = 160f;
     [Tooltip("Plot wheel: zoom x this per notch (§8.3).")]
+    [Tune("Board & time")]
     [SerializeField] private float wheelStep = 1.12f;
     [SerializeField] private Dial scaleDial;
     [SerializeField] private TMP_Text zoomLabel;
@@ -101,6 +104,9 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private Color tintLampOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), tintLampOff = new Color32(0x1B, 0x20, 0x24, 0xFF);
 
     public HandoffBoardState State => state;
+    /// <summary>Raised once per board tick, after the board's own rules and before the panels
+    /// redraw. The tactical world steps here, inside the board's single timer (Step 34).</summary>
+    public event System.Action Ticked;
     public HandoffBoardMotion Motion => motion;
     public string Tool { get; private set; }
     public bool Paused { get { return paused; } }
@@ -146,15 +152,21 @@ public class HandoffBoardControls : MonoBehaviour
         while (Time.unscaledTime >= nextTick)
         {
             nextTick += tickSeconds;
-            if (!paused) { missionSeconds += rate; ShowClock(); }
-            // tickPower runs whether or not time is paused (UIStateSpec §11)
-            state.TickPower();
-            state.TickAux();
-            state.TickHelm(); // reads the engine room before a repair lands this tick, as tickPower does
-            state.TickParty();
-            state.TickLaunch();
-            state.TickWeapons();
-            state.TickSensors();
+            // Owner 2026-10-17: nothing real changes while paused (spec Rule 2.d), so the whole tick
+            // waits — power, charges, signal, the bow, the world. The design ran tickPower while paused
+            // (UIStateSpec §11). Controls still click; panels still redraw.
+            if (!paused)
+            {
+                missionSeconds += rate; ShowClock();
+                state.TickPower();
+                state.TickAux();
+                state.TickHelm(); // reads the engine room before a repair lands this tick, as tickPower does
+                state.TickParty();
+                state.TickLaunch();
+                state.TickWeapons();
+                state.TickSensors();
+                if (Ticked != null) Ticked();
+            }
             RefreshPanels();
         }
     }
@@ -294,6 +306,7 @@ public class HandoffBoardControls : MonoBehaviour
         if (grid) grid.Zoom = zoom;
         if (zoomLabel) zoomLabel.text = "x" + (zoom >= 1f ? "1.0" : zoom.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
         scaleDial.Set(-140f + Mathf.Log10(zoom / 0.1f) * 280f); // knobAngle
+        RefreshPanels(); // the plot (marks, contacts, our ship) follows the zoom at once
     }
 
     void ShowTint()

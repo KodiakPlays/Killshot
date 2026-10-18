@@ -1,7 +1,7 @@
 # What Claude Design Still Needs to Give Us
 
 This is everything the Claude Design handoff package left out, grouped by what Claude Design has
-to make or decide. It is built from `HANDOFF_GAPS.md` (rows 1–105) and was checked against the
+to make or decide. It is built from `HANDOFF_GAPS.md` (rows 1–106) and was checked against the
 package, the reference picture and the live scene. The "Gap" column gives the `HANDOFF_GAPS.md`
 row, where the full detail lives. "New" means the check found it, and it is not in that file yet.
 
@@ -57,7 +57,7 @@ The plot shows ships and contacts as plain rectangles today. None of this art wa
 | 3.1 | **PDC and MISSILE controls.** The fire control drawer was laid out in RAILGUN mode only. Missing: the PDC quadrant buttons (FWD, STBD, AFT, PORT), the LOADERS button, the missile warhead selector, the SALVO knob, the missile mount's single tick, and the shot-cost mark's place for PDC and MISSILE. The hardware and sizes are already in `UIStateSpec.md` (warhead rotary selector, SALVO knob, LOADERS button, quadrant push buttons, the −90° tick). Only their positions on the board are missing. (updated 2026-10-05, asset audit) | Fire control drawer. | Not drawn. Their state still shows in the readouts. | **High** | 73, 76 |
 | 3.2 | **Engineering ship outline** (the schematic). Also a damage look for each compartment on it: fire, vented and radiation. | Engineering drawer. | A dark box. | Medium | 62 |
 | 3.3 | **Rockers as separate layers** (housing and pad), so the pad can slide as the design animates. Or confirm an instant swap is fine. | Every rocker. | Instant sprite swap. | Medium | 102 |
-| 3.4 | **Push-button pressed state** (art or offsets). | Hangar buttons. | No press motion. | Low | 103 |
+| 3.4 | ~~**Push-button pressed state** (art or offsets).~~ *Not needed (2026-10-18): `button_recall_pressed` exists and is used. Only the .1 s ease is missing, which is ours.* | Hangar buttons. | Art swaps; no ease yet. | — | 103 |
 | 3.5 | **Lit-cell looks**: power bus cells (lit and pending), capacitor cells, AUX cells, and the unlit stability cells. Also say which way the bus cells fill. | Power, Fire Control, Orders, Helm. | Stand-ins. | Medium | 47, 50, 75, 83, 79 |
 | 3.6 | **Fill bars and hazard tracks**: hangar stage bars, CAT CHARGE, the launch lever's green track, and the fire lever's red track (size and colour). | Hangar, Fire Control. | Built from the code's colours. Lever tracks are stand-ins. | Medium | 66, 75 |
 | 3.7 | **Gradients with no colours.** 26 shapes say "gradient" and give no stops: the gain fader track, the squadron bezel (the unselected one is missing entirely), the heading ring, the throttle track, the bearing tape and others. The sensors cone dial and the integrity rings have working versions built from the code, but they need the real stops. | Most drawers, helm, periscope. | 24 grey stand-ins, 2 hidden. | Medium | 12, 53, 54, 64, 71 |
@@ -143,6 +143,7 @@ The plot shows ships and contacts as plain rectangles today. None of this art wa
 | 8.19 | The A/D key repeat rate. This is our game-feel call; ask only for the design intent. | 81 |
 | 8.20 | The drawer latch tooltip text. "STOW" breaks the design rules. | 37 |
 | 8.21 | Please state in the README that the design blends colours in gamma space, and how Unity must match it. | 43 |
+| 8.22 | (added 2026-10-17, Step 35) The OWN EMISSIONS note has no line for signal above 0, below the tracked line, and rising or steady. This is new: the owner made every unit of power add signal, where the design only counted ACTIVE SCAN. Our stand-in is "POWER SIGNATURE — NOT YET RESOLVED". Please give the line. Also: should the meter label stay "OWN EMISSIONS" or become "SIGNAL", to match the owner's term? (Still open with the owner.) | 106 |
 
 ---
 

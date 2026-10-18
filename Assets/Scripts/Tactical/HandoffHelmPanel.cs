@@ -71,6 +71,7 @@ public class HandoffHelmPanel : HandoffPanel
     [SerializeField] private TMP_Text stabPct, gLoad;
 
     [Header("Keyboard — A and D step the ordered heading (onKey); held keys repeat as a browser does")]
+    [Tune("Helm")]
     [SerializeField] private float repeatDelay = 0.5f, repeatInterval = 0.033f;
 
     [Header("Colours (design sRGB)")]

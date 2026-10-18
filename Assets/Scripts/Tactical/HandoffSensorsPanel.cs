@@ -155,7 +155,7 @@ public class HandoffSensorsPanel : HandoffPanel
     private void Update()
     {
         if (Controls == null || !sigLamp) return;
-        bool tracked = State.ownSig >= State.ownSigTracked;
+        bool tracked = State.signal >= State.signalTrackedAt;
         bool lit = !tracked || (Time.unscaledTime % blinkSeconds) / blinkSeconds < blinkLitFraction;
         var c = sigLamp.color; c.a = sigLampAlpha * (lit ? 1f : blinkLowAlpha); sigLamp.color = c;
         // opacity on the lamp element dims its box-shadow glow too
@@ -171,26 +171,28 @@ public class HandoffSensorsPanel : HandoffPanel
         SetMaster(active, s.active, caution);
 
         // own emissions
-        int pct = HandoffBoardState.JsRound(s.ownSig);
-        Color sigInk = s.ownSig >= s.ownSigTracked ? alarm : s.ownSig > 0 ? caution : label;
+        int pct = HandoffBoardState.JsRound(s.signal);
+        Color sigInk = s.signal >= s.signalTrackedAt ? alarm : s.signal > 0 ? caution : label;
         if (sigPct) { sigPct.text = pct + "%"; Paint(sigPct, sigInk); }
-        int litCells = HandoffBoardState.JsRound(s.ownSig / 100f * 10f);
+        int litCells = HandoffBoardState.JsRound(s.signal / 100f * 10f);
         for (int k = 0; k < sigCells.Length; k++)
         {
             int n = k + 1;
             Paint(sigCells[k], n <= litCells ? (n >= 8 ? alarm : n >= 5 ? caution : Color.white) : cellUnlit);
         }
-        Color lampInk = s.ownSig >= s.ownSigTracked ? alarm : s.ownSig > 0 ? caution : lampOffPanel;
+        Color lampInk = s.signal >= s.signalTrackedAt ? alarm : s.signal > 0 ? caution : lampOffPanel;
         Paint(sigLamp, lampInk);
         Paint(sigGlow, lampInk);
-        Show(sigGlow, s.ownSig > 0);
+        Show(sigGlow, s.signal > 0);
         if (sigLamp) sigLampAlpha = 1f;
         if (sigNote)
         {
             int n = s.Trackers();
-            sigNote.text = s.ownSig >= s.ownSigTracked
+            sigNote.text = s.signal >= s.signalTrackedAt
                 ? n + " HOSTILE " + (n == 1 ? "SET HAS" : "SETS HAVE") + " YOUR RANGE"
-                : s.ownSig > 0 ? "EMISSIONS DECAYING — NOT YET RESOLVED" : "RUNNING SILENT";
+                : s.signal <= 0 ? "RUNNING SILENT"
+                : s.signal > s.SignalTarget ? "EMISSIONS DECAYING — NOT YET RESOLVED"
+                : "POWER SIGNATURE — NOT YET RESOLVED"; // stand-in: the design has no line for power-driven signal below the line (Step 35)
         }
 
         // array gain

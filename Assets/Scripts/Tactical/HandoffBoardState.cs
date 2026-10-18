@@ -19,6 +19,10 @@ public class HandoffBoardState
         public BusMode mode = BusMode.Standby;
         [Tooltip("Direction the selector steps next: +1 toward DRAW, -1 toward VENT (busDir).")]
         public int dir = 1;
+        [Tooltip("Signal each unit on this bus adds, on the 0–100 scale (Step 35, owner 2026-10-17). "
+               + "Default 10: a full reactor of 10 units reads 100 (prototype getSig).")]
+        [Tune("Power & signal")]
+        public float signalPerUnit = 10f;
     }
 
     [System.Serializable]
@@ -33,7 +37,9 @@ public class HandoffBoardState
     }
 
     [Header("Power — REACTOR_UNITS, BUS_MAX, BUSES")]
+    [Tune("Power & signal")]
     public int reactorUnits = 10;
+    [Tune("Power & signal")]
     public int busMax = 5;
     public Bus[] buses =
     {
@@ -65,6 +71,10 @@ public class HandoffBoardState
         public bool hostile, own;
         [Tooltip("Bands it emits in: THERM, RAD, UV, EM.")]
         public string[] sig;
+        [Tooltip("Exact world position (km), written by TacticalWorld. The plot draws the contact here; "
+               + "bearing and range above are the rounded readout values.")]
+        [System.NonSerialized] public bool hasWorld;
+        [System.NonSerialized] public double worldX, worldY;
     }
 
     [Header("Contacts — TRACKS and CLASSES (the board's fixed mock-up contacts)")]
@@ -82,8 +92,10 @@ public class HandoffBoardState
     public bool active;
     [Range(1, 5)] public int senBoost = 2;
     [Tooltip("Sensor range = base + per step x gain (senRangeKm).")]
+    [Tune("Sensors")]
     public float senRangeBaseKm = 12000f, senRangePerStepKm = 7000f;
     [Tooltip("UV hears to this fraction of the range (passiveRangeKm).")]
+    [Tune("Sensors")]
     public float uvRangeFactor = 0.55f;
     public string[] spectra = { "THERM", "RAD", "UV", "EM" };
     public string spectrum = "THERM";
@@ -91,11 +103,28 @@ public class HandoffBoardState
     [Range(0, 360)] public int coneBrg = 62;
     [Tooltip("Half-width of the active scan cone, degrees; NARROW / WIDEN step it.")]
     public int coneArc = 40;
+    [Tune("Sensors")]
     public int coneArcMin = 15, coneArcMax = 90, coneArcStep = 10;
-    [Range(0, 100)] public float ownSig;
-    public float ownSigRise = 9f, ownSigFall = 6f;
+    [Header("Signal — how detectable our ship is, 0–100 (Step 35, owner 2026-10-17)")]
+    [Tooltip("Our signal: how detectable we are, 0–100. Internal; the player sees a whole percent on the OWN "
+           + "EMISSIONS meter, the cells and the alert. It climbs and falls gradually toward SignalTarget.")]
+    [UnityEngine.Serialization.FormerlySerializedAs("ownSig")]
+    [Range(0, 100)] public float signal;
+    [Tooltip("Signal climbs this much per tick toward its target.")]
+    [UnityEngine.Serialization.FormerlySerializedAs("signalRise")]
+    [Tune("Power & signal")]
+    public float signalRise = 9f;
+    [Tooltip("Signal falls this much per tick toward its target.")]
+    [UnityEngine.Serialization.FormerlySerializedAs("signalFall")]
+    [Tune("Power & signal")]
+    public float signalFall = 6f;
+    [Tooltip("Signal ACTIVE SCAN adds while it is on. Default 35 (reference sim: a scan is worth 3.5 units).")]
+    [Tune("Power & signal")]
+    public float activeScanSignal = 35f;
     [Tooltip("Own emissions at or above this mean hostile sets have your range (sigNote, blink).")]
-    public float ownSigTracked = 45f;
+    [UnityEngine.Serialization.FormerlySerializedAs("signalTrackedAt")]
+    [Tune("Power & signal")]
+    public float signalTrackedAt = 45f;
     [Tooltip("Identified by sensors (idd) and classified by the periscope (cls).")]
     public System.Collections.Generic.List<string> identified = new System.Collections.Generic.List<string> { "bc1" };
     public System.Collections.Generic.List<string> classified = new System.Collections.Generic.List<string> { "bc1" };
@@ -155,20 +184,25 @@ public class HandoffBoardState
     [Tooltip("ALERTS index: 0 = CONDITION 3, 1 = CONDITION 2, 2 = CONDITION 1 (set on the orders station).")]
     [Range(0, 2)] public int alert;
     [Tooltip("PARTY_TICKS: a damage-control party works this many ticks, then the repair lands.")]
+    [Tune("Engineering & orders")]
     public int partyTicks = 6;
     [Tooltip("The party's compartment and its tick count; tick -1 when no party is out.")]
     public string partyComp;
     public int partyT = -1;
     [Tooltip("A thrown repair or order rocker flicks back after this long (flickBack).")]
+    [Tune("Engineering & orders")]
     public float flickBackSeconds = 0.4f;
     public System.Collections.Generic.List<string> dcThrown = new System.Collections.Generic.List<string>();
     [Header("Orders station — AUX order pool (ENG_ORDERS)")]
     [Tooltip("AUX order pool, 0..100 (auxCharge).")]
     public double auxCharge;
     [Tooltip("Pool gained per AUX unit per tick.")]
+    [Tune("Power & signal")]
     public double auxPerUnit = 3.2;
+    [Tune("Engineering & orders")]
     public int orderCostParty = 30, orderCostSeal = 25, orderCostVent = 15;
     [Tooltip("The refused order (orderFail) shows this long.")]
+    [Tune("Engineering & orders")]
     public float orderFailSeconds = 0.42f;
     public string orderFail;
     [System.NonSerialized] float orderFailUntil;
@@ -262,6 +296,7 @@ public class HandoffBoardState
     public bool[] quads = { true, true, false, false };
     public bool fired;
     [Range(0f, 100f)] public float wepCharge;
+    [Tune("Power & signal")]
     public float wepFeedPerUnit = 5f, wepBleed = 3f;
     [Tooltip("The fire lever, 0..1; fires once past leverFireAt with the ladder set.")]
     [Range(0f, 1f)] public float fireLever;
@@ -271,14 +306,18 @@ public class HandoffBoardState
     [Tooltip("Sight magnification, 1..8 in 0.1 steps (scopeZoom).")]
     public double scopeZoom = 1.4;
     [Tooltip("Degrees per px of slew drag (startSlew).")]
+    [Tune("Periscope & fire control")]
     public double slewDegPerPx = 0.34;
     [Tooltip("A slew drag ignores the first few px.")]
+    [Tune("Periscope & fire control")]
     public double slewDeadPx = 3;
     [Tooltip("px of MAG knob drag per 1x of zoom (magDown).")]
+    [Tune("Periscope & fire control")]
     public double magPxPerX = 40;
     public bool slewing;
     public double slewDx;
     [Tooltip("BEARING needs the periscope within this of the target (onBearing).")]
+    [Tune("Periscope & fire control")]
     public float onBearingDeg = 4f;
 
     [Header("Helm (Step 33h-1)")]
@@ -295,8 +334,10 @@ public class HandoffBoardState
     [Tooltip("Approach hold ranges, km (AP_RANGES).")]
     public int[] apRanges = { 2000, 4000, 8000, 12000, 18000, 24000 };
     [Tooltip("Ordered heading step for the A and D keys, degrees (onKey).")]
+    [Tune("Helm")]
     public int headingKeyStep = 3;
     [Tooltip("Degrees the bow swings per tick at full engine-room integrity (tickPower).")]
+    [Tune("Helm")]
     public float turnRate = 4f;
 
     // ---- gates ---------------------------------------------------------------------------
@@ -348,7 +389,7 @@ public class HandoffBoardState
     /// <summary>trackers: hostile sets that have your range once emissions reach the threshold.</summary>
     public int Trackers()
     {
-        if (ownSig < ownSigTracked) return 0;
+        if (signal < signalTrackedAt) return 0;
         int n = 0;
         foreach (var t in tracks) if (!t.own && t.hostile) n++;
         return n;
@@ -435,39 +476,48 @@ public class HandoffBoardState
         public int id;
         [Tooltip("point, ruler or ring.")]
         public string kind;
-        [Tooltip("Plot-layer px at 1x, own ship at 0,0, y down.")]
-        public int x, y, x2, y2;
+        [Tooltip("World km, x east, y north (Step 36: marks stay put in space). A ring is centred on our "
+               + "ship wherever it is, so its x, y are unused; x2, y2 is its far point.")]
+        public double x, y, x2, y2;
         [Tooltip("Mission clock at placement (points).")]
         public float t;
     }
+
+    [Header("Our ship in the world, km (written by TacticalWorld each tick)")]
+    public double ownX, ownY;
 
     [Header("Plot marks (§8.4)")]
     public System.Collections.Generic.List<Mark> marks = new System.Collections.Generic.List<Mark>();
     [System.NonSerialized] public Mark draft;
     public int markSeq;
     [Tooltip("A RULER or COMPASS drag shorter than this (layer px) is discarded.")]
+    [Tune("Plot tools")]
     public double markMinLen = 4;
 
     /// <summary>plotDown: POINT stamps a mark; RULER starts a line at the press; COMPASS a ring on own ship.</summary>
-    public bool MarkDown(string tool, int x, int y, float missionT)
+    public bool MarkDown(string tool, double x, double y, float missionT)
     {
         if (tool == "POINT") { marks.Add(new Mark { id = ++markSeq, kind = "point", x = x, y = y, t = missionT }); return false; }
         if (tool == "RULER") draft = new Mark { kind = "ruler", x = x, y = y, x2 = x, y2 = y };
-        else if (tool == "COMPASS") draft = new Mark { kind = "ring", x = 0, y = 0, x2 = x, y2 = y };
+        else if (tool == "COMPASS") draft = new Mark { kind = "ring", x = ownX, y = ownY, x2 = x, y2 = y };
         else return false;
         return true;
     }
-    public void MarkMove(int x, int y) { if (draft != null) { draft.x2 = x; draft.y2 = y; } }
-    /// <summary>plotUp: a draft shorter than 4 layer px is dropped; otherwise it becomes a mark.</summary>
-    public void MarkUp()
+    public void MarkMove(double x, double y) { if (draft != null) { draft.x2 = x; draft.y2 = y; } }
+    /// <summary>plotUp: a draft shorter than 4 layer px (given in km by the plot) is dropped; otherwise it becomes a mark.</summary>
+    public void MarkUp(double minLenKm)
     {
         var d = draft;
         draft = null;
-        if (d == null || MarkLen(d) < markMinLen) return;
+        if (d == null || MarkLen(d) < minLenKm - 1e-6) return; // tolerance: the km conversion can land a hair under an exact 4 px (Step 36 verification)
         d.id = ++markSeq;
         marks.Add(d);
     }
-    public static double MarkLen(Mark m) => System.Math.Sqrt((double)(m.x2 - m.x) * (m.x2 - m.x) + (double)(m.y2 - m.y) * (m.y2 - m.y));
+    /// <summary>A mark's start in world km: a ring starts at our ship, wherever it is now.</summary>
+    public double MarkX(Mark m) => m.kind == "ring" ? ownX : m.x;
+    public double MarkY(Mark m) => m.kind == "ring" ? ownY : m.y;
+    /// <summary>Length in km.</summary>
+    public double MarkLen(Mark m) { double dx = m.x2 - MarkX(m), dy = m.y2 - MarkY(m); return System.Math.Sqrt(dx * dx + dy * dy); }
     public void EraseMark(int id) => marks.RemoveAll(m => m.id == id);
 
     /// <summary>validSet: hostile contacts inside the current mount's range and arc.</summary>
@@ -572,6 +622,13 @@ public class HandoffBoardState
     public int SysIndex { get { for (int i = 0; i < systems.Length; i++) if (systems[i].id == sys) return i; return 0; } }
     public Mount MountOf(string id) { foreach (var m in mounts) if (m.id == id) return m; return null; }
     public Track TrackOf(string key) { foreach (var t in tracks) if (t.key == key) return t; return null; }
+    /// <summary>Keep only the tracks a world contact drives (Step 34, TacticalWorld).</summary>
+    public void KeepTracks(System.Collections.Generic.ICollection<string> keys)
+    {
+        tracks = System.Array.FindAll(tracks, t => keys.Contains(t.key));
+        identified.RemoveAll(k => !keys.Contains(k));
+        classified.RemoveAll(k => !keys.Contains(k));
+    }
     public Solution Sol => sol[SysIndex];
     public float ShotCost => Sys != null ? Sys.shot : 50f;
     public bool WepReady => BusUnits("wep") >= 2 && MagOk && WeaponsReleased;
@@ -933,7 +990,20 @@ public class HandoffBoardState
     {
         int senCap = Mathf.Max(1, BusUnits("sen"));
         if (senBoost > senCap) senBoost = senCap;
-        float want = active ? 100f : 0f;
-        if (ownSig != want) ownSig = Mathf.Clamp(ownSig + (active ? ownSigRise : -ownSigFall), 0f, 100f);
+        // every unit drawn makes us louder, and so does ACTIVE SCAN (GDD p18, spec 3.1.b, prototype getSig)
+        float want = SignalTarget;
+        if (signal < want) signal = Mathf.Min(want, signal + signalRise);
+        else if (signal > want) signal = Mathf.Max(want, signal - signalFall);
+    }
+
+    /// <summary>Where our signal is heading: each bus's units × its signal per unit, plus ACTIVE SCAN, 0–100.</summary>
+    public float SignalTarget
+    {
+        get
+        {
+            float t = active ? activeScanSignal : 0f;
+            foreach (var b in buses) t += b.fill * b.signalPerUnit;
+            return Mathf.Clamp(t, 0f, 100f);
+        }
     }
 }
