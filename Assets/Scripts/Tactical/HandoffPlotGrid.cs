@@ -34,6 +34,10 @@ public class HandoffPlotGrid : MaskableGraphic
 
     public Tint GridTint { get { return tint; } set { tint = value; SetVerticesDirty(); } }
     public float Zoom { get { return zoom; } set { zoom = Mathf.Clamp(value, 0.1f, 1f); SetVerticesDirty(); } }
+    /// <summary>Step 41: how far the lines are shifted, board px (x right, y down), so the grid
+    /// stays fixed in the world when the plot view is panned.</summary>
+    public Vector2 OffsetPx { get { return offsetPx; } set { if (value != offsetPx) { offsetPx = value; SetVerticesDirty(); } } }
+    private Vector2 offsetPx;
 
     /// <summary>The minor step in km, and its width on screen.</summary>
     public float CellKm(out float cellPx)
@@ -73,12 +77,12 @@ public class HandoffPlotGrid : MaskableGraphic
     // Lines at (size - cell) / 2 + n * cell from the top-left, both axes.
     void Lines(VertexHelper vh, Rect r, float cw, float ch, Color c)
     {
-        float x0 = (r.width - cw) / 2f;
+        float x0 = (r.width - cw) / 2f + offsetPx.x;
         x0 -= Mathf.Ceil(x0 / cw) * cw;
         for (float x = x0; x <= r.width; x += cw)
             if (x >= 0) Quad(vh, r.xMin + x, r.yMin, lineWidthPx, r.height, c);
 
-        float y0 = (r.height - ch) / 2f;
+        float y0 = (r.height - ch) / 2f + offsetPx.y;
         y0 -= Mathf.Ceil(y0 / ch) * ch;
         for (float y = y0; y <= r.height; y += ch)
             if (y >= 0) Quad(vh, r.xMin, r.yMax - y - lineWidthPx, r.width, lineWidthPx, c);

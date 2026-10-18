@@ -29,29 +29,31 @@ public class TacticalWorld : MonoBehaviour
             foreach (var c in contacts) keys.Add(c.trackKey);
             board.State.KeepTracks(keys);
         }
+        // where our ship starts; from here on the board moves it (Step 41) and this places the model
+        if (ownShip) { board.State.ownX = ownShip.position.x; board.State.ownY = ownShip.position.y; }
         Sync(); // before the board's first refresh (its Start), so it never shows mock numbers
         board.Ticked += Sync;
     }
 
     private void OnDestroy() { if (board) board.Ticked -= Sync; }
 
-    /// <summary>Write each contact's true bearing and range from our ship into its board track.</summary>
+    /// <summary>Place our ship's model where the board has it, and write each contact's true
+    /// bearing and range from our ship into its board track.</summary>
     public void Sync()
     {
-        Vector2 own = ownShip ? (Vector2)ownShip.position : Vector2.zero;
-        board.State.ownX = own.x; // the plot keeps marks in world km (Step 36)
-        board.State.ownY = own.y;
-        // the 3D ship faces our heading (clockwise from north; about +z in the x/y plane that is −hdg)
-        if (ownShip) ownShip.rotation = Quaternion.Euler(0f, 0f, -board.State.hdg);
+        var s = board.State;
+        // the 3D ship sits where the board moved it and faces our heading (clockwise from north;
+        // about +z in the x/y plane that is −hdg)
+        if (ownShip) ownShip.SetPositionAndRotation(new Vector3((float)s.ownX, (float)s.ownY, ownShip.position.z), Quaternion.Euler(0f, 0f, -s.hdg));
         foreach (var c in contacts)
         {
             if (!c) continue;
             var t = board.State.TrackOf(c.trackKey);
             if (t == null) continue;
-            Vector2 d = (Vector2)c.transform.position - own;
             t.hasWorld = true;
             t.worldX = c.transform.position.x;
             t.worldY = c.transform.position.y;
+            var d = new Vector2((float)(t.worldX - s.ownX), (float)(t.worldY - s.ownY));
             t.bearing = Bearing(d);
             t.rangeKm = HandoffBoardState.JsRound(d.magnitude); // the board's tracks hold whole km
         }

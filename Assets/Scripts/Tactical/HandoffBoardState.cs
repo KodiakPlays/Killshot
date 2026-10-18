@@ -485,8 +485,50 @@ public class HandoffBoardState
         public float t;
     }
 
-    [Header("Our ship in the world, km (written by TacticalWorld each tick)")]
+    [Header("Our ship in the world, km (x east, y north). The board moves it (TickMove); TacticalWorld places the model")]
     public double ownX, ownY;
+
+    // Step 41 (owner 2026-10-18): the ship moves. Spec §4: actual chases commanded at capped rates;
+    // the hull turns, the velocity follows, and the sideways part bleeds off (the ship slides). The
+    // prototype's numbers (MAX_SPEED 240, ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988 and
+    // SPACE_DRAG .9992 per 1/60 s) are slowed to the owner's top speed: time stretches by 240/2.5 = 96,
+    // so rates divide by 96 squared. That gives about 0.9 G, the design helm's 1.0 G.
+    [Header("Movement (Step 41)")]
+    [Tooltip("Speed at 100% throttle, km/s (owner: the design's scale; its contacts run 0.4–2.6 km/s).")]
+    [Tune("Helm")] public double topSpeedKms = 2.5;
+    [Tooltip("Speeding up, km/s per mission second (about 0.9 G).")]
+    [Tune("Helm")] public double accelKms2 = 0.0087;
+    [Tooltip("Slowing down, km/s per mission second (about 1.7 G).")]
+    [Tune("Helm")] public double brakeKms2 = 0.0163;
+    [Tooltip("Share of sideways speed kept each mission second: after a turn the ship slides, then lines up.")]
+    [Tune("Helm")] public double driftKeepPerS = 0.9925;
+    [Tooltip("Share of all speed kept each mission second.")]
+    [Tune("Helm")] public double dragKeepPerS = 0.9995;
+    [System.NonSerialized] public double vx, vy; // km/s
+
+    public double SpeedKms => System.Math.Sqrt(vx * vx + vy * vy);
+    /// <summary>Course over ground, degrees clockwise from north (the way we are actually going).</summary>
+    public double CourseDeg => (System.Math.Atan2(vx, vy) * 180 / System.Math.PI + 360) % 360;
+
+    /// <summary>Advance our ship by dt mission seconds: speed along the nose chases the throttle's
+    /// target, sideways speed bleeds off, then the position moves.</summary>
+    public void TickMove(double dt)
+    {
+        if (dt <= 0) return;
+        double h = hdg * System.Math.PI / 180;
+        double nx = System.Math.Sin(h), ny = System.Math.Cos(h); // the nose
+        double fwd = vx * nx + vy * ny, side = vx * ny - vy * nx; // side: to starboard
+        double keep = System.Math.Pow(dragKeepPerS, dt);
+        fwd *= keep;
+        side *= keep * System.Math.Pow(driftKeepPerS, dt);
+        double target = thr / 100.0 * topSpeedKms; // thr is already held to what ENG power allows (TickHelm)
+        double step = (fwd < target ? accelKms2 : brakeKms2) * dt;
+        fwd = System.Math.Abs(target - fwd) <= step ? target : fwd + System.Math.Sign(target - fwd) * step;
+        vx = fwd * nx + side * ny;
+        vy = fwd * ny - side * nx;
+        ownX += vx * dt;
+        ownY += vy * dt;
+    }
 
     [Header("Plot marks (§8.4)")]
     public System.Collections.Generic.List<Mark> marks = new System.Collections.Generic.List<Mark>();

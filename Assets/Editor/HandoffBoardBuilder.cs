@@ -595,8 +595,9 @@ public static class HandoffBoardBuilder
         so.FindProperty("tintLabelAmber").objectReferenceValue = Named(root, "Console", "text#82 ").GetComponent<TMPro.TMP_Text>();
         Hit(tintKnob, "tint", null);
 
-        // The plot takes the wheel (§8.3).
-        Hit((RectTransform)root.Find("Plot/Ground"), "plot", null);
+        // The plot takes the wheel (§8.3), and a drag on the empty grid pans it (Step 41, owner
+        // 2026-10-18). It lies under every mark, label and the marking tools' capture.
+        Hit((RectTransform)root.Find("Plot/Ground"), "plot.pan", null);
 
         so.ApplyModifiedPropertiesWithoutUndo();
     }
@@ -1520,6 +1521,7 @@ public static class HandoffBoardBuilder
         capImg.raycastTarget = false;
         cap.gameObject.AddComponent<HandoffHit>().action = "plot";
         so.FindProperty("capture").objectReferenceValue = capImg;
+        so.FindProperty("grid").objectReferenceValue = root.Find("Plot/Grid").GetComponent<HandoffPlotGrid>();
 
         var m = layer("Marks (drawn)");
         m.gameObject.AddComponent<CanvasRenderer>();

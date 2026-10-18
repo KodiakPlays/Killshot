@@ -331,24 +331,26 @@ public static class PlaytestRunner
         Shot("10_marks");
         yield return 0.2f;
 
-        //     Move our ship 5,000 km east. Stand-in for the helm, which is not built yet.
+        //     Put our ship 5,000 km east (the board owns its position since Step 41). The grid stays
+        //     put and the ship moves across it, so marks keep their place on screen.
         var own = GameObject.Find("World").transform.Find("OwnShip");
-        Vector3 home = own.position;
-        own.position = home + new Vector3(5000f, 0f, 0f);
-        double shift = 5000.0 * 60.9 / 1000.0 * board.ZoomExact; // px the world slides left on the plot
+        var shipImg = (RectTransform)GameObject.Find("Own ship (3D view)").transform;
+        double home = s.ownX;
+        Vector2 ship0 = shipImg.anchoredPosition;
+        s.ownX = home + 5000.0;
+        double shift = 5000.0 * 60.9 / 1000.0 * board.ZoomExact; // px our ship travels on the plot
         yield return 1.2f; // a few board ticks
         string pt1 = MarkLabel(board, 0), ru1 = MarkLabel(board, 1), co1 = MarkLabel(board, 2);
         Vector2 ptPos1 = MarkLabelPos(board, 0), ruPos1 = MarkLabelPos(board, 1);
-        Check("The board knows our ship moved", Mathf.Abs((float)s.ownX - home.x - 5000f) < 0.01f, "ownX " + s.ownX.ToString("0") + " km");
-        Check("The POINT stays put in space", Mathf.Abs(ptPos0.x - ptPos1.x - (float)shift) < 0.5f && Mathf.Abs(ptPos0.y - ptPos1.y) < 0.5f && pt1 == pt0,
-              "moved " + (ptPos1.x - ptPos0.x).ToString("0.0") + " px on the plot (expected " + (-shift).ToString("0.0") + "), label unchanged");
-        // the ruler label snaps to whole px from our ship, so it can land half a px either side
-        Check("The RULER stays put in space", Mathf.Abs(ruPos0.x - ruPos1.x - (float)shift) <= 0.51f && ru1 == ru0,
-              "moved " + (ruPos1.x - ruPos0.x).ToString("0.0") + " px, still \"" + ru1 + "\"");
+        Check("The 3D model follows the board's position", Mathf.Abs(own.position.x - (float)(home + 5000.0)) < 0.01f, "model x " + own.position.x.ToString("0") + " km");
+        Check("Our ship moves across the plot", Mathf.Abs(shipImg.anchoredPosition.x - ship0.x - (float)shift) < 0.5f && Mathf.Abs(shipImg.anchoredPosition.y - ship0.y) < 0.5f,
+              "moved " + (shipImg.anchoredPosition.x - ship0.x).ToString("0.0") + " px (expected " + shift.ToString("0.0") + ")");
+        Check("The POINT stays put", (ptPos1 - ptPos0).magnitude < 0.01f && pt1 == pt0, "moved " + (ptPos1 - ptPos0).magnitude.ToString("0.00") + " px, label unchanged");
+        Check("The RULER stays put", (ruPos1 - ruPos0).magnitude < 0.01f && ru1 == ru0, "moved " + (ruPos1 - ruPos0).magnitude.ToString("0.00") + " px, still \"" + ru1 + "\"");
         Check("The COMPASS re-measures from our ship", co1 != co0 && co1.StartsWith("RNG "), "\"" + co0 + "\" → \"" + co1 + "\"");
         Shot("11_ship_moved");
         yield return 0.2f;
-        own.position = home;
+        s.ownX = home;
         yield return 1.2f;
         Check("Moving back restores every label", MarkLabel(board, 0) == pt0 && MarkLabel(board, 1) == ru0 && MarkLabel(board, 2) == co0, "");
 
@@ -401,12 +403,62 @@ public static class PlaytestRunner
         if (!Click("hangar.recall", null, "RECALL (released)", down: false)) yield break;
         yield return (Func<bool>)(() => recall.sprite.name == "button_recall_up" && !overlay.enabled);
         Check("RECALL comes back up on release", recall.sprite.name == "button_recall_up" && !overlay.enabled, recall.sprite.name);
+        yield return 0.5f;
+
+        // 15. The helm (Step 41): power the engines, throttle up, and the ship moves across a fixed grid.
+        if (!Click("drawer", "power", "PWR key")) yield break;
+        yield return 0.8f;
+        if (!Click("power.shed", null, "LOAD SHED (release)")) yield break;
+        if (!Click("power.bus", "0", "ENG selector")) yield break;
+        Check("ENG back on DRAW after the shed", !s.shed && s.buses[0].mode == HandoffBoardState.BusMode.Draw, Buses(s));
+        yield return (Func<bool>)(() => s.ThrCap >= 60);
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        if (!Click("helm", null, "HELM header")) yield break;
+        yield return 0.8f;
+        if (!Click("helm.thr", null, "throttle (press mid-well)")) yield break;
+        Check("The throttle takes a setting", s.thr > 0, "throttle " + s.thr + "%, target " + (s.thr / 100.0 * s.topSpeedKms).ToString("0.00") + " km/s");
+        double x0 = s.ownX, y0 = s.ownY;
+        Vector2 img0 = shipImg.anchoredPosition, grid0 = board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx;
+        yield return 4f;
+        double moved = System.Math.Sqrt((s.ownX - x0) * (s.ownX - x0) + (s.ownY - y0) * (s.ownY - y0));
+        Check("The ship gathers speed", s.SpeedKms > 0.01, s.SpeedKms.ToString("0.000") + " km/s after 4 s at x10");
+        Check("It moves along its heading", moved > 0 && System.Math.Abs(((s.CourseDeg - s.hdg + 540) % 360) - 180) < 2,
+              moved.ToString("0.0") + " km, course " + s.CourseDeg.ToString("000") + "°, heading " + s.hdg.ToString("000") + "°");
+        Check("Our ship's image moves; the grid stays put", shipImg.anchoredPosition != img0 && board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx == grid0, "");
+        Shot("16_under_way");
+
+        //     A hard turn: the hull swings, the ship slides on its old course, then lines up.
+        s.ordHdg = (s.hdg + 90) % 360; // stand-in: set the ordered heading (the helm dial is a drag)
+        yield return (Func<bool>)(() => s.hdg == s.ordHdg);
+        double lag = System.Math.Abs(((s.CourseDeg - s.hdg + 540) % 360) - 180);
+        Check("After a turn the ship slides: course lags the heading", lag > 5, "heading " + s.hdg.ToString("000") + "°, course " + s.CourseDeg.ToString("000") + "°");
+        Shot("17_sliding");
+
+        //     Pause freezes the ship.
+        if (!Click("pause", null, "PAUSE key")) yield break;
+        double px = s.ownX, py = s.ownY;
+        yield return 2f;
+        Check("Paused, the ship stops where it is", s.ownX == px && s.ownY == py, "");
+        if (!Click("pause", null, "RUN key")) yield break;
+
+        //     Pan the plot: drag the empty grid; marks, contacts, the ship and the grid all move together.
+        if (!Click("helm", null, "HELM header (close)")) yield break;
+        yield return 0.6f;
+        if (!Click("tool", "CURSOR", "CURSOR tool")) yield break;
+        var plotPanel = board.GetComponent<HandoffPlotPanel>();
+        Vector2 v0 = plotPanel.View, gridA = board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx;
+        if (!PlotDrag(board, new Vector2(700, 300), new Vector2(800, 300), "drag the grid 100 px right", "plot.pan")) yield break;
+        float dragKm = (float)(100 / (60.9 / 1000.0 * board.ZoomExact));
+        Check("Dragging the grid pans the plot", Mathf.Abs(plotPanel.View.x - (v0.x - dragKm)) < 1f && Mathf.Abs(board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx.x - gridA.x - 100f) < 0.5f,
+              "view moved " + (plotPanel.View.x - v0.x).ToString("0") + " km (expected " + (-dragKm).ToString("0") + ")");
+        Shot("18_panned");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
         yield return 1f;
     }
 
     /// <summary>Press at board px a, release at board px b, on the plot, through the EventSystem.
     /// The plot's capture surface must be on top there.</summary>
-    static bool PlotDrag(HandoffBoardControls board, Vector2 a, Vector2 b, string label)
+    static bool PlotDrag(HandoffBoardControls board, Vector2 a, Vector2 b, string label, string expect = "plot")
     {
         var es = EventSystem.current;
         Vector2 sa = BoardToScreen(board, a), sb = BoardToScreen(board, b);
@@ -415,7 +467,7 @@ public static class PlaytestRunner
         es.RaycastAll(ped, hits);
         var top = hits.Count > 0 ? ExecuteEvents.GetEventHandler<IPointerDownHandler>(hits[0].gameObject) : null;
         var hh = top ? top.GetComponent<HandoffHit>() : null;
-        if (hh == null || hh.action != "plot")
+        if (hh == null || hh.action != expect)
         {
             Check(label, false, "blocked: topmost at board " + a + " is " + (hits.Count > 0 ? hits[0].gameObject.name : "nothing"));
             return false;

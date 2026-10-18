@@ -51,9 +51,22 @@ public class HandoffPlotPanel : HandoffPanel
     [Tooltip("A passive label shows only while its contact is heard and not identified (passives).")]
     [SerializeField] private bool passiveVisibility = true;
 
-    [Header("Plot space (§8.4): own ship at the plot centre; 60.9 layer px = 1000 km")]
+    [Header("Plot space (§8.4): 60.9 layer px = 1000 km")]
     [SerializeField] private Vector2 plotCentre = new Vector2(960, 545);
     [SerializeField] private double pxPer1000Km = 60.9;
+
+    // Step 41 (owner 2026-10-18): the grid stays put and our ship moves across it. The plot shows the
+    // world around a view centre, which starts on our ship. Drag the empty grid, or hold the arrow
+    // keys, to pan.
+    [Header("Panning the plot (Step 41)")]
+    [SerializeField] private HandoffPlotGrid grid;
+    [Tooltip("Arrow keys pan the plot this fast, screen px per second.")]
+    [Tune("Plot & our ship")] [SerializeField] private float panKeysPxPerS = 600f;
+    private double viewX, viewY, panX0, panY0;
+    private bool viewSet, panning;
+    private Vector2 panPress;
+    /// <summary>The world point at the plot centre, km.</summary>
+    public Vector2 View => new Vector2((float)viewX, (float)viewY);
 
     [Header("Labels — offsets have no value in the package (HANDOFF_GAPS)")]
     [Tune("Plot tools")]
@@ -87,12 +100,28 @@ public class HandoffPlotPanel : HandoffPanel
     // Step 36: marks live in world km (x east, y north) so they stay put when our ship moves.
     // The pointer is still rounded to whole layer px first, as the board's plotPt does.
     double KmPerPx => 1000.0 / pxPer1000Km;
-    double WorldX(float bx) => State.ownX + LayerX(bx) * KmPerPx;
-    double WorldY(float by) => State.ownY - LayerY(by) * KmPerPx;
-    Vector2 Screen(double wx, double wy)
+    double WorldX(float bx) => viewX + LayerX(bx) * KmPerPx;
+    double WorldY(float by) => viewY - LayerY(by) * KmPerPx;
+    /// <summary>A world point (km) in board px.</summary>
+    public Vector2 Screen(double wx, double wy)
     {
         double z = Controls.ZoomExact / KmPerPx;
-        return plotCentre + new Vector2((float)((wx - State.ownX) * z), (float)(-(wy - State.ownY) * z));
+        return plotCentre + new Vector2((float)((wx - viewX) * z), (float)(-(wy - viewY) * z));
+    }
+
+    private void Update()
+    {
+        if (Controls == null) return;
+        // not while typing in a field (the hangar's launch bearing)
+        var typing = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+        if (typing && typing.GetComponent<TMP_InputField>()) return;
+        float x = (Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.LeftArrow) ? 1f : 0f);
+        float y = (Input.GetKey(KeyCode.UpArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.DownArrow) ? 1f : 0f);
+        if (x == 0f && y == 0f) return;
+        double km = panKeysPxPerS * Time.unscaledDeltaTime * KmPerPx / Controls.ZoomExact;
+        viewX += x * km;
+        viewY += y * km;
+        Refresh();
     }
 
     public override bool Click(string action, string arg)
@@ -111,6 +140,7 @@ public class HandoffPlotPanel : HandoffPanel
 
     public override bool Down(string action, string arg, Vector2 board)
     {
+        if (action == "plot.pan") { panning = true; panPress = board; panX0 = viewX; panY0 = viewY; return true; }
         if (action != "plot" || !Capturing) return false;
         pressZoom = Controls.ZoomExact;
         State.MarkDown(Controls.Tool, WorldX(board.x), WorldY(board.y), Controls.MissionSeconds);
@@ -119,6 +149,14 @@ public class HandoffPlotPanel : HandoffPanel
 
     public override bool Drag(string action, string arg, Vector2 board)
     {
+        if (action == "plot.pan" && panning)
+        {
+            // the world follows the pointer: drag right and the view centre moves west
+            double k = KmPerPx / Controls.ZoomExact;
+            viewX = panX0 - (board.x - panPress.x) * k;
+            viewY = panY0 + (board.y - panPress.y) * k;
+            return true;
+        }
         if (action != "plot" || State.draft == null) return false;
         State.MarkMove(WorldX(board.x), WorldY(board.y));
         return true;
@@ -126,6 +164,7 @@ public class HandoffPlotPanel : HandoffPanel
 
     public override bool Up(string action, string arg, Vector2 board)
     {
+        if (action == "plot.pan") { panning = false; return true; }
         if (action != "plot" || State.draft == null) return false;
         State.MarkUp(State.markMinLen * KmPerPx);
         return true;
@@ -134,6 +173,14 @@ public class HandoffPlotPanel : HandoffPanel
     public override void Refresh()
     {
         var s = State;
+        if (!viewSet) { viewX = s.ownX; viewY = s.ownY; viewSet = true; }
+        if (!grid) grid = FindAnyObjectByType<HandoffPlotGrid>();
+        if (grid)
+        {
+            // the lines move with the world: the view's offset from the world origin, in board px
+            double z = Controls.ZoomExact / KmPerPx;
+            grid.OffsetPx = new Vector2((float)(-viewX * z), (float)(viewY * z));
+        }
         if (capture) capture.raycastTarget = Capturing;
         bool erasing = Controls.Tool == "ERASE";
 
@@ -160,10 +207,10 @@ public class HandoffPlotPanel : HandoffPanel
                 if (m.kind == "ruler")
                 {
                     label.alignment = TextAlignmentOptions.Center;
-                    // the board rounds the label's spot to whole layer px from our ship. km→px leaves
-                    // float dust (250.49999999999997 for 250.5), so trim it before rounding
-                    double mx = HandoffBoardState.JsRound(System.Math.Round((m.x + dx / 2.0 - s.ownX) / KmPerPx, 6));
-                    double my = HandoffBoardState.JsRound(System.Math.Round(-(m.y + dy / 2.0 - s.ownY) / KmPerPx, 6));
+                    // the board rounds the label's spot to whole layer px from the plot centre. km→px
+                    // leaves float dust (250.49999999999997 for 250.5), so trim it before rounding
+                    double mx = HandoffBoardState.JsRound(System.Math.Round((m.x + dx / 2.0 - viewX) / KmPerPx, 6));
+                    double my = HandoffBoardState.JsRound(System.Math.Round(-(m.y + dy / 2.0 - viewY) / KmPerPx, 6));
                     at = plotCentre + new Vector2((float)mx, (float)my) * (float)Controls.ZoomExact + rulerLabelOffset;
                 }
                 else { label.alignment = TextAlignmentOptions.Left; at = b + ringLabelOffset; }
@@ -182,7 +229,7 @@ public class HandoffPlotPanel : HandoffPanel
         for (int i = all.Count; i < hits.Count; i++) hits[i].gameObject.SetActive(false);
         if (marks) marks.Set(shapes);
 
-        // our ship, always at the plot centre: the 3D model's top-down view, sized by zoom and clamped
+        // our ship where it is (Step 41: it moves across the plot): the 3D model's top-down view, sized by zoom and clamped
         if (ownShipImage)
         {
             if (!shipView) shipView = FindAnyObjectByType<ShipView>();
@@ -192,7 +239,7 @@ public class HandoffPlotPanel : HandoffPanel
             float shipPx = Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx);
             float side = shipPx / (shipView ? shipView.ShipFill : 1f);
             ownShipImage.rectTransform.sizeDelta = new Vector2(side, side);
-            Put(ownShipImage.rectTransform, plotCentre, 0f);
+            Put(ownShipImage.rectTransform, Screen(s.ownX, s.ownY), 0f);
         }
 
         // identified hostile contacts at their true spot (res_* in the board: a mark only once
@@ -209,7 +256,7 @@ public class HandoffPlotPanel : HandoffPanel
             else
             {
                 double b = t.bearing * System.Math.PI / 180.0, px = t.rangeKm * pxPer1000Km / 1000.0 * Controls.ZoomExact;
-                at = plotCentre + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
+                at = Screen(s.ownX, s.ownY) + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
             }
             dots.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
             var cl = ContactLabel(n++);

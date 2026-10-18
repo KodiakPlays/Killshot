@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 40 are done, plus a final QA pass.**
+**Steps 1 to 41 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -22,8 +22,8 @@ now sits in a real world at TRACK 07's spot, and the board reads it. It does not
 is no mission yet. Since Step 35, power makes the ship loud (signal), and nothing real changes while
 paused. Since Step 36 the plot tools mark world positions; since Step 37 our ship shows on the plot as
 its 3D model seen from above. Every tunable value is in **Starwolf → Tuning** (Step 38). The plot
-carries no standing text (Step 39). Switches slide, refuse and click (Step 40). The wiring order is
-at the top of section 8.
+carries no standing text (Step 39). Switches slide, refuse and click (Step 40). Our ship moves and the
+plot pans (Step 41). The wiring order is at the top of section 8.
 
 The older board in `02_Grid` (Steps 5–26) is out of the play flow. It had an amber grid, corner
 panels, two icon rails, a targeting drawer, power, WASD movement and five plot tools.
@@ -34,9 +34,9 @@ passed. Every control is clickable and shows its states. Wiring to game systems 
 flow is `00_Start` → `01_Briefing` → `02.1_Grid`. `02_Grid` is still in Build Settings, but nothing
 leads to it. The full record is `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
 
-**Next up: the helm**, then sensors, periscope and fire control, fire, hit — the owner's wiring order,
-top of section 8. Power P1 (Step 35), the plot tools (Step 36) and the press and click interactions
-(Step 40) are done. The UI asset audit is done (`ASSET_AUDIT.md`). The Claude Design request still
+**Next up: sensors**, then periscope and fire control, fire, hit — the owner's wiring order, top of
+section 8. Power P1 (Step 35), the plot tools (Step 36), press and click (Step 40) and the helm
+(Step 41) are done. The UI asset audit is done (`ASSET_AUDIT.md`). The Claude Design request still
 stands, but placeholder art is fine, so it does not block a demo.
 
 The owner is building this one step at a time and checking each step before starting the next one.
@@ -80,8 +80,9 @@ Do not run ahead. Do one step, show it, wait.
 | 38 | Every tunable value in one window (Starwolf → Tuning) | **Done** — checked; one defect fixed and re-checked |
 | 39 | Nothing standing on the plot | **Done** — checked after a rebuild and a playtest |
 | 40 | Press and click: switches slide, refuse, and click | **Done** — playtest 48/48, slide measured in play |
+| 41 | The helm: our ship moves, and the plot pans | **Done** — playtest 57/57 |
 
-Steps 6 to 28 and Steps 34 to 40 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 41 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -397,6 +398,8 @@ These are settled. Do not reopen them.
     animates them. A locked switch nudges when clicked (owner addition). Click sounds come from the
     prototype. Unity audio is on. A refused order keeps the design's reaction, plus the refused
     sound. Details in Step 40.
+26. **Our ship moves across a fixed grid** (owner, 2026-10-18). Top speed about 2.5 km/s. The plot
+    pans by dragging the grid or with the arrow keys. Details in Step 41.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -574,7 +577,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 40, in detail
+## 6 · Steps 6 to 28, and 34 to 41, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1583,6 +1586,62 @@ is the newest source.
 - Tuning window: "Keep play-mode changes" does not keep edits to the three sounds or the RECALL
   press. It only keeps single numbers, colours and switches.
 
+### Step 41 — The helm: our ship moves, and the plot pans
+
+**Owner decisions (2026-10-18).**
+
+- Top speed is on the design's scale: about 2.5 km/s at full throttle. The design's contacts run
+  0.4–2.6 km/s. Reaching the dummy, 24,300 km away, takes about 7 minutes at ×10.
+- The grid stays put and our ship moves across it. The design kept our ship at the plot centre;
+  the owner overrode that.
+- You can drag across the grid to pan the plot, and use the arrow keys.
+
+**What was built.**
+
+- `HandoffBoardState.TickMove`, run every board tick for `rate` mission seconds (so ×10 moves ten
+  times as far per tick). Spec §4:
+  - the throttle sets a target speed along the nose, and the ship speeds up and slows down at
+    capped rates;
+  - the hull turns, but the ship keeps sliding on its old course while the sideways speed bleeds
+    off.
+  - The numbers are the prototype's, slowed to the owner's top speed: time stretches by
+    240 / 2.5 = 96. That gives 0.9 G accelerating and 1.7 G braking, which matches the design
+    helm's "1.0 G". Full speed takes about 5 minutes of mission time.
+  - All five values are in the tuning window under Helm.
+  - Throttle is still held to what ENG power allows, as before. There is no reverse; the board's
+    throttle runs 0–100%.
+- The board now owns our ship's position. `TacticalWorld` reads the model's start position once,
+  then places the model where the board has it every tick. Bearings and ranges to contacts use
+  that position.
+- `HandoffPlotPanel` has a view centre, which starts on our ship. Marks, contacts and the grid are
+  drawn around it. Our ship's image sits where the ship actually is.
+  - Dragging the empty grid pans the plot. The plot ground's hit is now `plot.pan`; the mouse wheel
+    still zooms there.
+  - The marking tools keep their drags for drawing.
+  - Holding an arrow key pans at 600 screen px a second (tunable), except while typing in a
+    field.
+- `HandoffPlotGrid.OffsetPx` shifts the grid lines, so the grid stays fixed in the world.
+
+**Checked.** Playtest 57/57 PASS, console clean (`Logs/Playtests/2026-10-19_000009/`). New checks:
+
+- Putting our ship 5,000 km east moves its image 304.5 px across the plot; marks don't move on
+  screen, and the COMPASS re-measures.
+- With ENG powered and the throttle at 50%, the ship gathers speed (0.77 km/s after 4 s at ×10)
+  and moves along its heading.
+- After a 90° turn the course lags the heading (heading 173°, course 140°).
+- Paused, the ship stops dead.
+- Dragging the grid 100 px pans the view by exactly 100 px worth of km.
+
+**Known.**
+
+- The playtest sets the ordered heading directly; the helm dial is a drag it doesn't do yet.
+  Arrow-key panning can't be pressed by a script (the old Input class), so it is untested.
+- Turning still runs at the design's 4° per board tick at every time rate, while movement scales
+  with the rate. So at ×10 the ship slides further during a turn.
+- The axis numbers on the plot's edge (−30 … +30) are fixed. They read as distance from the plot
+  centre, not world position.
+- Nothing recentres the plot on our ship. Panning is the only way to follow it.
+
 ---
 
 ## 7 · How to keep this log
@@ -1615,7 +1674,8 @@ order:
 2. **The plot tools.** **Done in Step 36.** Then, at the owner's request: our ship on the plot
    (Step 37), the tuning window (Step 38), nothing standing on the plot (Step 39).
 3. **The design's press and click interactions.** **Done in Step 40.**
-4. **Next:** back into the sequence: the helm, then sensors, periscope and fire control against the
+4. **The helm.** **Done in Step 41.**
+5. **Next:** back into the sequence: sensors, then periscope and fire control against the
    dummy, then fire, then hit.
    - **Sensors step:** give the alarm strip a real trigger (a new contact identified). Build the
      radar sweep (`drawn#34`, and probably `drawn#35`): it turns while DRADIS is on and hides
@@ -1661,7 +1721,8 @@ and `shots/`. It leaves play mode and reopens the scene you were in. First good 
 22 s of 1080p video. Since Step 35: 27/27 PASS, 35 s, and it also checks pause, RUN, signal and
 LOAD SHED. Since Step 36: 37/37 PASS, 37 s, and it also drops a POINT, a RULER and a COMPASS, moves
 our ship and checks the marks stay put. Since Step 40: 48/48 PASS. It also checks the click sounds,
-the LOAD SHED slide, a refused locked rocker, and the TRACK and RECALL presses. It grows as features land: add steps to `PowerUpRun()`. There is only one
+the LOAD SHED slide, a refused locked rocker, and the TRACK and RECALL presses. Since Step 41: 57/57.
+It also drives the helm (ENG power, throttle, a turn, pause) and pans the plot. It grows as features land: add steps to `PowerUpRun()`. There is only one
 Unity editor, so it runs when no other agent is using Unity.
 
 What it can't do yet: the intro menu and the briefing's Enter read Unity's old Input class, which
