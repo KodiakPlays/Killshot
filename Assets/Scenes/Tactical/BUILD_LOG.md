@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 39 are done, plus a final QA pass.**
+**Steps 1 to 40 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -22,7 +22,8 @@ now sits in a real world at TRACK 07's spot, and the board reads it. It does not
 is no mission yet. Since Step 35, power makes the ship loud (signal), and nothing real changes while
 paused. Since Step 36 the plot tools mark world positions; since Step 37 our ship shows on the plot as
 its 3D model seen from above. Every tunable value is in **Starwolf → Tuning** (Step 38). The plot
-carries no standing text (Step 39). The wiring order is at the top of section 8.
+carries no standing text (Step 39). Switches slide, refuse and click (Step 40). The wiring order is
+at the top of section 8.
 
 The older board in `02_Grid` (Steps 5–26) is out of the play flow. It had an amber grid, corner
 panels, two icon rails, a targeting drawer, power, WASD movement and five plot tools.
@@ -33,9 +34,9 @@ passed. Every control is clickable and shows its states. Wiring to game systems 
 flow is `00_Start` → `01_Briefing` → `02.1_Grid`. `02_Grid` is still in Build Settings, but nothing
 leads to it. The full record is `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
 
-**Next up: the design's press and click interactions** (switch slides, a "refused" nudge on locked
-switches, click sounds), then the helm, sensors, periscope and fire control, fire, hit — the owner's
-wiring order, top of section 8. Power P1 (Step 35) and the plot tools (Step 36) are done. The UI asset audit is done (`ASSET_AUDIT.md`). The Claude Design request still
+**Next up: the helm**, then sensors, periscope and fire control, fire, hit — the owner's wiring order,
+top of section 8. Power P1 (Step 35), the plot tools (Step 36) and the press and click interactions
+(Step 40) are done. The UI asset audit is done (`ASSET_AUDIT.md`). The Claude Design request still
 stands, but placeholder art is fine, so it does not block a demo.
 
 The owner is building this one step at a time and checking each step before starting the next one.
@@ -78,8 +79,9 @@ Do not run ahead. Do one step, show it, wait.
 | 37 | Our ship on the plot, as the 3D model seen from above | **Done** — verified (STEP 37: VERIFIED, second pass) |
 | 38 | Every tunable value in one window (Starwolf → Tuning) | **Done** — checked; one defect fixed and re-checked |
 | 39 | Nothing standing on the plot | **Done** — checked after a rebuild and a playtest |
+| 40 | Press and click: switches slide, refuse, and click | **Done** — playtest 48/48, slide measured in play |
 
-Steps 6 to 28 and Steps 34 to 39 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 40 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -391,6 +393,10 @@ These are settled. Do not reopen them.
 24. **Nothing standing on the plot** (owner, 2026-10-18). No always-on labels. Readouts come from
     using a tool. The PDC arcs show once the PDCs are activated; the alarm strip shows only for a
     real alert. Details in Step 39.
+25. **Switches slide, refuse and click** (owner, 2026-10-18). Rocker pads slide as the design
+    animates them. A locked switch nudges when clicked (owner addition). Click sounds come from the
+    prototype. Unity audio is on. A refused order keeps the design's reaction, plus the refused
+    sound. Details in Step 40.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -559,11 +565,16 @@ The new layout throws that split away:
     what to draw on the Layout pass only (play mode, the list). The tuning window broke this once
     when the playtest entered play between the two passes.
 
-33. Nothing else. The Unity console is clean: no errors, no warnings.
+33. **The playtest video shows eased motion unevenly.** Board motion follows real time
+    (`Time.unscaledTime`), so it keeps moving while the board is paused. The recorder spaces video
+    frames on its own clock, so a 0.14 s slide shows as a few small steps and then a jump. In play it
+    is smooth: logged frame by frame in Step 40. Judge feel in play, not from the video.
+
+34. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 39, in detail
+## 6 · Steps 6 to 28, and 34 to 40, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1507,6 +1518,71 @@ The player learns these things through the tools.
 **Checked.** After a rebuild, nothing under `Plot/Mockup` or `AlarmStrip` shows. The World is
 still linked and the scene saved clean. Playtest: 37/37 PASS, console clean, our ship white (`Logs/Playtests/2026-10-18_225433/`).
 
+### Step 40 — Press and click: switches slide, refuse, and click
+
+**Owner decisions (2026-10-18).** Bring in the design's press and click interactions; the handoff
+is the newest source.
+
+- Rocker switches slide their pad, built now from the cut-out art.
+- A locked switch that is clicked gives a small "refused" nudge. This is the owner's addition; the
+  design has nothing for it.
+- Click sounds, from the prototype. The design board has no sound.
+- Unity's audio was switched off for the whole project (since August 2025, no reason recorded).
+  It is now on. The intro's hum is now audible too.
+- A refused order keeps the design's own reaction (it throws, the lamp goes red for 0.42 s, it
+  flicks back), plus the refused sound.
+
+**What was built.**
+
+- `HandoffRockers.cs` on the board, covering all 21 clickable rockers in seven drawers.
+  - When a panel swaps a rocker's sprite, a cover the colour of the well (`sprite.well.01`) hides
+    the baked pad. Two cut-outs of the old and new pads slide over it, and the new one fades in.
+    The slide uses the design's spring curve, cubic-bezier(.3, 1.5, .5, 1), and the fade uses
+    ease. A slide lasts 0.14 s on the 30×38 and 24×32 rockers and 0.12 s on the 22×30 and REBOOT
+    (UIStateSpec §9.1).
+  - At rest the three layers are off, so the board looks exactly as before. The edit-mode board
+    renders pixel-identical before and after the rebuild.
+  - A change made while a drawer is shut isn't animated when it opens.
+  - Pad boxes and travel were measured in the art. The thrown pad carries a glow 2 px wider, so
+    the cut-outs include it. The 30×38 thrown pad sits 11 px lower; the spec says 10 (top 3 → 13).
+    The art wins, so the slide lands exactly on the baked pad.
+  - Refused nudge: if the rocker shows its locked art when clicked, the pad dips 2 px and springs
+    back over 0.12 s.
+- Click sounds, made in code from the prototype's `playTone` (no audio files):
+  - tab (560 Hz square, 35 ms): tool rail, systems keys and latches, helm, orders and periscope
+    headers;
+  - switch (310 Hz square, 45 ms): every other control that takes a click;
+  - refused (150 Hz sawtooth, 80 ms): locked rockers and refused orders;
+  - drag-only controls and drawing on the plot make no sound.
+- TRACK (fire control) and its lamp drop 1 px while held. The design gives no ease, so it's
+  instant.
+- RECALL (hangar) eases into its pressed art over 0.1 s and back.
+- Tuning window: Motion gains the four slide times, the nudge distance and time, the RECALL
+  press, and the TRACK drop. A new **Sound** section holds the three cues: pitch, length,
+  volume, and square or saw.
+
+**Checked.**
+
+- The edit-mode board renders pixel-identical before and after the rebuild (`Logs/HandoffQA/step40/`).
+- In play, the LOAD SHED pad was logged frame by frame (`slide_frames.txt`): 17 → 28.9 px with the
+  spring's small overshoot, then rest at 28, over 0.13 s. The new pad fades in alongside.
+- Playtest: 48/48 PASS, console clean (`Logs/Playtests/2026-10-18_234125/`). New checks:
+  - the tab and switch clicks;
+  - the LOAD SHED slide;
+  - drawing on the plot makes no sound;
+  - a locked arming rocker nudges with the refused sound and stays locked;
+  - TRACK drops 1 px and returns;
+  - RECALL eases down and back.
+
+**Known.**
+
+- The cover is one flat colour. The real well has a slight gradient and the thrown pad's red
+  glow. It only shows in the strip the pad uncovers during a 0.12–0.14 s slide.
+- RECALL's press is a crossfade between the up and pressed art. The design moves the button's
+  top 3 → 7 px; the pressed art already has the button lower, so it reads as a press.
+- Tuning window: "Keep play-mode changes" does not keep edits to the three sounds or the RECALL
+  press. It only keeps single numbers, colours and switches.
+
 ---
 
 ## 7 · How to keep this log
@@ -1538,15 +1614,17 @@ order:
 1. **Power P1.** "Raw power is the basis of everything." **Done in Step 35.**
 2. **The plot tools.** **Done in Step 36.** Then, at the owner's request: our ship on the plot
    (Step 37), the tuning window (Step 38), nothing standing on the plot (Step 39).
-3. **Next: the design's press and click interactions.** Switch pads slide from cut-out art, locked
-   switches give a small "refused" nudge (owner addition, not in the design), click sounds, the TRACK
-   1 px press and the RECALL ease.
-4. Then back into the sequence: the helm, then sensors, periscope and fire control against the
+3. **The design's press and click interactions.** **Done in Step 40.**
+4. **Next:** back into the sequence: the helm, then sensors, periscope and fire control against the
    dummy, then fire, then hit.
    - **Sensors step:** give the alarm strip a real trigger (a new contact identified). Build the
      radar sweep (`drawn#34`, and probably `drawn#35`): it turns while DRADIS is on and hides
      while it is off (`HANDOFF_GAPS.md` row 105).
    - **Fire-control step:** show the PDC arcs and their label once the PDCs are activated.
+
+**Items 5 and 7 of the wiring order are planned.** The first mission, the XO walkthrough (FTUE), the
+derelicts and the easy enemy AI are in `FTUE_PLAN.md`, next to this file (owner, 2026-10-18). Its
+step E (the comms box) can start now; step A (enemy patrol) once the helm works.
 
 **Parked.** Both fold into the sensors step later:
 
@@ -1582,7 +1660,8 @@ Each run writes `Logs/Playtests/<date_time>/`: `playtest.mp4`, `report.md` (pass
 and `shots/`. It leaves play mode and reopens the scene you were in. First good run: 18/18 PASS,
 22 s of 1080p video. Since Step 35: 27/27 PASS, 35 s, and it also checks pause, RUN, signal and
 LOAD SHED. Since Step 36: 37/37 PASS, 37 s, and it also drops a POINT, a RULER and a COMPASS, moves
-our ship and checks the marks stay put. It grows as features land: add steps to `PowerUpRun()`. There is only one
+our ship and checks the marks stay put. Since Step 40: 48/48 PASS. It also checks the click sounds,
+the LOAD SHED slide, a refused locked rocker, and the TRACK and RECALL presses. It grows as features land: add steps to `PowerUpRun()`. There is only one
 Unity editor, so it runs when no other agent is using Unity.
 
 What it can't do yet: the intro menu and the briefing's Enter read Unity's old Input class, which

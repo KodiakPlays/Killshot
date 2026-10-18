@@ -184,6 +184,7 @@ public static class HandoffBoardBuilder
         WireOrders(root);
         WirePeriscope(root);
         WirePlot(root);
+        WireRockers(root);
         RelinkWorld(root);
 
         EditorSceneManager.MarkSceneDirty(scene);
@@ -514,6 +515,10 @@ public static class HandoffBoardBuilder
         so.FindProperty("motion").objectReferenceValue = root.GetComponent<HandoffBoardMotion>();
         so.FindProperty("grid").objectReferenceValue = root.Find("Plot/Grid").GetComponent<HandoffPlotGrid>();
         so.FindProperty("canvas").objectReferenceValue = canvas;
+        // Step 40: one voice for the click cues
+        var voice = root.gameObject.AddComponent<AudioSource>();
+        voice.playOnAwake = false;
+        so.FindProperty("voice").objectReferenceValue = voice;
 
         // Tool rail: keys SEL, PNT, RUL, CMP, ERS in rail order (UIStateSpec §8.1 lines 156–160).
         string[] tools = { "CURSOR", "POINT", "RULER", "COMPASS", "ERASE" };
@@ -1096,6 +1101,12 @@ public static class HandoffBoardBuilder
         so.FindProperty("recallPressed").objectReferenceValue = LoadSprite("button_recall_pressed");
         so.FindProperty("recallLamp").objectReferenceValue = Gfx(root, H, "lamp#75 ");
         Hit(recall, "hangar.recall", null);
+        // Step 40: the pressed art fades in over the up art while RECALL eases down (.1 s)
+        var overlay = NewRect("Recall pressed (easing)", recall);
+        overlay.anchorMin = Vector2.zero; overlay.anchorMax = Vector2.one; overlay.offsetMin = overlay.offsetMax = Vector2.zero;
+        var overlayImg = Img(overlay.gameObject, LoadSprite("button_recall_pressed"), Color.white, false);
+        overlayImg.enabled = false;
+        so.FindProperty("recallOverlay").objectReferenceValue = overlayImg;
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 
@@ -1179,6 +1190,7 @@ public static class HandoffBoardBuilder
         so.FindProperty("solLamp").objectReferenceValue = Gfx(root, F, "lamp#82 ");
         so.FindProperty("solGlow").objectReferenceValue = GlowOf(root, F, 82);
         Hit(Named(root, F, "sprite#292 "), "fc.track", null);
+        so.FindProperty("trackKey").objectReferenceValue = Named(root, F, "sprite#292 ");
         so.FindProperty("trackId").objectReferenceValue = Tmp(root, F, "text#380 ");
         so.FindProperty("trackSrc").objectReferenceValue = Tmp(root, F, "text#381 ");
         so.FindProperty("solRange").objectReferenceValue = Tmp(root, F, "text#383 ");
@@ -1961,6 +1973,80 @@ public static class HandoffBoardBuilder
         float d = a * a - s * s;
         if (Mathf.Abs(d) < 0.05f) { float side = W / (a + s); return new Vector2(side, side); }
         return new Vector2((W * a - H * s) / d, (H * a - W * s) / d);
+    }
+
+    // ---- rockers (Step 40) ----------------------------------------------------------------
+
+    // UIStateSpec §9.1 (lines 1162–1208): the pad's top eases on cubic-bezier(.3,1.5,.5,1) and its
+    // background on ease. Pad boxes were measured in the art: image px from the top-left, the 14 px
+    // margin included, wide and tall enough for the thrown pad's glow. Travel is the art's: the
+    // 30x38 thrown pad sits 11 px lower, where the spec says top 3 → 13 (10). The art wins, so the
+    // slide lands exactly on the baked pad.
+    static readonly (string name, float seconds, Rect pad, float travel)[] RockerFamilies =
+    {
+        ("rocker_30x38", 0.14f, new Rect(15, 17, 28, 23), 11),
+        ("rocker_24x32", 0.14f, new Rect(15, 17, 22, 19), 9),
+        ("rocker_22x30", 0.12f, new Rect(15, 16, 20, 18), 9),
+        ("rocker_reboot", 0.12f, new Rect(15, 16, 88, 19), 9),
+    };
+
+    // Every clickable rocker gets a cover and two pad cut-outs, all off until a pad moves.
+    static void WireRockers(RectTransform root)
+    {
+        var so = new SerializedObject(root.gameObject.AddComponent<HandoffRockers>());
+        var fams = so.FindProperty("families");
+        fams.arraySize = RockerFamilies.Length;
+        for (int i = 0; i < RockerFamilies.Length; i++)
+        {
+            var f = RockerFamilies[i];
+            var e = fams.GetArrayElementAtIndex(i);
+            e.FindPropertyRelative("name").stringValue = f.name;
+            e.FindPropertyRelative("seconds").floatValue = f.seconds;
+            e.FindPropertyRelative("pad").rectValue = f.pad;
+            e.FindPropertyRelative("travel").floatValue = f.travel;
+            e.FindPropertyRelative("thrown").objectReferenceValue = LoadSprite(f.name + "_thrown");
+            e.FindPropertyRelative("locked").objectReferenceValue = LoadSprite(f.name + "_locked");
+        }
+        // the cover is the well floor (tokens: sprite.well.01, sampled as the floor behind the pad)
+        var well = Hex("sprite.well.01", 1f);
+        var found = new List<(HandoffHit hit, Image img, int fam)>();
+        foreach (var h in root.GetComponentsInChildren<HandoffHit>(true))
+        {
+            var img = h.GetComponent<Image>();
+            if (!img || !img.sprite) continue;
+            int fam = System.Array.FindIndex(RockerFamilies, f => img.sprite.name.StartsWith(f.name + "_"));
+            if (fam >= 0) found.Add((h, img, fam));
+        }
+        var list = so.FindProperty("rockers");
+        list.arraySize = found.Count;
+        for (int i = 0; i < found.Count; i++)
+        {
+            var (hit, img, fam) = found[i];
+            var f = RockerFamilies[fam];
+            var rt = (RectTransform)img.transform;
+            var e = list.GetArrayElementAtIndex(i);
+            e.FindPropertyRelative("image").objectReferenceValue = img;
+            e.FindPropertyRelative("family").intValue = fam;
+            e.FindPropertyRelative("action").stringValue = hit.action;
+            e.FindPropertyRelative("arg").stringValue = hit.arg ?? "";
+            e.FindPropertyRelative("cover").objectReferenceValue = RockerLayer<Image>(rt, "Pad cover", new Rect(f.pad.x, f.pad.y, f.pad.width, f.pad.height + f.travel), well);
+            e.FindPropertyRelative("oldPad").objectReferenceValue = RockerLayer<RawImage>(rt, "Pad (old)", f.pad, Color.white);
+            e.FindPropertyRelative("newPad").objectReferenceValue = RockerLayer<RawImage>(rt, "Pad (new)", f.pad, Color.white);
+            Count("built: rocker (cover + two pads)");
+        }
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    // A layer on a rocker image, placed in that image's px from its top-left; off until used.
+    static T RockerLayer<T>(RectTransform rocker, string name, Rect box, Color c) where T : Graphic
+    {
+        var rt = NewRect(name, rocker);
+        TopLeft(rt, box, Vector2.zero);
+        var g = rt.gameObject.AddComponent<T>();
+        g.color = c;
+        g.raycastTarget = false;
+        g.enabled = false;
+        return g;
     }
 
     // ---- sprites, margins, colours -------------------------------------------------------

@@ -11,6 +11,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// The standing end-of-feature playtest (owner, 2026-10-17): plays the real user flow — intro, menu
@@ -219,7 +220,9 @@ public static class PlaytestRunner
         Check("Signal starts at 0 — RUNNING SILENT", s.signal == 0f && SigNote(board) == "RUNNING SILENT", s.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
 
         // 6. Open the Power drawer from the systems rail
+        int snd = board.Sounds;
         if (!Click("drawer", "power", "PWR key")) yield break;
+        Check("A drawer key sounds the tab click (Step 40)", board.Sounds == snd + 1 && board.LastSound == "tab", (board.Sounds - snd) + " cue(s), last \"" + board.LastSound + "\"");
         yield return 0.8f;
         var drawer = GameObject.Find("State · power");
         Check("The Power drawer opens", drawer != null && drawer.activeInHierarchy, "");
@@ -230,12 +233,14 @@ public static class PlaytestRunner
         //    while paused). Setting all four first also shares the reactor evenly: it serves buses
         //    first come, first served, so a bus sent to DRAW late can find the reactor already spent.
         string[] names = { "ENG", "WEP", "SEN", "AUX" };
+        snd = board.Sounds;
         for (int i = 0; i < 4; i++)
         {
             if (!Click("power.bus", i.ToString(), names[i] + " selector")) yield break;
             Check(names[i] + " bus set to DRAW", s.buses[i].mode == HandoffBoardState.BusMode.Draw, s.buses[i].mode.ToString());
             yield return 0.3f;
         }
+        Check("Each selector sounds the switch click", board.Sounds == snd + 4 && board.LastSound == "switch", (board.Sounds - snd) + " cue(s), last \"" + board.LastSound + "\"");
         yield return 1.5f;
         Check("While paused, the buses do not fill", s.TotalFill == 0, "total fill " + s.TotalFill + " after 1.5 s paused");
         Shot("05_all_draw");
@@ -276,8 +281,17 @@ public static class PlaytestRunner
         // 12. LOAD SHED: every bus vents, the signal falls back to silent
         if (!Click("drawer", "power", "PWR key")) yield break;
         yield return 0.8f;
+        var rockers = board.GetComponent<HandoffRockers>();
+        var shed = Hit("power.shed", null).GetComponent<Image>();
+        var shed0 = shed.sprite;
         if (!Click("power.shed", null, "EMERGENCY LOAD SHED")) yield break;
         Check("LOAD SHED vents every bus", BusesAreMode(s, HandoffBoardState.BusMode.Vent), Buses(s));
+        bool slid = false;
+        float until = Time.realtimeSinceStartup + 0.6f;
+        yield return (Func<bool>)(() => (slid |= rockers.Moving("power.shed", null)) || Time.realtimeSinceStartup > until);
+        yield return (Func<bool>)(() => !rockers.Moving("power.shed", null));
+        Check("The LOAD SHED pad slides down (Step 40)", slid && shed.sprite != shed0 && shed.sprite.name.EndsWith("_thrown") && !shed.transform.Find("Pad cover").GetComponent<Image>().enabled,
+              shed0.name + " → " + shed.sprite.name + (slid ? ", slide seen, now at rest" : ", no slide seen"));
         yield return (Func<bool>)(() => s.TotalFill == 0);
         if (!Click("drawer", "sensors", "SENS key")) yield break;
         yield return (Func<bool>)(() => s.signal <= 0f);
@@ -290,14 +304,22 @@ public static class PlaytestRunner
         if (!Click("drawer", "sensors", "SENS key (close the drawer)")) yield break;
         yield return 0.6f;
         board.SetZoom(1.0);
+        int plotSounds = 0;
         if (!Click("tool", "POINT", "POINT tool")) yield break;
+        snd = board.Sounds;
         if (!PlotDrag(board, new Vector2(1100, 400), new Vector2(1100, 400), "drop a POINT")) yield break;
+        plotSounds += board.Sounds - snd;
         yield return 0.2f;
         if (!Click("tool", "RULER", "RULER tool")) yield break;
+        snd = board.Sounds;
         if (!PlotDrag(board, new Vector2(700, 700), new Vector2(820, 640), "draw a RULER")) yield break;
+        plotSounds += board.Sounds - snd;
         yield return 0.2f;
         if (!Click("tool", "COMPASS", "COMPASS tool")) yield break;
+        snd = board.Sounds;
         if (!PlotDrag(board, new Vector2(1200, 545), new Vector2(1300, 445), "draw a COMPASS")) yield break;
+        plotSounds += board.Sounds - snd;
+        Check("Drawing on the plot makes no click", plotSounds == 0, plotSounds + " cue(s)");
         yield return 0.3f;
         Check("Three marks placed (POINT, RULER, COMPASS)", s.marks.Count == 3, s.marks.Count + " marks");
         if (s.marks.Count != 3) yield break;
@@ -336,6 +358,49 @@ public static class PlaytestRunner
         yield return 0.3f;
         Check("ERASE twice clears every mark", s.marks.Count == 0, s.marks.Count + " marks left");
         Shot("12_cleared");
+        yield return 0.5f;
+
+        // 14. Press and click (Step 40). With no firing solution set, the first arming rocker is locked.
+        if (!Click("drawer", "fire control", "FIRE key")) yield break;
+        yield return 0.8f;
+        var rung = Hit("fc.flip", "0").GetComponent<Image>();
+        Check("The first arming rocker is locked (no solution yet)", rung.sprite.name.EndsWith("_locked"), rung.sprite.name);
+        snd = board.Sounds;
+        if (!Click("fc.flip", "0", "arming rocker 1 (locked)")) yield break;
+        bool nudged = false;
+        until = Time.realtimeSinceStartup + 0.6f;
+        yield return (Func<bool>)(() => (nudged |= rockers.Moving("fc.flip", "0")) || Time.realtimeSinceStartup > until);
+        Check("A locked rocker refuses: the pad nudges and the refused cue sounds", !s.sw[0] && nudged && board.LastSound == "refused" && board.Sounds == snd + 1,
+              "thrown " + s.sw[0] + ", nudge " + (nudged ? "seen" : "not seen") + ", last cue \"" + board.LastSound + "\"");
+        yield return (Func<bool>)(() => !rockers.Moving("fc.flip", "0"));
+        Check("After the nudge the rocker is back at rest, still locked", rung.sprite.name.EndsWith("_locked") && !rung.transform.Find("Pad cover").GetComponent<Image>().enabled, rung.sprite.name);
+        Shot("13_refused");
+
+        var track = (RectTransform)Hit("fc.track", null).transform;
+        var trackLamp = (RectTransform)track.parent.Find(FirstChildName(track.parent, "lamp#82 "));
+        float keyY = track.anchoredPosition.y, lampY = trackLamp.anchoredPosition.y;
+        if (!Click("fc.track", null, "TRACK (held)", up: false)) yield break;
+        Check("TRACK and its lamp drop 1 px while held", Mathf.Approximately(track.anchoredPosition.y, keyY - 1f) && Mathf.Approximately(trackLamp.anchoredPosition.y, lampY - 1f),
+              "key " + (track.anchoredPosition.y - keyY).ToString("0.##") + " px, lamp " + (trackLamp.anchoredPosition.y - lampY).ToString("0.##") + " px");
+        Shot("14_track_held");
+        yield return 0.3f;
+        if (!Click("fc.track", null, "TRACK (released)", down: false)) yield break;
+        Check("TRACK comes back up on release, with the switch click", Mathf.Approximately(track.anchoredPosition.y, keyY) && Mathf.Approximately(trackLamp.anchoredPosition.y, lampY) && board.LastSound == "switch",
+              "last cue \"" + board.LastSound + "\"");
+        yield return 0.3f;
+
+        if (!Click("drawer", "hangar", "HGR key")) yield break;
+        yield return 0.8f;
+        var recall = Hit("hangar.recall", null).GetComponent<Image>();
+        var overlay = recall.transform.Find("Recall pressed (easing)").GetComponent<Image>();
+        bool eased = false;
+        if (!Click("hangar.recall", null, "RECALL (held)", up: false)) yield break;
+        yield return (Func<bool>)(() => (eased |= overlay.enabled && overlay.color.a > 0f && overlay.color.a < 1f) && recall.sprite.name == "button_recall_pressed" && !overlay.enabled);
+        Check("RECALL eases down while held (.1 s)", eased && recall.sprite.name == "button_recall_pressed" && !overlay.enabled, recall.sprite.name + (eased ? ", ease seen" : ", no ease seen"));
+        Shot("15_recall_held");
+        if (!Click("hangar.recall", null, "RECALL (released)", down: false)) yield break;
+        yield return (Func<bool>)(() => recall.sprite.name == "button_recall_up" && !overlay.enabled);
+        Check("RECALL comes back up on release", recall.sprite.name == "button_recall_up" && !overlay.enabled, recall.sprite.name);
         yield return 1f;
     }
 
@@ -415,9 +480,23 @@ public static class PlaytestRunner
         return string.Join(", ", parts);
     }
 
+    static HandoffHit Hit(string action, string arg)
+    {
+        foreach (var h in UnityEngine.Object.FindObjectsByType<HandoffHit>(FindObjectsSortMode.None))
+            if (h.action == action && (h.arg ?? "") == (arg ?? "") && h.isActiveAndEnabled) return h;
+        return null;
+    }
+
+    static string FirstChildName(Transform parent, string prefix)
+    {
+        foreach (Transform c in parent) if (c.name.StartsWith(prefix)) return c.name;
+        return prefix;
+    }
+
     /// <summary>Click a board control where it is on screen, through the EventSystem. Fails if
-    /// the control can't be found or something else is on top of it.</summary>
-    static bool Click(string action, string arg, string label)
+    /// the control can't be found or something else is on top of it. down: false or up: false
+    /// sends only the release (up and click) or only the press, to hold a key.</summary>
+    static bool Click(string action, string arg, string label, bool down = true, bool up = true)
     {
         HandoffHit target = null;
         foreach (var h in UnityEngine.Object.FindObjectsByType<HandoffHit>(FindObjectsSortMode.None))
@@ -438,9 +517,12 @@ public static class PlaytestRunner
             return false;
         }
         ped.pointerCurrentRaycast = ped.pointerPressRaycast = hits[0];
-        ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerDownHandler);
-        ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerUpHandler);
-        ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerClickHandler);
+        if (down) ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerDownHandler);
+        if (up)
+        {
+            ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerUpHandler);
+            ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerClickHandler);
+        }
         return true;
     }
 

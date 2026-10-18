@@ -205,6 +205,8 @@ public class HandoffBoardState
     [Tune("Engineering & orders")]
     public float orderFailSeconds = 0.42f;
     public string orderFail;
+    /// <summary>Orders refused so far (Step 40: the board sounds a refusal).</summary>
+    [System.NonSerialized] public int orderRefusals;
     [System.NonSerialized] float orderFailUntil;
     [System.NonSerialized] readonly System.Collections.Generic.Dictionary<string, float> flickUntil = new System.Collections.Generic.Dictionary<string, float>();
 
@@ -572,7 +574,7 @@ public class HandoffBoardState
     {
         int cost = OrderCost(id);
         if (cost < 0) return;
-        if (auxCharge < cost || OrderBlock(id) != null) { orderFail = id; orderFailUntil = now + orderFailSeconds; }
+        if (auxCharge < cost || OrderBlock(id) != null) { orderFail = id; orderFailUntil = now + orderFailSeconds; orderRefusals++; }
         else { auxCharge = System.Math.Max(0, auxCharge - cost); ApplyOrder(id); }
         FlickBack(id, now);
     }

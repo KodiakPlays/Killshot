@@ -35,6 +35,9 @@ public class HandoffFireControlPanel : HandoffPanel
 
     [Header("02 Firing solution")]
     [SerializeField] private Image solLamp, solGlow;
+    [Tooltip("The TRACK (COMPUTE) key; it and its lamp drop while held (handoff README: push-buttons move 1 px).")]
+    [SerializeField] private RectTransform trackKey;
+    [Tune("Motion")] [SerializeField] private float trackPressPx = 1f;
     [SerializeField] private TMP_Text trackId, trackSrc, solRange, solBrg, solSpd;
     [Tooltip("The '°' run after the REL BRG value: the value now carries its own '°'.")]
     [SerializeField] private TMP_Text solBrgDegree;
@@ -74,7 +77,8 @@ public class HandoffFireControlPanel : HandoffPanel
     [SerializeField] private Color cellUnlit = new Color32(0x0E, 0x13, 0x16, 0xFF);
 
     private float knobX0, leverX0, leverV0;
-    private bool leverHeld, shotThisPull;
+    private bool leverHeld, shotThisPull, trackHeld;
+    private Vector2 trackHome, trackLampHome;
     private float capMarkX0 = float.NaN;
 
     public override bool Click(string action, string arg)
@@ -93,6 +97,7 @@ public class HandoffFireControlPanel : HandoffPanel
 
     public override bool Down(string action, string arg, Vector2 board)
     {
+        if (action == "fc.track") { PressTrack(true); return true; }
         if (action == "fc.knob") { knobX0 = board.x; return true; }
         if (action == "fc.lever") { leverHeld = true; shotThisPull = false; leverX0 = board.x; leverV0 = State.fireLever; return true; }
         return false;
@@ -120,10 +125,26 @@ public class HandoffFireControlPanel : HandoffPanel
 
     public override bool Up(string action, string arg, Vector2 board)
     {
+        if (action == "fc.track") { PressTrack(false); return true; }
         if (action != "fc.lever") return false;
         leverHeld = false;
         State.fireLever = 0f; // springs back
         return true;
+    }
+
+    // No transition: §9.1 lists none for the TRACK key, so it drops and returns at once.
+    void PressTrack(bool down)
+    {
+        if (down == trackHeld) return;
+        trackHeld = down;
+        if (down)
+        {
+            if (trackKey) trackHome = trackKey.anchoredPosition;
+            if (solLamp) trackLampHome = solLamp.rectTransform.anchoredPosition;
+        }
+        var drop = down ? new Vector2(0f, -trackPressPx) : Vector2.zero;
+        if (trackKey) trackKey.anchoredPosition = trackHome + drop;
+        if (solLamp) solLamp.rectTransform.anchoredPosition = trackLampHome + drop;
     }
 
     public override void Refresh()

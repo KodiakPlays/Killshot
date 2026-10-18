@@ -65,6 +65,9 @@ public class HandoffHangarPanel : HandoffPanel
     [SerializeField] private float capLeftPct = 2f, capTravelPct = 72f, leverTravelPx = 210f;
     [SerializeField] private Image recall, recallLamp;
     [SerializeField] private Sprite recallUp, recallPressed;
+    [Tooltip("RECALL's press eases over .1 s (UIStateSpec §9.1, template line 1294): the pressed art fades in over the up art.")]
+    [Tune("Motion")] [SerializeField] private HandoffEased recallPress = new HandoffEased(0.1f, CssEase.Ease);
+    [SerializeField] private Image recallOverlay;
 
     [Header("Colours (design sRGB)")]
     [SerializeField] private Color nominal = new Color32(0x8F, 0xC3, 0x3A, 0xFF);
@@ -79,7 +82,8 @@ public class HandoffHangarPanel : HandoffPanel
     [SerializeField] private Color lampOffSelector = new Color32(0x1B, 0x20, 0x24, 0xFF);
 
     private float leverX0, leverV0;
-    private bool leverHeld, launchedThisPull;
+    private bool leverHeld, launchedThisPull, recallHeld;
+    private System.Action<float> showRecall;
     private float bezelHomeY = float.NaN;
 
     public override bool Click(string action, string arg)
@@ -98,7 +102,7 @@ public class HandoffHangarPanel : HandoffPanel
 
     public override bool Down(string action, string arg, Vector2 board)
     {
-        if (action == "hangar.recall") { if (recall) recall.sprite = recallPressed; return true; }
+        if (action == "hangar.recall") { recallHeld = true; return true; }
         if (action != "hangar.lever") return false;
         var s = State;
         // llDown: refused unless the launch is clear and every stage is at 100%
@@ -119,7 +123,7 @@ public class HandoffHangarPanel : HandoffPanel
 
     public override bool Up(string action, string arg, Vector2 board)
     {
-        if (action == "hangar.recall") { if (recall) recall.sprite = recallUp; return true; }
+        if (action == "hangar.recall") { recallHeld = false; return true; }
         if (action != "hangar.lever") return false;
         leverHeld = false;
         State.launchLever = 0f; // springs back
@@ -142,8 +146,18 @@ public class HandoffHangarPanel : HandoffPanel
         Refresh();
     }
 
+    void ShowRecall(float k)
+    {
+        if (recall) recall.sprite = k >= 1f ? recallPressed : recallUp;
+        if (!recallOverlay) return;
+        recallOverlay.enabled = k > 0f && k < 1f;
+        var c = recallOverlay.color; c.a = k; recallOverlay.color = c;
+    }
+
     public override void Refresh()
     {
+        if (showRecall == null) showRecall = ShowRecall;
+        recallPress.Set(recallHeld ? 1f : 0f, showRecall);
         var s = State;
         var q = s.CurrentSquad;
         bool out_ = s.Launched(q);

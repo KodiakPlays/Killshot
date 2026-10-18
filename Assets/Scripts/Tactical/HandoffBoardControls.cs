@@ -45,6 +45,44 @@ public class HandoffBoardControls : MonoBehaviour
         }
     }
 
+    /// <summary>Step 40. One click cue from the prototype's playTone (References/starwolf-prototype.html):
+    /// a 10 ms rise to the volume, an exponential fall to 0.0001 at max(.03 s, length), cut 30 ms after
+    /// the length. Made as a clip on first use, and again whenever a value changes.</summary>
+    [System.Serializable]
+    public class Tone
+    {
+        [Tooltip("Pitch, Hz.")] public float hz = 440f;
+        [Tooltip("Length, s.")] public float seconds = 0.05f;
+        [Tooltip("Loudness, 0–1 (the prototype's gain).")] public float volume = 0.02f;
+        [Tooltip("Sawtooth instead of square.")] public bool saw;
+        [System.NonSerialized] private AudioClip clip;
+        [System.NonSerialized] private Vector4 made;
+
+        public Tone() { }
+        public Tone(float hz, float seconds, float volume, bool saw) { this.hz = hz; this.seconds = seconds; this.volume = volume; this.saw = saw; }
+
+        public AudioClip Clip(string name)
+        {
+            var key = new Vector4(hz, seconds, volume, saw ? 1f : 0f);
+            if (clip && key == made) return clip;
+            int rate = AudioSettings.outputSampleRate > 0 ? AudioSettings.outputSampleRate : 48000;
+            float end = Mathf.Max(0.03f, seconds), v = Mathf.Max(volume, 1e-4f);
+            int n = Mathf.Max(1, Mathf.CeilToInt((seconds + 0.03f) * rate));
+            var data = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = (float)i / rate, p = t * hz % 1f;
+                float g = t < 0.01f ? v * t / 0.01f : v * Mathf.Pow(1e-4f / v, Mathf.Min(1f, (t - 0.01f) / (end - 0.01f)));
+                data[i] = g * (saw ? 2f * p - 1f : (p < 0.5f ? 1f : -1f));
+            }
+            if (clip) Object.Destroy(clip);
+            clip = AudioClip.Create(name, n, 1, rate, false);
+            clip.SetData(data, 0);
+            made = key;
+            return clip;
+        }
+    }
+
     [Tooltip("The board's own state and rules (board-logic.js). Panels read it.")]
     [SerializeField] private HandoffBoardState state = new HandoffBoardState();
     [SerializeField] private HandoffBoardMotion motion;
@@ -87,6 +125,14 @@ public class HandoffBoardControls : MonoBehaviour
     [Header("Alarm strip — shown until acknowledged")]
     [SerializeField] private GameObject[] alarmParts;
 
+    [Header("Sound — the prototype's click cues (audioCue tab, power, auxfail)")]
+    [Tune("Sound")] [SerializeField] private Tone tabSound = new Tone(560f, 0.035f, 0.018f, false);
+    [Tune("Sound")] [SerializeField] private Tone switchSound = new Tone(310f, 0.045f, 0.022f, false);
+    [Tune("Sound")] [SerializeField] private Tone refusedSound = new Tone(150f, 0.08f, 0.025f, true);
+    [SerializeField] private AudioSource voice;
+    // the prototype's "tab" cue is a view change: the rails, the latches and the station headers
+    static readonly string[] TabActions = { "tool", "drawer", "helm", "orders", "scope" };
+
     [Header("Console — SCALE knob and grid tint")]
     [SerializeField, Range(0.1f, 1f)] private float zoom = 1f;
     [Tooltip("SCALE knob: zoom x10 per this many px of drag (UIStateSpec §8.2).")]
@@ -116,12 +162,16 @@ public class HandoffBoardControls : MonoBehaviour
     public double ZoomExact { get { return zoomExact; } }
     private double zoomExact = 1;
     public float MissionSeconds { get { return missionSeconds; } }
+    /// <summary>Click cues played so far, and the last one ("tab", "switch", "refused"). The playtest reads these.</summary>
+    public int Sounds { get; private set; }
+    public string LastSound { get; private set; }
     /// <summary>The board's second grid tint ("RED" in the design, amber here).</summary>
     public bool GridAmber { get { return grid && grid.GridTint == HandoffPlotGrid.Tint.Amber; } }
 
     private Vector2 barHome, frameHome;
     private float nextTick;
     private HandoffPanel[] panels = new HandoffPanel[0];
+    private HandoffRockers rockers;
 
     private void Start()
     {
@@ -129,6 +179,7 @@ public class HandoffBoardControls : MonoBehaviour
         barHome = selectedBar ? selectedBar.anchoredPosition : Vector2.zero;
         if (motion) motion.Changed += ShowSystems;
         panels = GetComponents<HandoffPanel>();
+        rockers = GetComponent<HandoffRockers>();
         foreach (var p in panels) p.Bind(this);
         RefreshPanels();
         PickTool(tools[0]);
@@ -175,6 +226,9 @@ public class HandoffBoardControls : MonoBehaviour
 
     public void Click(string action, string arg)
     {
+        bool refused = rockers && rockers.Refuse(action, arg); // reads the rocker as clicked, before the click changes it
+        int orderRefusals = state.orderRefusals;
+        bool owned = true;
         switch (action)
         {
             case "tool": if (arg == "ERASE") PressErase(); else PickTool(arg); RefreshPanels(); break;
@@ -187,10 +241,22 @@ public class HandoffBoardControls : MonoBehaviour
             case "ack": foreach (var p in alarmParts) if (p) p.SetActive(false); break;
             case "tint": grid.GridTint = grid.GridTint == HandoffPlotGrid.Tint.White ? HandoffPlotGrid.Tint.Amber : HandoffPlotGrid.Tint.White; ShowTint(); RefreshPanels(); break;
             default:
-                foreach (var p in panels) if (p.Click(action, arg)) break;
+                owned = false;
+                foreach (var p in panels) if (p.Click(action, arg)) { owned = true; break; }
                 RefreshPanels();
                 break;
         }
+        // a refused order throws and flicks back as the design has it; it still sounds refused (owner)
+        if (refused || state.orderRefusals != orderRefusals) Play(refusedSound, "refused");
+        else if (System.Array.IndexOf(TabActions, action) >= 0) Play(tabSound, "tab");
+        else if (owned) Play(switchSound, "switch");
+    }
+
+    void Play(Tone t, string name)
+    {
+        Sounds++;
+        LastSound = name;
+        if (voice) voice.PlayOneShot(t.Clip(name));
     }
 
     void RefreshPanels() { foreach (var p in panels) p.Refresh(); }
