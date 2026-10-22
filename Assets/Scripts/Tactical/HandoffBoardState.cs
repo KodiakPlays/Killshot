@@ -75,6 +75,8 @@ public class HandoffBoardState
                + "bearing and range above are the rounded readout values.")]
         [System.NonSerialized] public bool hasWorld;
         [System.NonSerialized] public double worldX, worldY;
+        [Tooltip("Step 48: which way the contact's bow points, degrees (from its model), for the side a slug strikes.")]
+        [System.NonSerialized] public double worldHdg;
     }
 
     [Header("Contacts — TRACKS and CLASSES (the board's fixed mock-up contacts)")]
@@ -842,18 +844,112 @@ public class HandoffBoardState
             return;
         }
         if (i > 0 && !sw[i - 1]) return;
+        if (i == 1 && !InArc) return; // ANGLE: the turret must bear (Step 48)
         if (i == 0 && (!WepReady || !Sol.set || (sys == "PD" && !loaders))) return;
         if (i == 2 && !OnBearing) return;
         if (i == 3 && wepCharge < ShotCost) return;
         sw[i] = true; fired = false;
     }
 
-    /// <summary>The lever passing 0.9 with the ladder set: rounds away, charge spent (drawWep).</summary>
+    /// <summary>The lever passing 0.9 with the ladder set: rounds away, charge spent (drawWep).
+    /// Step 48: refused below the shot's cost; firing releases ARM, one shot per arming (spec 8.4.b);
+    /// a railgun shot is a slug that flies (TickRounds); firing spikes our signal (GDD p.42).</summary>
     public void Fire()
     {
         if (!AllSet) return; // moveSlew fires on every new pull while allSet() holds; the panel's per-pull latch stops repeats (Step 33g verification)
+        if (wepCharge < ShotCost) return;
         fired = true;
         wepCharge = Mathf.Max(0f, wepCharge - ShotCost);
+        sw[3] = false;
+        shotsFired++;
+        var m = MountOf(mount);
+        if (sys == "RG" && m != null)
+        {
+            double b = (hdg + Sol.brg) * System.Math.PI / 180; // straight out on the solution's bearing (no lead yet)
+            Rounds.Add(new Round { x = ownX, y = ownY, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm });
+            shotReport = null;
+            signal = Mathf.Min(100f, signal + fireSignalSpike);
+        }
+    }
+
+    // ---- rounds in flight (Step 48, owner 2026-10-23) ------------------------------------------
+
+    [System.Serializable]
+    public class Round { public double x, y, dx, dy, travelled, maxKm; }
+    [System.Serializable]
+    public class HitRadius { public string klass; public float km; }
+
+    [System.NonSerialized] private System.Collections.Generic.List<Round> rounds;
+    public System.Collections.Generic.List<Round> Rounds => rounds ?? (rounds = new System.Collections.Generic.List<Round>());
+    [Tooltip("Railgun slug speed, km/s: the prototype's 4,800 slowed x96 like our ship. About 8 minutes to 24,300 km.")]
+    [Tune("Periscope & fire control")] public double slugSpeedKms = 50;
+    [Tooltip("A slug hits a ship it passes within this distance of, by class (the prototype's radii, km). Others: 150.")]
+    [Tune("Periscope & fire control")] public HitRadius[] hitRadii =
+    {
+        new HitRadius { klass = "FRIGATE", km = 95 }, new HitRadius { klass = "DESTROYER", km = 135 },
+        new HitRadius { klass = "CRUISER", km = 210 }, new HitRadius { klass = "CARRIER", km = 600 },
+    };
+    [Tooltip("Firing the railgun spikes our signal by this much (GDD p.42); it falls back at the usual rate.")]
+    [Tune("Power & signal")] public float fireSignalSpike = 25f;
+    /// <summary>The last shot's outcome: "HIT · TRACK 07 · STBD", "MISS", or null while none has landed.</summary>
+    [System.NonSerialized] public string shotReport;
+    [System.NonSerialized] public bool lastShotHit;
+    [System.NonSerialized] public int shotsFired, shotResults;
+
+    public float HitRadiusKm(string klass)
+    {
+        foreach (var h in hitRadii) if (h.klass == klass) return h.km;
+        return 150f;
+    }
+
+    /// <summary>Hull-fixed arcs (spec 8.7.a): the solution's bearing from our bow must lie in the mount's arc.</summary>
+    public bool InArc
+    {
+        get
+        {
+            var m = MountOf(mount);
+            if (m == null || !Sol.set) return false;
+            return AngDiff((Sol.brg % 360 + 360) % 360, m.arc) <= m.halfArc;
+        }
+    }
+
+    /// <summary>Fly every round dt mission seconds. Its whole path this tick is tested, so a fast slug
+    /// cannot skip past a ship: the first ship it passes within that ship's hit radius is hit.</summary>
+    public void TickRounds(double dt)
+    {
+        var list = Rounds;
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            var r = list[i];
+            double step = System.Math.Min(slugSpeedKms * dt, r.maxKm - r.travelled);
+            Track struck = null;
+            double first = double.MaxValue;
+            foreach (var t in tracks)
+            {
+                if (t.own || !t.hasWorld) continue;
+                double px = t.worldX - r.x, py = t.worldY - r.y;
+                double u = System.Math.Max(0, System.Math.Min(step, px * r.dx + py * r.dy)); // closest point along the path
+                double cx = px - r.dx * u, cy = py - r.dy * u, rad = HitRadiusKm(t.klass);
+                if (cx * cx + cy * cy <= rad * rad && u < first) { struck = t; first = u; }
+            }
+            if (struck != null)
+            {
+                shotReport = "HIT · " + struck.name + " · " + SideStruck(struck, r);
+                lastShotHit = true; shotResults++;
+                list.RemoveAt(i);
+                continue;
+            }
+            r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
+            if (r.travelled >= r.maxKm - 1e-6) { shotReport = "MISS"; lastShotHit = false; shotResults++; list.RemoveAt(i); }
+        }
+    }
+
+    // The side facing the shot (reference sim sideFacing): where it came from, against the ship's bow.
+    static string SideStruck(Track t, Round r)
+    {
+        double from = (System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI + 360) % 360;
+        double rel = ((from - t.worldHdg) % 360 + 360) % 360;
+        return rel < 45 || rel >= 315 ? "PROW" : rel < 135 ? "STBD" : rel < 225 ? "AFT" : "PORT";
     }
 
     public void ToggleDoors() { doorsOpen = !doorsOpen; }

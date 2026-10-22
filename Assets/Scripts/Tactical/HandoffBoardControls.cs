@@ -133,6 +133,11 @@ public class HandoffBoardControls : MonoBehaviour
     [Tune("Sound")] [SerializeField] private Tone refusedSound = new Tone(150f, 0.08f, 0.025f, true);
     [Tooltip("A new contact raises the alarm strip (the prototype's alert cue).")]
     [Tune("Sound")] [SerializeField] private Tone alertSound = new Tone(170f, 0.42f, 0.045f, true);
+    [Tooltip("The railgun fires (the prototype's railgun cue).")]
+    [Tune("Sound")] [SerializeField] private Tone railgunSound = new Tone(90f, 0.25f, 0.05f, true);
+    [Tooltip("A slug lands: a hit, or a miss at the end of its range (Step 48).")]
+    [Tune("Sound")] [SerializeField] private Tone hitSound = new Tone(680f, 0.16f, 0.035f, false);
+    [Tune("Sound")] [SerializeField] private Tone missSound = new Tone(150f, 0.08f, 0.025f, true);
     [SerializeField] private AudioSource voice;
     // the prototype's "tab" cue is a view change: the rails, the latches and the station headers
     static readonly string[] TabActions = { "tool", "drawer", "helm", "orders", "scope" };
@@ -176,6 +181,7 @@ public class HandoffBoardControls : MonoBehaviour
     private float nextTick;
     private HandoffPanel[] panels = new HandoffPanel[0];
     private HandoffRockers rockers;
+    private int shotsHeard, resultsHeard;
 
     private void Start()
     {
@@ -202,6 +208,9 @@ public class HandoffBoardControls : MonoBehaviour
         // The board's single timer (tickPower). Only the mission clock is board-local so far.
         // thrown repair and order rockers fall back after 400 ms (flickBack)
         if (state.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
+        // a shot fired (from the lever) and a shot landing (in the tick) each get their cue
+        if (state.shotsFired != shotsHeard) { shotsHeard = state.shotsFired; Play(railgunSound, "railgun"); }
+        if (state.shotResults != resultsHeard) { resultsHeard = state.shotResults; Play(state.lastShotHit ? hitSound : missSound, state.lastShotHit ? "hit" : "miss"); }
         HandoffEased.TickAll(); // control transitions (Step 33j)
         // setInterval drops ticks it missed during a stall; do the same rather than bursting
         if (Time.unscaledTime - nextTick > tickSeconds) nextTick = Time.unscaledTime;
@@ -218,6 +227,7 @@ public class HandoffBoardControls : MonoBehaviour
                 state.TickAux();
                 state.TickHelm(); // reads the engine room before a repair lands this tick, as tickPower does
                 state.TickMove(rate); // Step 41: the ship moves; each tick is `rate` mission seconds, as the clock
+                state.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
                 state.TickParty();
                 state.TickLaunch();
                 state.TickWeapons();

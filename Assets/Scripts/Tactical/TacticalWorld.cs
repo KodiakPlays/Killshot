@@ -53,6 +53,7 @@ public class TacticalWorld : MonoBehaviour
             t.hasWorld = true;
             t.worldX = c.transform.position.x;
             t.worldY = c.transform.position.y;
+            t.worldHdg = ((-c.transform.eulerAngles.z) % 360 + 360) % 360; // its bow, clockwise from north (Step 48)
             var d = new Vector2((float)(t.worldX - s.ownX), (float)(t.worldY - s.ownY));
             t.bearing = Bearing(d);
             t.rangeKm = HandoffBoardState.JsRound(d.magnitude); // the board's tracks hold whole km

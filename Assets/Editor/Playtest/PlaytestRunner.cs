@@ -616,7 +616,100 @@ public static class PlaytestRunner
         Shot("26_manual_solution");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("drawer", "fire control", "FIRE key (close)")) yield break;
+        yield return 0.5f;
+
+        // 21. Fire and hit (Step 48): aim at TRACK 07 by hand, arm, fire a slug, watch it land.
+        //     The periscope onto the contact, by its bearing label (it is still heard).
+        if (!Click("plot.look", "t07", "BRG label (periscope onto TRACK 07)")) yield break;
+        yield return 0.6f;
+        //     Weapons released: CONDITION 2 from the orders station.
+        if (!Click("orders", null, "ORDERS header")) yield break;
+        yield return 0.6f;
+        if (!Click("orders.alert", null, "CONDITION dial")) yield break;
+        Check("CONDITION 2: weapons released", s.WeaponsReleased, "alert " + s.alert);
+        if (!Click("orders", null, "ORDERS header (close)")) yield break;
+        yield return 0.6f;
+        //     Power for the guns: SEN gives its units back, WEP draws and charges.
+        if (!Click("drawer", "power", "PWR key")) yield break;
+        yield return 0.8f;
+        if (!Click("power.bus", "2", "SEN selector (STANDBY)")) yield break;
+        if (!Click("power.bus", "2", "SEN selector (VENT)")) yield break;
+        if (!Click("power.bus", "1", "WEP selector (DRAW)")) yield break;
+        yield return (Func<bool>)(() => s.WepReady && s.wepCharge >= s.ShotCost);
+        Check("WEP charged for a shot", s.WepReady && s.wepCharge >= s.ShotCost, s.wepCharge.ToString("0") + "% of " + s.ShotCost + "%");
+        //     A fresh hand-dialled solution on the periscope's bearing (one RNG step starts it).
+        if (!Click("drawer", "fire control", "FIRE key")) yield break;
+        yield return 0.6f;
+        s.sol[s.SysIndex] = new HandoffBoardState.Solution(); // stand-in: clear the old solution (the board has no clear)
+        if (!PlotDrag(board, knobAt, knobAt + new Vector2(8, 0), "turn the RNG knob (1 step)", "fc.knob")) yield break;
+        yield return 0.3f;
+        //     Whole-degree aim: dial the degree nearest the target (half a degree is ~213 km out here).
+        var brgKnob = Hit("fc.knob", "brg");
+        Vector2 brgAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(brgKnob.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
+                                         brgKnob.transform.TransformPoint(((RectTransform)brgKnob.transform).rect.center)));
+        int best = 0;
+        for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.hdg + s.Sol.brg + d) < MissKm(s, t07, s.hdg + s.Sol.brg + best)) best = d;
+        if (best != 0 && !PlotDrag(board, brgAt, brgAt + new Vector2(6 * best, 0), "turn the BRG knob to the nearest degree", "fc.knob")) yield break;
+        s.SlewTo(); // stand-in for the periscope's SLEW TO key: onto the dialled bearing
+        double predicted = MissKm(s, t07, s.hdg + s.Sol.brg);
+        bool expectHit = predicted <= s.HitRadiusKm(t07.klass);
+        Check("Turret A can't bear on it: ANGLE is out of arc", s.mount == "RGA" && !s.InArc, "REL BRG " + s.Sol.brg + "°, heading " + s.hdg + "°");
+        if (!Click("fc.mount", null, "turret selector (RG-B)")) yield break;
+        Check("Turret B bears", s.mount == "RGB" && s.InArc, "");
+        for (int i = 0; i < 4; i++) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1))) yield break; yield return 0.2f; }
+        Check("The ladder is set: LOAD, ANGLE, BEARING, ARM", s.AllSet, string.Join(",", System.Array.ConvertAll(s.sw, b => b ? "1" : "0")));
+        //     Fire at x10.
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        var lever = Hit("fc.lever", null);
+        Vector2 leverAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(lever.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
+                                           lever.transform.TransformPoint(((RectTransform)lever.transform).rect.center)));
+        s.signal = 50f; // stand-in: room for the spike to show (we are at 100% with this much power drawn)
+        float sig0 = s.signal;
+        if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever", "fc.lever")) yield break;
+        Check("The lever fires one slug and releases ARM", s.Rounds.Count == 1 && !s.sw[3], s.Rounds.Count + " in flight");
+        Check("Firing spikes our signal", Mathf.Approximately(s.signal, sig0 + s.fireSignalSpike), sig0.ToString("0") + " → " + s.signal.ToString("0"));
+        yield return 0.4f;
+        Check("The fire cue sounds", board.Sounds > 0 && (board.LastSound == "railgun" || board.LastSound == "hit"), "last cue \"" + board.LastSound + "\"");
+        //     Paused, the slug stops.
+        if (!Click("pause", null, "PAUSE key")) yield break;
+        double rx = s.Rounds.Count > 0 ? s.Rounds[0].travelled : -1;
+        yield return 0.6f;
+        Check("Paused, the slug holds still", s.Rounds.Count == 1 && s.Rounds[0].travelled == rx, (rx >= 0 ? rx.ToString("N0") + " km flown" : "none"));
+        if (!Click("pause", null, "RUN key")) yield break;
+        board.SetZoom(0.4);
+        yield return 3f;
+        Shot("27_slug_in_flight");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        board.SetZoom(1.0);
+        yield return (Func<bool>)(() => s.Rounds.Count == 0);
+        yield return (Func<bool>)(() => s.Rounds.Count == 0); // 15 s each; the flight is about 20 s at x10
+        Check("The slug lands as the aim says: " + (expectHit ? "a HIT" : "a MISS"),
+              expectHit ? s.shotReport != null && s.shotReport.StartsWith("HIT · TRACK 07 · ") : s.shotReport == "MISS",
+              "\"" + s.shotReport + "\"; the aim passes " + predicted.ToString("N0") + " km from it (hit radius " + s.HitRadiusKm(t07.klass) + " km)");
+        yield return 0.3f;
+        Check("Fire control reports it, with its cue", board.LastSound == (expectHit ? "hit" : "miss"), "last cue \"" + board.LastSound + "\"");
+        Shot("28_hit");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        //     A second shot 2° off: a miss.
+        if (!PlotDrag(board, brgAt, brgAt + new Vector2(12, 0), "turn the BRG knob (+2°)", "fc.knob")) yield break;
+        s.SlewTo(); // stand-in for the periscope's SLEW TO key: onto the new dialled bearing
+        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
+        for (int i = 0; i < 4; i++) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (again)")) yield break; yield return 0.2f; }
+        if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever (again)", "fc.lever")) yield break;
+        yield return (Func<bool>)(() => s.Rounds.Count == 0);
+        yield return (Func<bool>)(() => s.Rounds.Count == 0);
+        Check("2° off, it misses", s.shotReport == "MISS", "\"" + s.shotReport + "\"");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        if (!Click("drawer", "fire control", "FIRE key (close)")) yield break;
         yield return 1f;
+    }
+
+    // How far a straight shot from our ship on this bearing passes from a contact, km (huge if it's behind us).
+    static double MissKm(HandoffBoardState s, HandoffBoardState.Track t, double aimDeg)
+    {
+        double a = aimDeg * System.Math.PI / 180, px = t.worldX - s.ownX, py = t.worldY - s.ownY;
+        double along = px * System.Math.Sin(a) + py * System.Math.Cos(a);
+        return along < 0 ? double.MaxValue : System.Math.Abs(px * System.Math.Cos(a) - py * System.Math.Sin(a));
     }
 
     // Where two bearing lines meet (world km; bearings clockwise from north). False if near parallel.

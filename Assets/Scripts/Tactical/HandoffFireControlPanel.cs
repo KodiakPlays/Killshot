@@ -246,7 +246,7 @@ public class HandoffFireControlPanel : HandoffPanel
             var r = ladder[i];
             bool on = s.sw[i];
             bool prevOk = i == 0 || s.sw[i - 1];
-            bool gated = (i == 2 && !s.OnBearing) || (i == 3 && s.wepCharge < cost)
+            bool gated = (i == 1 && !s.InArc) || (i == 2 && !s.OnBearing) || (i == 3 && s.wepCharge < cost)
                          || (i == 0 && (!s.WepReady || !s.Sol.set || (s.sys == "PD" && !s.loaders)));
             bool open = prevOk && !gated;
             if (r.rocker) r.rocker.sprite = on ? rockerThrown : open ? rockerUp : rockerLocked;
@@ -258,7 +258,8 @@ public class HandoffFireControlPanel : HandoffPanel
                     : i == 0 && !s.WeaponsReleased ? "NOT RELEASED"
                     : i == 0 && !s.MagOk ? "MAGAZINE HIT"
                     : i == 0 && !s.WepReady ? "NO WEP BUS"
-                    : i == 3 && prevOk && s.wepCharge < cost ? "CHARGING" : "LOCKED";
+                    : i == 3 && prevOk && s.wepCharge < cost ? "CHARGING"
+                    : i == 1 && prevOk && !s.InArc ? "OUT OF ARC" : "LOCKED"; // Step 48: turn to bring the turret to bear
                 Paint(r.hint, on ? caution : open ? label : wellStencil);
             }
         }
@@ -281,7 +282,7 @@ public class HandoffFireControlPanel : HandoffPanel
         if (readyLabel)
         {
             string t;
-            if (s.fired) t = "ROUNDS AWAY";
+            if (s.fired) t = s.Rounds.Count > 0 || s.shotReport == null ? "ROUNDS AWAY" : s.shotReport; // Step 48: then HIT · … or MISS
             else if (s.AllSet) t = "SOLUTION LOCKED — MOUNT READY";
             else if (tgt == null && !manual) t = "NO TARGET DESIGNATED";
             else if (tid == null && !manual) t = "NO TRACKING ID — NOT IDENTIFIED";

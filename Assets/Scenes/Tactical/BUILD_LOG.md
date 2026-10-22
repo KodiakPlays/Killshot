@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 47 are done, plus a final QA pass.**
+**Steps 1 to 48 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -87,8 +87,9 @@ Do not run ahead. Do one step, show it, wait.
 | 45 | The bearing trail: plotting a passive contact's range | **Done** — playtest 70/70 |
 | 46 | Intercept helpers: time to reach, tracks, weapon reach | **Done** — playtest 76/76 |
 | 47 | The firing solution dialled by hand | **Done** — playtest 81/81 |
+| 48 | Fire and hit: the railgun slug | **Done** — playtest 93/93 |
 
-Steps 6 to 28 and Steps 34 to 47 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 48 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -588,7 +589,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 47, in detail
+## 6 · Steps 6 to 28, and 34 to 48, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1858,6 +1859,75 @@ solution TRACK had made; now they also start one. The layout and controls are un
 - The relative bearing is against our heading when it is dialled, as the design stores it.
   Turning afterwards moves the aim.
 
+### Step 48 — Fire and hit: the railgun slug
+
+**Owner decisions (2026-10-23).**
+
+- A railgun shot is a **slug that flies at 50 km/s**: the prototype's 4,800 slowed ×96, like our ship.
+  It takes about 8 minutes of mission time to reach TRACK 07, about 20 s at ×10.
+- It **hits** if it passes within the ship's **hit radius**, set per class from the prototype (km):
+  - frigate 95;
+  - destroyer 135;
+  - cruiser 210 (TRACK 07);
+  - carrier 600;
+  - anything else 150.
+- On a hit, **fire control reports it with the side struck**: "HIT · TRACK 07 · PORT". Otherwise
+  "MISS". Each has a sound. The slug shows on the plot as a small dot with a short trail, no label.
+  Damage comes in the damage step.
+- **Firing spikes our signal**: +25, tunable (GDD p.42). The enemy reacting to it comes with the
+  enemy AI.
+
+**From the spec, not new calls:**
+
+- one shot per arming: firing releases ARM (spec 8.4.b);
+- no shot below the charge it costs;
+- turret arcs are fixed to the hull (spec 8.7.a);
+- a slug dies at its weapon's range.
+
+**Settled by a source:** no lead in this step. The dummy doesn't move. Leading from a POINT-to-POINT
+track comes with a moving enemy.
+
+**What was built.**
+
+- `HandoffBoardState`:
+  - `Fire()` refuses below the shot cost, releases ARM, and for the railgun adds a `Round`: our
+    position, the bearing heading + BRG, and the mount's range. It spikes the signal.
+  - `TickRounds(dt)` runs every board tick for `rate` mission seconds. It tests each slug's whole
+    path that tick, so a 500 km jump at ×10 can't skip past a ship. The first ship passed within
+    its hit radius is hit.
+  - The side struck is where the slug came from, against the ship's bow: PROW, STBD, AFT or PORT
+    (reference sim `sideFacing`). The bow comes from the model's heading (`Track.worldHdg`, set by
+    `TacticalWorld`).
+  - `InArc`: the solution's bearing from our bow must lie inside the mount's arc. **The ANGLE
+    rocker now locks out of arc, with the hint "OUT OF ARC"**: turn the ship, or pick the other
+    turret. The rule is new; the switch is the design's.
+- Fire control's status line: ROUNDS AWAY while the slug flies, then the report.
+- The plot draws slugs in our own-force blue.
+- Sounds: firing plays the prototype's railgun cue (90 Hz saw). A hit is a 680 Hz tone and a miss
+  the refused buzz; those two are my choice, tunable under Sound.
+- Tuning window: slug speed, hit radii by class, the signal spike and the slug's trail length.
+
+**Checked.** Playtest 93/93 PASS, console clean (`Logs/Playtests/2026-10-23_013213/`). Weapons released at CONDITION 2 from the orders station. SEN vented
+to free power for WEP, and the gun charged. A hand-dialled solution on TRACK 07's bearing, nearest
+whole degree. Turret A was out of arc (ANGLE locked); turret B bore. All four rockers set, and the
+lever fired one slug and released ARM. Firing spiked the signal +25. Paused, the slug held still.
+The test predicts each shot from the geometry and checks the game agrees:
+
+- In run `2026-10-23_012910` the best whole-degree aim passed 192 km from TRACK 07: **"HIT · TRACK 07
+  · PORT"**, with the hit cue.
+- In run `2026-10-23_013213` the ship sat a little further off. The best aim passed 223 km away,
+  and the game said **"MISS"**, as predicted.
+- A second shot 2° off: **"MISS"** both times.
+
+**Known.**
+
+- Aiming is in whole degrees. At ~24,000 km half a degree is ~213 km, just over a cruiser's
+  hit radius, so a dead-on shot from that far may still miss. Close in for a sure shot. A finer
+  BRG step is one Tuning change away if wanted.
+- Only the railgun fires a slug. PDC and VLS still only spend charge.
+- Our own speed isn't added to the slug. There is no lead and no aim scatter.
+- With high power drawn our signal is already at 100%, so the spike has nothing to add.
+
 ---
 
 ## 7 · How to keep this log
@@ -1902,8 +1972,9 @@ order:
        ahead);
      - the RULER label shows time to reach at our speed;
      - the selected weapon's range ring shows while Fire Control is open.
-     Step 47, the solution dialled by hand, is done. **Next: fire, then hit.** Decide the hit rule
-     (how close the dialled solution must be) and the target's course for leading.
+     Step 47, the solution dialled by hand, and Step 48, fire and hit, are done. Next: damage
+     (hull sides and compartments), lead from a POINT-to-POINT track once the enemy moves, and the
+     enemy itself (`FTUE_PLAN.md`).
    - **Fire-control step:** show the PDC arcs and their label once the PDCs are activated.
 
 **Items 5 and 7 of the wiring order are planned.** The first mission, the XO walkthrough (FTUE), the
