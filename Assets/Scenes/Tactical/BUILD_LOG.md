@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 43 are done, plus a final QA pass.**
+**Steps 1 to 44 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -83,8 +83,9 @@ Do not run ahead. Do one step, show it, wait.
 | 41 | The helm: our ship moves, and the plot pans | **Done** — playtest 57/57 |
 | 42 | The sensor circle: DRADIS's hearing range around our ship | **Done** — playtest 60/60 |
 | 43 | The radar sweep | **Done** — playtest 62/62 |
+| 44 | Hearing the enemy: bearing lines, the alert strip, the tracked blink | **Done** — playtest 68/68 |
 
-Steps 6 to 28 and Steps 34 to 43 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 44 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -584,7 +585,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 43, in detail
+## 6 · Steps 6 to 28, and 34 to 44, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1703,6 +1704,48 @@ are red at 75% and 11%. The export only had a frozen gradient stand-in for it (`
 **Known.** On the amber grid the tail uses the edge's colour (rgb 255, 150, 130). The design's tail
 there is a deeper red (224, 75, 60), at 11%.
 
+### Step 44 — Hearing the enemy: bearing lines, the alert strip, the tracked blink
+
+**Owner direction.** Alerts appear only when there is a real alert (2026-10-18). This step also
+delivers Power P2, which was parked here: hearing on the plot.
+
+**What was built.**
+
+- **Bearing lines.** Every contact DRADIS hears but hasn't identified gets a line fading out from
+  our ship along its bearing, to the sensor circle's edge, with a "BRG 047" label. A passive
+  contact gives a bearing only, no range.
+  - Lines and labels are data white at 60%. While the periscope is on the contact, the line is at
+    100% and the label turns amber, as the design's `passives` do.
+  - Clicking the label still swings the periscope onto the contact (`plot.look`).
+  - The label sits 200 px out along the line, or at the circle if that is nearer (tunable). The
+    line is a new `fade` kind in `HandoffMarksGraphic`, on a `Passive bearings (drawn)` layer.
+  - The export's only passive label (BRG 149, for the removed CONTACT 22) is now the template
+    for every heard contact's label.
+- **The alert strip.** The board counts each contact once, the first time DRADIS hears it or a
+  scan identifies it (`HandoffBoardState.NoteNewContacts`, run every tick). A new one raises the
+  strip and sets its count: "1 NEW CONTACT SINCE COMMIT", plural for more. It also plays the
+  prototype's alert tone, 170 Hz sawtooth for 0.42 s, tunable under Sound. Clicking the strip
+  acknowledges it and clears the count. The design raised the strip once at load and never
+  again; this trigger is ours, after the owner's direction.
+- **The tracked blink.** While our signal is at or above the tracked line (45%), our ship blinks:
+  full for the first half of each 1.1 s, then at 20% (the design's `bd-blink` on its own-ship
+  glyph).
+
+**Checked.** Playtest 68/68 PASS, console clean (`Logs/Playtests/2026-10-23_000923/`).
+
+- At load nothing is heard and the strip is quiet.
+- With SEN powered and gain 2, the hearing range is 26,000 km and DRADIS hears TRACK 07 at
+  24,127 km.
+- Its line and label read "BRG 047".
+- The strip raised "1 NEW CONTACT SINCE COMMIT" with the alert tone. Clicking it cleared it.
+- At 100% signal our ship blinked.
+
+**Known.**
+
+- The playtest sets the sensor gain directly; the gain fader is a drag it doesn't do yet.
+- The enemy noticing us (Power P3) is still to come. It is the first-mission plan's step B
+  (`FTUE_PLAN.md`).
+
 ---
 
 ## 7 · How to keep this log
@@ -1738,8 +1781,9 @@ order:
 4. **The helm.** **Done in Step 41.**
 5. **Next:** back into the sequence: sensors, then periscope and fire control against the
    dummy, then fire, then hit.
-   - **Sensors step:** give the alarm strip a real trigger (a new contact identified). The sensor
-     circle (Step 42) and the radar sweep (Step 43) are done.
+   - **Sensors step:** the sensor circle (Step 42), the radar sweep (Step 43), and hearing, with
+     bearing lines, the alarm strip trigger and the tracked blink (Step 44), are done. Still to do:
+     the enemy noticing us (P3, `FTUE_PLAN.md` step B).
    - **Fire-control step:** show the PDC arcs and their label once the PDCs are activated.
 
 **Items 5 and 7 of the wiring order are planned.** The first mission, the XO walkthrough (FTUE), the

@@ -489,6 +489,36 @@ public static class PlaytestRunner
         Shot("21_dradis_on_again");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         board.SetZoom(1.0);
+        yield return 0.5f;
+
+        // 17. Hearing (Step 44): power SEN, raise the gain, and TRACK 07 comes into hearing range.
+        var alarmWords = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/" + FirstChildName(GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip"), "text#14 ")).GetComponent<TMPro.TMP_Text>();
+        Check("Nothing heard yet: the alarm strip is quiet", s.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, s.newContacts + " new");
+        if (!Click("drawer", "power", "PWR key")) yield break;
+        yield return 0.8f;
+        if (!Click("power.bus", "2", "SEN selector")) yield break;
+        yield return (Func<bool>)(() => s.GainCap >= 2);
+        s.senBoost = 2; // stand-in: the gain fader is a drag
+        var t07 = s.TrackOf("t07");
+        yield return (Func<bool>)(() => s.Heard(t07) && s.newContacts > 0);
+        Check("At gain 2 DRADIS hears TRACK 07", s.Heard(t07), "range " + t07.rangeKm.ToString("N0") + " km, hearing range " + s.PassiveRangeKm.ToString("N0") + " km");
+        var pl = GameObject.Find("Passive label 0");
+        string plText = pl ? pl.GetComponent<TMPro.TMP_Text>().text : "none";
+        Check("A bearing line and label point at it", pl && plText == "BRG " + t07.bearing.ToString("000"), "\"" + plText + "\"");
+        Check("The alarm strip raises: 1 NEW CONTACT, with the alert tone", s.newContacts == 1 && alarmWords.gameObject.activeInHierarchy && alarmWords.text == "NEW CONTACT SINCE COMMIT",
+              "\"" + alarmWords.text + "\", last cue \"" + board.LastSound + "\"");
+        Shot("22_heard");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        if (!Click("ack", null, "alarm strip (acknowledge)")) yield break;
+        Check("Clicking the strip acknowledges it", s.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, "");
+
+        //     Loud enough to be tracked: our ship blinks (bd-blink).
+        yield return (Func<bool>)(() => s.signal >= s.signalTrackedAt);
+        var shipRaw = GameObject.Find("Own ship (3D view)").GetComponent<UnityEngine.UI.RawImage>();
+        bool bright = false, dim = false;
+        float blinkUntil = Time.realtimeSinceStartup + 1.3f;
+        yield return (Func<bool>)(() => { if (shipRaw.color.a > 0.9f) bright = true; else if (shipRaw.color.a < 0.3f) dim = true; return Time.realtimeSinceStartup > blinkUntil; });
+        Check("Tracked, our ship blinks", bright && dim, "signal " + s.signal.ToString("0") + "%");
         yield return 1f;
     }
 

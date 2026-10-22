@@ -561,6 +561,8 @@ public static class HandoffBoardBuilder
             Named(root, "AlarmStrip", "glow · lamp#1 ").gameObject, Named(root, "AlarmStrip", "text#14 ").gameObject,
             Named(root, "AlarmStrip", "text#15 ").gameObject);
         Hit(Named(root, "AlarmStrip", "sprite#18 "), "ack", null);
+        so.FindProperty("alarmCount").objectReferenceValue = Tmp(root, "AlarmStrip", "text#15 ");
+        so.FindProperty("alarmText").objectReferenceValue = Tmp(root, "AlarmStrip", "text#14 ");
         // Owner, 2026-10-18: the strip shows only for a real alert; the board loads quiet (already acked).
         // ponytail: hidden at build; a real alert needs a show path (sensors step, new contact identified)
         var alarm = so.FindProperty("alarmParts");
@@ -1493,6 +1495,14 @@ public static class HandoffBoardBuilder
         ringG.raycastTarget = false;
         so.FindProperty("sensorRing").objectReferenceValue = ringG;
 
+        // Step 44: passive bearing lines, fading out from our ship toward heard contacts
+        var pasRt = layer("Passive bearings (drawn)");
+        pasRt.gameObject.AddComponent<CanvasRenderer>();
+        var pasG = pasRt.gameObject.AddComponent<HandoffMarksGraphic>();
+        pasG.color = Hex("ink.data", 1f);
+        pasG.raycastTarget = false;
+        so.FindProperty("passiveLines").objectReferenceValue = pasG;
+
         // Step 43: the radar sweep, turning inside the sensor circle (the panel sizes, places and turns it)
         var sweepRt = layer("Sensor sweep (drawn)");
         sweepRt.pivot = new Vector2(0.5f, 0.5f);
@@ -1553,13 +1563,12 @@ public static class HandoffBoardBuilder
         so.FindProperty("labelTemplate").objectReferenceValue = labelTemplate(layer("Mark labels"), "Mark label (template)");
         so.FindProperty("hitLayer").objectReferenceValue = layer("Mark hits (ERASE)");
 
-        // the passive bearing label in the export (BRG 149 = CONTACT 22) puts the scope on it
-        var pas = so.FindProperty("passives");
-        pas.arraySize = 1;
+        // the passive bearing label in the export (BRG 149, CONTACT 22) puts the scope on its contact.
+        // Step 44: it is the template for every heard contact's label (the panel sets the key)
+        so.FindProperty("passives").arraySize = 0;
         var brg = Named(root, "Plot/Mockup", "text#39 ");
-        pas.GetArrayElementAtIndex(0).FindPropertyRelative("key").stringValue = "c22";
-        pas.GetArrayElementAtIndex(0).FindPropertyRelative("label").objectReferenceValue = brg.GetComponent<TMPro.TMP_Text>();
-        Hit(brg, "plot.look", "c22");
+        Hit(brg, "plot.look", null);
+        so.FindProperty("passiveLabelTemplate").objectReferenceValue = brg.GetComponent<TMPro.TMP_Text>();
         Count("built: plot marks layers");
         so.ApplyModifiedPropertiesWithoutUndo();
     }

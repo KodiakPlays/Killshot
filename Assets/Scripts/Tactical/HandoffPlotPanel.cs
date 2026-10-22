@@ -61,6 +61,17 @@ public class HandoffPlotPanel : HandoffPanel
     /// <summary>The sensor circle's radius now, km (it eases), or 0 while DRADIS is off.</summary>
     public float SensorRingKm => State != null && State.dradis ? sensorKm : 0f;
 
+    [Header("Passive bearings (Step 44): contacts DRADIS hears but has not identified")]
+    [SerializeField] private HandoffMarksGraphic passiveLines;
+    [Tooltip("A hidden plot label carrying a plot.look hit (the export's text #39), cloned per heard contact.")]
+    [SerializeField] private TMP_Text passiveLabelTemplate;
+    [Tooltip("The bearing line runs out to the sensor circle; its label sits this far out, or at the circle if nearer.")]
+    [Tune("Sensors")] [SerializeField] private float passiveLabelPx = 200f;
+    private readonly List<TMP_Text> passiveLabels = new List<TMP_Text>();
+
+    [Tooltip("bd-blink: our ship blinks while we are loud enough to be tracked (UIStateSpec §9.2, 1.1 s, steps).")]
+    [SerializeField] private float trackedBlinkSeconds = 1.1f, trackedBlinkLow = 0.2f;
+
     [Header("Contacts on the plot (Step 34): identified hostiles at their true range and bearing")]
     [Tooltip("Stand-in art until Claude Design's contact glyphs arrive (CLAUDE_DESIGN_NEEDS 1.2).")]
     [SerializeField] private HandoffMarksGraphic contactMarks;
@@ -135,6 +146,10 @@ public class HandoffPlotPanel : HandoffPanel
     private void Update()
     {
         if (Controls == null) return;
+        if (ownShipImage && ownShipImage.color.a != ShipAlpha())
+        {
+            var k = ownShipImage.color; k.a = ShipAlpha(); ownShipImage.color = k;
+        }
         if (sweep && State.dradis && !Controls.Paused)
         {
             float turn = Mathf.Max(0.5f, sweepSecondsBase - State.senBoost * sweepSecondsPerGain);
@@ -264,7 +279,9 @@ public class HandoffPlotPanel : HandoffPanel
             if (!shipView) shipView = FindAnyObjectByType<ShipView>();
             ownShipImage.texture = shipView ? shipView.Texture : null;
             ownShipImage.enabled = shipView && shipView.Texture;
-            ownShipImage.color = ownShipColor.gamma; // the board canvas linearises vertex colours; pre-encode
+            var shipInk = ownShipColor.gamma; // the board canvas linearises vertex colours; pre-encode
+            shipInk.a = ShipAlpha();
+            ownShipImage.color = shipInk;
             float shipPx = Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx);
             float side = shipPx / (shipView ? shipView.ShipFill : 1f);
             ownShipImage.rectTransform.sizeDelta = new Vector2(side, side);
@@ -302,8 +319,32 @@ public class HandoffPlotPanel : HandoffPanel
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
         if (contactMarks) contactMarks.Set(dots);
 
-        // passive bearing labels: amber while the scope is on the contact
+        // passive bearings: a line fading out from our ship toward each contact DRADIS hears but has not
+        // identified (bearing only, no range), with its bearing; amber while the scope is on it (passives)
         bool down = Controls.Motion && Controls.Motion.ScopeDown;
+        var bearings = new List<HandoffMarksGraphic.Shape>();
+        int np = 0;
+        Vector2 ownAt = Screen(s.ownX, s.ownY);
+        float reach = (float)(s.PassiveRangeKm / KmPerPx * Controls.ZoomExact);
+        foreach (var t in s.tracks)
+        {
+            if (t.own || !s.Heard(t) || s.identified.Contains(t.key)) continue;
+            double rad = t.bearing * System.Math.PI / 180.0;
+            var dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad)); // board y is down
+            bool on = s.ScopeOn(t, down);
+            bearings.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = ownAt, b = ownAt + dir * reach, alpha = on ? 1f : 0.6f });
+            var pl = PassiveLabel(np++);
+            pl.text = "BRG " + t.bearing.ToString("000");
+            pl.alpha = on ? 1f : 0.6f;
+            Paint(pl, on ? caution : Controls.GridAmber ? alarm : data);
+            Place(pl.rectTransform, ownAt + dir * Mathf.Min(reach, passiveLabelPx), dir.x < 0f ? 1f : 0f);
+            var look = pl.GetComponent<HandoffHit>();
+            if (look) look.arg = t.key;
+        }
+        for (int i = np; i < passiveLabels.Count; i++) passiveLabels[i].gameObject.SetActive(false);
+        if (passiveLines) { Paint(passiveLines, Controls.GridAmber ? alarm : data); passiveLines.Set(bearings); }
+
+        // the export's own passive labels (none since Step 44; kept for a configured one)
         foreach (var p in passives)
         {
             var t = s.TrackOf(p.key);
@@ -339,6 +380,26 @@ public class HandoffPlotPanel : HandoffPanel
         float d = 2f * (float)(sensorKm / KmPerPx * Controls.ZoomExact);
         if (sweep.rectTransform.sizeDelta != new Vector2(d, d)) sweep.rectTransform.sizeDelta = new Vector2(d, d);
         Put(sweep.rectTransform, Screen(s.ownX, s.ownY), -sweepDeg);
+    }
+
+    // bd-blink while tracked: full for the first half of each 1.1 s, then dim
+    float ShipAlpha()
+    {
+        var s = State;
+        if (s == null || s.signal < s.signalTrackedAt) return 1f;
+        return Time.unscaledTime % trackedBlinkSeconds < trackedBlinkSeconds * 0.5f ? 1f : trackedBlinkLow;
+    }
+
+    TMP_Text PassiveLabel(int i)
+    {
+        while (passiveLabels.Count <= i)
+        {
+            var t = Instantiate(passiveLabelTemplate, passiveLabelTemplate.transform.parent);
+            t.name = "Passive label " + passiveLabels.Count;
+            passiveLabels.Add(t);
+        }
+        passiveLabels[i].gameObject.SetActive(true);
+        return passiveLabels[i];
     }
 
     TMP_Text ContactLabel(int i)

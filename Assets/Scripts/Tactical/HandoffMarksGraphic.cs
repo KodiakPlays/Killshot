@@ -46,19 +46,23 @@ public class HandoffMarksGraphic : MaskableGraphic
             // Step 42: the sensor circle — a solid ring, and the faint fill inside it
             else if (s.kind == "circle") Ring(s.a, (s.b - s.a).magnitude, c, false);
             else if (s.kind == "disc") Dot(s.a, (s.b - s.a).magnitude, c);
+            // Step 44: a passive bearing, fading out from our ship
+            else if (s.kind == "fade") { var end = c; end.a = 0f; Line(s.a, s.b, c, end); }
             else { Line(s.a, s.b, c); Ring(s.a, (s.b - s.a).magnitude, c); }
         }
     }
 
-    void Line(Vector2 a, Vector2 b, Color c)
+    void Line(Vector2 a, Vector2 b, Color c) => Line(a, b, c, c);
+
+    void Line(Vector2 a, Vector2 b, Color c, Color cb)
     {
         Vector2 p = L(a), q = L(b);
         if ((q - p).sqrMagnitude < 1e-6f) return;
         Vector2 n = (q - p).normalized;
         n = new Vector2(-n.y, n.x) * (lineWidth / 2f);
         int i = vh.currentVertCount;
-        vh.AddVert(p + n, c, Vector2.zero); vh.AddVert(q + n, c, Vector2.zero);
-        vh.AddVert(q - n, c, Vector2.zero); vh.AddVert(p - n, c, Vector2.zero);
+        vh.AddVert(p + n, c, Vector2.zero); vh.AddVert(q + n, cb, Vector2.zero);
+        vh.AddVert(q - n, cb, Vector2.zero); vh.AddVert(p - n, c, Vector2.zero);
         vh.AddTriangle(i, i + 1, i + 2); vh.AddTriangle(i, i + 2, i + 3);
     }
 

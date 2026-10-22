@@ -1030,6 +1030,25 @@ public class HandoffBoardState
 
     // ---- the tick — sensors part (reads the fill this tick committed) --------------------
 
+    /// <summary>Contacts first heard or identified since the alarm strip was last acknowledged
+    /// (Step 44; owner 2026-10-18: an alert shows only for a real alert). The design raised the strip
+    /// once at load and never again.</summary>
+    [System.NonSerialized] public int newContacts;
+    [System.NonSerialized] private System.Collections.Generic.HashSet<string> seenContacts;
+
+    /// <summary>Count each contact once: the first time DRADIS hears it or a scan identifies it.
+    /// Returns true when there is a new one.</summary>
+    public bool NoteNewContacts()
+    {
+        if (seenContacts == null) seenContacts = new System.Collections.Generic.HashSet<string>();
+        int before = newContacts;
+        foreach (var t in tracks)
+            if (!t.own && (Heard(t) || identified.Contains(t.key)) && seenContacts.Add(t.key)) newContacts++;
+        return newContacts > before;
+    }
+
+    public void AckContacts() { newContacts = 0; }
+
     public void TickSensors()
     {
         int senCap = Mathf.Max(1, BusUnits("sen"));

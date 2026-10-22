@@ -122,13 +122,17 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private Sprite rateKeyOn, rateKeyOff;
     [SerializeField] private Color rateInkOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), rateInkOff = new Color32(0x8A, 0x95, 0x9D, 0xFF);
 
-    [Header("Alarm strip — shown until acknowledged")]
+    [Header("Alarm strip — new contacts since the last acknowledgement (Step 44)")]
     [SerializeField] private GameObject[] alarmParts;
+    [Tooltip("The strip's count (\"3\") and its words (\"NEW CONTACTS SINCE COMMIT\").")]
+    [SerializeField] private TMP_Text alarmCount, alarmText;
 
     [Header("Sound — the prototype's click cues (audioCue tab, power, auxfail)")]
     [Tune("Sound")] [SerializeField] private Tone tabSound = new Tone(560f, 0.035f, 0.018f, false);
     [Tune("Sound")] [SerializeField] private Tone switchSound = new Tone(310f, 0.045f, 0.022f, false);
     [Tune("Sound")] [SerializeField] private Tone refusedSound = new Tone(150f, 0.08f, 0.025f, true);
+    [Tooltip("A new contact raises the alarm strip (the prototype's alert cue).")]
+    [Tune("Sound")] [SerializeField] private Tone alertSound = new Tone(170f, 0.42f, 0.045f, true);
     [SerializeField] private AudioSource voice;
     // the prototype's "tab" cue is a view change: the rails, the latches and the station headers
     static readonly string[] TabActions = { "tool", "drawer", "helm", "orders", "scope" };
@@ -187,6 +191,7 @@ public class HandoffBoardControls : MonoBehaviour
         ShowSystems();
         SetZoom(zoom);
         ShowTint();
+        ShowAlarm();
         nextTick = Time.unscaledTime + tickSeconds;
     }
 
@@ -218,6 +223,7 @@ public class HandoffBoardControls : MonoBehaviour
                 state.TickWeapons();
                 state.TickSensors();
                 if (Ticked != null) Ticked();
+                if (state.NoteNewContacts()) { ShowAlarm(); Play(alertSound, "alert"); }
             }
             RefreshPanels();
         }
@@ -239,7 +245,7 @@ public class HandoffBoardControls : MonoBehaviour
             case "scope": motion.ToggleScope(); RefreshPanels(); break;
             case "pause": paused = !paused; ShowTime(); break;
             case "rate": rate = float.Parse(arg, System.Globalization.CultureInfo.InvariantCulture); paused = false; ShowTime(); break;
-            case "ack": foreach (var p in alarmParts) if (p) p.SetActive(false); break;
+            case "ack": state.AckContacts(); ShowAlarm(); break;
             case "tint": grid.GridTint = grid.GridTint == HandoffPlotGrid.Tint.White ? HandoffPlotGrid.Tint.Amber : HandoffPlotGrid.Tint.White; ShowTint(); RefreshPanels(); break;
             default:
                 owned = false;
@@ -327,6 +333,17 @@ public class HandoffBoardControls : MonoBehaviour
     {
         if (Tool == "ERASE") { state.marks.Clear(); PickTool(tools[0]); }
         else PickTool("ERASE");
+    }
+
+    // ---- alarm strip ---------------------------------------------------------------------
+
+    void ShowAlarm()
+    {
+        bool on = state.newContacts > 0;
+        foreach (var p in alarmParts) if (p && p.activeSelf != on) p.SetActive(on);
+        if (!on) return;
+        if (alarmCount) alarmCount.text = state.newContacts.ToString();
+        if (alarmText) alarmText.text = state.newContacts == 1 ? "NEW CONTACT SINCE COMMIT" : "NEW CONTACTS SINCE COMMIT";
     }
 
     // ---- systems rail --------------------------------------------------------------------
