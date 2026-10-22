@@ -205,8 +205,9 @@ public class HandoffFireControlPanel : HandoffPanel
         string tid = s.TrackIdFor();
         Color solInk = sol.set ? nominal : tid != null ? caution : lampOffSelector;
         Paint(solLamp, solInk); Paint(solGlow, solInk); Show(solGlow, sol.set || tid != null);
-        if (trackId) { trackId.text = tid ?? "NO TRACK"; Paint(trackId, tid != null ? data : stencil); }
-        if (trackSrc) trackSrc.text = tid != null ? "FROM SENSOR LOCK" : "NOT IDENTIFIED ON SENSORS";
+        bool manual = sol.set && sol.manual; // Step 47: dialled by hand from the plot
+        if (trackId) { trackId.text = manual ? "MANUAL" : tid ?? "NO TRACK"; Paint(trackId, manual || tid != null ? data : stencil); }
+        if (trackSrc) trackSrc.text = manual ? "DIALLED BY HAND" : tid != null ? "FROM SENSOR LOCK" : "NOT IDENTIFIED ON SENSORS";
         Color valInk = sol.set ? data : wellStencil;
         if (solRange) { solRange.text = sol.set ? sol.rangeKm.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) : "—"; Paint(solRange, valInk); }
         if (solBrg) { solBrg.text = (sol.set ? (sol.brg > 0 ? "+" : "") + sol.brg : "—") + "°"; Paint(solBrg, valInk); }
@@ -282,8 +283,8 @@ public class HandoffFireControlPanel : HandoffPanel
             string t;
             if (s.fired) t = "ROUNDS AWAY";
             else if (s.AllSet) t = "SOLUTION LOCKED — MOUNT READY";
-            else if (tgt == null) t = "NO TARGET DESIGNATED";
-            else if (tid == null) t = "NO TRACKING ID — NOT IDENTIFIED";
+            else if (tgt == null && !manual) t = "NO TARGET DESIGNATED";
+            else if (tid == null && !manual) t = "NO TRACKING ID — NOT IDENTIFIED";
             else if (!s.BriOk) t = "BRIDGE DAMAGED — PLOT COMPUTER OFFLINE";
             else if (!sol.set) t = "NO FIRING SOLUTION";
             else if (!s.WeaponsReleased) t = "WEAPONS NOT RELEASED — CONDITION 2 REQUIRED";

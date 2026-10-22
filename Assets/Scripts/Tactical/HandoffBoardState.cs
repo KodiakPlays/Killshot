@@ -265,7 +265,14 @@ public class HandoffBoardState
     public class WeaponSystem { public string id, label; public string[] mounts; public float shot; }
 
     [System.Serializable]
-    public class Solution { public bool set; public float rangeKm; public int brg; public float spd; }
+    public class Solution
+    {
+        public bool set; public float rangeKm; public int brg; public float spd;
+        [Tooltip("Step 47: dialled by hand from the plot, not by TRACK. It aims at a point in space, not a locked contact.")]
+        public bool manual;
+    }
+    [Tooltip("A knob turned with no solution starts one here, on the periscope's bearing at speed 0 (owner 2026-10-23).")]
+    [Tune("Periscope & fire control")] public float manualStartRangeKm = 10000f;
 
     [Header("Fire control — MOUNTS, SYSTEMS, WARHEADS, SWITCHES and the board's initial state")]
     public Mount[] mounts =
@@ -717,7 +724,15 @@ public class HandoffBoardState
     }
     /// <summary>offBearing: target bearing minus periscope bearing, wrapped to ±180.</summary>
     public double? OffBearing() { var t = TrackOf(target); if (t == null) return null; return ((t.bearing - scopeBrg + 540) % 360) - 180; }
-    public bool OnBearing { get { var o = OffBearing(); return o.HasValue && System.Math.Abs(o.Value) <= onBearingDeg; } }
+    public bool OnBearing
+    {
+        get
+        {
+            // a hand-dialled solution aims at a point: BEARING wants the periscope on the dialled bearing
+            if (Sol.set && Sol.manual) return AngDiffD(hdg + Sol.brg, scopeBrg) <= onBearingDeg;
+            var o = OffBearing(); return o.HasValue && System.Math.Abs(o.Value) <= onBearingDeg;
+        }
+    }
 
     // ---- periscope -----------------------------------------------------------------------
 
@@ -744,14 +759,18 @@ public class HandoffBoardState
     }
     public void EndSlew() { slewing = false; slewDx = 0; }
     /// <summary>slewTo: jump to the target's bearing; the switches are left as they are.</summary>
-    public void SlewTo() { var t = TrackOf(target); if (t == null) return; scopeBrg = t.bearing; slewing = false; slewDx = 0; }
+    public void SlewTo()
+    {
+        if (Sol.set && Sol.manual) { scopeBrg = ((hdg + Sol.brg) % 360 + 360) % 360; slewing = false; slewDx = 0; return; } // onto the dialled bearing
+        var t = TrackOf(target); if (t == null) return; scopeBrg = t.bearing; slewing = false; slewDx = 0;
+    }
     /// <summary>magDown: zoom = start + dx / 40, 1..8, rounded to 0.1.</summary>
     public void SetZoom(double z0, double dx) => scopeZoom = JsRound(System.Math.Max(1, System.Math.Min(8, z0 + dx / magPxPerX)) * 10) / 10.0;
     public bool AllSet
     {
         get
         {
-            if (TrackOf(target) == null || !Sol.set) return false;
+            if (!Sol.set || (!Sol.manual && TrackOf(target) == null)) return false; // a hand-dialled shot needs no locked contact
             if (sys == "PD" && !loaders) return false;
             foreach (var b in sw) if (!b) return false;
             return true;
@@ -798,7 +817,14 @@ public class HandoffBoardState
     public void NudgeSol(string field, int d)
     {
         var cur = Sol;
-        if (!cur.set) return;
+        if (!cur.set)
+        {
+            // Step 47 (owner 2026-10-23): a knob starts a hand-dialled solution, from the plot
+            cur.set = true; cur.manual = true;
+            cur.rangeKm = manualStartRangeKm;
+            cur.brg = (JsRound(scopeBrg) - hdg + 540) % 360 - 180; // relative, as TRACK stores it
+            cur.spd = 0f;
+        }
         if (field == "rng") cur.rangeKm = Mathf.Max(0f, cur.rangeKm + d * 100f);
         if (field == "brg") cur.brg = Mathf.Max(-180, Mathf.Min(180, cur.brg + d));
         if (field == "spd") cur.spd = Mathf.Max(0f, (float)System.Math.Round(cur.spd + d * 0.05, 2, System.MidpointRounding.AwayFromZero));

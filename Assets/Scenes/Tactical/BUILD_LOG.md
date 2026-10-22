@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 46 are done, plus a final QA pass.**
+**Steps 1 to 47 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -86,8 +86,9 @@ Do not run ahead. Do one step, show it, wait.
 | 44 | Hearing the enemy: bearing lines, the alert strip, the tracked blink | **Done** — playtest 68/68 |
 | 45 | The bearing trail: plotting a passive contact's range | **Done** — playtest 70/70 |
 | 46 | Intercept helpers: time to reach, tracks, weapon reach | **Done** — playtest 76/76 |
+| 47 | The firing solution dialled by hand | **Done** — playtest 81/81 |
 
-Steps 6 to 28 and Steps 34 to 46 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 47 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -587,7 +588,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 46, in detail
+## 6 · Steps 6 to 28, and 34 to 47, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1814,6 +1815,49 @@ or turn across the bearing to get a clear cross. Bearings are exact: no sensor e
 
 **Known.** With POINTs close together, the track label can overlap the POINTs' time labels.
 
+### Step 47 — The firing solution dialled by hand
+
+**Owner decisions (2026-10-23).**
+
+- The player dials the firing solution by hand from the plot. TRACK only works after an active
+  scan identifies the target, as the design already had it.
+- A hand-dialled solution aims at **a point in space**, not a locked contact. You can shoot a
+  contact you have only heard.
+- With no solution, turning a knob starts one: on the periscope's bearing, at 10,000 km, speed 0.
+- How close a solution must be to hit is decided in the fire step.
+
+This changes the design's fire control in one place. Its RNG / BRG / SPD knobs only adjusted a
+solution TRACK had made; now they also start one. The layout and controls are unchanged.
+
+**What was built.**
+
+- `Solution.manual`. `NudgeSol` with no solution starts one: `manualStartRangeKm` (10,000,
+  tunable), relative bearing from the periscope, speed 0. Then it applies the turn.
+- For a manual solution:
+  - BEARING (`OnBearing`) wants the periscope on the dialled bearing (heading + relative);
+  - SLEW TO puts it there;
+  - `AllSet` doesn't need a locked contact.
+  TRACK solutions behave exactly as before.
+- The readout shows "MANUAL / DIALLED BY HAND". The status line skips "NO TARGET DESIGNATED" and
+  "NO TRACKING ID" for a manual solution. Only the words change.
+
+**Checked.** Playtest 81/81 PASS, console clean (`Logs/Playtests/2026-10-23_011103/`).
+
+- TRACK refused a heard-only contact.
+- Ten steps of the RNG knob started a manual solution at 11,000 km on the periscope's bearing
+  (REL −111°), at speed 0. The readout said MANUAL.
+- BEARING was off 10° away from the dialled bearing. SLEW TO put the periscope on it, and it read
+  ON BEARING.
+
+**Known.**
+
+- The knobs step 100 km per 8 px of drag, the design's fine-tune pitch. Dialling a long range from
+  10,000 km takes long drags; a coarse mode may be wanted.
+- The solution holds range, relative bearing and speed but no course. Leading a moving target
+  needs one. That belongs to the fire step.
+- The relative bearing is against our heading when it is dialled, as the design stores it.
+  Turning afterwards moves the aim.
+
 ---
 
 ## 7 · How to keep this log
@@ -1858,8 +1902,8 @@ order:
        ahead);
      - the RULER label shows time to reach at our speed;
      - the selected weapon's range ring shows while Fire Control is open.
-     Then Step 47, the solution dialled by hand. That changes the design's fire control (its knobs
-     only adjust a TRACK solution), so ask the owner first.
+     Step 47, the solution dialled by hand, is done. **Next: fire, then hit.** Decide the hit rule
+     (how close the dialled solution must be) and the target's course for leading.
    - **Fire-control step:** show the PDC arcs and their label once the PDCs are activated.
 
 **Items 5 and 7 of the wiring order are planned.** The first mission, the XO walkthrough (FTUE), the

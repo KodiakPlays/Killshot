@@ -586,6 +586,36 @@ public static class PlaytestRunner
         Check("Fire Control shut: the ring goes", plotPanel.WeaponRingKm == 0f, "");
         if (!Click("tool", "ERASE", "ERASE tool")) yield break;
         if (!Click("tool", "ERASE", "ERASE tool (again)")) yield break;
+
+        // 20. A firing solution dialled by hand (Step 47). TRACK 07 is heard, not identified.
+        if (!Click("drawer", "fire control", "FIRE key")) yield break;
+        yield return 0.6f;
+        Check("No firing solution yet", !s.Sol.set, "");
+        if (!Click("fc.track", null, "TRACK (contact not identified)")) yield break;
+        Check("TRACK refuses a contact that is only heard", !s.Sol.set, "");
+        int expBrg = (HandoffBoardState.JsRound(s.scopeBrg) - s.hdg + 540) % 360 - 180;
+        var rngKnob = Hit("fc.knob", "rng");
+        Vector2 knobAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(rngKnob.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
+                                         rngKnob.transform.TransformPoint(((RectTransform)rngKnob.transform).rect.center)));
+        if (!PlotDrag(board, knobAt, knobAt + new Vector2(80, 0), "turn the RNG knob (10 steps)", "fc.knob")) yield break;
+        yield return 0.3f;
+        Check("The RNG knob starts a hand-dialled solution on the periscope's bearing",
+              s.Sol.set && s.Sol.manual && s.Sol.brg == expBrg && s.Sol.spd == 0f && Mathf.Abs(s.Sol.rangeKm - (s.manualStartRangeKm + 1000f)) < 0.01f,
+              "RNG " + s.Sol.rangeKm.ToString("N0") + " km, REL BRG " + s.Sol.brg + "°, SPD " + s.Sol.spd.ToString("0.00"));
+        var fc = board.GetComponent<HandoffFireControlPanel>();
+        var tidField = typeof(HandoffFireControlPanel).GetField("trackId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var tidText = tidField != null ? tidField.GetValue(fc) as TMPro.TMP_Text : null;
+        Check("The readout says MANUAL", tidText && tidText.text == "MANUAL", tidText ? "\"" + tidText.text + "\"" : "no readout");
+        //     BEARING follows the dialled bearing (a point in space), not a locked contact.
+        double dialled = ((s.hdg + s.Sol.brg) % 360 + 360) % 360;
+        s.scopeBrg = (dialled + 10) % 360;
+        bool offOk = !s.OnBearing;
+        s.SlewTo();
+        Check("BEARING wants the periscope on the dialled bearing; SLEW TO puts it there", offOk && s.OnBearing && System.Math.Abs(s.scopeBrg - dialled) < 0.01,
+              "dialled " + dialled.ToString("000") + "°, periscope " + s.scopeBrg.ToString("000") + "°");
+        Shot("26_manual_solution");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        if (!Click("drawer", "fire control", "FIRE key (close)")) yield break;
         yield return 1f;
     }
 
