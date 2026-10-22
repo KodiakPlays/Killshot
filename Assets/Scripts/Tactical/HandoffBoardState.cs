@@ -1049,6 +1049,27 @@ public class HandoffBoardState
 
     public void AckContacts() { newContacts = 0; }
 
+    /// <summary>Step 45 (owner 2026-10-23): each radar sweep that passes a heard contact leaves its
+    /// bearing line where our ship was. As we move, the lines cross at the target: that is how a
+    /// passive contact's range is found. Exact bearings; the lines fade out.</summary>
+    [System.Serializable]
+    public class BearingFix { public string key; public double x, y, brg; public float t; }
+    [System.NonSerialized] private System.Collections.Generic.List<BearingFix> bearingFixes;
+    public System.Collections.Generic.List<BearingFix> BearingFixes => bearingFixes ?? (bearingFixes = new System.Collections.Generic.List<BearingFix>());
+    [Tooltip("A bearing line fades out over this much mission time (owner 2026-10-23: 2 minutes).")]
+    [Tune("Sensors")] public float bearingTrailSeconds = 120f;
+
+    /// <summary>True bearing from our ship to a contact, degrees, unrounded.</summary>
+    public double ExactBearing(Track t)
+    {
+        if (!t.hasWorld) return t.bearing;
+        return (System.Math.Atan2(t.worldX - ownX, t.worldY - ownY) * 180 / System.Math.PI + 360) % 360;
+    }
+
+    public void LayBearing(Track t, float now) { BearingFixes.Add(new BearingFix { key = t.key, x = ownX, y = ownY, brg = ExactBearing(t), t = now }); }
+
+    public void PruneBearings(float now) { BearingFixes.RemoveAll(f => now - f.t >= bearingTrailSeconds); }
+
     public void TickSensors()
     {
         int senCap = Mathf.Max(1, BusUnits("sen"));

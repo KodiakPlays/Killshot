@@ -519,7 +519,41 @@ public static class PlaytestRunner
         float blinkUntil = Time.realtimeSinceStartup + 1.3f;
         yield return (Func<bool>)(() => { if (shipRaw.color.a > 0.9f) bright = true; else if (shipRaw.color.a < 0.3f) dim = true; return Time.realtimeSinceStartup > blinkUntil; });
         Check("Tracked, our ship blinks", bright && dim, "signal " + s.signal.ToString("0") + "%");
+
+        // 18. The bearing trail (Step 45): each sweep leaves TRACK 07's bearing where we were. As we
+        //     move, the lines cross at it. They fade out over two minutes of mission time.
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        s.BearingFixes.Clear();
+        yield return (Func<bool>)(() => s.BearingFixes.FindAll(f => f.key == "t07").Count >= 2);
+        var fixes = s.BearingFixes.FindAll(f => f.key == "t07");
+        var fa = fixes[0]; var fb = fixes[fixes.Count - 1];
+        double baseKm = System.Math.Sqrt((fb.x - fa.x) * (fb.x - fa.x) + (fb.y - fa.y) * (fb.y - fa.y));
+        double crossX, crossY;
+        bool crosses = Cross(fa, fb, out crossX, out crossY);
+        double missKm = crosses ? System.Math.Sqrt((crossX - t07.worldX) * (crossX - t07.worldX) + (crossY - t07.worldY) * (crossY - t07.worldY)) : -1;
+        Check("Two bearing lines from different spots cross at TRACK 07", crosses && missKm < 0.01 * t07.rangeKm,
+              fixes.Count + " lines, " + baseKm.ToString("N0") + " km apart; they cross " + missKm.ToString("N1") + " km from the target");
+        Shot("23_bearing_trail");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        float firstLaid = fa.t;
+        yield return (Func<bool>)(() => board.MissionSeconds - firstLaid > s.bearingTrailSeconds + 2f);
+        yield return 0.5f;
+        Check("A bearing line is gone after two minutes", !s.BearingFixes.Contains(fa), (board.MissionSeconds - firstLaid).ToString("0") + " s after it was laid");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
         yield return 1f;
+    }
+
+    // Where two bearing lines meet (world km; bearings clockwise from north). False if near parallel.
+    static bool Cross(HandoffBoardState.BearingFix a, HandoffBoardState.BearingFix b, out double x, out double y)
+    {
+        double ra = a.brg * System.Math.PI / 180, rb = b.brg * System.Math.PI / 180;
+        double ax = System.Math.Sin(ra), ay = System.Math.Cos(ra), bx = System.Math.Sin(rb), by = System.Math.Cos(rb);
+        double den = ax * by - ay * bx;
+        x = y = 0;
+        if (System.Math.Abs(den) < 1e-9) return false;
+        double u = ((b.x - a.x) * by - (b.y - a.y) * bx) / den;
+        x = a.x + u * ax; y = a.y + u * ay;
+        return true;
     }
 
     /// <summary>Press at board px a, release at board px b, on the plot, through the EventSystem.

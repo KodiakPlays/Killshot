@@ -67,6 +67,8 @@ public class HandoffPlotPanel : HandoffPanel
     [SerializeField] private TMP_Text passiveLabelTemplate;
     [Tooltip("The bearing line runs out to the sensor circle; its label sits this far out, or at the circle if nearer.")]
     [Tune("Sensors")] [SerializeField] private float passiveLabelPx = 200f;
+    [Tooltip("How strong a fresh trail line is (Step 45); it fades to nothing.")]
+    [Tune("Sensors")] [SerializeField] private float trailAlpha = 0.45f;
     private readonly List<TMP_Text> passiveLabels = new List<TMP_Text>();
 
     [Tooltip("bd-blink: our ship blinks while we are loud enough to be tracked (UIStateSpec §9.2, 1.1 s, steps).")]
@@ -153,7 +155,15 @@ public class HandoffPlotPanel : HandoffPanel
         if (sweep && State.dradis && !Controls.Paused)
         {
             float turn = Mathf.Max(0.5f, sweepSecondsBase - State.senBoost * sweepSecondsPerGain);
-            sweepDeg = (sweepDeg + 360f * Time.unscaledDeltaTime / turn) % 360f;
+            float before = sweepDeg, step = 360f * Time.unscaledDeltaTime / turn;
+            sweepDeg = (sweepDeg + step) % 360f;
+            // Step 45: the sweep leaves a bearing line on each heard contact it passes
+            foreach (var t in State.tracks)
+            {
+                if (t.own || !State.Heard(t) || State.identified.Contains(t.key)) continue;
+                float past = Mathf.Repeat((float)State.ExactBearing(t) - before, 360f);
+                if (past > 0f && past <= step) { State.LayBearing(t, Controls.MissionSeconds); Refresh(); }
+            }
             sweep.rectTransform.localEulerAngles = new Vector3(0f, 0f, -sweepDeg); // clockwise on screen
         }
         // not while typing in a field (the hangar's launch bearing)
@@ -326,10 +336,19 @@ public class HandoffPlotPanel : HandoffPanel
         int np = 0;
         Vector2 ownAt = Screen(s.ownX, s.ownY);
         float reach = (float)(s.PassiveRangeKm / KmPerPx * Controls.ZoomExact);
+        // the bearing trail (Step 45): each line from where our ship was, fading over bearingTrailSeconds
+        s.PruneBearings(Controls.MissionSeconds);
+        foreach (var f in s.BearingFixes)
+        {
+            float life = 1f - (Controls.MissionSeconds - f.t) / Mathf.Max(1f, s.bearingTrailSeconds);
+            double rad = f.brg * System.Math.PI / 180.0;
+            Vector2 from = Screen(f.x, f.y), dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad));
+            bearings.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = from, b = from + dir * reach, alpha = trailAlpha * life });
+        }
         foreach (var t in s.tracks)
         {
             if (t.own || !s.Heard(t) || s.identified.Contains(t.key)) continue;
-            double rad = t.bearing * System.Math.PI / 180.0;
+            double rad = s.ExactBearing(t) * System.Math.PI / 180.0; // the label shows it in whole degrees
             var dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad)); // board y is down
             bool on = s.ScopeOn(t, down);
             bearings.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = ownAt, b = ownAt + dir * reach, alpha = on ? 1f : 0.6f });

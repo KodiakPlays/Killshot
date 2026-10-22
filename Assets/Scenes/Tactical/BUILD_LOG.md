@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 44 are done, plus a final QA pass.**
+**Steps 1 to 45 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -84,8 +84,9 @@ Do not run ahead. Do one step, show it, wait.
 | 42 | The sensor circle: DRADIS's hearing range around our ship | **Done** — playtest 60/60 |
 | 43 | The radar sweep | **Done** — playtest 62/62 |
 | 44 | Hearing the enemy: bearing lines, the alert strip, the tracked blink | **Done** — playtest 68/68 |
+| 45 | The bearing trail: plotting a passive contact's range | **Done** — playtest 70/70 |
 
-Steps 6 to 28 and Steps 34 to 44 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 45 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -585,7 +586,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 44, in detail
+## 6 · Steps 6 to 28, and 34 to 45, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1746,6 +1747,35 @@ delivers Power P2, which was parked here: hearing on the plot.
 - The enemy noticing us (Power P3) is still to come. It is the first-mission plan's step B
   (`FTUE_PLAN.md`).
 
+### Step 45 — The bearing trail: plotting a passive contact's range
+
+**Owner decisions (2026-10-23).** The plot tools exist to build an accurate firing solution by hand
+(Silent Shark style). A passive contact gives a bearing only. To find its range:
+
+- each sweep leaves a bearing line where our ship was;
+- the lines fade out over **2 minutes** of mission time;
+- as we move, they cross at the target.
+
+The design's buttons, drawers and flows are unchanged; this is drawing on the plot only.
+
+**What was built.**
+
+- `HandoffBoardState.BearingFixes`: one fix each time the radar sweep passes a contact DRADIS hears
+  but hasn't identified. A fix holds our position, the exact bearing (not rounded) and the
+  mission time. `bearingTrailSeconds` (120) is under Sensors in the tuning window. Old fixes are
+  pruned.
+- The plot draws each fix as a line fading out from where we were, out to the hearing range. Its
+  strength fades with age; a fresh line is at 45% (tunable).
+- The live bearing line now uses the exact bearing too. Its label still shows whole degrees.
+- Pausing freezes the sweep, so nothing new is laid. Pressing ERASE twice clears the trail along
+  with the marks.
+
+**Checked.** Playtest 70/70 PASS, console clean (`Logs/Playtests/2026-10-23_005602/`). At ×10 two
+lines laid 140 km apart crossed 0.0 km from TRACK 07. The first line was gone 140 s later.
+
+**Known.** At 24,000 km a short baseline gives near-parallel lines. The player has to cover distance
+or turn across the bearing to get a clear cross. Bearings are exact: no sensor error yet.
+
 ---
 
 ## 7 · How to keep this log
@@ -1784,6 +1814,14 @@ order:
    - **Sensors step:** the sensor circle (Step 42), the radar sweep (Step 43), and hearing, with
      bearing lines, the alarm strip trigger and the tracked blink (Step 44), are done. Still to do:
      the enemy noticing us (P3, `FTUE_PLAN.md` step B).
+   - **Plotting feeds the firing solution (owner, 2026-10-23).** Step 45, the bearing trail, is done.
+     Next, Step 46, the intercept helpers:
+     - a RULER drawn between two POINTs snaps to them and becomes a track (course, speed, projected
+       ahead);
+     - the RULER label shows time to reach at our speed;
+     - the selected weapon's range ring shows while Fire Control is open.
+     Then Step 47, the solution dialled by hand. That changes the design's fire control (its knobs
+     only adjust a TRACK solution), so ask the owner first.
    - **Fire-control step:** show the PDC arcs and their label once the PDCs are activated.
 
 **Items 5 and 7 of the wiring order are planned.** The first mission, the XO walkthrough (FTUE), the
