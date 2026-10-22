@@ -483,6 +483,8 @@ public class HandoffBoardState
         public double x, y, x2, y2;
         [Tooltip("Mission clock at placement (points).")]
         public float t;
+        [Tooltip("Step 46: the POINT ids a RULER's ends snapped to (0 = none).")]
+        public int ptA, ptB;
     }
 
     [Header("Our ship in the world, km (x east, y north). The board moves it (TickMove); TacticalWorld places the model")]
@@ -563,6 +565,37 @@ public class HandoffBoardState
     /// <summary>Length in km.</summary>
     public double MarkLen(Mark m) { double dx = m.x2 - MarkX(m), dy = m.y2 - MarkY(m); return System.Math.Sqrt(dx * dx + dy * dy); }
     public void EraseMark(int id) => marks.RemoveAll(m => m.id == id);
+
+    /// <summary>Step 46: the nearest POINT within reach of a spot (km), or null — a RULER snaps to it.</summary>
+    public Mark PointNear(double x, double y, double withinKm)
+    {
+        Mark best = null;
+        double bestD = withinKm;
+        foreach (var m in marks)
+        {
+            if (m.kind != "point") continue;
+            double d = System.Math.Sqrt((m.x - x) * (m.x - x) + (m.y - y) * (m.y - y));
+            if (d <= bestD) { best = m; bestD = d; }
+        }
+        return best;
+    }
+
+    /// <summary>Step 46 (owner 2026-10-23): a RULER from one POINT to another, with different times, is a
+    /// target's track. Course runs from the earlier POINT to the later; speed is distance over time.</summary>
+    public bool TrackLeg(Mark m, out Mark from, out Mark to, out double courseDeg, out double speedKms)
+    {
+        from = to = null; courseDeg = speedKms = 0;
+        if (m.kind != "ruler" || m.ptA == 0 || m.ptB == 0) return false;
+        var a = marks.Find(k => k.id == m.ptA);
+        var b = marks.Find(k => k.id == m.ptB);
+        if (a == null || b == null || a.t == b.t) return false;
+        if (a.t > b.t) { var swap = a; a = b; b = swap; }
+        double dx = b.x - a.x, dy = b.y - a.y;
+        from = a; to = b;
+        courseDeg = (System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360;
+        speedKms = System.Math.Sqrt(dx * dx + dy * dy) / (b.t - a.t);
+        return true;
+    }
 
     /// <summary>validSet: hostile contacts inside the current mount's range and arc.</summary>
     public bool ValidTarget(string key)

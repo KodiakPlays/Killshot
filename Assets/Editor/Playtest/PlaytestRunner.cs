@@ -540,6 +540,52 @@ public static class PlaytestRunner
         yield return 0.5f;
         Check("A bearing line is gone after two minutes", !s.BearingFixes.Contains(fa), (board.MissionSeconds - firstLaid).ToString("0") + " s after it was laid");
         if (!Click("rate", "1", "x1 rate key")) yield break;
+
+        // 19. Intercept helpers (Step 46). Our ship is under way.
+        if (!Click("drawer", "power", "PWR key (close the drawer)")) yield break;
+        yield return 0.6f;
+        s.marks.Clear();
+        if (!Click("tool", "RULER", "RULER tool")) yield break;
+        if (!PlotDrag(board, new Vector2(500, 300), new Vector2(620, 300), "draw a RULER")) yield break;
+        yield return 0.3f;
+        string timed = MarkLabel(board, 0);
+        Check("A RULER shows the time to cover it at our speed", timed.Contains(" MIN") || timed.EndsWith(" S"), "\"" + timed + "\" at " + s.SpeedKms.ToString("0.00") + " km/s");
+
+        //     Two timed POINTs, and a RULER between them, make a track: course, speed, projection.
+        if (!Click("tool", "POINT", "POINT tool")) yield break;
+        if (!PlotDrag(board, new Vector2(1300, 300), new Vector2(1300, 300), "POINT A")) yield break;
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        yield return 1.5f;
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        if (!PlotDrag(board, new Vector2(1340, 280), new Vector2(1340, 280), "POINT B")) yield break;
+        var pa = s.marks[s.marks.Count - 2]; var pb = s.marks[s.marks.Count - 1];
+        if (!Click("tool", "RULER", "RULER tool")) yield break;
+        if (!PlotDrag(board, new Vector2(1305, 304), new Vector2(1336, 283), "RULER from near A to near B")) yield break;
+        yield return 0.3f;
+        var leg = s.marks[s.marks.Count - 1];
+        double expSpd = System.Math.Sqrt((pb.x - pa.x) * (pb.x - pa.x) + (pb.y - pa.y) * (pb.y - pa.y)) / (pb.t - pa.t);
+        string legLabel = MarkLabel(board, s.marks.Count - 1);
+        Check("A RULER between two POINTs snaps to them", leg.ptA == pa.id && leg.ptB == pb.id && leg.x == pa.x && leg.y2 == pb.y, "ends on POINTs " + leg.ptA + " and " + leg.ptB);
+        Check("It reads the target's course and speed", legLabel == "CRS 063° · " + expSpd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " km/s",
+              "\"" + legLabel + "\" (" + (pb.t - pa.t).ToString("0") + " s between the POINTs)");
+        Shot("24_track_projection");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+
+        //     The selected weapon's reach shows while Fire Control is open.
+        Check("No weapon ring with Fire Control shut", plotPanel.WeaponRingKm == 0f, "");
+        if (!Click("drawer", "fire control", "FIRE key")) yield break;
+        yield return 0.6f;
+        Check("Fire Control open: the railgun's reach shows round our ship", plotPanel.WeaponRingKm == 30000f, plotPanel.WeaponRingKm.ToString("N0") + " km");
+        board.SetZoom(0.25);
+        yield return 0.4f;
+        Shot("25_weapon_ring");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        board.SetZoom(1.0);
+        if (!Click("drawer", "fire control", "FIRE key (close)")) yield break;
+        yield return 0.4f;
+        Check("Fire Control shut: the ring goes", plotPanel.WeaponRingKm == 0f, "");
+        if (!Click("tool", "ERASE", "ERASE tool")) yield break;
+        if (!Click("tool", "ERASE", "ERASE tool (again)")) yield break;
         yield return 1f;
     }
 

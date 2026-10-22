@@ -114,6 +114,14 @@ public class HandoffPlotPanel : HandoffPanel
     [Tune("Plot tools")]
     [SerializeField] private float draftAlpha = 0.75f;
 
+    [Header("Intercept helpers (Step 46, owner 2026-10-23)")]
+    [Tooltip("A RULER end within this many screen px of a POINT snaps to it.")]
+    [Tune("Plot tools")] [SerializeField] private float rulerSnapPx = 12f;
+    [Tooltip("A track (a RULER from one POINT to another) projects its course this far ahead, mission seconds.")]
+    [Tune("Plot tools")] [SerializeField] private float projectSeconds = 300f;
+    [Tooltip("The selected weapon's reach, a dashed ring round our ship while Fire Control is open.")]
+    [SerializeField] private HandoffMarksGraphic weaponRing;
+
     [Header("Colours (design sRGB)")]
     [SerializeField] private Color ownForce = new Color32(0x4A, 0x9F, 0xD8, 0xFF);
     [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
@@ -136,6 +144,7 @@ public class HandoffPlotPanel : HandoffPanel
     // Step 36: marks live in world km (x east, y north) so they stay put when our ship moves.
     // The pointer is still rounded to whole layer px first, as the board's plotPt does.
     double KmPerPx => 1000.0 / pxPer1000Km;
+    double SnapKm => rulerSnapPx * KmPerPx / Controls.ZoomExact;
     double WorldX(float bx) => viewX + LayerX(bx) * KmPerPx;
     double WorldY(float by) => viewY - LayerY(by) * KmPerPx;
     /// <summary>A world point (km) in board px.</summary>
@@ -197,7 +206,11 @@ public class HandoffPlotPanel : HandoffPanel
         if (action == "plot.pan") { panning = true; panPress = board; panX0 = viewX; panY0 = viewY; return true; }
         if (action != "plot" || !Capturing) return false;
         pressZoom = Controls.ZoomExact;
-        State.MarkDown(Controls.Tool, WorldX(board.x), WorldY(board.y), Controls.MissionSeconds);
+        double wx = WorldX(board.x), wy = WorldY(board.y);
+        var snap = Controls.Tool == "RULER" ? State.PointNear(wx, wy, SnapKm) : null; // Step 46
+        if (snap != null) { wx = snap.x; wy = snap.y; }
+        State.MarkDown(Controls.Tool, wx, wy, Controls.MissionSeconds);
+        if (snap != null && State.draft != null) State.draft.ptA = snap.id;
         return true;
     }
 
@@ -212,7 +225,12 @@ public class HandoffPlotPanel : HandoffPanel
             return true;
         }
         if (action != "plot" || State.draft == null) return false;
-        State.MarkMove(WorldX(board.x), WorldY(board.y));
+        double wx = WorldX(board.x), wy = WorldY(board.y);
+        var d = State.draft;
+        var snap = d.kind == "ruler" ? State.PointNear(wx, wy, SnapKm) : null; // Step 46
+        if (snap != null && snap.id != d.ptA) { wx = snap.x; wy = snap.y; d.ptB = snap.id; }
+        else d.ptB = 0;
+        State.MarkMove(wx, wy);
         return true;
     }
 
@@ -261,6 +279,18 @@ public class HandoffPlotPanel : HandoffPanel
                 if (m.kind == "ruler")
                 {
                     label.alignment = TextAlignmentOptions.Center;
+                    HandoffBoardState.Mark fromPt, toPt;
+                    double crs, spd;
+                    if (s.TrackLeg(m, out fromPt, out toPt, out crs, out spd))
+                    {
+                        // a target's track: its course and speed, and where it will be projectSeconds on
+                        label.text = "CRS " + (HandoffBoardState.JsRound(crs) % 360).ToString("000") + "° · "
+                                   + spd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " km/s";
+                        double ahead = spd * projectSeconds, rc = crs * System.Math.PI / 180.0;
+                        shapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = Screen(toPt.x, toPt.y),
+                            b = Screen(toPt.x + System.Math.Sin(rc) * ahead, toPt.y + System.Math.Cos(rc) * ahead), alpha = alpha });
+                    }
+                    else if (s.SpeedKms >= 0.01) label.text += " · " + Duration(s.MarkLen(m) / s.SpeedKms); // time to cover it at our speed
                     // the board rounds the label's spot to whole layer px from the plot centre. km→px
                     // leaves float dust (250.49999999999997 for 250.5), so trim it before rounding
                     double mx = HandoffBoardState.JsRound(System.Math.Round((m.x + dx / 2.0 - viewX) / KmPerPx, 6));
@@ -296,6 +326,20 @@ public class HandoffPlotPanel : HandoffPanel
             float side = shipPx / (shipView ? shipView.ShipFill : 1f);
             ownShipImage.rectTransform.sizeDelta = new Vector2(side, side);
             Put(ownShipImage.rectTransform, Screen(s.ownX, s.ownY), 0f);
+        }
+
+        // the selected weapon's reach while Fire Control is open (Step 46)
+        if (weaponRing)
+        {
+            var reachShapes = new List<HandoffMarksGraphic.Shape>();
+            var mount = s.MountOf(s.mount);
+            if (Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && mount != null && mount.rangeKm > 0f)
+            {
+                Vector2 c = Screen(s.ownX, s.ownY);
+                reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeKm / KmPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
+            }
+            Paint(weaponRing, caution);
+            weaponRing.Set(reachShapes);
         }
 
         if (sensorRing)
@@ -399,6 +443,24 @@ public class HandoffPlotPanel : HandoffPanel
         float d = 2f * (float)(sensorKm / KmPerPx * Controls.ZoomExact);
         if (sweep.rectTransform.sizeDelta != new Vector2(d, d)) sweep.rectTransform.sizeDelta = new Vector2(d, d);
         Put(sweep.rectTransform, Screen(s.ownX, s.ownY), -sweepDeg);
+    }
+
+    /// <summary>The selected weapon's reach drawn now, km, or 0 (the playtest reads it).</summary>
+    public float WeaponRingKm
+    {
+        get
+        {
+            var m = State != null ? State.MountOf(State.mount) : null;
+            return Controls && Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && m != null ? m.rangeKm : 0f;
+        }
+    }
+
+    // time at our speed: "45 S", "15 MIN", "1 H 12 MIN" (mission time)
+    static string Duration(double seconds)
+    {
+        if (seconds < 60) return HandoffBoardState.JsRound(seconds) + " S";
+        int min = HandoffBoardState.JsRound(seconds / 60);
+        return min < 60 ? min + " MIN" : (min / 60) + " H " + (min % 60) + " MIN";
     }
 
     // bd-blink while tracked: full for the first half of each 1.1 s, then dim

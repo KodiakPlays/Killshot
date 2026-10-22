@@ -1495,6 +1495,14 @@ public static class HandoffBoardBuilder
         ringG.raycastTarget = false;
         so.FindProperty("sensorRing").objectReferenceValue = ringG;
 
+        // Step 46: the selected weapon's reach, a dashed amber ring while Fire Control is open
+        var wrRt = layer("Weapon ring (drawn)");
+        wrRt.gameObject.AddComponent<CanvasRenderer>();
+        var wrG = wrRt.gameObject.AddComponent<HandoffMarksGraphic>();
+        wrG.color = Hex("accent.caution", 1f);
+        wrG.raycastTarget = false;
+        so.FindProperty("weaponRing").objectReferenceValue = wrG;
+
         // Step 44: passive bearing lines, fading out from our ship toward heard contacts
         var pasRt = layer("Passive bearings (drawn)");
         pasRt.gameObject.AddComponent<CanvasRenderer>();

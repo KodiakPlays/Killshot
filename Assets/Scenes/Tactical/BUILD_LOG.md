@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 45 are done, plus a final QA pass.**
+**Steps 1 to 46 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -85,8 +85,9 @@ Do not run ahead. Do one step, show it, wait.
 | 43 | The radar sweep | **Done** — playtest 62/62 |
 | 44 | Hearing the enemy: bearing lines, the alert strip, the tracked blink | **Done** — playtest 68/68 |
 | 45 | The bearing trail: plotting a passive contact's range | **Done** — playtest 70/70 |
+| 46 | Intercept helpers: time to reach, tracks, weapon reach | **Done** — playtest 76/76 |
 
-Steps 6 to 28 and Steps 34 to 45 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 46 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -586,7 +587,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 45, in detail
+## 6 · Steps 6 to 28, and 34 to 46, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1776,6 +1777,43 @@ lines laid 140 km apart crossed 0.0 km from TRACK 07. The first line was gone 14
 **Known.** At 24,000 km a short baseline gives near-parallel lines. The player has to cover distance
 or turn across the bearing to get a clear cross. Bearings are exact: no sensor error yet.
 
+### Step 46 — Intercept helpers: time to reach, tracks, weapon reach
+
+**Owner decisions (2026-10-23).**
+
+- A RULER label adds the time to cover its length at our current speed. Nothing while stopped.
+- A RULER drawn from one POINT to another snaps to them. It becomes a target's track: course and
+  speed, with the course projected **5 minutes** ahead. This settles the old open question of
+  whether a RULER snaps to a POINT.
+- The selected weapon's reach shows as a **plain dashed amber ring** round our ship, while Fire
+  Control is open.
+- The design's buttons and flows are unchanged. The RULER keeps its drag; its label carries more.
+
+**What was built.**
+
+- `HandoffBoardState`: `Mark.ptA` / `ptB`, the POINTs a ruler's ends snapped to. Also
+  `PointNear` and `TrackLeg`: course runs from the earlier POINT to the later, and speed is
+  distance over time.
+- `HandoffPlotPanel`:
+  - a RULER end within 12 screen px of a POINT snaps to it (tunable);
+  - a track ruler's label reads "CRS 063° · 1.10 km/s", and a dashed line runs from the later
+    POINT along the course for 300 mission seconds of travel (tunable);
+  - other rulers add " · 26 MIN" (or "45 S", or "1 H 12 MIN");
+  - while the FIRE drawer is open, the selected mount's `rangeKm` is a dashed ring at 70% amber
+    (railgun 30,000 km, PDC 4,000 km, VLS 40,000 km).
+  - A drawer click now refreshes the panels, so the ring appears at once.
+- `HandoffMarksGraphic`: a dashed line and a plain dashed ring. Builder: a `Weapon ring (drawn)`
+  layer.
+
+**Checked.** Playtest 76/76 PASS, console clean (`Logs/Playtests/2026-10-23_010133/`).
+
+- A RULER read "RNG 1,970 km · BRG 090° · 26 MIN" at 1.25 km/s.
+- A RULER between two POINTs 40 s apart snapped to both. It read "CRS 063° · 18.36 km/s", the
+  exact course and speed of the test points, and drew its projection.
+- The railgun ring showed only while FIRE was open.
+
+**Known.** With POINTs close together, the track label can overlap the POINTs' time labels.
+
 ---
 
 ## 7 · How to keep this log
@@ -1815,7 +1853,7 @@ order:
      bearing lines, the alarm strip trigger and the tracked blink (Step 44), are done. Still to do:
      the enemy noticing us (P3, `FTUE_PLAN.md` step B).
    - **Plotting feeds the firing solution (owner, 2026-10-23).** Step 45, the bearing trail, is done.
-     Next, Step 46, the intercept helpers:
+     Step 46, the intercept helpers, is done too:
      - a RULER drawn between two POINTs snaps to them and becomes a track (course, speed, projected
        ahead);
      - the RULER label shows time to reach at our speed;

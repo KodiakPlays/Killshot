@@ -239,7 +239,7 @@ public class HandoffBoardControls : MonoBehaviour
         switch (action)
         {
             case "tool": if (arg == "ERASE") PressErase(); else PickTool(arg); RefreshPanels(); break;
-            case "drawer": motion.ToggleDrawer(arg); break;
+            case "drawer": motion.ToggleDrawer(arg); RefreshPanels(); break; // the plot shows the weapon ring while FIRE is open (Step 46)
             case "helm": motion.ToggleHelm(); break;
             case "orders": motion.ToggleOrders(); break;
             case "scope": motion.ToggleScope(); RefreshPanels(); break;

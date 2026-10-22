@@ -48,6 +48,9 @@ public class HandoffMarksGraphic : MaskableGraphic
             else if (s.kind == "disc") Dot(s.a, (s.b - s.a).magnitude, c);
             // Step 44: a passive bearing, fading out from our ship
             else if (s.kind == "fade") { var end = c; end.a = 0f; Line(s.a, s.b, c, end); }
+            // Step 46: a track's projected course (dashed line) and a weapon's reach (dashed ring, no radius)
+            else if (s.kind == "dash") DashedLine(s.a, s.b, c);
+            else if (s.kind == "dashring") Ring(s.a, (s.b - s.a).magnitude, c);
             else { Line(s.a, s.b, c); Ring(s.a, (s.b - s.a).magnitude, c); }
         }
     }
@@ -64,6 +67,14 @@ public class HandoffMarksGraphic : MaskableGraphic
         vh.AddVert(p + n, c, Vector2.zero); vh.AddVert(q + n, cb, Vector2.zero);
         vh.AddVert(q - n, cb, Vector2.zero); vh.AddVert(p - n, c, Vector2.zero);
         vh.AddTriangle(i, i + 1, i + 2); vh.AddTriangle(i, i + 2, i + 3);
+    }
+
+    void DashedLine(Vector2 a, Vector2 b, Color c)
+    {
+        float len = (b - a).magnitude, period = dash + dashGap;
+        if (len < 1e-3f || period <= 0f) return;
+        Vector2 d = (b - a) / len;
+        for (float s = 0f; s < len; s += period) Line(a + d * s, a + d * Mathf.Min(len, s + dash), c);
     }
 
     void Dot(Vector2 at, float r, Color c)
