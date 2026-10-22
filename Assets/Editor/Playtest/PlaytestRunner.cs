@@ -676,6 +676,7 @@ public static class PlaytestRunner
         yield return 0.6f;
         Check("Paused, the slug holds still", s.Rounds.Count == 1 && s.Rounds[0].travelled == rx, (rx >= 0 ? rx.ToString("N0") + " km flown" : "none"));
         if (!Click("pause", null, "RUN key")) yield break;
+        if (board.Motion && board.Motion.ScopeDown) board.Motion.SetScopeDown(false); // the periscope covers the plot's middle
         board.SetZoom(0.4);
         yield return 3f;
         Shot("27_slug_in_flight");

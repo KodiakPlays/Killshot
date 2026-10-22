@@ -407,6 +407,12 @@ These are settled. Do not reopen them.
     sound. Details in Step 40.
 26. **Our ship moves across a fixed grid** (owner, 2026-10-18). Top speed about 2.5 km/s. The plot
     pans by dragging the grid or with the arrow keys. Details in Step 41.
+27. **Plotting feeds the firing solution** (owner, 2026-10-23). A passive contact gives a bearing
+    only, and the bearing trail finds its range. The solution is dialled by hand, aiming at a point
+    in space; TRACK needs an active scan. Details in Steps 45–47.
+28. **Railgun: a 50 km/s slug that hits within a class radius, aimed in whole degrees** (owner,
+    2026-10-23). Whole degrees stay on purpose: from ~24,000 km even the best aim can just miss a
+    cruiser. Close in for a sure shot. Details in Step 48.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -1922,8 +1928,8 @@ The test predicts each shot from the geometry and checks the game agrees:
 **Known.**
 
 - Aiming is in whole degrees. At ~24,000 km half a degree is ~213 km, just over a cruiser's
-  hit radius, so a dead-on shot from that far may still miss. Close in for a sure shot. A finer
-  BRG step is one Tuning change away if wanted.
+  hit radius, so a dead-on shot from that far may still miss. Close in for a sure shot. **The owner
+  kept whole degrees on purpose (decision 28).**
 - Only the railgun fires a slug. PDC and VLS still only spend charge.
 - Our own speed isn't added to the slug. There is no lead and no aim scatter.
 - With high power drawn our signal is already at 100%, so the spike has nothing to add.
