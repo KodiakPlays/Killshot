@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 42 are done, plus a final QA pass.**
+**Steps 1 to 43 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -82,8 +82,9 @@ Do not run ahead. Do one step, show it, wait.
 | 40 | Press and click: switches slide, refuse, and click | **Done** — playtest 48/48, slide measured in play |
 | 41 | The helm: our ship moves, and the plot pans | **Done** — playtest 57/57 |
 | 42 | The sensor circle: DRADIS's hearing range around our ship | **Done** — playtest 60/60 |
+| 43 | The radar sweep | **Done** — playtest 62/62 |
 
-Steps 6 to 28 and Steps 34 to 42 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 43 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -583,7 +584,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 42, in detail
+## 6 · Steps 6 to 28, and 34 to 43, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1676,6 +1677,32 @@ visible was lost.
 **Checked.** Playtest 60/60 PASS, console clean (`Logs/Playtests/2026-10-19_001410/`). The circle matches the hearing range with DRADIS on, goes with
 DRADIS off, and comes back. A screenshot at ×0.3 shows it centred on our ship.
 
+### Step 43 — The radar sweep
+
+**What the design has.** `rd-sweep`: while DRADIS is on, a sweep turns once every
+(5.4 − 0.5 × gain) seconds (UIStateSpec §9.2; board-logic.js `sweepDur`). It has a bright leading
+edge (`sweepEdge`, data white at 70%) and a faint tail (`sweepTail`, 9%). On the amber grid they
+are red at 75% and 11%. The export only had a frozen gradient stand-in for it (`drawn#34`, hidden;
+`drawn#35`, removed in Step 39).
+
+**What was built.**
+
+- `HandoffSweepGraphic.cs`: draws the edge, a line from our ship to the rim pointing north, and
+  the tail, a fan fading to nothing 60° behind it. It is drawn once; turning it costs nothing.
+- `HandoffPlotPanel` sizes it to the sensor circle and places it on our ship. It turns it
+  clockwise at the design's rate, and hides it while DRADIS is off.
+- It holds still while the board is paused. The design kept it turning; the owner's rule is that
+  nothing moves while paused.
+- Tuning window, Sensors section: the tail angle (the design gives none) and the turn time.
+- A `Sensor sweep (drawn)` layer between the sensor circle and our ship (builder).
+
+**Checked.** Playtest 62/62 PASS, console clean (`Logs/Playtests/2026-10-23_000343/`). The sweep turned 39° in
+0.5 s at gain 1; the design rate gives 37°. It held still while paused and went with DRADIS off. The
+×0.3 screenshot shows the edge and its fading tail inside the circle.
+
+**Known.** On the amber grid the tail uses the edge's colour (rgb 255, 150, 130). The design's tail
+there is a deeper red (224, 75, 60), at 11%.
+
 ---
 
 ## 7 · How to keep this log
@@ -1711,9 +1738,8 @@ order:
 4. **The helm.** **Done in Step 41.**
 5. **Next:** back into the sequence: sensors, then periscope and fire control against the
    dummy, then fire, then hit.
-   - **Sensors step:** give the alarm strip a real trigger (a new contact identified). Build the
-     radar sweep (`drawn#34`, and probably `drawn#35`): it turns while DRADIS is on and hides
-     while it is off (`HANDOFF_GAPS.md` row 105).
+   - **Sensors step:** give the alarm strip a real trigger (a new contact identified). The sensor
+     circle (Step 42) and the radar sweep (Step 43) are done.
    - **Fire-control step:** show the PDC arcs and their label once the PDCs are activated.
 
 **Items 5 and 7 of the wiring order are planned.** The first mission, the XO walkthrough (FTUE), the

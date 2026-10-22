@@ -49,6 +49,15 @@ public class HandoffPlotPanel : HandoffPanel
     [SerializeField] private float senEdgeAlpha = 0.26f, senGlowAlpha = 0.04f, senEdgeAlphaAmber = 0.3f, senGlowAlphaAmber = 0.05f;
     private float sensorKm;
     private System.Action<float> setSensorKm;
+
+    [Header("Radar sweep (Step 43): turns inside the sensor circle while DRADIS is on")]
+    [SerializeField] private HandoffSweepGraphic sweep;
+    [Tooltip("One turn takes base − perGain × gain seconds (sweepDur: 5.4 − senBoost × .5). It holds still while the board is paused (owner rule).")]
+    [Tune("Sensors")] [SerializeField] private float sweepSecondsBase = 5.4f, sweepSecondsPerGain = 0.5f;
+    private float sweepDeg;
+    /// <summary>The sweep's bearing now, degrees clockwise from north; and whether it shows.</summary>
+    public float SweepDeg => sweepDeg;
+    public bool SweepShown => sweep && sweep.isActiveAndEnabled;
     /// <summary>The sensor circle's radius now, km (it eases), or 0 while DRADIS is off.</summary>
     public float SensorRingKm => State != null && State.dradis ? sensorKm : 0f;
 
@@ -97,6 +106,8 @@ public class HandoffPlotPanel : HandoffPanel
     [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
     [SerializeField] private Color alarm = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
     [SerializeField] private Color data = new Color32(0xE8, 0xED, 0xF0, 0xFF);
+    [Tooltip("sweepEdge on the amber grid: rgb(255,150,130).")]
+    [SerializeField] private Color sweepInkAmber = new Color32(0xFF, 0x96, 0x82, 0xFF);
 
     private readonly List<TMP_Text> labels = new List<TMP_Text>();
     private readonly List<HandoffHit> hits = new List<HandoffHit>();
@@ -124,6 +135,12 @@ public class HandoffPlotPanel : HandoffPanel
     private void Update()
     {
         if (Controls == null) return;
+        if (sweep && State.dradis && !Controls.Paused)
+        {
+            float turn = Mathf.Max(0.5f, sweepSecondsBase - State.senBoost * sweepSecondsPerGain);
+            sweepDeg = (sweepDeg + 360f * Time.unscaledDeltaTime / turn) % 360f;
+            sweep.rectTransform.localEulerAngles = new Vector3(0f, 0f, -sweepDeg); // clockwise on screen
+        }
         // not while typing in a field (the hangar's launch bearing)
         var typing = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
         if (typing && typing.GetComponent<TMP_InputField>()) return;
@@ -311,6 +328,17 @@ public class HandoffPlotPanel : HandoffPanel
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "circle", a = c, b = e, alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
         }
         sensorRing.Set(shapes);
+
+        if (!sweep) return;
+        bool on = s.dradis && sensorKm > 0f;
+        if (sweep.gameObject.activeSelf != on) sweep.gameObject.SetActive(on);
+        if (!on) return;
+        bool red = Controls.GridAmber;
+        Paint(sweep, red ? sweepInkAmber : data);
+        sweep.SetAlphas(red ? 0.75f : 0.7f, red ? 0.11f : 0.09f); // sweepEdge, sweepTail
+        float d = 2f * (float)(sensorKm / KmPerPx * Controls.ZoomExact);
+        if (sweep.rectTransform.sizeDelta != new Vector2(d, d)) sweep.rectTransform.sizeDelta = new Vector2(d, d);
+        Put(sweep.rectTransform, Screen(s.ownX, s.ownY), -sweepDeg);
     }
 
     TMP_Text ContactLabel(int i)

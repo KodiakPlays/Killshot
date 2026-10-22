@@ -1493,6 +1493,16 @@ public static class HandoffBoardBuilder
         ringG.raycastTarget = false;
         so.FindProperty("sensorRing").objectReferenceValue = ringG;
 
+        // Step 43: the radar sweep, turning inside the sensor circle (the panel sizes, places and turns it)
+        var sweepRt = layer("Sensor sweep (drawn)");
+        sweepRt.pivot = new Vector2(0.5f, 0.5f);
+        sweepRt.gameObject.AddComponent<CanvasRenderer>();
+        var sweepG = sweepRt.gameObject.AddComponent<HandoffSweepGraphic>();
+        sweepG.color = Hex("ink.data", 1f);
+        sweepG.raycastTarget = false;
+        sweepRt.gameObject.SetActive(false);
+        so.FindProperty("sweep").objectReferenceValue = sweepG;
+
         var shipRt = layer("Own ship (3D view)");
         shipRt.gameObject.AddComponent<CanvasRenderer>();
         var shipImg = shipRt.gameObject.AddComponent<RawImage>();

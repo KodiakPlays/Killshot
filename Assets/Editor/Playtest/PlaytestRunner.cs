@@ -462,6 +462,17 @@ public static class PlaytestRunner
         // 16. The sensor circle (Step 42): while DRADIS is on, a circle round our ship at the hearing range.
         Check("DRADIS on: the sensor circle shows at the hearing range", s.dradis && Mathf.Abs(plotPanel.SensorRingKm - s.PassiveRangeKm) < 1f,
               plotPanel.SensorRingKm.ToString("N0") + " km (hearing range " + s.PassiveRangeKm.ToString("N0") + " km)");
+        //     The radar sweep (Step 43) turns inside the circle, and holds still while paused.
+        float sw0 = plotPanel.SweepDeg;
+        yield return 0.5f;
+        float sw1 = plotPanel.SweepDeg;
+        Check("The radar sweep turns while DRADIS is on", plotPanel.SweepShown && Mathf.Abs(Mathf.DeltaAngle(sw0, sw1)) > 5f,
+              "turned " + Mathf.DeltaAngle(sw0, sw1).ToString("0") + "° in 0.5 s");
+        if (!Click("pause", null, "PAUSE key")) yield break;
+        float sw2 = plotPanel.SweepDeg;
+        yield return 0.5f;
+        Check("Paused, the sweep holds still", plotPanel.SweepDeg == sw2, "");
+        if (!Click("pause", null, "RUN key")) yield break;
         if (!Click("drawer", "sensors", "SENS key")) yield break;
         board.SetZoom(0.3); // 19,000 km is wider than the plot at x1; zoom out to see the whole circle
         yield return 0.8f;
@@ -469,7 +480,7 @@ public static class PlaytestRunner
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("sensors.dradis", null, "DRADIS rocker (off)")) yield break;
         yield return 0.3f;
-        Check("DRADIS off: the circle goes", !s.dradis && plotPanel.SensorRingKm == 0f, "dradis " + s.dradis);
+        Check("DRADIS off: the circle and the sweep go", !s.dradis && plotPanel.SensorRingKm == 0f && !plotPanel.SweepShown, "dradis " + s.dradis);
         Shot("20_dradis_off");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("sensors.dradis", null, "DRADIS rocker (on)")) yield break;
