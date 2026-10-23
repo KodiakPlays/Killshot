@@ -72,8 +72,12 @@ public class TacticalWorld : MonoBehaviour
         {
             var c = contacts[i];
             var brain = brains[i];
-            if (!c || !brain || !brain.enabled) continue;
+            if (!c) continue;
             var ship = c.Ship;
+            ship.missionNow = board.State.missionNow;
+            // EMP (Step 53): power is out until it wears off; then its engines come back
+            if (ship.empUntil > 0f && ship.missionNow >= ship.empUntil) { ship.empUntil = 0f; ship.buses[0].fill = ship.busMax; }
+            if (!brain || !brain.enabled) continue;
             if (ship.destroyed) ship.thr = 0; // a wreck makes no way of its own
             else brain.Think(ship);
             ship.TickHelm();

@@ -800,8 +800,60 @@ public static class PlaytestRunner
         //     Hold it still again for the fight below; clear the plot.
         brain.enabled = false; t07Ship.vx = t07Ship.vy = 0; s.marks.Clear(); s.identified.Remove("t07");
 
+        // 21c. Missiles (Step 53): a lock, the launcher, three warheads, homing on the moving TRACK 07.
+        brain.enabled = true;
+        s.identified.Add("t07"); // stand-in for an active-scan lock
+        for (int k = 0; k < 3 && s.sys != "MS"; k++) { if (!Click("fc.system", null, "weapon selector")) yield break; yield return 0.2f; }
+        s.salvo = 2; // stand-in for the Tuning window (its default is 2)
+        Check("MISSILE selected: the launcher, HE", s.sys == "MS" && s.mount == "VLS" && s.warheads[s.warhead] == "HE", s.sys + " " + s.mount + " " + s.warheads[s.warhead]);
+        if (!Click("fc.track", null, "TRACK (locked)")) yield break;
+        s.LookAt("t07");
+        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (missiles)")) yield break; yield return 0.15f; }
+        int cells0 = s.vlsCells, landed0 = s.shotResults, mag0 = dummyShip.Comp("mag").integ;
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "launch (HE salvo of 2)", "fc.lever")) yield break;
+        Check("A salvo of two leaves the launcher", s.Rounds.FindAll(r => r.missile).Count == 2 && s.vlsCells == cells0 - 2, s.vlsCells + " cells left");
+        yield return (Func<bool>)(() => s.shotResults >= landed0 + 2);
+        yield return (Func<bool>)(() => s.shotResults >= landed0 + 2);
+        Check("Both home in on the moving TRACK 07: HE through its open side", s.lastShotHit && s.shotReport.Contains(" · HE · ") && dummyShip.Comp("mag").integ == Mathf.Max(0, mag0 - 4),
+              "\"" + s.shotReport + "\", MAG " + mag0 + " → " + dummyShip.Comp("mag").integ);
+        //     EMP: no hull damage, its power goes down and it slows.
+        if (!Click("fc.mount", null, "warhead selector (EMP)")) yield break;
+        Check("The turret knob picks the warhead", s.warheads[s.warhead] == "EMP", s.warheads[s.warhead]);
+        s.salvo = 1;
+        s.LookAt("t07");
+        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (EMP)")) yield break; yield return 0.15f; }
+        int landed1 = s.shotResults;
+        if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "launch (EMP)", "fc.lever")) yield break;
+        yield return (Func<bool>)(() => s.shotResults > landed1);
+        yield return (Func<bool>)(() => s.shotResults > landed1);
+        double spdHit = t07Ship.SpeedKms;
+        Check("EMP: its power goes down", s.shotReport != null && s.shotReport.EndsWith(" · EMP · POWER DOWN") && dummyShip.buses[0].fill == 0, "\"" + s.shotReport + "\"");
+        yield return 2f;
+        Check("Without power it slows", t07Ship.SpeedKms < spdHit, spdHit.ToString("0.00") + " → " + t07Ship.SpeedKms.ToString("0.00") + " km/s");
+        //     PENETRATOR: straight to a compartment behind the side.
+        if (!Click("fc.mount", null, "warhead selector (PENETRATOR)")) yield break;
+        s.LookAt("t07");
+        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (PEN)")) yield break; yield return 0.15f; }
+        int landed2 = s.shotResults;
+        if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "launch (PENETRATOR)", "fc.lever")) yield break;
+        yield return (Func<bool>)(() => s.shotResults > landed2);
+        yield return (Func<bool>)(() => s.shotResults > landed2);
+        Check("PENETRATOR: straight through to a compartment", s.shotReport != null && s.shotReport.Contains(" · PEN · "), "\"" + s.shotReport + "\"");
+        Check("Four cells used", s.vlsCells == cells0 - 4, s.vlsCells + " left");
+        Shot("28b_missiles");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     Back to the railgun; hold TRACK 07 still for the fight.
+        if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break;
+        brain.enabled = false; t07Ship.vx = t07Ship.vy = 0; s.identified.Remove("t07");
+
         // 22. A fight to the kill (Step 49): close in behind TRACK 07 and shoot until it is a wreck.
-        var before = (float[])dummyShip.SideArmour.Clone(); // the shot above may have marked its port side
+        var before = (float[])dummyShip.SideArmour.Clone(); // the shots above may have marked its sides
+        int bri0 = dummyShip.Comp("bri").integ, magB = dummyShip.Comp("mag").integ, hab0 = dummyShip.Comp("hab").integ, hgr0 = dummyShip.Comp("hgr").integ;
         //     Stand-in for the helm: 10,000 km behind its stern, stopped, side-on so turret B (port) bears.
         double tb = t07.worldHdg * System.Math.PI / 180;
         s.ownX = t07.worldX - System.Math.Sin(tb) * 10000; s.ownY = t07.worldY - System.Math.Cos(tb) * 10000;
@@ -837,7 +889,7 @@ public static class PlaytestRunner
         Check("Its reactor gone, it is destroyed: a cold wreck", t07.wreck && dummyShip.destroyed && dummyShip.Comp("rct").integ == 0 && !s.Heard(t07) && reports[reports.Count - 1] == "TRACK 07 DESTROYED",
               "RCT " + dummyShip.Comp("rct").integ + ", ENG " + dummyShip.Comp("eng").integ + ", last \"" + reports[reports.Count - 1] + "\"");
         Check("Nothing else on it was touched", dummyShip.SideArmour[0] == before[0] && dummyShip.SideArmour[1] == before[1] && dummyShip.SideArmour[3] == before[3]
-              && dummyShip.Comp("bri").integ == 5 && dummyShip.Comp("mag").integ == 5 && dummyShip.Comp("hab").integ == 5 && dummyShip.Comp("hgr").integ == 5, "");
+              && dummyShip.Comp("bri").integ == bri0 && dummyShip.Comp("mag").integ == magB && dummyShip.Comp("hab").integ == hab0 && dummyShip.Comp("hgr").integ == hgr0, "");
         yield return 0.4f;
         Check("The kill cue sounds", board.LastSound == "kill", "last cue \"" + board.LastSound + "\"");
         Shot("29_destroyed");
@@ -998,32 +1050,33 @@ public static class PlaytestRunner
     /// sends only the release (up and click) or only the press, to hold a key.</summary>
     static bool Click(string action, string arg, string label, bool down = true, bool up = true)
     {
-        HandoffHit target = null;
+        // A control can have several click targets (a rail key and its drawer's latch, which may still be
+        // sliding away). Use the first one that is actually on top at its own centre.
+        string why = "control not found";
         foreach (var h in UnityEngine.Object.FindObjectsByType<HandoffHit>(FindObjectsSortMode.None))
-            if (h.action == action && (h.arg ?? "") == (arg ?? "") && h.isActiveAndEnabled) { target = h; break; } // Unity saves a null arg as ""
-        if (target == null) { Check("Click " + label, false, "control not found"); return false; }
-        var rt = (RectTransform)target.transform;
-        var canvas = target.GetComponentInParent<Canvas>().rootCanvas;
-        Vector2 screen = RectTransformUtility.WorldToScreenPoint(canvas.worldCamera, rt.TransformPoint(rt.rect.center));
-        var es = EventSystem.current;
-        var ped = new PointerEventData(es) { position = screen, pressPosition = screen, button = PointerEventData.InputButton.Left };
-        var hits = new List<RaycastResult>();
-        es.RaycastAll(ped, hits);
-        GameObject top = hits.Count > 0 ? hits[0].gameObject : null;
-        var handler = top ? ExecuteEvents.GetEventHandler<IPointerClickHandler>(top) : null;
-        if (handler != target.gameObject)
         {
-            Check("Click " + label, false, "blocked: topmost at " + screen + " is " + (top ? top.name : "nothing"));
-            return false;
+            if (h.action != action || (h.arg ?? "") != (arg ?? "") || !h.isActiveAndEnabled) continue; // Unity saves a null arg as ""
+            var rt = (RectTransform)h.transform;
+            var canvas = h.GetComponentInParent<Canvas>().rootCanvas;
+            Vector2 screen = RectTransformUtility.WorldToScreenPoint(canvas.worldCamera, rt.TransformPoint(rt.rect.center));
+            var es = EventSystem.current;
+            var ped = new PointerEventData(es) { position = screen, pressPosition = screen, button = PointerEventData.InputButton.Left };
+            var hits = new List<RaycastResult>();
+            es.RaycastAll(ped, hits);
+            GameObject top = hits.Count > 0 ? hits[0].gameObject : null;
+            var handler = top ? ExecuteEvents.GetEventHandler<IPointerClickHandler>(top) : null;
+            if (handler != h.gameObject) { why = "blocked: topmost at " + screen + " is " + (top ? top.name : "nothing"); continue; }
+            ped.pointerCurrentRaycast = ped.pointerPressRaycast = hits[0];
+            if (down) ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerDownHandler);
+            if (up)
+            {
+                ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerUpHandler);
+                ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerClickHandler);
+            }
+            return true;
         }
-        ped.pointerCurrentRaycast = ped.pointerPressRaycast = hits[0];
-        if (down) ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerDownHandler);
-        if (up)
-        {
-            ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerUpHandler);
-            ExecuteEvents.Execute(handler, ped, ExecuteEvents.pointerClickHandler);
-        }
-        return true;
+        Check("Click " + label, false, why);
+        return false;
     }
 
     static void Check(string step, bool ok, string detail)

@@ -313,7 +313,8 @@ public class HandoffBoardState
     [Tooltip("A firing solution per system, in SYSTEMS order (sol).")]
     public Solution[] sol = { new Solution(), new Solution(), new Solution() };
     public int warhead;
-    [Range(1, 8)] public int salvo = 4;
+    [Tooltip("Missiles launched together (owner 2026-10-23: set here until the design's salvo stepper has art).")]
+    [Tune("Periscope & fire control")] [Range(1, 8)] public int salvo = 2;
     public bool loaders;
     [Tooltip("PDC quadrants FWD, STBD, AFT, PORT (quads).")]
     public bool[] quads = { true, true, false, false };
@@ -875,6 +876,7 @@ public class HandoffBoardState
     {
         if (!AllSet) return; // moveSlew fires on every new pull while allSet() holds; the panel's per-pull latch stops repeats (Step 33g verification)
         if (wepCharge < ShotCost) return;
+        if (sys == "MS" && !MissileReady) return;
         fired = true;
         wepCharge = Mathf.Max(0f, wepCharge - ShotCost);
         sw[3] = false;
@@ -883,11 +885,29 @@ public class HandoffBoardState
         if (sys == "RG" && m != null)
         {
             double b = LeadBearing() * System.Math.PI / 180;
-            Rounds.Add(new Round { x = ownX, y = ownY, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm });
+            Rounds.Add(new Round { x = ownX, y = ownY, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm, speed = slugSpeedKms });
+            shotReport = null;
+            signal = Mathf.Min(100f, signal + fireSignalSpike);
+        }
+        if (sys == "MS" && m != null)
+        {
+            // a salvo, spread a little either side of the target's bearing; each missile then homes on it
+            var tgt = TrackOf(target);
+            int n = Mathf.Min(salvo, vlsCells);
+            for (int i = 0; i < n; i++)
+            {
+                double b = (tgt.bearing + (i - (n - 1) / 2.0) * missileSpreadDeg) * System.Math.PI / 180;
+                Rounds.Add(new Round { x = ownX, y = ownY, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm,
+                                       speed = missileSpeedKms, missile = true, targetKey = tgt.key, warhead = warhead });
+            }
+            vlsCells -= n;
             shotReport = null;
             signal = Mathf.Min(100f, signal + fireSignalSpike);
         }
     }
+
+    /// <summary>Step 53 (GDD p.45): missiles need a locked target — identified by an active scan — and a cell left.</summary>
+    public bool MissileReady { get { var t = TrackOf(target); return t != null && !t.wreck && identified.Contains(t.key) && vlsCells > 0; } }
 
     // ---- leading a moving target (Step 52, owner 2026-10-23) ---------------------------------
 
@@ -936,7 +956,15 @@ public class HandoffBoardState
     // ---- rounds in flight (Step 48, owner 2026-10-23) ------------------------------------------
 
     [System.Serializable]
-    public class Round { public double x, y, dx, dy, travelled, maxKm; }
+    public class Round
+    {
+        public double x, y, dx, dy, travelled, maxKm;
+        public double speed = 50;
+        [Tooltip("Step 53: a missile homes on its target and carries a warhead (an index into warheads).")]
+        public bool missile;
+        public string targetKey;
+        public int warhead;
+    }
     [System.Serializable]
     public class HitRadius { public string klass; public float km; }
 
@@ -944,6 +972,14 @@ public class HandoffBoardState
     public System.Collections.Generic.List<Round> Rounds => rounds ?? (rounds = new System.Collections.Generic.List<Round>());
     [Tooltip("Railgun slug speed, km/s: the prototype's 4,800 slowed x96 like our ship. About 8 minutes to 24,300 km.")]
     [Tune("Periscope & fire control")] public double slugSpeedKms = 50;
+    [Tooltip("Missile speed, km/s (owner 2026-10-23): slower than a slug, but it homes. About 10 minutes to 12,000 km.")]
+    [Tune("Periscope & fire control")] public double missileSpeedKms = 20;
+    [Tooltip("How fast a missile can turn toward its target, degrees per mission second (the prototype's 2.2 rad/s slowed x96).")]
+    [Tune("Periscope & fire control")] public double missileTurnDegPerS = 1.3;
+    [Tooltip("A salvo leaves the launcher fanned this many degrees apart.")]
+    [Tune("Periscope & fire control")] public double missileSpreadDeg = 3;
+    [Tooltip("VLS cells left (the design's 8 / 8).")]
+    public int vlsCells = 8;
     [Tooltip("A slug hits a ship it passes within this distance of, by class (the prototype's radii, km). Others: 150.")]
     [Tune("Periscope & fire control")] public HitRadius[] hitRadii =
     {
@@ -966,7 +1002,7 @@ public class HandoffBoardState
 
     public static readonly string[] Sides = { "PROW", "STBD", "AFT", "PORT" };
     // what sits behind each side (FTUE_PLAN §4.4, ruled by the owner 2026-10-18)
-    static readonly string[][] Behind = { new[] { "bri" }, new[] { "mag" }, new[] { "rct", "eng" }, new[] { "hab", "hgr" } };
+    static readonly string[][] BehindSide = { new[] { "bri" }, new[] { "mag" }, new[] { "rct", "eng" }, new[] { "hab", "hgr" } };
     [Tooltip("Armour per side: PROW, STBD, AFT, PORT. At 0 the side is open (owner: prow and flanks take 2 slugs, the aft 1).")]
     [Tune("Damage")] public float[] sideArmourMax = { 100f, 100f, 50f, 100f };
     [Tooltip("Armour one railgun slug takes off the side it hits.")]
@@ -991,14 +1027,50 @@ public class HandoffBoardState
             armour[i] = Mathf.Max(0f, armour[i] - slugArmourDamage);
             return armour[i] <= 0f ? " OPEN" : " ARMOUR " + JsRound(armour[i] / sideArmourMax[i] * 100f) + "%";
         }
+        return Behind(i);
+    }
+
+    // One compartment behind side i that still stands, at random, loses slugCompartmentDamage.
+    string Behind(int i)
+    {
         var standing = new System.Collections.Generic.List<Compartment>();
-        foreach (var key in Behind[i]) { var c = Comp(key); if (c != null && c.integ > 0) standing.Add(c); }
+        foreach (var key in BehindSide[i]) { var c = Comp(key); if (c != null && c.integ > 0) standing.Add(c); }
         if (standing.Count == 0) return " · NOTHING LEFT BEHIND IT";
         if (dice == null) dice = new System.Random(49);
         var hit = standing[dice.Next(standing.Count)];
         hit.integ = Mathf.Max(0, hit.integ - slugCompartmentDamage);
         if (CompHealth("rct") <= 0) destroyed = true;
         return " · " + hit.tag + " −" + slugCompartmentDamage;
+    }
+
+    [Tooltip("Armour an HE warhead takes off the side it hits (owner: it opens a side fast).")]
+    [Tune("Damage")] public float heArmourDamage = 100f;
+    [Tooltip("An EMP knocks a ship's power out for this many mission seconds.")]
+    [Tune("Damage")] public float empSeconds = 60f;
+    /// <summary>Power is out until this mission time (EMP).</summary>
+    [System.NonSerialized] public float empUntil;
+
+    /// <summary>A missile's warhead strikes this ship (Step 53, owner 2026-10-23). HE hits the armour hard,
+    /// then what is behind it; PENETRATOR goes straight to a compartment behind the side; EMP does no
+    /// hull damage but knocks the power out.</summary>
+    public string TakeWarhead(string side, string warheadName)
+    {
+        if (destroyed) return "";
+        if (warheadName == "EMP")
+        {
+            foreach (var b in buses) b.fill = 0;
+            empUntil = missionNow + empSeconds;
+            return " · EMP · POWER DOWN";
+        }
+        int i = System.Array.IndexOf(Sides, side);
+        if (i < 0) return "";
+        var armour = SideArmour;
+        if (warheadName == "HE" && armour[i] > 0f)
+        {
+            armour[i] = Mathf.Max(0f, armour[i] - heArmourDamage);
+            return " · HE" + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + JsRound(armour[i] / sideArmourMax[i] * 100f) + "%");
+        }
+        return " · " + (warheadName == "PENETRATOR" ? "PEN" : warheadName) + Behind(i);
     }
 
     public float HitRadiusKm(string klass)
@@ -1026,7 +1098,8 @@ public class HandoffBoardState
         for (int i = list.Count - 1; i >= 0; i--)
         {
             var r = list[i];
-            double step = System.Math.Min(slugSpeedKms * dt, r.maxKm - r.travelled);
+            if (r.missile) Steer(r, dt);
+            double step = System.Math.Min(r.speed * dt, r.maxKm - r.travelled);
             Track struck = null;
             double first = double.MaxValue;
             foreach (var t in tracks)
@@ -1042,7 +1115,7 @@ public class HandoffBoardState
                 // Step 49: the struck ship takes the hit on its own model (its side, then what is behind it)
                 string side = SideStruck(struck, r);
                 var ship = ShipOf != null ? ShipOf(struck.key) : null;
-                string damage = ship != null ? ship.TakeSlug(side) : "";
+                string damage = ship == null ? "" : r.missile ? ship.TakeWarhead(side, warheads[r.warhead]) : ship.TakeSlug(side);
                 if (ship != null && ship.destroyed)
                 {
                     struck.wreck = true; struck.hostile = false;
@@ -1057,6 +1130,18 @@ public class HandoffBoardState
             r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
             if (r.travelled >= r.maxKm - 1e-6) { shotReport = "MISS"; lastShotHit = false; shotResults++; list.RemoveAt(i); }
         }
+    }
+
+    // A missile turns toward its target, no faster than missileTurnDegPerS. With no target left it flies on.
+    void Steer(Round r, double dt)
+    {
+        var t = TrackOf(r.targetKey);
+        if (t == null || !t.hasWorld || t.wreck) return;
+        double want = System.Math.Atan2(t.worldX - r.x, t.worldY - r.y) * 180 / System.Math.PI;
+        double now = System.Math.Atan2(r.dx, r.dy) * 180 / System.Math.PI;
+        double turn = ((want - now) % 360 + 540) % 360 - 180, most = missileTurnDegPerS * dt;
+        double head = (now + System.Math.Max(-most, System.Math.Min(most, turn))) * System.Math.PI / 180;
+        r.dx = System.Math.Sin(head); r.dy = System.Math.Cos(head);
     }
 
     // The side facing the shot (reference sim sideFacing): where it came from, against the ship's bow.
@@ -1193,6 +1278,7 @@ public class HandoffBoardState
 
     public void TickPower()
     {
+        if (missionNow < empUntil) { foreach (var b in buses) b.fill = 0; return; } // EMP: power stays down (Step 53)
         int total = TotalFill, cap = ReactorCap;
         // drain first, so a bus dropping out of DRAW frees its units the same tick
         foreach (var b in buses) if (b.mode == BusMode.Vent && b.fill > 0) { b.fill--; total--; }

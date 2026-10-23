@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 52 are done, plus a final QA pass.**
+**Steps 1 to 53 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -92,8 +92,9 @@ Do not run ahead. Do one step, show it, wait.
 | 50 | Engineering's ship diagram | **Done** — playtest 103/103 |
 | 51 | The enemy moves: TRACK 07 patrols | **Done** — playtest 107/107 |
 | 52 | Leading a moving target | **Done** — playtest 113/113 |
+| 53 | Missiles: the launcher, homing, three warheads | **Done** — playtest 121/121 |
 
-Steps 6 to 28 and Steps 34 to 52 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 53 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -595,16 +596,18 @@ The new layout throws that split away:
     after a shot (`yield return 0.2f`) before the next action. Step 42 caught a "DRADIS on"
     shot that showed DRADIS off.
 
-35. **Don't touch the Unity window while a playtest runs.** Bringing it to the front or clicking it
-    can switch the Game view off the recorder's 1920×1080 partway through. The playtest's clicks
-    then land in the wrong place ("blocked: topmost … is nothing"). Run `2026-10-23_090517` failed
-    this way; rerun untouched, it passed.
+35. **A control can have more than one click target.** A drawer has its rail key and its own latch,
+    and the latch stays active while the drawer slides away. Run `2026-10-23_090517` and run
+    `221323` failed "blocked: topmost … is nothing": the playtest clicked the FIRE latch while it
+    was still off the right edge, closing. (I first blamed someone touching the Unity window; that
+    was wrong.) Since Step 53, the playtest's `Click` tries every matching target and uses the
+    first one on top at its centre.
 
 36. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 52, in detail
+## 6 · Steps 6 to 28, and 34 to 53, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2123,6 +2126,60 @@ its average course over the two minutes (256° against 248° at that instant), a
 - The solution's point is fixed when the knob is last turned: an old solution is reckoned forward
   on the plotted course.
 
+### Step 53 — Missiles: the launcher, homing, three warheads
+
+**Owner decisions (2026-10-23).**
+
+- Missiles fly at **20 km/s**: slower than a slug, but they home. About 10 minutes to 12,000 km.
+- They **home on a locked target**, which needs an active-scan identification (GDD p.45). No
+  leading needed.
+- **The warheads split:**
+  - HE hits armour hard;
+  - PENETRATOR ignores armour and goes straight to a compartment behind the side;
+  - EMP does no hull damage but knocks the power out.
+- **Salvos stay** (1–8, using the launcher's 8 cells).
+- The design's warhead selector and salvo stepper were never in the export, so:
+  - **the turret knob picks the warhead** while MISSILE is selected (there is only one launcher);
+  - **the salvo is set in the tuning window** (default 2) until the stepper has art.
+
+**What was built.**
+
+- `Round` is now a slug or a missile: it carries its speed, whether it is a missile, its target
+  and its warhead.
+- `Fire()` with MISSILE (`MS`):
+  - it refuses without a lock or a cell (`MissileReady`), before spending charge;
+  - it launches `salvo` missiles, fanned 3° apart, and counts the cells down;
+  - it spikes the signal.
+- In `TickRounds` a missile steers toward its target, at up to 1.3° per mission second (the
+  prototype's 2.2 rad/s slowed ×96). The path test and hit radius are the slug's.
+- `TakeWarhead` on the struck ship:
+  - HE takes 100 armour, which opens any side in one hit, then compartments −2;
+  - PEN takes a compartment behind the side −2, whatever the armour;
+  - EMP drains every bus to 0 for 60 mission seconds (`empUntil`). The ship's power can't refill
+    until then (`TickPower` holds it at 0; a contact's engines come back when it ends).
+- Reports read "HIT · TRACK 07 · STBD · HE · MAG −2", "… · EMP · POWER DOWN", "… · PEN · MAG −2".
+- Fire control:
+  - with MISSILE the turret knob cycles HE → EMP → PENETRATOR, which also clears the ladder, as
+    the design says;
+  - the readout shows "HE · SALVO 2 OF 6" (cells left).
+- Tuning window: missile speed, turn rate and spread, HE armour damage, EMP time, salvo.
+
+**Checked.** Playtest 121/121 PASS, console clean (`Logs/Playtests/2026-10-23_221627/`). Against the
+patrolling TRACK 07, with a lock (stand-in for an active scan):
+
+- An HE salvo of two left the launcher (6 cells left). Both homed in and hit its already-open
+  starboard side, and its magazine went 5 → 1.
+- The knob picked EMP: "POWER DOWN". With no power it slowed from 0.93 to 0.27 km/s.
+- PENETRATOR: "PEN · MAG −2".
+- Four cells used.
+
+**Known.**
+
+- Missiles are drawn like slugs: a dot and a trail.
+- Nothing can shoot them down yet. PDCs come later.
+- The knob doesn't turn to show the warhead; the readout line does.
+- No reload: 8 cells per mission.
+
 ---
 
 ## 7 · How to keep this log
@@ -2170,7 +2227,7 @@ order:
      Steps 47–49 are done: the hand-dialled solution, fire and hit, and damage. **The dummy can
      be found, plotted, shot and destroyed.**
    - **Owner's order (2026-10-23):** an enemy that moves (done, Step 51), leading a moving target
-     (done, Step 52), **then missiles**, fighters, PDCs, the hangar launch.
+     (done, Step 52), missiles (done, Step 53), **then fighters**, PDCs, the hangar launch.
    - **Owner's list (2026-10-23), each to be planned with the owner:**
      - fighters: a launch puts a small triangle squadron on the plot, flying at the enemy;
      - ~~engineering shows the same top-down ship picture as the plot~~ (done, Step 50);

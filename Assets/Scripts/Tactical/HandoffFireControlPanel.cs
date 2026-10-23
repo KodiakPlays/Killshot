@@ -88,7 +88,7 @@ public class HandoffFireControlPanel : HandoffPanel
         {
             case "fc.sight": if (Controls.Motion) Controls.Motion.ToggleScope(); return true;
             case "fc.system": s.CycleSystem(); return true;
-            case "fc.mount": s.CycleMount(); return true;
+            case "fc.mount": if (s.sys == "MS") s.CycleWarhead(); else s.CycleMount(); return true; // Step 53: with one launcher, the knob picks the warhead
             case "fc.track": s.ComputeSol(); return true;
             case "fc.flip": s.Flip(int.Parse(arg)); return true;
         }
@@ -196,7 +196,7 @@ public class HandoffFireControlPanel : HandoffPanel
         {
             sysState.text = s.sys == "RG" ? "RAIL " + m.loaded + " · SLUGS " + m.ammo
                 : s.sys == "PD" ? m.ammo + " RDS · LOADERS " + (s.loaders ? "ENGAGED" : "OFF")
-                : s.warheads[s.warhead] + " · SALVO " + s.salvo + " OF 8";
+                : s.warheads[s.warhead] + " · SALVO " + s.salvo + " OF " + s.vlsCells; // cells left
             Paint(sysState, s.sys == "PD" && !s.loaders ? caution : data);
         }
 
