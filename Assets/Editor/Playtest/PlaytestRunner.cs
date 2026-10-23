@@ -257,6 +257,30 @@ public static class PlaytestRunner
         Shot("06_powered");
         yield return 0.2f;
 
+        //     TRACK 07 patrols (Step 51): its brain orders a heading and a throttle; its own ship model
+        //     moves it with the same maths as ours.
+        var brain = GameObject.Find("World").GetComponentInChildren<EnemyBrain>();
+        var t07Ship = brain ? brain.GetComponent<WorldContact>().Ship : null;
+        Check("TRACK 07 has a patrol brain", brain && brain.enabled, "");
+        if (!brain) yield break;
+        double ex0 = t07Ship.ownX, ey0 = t07Ship.ownY;
+        s.thr = 0; // stand-in: our helm at zero throttle, so our own ship holds still while TRACK 07 moves
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        yield return 3f;
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        s.vx = s.vy = 0;
+        double movedKm = System.Math.Sqrt((t07Ship.ownX - ex0) * (t07Ship.ownX - ex0) + (t07Ship.ownY - ey0) * (t07Ship.ownY - ey0));
+        var wp = brain.Waypoint;
+        int toWp = TacticalWorld.Bearing(new Vector2((float)(wp.x - t07Ship.ownX), (float)(wp.y - t07Ship.ownY)));
+        Check("TRACK 07 gets under way on its patrol, toward its next waypoint", movedKm > 1 && t07Ship.SpeedKms > 0.05 && System.Math.Abs(((t07Ship.ordHdg - toWp + 540) % 360) - 180) <= 1,
+              movedKm.ToString("0") + " km, " + t07Ship.SpeedKms.ToString("0.00") + " km/s, ordered " + t07Ship.ordHdg.ToString("000") + "°, heading " + t07Ship.hdg.ToString("000") + "°");
+        var dummyT = brain.transform;
+        Check("Its 3D model follows it", Mathf.Abs(dummyT.position.x - (float)t07Ship.ownX) < 0.05f && Mathf.Abs(dummyT.position.y - (float)t07Ship.ownY) < 0.05f, "");
+        Check("The board's track reads its real speed", Mathf.Abs(s.TrackOf("t07").speed - (float)t07Ship.SpeedKms) < 0.01f, s.TrackOf("t07").speed.ToString("0.00") + " km/s");
+        //     Stand-in: hold it still for the static-target checks below, until leading lands (Step 52).
+        brain.enabled = false;
+        t07Ship.vx = t07Ship.vy = 0;
+
         // 10. What the power now drives (board rules)
         Check("ENG power raises the throttle limit", s.ThrCap > 0, "throttle cap " + s.ThrCap + "%");
         Check("SEN power raises the sensor gain limit", s.GainCap > 1, "gain limit " + s.GainCap + " (range is " + s.SenRangeKm.ToString("N0") + " km until the gain is turned up — sensors feature)");

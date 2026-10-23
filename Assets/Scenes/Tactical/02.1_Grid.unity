@@ -9271,7 +9271,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 750, y: -0}
+  m_AnchoredPosition: {x: 750, y: 0}
   m_SizeDelta: {x: 420, y: 44}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &120608152
@@ -58229,6 +58229,7 @@ GameObject:
   m_Component:
   - component: {fileID: 765287327}
   - component: {fileID: 765287328}
+  - component: {fileID: 765287329}
   m_Layer: 0
   m_Name: "Dummy \xB7 TRACK 07"
   m_TagString: Untagged
@@ -58265,6 +58266,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldContact
   trackKey: t07
+--- !u!114 &765287329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765287326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b21730c2a5b4a4b4583d2d1cd71f531e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyBrain
+  route:
+  - {x: 0, y: 0}
+  - {x: -6000, y: -4000}
+  - {x: 0, y: -8000}
+  - {x: 6000, y: -4000}
+  cruiseKms: 1.1
+  arriveKm: 300
 --- !u!1 &766414874
 GameObject:
   m_ObjectHideFlags: 0

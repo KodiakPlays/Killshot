@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 50 are done, plus a final QA pass.**
+**Steps 1 to 51 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -90,8 +90,9 @@ Do not run ahead. Do one step, show it, wait.
 | 48 | Fire and hit: the railgun slug | **Done** — playtest 93/93 |
 | 49 | Damage: armour, compartments, the kill | **Done** — playtest 99/99 |
 | 50 | Engineering's ship diagram | **Done** — playtest 103/103 |
+| 51 | The enemy moves: TRACK 07 patrols | **Done** — playtest 107/107 |
 
-Steps 6 to 28 and Steps 34 to 50 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 51 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -597,7 +598,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 50, in detail
+## 6 · Steps 6 to 28, and 34 to 51, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2024,6 +2025,47 @@ engineering drawer:
 - The lamp spots are placed by eye on the model (tunable).
 - The target's own diagram (seeing the enemy's damage this way) waits for the target readout.
 
+### Step 51 — The enemy moves: TRACK 07 patrols
+
+**Owner decisions (2026-10-23).**
+
+- The order from here: an enemy that moves; leading a moving target; then missiles, fighters,
+  PDCs and the hangar launch.
+- **TRACK 07 moves.** It **patrols a loop of waypoints** at **1.1 km/s** (the design's speed for
+  it) and **does not react to us yet**.
+
+This is `FTUE_PLAN.md` step A, done the plan's way: a brain that only gives orders, and the ship's own
+`HandoffBoardState` moved by the same code as ours.
+
+**What was built.**
+
+- `EnemyBrain.cs`, on `Dummy · TRACK 07`:
+  - its route is a loop of points, km from where it starts. The default diamond runs (0,0),
+    (−6000,−4000), (0,−8000), (6000,−4000), from its start toward our side and back;
+  - `cruiseKms` (1.1) and `arriveKm` (300);
+  - `Think()` sets the ordered heading toward the current waypoint and the throttle for cruise
+    speed, and moves on to the next waypoint on arrival.
+  All three are under Enemy in the tuning window.
+- `TacticalWorld`:
+  - at load, each contact's ship starts where its model is, facing its way, engines powered;
+  - each board tick, for each contact with a brain, it runs `Think`, `TickHelm` and
+    `TickMove(rate)` — the same turning, acceleration and drift as ours — then places its model;
+  - the track's `speed` is now its real speed, which TRACK reads;
+  - a destroyed ship cuts its throttle and coasts to a stop.
+- Paused, there is no tick, so it holds still.
+
+**Checked.** Playtest 107/107 PASS, console clean (`Logs/Playtests/2026-10-23_085004/`).
+
+- After 3 s at ×10, TRACK 07 had gone 34 km and was making 0.71 km/s, still speeding up.
+- It was ordered onto 236° for its first waypoint and was still turning (heading 308°).
+- Its model followed its ship model, and the board's track read its real speed.
+- The older checks (the bearing trail crossing at the target, the hit, the fight) still assume a
+  target that holds still. Until leading lands in Step 52, the playtest stops TRACK 07 after the
+  patrol check, and holds our own ship still during the patrol burst.
+
+**Known.** At load our throttle sits at the design's 40%, so once ENG is powered our ship gets under
+way on its own.
+
 ---
 
 ## 7 · How to keep this log
@@ -2070,6 +2112,8 @@ order:
      - the selected weapon's range ring shows while Fire Control is open.
      Steps 47–49 are done: the hand-dialled solution, fire and hit, and damage. **The dummy can
      be found, plotted, shot and destroyed.**
+   - **Owner's order (2026-10-23):** an enemy that moves (done, Step 51), leading a moving target,
+     then missiles, fighters, PDCs, the hangar launch.
    - **Owner's list (2026-10-23), each to be planned with the owner:**
      - fighters: a launch puts a small triangle squadron on the plot, flying at the enemy;
      - ~~engineering shows the same top-down ship picture as the plot~~ (done, Step 50);

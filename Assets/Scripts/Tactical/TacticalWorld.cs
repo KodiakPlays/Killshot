@@ -17,12 +17,25 @@ public class TacticalWorld : MonoBehaviour
     [SerializeField] private bool dropTracksWithoutContact = true;
 
     private WorldContact[] contacts = new WorldContact[0];
+    private EnemyBrain[] brains = new EnemyBrain[0];
 
     private void Awake()
     {
         if (!board) board = FindAnyObjectByType<HandoffBoardControls>();
         if (!board) { Debug.LogError("[TacticalWorld] no HandoffBoardControls in the scene"); enabled = false; return; }
         contacts = GetComponentsInChildren<WorldContact>();
+        brains = System.Array.ConvertAll(contacts, c => c.GetComponent<EnemyBrain>());
+        // Step 51: each contact's ship starts where its model is, facing its way, engines powered
+        foreach (var c in contacts)
+        {
+            var ship = c.Ship;
+            ship.ownX = c.transform.position.x; ship.ownY = c.transform.position.y;
+            ship.hdg = ship.ordHdg = HandoffBoardState.JsRound(((-c.transform.eulerAngles.z) % 360 + 360) % 360) % 360;
+            ship.thr = 0;
+            var eng = ship.buses[0];
+            eng.mode = HandoffBoardState.BusMode.Draw;
+            eng.fill = ship.busMax;
+        }
         if (dropTracksWithoutContact)
         {
             var keys = new HashSet<string>();
@@ -46,10 +59,29 @@ public class TacticalWorld : MonoBehaviour
             return null;
         };
         Sync(); // before the board's first refresh (its Start), so it never shows mock numbers
-        board.Ticked += Sync;
+        board.Ticked += OnTick;
     }
 
-    private void OnDestroy() { if (board) board.Ticked -= Sync; }
+    private void OnDestroy() { if (board) board.Ticked -= OnTick; }
+
+    // One board tick: each contact with a brain takes its orders and moves (the same maths as our ship),
+    // then everything is placed and measured. Paused, no tick, so nothing moves.
+    void OnTick()
+    {
+        for (int i = 0; i < contacts.Length; i++)
+        {
+            var c = contacts[i];
+            var brain = brains[i];
+            if (!c || !brain || !brain.enabled) continue;
+            var ship = c.Ship;
+            if (ship.destroyed) ship.thr = 0; // a wreck makes no way of its own
+            else brain.Think(ship);
+            ship.TickHelm();
+            ship.TickMove(board.Rate);
+            c.transform.SetPositionAndRotation(new Vector3((float)ship.ownX, (float)ship.ownY, c.transform.position.z), Quaternion.Euler(0f, 0f, -ship.hdg));
+        }
+        Sync();
+    }
 
     /// <summary>Place our ship's model where the board has it, and write each contact's true
     /// bearing and range from our ship into its board track.</summary>
@@ -68,6 +100,7 @@ public class TacticalWorld : MonoBehaviour
             t.worldX = c.transform.position.x;
             t.worldY = c.transform.position.y;
             t.worldHdg = ((-c.transform.eulerAngles.z) % 360 + 360) % 360; // its bow, clockwise from north (Step 48)
+            t.speed = (float)c.Ship.SpeedKms; // its real speed (Step 51); TRACK reads it
             var d = new Vector2((float)(t.worldX - s.ownX), (float)(t.worldY - s.ownY));
             t.bearing = Bearing(d);
             t.rangeKm = HandoffBoardState.JsRound(d.magnitude); // the board's tracks hold whole km
