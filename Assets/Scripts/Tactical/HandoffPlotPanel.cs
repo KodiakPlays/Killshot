@@ -124,6 +124,17 @@ public class HandoffPlotPanel : HandoffPanel
     [Tooltip("The selected weapon's reach, a dashed ring round our ship while Fire Control is open.")]
     [SerializeField] private HandoffMarksGraphic weaponRing;
 
+    [Header("Fighters (Step 54): one small wedge per craft, own-force blue, no labels")]
+    [Tooltip("A hidden wedge image (hull_wedge_filled, nose up; the outline vanishes this small), cloned per fighter in flight.")]
+    [SerializeField] private Image fighterTemplate;
+    [Tooltip("A fighter's length on screen, px.")]
+    [Tune("Hangar & fighters")] [SerializeField] private float fighterPx = 16f;
+    [Tooltip("Gap between fighters in the V, px.")]
+    [Tune("Hangar & fighters")] [SerializeField] private float fighterGapPx = 10f;
+    private readonly List<Image> fighters = new List<Image>();
+    /// <summary>Fighters drawn now (the playtest reads it).</summary>
+    public int FightersShown { get; private set; }
+
     [Header("Colours (design sRGB)")]
     [SerializeField] private Color ownForce = new Color32(0x4A, 0x9F, 0xD8, 0xFF);
     [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
@@ -337,6 +348,29 @@ public class HandoffPlotPanel : HandoffPanel
             Put(ownShipImage.rectTransform, Screen(s.ownX, s.ownY), 0f);
         }
 
+        // fighters in flight (Step 54): a V behind the leader, each wedge pointing where the flight flies
+        int nf = 0;
+        if (fighterTemplate)
+        {
+            var ink = ownForce.gamma;
+            foreach (var f in s.Flights)
+            {
+                double h = f.hdg * System.Math.PI / 180.0;
+                Vector2 ahead = new Vector2((float)System.Math.Sin(h), (float)-System.Math.Cos(h)), right = new Vector2(-ahead.y, ahead.x); // board y is down
+                Vector2 lead = Screen(f.x, f.y);
+                for (int c = 0; c < f.craft; c++)
+                {
+                    int row = (c + 1) / 2;
+                    var img = Fighter(nf++);
+                    img.color = ink;
+                    img.rectTransform.sizeDelta = new Vector2(fighterPx * 0.5f, fighterPx);
+                    Put(img.rectTransform, lead + (right * (c % 2 == 1 ? -row : row) - ahead * row) * fighterGapPx, -(float)f.hdg);
+                }
+            }
+            for (int i = nf; i < fighters.Count; i++) fighters[i].gameObject.SetActive(false);
+        }
+        FightersShown = nf;
+
         // the selected weapon's reach while Fire Control is open (Step 46)
         if (weaponRing)
         {
@@ -493,6 +527,18 @@ public class HandoffPlotPanel : HandoffPanel
         }
         passiveLabels[i].gameObject.SetActive(true);
         return passiveLabels[i];
+    }
+
+    Image Fighter(int i)
+    {
+        while (fighters.Count <= i)
+        {
+            var f = Instantiate(fighterTemplate, fighterTemplate.transform.parent);
+            f.name = "Fighter " + fighters.Count;
+            fighters.Add(f);
+        }
+        fighters[i].gameObject.SetActive(true);
+        return fighters[i];
     }
 
     TMP_Text ContactLabel(int i)

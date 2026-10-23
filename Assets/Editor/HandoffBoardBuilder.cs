@@ -1561,6 +1561,19 @@ public static class HandoffBoardBuilder
         shipRt.anchoredPosition = new Vector2(960 - 104, -(545 - 100));
         so.FindProperty("ownShipImage").objectReferenceValue = shipImg;
 
+        // Step 54 (owner 2026-10-23): our fighters, small wedges in own-force blue; the panel clones,
+        // places and turns one per craft
+        var ftRt = NewRect("Fighter (template)", layer("Fighters"));
+        ftRt.anchorMin = ftRt.anchorMax = new Vector2(0, 1);
+        ftRt.pivot = new Vector2(0.5f, 0.5f);
+        ftRt.gameObject.AddComponent<CanvasRenderer>();
+        var ftImg = ftRt.gameObject.AddComponent<Image>();
+        ftImg.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Hulls/hull_wedge_filled.png");
+        ftImg.preserveAspect = true;
+        ftImg.raycastTarget = false;
+        ftRt.gameObject.SetActive(false);
+        so.FindProperty("fighterTemplate").objectReferenceValue = ftImg;
+
         // Step 34: identified hostile contacts at their true range and bearing. Stand-in red dots
         // and name labels until the contact glyphs arrive (CLAUDE_DESIGN_NEEDS 1.2). Under the marks.
         var cm = layer("Contacts (drawn)");

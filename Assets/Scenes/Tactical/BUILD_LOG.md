@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 53 are done, plus a final QA pass.**
+**Steps 1 to 54 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -93,8 +93,9 @@ Do not run ahead. Do one step, show it, wait.
 | 51 | The enemy moves: TRACK 07 patrols | **Done** — playtest 107/107 |
 | 52 | Leading a moving target | **Done** — playtest 113/113 |
 | 53 | Missiles: the launcher, homing, three warheads | **Done** — playtest 121/121 |
+| 54 | Fighters: launch, fly out, attack runs, recall | **Done** — playtest 130/130 |
 
-Steps 6 to 28 and Steps 34 to 53 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 54 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -418,6 +419,9 @@ These are settled. Do not reopen them.
 28. **Railgun: a 50 km/s slug that hits within a class radius, aimed in whole degrees** (owner,
     2026-10-23). Whole degrees stay on purpose: from ~24,000 km even the best aim can just miss a
     cruiser. Close in for a sure shot. Details in Step 48.
+29. **Fighters fly and fight on the plot; RECALL brings them home** (owner, 2026-10-23). 8 km/s,
+    attack runs of 10 armour per fighter, wedges in a V with no labels. They land when they reach
+    us. Details in Step 54.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -607,7 +611,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 53, in detail
+## 6 · Steps 6 to 28, and 34 to 54, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2180,6 +2184,68 @@ patrolling TRACK 07, with a lock (stand-in for an active scan):
 - The knob doesn't turn to show the warhead; the readout line does.
 - No reload: 8 cells per mission.
 
+### Step 54 — Fighters: launch, fly out, attack runs, recall
+
+**Owner decisions (2026-10-23).**
+
+- Fighters fly at **8 km/s**, about three times our top speed.
+- **Attack runs:**
+  - DESTROY: every 30 mission seconds each fighter takes 10 armour off the side facing it. Once
+    that side is open, it takes 1 off a compartment behind it.
+  - DISABLE: the same, but always at the engines (AFT armour, then ENG).
+  - ESCORT: the squadron stays with our ship.
+- **On the plot:** one small wedge per fighter, in own-force blue, in a loose V, pointing where
+  they fly. No labels.
+- **RECALL brings them home.** They turn back to our ship and land; the squadron is then ready
+  again. Fuel comes later.
+
+**What was built.**
+
+- `HandoffBoardState`:
+  - `LaunchSquad()` now also puts a `Flight` in the air: the squadron's ready craft, its order,
+    fire control's target, starting at our ship on the launch bearing.
+  - `TickFlights()`, each board tick:
+    - the flight flies toward its target, or home, or with us on ESCORT;
+    - inside 200 km of the target it makes its attack runs (`TakeFighterRun` on the target's own
+      ship model);
+    - if the target is destroyed, it turns home;
+    - home and inside 50 km, it lands: the squadron is aboard and the launch stages clear.
+  - `RecallSquad()` with a flight out turns it home instead of removing it at once.
+  - `FlightStatus()` gives the hangar's telemetry line: "OUTBOUND TO TRACK 07 · 1,592 KM",
+    "ATTACKING TRACK 07 · PROW ARMOUR 60%", "RETURNING · 1,820 KM", "ESCORTING".
+  - A destroyed target is marked a wreck through the same `Kill()` as a slug.
+- `HandoffPlotPanel` draws the fighters from a hidden template (`fighterTemplate`, the builder's
+  "Fighters" layer, `hull_wedge_filled`). Size and V gap are in the Tuning window.
+- `HandoffHangarPanel`'s telemetry line shows `FlightStatus` while the squadron is out.
+- Tuning window, "Hangar & fighters": speed, attack range, seconds between runs, armour and
+  compartment damage, wedge size and gap.
+
+**Behaviour change, as the owner decided.** Before, RECALL ended a launch at once. Now it turns the
+fighters home and they land when they reach us. The telemetry line used to read "SQUADRON AIRBORNE —
+RECALL TO RECOVER" while out; it now says what the flight is doing.
+
+**Checked.** Playtest 130/130 PASS, console clean (`Logs/Playtests/2026-10-23_231846/`). With TRACK 07
+held still and our ship 2,000 km off its bow:
+
+- ENG and WEP were drawing all 10 units, so the catapult refused ("NO AUX UNITS"). Venting ENG
+  (we were stopped) gave AUX 3 units.
+- The six launch stages ran to 100% and the launch lever put four interceptors on the plot.
+- They flew out at 8.00 km/s ("OUTBOUND TO TRACK 07").
+- Their first run took PROW armour 100 → 60, which is 4 × 10 ("ATTACKING TRACK 07 · PROW ARMOUR 60%").
+- RECALL turned them home; they landed, the stages cleared, and there were no runs after the recall.
+- The fight to the kill that follows still passed unchanged.
+
+**Known.**
+
+- The outline wedge (`hull_wedge_outline`) vanishes at 16 px, as its lines go under a pixel, so the
+  filled one is used. Same shape.
+- The fighters fly to the target's true position even when we only hear it. The plot shows them
+  flying down the bearing line.
+- The playtest doesn't run DISABLE or ESCORT; their code paths are simple branches of the same
+  tick. It launches with a stand-in for typing the launch bearing.
+- No fuel, no losses, no enemy PDCs shooting them down yet.
+- The assault boats' SECURE order attacks like DESTROY (boarding is out, decision in memory).
+
 ---
 
 ## 7 · How to keep this log
@@ -2227,9 +2293,11 @@ order:
      Steps 47–49 are done: the hand-dialled solution, fire and hit, and damage. **The dummy can
      be found, plotted, shot and destroyed.**
    - **Owner's order (2026-10-23):** an enemy that moves (done, Step 51), leading a moving target
-     (done, Step 52), missiles (done, Step 53), **then fighters**, PDCs, the hangar launch.
+     (done, Step 52), missiles (done, Step 53), fighters (done, Step 54), **then PDCs**, the
+     hangar launch (what is left of it after Step 54: plan with the owner).
    - **Owner's list (2026-10-23), each to be planned with the owner:**
-     - fighters: a launch puts a small triangle squadron on the plot, flying at the enemy;
+     - ~~fighters: a launch puts a small triangle squadron on the plot, flying at the enemy~~ (done,
+       Step 54);
      - ~~engineering shows the same top-down ship picture as the plot~~ (done, Step 50);
      - missiles and PDCs;
      - the hangar launch;

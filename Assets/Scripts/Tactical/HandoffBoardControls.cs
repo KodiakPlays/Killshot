@@ -237,6 +237,7 @@ public class HandoffBoardControls : MonoBehaviour
                 state.TickHelm(); // reads the engine room before a repair lands this tick, as tickPower does
                 state.TickMove(rate); // Step 41: the ship moves; each tick is `rate` mission seconds, as the clock
                 state.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
+                state.TickFlights(rate); // Step 54: fighters fly, attack, come home
                 state.TickParty();
                 state.TickLaunch();
                 state.TickWeapons();

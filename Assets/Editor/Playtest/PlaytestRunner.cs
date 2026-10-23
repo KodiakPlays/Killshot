@@ -851,6 +851,77 @@ public static class PlaytestRunner
         if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break;
         brain.enabled = false; t07Ship.vx = t07Ship.vy = 0; s.identified.Remove("t07");
 
+        // 21d. Fighters (Step 54): the interceptors launch from the hangar, fly to TRACK 07, make attack runs
+        //     on the side facing them, and RECALL brings them home to land.
+        //     Stand-in for the helm: 2,000 km ahead of its bow (never hit yet), stopped, facing it.
+        double sbd = t07.worldHdg * System.Math.PI / 180;
+        s.ownX = t07.worldX + System.Math.Sin(sbd) * 2000; s.ownY = t07.worldY + System.Math.Cos(sbd) * 2000;
+        s.vx = s.vy = 0; s.thr = 0;
+        s.hdg = s.ordHdg = ((int)System.Math.Round(t07.worldHdg) + 180) % 360;
+        s.target = "t07";
+        var vxField = typeof(HandoffPlotPanel).GetField("viewX", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var vyField = typeof(HandoffPlotPanel).GetField("viewY", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        vxField.SetValue(plotPanel, (s.ownX + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.ownY + t07.worldY) / 2); // stand-in for panning the plot
+        var ilField = typeof(HandoffHangarPanel).GetField("interlock", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var hangarPanel = board.GetComponent<HandoffHangarPanel>();
+        Func<string> interlockText = () => { var t = ilField.GetValue(hangarPanel) as TMPro.TMP_Text; return t ? t.text : ""; };
+        if (board.Motion && board.Motion.ScopeDown) board.Motion.SetScopeDown(false); // the periscope covers the plot's middle
+        //     Power for the catapult: ENG and WEP hold all ten units, so ENG gives its back (we are stopped) and AUX draws.
+        if (!Click("drawer", "power", "PWR key")) yield break;
+        yield return 0.8f;
+        for (int k = 0; k < 3 && s.buses[0].mode != HandoffBoardState.BusMode.Vent; k++) if (!Click("power.bus", "0", "ENG selector (toward VENT)")) yield break;
+        for (int k = 0; k < 3 && s.buses[3].mode != HandoffBoardState.BusMode.Draw; k++) if (!Click("power.bus", "3", "AUX selector (toward DRAW)")) yield break;
+        yield return (Func<bool>)(() => s.BusUnits("aux") >= 1);
+        if (!Click("drawer", "hangar", "HGR key")) yield break;
+        yield return 0.8f;
+        Check("The interceptors are selected, on DESTROY", s.CurrentSquad.key == "gw" && s.order == "destroy" && s.SquadReady(s.CurrentSquad) == 4, s.CurrentSquad.key + " " + s.order + ", " + s.SquadReady(s.CurrentSquad) + " ready");
+        s.SetLbrg(s.hdg.ToString()); // stand-in for typing the launch bearing: dead ahead
+        if (!s.doorsOpen && !Click("hangar.doors", null, "bay door master")) yield break;
+        Check("The catapult can charge (AUX powered)", s.StageBlock("cat") == null, (s.StageBlock("cat") ?? "") + " AUX " + s.BusUnits("aux") + " units, ENG " + s.buses[0].mode);
+        for (int i = 0; i < s.stages.Length; i++)
+        {
+            if (!Click("hangar.stage", i.ToString(), s.stages[i].label + " stage")) yield break;
+            int k = i;
+            yield return (Func<bool>)(() => s.stages[k].progress >= 100f);
+        }
+        Check("Every launch stage at 100%", s.AllStagesDone && s.LaunchBlock() == null, s.LaunchBlock() ?? "");
+        var hLever = Hit("hangar.lever", null);
+        Vector2 hLeverAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(hLever.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
+                                            hLever.transform.TransformPoint(((RectTransform)hLever.transform).rect.center)));
+        if (!PlotDrag(board, hLeverAt, hLeverAt + new Vector2(240, 0), "pull the launch lever", "hangar.lever")) yield break;
+        yield return 0.6f;
+        Check("Four interceptors take off: four wedges on the plot", s.Flights.Count == 1 && s.Flights[0].craft == 4 && plotPanel.FightersShown == 4 && s.Launched(s.CurrentSquad),
+              s.Flights.Count + " flight, " + (s.Flights.Count > 0 ? s.Flights[0].craft : 0) + " craft, " + plotPanel.FightersShown + " drawn");
+        var flight = s.Flights.Count > 0 ? s.Flights[0] : null;
+        if (flight == null) yield break;
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        double fx0 = flight.x, fy0 = flight.y; float ft0 = board.MissionSeconds;
+        yield return 2f;
+        double flown = System.Math.Sqrt((flight.x - fx0) * (flight.x - fx0) + (flight.y - fy0) * (flight.y - fy0)), took = board.MissionSeconds - ft0;
+        Check("They fly toward TRACK 07 at 8 km/s", System.Math.Abs(flown / took - s.fighterSpeedKms) < 0.5 && interlockText().StartsWith("OUTBOUND TO TRACK 07"),
+              (flown / took).ToString("0.00") + " km/s; \"" + interlockText() + "\"");
+        yield return (Func<bool>)(() => System.Math.Sqrt((flight.x - s.ownX) * (flight.x - s.ownX) + (flight.y - s.ownY) * (flight.y - s.ownY)) > 1000); // clear of our ship's picture
+        Shot("28c_fighters_outbound");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        float prow0 = dummyShip.SideArmour[0];
+        yield return (Func<bool>)(() => s.flightRuns >= 1);
+        Check("In range, one attack run: 10 armour per fighter off the side facing them, its bow", s.flightRuns == 1 && s.flightReport == " PROW ARMOUR 60%"
+              && Mathf.Approximately(dummyShip.SideArmour[0], prow0 - 4 * s.fighterArmourDamage),
+              "\"" + s.flightReport + "\"; PROW armour " + prow0 + " → " + dummyShip.SideArmour[0]);
+        Check("The hangar reports the attack", interlockText().StartsWith("ATTACKING TRACK 07"), "\"" + interlockText() + "\"");
+        Shot("28d_fighters_attacking");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        if (!Click("hangar.recall", null, "RECALL")) yield break;
+        Check("RECALL turns them home", flight.returning && interlockText().StartsWith("RETURNING"), "\"" + interlockText() + "\"");
+        int runs = s.flightRuns;
+        yield return (Func<bool>)(() => s.Flights.Count == 0);
+        yield return (Func<bool>)(() => s.Flights.Count == 0); // 15 s each; the way home is about 11 s at x10
+        Check("Home, they land: the squadron is aboard and its stages clear", s.Flights.Count == 0 && !s.Launched(s.CurrentSquad) && !s.AllStagesDone && plotPanel.FightersShown == 0 && s.flightRuns == runs,
+              s.Flights.Count + " flights, " + plotPanel.FightersShown + " drawn, " + (s.flightRuns - runs) + " runs after the recall");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        if (!Click("drawer", "fire control", "FIRE key")) yield break;
+        yield return 0.6f;
+
         // 22. A fight to the kill (Step 49): close in behind TRACK 07 and shoot until it is a wreck.
         var before = (float[])dummyShip.SideArmour.Clone(); // the shots above may have marked its sides
         int bri0 = dummyShip.Comp("bri").integ, magB = dummyShip.Comp("mag").integ, hab0 = dummyShip.Comp("hab").integ, hgr0 = dummyShip.Comp("hgr").integ;

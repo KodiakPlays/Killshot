@@ -1030,17 +1030,41 @@ public class HandoffBoardState
         return Behind(i);
     }
 
-    // One compartment behind side i that still stands, at random, loses slugCompartmentDamage.
-    string Behind(int i)
+    /// <summary>One fighter's attack run on this ship (Step 54). DESTROY: the side facing it, then a compartment
+    /// behind. DISABLE: always the aft armour, then the engines.</summary>
+    public string TakeFighterRun(string side, bool disable, float armourDamage, int compartmentDamage)
+    {
+        if (destroyed) return "";
+        int i = disable ? 2 : System.Array.IndexOf(Sides, side);
+        if (i < 0) return "";
+        var armour = SideArmour;
+        if (armour[i] > 0f)
+        {
+            armour[i] = Mathf.Max(0f, armour[i] - armourDamage);
+            return " " + Sides[i] + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + JsRound(armour[i] / sideArmourMax[i] * 100f) + "%");
+        }
+        if (disable)
+        {
+            var eng = Comp("eng");
+            if (eng == null || eng.integ <= 0) return " AFT · ENG DOWN";
+            eng.integ = Mathf.Max(0, eng.integ - compartmentDamage);
+            return " AFT · ENG −" + compartmentDamage;
+        }
+        return " " + Sides[i] + Behind(i, compartmentDamage);
+    }
+
+    // One compartment behind side i that still stands, at random, loses the damage given.
+    string Behind(int i) => Behind(i, slugCompartmentDamage);
+    string Behind(int i, int damage)
     {
         var standing = new System.Collections.Generic.List<Compartment>();
         foreach (var key in BehindSide[i]) { var c = Comp(key); if (c != null && c.integ > 0) standing.Add(c); }
         if (standing.Count == 0) return " · NOTHING LEFT BEHIND IT";
         if (dice == null) dice = new System.Random(49);
         var hit = standing[dice.Next(standing.Count)];
-        hit.integ = Mathf.Max(0, hit.integ - slugCompartmentDamage);
+        hit.integ = Mathf.Max(0, hit.integ - damage);
         if (CompHealth("rct") <= 0) destroyed = true;
-        return " · " + hit.tag + " −" + slugCompartmentDamage;
+        return " · " + hit.tag + " −" + damage;
     }
 
     [Tooltip("Armour an HE warhead takes off the side it hits (owner: it opens a side fast).")]
@@ -1116,14 +1140,8 @@ public class HandoffBoardState
                 string side = SideStruck(struck, r);
                 var ship = ShipOf != null ? ShipOf(struck.key) : null;
                 string damage = ship == null ? "" : r.missile ? ship.TakeWarhead(side, warheads[r.warhead]) : ship.TakeSlug(side);
-                if (ship != null && ship.destroyed)
-                {
-                    struck.wreck = true; struck.hostile = false;
-                    shotReport = struck.name + " DESTROYED";
-                    kills++;
-                }
-                else shotReport = "HIT · " + struck.name + " · " + side + damage;
-                lastShotHit = true; shotResults++;
+                if (ship != null && ship.destroyed) Kill(struck);
+                else { shotReport = "HIT · " + struck.name + " · " + side + damage; lastShotHit = true; shotResults++; }
                 list.RemoveAt(i);
                 continue;
             }
@@ -1200,13 +1218,115 @@ public class HandoffBoardState
         if (Launched(q) || LaunchBlock() != null || !AllStagesDone) return;
         launchedSquads.Add(q.key);
         launchedOrders.Add(order);
+        // Step 54: the squadron's ready craft take off from our ship, for fire control's target
+        Flights.Add(new Flight { squad = q.key, order = order, targetKey = target, craft = SquadReady(q), x = ownX, y = ownY, hdg = lbrg });
     }
 
     public void RecallSquad()
     {
+        // Step 54 (owner 2026-10-23): RECALL turns the squadron home; it is back once it lands (TickFlights)
+        var f = Flights.Find(k => k.squad == CurrentSquad.key);
+        if (f != null) { f.returning = true; return; }
         int i = launchedSquads.IndexOf(CurrentSquad.key);
         if (i >= 0) { launchedSquads.RemoveAt(i); launchedOrders.RemoveAt(i); }
         ClearStages();
+    }
+
+    // ---- fighters in flight (Step 54, owner 2026-10-23) ----------------------------------------
+
+    [System.Serializable]
+    public class Flight
+    {
+        public string squad, order, targetKey;
+        public int craft;
+        public double x, y, hdg;
+        public bool returning, attacking;
+        public float nextRun;
+    }
+    [System.NonSerialized] private System.Collections.Generic.List<Flight> flights;
+    public System.Collections.Generic.List<Flight> Flights => flights ?? (flights = new System.Collections.Generic.List<Flight>());
+    [Tooltip("Fighter speed, km/s (owner: three times our top speed).")]
+    [Tune("Hangar & fighters")] public double fighterSpeedKms = 8;
+    [Tooltip("Inside this distance of the target the squadron makes its attack runs, km.")]
+    [Tune("Hangar & fighters")] public double fighterAttackKm = 200;
+    [Tooltip("One attack run by every fighter this often, mission seconds.")]
+    [Tune("Hangar & fighters")] public float fighterRunSeconds = 30f;
+    [Tooltip("Armour each fighter takes off the side it attacks, per run.")]
+    [Tune("Hangar & fighters")] public float fighterArmourDamage = 10f;
+    [Tooltip("Integrity each fighter takes off a compartment through an open side, per run.")]
+    [Tune("Hangar & fighters")] public int fighterCompartmentDamage = 1;
+    /// <summary>What the squadron is doing, for the hangar's status line.</summary>
+    public string FlightStatus(string squadKey)
+    {
+        var f = Flights.Find(k => k.squad == squadKey);
+        if (f == null) return null;
+        if (f.returning) return "RETURNING · " + JsRound(System.Math.Sqrt((f.x - ownX) * (f.x - ownX) + (f.y - ownY) * (f.y - ownY))).ToString("N0") + " KM";
+        if (f.order == "escort") return "ESCORTING";
+        var t = TrackOf(f.targetKey);
+        string name = t != null ? t.name : "TARGET";
+        if (f.attacking) return (f.order == "disable" ? "DISABLING " : "ATTACKING ") + name + (flightReport != null ? " ·" + flightReport : "");
+        double d = t != null && t.hasWorld ? System.Math.Sqrt((t.worldX - f.x) * (t.worldX - f.x) + (t.worldY - f.y) * (t.worldY - f.y)) : 0;
+        return "OUTBOUND TO " + name + " · " + JsRound(d).ToString("N0") + " KM";
+    }
+    [System.NonSerialized] public string flightReport;
+    [System.NonSerialized] public int flightRuns;
+
+    /// <summary>Each tick: fly to the target (or home, or with us on ESCORT); inside attack range, every fighter
+    /// makes a run every fighterRunSeconds; home and close, they land and the squadron is ready again.</summary>
+    public void TickFlights(double dt)
+    {
+        var list = Flights;
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            var f = list[i];
+            var t = f.returning || f.order == "escort" ? null : TrackOf(f.targetKey);
+            if (!f.returning && f.order != "escort" && (t == null || !t.hasWorld || t.wreck)) { f.returning = true; f.attacking = false; t = null; }
+            double gx = t != null ? t.worldX : ownX, gy = t != null ? t.worldY : ownY;
+            double reach = f.returning ? 50 : f.order == "escort" ? 300 : fighterAttackKm;
+            double dx = gx - f.x, dy = gy - f.y, d = System.Math.Sqrt(dx * dx + dy * dy);
+            if (d > reach)
+            {
+                double step = System.Math.Min(fighterSpeedKms * dt, d - reach * 0.9);
+                f.x += dx / d * step; f.y += dy / d * step;
+                f.hdg = (System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360;
+                continue;
+            }
+            if (f.returning)
+            {
+                list.RemoveAt(i);
+                int k = launchedSquads.IndexOf(f.squad);
+                if (k >= 0) { launchedSquads.RemoveAt(k); launchedOrders.RemoveAt(k); }
+                ClearStages();
+                continue;
+            }
+            if (t == null) continue; // escorting: stay with us
+            if (!f.attacking) { f.attacking = true; f.nextRun = missionNow; }
+            if (missionNow < f.nextRun) continue;
+            f.nextRun = missionNow + fighterRunSeconds;
+            var ship = ShipOf != null ? ShipOf(t.key) : null;
+            if (ship == null) continue;
+            string side = SideFrom(t, f.x, f.y), result = "";
+            for (int c = 0; c < f.craft && !ship.destroyed; c++)
+                result = ship.TakeFighterRun(side, f.order == "disable", fighterArmourDamage, fighterCompartmentDamage);
+            flightRuns++;
+            flightReport = result;
+            if (ship.destroyed && !t.wreck) Kill(t);
+        }
+    }
+
+    // The side of a ship facing a point (where the attack comes from), against its bow.
+    static string SideFrom(Track t, double x, double y)
+    {
+        double from = (System.Math.Atan2(x - t.worldX, y - t.worldY) * 180 / System.Math.PI + 360) % 360;
+        double rel = ((from - t.worldHdg) % 360 + 360) % 360;
+        return rel < 45 || rel >= 315 ? "PROW" : rel < 135 ? "STBD" : rel < 225 ? "AFT" : "PORT";
+    }
+
+    void Kill(Track t)
+    {
+        t.wreck = true; t.hostile = false;
+        shotReport = t.name + " DESTROYED";
+        kills++; shotResults++; lastShotHit = true;
     }
 
     public void ToggleDradis() { dradis = !dradis; }

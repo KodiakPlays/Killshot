@@ -241,7 +241,7 @@ public class HandoffHangarPanel : HandoffPanel
         if (interlock)
         {
             string t = null;
-            if (out_) t = "SQUADRON AIRBORNE — RECALL TO RECOVER";
+            if (out_) t = s.FlightStatus(q.key) ?? "SQUADRON AIRBORNE — RECALL TO RECOVER"; // Step 54: what it is doing
             else
             {
                 foreach (var g in s.stages) if (g.on && g.progress < 100f) { t = g.label + " — " + HandoffBoardState.JsRound(g.progress) + "%"; break; }
