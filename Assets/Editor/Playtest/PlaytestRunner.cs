@@ -751,6 +751,33 @@ public static class PlaytestRunner
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("rate", "1", "x1 rate key")) yield break;
         if (!Click("drawer", "fire control", "FIRE key (close)")) yield break;
+        yield return 0.5f;
+
+        // 23. Engineering's ship diagram (Step 50): our ship bow up, a lamp per compartment.
+        if (!Click("drawer", "engineering", "ENGR key")) yield break;
+        yield return 0.8f;
+        var eng = board.GetComponent<HandoffEngineeringPanel>();
+        var picField = typeof(HandoffEngineeringPanel).GetField("shipPicture", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var lampsField = typeof(HandoffEngineeringPanel).GetField("compartmentLamps", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var pic = picField.GetValue(eng) as UnityEngine.UI.RawImage;
+        var lamps = lampsField.GetValue(eng) as UnityEngine.UI.Image[];
+        Check("Engineering shows our ship, bow up", pic && pic.enabled && pic.texture != null && Mathf.Approximately(Mathf.DeltaAngle(pic.rectTransform.localEulerAngles.z, s.hdg), 0f),
+              pic ? "turned back " + pic.rectTransform.localEulerAngles.z.ToString("0") + "° for heading " + s.hdg.ToString("000") + "°" : "no picture");
+        Color green = ((Color)new Color32(0x8F, 0xC3, 0x3A, 0xFF)).gamma, amber = ((Color)new Color32(0xE0, 0xA0, 0x20, 0xFF)).gamma, red = ((Color)new Color32(0xE0, 0x4B, 0x3C, 0xFF)).gamma;
+        System.Func<UnityEngine.UI.Image, Color, bool> lit = (l, c) => Mathf.Abs(l.color.r - c.r) < 0.01f && Mathf.Abs(l.color.g - c.g) < 0.01f && Mathf.Abs(l.color.b - c.b) < 0.01f;
+        bool allGreen = lamps != null && lamps.Length == 6;
+        if (allGreen) foreach (var l in lamps) if (!lit(l, green)) allGreen = false;
+        Check("Six compartment lamps, all green: undamaged", allGreen, lamps != null ? lamps.Length + " lamps" : "none");
+        //     Stand-in for an enemy hit: habitation hurt, hangar nearly gone.
+        s.Comp("hab").integ = 2; s.Comp("hgr").integ = 1;
+        yield return 0.6f;
+        Check("A hurt compartment's lamp turns amber, a nearly-gone one red", lit(lamps[2], amber) && lit(lamps[3], red) && lit(lamps[0], green), "HAB 2, HGR 1");
+        Shot("30_engineering_diagram");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        s.Comp("hab").integ = 5; s.Comp("hgr").integ = 5;
+        yield return 0.6f;
+        Check("Repaired, they go green again", lit(lamps[2], green) && lit(lamps[3], green), "");
+        if (!Click("drawer", "engineering", "ENGR key (close)")) yield break;
         yield return 1f;
     }
 

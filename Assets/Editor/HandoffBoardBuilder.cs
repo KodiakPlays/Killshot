@@ -878,6 +878,35 @@ public static class HandoffBoardBuilder
         string[] keys = { "mag", "bri", "hab", "hgr", "rct", "eng" };
         int[] rings = { 237, 239, 241, 243, 246, 248 };
         Named(root, E, "drawn#245 ").gameObject.SetActive(false); // replaced by a background per row
+
+        // Step 50 (owner 2026-10-23): our ship's top-down picture replaces the design's line-and-blocks
+        // diagram (#230 line, #231–#236 blocks) on its dark box (#228/#229, kept), bow up, a lamp per
+        // compartment. The panel sizes and turns the picture and colours the lamps.
+        for (int d = 230; d <= 236; d++) Named(root, E, "drawn#" + d + " ").gameObject.SetActive(false);
+        var box = Named(root, E, "drawn#229 ");
+        var diagram = NewRect("Ship diagram", group);
+        TopLeft(diagram, new Rect(1477, 337, 112, 199), Vector2.zero);
+        diagram.SetSiblingIndex(box.GetSiblingIndex() + 1);
+        var pic = NewRect("Ship (bow up)", diagram);
+        pic.anchorMin = pic.anchorMax = pic.pivot = new Vector2(0.5f, 0.5f);
+        pic.anchoredPosition = Vector2.zero;
+        pic.sizeDelta = new Vector2(199, 199);
+        var picImg = pic.gameObject.AddComponent<RawImage>();
+        picImg.material = ShipImageMaterial();
+        picImg.raycastTarget = false;
+        picImg.enabled = false; // no texture until play (a RawImage with none draws white)
+        so.FindProperty("shipPicture").objectReferenceValue = picImg;
+        var lampSprite = LoadSprite("lamp_dot");
+        var lampList = new List<Object>();
+        foreach (var k in new[] { "bri", "mag", "hab", "hgr", "rct", "eng" })
+        {
+            var lr = NewRect("Lamp · " + k, diagram);
+            lr.anchorMin = lr.anchorMax = lr.pivot = new Vector2(0.5f, 0.5f);
+            lr.sizeDelta = new Vector2(8, 8);
+            lampList.Add(Img(lr.gameObject, lampSprite, Hex("accent.nominal", 1f), false));
+        }
+        SetRefs(so.FindProperty("compartmentLamps"), lampList.ToArray());
+        Count("built: engineering ship diagram");
         var rowsProp = so.FindProperty("rows");
         rowsProp.arraySize = keys.Length;
         for (int r = 0; r < keys.Length; r++)

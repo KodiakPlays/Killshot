@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 49 are done, plus a final QA pass.**
+**Steps 1 to 50 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -89,8 +89,9 @@ Do not run ahead. Do one step, show it, wait.
 | 47 | The firing solution dialled by hand | **Done** — playtest 81/81 |
 | 48 | Fire and hit: the railgun slug | **Done** — playtest 93/93 |
 | 49 | Damage: armour, compartments, the kill | **Done** — playtest 99/99 |
+| 50 | Engineering's ship diagram | **Done** — playtest 103/103 |
 
-Steps 6 to 28 and Steps 34 to 49 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 50 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -596,7 +597,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 49, in detail
+## 6 · Steps 6 to 28, and 34 to 50, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1987,6 +1988,42 @@ kill cue sounded. The earlier long-range shot correctly missed by 224 km.
   compartments use the same code.
 - The plot view doesn't follow our ship: after a long move you pan to find it.
 
+### Step 50 — Engineering's ship diagram
+
+**Owner decisions (2026-10-23).** The same picture of our ship as on the plot appears in the
+engineering drawer:
+
+- it replaces the design's line-and-blocks diagram;
+- it is always bow up;
+- a lamp on the hull shows each compartment, green, then amber, then red as its integrity drops.
+
+**What was built.**
+
+- The builder hides the design's diagram (`drawn#230` line, `#231`–`#236` blocks) and keeps its
+  dark box (`#228`/`#229`). Over the box it adds `Ship diagram`: a RawImage of the plot's ship
+  view, plus six lamps (`lamp_dot`).
+- `HandoffEngineeringPanel.ShowDiagram`, on every refresh:
+  - the picture shows `ShipView`'s texture in our ship's white;
+  - it is turned back by our heading, so the bow is always up (no second camera);
+  - its size is set by `diagramShipPx` (190);
+  - lamps follow `CompHealth`: 4–5 green, 2–3 amber, 0–1 red;
+  - lamp spots: bridge at the bow, magazine starboard, habitation and hangar port, reactor and
+    engines at the stern. They follow the side-to-compartment map in `FTUE_PLAN.md` §4.4.
+  Spots and size are tunable under Engineering & orders.
+
+**Checked.** Playtest 103/103 PASS, console clean (`Logs/Playtests/2026-10-23_081716/`).
+
+- With the drawer open, the picture showed our ship turned back 90° for heading 090°, bow up.
+- Six lamps were green.
+- With HAB at 2 and HGR at 1 (a stand-in for enemy hits), their lamps went amber and red, the
+  others stayed green. Restored, they went green again.
+
+**Known.**
+
+- The wide hammerhead spills a little past the old dark box, still inside the screen.
+- The lamp spots are placed by eye on the model (tunable).
+- The target's own diagram (seeing the enemy's damage this way) waits for the target readout.
+
 ---
 
 ## 7 · How to keep this log
@@ -2035,7 +2072,7 @@ order:
      be found, plotted, shot and destroyed.**
    - **Owner's list (2026-10-23), each to be planned with the owner:**
      - fighters: a launch puts a small triangle squadron on the plot, flying at the enemy;
-     - engineering shows the same top-down ship picture as the plot;
+     - ~~engineering shows the same top-down ship picture as the plot~~ (done, Step 50);
      - missiles and PDCs;
      - the hangar launch;
      - a ship AI that fights back (`FTUE_PLAN.md` steps A–C and J);

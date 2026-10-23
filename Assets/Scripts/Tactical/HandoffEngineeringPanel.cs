@@ -49,6 +49,21 @@ public class HandoffEngineeringPanel : HandoffPanel
     [SerializeField] private float ringDimAlpha = 0.72f;
 
     [Header("Colours (design sRGB)")]
+    [Header("Ship diagram (Step 50, owner 2026-10-23): our ship's top-down picture, bow up, a lamp per compartment")]
+    [Tooltip("Shows the plot's ship view (ShipView), turned back by our heading so the bow is always up.")]
+    [SerializeField] private RawImage shipPicture;
+    [SerializeField] private Image[] compartmentLamps;
+    [SerializeField] private string[] lampKeys = { "bri", "mag", "hab", "hgr", "rct", "eng" };
+    [Tooltip("Where each lamp sits on the hull, px from the diagram's centre (y up): bridge at the bow, magazine "
+           + "starboard, habitation and hangar port, reactor and engines at the stern (FTUE_PLAN §4.4).")]
+    [Tune("Engineering & orders")] [SerializeField] private Vector2[] lampOffsets =
+        { new Vector2(0, 74), new Vector2(20, 8), new Vector2(-20, 26), new Vector2(-20, -12), new Vector2(0, -44), new Vector2(0, -78) };
+    [Tooltip("The ship's length in the diagram, px.")]
+    [Tune("Engineering & orders")] [SerializeField] private float diagramShipPx = 190f;
+    [Tooltip("Our ship's line colour (the plot's: ink.data).")]
+    [SerializeField] private Color shipInk = new Color32(0xE8, 0xED, 0xF0, 0xFF);
+    private ShipView shipView;
+
     [SerializeField] private Color nominal = new Color32(0x8F, 0xC3, 0x3A, 0xFF);
     [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
     [SerializeField] private Color alarm = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
@@ -83,6 +98,7 @@ public class HandoffEngineeringPanel : HandoffPanel
     public override void Refresh()
     {
         var s = State;
+        ShowDiagram(s);
 
         // compartment screen and schematic
         foreach (var r in rows)
@@ -187,4 +203,29 @@ public class HandoffEngineeringPanel : HandoffPanel
 
     // ENG_REPAIRS labels
     static string Label(string id) => id == "reboot" ? "REBOOT" : id == "party" ? "REPAIR" : id == "seal" ? "SEAL" : id == "vent" ? "VENT" : id.ToUpperInvariant();
+
+    // Step 50: our ship, bow up, with each compartment's lamp: green whole (4–5), amber hurt (2–3), red nearly gone (0–1)
+    void ShowDiagram(HandoffBoardState s)
+    {
+        if (shipPicture)
+        {
+            if (!shipView) shipView = FindAnyObjectByType<ShipView>();
+            shipPicture.texture = shipView ? shipView.Texture : null;
+            shipPicture.enabled = shipView && shipView.Texture;
+            shipPicture.color = shipInk.gamma; // the board canvas linearises vertex colours; pre-encode
+            float side = diagramShipPx / (shipView ? shipView.ShipFill : 1f);
+            shipPicture.rectTransform.sizeDelta = new Vector2(side, side);
+            // the model turns with our heading; turn the picture back so the bow stays up
+            shipPicture.rectTransform.localEulerAngles = new Vector3(0f, 0f, s.hdg);
+        }
+        if (compartmentLamps == null) return;
+        for (int i = 0; i < compartmentLamps.Length && i < lampKeys.Length; i++)
+        {
+            var lamp = compartmentLamps[i];
+            if (!lamp) continue;
+            if (i < lampOffsets.Length) lamp.rectTransform.anchoredPosition = lampOffsets[i];
+            int integ = s.CompHealth(lampKeys[i]);
+            Paint(lamp, integ >= 4 ? nominal : integ >= 2 ? caution : alarm);
+        }
+    }
 }
