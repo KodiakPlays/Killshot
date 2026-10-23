@@ -731,6 +731,75 @@ public static class PlaytestRunner
         Check("2° off, it misses", s.shotReport == "MISS", "\"" + s.shotReport + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
 
+        // 21b. Leading a moving target (Step 52). TRACK 07 gets under way on its patrol again.
+        brain.enabled = true;
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        yield return (Func<bool>)(() => t07Ship.SpeedKms > 1.0);
+        yield return (Func<bool>)(() => t07Ship.hdg == t07Ship.ordHdg); // steady on its leg before we plot it
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     Stand-in for the helm: 12,000 km off its starboard beam, stopped, on its course, so turret B bears.
+        double beam = (t07Ship.CourseDeg + 90) * System.Math.PI / 180;
+        s.ownX = t07Ship.ownX + System.Math.Sin(beam) * 12000; s.ownY = t07Ship.ownY + System.Math.Cos(beam) * 12000;
+        s.vx = s.vy = 0; s.thr = 0;
+        s.hdg = s.ordHdg = HandoffBoardState.JsRound(t07Ship.CourseDeg) % 360;
+        yield return 1f;
+        //     Its track: two POINTs on it two minutes apart (stand-in for accurate plotting; the plot itself was tested above).
+        s.marks.Clear();
+        var trackA = new HandoffBoardState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.ownX, y = t07Ship.ownY, t = board.MissionSeconds };
+        s.marks.Add(trackA);
+        //     The solution: the periscope on it, the RNG knob starts one, dialled to its range (stand-in for reading the plot).
+        s.LookAt("t07");
+        s.sol[s.SysIndex] = new HandoffBoardState.Solution();
+        if (!PlotDrag(board, knobAt, knobAt + new Vector2(8, 0), "turn the RNG knob (1 step)", "fc.knob")) yield break;
+        s.Sol.rangeKm = (float)System.Math.Sqrt((t07Ship.ownX - s.ownX) * (t07Ship.ownX - s.ownX) + (t07Ship.ownY - s.ownY) * (t07Ship.ownY - s.ownY));
+        s.NudgeSol("rng", 0);
+        Check("Without a track the solution has no course", s.Sol.set && s.Sol.manual && !s.Sol.hasCourse, "");
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        yield return (Func<bool>)(() => board.MissionSeconds - trackA.t >= 120f);
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        var trackB = new HandoffBoardState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.ownX, y = t07Ship.ownY, t = board.MissionSeconds };
+        s.marks.Add(trackB);
+        s.MarkDown("RULER", trackA.x, trackA.y, board.MissionSeconds); s.draft.ptA = trackA.id;
+        s.MarkMove(trackB.x, trackB.y); s.draft.ptB = trackB.id;
+        s.MarkUp(0);
+        // the plot gives the course and speed between its two POINTs
+        float legCrs = (float)((System.Math.Atan2(trackB.x - trackA.x, trackB.y - trackA.y) * 180 / System.Math.PI + 360) % 360);
+        float legSpd = (float)(System.Math.Sqrt((trackB.x - trackA.x) * (trackB.x - trackA.x) + (trackB.y - trackA.y) * (trackB.y - trackA.y)) / (trackB.t - trackA.t));
+        Check("A POINT-to-POINT track feeds the solution its course and speed",
+              s.Sol.hasCourse && Mathf.Abs(Mathf.DeltaAngle(s.Sol.course, legCrs)) < 0.01f && Mathf.Abs(s.Sol.spd - legSpd) < 0.006f,
+              "CRS " + s.Sol.course.ToString("000") + "°, SPD " + s.Sol.spd.ToString("0.00") + " (its true course now " + t07Ship.CourseDeg.ToString("000") + "°, speed " + t07Ship.SpeedKms.ToString("0.00") + ")");
+        //     Arm and fire, led. The same shot unled would miss.
+        if (s.mount != "RGB" && !Click("fc.mount", null, "turret selector (RG-B)")) yield break;
+        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (led shot)")) yield break; yield return 0.15f; }
+        double tvx = t07Ship.vx, tvy = t07Ship.vy;
+        double unled = PassKm(s.ownX, s.ownY, s.hdg + s.Sol.brg, s.slugSpeedKms, t07Ship.ownX, t07Ship.ownY, tvx, tvy, 600);
+        double led = PassKm(s.ownX, s.ownY, s.LeadBearing(), s.slugSpeedKms, t07Ship.ownX, t07Ship.ownY, tvx, tvy, 600);
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        int landedLed = s.shotResults;
+        if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (led)", "fc.lever")) yield break;
+        yield return (Func<bool>)(() => s.shotResults > landedLed);
+        Check("Led from the track, it hits the moving TRACK 07", s.shotReport != null && s.shotReport.StartsWith("HIT · TRACK 07"),
+              "\"" + s.shotReport + "\"; aimed straight it would pass " + unled.ToString("N0") + " km off, led " + led.ToString("N0") + " km (hit radius " + s.HitRadiusKm(t07.klass) + ")");
+        Check("Unled, the same shot would have missed", unled > s.HitRadiusKm(t07.klass), unled.ToString("N0") + " km");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     An active-scan lock: TRACK knows its true course and speed and leads exactly.
+        s.identified.Add("t07"); // stand-in for an active scan identifying it
+        yield return 0.6f;
+        if (!Click("fc.track", null, "TRACK (locked)")) yield break;
+        Check("TRACK's solution carries the target's course", s.Sol.set && !s.Sol.manual && s.Sol.hasCourse, "CRS " + s.Sol.course.ToString("000") + "°, SPD " + s.Sol.spd.ToString("0.00"));
+        s.LookAt("t07");
+        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (TRACK shot)")) yield break; yield return 0.15f; }
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        int landedTrack = s.shotResults;
+        if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (TRACK)", "fc.lever")) yield break;
+        yield return (Func<bool>)(() => s.shotResults > landedTrack);
+        Check("TRACK's led shot hits", s.shotReport != null && s.shotReport.StartsWith("HIT · TRACK 07"), "\"" + s.shotReport + "\"");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     Hold it still again for the fight below; clear the plot.
+        brain.enabled = false; t07Ship.vx = t07Ship.vy = 0; s.marks.Clear(); s.identified.Remove("t07");
+
         // 22. A fight to the kill (Step 49): close in behind TRACK 07 and shoot until it is a wreck.
         var before = (float[])dummyShip.SideArmour.Clone(); // the shot above may have marked its port side
         //     Stand-in for the helm: 10,000 km behind its stern, stopped, side-on so turret B (port) bears.
@@ -803,6 +872,15 @@ public static class PlaytestRunner
         Check("Repaired, they go green again", lit(lamps[2], green) && lit(lamps[3], green), "");
         if (!Click("drawer", "engineering", "ENGR key (close)")) yield break;
         yield return 1f;
+    }
+
+    // How close a slug fired from (px,py) on this bearing passes a target moving at (vx,vy), km.
+    static double PassKm(double px, double py, double aimDeg, double speed, double tx, double ty, double vx, double vy, double maxT)
+    {
+        double a = aimDeg * System.Math.PI / 180, wx = vx - speed * System.Math.Sin(a), wy = vy - speed * System.Math.Cos(a);
+        double rx = tx - px, ry = ty - py, ww = wx * wx + wy * wy;
+        double t = ww > 0 ? System.Math.Max(0, System.Math.Min(maxT, -(rx * wx + ry * wy) / ww)) : 0;
+        return System.Math.Sqrt((rx + wx * t) * (rx + wx * t) + (ry + wy * t) * (ry + wy * t));
     }
 
     // How far a straight shot from our ship on this bearing passes from a contact, km (huge if it's behind us).

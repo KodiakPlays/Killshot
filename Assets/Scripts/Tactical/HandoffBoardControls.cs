@@ -200,6 +200,7 @@ public class HandoffBoardControls : MonoBehaviour
         SetZoom(zoom);
         ShowTint();
         ShowAlarm();
+        state.missionNow = missionSeconds;
         nextTick = Time.unscaledTime + tickSeconds;
     }
 
@@ -230,6 +231,7 @@ public class HandoffBoardControls : MonoBehaviour
             if (!paused)
             {
                 missionSeconds += rate; ShowClock();
+                state.missionNow = missionSeconds; // the solution's clock (Step 52)
                 state.TickPower();
                 state.TickAux();
                 state.TickHelm(); // reads the engine room before a repair lands this tick, as tickPower does

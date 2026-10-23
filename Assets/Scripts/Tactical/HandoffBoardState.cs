@@ -77,6 +77,8 @@ public class HandoffBoardState
         [System.NonSerialized] public double worldX, worldY;
         [Tooltip("Step 48: which way the contact's bow points, degrees (from its model), for the side a slug strikes.")]
         [System.NonSerialized] public double worldHdg;
+        [Tooltip("Step 52: which way it is actually going, degrees (its course over the ground).")]
+        [System.NonSerialized] public double course;
         [Tooltip("Step 49: destroyed; cold, no longer hostile or heard, a wreck where it died.")]
         [System.NonSerialized] public bool wreck;
     }
@@ -274,9 +276,17 @@ public class HandoffBoardState
         public bool set; public float rangeKm; public int brg; public float spd;
         [Tooltip("Step 47: dialled by hand from the plot, not by TRACK. It aims at a point in space, not a locked contact.")]
         public bool manual;
+        [Tooltip("Step 52: the target's course is known (from a plotted track, or TRACK's lock), so the shot is led.")]
+        public bool hasCourse;
+        public float course;
+        [Tooltip("Where the target was (world km) and when (mission seconds) as the solution was set; the fire computer reckons it forward.")]
+        public double wx, wy;
+        public float t;
     }
     [Tooltip("A knob turned with no solution starts one here, on the periscope's bearing at speed 0 (owner 2026-10-23).")]
     [Tune("Periscope & fire control")] public float manualStartRangeKm = 10000f;
+    /// <summary>The mission clock as of the last tick (HandoffBoardControls writes it).</summary>
+    [System.NonSerialized] public float missionNow;
 
     [Header("Fire control — MOUNTS, SYSTEMS, WARHEADS, SWITCHES and the board's initial state")]
     public Mount[] mounts =
@@ -569,6 +579,7 @@ public class HandoffBoardState
         if (d == null || MarkLen(d) < minLenKm - 1e-6) return; // tolerance: the km conversion can land a hair under an exact 4 px (Step 36 verification)
         d.id = ++markSeq;
         marks.Add(d);
+        if (Sol.set && Sol.manual) ApplyTrack(Sol); // Step 52: a new track feeds the hand-dialled solution
     }
     /// <summary>A mark's start in world km: a ring starts at our ship, wherever it is now.</summary>
     public double MarkX(Mark m) => m.kind == "ring" ? ownX : m.x;
@@ -813,7 +824,9 @@ public class HandoffBoardState
         var t = TrackOf(target);
         if (t == null || !identified.Contains(t.key) || !BriOk) return;
         int rel = ((t.bearing - hdg + 540) % 360) - 180;
-        sol[SysIndex] = new Solution { set = true, rangeKm = t.rangeKm, brg = rel, spd = t.speed };
+        // Step 52: an active lock knows its true course and speed, and where it is now, so TRACK's shot is led
+        sol[SysIndex] = new Solution { set = true, rangeKm = t.rangeKm, brg = rel, spd = t.speed,
+            hasCourse = t.speed > 0.01f, course = (float)t.course, wx = t.worldX, wy = t.worldY, t = missionNow };
         ClearSwitches(); fired = false;
     }
 
@@ -828,10 +841,12 @@ public class HandoffBoardState
             cur.rangeKm = manualStartRangeKm;
             cur.brg = (JsRound(scopeBrg) - hdg + 540) % 360 - 180; // relative, as TRACK stores it
             cur.spd = 0f;
+            ApplyTrack(cur);
         }
         if (field == "rng") cur.rangeKm = Mathf.Max(0f, cur.rangeKm + d * 100f);
         if (field == "brg") cur.brg = Mathf.Max(-180, Mathf.Min(180, cur.brg + d));
         if (field == "spd") cur.spd = Mathf.Max(0f, (float)System.Math.Round(cur.spd + d * 0.05, 2, System.MidpointRounding.AwayFromZero));
+        if (cur.manual) Fix(cur); // the dialled point is where the target is now
         ClearSwitches();
     }
 
@@ -867,11 +882,55 @@ public class HandoffBoardState
         var m = MountOf(mount);
         if (sys == "RG" && m != null)
         {
-            double b = (hdg + Sol.brg) * System.Math.PI / 180; // straight out on the solution's bearing (no lead yet)
+            double b = LeadBearing() * System.Math.PI / 180;
             Rounds.Add(new Round { x = ownX, y = ownY, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm });
             shotReport = null;
             signal = Mathf.Min(100f, signal + fireSignalSpike);
         }
+    }
+
+    // ---- leading a moving target (Step 52, owner 2026-10-23) ---------------------------------
+
+    /// <summary>The latest plotted track (a RULER from one POINT to another) gives the solution its course,
+    /// and its speed into SPD.</summary>
+    public void ApplyTrack(Solution cur)
+    {
+        Mark latest = null;
+        Mark f, g; double crs, spd;
+        foreach (var m in marks) if (m.kind == "ruler" && (latest == null || m.id > latest.id) && TrackLeg(m, out f, out g, out crs, out spd)) latest = m;
+        if (latest == null) return;
+        TrackLeg(latest, out f, out g, out crs, out spd);
+        cur.hasCourse = true;
+        cur.course = (float)crs;
+        cur.spd = (float)System.Math.Round(spd, 2, System.MidpointRounding.AwayFromZero);
+    }
+
+    // the dialled range and bearing as a world point, now
+    void Fix(Solution cur)
+    {
+        double b = (hdg + cur.brg) * System.Math.PI / 180;
+        cur.wx = ownX + System.Math.Sin(b) * cur.rangeKm;
+        cur.wy = ownY + System.Math.Cos(b) * cur.rangeKm;
+        cur.t = missionNow;
+    }
+
+    /// <summary>Where to point the slug. With a course, reckon the target forward from where the solution
+    /// put it to now, then aim where it will be when the slug arrives. Otherwise straight down the dialled
+    /// bearing, as before.</summary>
+    public double LeadBearing()
+    {
+        var cur = Sol;
+        double straight = hdg + cur.brg;
+        if (!cur.hasCourse || cur.spd <= 0.001f) return straight;
+        double c = cur.course * System.Math.PI / 180, vx = cur.spd * System.Math.Sin(c), vy = cur.spd * System.Math.Cos(c);
+        double age = System.Math.Max(0, missionNow - cur.t);
+        double tx = cur.wx + vx * age - ownX, ty = cur.wy + vy * age - ownY;
+        double a = vx * vx + vy * vy - slugSpeedKms * slugSpeedKms, bq = 2 * (tx * vx + ty * vy), cq = tx * tx + ty * ty;
+        double disc = bq * bq - 4 * a * cq;
+        if (a >= 0 || disc < 0) return straight; // can't catch it
+        double tHit = (-bq - System.Math.Sqrt(disc)) / (2 * a);
+        if (tHit <= 0) return straight;
+        return (System.Math.Atan2(tx + vx * tHit, ty + vy * tHit) * 180 / System.Math.PI + 360) % 360;
     }
 
     // ---- rounds in flight (Step 48, owner 2026-10-23) ------------------------------------------

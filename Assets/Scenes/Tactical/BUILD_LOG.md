@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 51 are done, plus a final QA pass.**
+**Steps 1 to 52 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -91,8 +91,9 @@ Do not run ahead. Do one step, show it, wait.
 | 49 | Damage: armour, compartments, the kill | **Done** — playtest 99/99 |
 | 50 | Engineering's ship diagram | **Done** — playtest 103/103 |
 | 51 | The enemy moves: TRACK 07 patrols | **Done** — playtest 107/107 |
+| 52 | Leading a moving target | **Done** — playtest 113/113 |
 
-Steps 6 to 28 and Steps 34 to 51 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 52 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -594,11 +595,16 @@ The new layout throws that split away:
     after a shot (`yield return 0.2f`) before the next action. Step 42 caught a "DRADIS on"
     shot that showed DRADIS off.
 
-35. Nothing else. The Unity console is clean: no errors, no warnings.
+35. **Don't touch the Unity window while a playtest runs.** Bringing it to the front or clicking it
+    can switch the Game view off the recorder's 1920×1080 partway through. The playtest's clicks
+    then land in the wrong place ("blocked: topmost … is nothing"). Run `2026-10-23_090517` failed
+    this way; rerun untouched, it passed.
+
+36. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 51, in detail
+## 6 · Steps 6 to 28, and 34 to 52, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2066,6 +2072,57 @@ This is `FTUE_PLAN.md` step A, done the plan's way: a brain that only gives orde
 **Known.** At load our throttle sits at the design's 40%, so once ENG is powered our ship gets under
 way on its own.
 
+### Step 52 — Leading a moving target
+
+**Owner decisions (2026-10-23).**
+
+- A hand-dialled shot is led by **fire control, from your plotted track**: the latest
+  POINT-to-POINT RULER gives the target's course and speed. Your plot's accuracy decides the hit.
+- **TRACK leads exactly** once an active scan has identified the target, as the reward for going
+  loud.
+- No new controls. Drawing a track copies its speed into the existing SPD readout.
+
+**What was built.**
+
+- A `Solution` now carries:
+  - `hasCourse` and `course`;
+  - where the target was (`wx`, `wy`) and when (`t`, mission seconds) as the solution was set.
+- The solution is set in three places:
+  - a hand-dialled solution records the dialled point at each knob turn (`Fix`);
+  - the latest track (`ApplyTrack`) gives it course and speed, when the solution starts or when a
+    track is drawn;
+  - TRACK takes the target's true position, course and speed from the lock.
+- `LeadBearing()`, at the moment of firing:
+  - it reckons the target forward from the solution's point and time to now;
+  - it solves where the 50 km/s slug meets it, and fires on that bearing;
+  - without a course, the shot flies straight down the dialled bearing, as before.
+- `HandoffBoardControls` keeps the board state's clock current (`missionNow`). `TacticalWorld` gives
+  each track its real course over the ground (`Track.course`).
+
+**Checked.** Playtest 113/113 PASS, console clean (`Logs/Playtests/2026-10-23_090720/`). Run against the patrolling TRACK 07, steady on its leg, from 12,000 km
+off its starboard beam:
+
+- Without a track, the solution had no course.
+- Two POINTs on it two minutes apart, joined by a RULER, fed the solution exactly the track's
+  course and speed.
+- The led shot hit. Aimed straight, the same shot would have passed 295 km off and missed; led, it
+  passed 113 km off. The plotted course read 250°, against 244° at that instant: after its turn the
+  ship was still sliding onto its new course, so the plot shows the average. (In an earlier run: 438
+  km unled, 33 km led.)
+- After a lock, TRACK carried the target's course, and its led shot hit too.
+
+In the first run TRACK 07 was still turning onto its leg while it was plotted. The track then gives
+its average course over the two minutes (256° against 248° at that instant), and the shot still hit
+(`2026-10-23_085847`). The test now waits for a steady target.
+
+**Known.**
+
+- The playtest places the two POINTs on the target's true positions, standing in for good
+  plotting; the plot itself is tested in Step 46. It dials the range directly.
+- If the target turns after it was plotted, the lead is wrong until it is re-plotted, as at sea.
+- The solution's point is fixed when the knob is last turned: an old solution is reckoned forward
+  on the plotted course.
+
 ---
 
 ## 7 · How to keep this log
@@ -2112,15 +2169,15 @@ order:
      - the selected weapon's range ring shows while Fire Control is open.
      Steps 47–49 are done: the hand-dialled solution, fire and hit, and damage. **The dummy can
      be found, plotted, shot and destroyed.**
-   - **Owner's order (2026-10-23):** an enemy that moves (done, Step 51), leading a moving target,
-     then missiles, fighters, PDCs, the hangar launch.
+   - **Owner's order (2026-10-23):** an enemy that moves (done, Step 51), leading a moving target
+     (done, Step 52), **then missiles**, fighters, PDCs, the hangar launch.
    - **Owner's list (2026-10-23), each to be planned with the owner:**
      - fighters: a launch puts a small triangle squadron on the plot, flying at the enemy;
      - ~~engineering shows the same top-down ship picture as the plot~~ (done, Step 50);
      - missiles and PDCs;
      - the hangar launch;
      - a ship AI that fights back (`FTUE_PLAN.md` steps A–C and J);
-     - leading a moving target from a POINT-to-POINT track;
+     - ~~leading a moving target from a POINT-to-POINT track~~ (done, Step 52);
      - a faster way to dial long ranges.
    - **Fire-control step:** show the PDC arcs and their label once the PDCs are activated.
 
