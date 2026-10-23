@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 48 are done, plus a final QA pass.**
+**Steps 1 to 49 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -88,8 +88,9 @@ Do not run ahead. Do one step, show it, wait.
 | 46 | Intercept helpers: time to reach, tracks, weapon reach | **Done** — playtest 76/76 |
 | 47 | The firing solution dialled by hand | **Done** — playtest 81/81 |
 | 48 | Fire and hit: the railgun slug | **Done** — playtest 93/93 |
+| 49 | Damage: armour, compartments, the kill | **Done** — playtest 99/99 |
 
-Steps 6 to 28 and Steps 34 to 48 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 49 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -595,7 +596,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 48, in detail
+## 6 · Steps 6 to 28, and 34 to 49, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1934,6 +1935,58 @@ The test predicts each shot from the geometry and checks the game agrees:
 - Our own speed isn't added to the slug. There is no lead and no aim scatter.
 - With high power drawn our signal is already at 100%, so the spike has nothing to add.
 
+### Step 49 — Damage: armour, compartments, the kill
+
+**Owner decisions (2026-10-23).**
+
+- **Armour by side.** The prow and flanks take 2 railgun slugs to open (armour 100, a slug takes
+  50). The aft takes 1 (armour 50), the weak stern.
+- Once a side is open, **each slug takes 2 integrity** (of 5) off one compartment behind it, at
+  random among those still standing.
+- The target's damage shows on **fire control's report line** for now. A proper target readout
+  waits for art.
+- **The reactor at zero destroys the ship.** It becomes **a cold wreck**: no longer hostile or
+  heard, a dim dot where it died.
+
+Already ruled in `FTUE_PLAN.md` §4.4 (2026-10-18):
+
+- the side facing the shot takes it;
+- what sits behind each side: prow BRI; aft RCT and ENG; starboard MAG; port HAB and HGR;
+- the enemy uses our damage model and our kill condition.
+
+**What was built.**
+
+- `HandoffBoardState`, the model both ships use:
+  - `sideArmourMax` (PROW, STBD, AFT, PORT), `slugArmourDamage`, `slugCompartmentDamage`, all
+    under Damage in the tuning window;
+  - `TakeSlug(side)`: armour first, then a compartment behind the side;
+  - `destroyed`, when the reactor reaches 0.
+- `WorldContact.Ship`: each contact has its own `HandoffBoardState`, undamaged at load.
+  `TacticalWorld` hands it to the board (`ShipOf`), with our damage numbers from the tuning window.
+- `TickRounds`: the struck ship takes the hit on its own model. The report reads "HIT · TRACK 07 ·
+  AFT OPEN", "… · AFT ARMOUR 50%", "… · AFT · RCT −2", or "TRACK 07 DESTROYED".
+- A destroyed track becomes a wreck: not heard (`Heard` skips wrecks), not hostile, and slugs pass
+  through it. The plot draws a dim dot where it died.
+- The prototype's kill cue (120 Hz saw) plays for a kill.
+
+**Checked.** Playtest 99/99 PASS, console clean (`Logs/Playtests/2026-10-23_080215/`). TRACK 07
+started undamaged. The fight, from 10,000 km behind its stern (stopped, side-on so turret B bore):
+
+1. "HIT · TRACK 07 · AFT OPEN"
+2. "HIT · TRACK 07 · AFT · RCT −2"
+3. "HIT · TRACK 07 · AFT · RCT −2"
+4. "TRACK 07 DESTROYED"
+
+Its reactor went to 0, its engines stayed at 5, and nothing else was touched. It went cold, and the
+kill cue sounded. The earlier long-range shot correctly missed by 224 km.
+
+**Known.**
+
+- The fight test puts our ship in place directly, standing in for flying there with the helm.
+- Hits on our own ship come when the enemy shoots back (`FTUE_PLAN.md` step J). Our own sides and
+  compartments use the same code.
+- The plot view doesn't follow our ship: after a long move you pan to find it.
+
 ---
 
 ## 7 · How to keep this log
@@ -1978,9 +2031,16 @@ order:
        ahead);
      - the RULER label shows time to reach at our speed;
      - the selected weapon's range ring shows while Fire Control is open.
-     Step 47, the solution dialled by hand, and Step 48, fire and hit, are done. Next: damage
-     (hull sides and compartments), lead from a POINT-to-POINT track once the enemy moves, and the
-     enemy itself (`FTUE_PLAN.md`).
+     Steps 47–49 are done: the hand-dialled solution, fire and hit, and damage. **The dummy can
+     be found, plotted, shot and destroyed.**
+   - **Owner's list (2026-10-23), each to be planned with the owner:**
+     - fighters: a launch puts a small triangle squadron on the plot, flying at the enemy;
+     - engineering shows the same top-down ship picture as the plot;
+     - missiles and PDCs;
+     - the hangar launch;
+     - a ship AI that fights back (`FTUE_PLAN.md` steps A–C and J);
+     - leading a moving target from a POINT-to-POINT track;
+     - a faster way to dial long ranges.
    - **Fire-control step:** show the PDC arcs and their label once the PDCs are activated.
 
 **Items 5 and 7 of the wiring order are planned.** The first mission, the XO walkthrough (FTUE), the

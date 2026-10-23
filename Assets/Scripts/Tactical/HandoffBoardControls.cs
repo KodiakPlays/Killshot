@@ -138,6 +138,8 @@ public class HandoffBoardControls : MonoBehaviour
     [Tooltip("A slug lands: a hit, or a miss at the end of its range (Step 48).")]
     [Tune("Sound")] [SerializeField] private Tone hitSound = new Tone(680f, 0.16f, 0.035f, false);
     [Tune("Sound")] [SerializeField] private Tone missSound = new Tone(150f, 0.08f, 0.025f, true);
+    [Tooltip("A ship destroyed (the prototype's kill cue, its first tone).")]
+    [Tune("Sound")] [SerializeField] private Tone killSound = new Tone(120f, 0.28f, 0.04f, true);
     [SerializeField] private AudioSource voice;
     // the prototype's "tab" cue is a view change: the rails, the latches and the station headers
     static readonly string[] TabActions = { "tool", "drawer", "helm", "orders", "scope" };
@@ -181,7 +183,7 @@ public class HandoffBoardControls : MonoBehaviour
     private float nextTick;
     private HandoffPanel[] panels = new HandoffPanel[0];
     private HandoffRockers rockers;
-    private int shotsHeard, resultsHeard;
+    private int shotsHeard, resultsHeard, killsHeard;
 
     private void Start()
     {
@@ -210,7 +212,12 @@ public class HandoffBoardControls : MonoBehaviour
         if (state.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
         // a shot fired (from the lever) and a shot landing (in the tick) each get their cue
         if (state.shotsFired != shotsHeard) { shotsHeard = state.shotsFired; Play(railgunSound, "railgun"); }
-        if (state.shotResults != resultsHeard) { resultsHeard = state.shotResults; Play(state.lastShotHit ? hitSound : missSound, state.lastShotHit ? "hit" : "miss"); }
+        if (state.shotResults != resultsHeard)
+        {
+            resultsHeard = state.shotResults;
+            if (state.kills != killsHeard) { killsHeard = state.kills; Play(killSound, "kill"); }
+            else Play(state.lastShotHit ? hitSound : missSound, state.lastShotHit ? "hit" : "miss");
+        }
         HandoffEased.TickAll(); // control transitions (Step 33j)
         // setInterval drops ticks it missed during a stall; do the same rather than bursting
         if (Time.unscaledTime - nextTick > tickSeconds) nextTick = Time.unscaledTime;

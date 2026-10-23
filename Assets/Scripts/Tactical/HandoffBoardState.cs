@@ -77,6 +77,8 @@ public class HandoffBoardState
         [System.NonSerialized] public double worldX, worldY;
         [Tooltip("Step 48: which way the contact's bow points, degrees (from its model), for the side a slug strikes.")]
         [System.NonSerialized] public double worldHdg;
+        [Tooltip("Step 49: destroyed; cold, no longer hostile or heard, a wreck where it died.")]
+        [System.NonSerialized] public bool wreck;
     }
 
     [Header("Contacts — TRACKS and CLASSES (the board's fixed mock-up contacts)")]
@@ -383,7 +385,7 @@ public class HandoffBoardState
     static int AngDiff(int a, int b) => Mathf.Abs(((a - b) % 360 + 540) % 360 - 180);
 
     /// <summary>heard: DRADIS on, the contact emits in the chosen band, and it is in range.</summary>
-    public bool Heard(Track t) => !t.own && dradis && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeKm <= PassiveRangeKm;
+    public bool Heard(Track t) => !t.own && !t.wreck && dradis && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeKm <= PassiveRangeKm;
 
     /// <summary>coneCovers: active scan on, inside the cone, inside sensor range.</summary>
     public bool ConeCovers(Track t) => active && AngDiff(t.bearing, coneBrg) <= coneArc && t.rangeKm <= SenRangeKm;
@@ -896,6 +898,50 @@ public class HandoffBoardState
     [System.NonSerialized] public bool lastShotHit;
     [System.NonSerialized] public int shotsFired, shotResults;
 
+    /// <summary>The damage model of the ship behind a track (TacticalWorld supplies it), or null.</summary>
+    [System.NonSerialized] public System.Func<string, HandoffBoardState> ShipOf;
+    [System.NonSerialized] public int kills;
+
+    // ---- hull sides and damage (Step 49, owner 2026-10-23) --------------------------------------
+    // The same model for every ship, ours included (the enemy is our ship with other stats).
+
+    public static readonly string[] Sides = { "PROW", "STBD", "AFT", "PORT" };
+    // what sits behind each side (FTUE_PLAN §4.4, ruled by the owner 2026-10-18)
+    static readonly string[][] Behind = { new[] { "bri" }, new[] { "mag" }, new[] { "rct", "eng" }, new[] { "hab", "hgr" } };
+    [Tooltip("Armour per side: PROW, STBD, AFT, PORT. At 0 the side is open (owner: prow and flanks take 2 slugs, the aft 1).")]
+    [Tune("Damage")] public float[] sideArmourMax = { 100f, 100f, 50f, 100f };
+    [Tooltip("Armour one railgun slug takes off the side it hits.")]
+    [Tune("Damage")] public float slugArmourDamage = 50f;
+    [Tooltip("Integrity one slug through an open side takes off one compartment behind it (owner: 2 of 5).")]
+    [Tune("Damage")] public int slugCompartmentDamage = 2;
+    [System.NonSerialized] private float[] sideArmour;
+    public float[] SideArmour => sideArmour ?? (sideArmour = (float[])sideArmourMax.Clone());
+    /// <summary>Destroyed: its reactor is at zero (the kill condition, FTUE §4.4).</summary>
+    [System.NonSerialized] public bool destroyed;
+    [System.NonSerialized] private System.Random dice;
+
+    /// <summary>A slug strikes this ship's side. Armour first; once the side is open, a compartment behind
+    /// it that still stands, at random, loses integrity. Returns the report's tail (" OPEN", " · RCT −2").</summary>
+    public string TakeSlug(string side)
+    {
+        int i = System.Array.IndexOf(Sides, side);
+        if (i < 0 || destroyed) return "";
+        var armour = SideArmour;
+        if (armour[i] > 0f)
+        {
+            armour[i] = Mathf.Max(0f, armour[i] - slugArmourDamage);
+            return armour[i] <= 0f ? " OPEN" : " ARMOUR " + JsRound(armour[i] / sideArmourMax[i] * 100f) + "%";
+        }
+        var standing = new System.Collections.Generic.List<Compartment>();
+        foreach (var key in Behind[i]) { var c = Comp(key); if (c != null && c.integ > 0) standing.Add(c); }
+        if (standing.Count == 0) return " · NOTHING LEFT BEHIND IT";
+        if (dice == null) dice = new System.Random(49);
+        var hit = standing[dice.Next(standing.Count)];
+        hit.integ = Mathf.Max(0, hit.integ - slugCompartmentDamage);
+        if (CompHealth("rct") <= 0) destroyed = true;
+        return " · " + hit.tag + " −" + slugCompartmentDamage;
+    }
+
     public float HitRadiusKm(string klass)
     {
         foreach (var h in hitRadii) if (h.klass == klass) return h.km;
@@ -926,7 +972,7 @@ public class HandoffBoardState
             double first = double.MaxValue;
             foreach (var t in tracks)
             {
-                if (t.own || !t.hasWorld) continue;
+                if (t.own || !t.hasWorld || t.wreck) continue;
                 double px = t.worldX - r.x, py = t.worldY - r.y;
                 double u = System.Math.Max(0, System.Math.Min(step, px * r.dx + py * r.dy)); // closest point along the path
                 double cx = px - r.dx * u, cy = py - r.dy * u, rad = HitRadiusKm(t.klass);
@@ -934,7 +980,17 @@ public class HandoffBoardState
             }
             if (struck != null)
             {
-                shotReport = "HIT · " + struck.name + " · " + SideStruck(struck, r);
+                // Step 49: the struck ship takes the hit on its own model (its side, then what is behind it)
+                string side = SideStruck(struck, r);
+                var ship = ShipOf != null ? ShipOf(struck.key) : null;
+                string damage = ship != null ? ship.TakeSlug(side) : "";
+                if (ship != null && ship.destroyed)
+                {
+                    struck.wreck = true; struck.hostile = false;
+                    shotReport = struck.name + " DESTROYED";
+                    kills++;
+                }
+                else shotReport = "HIT · " + struck.name + " · " + side + damage;
                 lastShotHit = true; shotResults++;
                 list.RemoveAt(i);
                 continue;

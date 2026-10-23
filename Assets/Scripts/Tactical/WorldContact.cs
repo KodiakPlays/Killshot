@@ -8,4 +8,9 @@ public class WorldContact : MonoBehaviour
 {
     [Tooltip("The board track this contact drives, e.g. t07 (TRACK 07).")]
     public string trackKey = "t07";
+
+    /// <summary>Step 49: this ship's own model — the same one ours runs on (the enemy is our ship
+    /// with different stats, FTUE_PLAN §4). It takes our hits. Undamaged at load.</summary>
+    public HandoffBoardState Ship => ship ?? (ship = new HandoffBoardState());
+    [System.NonSerialized] private HandoffBoardState ship;
 }

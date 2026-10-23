@@ -414,6 +414,9 @@ public class HandoffPlotPanel : HandoffPanel
             if (look) look.arg = t.key;
         }
         for (int i = np; i < passiveLabels.Count; i++) passiveLabels[i].gameObject.SetActive(false);
+        // wrecks (Step 49): a dim dot where each destroyed ship died, no label
+        foreach (var t in s.tracks)
+            if (t.wreck && t.hasWorld) { var w = Screen(t.worldX, t.worldY); bearings.Add(new HandoffMarksGraphic.Shape { kind = "point", a = w, b = w, alpha = 0.45f }); }
         if (passiveLines) { Paint(passiveLines, Controls.GridAmber ? alarm : data); passiveLines.Set(bearings); }
 
         // the export's own passive labels (none since Step 44; kept for a configured one)

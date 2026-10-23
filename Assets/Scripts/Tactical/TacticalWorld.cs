@@ -31,6 +31,20 @@ public class TacticalWorld : MonoBehaviour
         }
         // where our ship starts; from here on the board moves it (Step 41) and this places the model
         if (ownShip) { board.State.ownX = ownShip.position.x; board.State.ownY = ownShip.position.y; }
+        // Step 49: each contact's ship takes our hits; its damage numbers follow ours from the tuning window
+        board.State.ShipOf = key =>
+        {
+            foreach (var c in contacts)
+            {
+                if (!c || c.trackKey != key) continue;
+                var ship = c.Ship;
+                var own = board.State;
+                ship.slugArmourDamage = own.slugArmourDamage;
+                ship.slugCompartmentDamage = own.slugCompartmentDamage;
+                return ship;
+            }
+            return null;
+        };
         Sync(); // before the board's first refresh (its Start), so it never shows mock numbers
         board.Ticked += Sync;
     }

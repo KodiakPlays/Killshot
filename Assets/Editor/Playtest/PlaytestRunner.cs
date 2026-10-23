@@ -619,6 +619,11 @@ public static class PlaytestRunner
         yield return 0.5f;
 
         // 21. Fire and hit (Step 48): aim at TRACK 07 by hand, arm, fire a slug, watch it land.
+        var dummyShip = GameObject.Find("World").GetComponentInChildren<WorldContact>().Ship;
+        bool whole = true;
+        foreach (var c in dummyShip.compartments) if (c.integ != 5) whole = false;
+        foreach (var a in dummyShip.SideArmour) if (a <= 0f) whole = false;
+        Check("TRACK 07 starts undamaged", whole, "");
         //     The periscope onto the contact, by its bearing label (it is still heard).
         if (!Click("plot.look", "t07", "BRG label (periscope onto TRACK 07)")) yield break;
         yield return 0.6f;
@@ -700,6 +705,50 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.Rounds.Count == 0);
         yield return (Func<bool>)(() => s.Rounds.Count == 0);
         Check("2° off, it misses", s.shotReport == "MISS", "\"" + s.shotReport + "\"");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+
+        // 22. A fight to the kill (Step 49): close in behind TRACK 07 and shoot until it is a wreck.
+        var before = (float[])dummyShip.SideArmour.Clone(); // the shot above may have marked its port side
+        //     Stand-in for the helm: 10,000 km behind its stern, stopped, side-on so turret B (port) bears.
+        double tb = t07.worldHdg * System.Math.PI / 180;
+        s.ownX = t07.worldX - System.Math.Sin(tb) * 10000; s.ownY = t07.worldY - System.Math.Cos(tb) * 10000;
+        s.vx = s.vy = 0; s.thr = 0;
+        s.hdg = s.ordHdg = ((int)System.Math.Round(t07.worldHdg) + 90) % 360;
+        yield return 1f;
+        s.LookAt("t07");
+        s.sol[s.SysIndex] = new HandoffBoardState.Solution(); // stand-in: clear the old solution
+        if (!PlotDrag(board, knobAt, knobAt + new Vector2(8, 0), "turn the RNG knob (1 step)", "fc.knob")) yield break;
+        best = 0;
+        for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.hdg + s.Sol.brg + d) < MissKm(s, t07, s.hdg + s.Sol.brg + best)) best = d;
+        if (best != 0 && !PlotDrag(board, brgAt, brgAt + new Vector2(6 * best, 0), "turn the BRG knob to the nearest degree", "fc.knob")) yield break;
+        s.SlewTo();
+        if (s.mount != "RGB" && !Click("fc.mount", null, "turret selector (RG-B)")) yield break;
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        var reports = new List<string>();
+        for (int shot = 0; shot < 10 && !t07.wreck; shot++)
+        {
+            yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
+            for (int i = 0; i < 4; i++)
+                if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (shot " + (shot + 1) + ")")) yield break; yield return 0.15f; }
+            int landed = s.shotResults;
+            if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (shot " + (shot + 1) + ")", "fc.lever")) yield break;
+            yield return (Func<bool>)(() => s.shotResults > landed);
+            reports.Add(s.shotReport);
+        }
+        string log = string.Join(" | ", reports);
+        Check("The first hit opens its stern", reports.Count > 0 && reports[0] == "HIT · TRACK 07 · AFT OPEN", log);
+        bool behindOnly = true;
+        for (int i = 1; i < reports.Count - 1; i++)
+            if (reports[i] != "HIT · TRACK 07 · AFT · RCT −2" && reports[i] != "HIT · TRACK 07 · AFT · ENG −2") behindOnly = false;
+        Check("Then each hit takes 2 off the reactor or the engines behind it", reports.Count > 2 && behindOnly, reports.Count + " shots");
+        Check("Its reactor gone, it is destroyed: a cold wreck", t07.wreck && dummyShip.destroyed && dummyShip.Comp("rct").integ == 0 && !s.Heard(t07) && reports[reports.Count - 1] == "TRACK 07 DESTROYED",
+              "RCT " + dummyShip.Comp("rct").integ + ", ENG " + dummyShip.Comp("eng").integ + ", last \"" + reports[reports.Count - 1] + "\"");
+        Check("Nothing else on it was touched", dummyShip.SideArmour[0] == before[0] && dummyShip.SideArmour[1] == before[1] && dummyShip.SideArmour[3] == before[3]
+              && dummyShip.Comp("bri").integ == 5 && dummyShip.Comp("mag").integ == 5 && dummyShip.Comp("hab").integ == 5 && dummyShip.Comp("hgr").integ == 5, "");
+        yield return 0.4f;
+        Check("The kill cue sounds", board.LastSound == "kill", "last cue \"" + board.LastSound + "\"");
+        Shot("29_destroyed");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("rate", "1", "x1 rate key")) yield break;
         if (!Click("drawer", "fire control", "FIRE key (close)")) yield break;
         yield return 1f;
