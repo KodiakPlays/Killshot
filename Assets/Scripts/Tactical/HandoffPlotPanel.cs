@@ -123,6 +123,8 @@ public class HandoffPlotPanel : HandoffPanel
     [Tune("Periscope & fire control")] [SerializeField] private float slugTrailPx = 24f;
     [Tooltip("The selected weapon's reach, a dashed ring round our ship while Fire Control is open.")]
     [SerializeField] private HandoffMarksGraphic weaponRing;
+    [Tooltip("A PDC arc's curved edge is drawn in steps this many degrees long (Step 55).")]
+    [SerializeField] private float pdcArcStepDeg = 2f;
 
     [Header("Fighters (Step 54): one small wedge per craft, own-force blue, no labels")]
     [Tooltip("A hidden wedge image (hull_wedge_filled, nose up; the outline vanishes this small), cloned per fighter in flight.")]
@@ -381,6 +383,21 @@ public class HandoffPlotPanel : HandoffPanel
                 Vector2 c = Screen(s.ownX, s.ownY);
                 reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeKm / KmPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
             }
+            // Step 55: each PDC group on AUTO shows its arc, a dashed sector off our hull (the design's PDC arc, accent.caution at .45)
+            var pdGroups = System.Array.Find(s.systems, y => y.id == "PD").mounts;
+            for (int g = 0; g < pdGroups.Length && g < s.pdcAuto.Length; g++)
+            {
+                var pm = s.MountOf(pdGroups[g]);
+                if (!s.pdcAuto[g] || pm == null) continue;
+                Vector2 c = Screen(s.ownX, s.ownY);
+                float r = (float)(pm.rangeKm / KmPerPx * Controls.ZoomExact);
+                System.Func<float, Vector2> at = deg => c + new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)) * r; // board y is down
+                float from = s.hdg + pm.arc - pm.halfArc, to = s.hdg + pm.arc + pm.halfArc;
+                reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = c, b = at(from), alpha = 0.45f });
+                reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = c, b = at(to), alpha = 0.45f });
+                for (float d = from; d < to; d += pdcArcStepDeg)
+                    reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = at(d), b = at(Mathf.Min(to, d + pdcArcStepDeg)), alpha = 0.45f });
+            }
             Paint(weaponRing, caution);
             weaponRing.Set(reachShapes);
         }
@@ -414,6 +431,13 @@ public class HandoffPlotPanel : HandoffPanel
             Place(cl.rectTransform, at + contactLabelOffset, 0f);
         }
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
+        // enemy missiles coming at us (Step 55): a red dot with a short trail, like our own rounds, no label
+        foreach (var r in s.Incoming)
+        {
+            Vector2 at = Screen(r.x, r.y), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
+            dots.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
+            dots.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f });
+        }
         if (contactMarks) contactMarks.Set(dots);
 
         // passive bearings: a line fading out from our ship toward each contact DRADIS hears but has not

@@ -79,7 +79,7 @@ public class TacticalWorld : MonoBehaviour
             if (ship.empUntil > 0f && ship.missionNow >= ship.empUntil) { ship.empUntil = 0f; ship.buses[0].fill = ship.busMax; }
             if (!brain || !brain.enabled) continue;
             if (ship.destroyed) ship.thr = 0; // a wreck makes no way of its own
-            else brain.Think(ship);
+            else brain.Think(ship, board.State);
             ship.TickHelm();
             ship.TickMove(board.Rate);
             c.transform.SetPositionAndRotation(new Vector3((float)ship.ownX, (float)ship.ownY, c.transform.position.z), Quaternion.Euler(0f, 0f, -ship.hdg));

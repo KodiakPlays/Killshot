@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 54 are done, plus a final QA pass.**
+**Steps 1 to 55 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -94,8 +94,9 @@ Do not run ahead. Do one step, show it, wait.
 | 52 | Leading a moving target | **Done** — playtest 113/113 |
 | 53 | Missiles: the launcher, homing, three warheads | **Done** — playtest 121/121 |
 | 54 | Fighters: launch, fly out, attack runs, recall | **Done** — playtest 130/130 |
+| 55 | PDCs, and the enemy fires back | **Done** — playtest 138/138 |
 
-Steps 6 to 28 and Steps 34 to 54 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 55 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -422,6 +423,8 @@ These are settled. Do not reopen them.
 29. **Fighters fly and fight on the plot; RECALL brings them home** (owner, 2026-10-23). 8 km/s,
     attack runs of 10 armour per fighter, wedges in a V with no labels. They land when they reach
     us. Details in Step 54.
+30. **PDCs: arm the ladder for AUTO, a chance per missile; the enemy fires back when hit** (owner,
+    2026-10-24). Enemy PDCs wait for the ship AI. Details in Step 55.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -611,7 +614,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 54, in detail
+## 6 · Steps 6 to 28, and 34 to 55, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2246,6 +2249,72 @@ held still and our ship 2,000 km off its bow:
 - No fuel, no losses, no enemy PDCs shooting them down yet.
 - The assault boats' SECURE order attacks like DESTROY (boarding is out, decision in memory).
 
+### Step 55 — PDCs, and the enemy fires back
+
+**Owner decisions (2026-10-24).**
+
+- **TRACK 07 fires back.** When we hit it, and we are inside its launcher's range, it fires a
+  missile salvo at us. This is the first small piece of the ship AI.
+- **Arming the ladder puts a PDC group on AUTO.** Select PDC, pick group A or B with the turret
+  knob, and arm the ladder. The group then shoots by itself at anything in its arc until you drop
+  ARM. Its arc shows on the plot while it is on. No new controls.
+- **A chance per missile.** Each enemy missile that enters an AUTO group's arc and range gets one
+  roll: 70% it is shot down (Tuning window).
+- **Enemy PDCs come later,** with the ship AI. Our missiles and fighters work as before.
+
+**What was built.**
+
+- `HandoffBoardState`:
+  - `Incoming`: enemy missiles flying at us. `LaunchAt()` adds a fanned salvo; `TickIncoming()`
+    lets the PDCs try, then steers each missile at us. One that passes within `ownHitRadiusKm`
+    (210) strikes the side facing it through the same `TakeWarhead` as our missiles
+    ("MISSILE HIT · PROW · HE · BRI −2").
+  - `pdcAuto[2]`, for PDC-A and PDC-B. Throwing ARM with a group selected turns it on; dropping
+    any rung turns it off. Switching weapons leaves it on; coming back to that group shows its
+    ladder still armed.
+  - `RungGated()`: one place for the ladder's gates, used by `Flip` and by the fire-control panel.
+    A PDC group needs only WEP power and its autoloaders: no solution, no ANGLE or BEARING gate.
+  - `PdcStops()`: one roll per group per missile, needing WEP and the autoloaders.
+  - Sides now come from one helper, `SideAt`, for slugs, fighters and incoming missiles.
+- `EnemyBrain`: if its armour or a compartment dropped since the last tick, it fires `fireBackSalvo`
+  (2, HE) at us, at most once every `fireBackSeconds` (120), while it has cells. Its switch
+  `firesBack` is in the Tuning window.
+- `HandoffPlotPanel`: enemy missiles show as red dots with a trail. Each AUTO group draws its arc as
+  a dashed amber sector out to its range (the design's PDC arc colour, accent.caution at .45). No
+  label.
+- Fire control's status line reads "PDC-A AUTO · LAST: PDC-A · MISSILE DOWN".
+- Being hit plays the alert tone.
+
+**Behaviour changes, flagged.**
+
+- **Autoloaders start ENGAGED** (`loaders = true`). The design starts them off, but its LOADERS
+  button was never in the export (HANDOFF_GAPS row 73). Without it PDCs could never arm. The switch
+  is in the Tuning window until the button has art.
+- **With PDC selected, the fire lever does nothing.** The guns fire by themselves on AUTO.
+- **PDC's ladder no longer needs a firing solution, ANGLE or BEARING.**
+
+**Checked.** Playtest 138/138 PASS, console clean (`Logs/Playtests/2026-10-24_002347/`). With our
+ship stopped 6,000 km off TRACK 07's bow, turned so it bears 042° (PDC-A's arc):
+
+- The ladder armed on PDC-A with no solution, and PDC-A went AUTO.
+- A stand-in hit on TRACK 07 made it fire two HE missiles at us (its cells went 8 → 6).
+- PDC-A shot both down, at a stand-in certain chance; nothing hit us.
+- On the railgun PDC-A stayed on AUTO. Back on PDC-A, its ladder still showed armed.
+- With ARM dropped, the next salvo got through: two hits ("MISSILE HIT · PROW · HE · BRI −2"),
+  with the alert tone.
+- The fight to the kill and the engineering checks that follow still pass. The test repairs our
+  ship first, as a stand-in for damage control.
+
+**Known.**
+
+- The playtest stands in for the railgun hits that trigger the salvo, and for a certain PDC; the
+  70% chance itself isn't tested.
+- Enemy missiles show on the plot even when our sensors couldn't see them.
+- Nothing happens if our reactor reaches 0: no game over yet.
+- TRACK 07 fires whatever its own power state is.
+- PDC-B covers astern-port (200° ±35°); nothing covers dead ahead or dead astern, as the design
+  has it.
+
 ---
 
 ## 7 · How to keep this log
@@ -2293,18 +2362,20 @@ order:
      Steps 47–49 are done: the hand-dialled solution, fire and hit, and damage. **The dummy can
      be found, plotted, shot and destroyed.**
    - **Owner's order (2026-10-23):** an enemy that moves (done, Step 51), leading a moving target
-     (done, Step 52), missiles (done, Step 53), fighters (done, Step 54), **then PDCs**, the
-     hangar launch (what is left of it after Step 54: plan with the owner).
+     (done, Step 52), missiles (done, Step 53), fighters (done, Step 54), PDCs and the enemy
+     firing back (done, Step 55), **then the hangar launch** (what is left of it after Step 54:
+     plan with the owner).
    - **Owner's list (2026-10-23), each to be planned with the owner:**
      - ~~fighters: a launch puts a small triangle squadron on the plot, flying at the enemy~~ (done,
        Step 54);
      - ~~engineering shows the same top-down ship picture as the plot~~ (done, Step 50);
-     - missiles and PDCs;
+     - ~~missiles and PDCs~~ (done, Steps 53 and 55);
      - the hangar launch;
      - a ship AI that fights back (`FTUE_PLAN.md` steps A–C and J);
      - ~~leading a moving target from a POINT-to-POINT track~~ (done, Step 52);
      - a faster way to dial long ranges.
-   - **Fire-control step:** show the PDC arcs and their label once the PDCs are activated.
+   - ~~**Fire-control step:** show the PDC arcs once the PDCs are activated~~ (done, Step 55; no
+     label, per decision 24).
 
 **Items 5 and 7 of the wiring order are planned.** The first mission, the XO walkthrough (FTUE), the
 derelicts and the easy enemy AI are in `FTUE_PLAN.md`, next to this file (owner, 2026-10-18). Its

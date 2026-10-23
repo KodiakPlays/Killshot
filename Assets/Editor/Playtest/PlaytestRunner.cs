@@ -260,6 +260,7 @@ public static class PlaytestRunner
         //     TRACK 07 patrols (Step 51): its brain orders a heading and a throttle; its own ship model
         //     moves it with the same maths as ours.
         var brain = GameObject.Find("World").GetComponentInChildren<EnemyBrain>();
+        if (brain) brain.firesBack = false; // stand-in: it holds its fire until the point-defence step (21e)
         var t07Ship = brain ? brain.GetComponent<WorldContact>().Ship : null;
         Check("TRACK 07 has a patrol brain", brain && brain.enabled, "");
         if (!brain) yield break;
@@ -921,6 +922,65 @@ public static class PlaytestRunner
         if (!Click("rate", "1", "x1 rate key")) yield break;
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
+
+        // 21e. Point defence (Step 55): hit, TRACK 07 fires missiles back; PDC-A on AUTO shoots them down;
+        //     with its ladder dropped, the next salvo gets through and hits us.
+        //     Stand-in for the helm: 6,000 km off its bow, stopped, turned so it bears 042° from our bow (PDC-A's arc).
+        double pdb = t07.worldHdg * System.Math.PI / 180;
+        s.ownX = t07.worldX + System.Math.Sin(pdb) * 6000; s.ownY = t07.worldY + System.Math.Cos(pdb) * 6000;
+        s.vx = s.vy = 0; s.thr = 0;
+        s.hdg = s.ordHdg = (((int)System.Math.Round(t07.worldHdg) + 180 - 42) % 360 + 360) % 360;
+        vxField.SetValue(plotPanel, (s.ownX + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.ownY + t07.worldY) / 2); // stand-in for panning the plot
+        brain.enabled = true; // it thinks again (it holds its fire for a tick, so old damage doesn't count)
+        yield return 1f;
+        for (int k = 0; k < 3 && s.sys != "PD"; k++) { if (!Click("fc.system", null, "weapon selector")) yield break; yield return 0.2f; }
+        Check("PDC selected: group A, autoloaders engaged", s.sys == "PD" && s.mount == "PDA" && s.loaders, s.sys + " " + s.mount + ", loaders " + s.loaders);
+        bool noSol = !s.Sol.set;
+        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (PDC-A)")) yield break; yield return 0.15f; }
+        Check("The ladder arms with no solution: PDC-A is on AUTO", noSol && System.Array.TrueForAll(s.sw, b => b) && s.pdcAuto[0] && !s.pdcAuto[1], string.Join(",", System.Array.ConvertAll(s.sw, b => b ? "1" : "0")));
+        //     We hit it (stand-in for a railgun hit, tested above): it fires back.
+        s.pdcKillChance = 1f; // stand-in: a sure PDC, so the result is certain (the real chance is in the Tuning window)
+        brain.firesBack = true;
+        int enemyCells = dummyShip.vlsCells, kills0 = s.pdcKills, taken0 = s.hitsTaken;
+        dummyShip.TakeSlug("PROW");
+        yield return (Func<bool>)(() => s.Incoming.Count > 0);
+        Check("Hit, TRACK 07 fires a salvo of two back at us", s.Incoming.Count == 2 && dummyShip.vlsCells == enemyCells - 2, s.Incoming.Count + " incoming, its cells " + enemyCells + " → " + dummyShip.vlsCells);
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        yield return (Func<bool>)(() => s.Incoming.Count == 0 || System.Math.Sqrt((s.Incoming[0].x - s.ownX) * (s.Incoming[0].x - s.ownX) + (s.Incoming[0].y - s.ownY) * (s.Incoming[0].y - s.ownY)) < 4600);
+        Shot("28e_incoming_pdc_arc");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        yield return (Func<bool>)(() => s.Incoming.Count == 0);
+        yield return (Func<bool>)(() => s.Incoming.Count == 0); // 15 s each; the flight is about 13 s at x10
+        Check("PDC-A shoots both down; nothing hits us", s.pdcKills == kills0 + 2 && s.hitsTaken == taken0 && s.pdcReport == "PDC-A · MISSILE DOWN",
+              (s.pdcKills - kills0) + " down, " + (s.hitsTaken - taken0) + " hits on us, \"" + s.pdcReport + "\"");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     Changing weapons leaves PDC-A on AUTO; back on PDC-A its ladder shows armed.
+        for (int k = 0; k < 3 && s.sys != "RG"; k++) { if (!Click("fc.system", null, "weapon selector (to RAILGUN)")) yield break; yield return 0.2f; }
+        Check("On the railgun, PDC-A stays on AUTO", s.sys == "RG" && s.pdcAuto[0], s.sys);
+        for (int k = 0; k < 3 && s.sys != "PD"; k++) { if (!Click("fc.system", null, "weapon selector (back to PDC)")) yield break; yield return 0.2f; }
+        Check("Back on PDC-A, its ladder is still armed", s.sys == "PD" && s.mount == "PDA" && System.Array.TrueForAll(s.sw, b => b), "");
+        //     Dropping ARM takes it off AUTO: the next salvo gets through.
+        if (!Click("fc.flip", "3", "ARM rocker (drop)")) yield break;
+        Check("Dropping ARM takes PDC-A off AUTO", !s.sw[3] && !s.pdcAuto[0], "");
+        var ourArmour = (float[])s.SideArmour.Clone();
+        var ourInteg = System.Array.ConvertAll(s.compartments, c => c.integ);
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        dummyShip.TakeSlug("PROW"); // stand-in for another railgun hit
+        yield return (Func<bool>)(() => s.Incoming.Count > 0);
+        yield return (Func<bool>)(() => s.Incoming.Count > 0); // its 120 s between salvos
+        yield return (Func<bool>)(() => s.Incoming.Count == 0);
+        yield return (Func<bool>)(() => s.Incoming.Count == 0);
+        yield return 0.4f;
+        Check("With no PDC on AUTO, both hit us, with the alert tone", s.hitsTaken == taken0 + 2 && s.incomingReport != null && s.incomingReport.StartsWith("MISSILE HIT · ") && board.LastSound == "alert",
+              (s.hitsTaken - taken0) + " hits, last \"" + s.incomingReport + "\", last cue \"" + board.LastSound + "\"");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     Clean up for the steps below: TRACK 07 held still and quiet, our ship repaired (stand-in for damage control).
+        brain.firesBack = false; brain.enabled = false; t07Ship.vx = t07Ship.vy = 0;
+        s.pdcKillChance = 0.7f;
+        System.Array.Copy(ourArmour, s.SideArmour, ourArmour.Length);
+        for (int c = 0; c < s.compartments.Length; c++) s.compartments[c].integ = ourInteg[c];
+        for (int k = 0; k < 3 && s.sys != "RG"; k++) { if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break; yield return 0.2f; }
 
         // 22. A fight to the kill (Step 49): close in behind TRACK 07 and shoot until it is a wreck.
         var before = (float[])dummyShip.SideArmour.Clone(); // the shots above may have marked its sides

@@ -315,9 +315,12 @@ public class HandoffBoardState
     public int warhead;
     [Tooltip("Missiles launched together (owner 2026-10-23: set here until the design's salvo stepper has art).")]
     [Tune("Periscope & fire control")] [Range(1, 8)] public int salvo = 2;
-    public bool loaders;
+    [Tooltip("PDC autoloaders. Step 55: engaged at load (the design starts them off) and set here until the design's LOADERS pushbutton has art (HANDOFF_GAPS row 73); without them PDCs cannot arm.")]
+    [Tune("Periscope & fire control")] public bool loaders = true;
     [Tooltip("PDC quadrants FWD, STBD, AFT, PORT (quads).")]
     public bool[] quads = { true, true, false, false };
+    [Tooltip("Step 55: PDC groups on AUTO (PDC-A, PDC-B). Arming the ladder with a group selected puts it on AUTO; it then shoots by itself at enemy missiles in its arc.")]
+    public bool[] pdcAuto = new bool[2];
     public bool fired;
     [Range(0f, 100f)] public float wepCharge;
     [Tune("Power & signal")]
@@ -793,7 +796,10 @@ public class HandoffBoardState
         }
     }
 
-    void ClearSwitches() { for (int i = 0; i < sw.Length; i++) sw[i] = false; }
+    // Step 55: a PDC group on AUTO keeps its ladder armed whenever it is the one selected
+    void ClearSwitches() { bool auto = PdcGroup >= 0 && pdcAuto[PdcGroup]; for (int i = 0; i < sw.Length; i++) sw[i] = auto; }
+    /// <summary>The selected PDC group (0 = PDC-A, 1 = PDC-B), or -1 when PDC is not selected.</summary>
+    int PdcGroup => sys == "PD" ? System.Array.IndexOf(Sys.mounts, mount) : -1;
 
     /// <summary>pickSystem via cycleSystem: next system; keep the mount if it belongs, else its first.</summary>
     public void CycleSystem()
@@ -815,7 +821,7 @@ public class HandoffBoardState
 
     public void CycleWarhead() { warhead = (warhead + 1) % warheads.Length; ClearSwitches(); }
     public void StepSalvo(int d) { salvo = Mathf.Max(1, Mathf.Min(8, salvo + d)); }
-    public void ToggleLoaders() { loaders = !loaders; ClearSwitches(); }
+    public void ToggleLoaders() { loaders = !loaders; if (!loaders) pdcAuto[0] = pdcAuto[1] = false; ClearSwitches(); }
     public void ToggleQuad(int i) { quads[i] = !quads[i]; }
 
     /// <summary>computeSol: needs an identified target and the bridge; stores range, relative
@@ -859,14 +865,23 @@ public class HandoffBoardState
         {
             for (int j = i; j < sw.Length; j++) sw[j] = false;
             fired = false; fireLever = 0f;
+            if (PdcGroup >= 0) pdcAuto[PdcGroup] = false; // Step 55: dropping the ladder takes the group off AUTO
             return;
         }
         if (i > 0 && !sw[i - 1]) return;
-        if (i == 1 && !InArc) return; // ANGLE: the turret must bear (Step 48)
-        if (i == 0 && (!WepReady || !Sol.set || (sys == "PD" && !loaders))) return;
-        if (i == 2 && !OnBearing) return;
-        if (i == 3 && wepCharge < ShotCost) return;
+        if (RungGated(i)) return;
         sw[i] = true; fired = false;
+        if (i == 3 && PdcGroup >= 0) pdcAuto[PdcGroup] = true; // Step 55: ARM puts the PDC group on AUTO
+    }
+
+    /// <summary>A rung's gate: LOAD needs the WEP bus and a solution, ANGLE the turret to bear (Step 48),
+    /// BEARING the scope on axis, ARM the charge. Step 55: a PDC group needs no solution or bearing, only its
+    /// autoloaders: on AUTO it fires by itself at what enters its arc.</summary>
+    public bool RungGated(int i)
+    {
+        bool pd = sys == "PD";
+        return (i == 0 && (!WepReady || (pd ? !loaders : !Sol.set)))
+            || (i == 1 && !pd && !InArc) || (i == 2 && !pd && !OnBearing) || (i == 3 && wepCharge < ShotCost);
     }
 
     /// <summary>The lever passing 0.9 with the ladder set: rounds away, charge spent (drawWep).
@@ -874,6 +889,7 @@ public class HandoffBoardState
     /// a railgun shot is a slug that flies (TickRounds); firing spikes our signal (GDD p.42).</summary>
     public void Fire()
     {
+        if (sys == "PD") return; // Step 55: PDCs on AUTO fire by themselves; the lever does nothing
         if (!AllSet) return; // moveSlew fires on every new pull while allSet() holds; the panel's per-pull latch stops repeats (Step 33g verification)
         if (wepCharge < ShotCost) return;
         if (sys == "MS" && !MissileReady) return;
@@ -964,6 +980,8 @@ public class HandoffBoardState
         public bool missile;
         public string targetKey;
         public int warhead;
+        [Tooltip("Step 55: PDC groups that have had their one chance at this missile (bit 0 = PDC-A, bit 1 = PDC-B).")]
+        public int pdcTried;
     }
     [System.Serializable]
     public class HitRadius { public string klass; public float km; }
@@ -1155,7 +1173,12 @@ public class HandoffBoardState
     {
         var t = TrackOf(r.targetKey);
         if (t == null || !t.hasWorld || t.wreck) return;
-        double want = System.Math.Atan2(t.worldX - r.x, t.worldY - r.y) * 180 / System.Math.PI;
+        SteerAt(r, t.worldX, t.worldY, dt);
+    }
+
+    void SteerAt(Round r, double x, double y, double dt)
+    {
+        double want = System.Math.Atan2(x - r.x, y - r.y) * 180 / System.Math.PI;
         double now = System.Math.Atan2(r.dx, r.dy) * 180 / System.Math.PI;
         double turn = ((want - now) % 360 + 540) % 360 - 180, most = missileTurnDegPerS * dt;
         double head = (now + System.Math.Max(-most, System.Math.Min(most, turn))) * System.Math.PI / 180;
@@ -1163,11 +1186,86 @@ public class HandoffBoardState
     }
 
     // The side facing the shot (reference sim sideFacing): where it came from, against the ship's bow.
-    static string SideStruck(Track t, Round r)
+    static string SideStruck(Track t, Round r) => SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, t.worldHdg);
+
+    // The side of a ship whose bow points bowDeg that faces a bearing fromDeg (both clockwise from north).
+    static string SideAt(double fromDeg, double bowDeg)
     {
-        double from = (System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI + 360) % 360;
-        double rel = ((from - t.worldHdg) % 360 + 360) % 360;
+        double rel = ((fromDeg - bowDeg) % 360 + 360) % 360;
         return rel < 45 || rel >= 315 ? "PROW" : rel < 135 ? "STBD" : rel < 225 ? "AFT" : "PORT";
+    }
+
+    // ---- enemy missiles and our point defence (Step 55, owner 2026-10-24) -----------------------
+
+    [System.NonSerialized] private System.Collections.Generic.List<Round> incoming;
+    /// <summary>Enemy missiles flying at our ship.</summary>
+    public System.Collections.Generic.List<Round> Incoming => incoming ?? (incoming = new System.Collections.Generic.List<Round>());
+    [Tooltip("The chance a PDC group on AUTO shoots down an enemy missile that enters its arc (owner: a chance per missile).")]
+    [Tune("Periscope & fire control")] [Range(0f, 1f)] public float pdcKillChance = 0.7f;
+    [Tooltip("An enemy missile hits our ship if it passes within this distance, km (cruiser-sized, like TRACK 07).")]
+    [Tune("Damage")] public float ownHitRadiusKm = 210f;
+    /// <summary>The PDCs' last result ("PDC-A · MISSILE DOWN"), and the last enemy missile to hit us.</summary>
+    [System.NonSerialized] public string pdcReport, incomingReport;
+    [System.NonSerialized] public int pdcKills, hitsTaken;
+
+    /// <summary>An enemy at (x, y) launches n missiles at us, fanned, each homing on our ship.</summary>
+    public void LaunchAt(double x, double y, int n, int warheadIndex, double maxKm)
+    {
+        double brg = System.Math.Atan2(ownX - x, ownY - y) * 180 / System.Math.PI;
+        for (int i = 0; i < n; i++)
+        {
+            double b = (brg + (i - (n - 1) / 2.0) * missileSpreadDeg) * System.Math.PI / 180;
+            Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = maxKm,
+                                     speed = missileSpeedKms, missile = true, warhead = warheadIndex });
+        }
+    }
+
+    /// <summary>Each tick: our PDCs take their chances, then every enemy missile homes on us; one that
+    /// passes within ownHitRadiusKm strikes the side facing it.</summary>
+    public void TickIncoming(double dt)
+    {
+        var list = Incoming;
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            var r = list[i];
+            if (PdcStops(r)) { list.RemoveAt(i); continue; }
+            SteerAt(r, ownX, ownY, dt);
+            double step = System.Math.Min(r.speed * dt, r.maxKm - r.travelled);
+            double px = ownX - r.x, py = ownY - r.y;
+            double u = System.Math.Max(0, System.Math.Min(step, px * r.dx + py * r.dy)); // closest point along the path
+            double cx = px - r.dx * u, cy = py - r.dy * u;
+            if (cx * cx + cy * cy <= ownHitRadiusKm * ownHitRadiusKm)
+            {
+                string side = SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, hdg);
+                incomingReport = "MISSILE HIT · " + side + TakeWarhead(side, warheads[r.warhead]);
+                hitsTaken++;
+                list.RemoveAt(i);
+                continue;
+            }
+            r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
+            if (r.travelled >= r.maxKm - 1e-6) list.RemoveAt(i);
+        }
+    }
+
+    // A PDC group on AUTO, loaded and powered, gets one chance at each enemy missile inside its arc and range.
+    bool PdcStops(Round r)
+    {
+        if (!loaders || !WepReady) return false;
+        double dx = r.x - ownX, dy = r.y - ownY;
+        int rel = JsRound(((System.Math.Atan2(dx, dy) * 180 / System.Math.PI - hdg) % 360 + 360) % 360) % 360;
+        var groups = System.Array.Find(systems, y => y.id == "PD").mounts;
+        for (int g = 0; g < groups.Length && g < pdcAuto.Length; g++)
+        {
+            var m = MountOf(groups[g]);
+            if (!pdcAuto[g] || m == null || (r.pdcTried & (1 << g)) != 0) continue;
+            if (dx * dx + dy * dy > (double)m.rangeKm * m.rangeKm || AngDiff(rel, m.arc) > m.halfArc) continue;
+            r.pdcTried |= 1 << g;
+            if (dice == null) dice = new System.Random(49);
+            bool down = dice.NextDouble() < pdcKillChance;
+            pdcReport = m.shortName + (down ? " · MISSILE DOWN" : " · MISSED");
+            if (down) { pdcKills++; return true; }
+        }
+        return false;
     }
 
     public void ToggleDoors() { doorsOpen = !doorsOpen; }
@@ -1315,12 +1413,7 @@ public class HandoffBoardState
     }
 
     // The side of a ship facing a point (where the attack comes from), against its bow.
-    static string SideFrom(Track t, double x, double y)
-    {
-        double from = (System.Math.Atan2(x - t.worldX, y - t.worldY) * 180 / System.Math.PI + 360) % 360;
-        double rel = ((from - t.worldHdg) % 360 + 360) % 360;
-        return rel < 45 || rel >= 315 ? "PROW" : rel < 135 ? "STBD" : rel < 225 ? "AFT" : "PORT";
-    }
+    static string SideFrom(Track t, double x, double y) => SideAt(System.Math.Atan2(x - t.worldX, y - t.worldY) * 180 / System.Math.PI, t.worldHdg);
 
     void Kill(Track t)
     {

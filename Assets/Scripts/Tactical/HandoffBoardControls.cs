@@ -183,7 +183,7 @@ public class HandoffBoardControls : MonoBehaviour
     private float nextTick;
     private HandoffPanel[] panels = new HandoffPanel[0];
     private HandoffRockers rockers;
-    private int shotsHeard, resultsHeard, killsHeard;
+    private int shotsHeard, resultsHeard, killsHeard, hitsTakenHeard;
 
     private void Start()
     {
@@ -219,6 +219,7 @@ public class HandoffBoardControls : MonoBehaviour
             if (state.kills != killsHeard) { killsHeard = state.kills; Play(killSound, "kill"); }
             else Play(state.lastShotHit ? hitSound : missSound, state.lastShotHit ? "hit" : "miss");
         }
+        if (state.hitsTaken != hitsTakenHeard) { hitsTakenHeard = state.hitsTaken; Play(alertSound, "alert"); } // Step 55: an enemy missile hit us
         HandoffEased.TickAll(); // control transitions (Step 33j)
         // setInterval drops ticks it missed during a stall; do the same rather than bursting
         if (Time.unscaledTime - nextTick > tickSeconds) nextTick = Time.unscaledTime;
@@ -238,6 +239,7 @@ public class HandoffBoardControls : MonoBehaviour
                 state.TickMove(rate); // Step 41: the ship moves; each tick is `rate` mission seconds, as the clock
                 state.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
                 state.TickFlights(rate); // Step 54: fighters fly, attack, come home
+                state.TickIncoming(rate); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
                 state.TickParty();
                 state.TickLaunch();
                 state.TickWeapons();
