@@ -306,6 +306,84 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &976202080
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 976202082}
+  - component: {fileID: 976202081}
+  m_Layer: 0
+  m_Name: INITIALISING
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &976202081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 976202080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e22b0be2be252fbb5aefb5efc8197d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Starwolf.Intro.StarwolfIntroController
+  glyphData: {fileID: 0}
+  displayShader: {fileID: 4800000, guid: 322627cc3a3e54c8bdaa4dc899202abd, type: 3}
+  hardwareHum: {fileID: 0}
+  sectionDuration: 2.5
+  initialisingDuration: 2
+  titleDuration: 2
+  typeShare: 0.5
+  initialisingOnly: 1
+  finished:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1675068442}
+        m_TargetAssemblyTypeName: ScreenFlow, Assembly-CSharp
+        m_MethodName: Advance
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  humVolume: 0.12
+  newGame:
+    m_PersistentCalls:
+      m_Calls: []
+  loadGame:
+    m_PersistentCalls:
+      m_Calls: []
+  settings:
+    m_PersistentCalls:
+      m_Calls: []
+  loadGameAvailable: 0
+--- !u!4 &976202082
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 976202080}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1360786927
 GameObject:
   m_ObjectHideFlags: 0
@@ -474,6 +552,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScreenFlow
   nextScene: 02.1_Grid
   advanceOnEnter: 1
+  showFirst: {fileID: 976202080}
 --- !u!4 &1675068443
 Transform:
   m_ObjectHideFlags: 0
@@ -709,3 +788,4 @@ SceneRoots:
   - {fileID: 2112797141}
   - {fileID: 625657234}
   - {fileID: 1675068443}
+  - {fileID: 976202082}

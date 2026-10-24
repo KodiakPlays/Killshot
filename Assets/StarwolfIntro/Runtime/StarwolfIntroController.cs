@@ -17,6 +17,9 @@ namespace Starwolf.Intro
         [Min(0.1f)] public float titleDuration = 2.0f;
         [Tooltip("Owner 2026-10-24: each line types in left to right over this share of its time, holds, then cuts straight to the next. No pull-back.")]
         [Range(0.1f, 1f)] public float typeShare = 0.5f;
+        [Tooltip("Owner 2026-10-24: the intro is SECTION 36, STARWOLF, then the menu. INITIALISING... plays on its own after the beta page: tick this there, and it types that line, holds, then calls finished.")]
+        public bool initialisingOnly;
+        public UnityEvent finished = new UnityEvent();
         [Range(0, 0.3f)] public float humVolume = 0.12f;
         [Header("Connect these to the game's own systems")]
         public UnityEvent newGame = new UnityEvent();
@@ -24,8 +27,8 @@ namespace Starwolf.Intro
         public UnityEvent settings = new UnityEvent();
         public bool loadGameAvailable = true;
         public event Action<int> MenuAction;
-        public bool MenuVisible => clock >= TotalDuration;
-        public float TotalDuration => Mathf.Max(.1f, sectionDuration) + Mathf.Max(.1f, initialisingDuration) + Mathf.Max(.1f, titleDuration);
+        public bool MenuVisible => !initialisingOnly && clock >= TotalDuration;
+        public float TotalDuration => initialisingOnly ? Mathf.Max(.1f, initialisingDuration) : Mathf.Max(.1f, sectionDuration) + Mathf.Max(.1f, titleDuration);
         public float Elapsed => clock;
         public int GridPitchPixels { get; private set; }
 
@@ -36,7 +39,7 @@ namespace Starwolf.Intro
         PhosphorData data;
         float clock;
         int selected;
-        bool suspended;
+        bool suspended, done;
         static readonly string[] Names = { "New Game", "Load Game", "Settings" };
         static readonly string[] MaskProperties = { "_Ident", "_Boot", "_Title", "_NewGame", "_LoadGame", "_Settings" };
 
@@ -68,8 +71,9 @@ namespace Starwolf.Intro
             clock += Time.unscaledDeltaTime;
             if (source) source.volume = humVolume * Mathf.Clamp01(clock / .6f);
             DrawFrame();
+            if (initialisingOnly && !done && clock >= TotalDuration) { done = true; finished.Invoke(); }
         }
-        public void RestartIntro() { clock = 0; selected = 0; suspended = false; if (source && !source.isPlaying) source.Play(); }
+        public void RestartIntro() { clock = 0; selected = 0; suspended = false; done = false; if (source && !source.isPlaying) source.Play(); }
         public void SkipToMenu() { clock = TotalDuration; }
         // Game integration calls this after New/Load Game, or while its Settings panel owns input.
         public void HideMenu() { suspended = true; if (source) source.Pause(); }
@@ -113,11 +117,11 @@ namespace Starwolf.Intro
             }
             float s = Mathf.Max(.1f, sectionDuration), b = Mathf.Max(.1f, initialisingDuration);
             float t = Mathf.Max(.1f, titleDuration);
-            // Owner 2026-10-24: SECTION 36, INITIALISING..., STARWOLF, each typed in place, then a
-            // straight cut to the next; the menu (stage 4) follows the title with no pull-back.
-            float stage = clock < s ? 0 : clock < s + b ? 1 : clock < s + b + t ? 2 : 4;
-            float local = stage == 0 ? clock : stage == 1 ? clock - s : clock - s - b;
-            float duration = stage == 0 ? s : stage == 1 ? b : t;
+            // Owner 2026-10-24: SECTION 36, then STARWOLF, each typed in place, then a straight cut to
+            // the menu (stage 4), with no pull-back. INITIALISING... (stage 1) plays on its own.
+            float stage = initialisingOnly ? 1 : clock < s ? 0 : clock < s + t ? 2 : 4;
+            float local = stage <= 1 ? clock : clock - s;
+            float duration = stage == 1 ? b : stage == 0 ? s : t;
             material.SetFloat("_Stage", stage); material.SetFloat("_Clock", clock);
             material.SetFloat("_Reveal", stage < 3 ? Mathf.Clamp01(local / (duration * typeShare)) : 1f);
             material.SetFloat("_Selected", selected); material.SetFloat("_LoadAvailable", loadGameAvailable ? 1 : 0);

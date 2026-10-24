@@ -13,14 +13,17 @@ public class ScreenFlow : MonoBehaviour
     [Header("How it advances")]
     [Tooltip("Tick this to advance on Enter. Leave off if a button calls Advance().")]
     [SerializeField] private bool advanceOnEnter = false;
+    [Tooltip("Optional. Enter shows this first (the beta page's INITIALISING... line, owner 2026-10-24); it calls Advance() when it is done.")]
+    [SerializeField] private GameObject showFirst;
 
     private bool going;
 
     private void Update()
     {
         if (!advanceOnEnter || going) return;
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-            Advance();
+        if (!Input.GetKeyDown(KeyCode.Return) && !Input.GetKeyDown(KeyCode.KeypadEnter)) return;
+        if (showFirst && !showFirst.activeSelf) showFirst.SetActive(true);
+        else if (!showFirst) Advance();
     }
 
     /// <summary>Load the next scene. Safe to call from a Button's onClick.</summary>

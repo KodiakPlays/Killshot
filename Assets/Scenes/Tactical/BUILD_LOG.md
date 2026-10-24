@@ -2350,6 +2350,23 @@ title behind it.
   (`References/Company Logo.png`). Only black is immune to it.
 - `00_Start` still holds an unused `pullbackDuration: 4` line; Unity drops it on the next save.
 
+**The order, changed the same day (owner 2026-10-24).** The flow is now:
+
+**SECTION 36 → STARWOLF → menu → NEW GAME → beta page → Enter → INITIALISING... → battle map.**
+
+- `StarwolfIntroController.initialisingOnly`: with it ticked, the controller types only the
+  INITIALISING... line, holds, then calls its new `finished` event. Without it (in `00_Start`),
+  the intro is SECTION 36 then STARWOLF then the menu: 4 + 4 s.
+- `01_Briefing` has a new inactive object, `INITIALISING`, with that controller (2 s), and
+  `finished` wired to `ScreenFlow.Advance()`.
+- `ScreenFlow.showFirst`: on Enter, it shows that object first instead of loading at once.
+- Checked in play mode: shots at 2.5 s (SECTION 36), 5.2 s (STARWOLF) and 8.3 s (the menu). In
+  `01_Briefing`, INITIALISING... typed in over black, then `02.1_Grid` loaded.
+
+A trap: a screenshot taken right after `SeekPreview()` lands about half a second later than the
+time asked for (the editor runs a few frames first). A shot asked for at 3.5 s showed STARWOLF's
+first letter, not SECTION 36.
+
 ---
 
 ## 7 · How to keep this log
