@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 59 are done, plus a final QA pass.**
+**Steps 1 to 60 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -99,8 +99,9 @@ Do not run ahead. Do one step, show it, wait.
 | 57 | Everything in game time | **Done** — playtest 138/138 |
 | 58 | The audit's side map; our ship can die | **Done** — playtest 139/139 |
 | 59 | Conditions: fire, vacuum, radiation | **Done** — playtest 153/153 |
+| 60 | Boarding: the assault boats | **Done** — playtest 160/160 |
 
-Steps 6 to 28 and Steps 34 to 59 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 60 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -618,7 +619,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 59, in detail
+## 6 · Steps 6 to 28, and 34 to 60, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2514,6 +2515,51 @@ the base:
 - The enemy does not fight its own fires: its rooms burn until we finish it, or a fire reaches its
   reactor.
 
+### Step 60 — Boarding: the assault boats
+
+**Owner decisions (2026-10-24).** The rules are in `BOARDING_README.md`, next to this file.
+
+- **The design's three orders, exactly:** DESTROY blows up its reactor; DISABLE wrecks its engines
+  and magazine; SECURE captures it.
+- **Boarding needs** one face open and the ship nearly stopped: fight it down first.
+- **The fight aboard is time and odds:** 60 s, marines against a quarter of its crew, with losses
+  on both sides.
+
+**What was built** (`HandoffBoardState`):
+
+- **Launch.** The ASSAULT BOAT squadron flies as a `Flight`, like the fighters, at 6 km/s. Each boat
+  takes 6 marines from the ship's 18. The launch refuses with "NO MARINES ABOARD" when none are left.
+- **`TickBoarding`:**
+  - the boats hold off with a reason ("HOLDING OFF TRACK 07 · NO OPEN SIDE" or "TARGET UNDER WAY");
+  - they dock and fight ("BOARDING TRACK 07 · 42 S");
+  - they win or are repelled ("BOARDING REPELLED"), then fly home with the outcome on the hangar
+    line;
+  - survivors rejoin the pool when they land.
+- **SECURE** marks the ship and its track captured. The enemy stops and holds still
+  (`TacticalWorld`), and the plot shows it as an own-force dot (placeholder).
+- **RECALL** while aboard withdraws the marines with no result.
+- Tuning window, "Hangar & fighters": boat speed, marines, docking distance, speed limit, fight time,
+  defender share, losses.
+
+**Checked.**
+
+- On bare ship models, all three orders: SCUTTLED (wreck), DISABLED (ENG and MAG 0, alive), SECURED
+  (captured, not hostile). In each case the boats held off with no face open, and the marines came
+  home.
+- Playtest 160/160 PASS (`Logs/Playtests/2026-10-24_120447/`), new step 21f, through the hangar's
+  controls:
+  - three boats launched on DISABLE with 18 marines;
+  - they held off while no face was open (a stand-in), and boarded once one was;
+  - they won (stand-in: no defenders, so the result is certain) and disabled TRACK 07;
+  - they flew home with "TRACK 07 DISABLED · RETURNING" and landed with all 18 marines;
+  - the fight to the kill that follows still passed.
+
+**Known.**
+
+- Salvage and what a prize is for, fuel, and enemy boarders are not built (`BOARDING_README.md`,
+  still open).
+- The boats are drawn as the fighters' wedges.
+
 ---
 
 ## 7 · How to keep this log
@@ -2565,8 +2611,8 @@ order:
      firing back (done, Step 55), **then the hangar launch** (what is left of it after Step 54:
      plan with the owner).
    - **Owner, 2026-10-24: damage and damage control next,** built in the order in
-     `DAMAGE_README.md` (side map, conditions, teams, breakdowns, displays). **Boarding** (assault
-     boats: capture, scuttle, salvage) gets its own README right after conditions. Later: the
+     `DAMAGE_README.md` (side map, conditions, teams, breakdowns, displays). **Boarding** is done
+     (Step 60, `BOARDING_README.md`). Still open there: salvage, fuel and range, enemy boarders. Later: the
      periscope shows the real enemy ship (today it shows the design's decorative corridor).
    - **Owner's list (2026-10-23), each to be planned with the owner:**
      - ~~fighters: a launch puts a small triangle squadron on the plot, flying at the enemy~~ (done,

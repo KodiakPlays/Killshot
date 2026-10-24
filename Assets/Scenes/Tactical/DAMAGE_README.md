@@ -105,7 +105,7 @@ All are in **Starwolf → Tuning**, under "Damage control". These are the starti
    REBOOT.
 6. **Displays** (audit §09.10): armour per face, conditions per room, broken parts, team roster,
    door state. Request the art from Claude Design; working placeholders meanwhile.
-7. **Boarding:** a README of its own (capture, scuttle, salvage); no design source defines it.
+7. **Boarding:** `BOARDING_README.md`. **Done, Step 60.**
 
 ## Still open
 

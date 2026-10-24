@@ -81,6 +81,8 @@ public class HandoffBoardState
         [Tooltip("Exact world position (km), written by TacticalWorld. The plot draws the contact here; "
                + "bearing and range above are the rounded readout values.")]
         [System.NonSerialized] public bool hasWorld;
+        [Tooltip("Step 60: taken by our marines (SECURE).")]
+        [System.NonSerialized] public bool captured;
         [System.NonSerialized] public double worldX, worldY;
         [Tooltip("Step 48: which way the contact's bow points, degrees (from its model), for the side a slug strikes.")]
         [System.NonSerialized] public double worldHdg;
@@ -715,6 +717,7 @@ public class HandoffBoardState
         if (!FlightOpsReleased) return "FLIGHT OPS NOT RELEASED \u2014 HELD AT DC-1 ALERT CONDITION 3";
         if (!HgrOk) return "HANGAR BAY DAMAGED \u2014 CANNOT SPOT CRAFT";
         if (SquadReady(q) == 0) return "NO CRAFT READY";
+        if (q.key == "ih" && marines < 1) return "NO MARINES ABOARD"; // Step 60
         if (LaunchDev > launchConeDeg) return "BEARING OUTSIDE LAUNCH CONE";
         return null;
     }
@@ -1436,14 +1439,16 @@ public class HandoffBoardState
         launchedSquads.Add(q.key);
         launchedOrders.Add(order);
         // Step 54: the squadron's ready craft take off from our ship, for fire control's target
-        Flights.Add(new Flight { squad = q.key, order = order, targetKey = target, craft = SquadReady(q), x = ownX, y = ownY, hdg = lbrg });
+        var f = new Flight { squad = q.key, order = order, targetKey = target, craft = SquadReady(q), x = ownX, y = ownY, hdg = lbrg };
+        if (q.key == "ih") { f.marines = Mathf.Min(marines, f.craft * marinesPerBoat); marines -= f.marines; } // Step 60: the boats take marines
+        Flights.Add(f);
     }
 
     public void RecallSquad()
     {
         // Step 54 (owner 2026-10-23): RECALL turns the squadron home; it is back once it lands (TickFlights)
         var f = Flights.Find(k => k.squad == CurrentSquad.key);
-        if (f != null) { f.returning = true; return; }
+        if (f != null) { f.returning = true; f.aboard = false; f.holding = null; return; } // marines aboard withdraw (Step 60)
         int i = launchedSquads.IndexOf(CurrentSquad.key);
         if (i >= 0) { launchedSquads.RemoveAt(i); launchedOrders.RemoveAt(i); }
         ClearStages();
@@ -1459,6 +1464,12 @@ public class HandoffBoardState
         public double x, y, hdg;
         public bool returning, attacking;
         public float nextRun;
+        [Tooltip("Step 60: assault boats — marines carried, whether they are aboard the target and for how long, why they are "
+               + "holding off (null while not), and how it ended.")]
+        public int marines;
+        public bool aboard;
+        public float boardT;
+        public string holding, outcome;
     }
     [System.NonSerialized] private System.Collections.Generic.List<Flight> flights;
     public System.Collections.Generic.List<Flight> Flights => flights ?? (flights = new System.Collections.Generic.List<Flight>());
@@ -1472,15 +1483,38 @@ public class HandoffBoardState
     [Tune("Hangar & fighters")] public float fighterArmourDamage = 10f;
     [Tooltip("Integrity each fighter takes off a compartment through an open side, per run.")]
     [Tune("Hangar & fighters")] public int fighterCompartmentDamage = 1;
+    [Header("Assault boats (Step 60, BOARDING_README.md)")]
+    [Tooltip("Assault boat speed, km/s.")]
+    [Tune("Hangar & fighters")] public double boatSpeedKms = 6;
+    [Tooltip("Marines aboard our ship, carried by the assault boats; those lost aboard an enemy are gone.")]
+    [Tune("Hangar & fighters")] public int marines = 18;
+    [Tooltip("Marines each assault boat carries.")]
+    [Tune("Hangar & fighters")] public int marinesPerBoat = 6;
+    [Tooltip("Boats dock inside this distance of the target, km.")]
+    [Tune("Hangar & fighters")] public double dockKm = 50;
+    [Tooltip("A ship can be boarded only with a face open and slower than this, km/s (owner: fight it down first).")]
+    [Tune("Hangar & fighters")] public float boardMaxSpeedKms = 0.1f;
+    [Tooltip("How long the marines fight aboard, game seconds.")]
+    [Tune("Hangar & fighters")] public float boardSeconds = 60f;
+    [Tooltip("Share of the enemy's crew that fights the boarders. The odds are marines ÷ (marines + defenders).")]
+    [Tune("Hangar & fighters")] [Range(0f, 1f)] public float defenderShare = 0.25f;
+    [Tooltip("Marines lost per defender, when they win.")]
+    [Tune("Hangar & fighters")] public float marineLossPerDefender = 0.5f;
+    /// <summary>Taken by our marines (SECURE): it stops fighting and is a prize.</summary>
+    [System.NonSerialized] public bool captured;
+    [System.NonSerialized] public int boardings;
+
     /// <summary>What the squadron is doing, for the hangar's status line.</summary>
     public string FlightStatus(string squadKey)
     {
         var f = Flights.Find(k => k.squad == squadKey);
         if (f == null) return null;
-        if (f.returning) return "RETURNING · " + JsRound(System.Math.Sqrt((f.x - ownX) * (f.x - ownX) + (f.y - ownY) * (f.y - ownY))).ToString("N0") + " KM";
+        if (f.returning) return (f.outcome != null ? f.outcome + " · " : "") + "RETURNING · " + JsRound(System.Math.Sqrt((f.x - ownX) * (f.x - ownX) + (f.y - ownY) * (f.y - ownY))).ToString("N0") + " KM";
         if (f.order == "escort") return "ESCORTING";
         var t = TrackOf(f.targetKey);
         string name = t != null ? t.name : "TARGET";
+        if (f.aboard) return "BOARDING " + name + " · " + Mathf.CeilToInt(boardSeconds - f.boardT) + " S";
+        if (f.holding != null) return "HOLDING OFF " + name + " · " + f.holding;
         if (f.attacking) return (f.order == "disable" ? "DISABLING " : "ATTACKING ") + name + (flightReport != null ? " ·" + flightReport : "");
         double d = t != null && t.hasWorld ? System.Math.Sqrt((t.worldX - f.x) * (t.worldX - f.x) + (t.worldY - f.y) * (t.worldY - f.y)) : 0;
         return "OUTBOUND TO " + name + " · " + JsRound(d).ToString("N0") + " KM";
@@ -1496,16 +1530,18 @@ public class HandoffBoardState
         for (int i = list.Count - 1; i >= 0; i--)
         {
             var f = list[i];
+            bool boats = f.squad == "ih"; // the assault boats carry marines (Step 60)
             var t = f.returning || f.order == "escort" ? null : TrackOf(f.targetKey);
-            if (!f.returning && f.order != "escort" && (t == null || !t.hasWorld || t.wreck)) { f.returning = true; f.attacking = false; t = null; }
+            if (!f.returning && f.order != "escort" && (t == null || !t.hasWorld || t.wreck || t.captured)) { f.returning = true; f.attacking = false; f.aboard = false; t = null; }
             double gx = t != null ? t.worldX : ownX, gy = t != null ? t.worldY : ownY;
-            double reach = f.returning ? 50 : f.order == "escort" ? 300 : fighterAttackKm;
+            double reach = f.returning ? 50 : f.order == "escort" ? 300 : boats ? dockKm : fighterAttackKm;
             double dx = gx - f.x, dy = gy - f.y, d = System.Math.Sqrt(dx * dx + dy * dy);
             if (d > reach)
             {
-                double step = System.Math.Min(fighterSpeedKms * dt, d - reach * 0.9);
+                double step = System.Math.Min((boats ? boatSpeedKms : fighterSpeedKms) * dt, d - reach * 0.9);
                 f.x += dx / d * step; f.y += dy / d * step;
                 f.hdg = (System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360;
+                f.holding = null;
                 continue;
             }
             if (f.returning)
@@ -1513,10 +1549,17 @@ public class HandoffBoardState
                 list.RemoveAt(i);
                 int k = launchedSquads.IndexOf(f.squad);
                 if (k >= 0) { launchedSquads.RemoveAt(k); launchedOrders.RemoveAt(k); }
+                marines += f.marines; // the survivors are home
                 ClearStages();
                 continue;
             }
             if (t == null) continue; // escorting: stay with us
+            if (boats)
+            {
+                var target = ShipOf != null ? ShipOf(t.key) : null;
+                if (target != null) TickBoarding(f, t, target, dt);
+                continue;
+            }
             if (!f.attacking) { f.attacking = true; f.nextRun = missionNow; }
             if (missionNow < f.nextRun) continue;
             f.nextRun = missionNow + fighterRunSeconds;
@@ -1528,6 +1571,51 @@ public class HandoffBoardState
             flightRuns++;
             flightReport = result;
             if (ship.destroyed && !t.wreck) Kill(t);
+        }
+    }
+
+    // Step 60 (owner 2026-10-24, BOARDING_README.md): the boats hold off until a face is open and the ship is nearly
+    // stopped, then dock; the marines fight for boardSeconds; then they carry out the order, or are repelled.
+    void TickBoarding(Flight f, Track t, HandoffBoardState ship, double dt)
+    {
+        if (!f.aboard)
+        {
+            bool open = false;
+            foreach (var a in ship.SideArmour) if (a <= 0f) open = true;
+            f.holding = !open ? "NO OPEN SIDE" : t.speed > boardMaxSpeedKms ? "TARGET UNDER WAY" : null;
+            if (f.holding != null) return;
+            f.aboard = true; f.boardT = 0;
+        }
+        f.boardT += (float)dt;
+        if (f.boardT < boardSeconds) return;
+        int defenders = Mathf.CeilToInt(ship.TotalCrew * defenderShare);
+        bool won = f.marines > 0 && (defenders == 0 || Roll(f.marines / (double)(f.marines + defenders)));
+        if (won)
+        {
+            ship.KillCrew(defenders);
+            f.marines = Mathf.Max(0, f.marines - Mathf.RoundToInt(defenders * marineLossPerDefender));
+            if (f.order == "destroy") { ship.Comp("rct").integ = 0; ship.destroyed = true; Kill(t); f.outcome = t.name + " SCUTTLED"; }
+            else if (f.order == "disable") { ship.Comp("eng").integ = 0; ship.Comp("mag").integ = 0; f.outcome = t.name + " DISABLED"; }
+            else { ship.captured = true; t.captured = true; t.hostile = false; f.outcome = t.name + " SECURED"; }
+        }
+        else { ship.KillCrew(f.marines / 2); f.marines = 0; f.outcome = "BOARDING REPELLED"; }
+        flightReport = f.outcome;
+        boardings++;
+        f.aboard = false;
+        f.returning = true;
+    }
+
+    public int TotalCrew { get { int n = 0; foreach (var c in compartments) n += c.crew; return n; } }
+
+    /// <summary>Crew lost aboard (boarding): taken from the most crowded rooms first.</summary>
+    public void KillCrew(int n)
+    {
+        for (; n > 0; n--)
+        {
+            Compartment most = null;
+            foreach (var c in compartments) if (c.crew > 0 && (most == null || c.crew > most.crew)) most = c;
+            if (most == null) return;
+            most.crew--;
         }
     }
 

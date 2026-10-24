@@ -996,6 +996,61 @@ public static class PlaytestRunner
         for (int c = 0; c < s.compartments.Length; c++) s.compartments[c].integ = ourInteg[c];
         for (int k = 0; k < 3 && s.sys != "RG"; k++) { if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break; yield return 0.2f; }
 
+        // 21f. Boarding (Step 60, BOARDING_README.md): the assault boats, on DISABLE, carry marines to TRACK 07,
+        //     hold off while no face is open, board, wreck its engines and magazine, and come home. DISABLE keeps it
+        //     alive for the fight below; DESTROY and SECURE were checked on the bare ship model.
+        //     Stand-in for the helm: 1,500 km off its starboard beam, stopped.
+        double sb2 = (t07.worldHdg + 90) * System.Math.PI / 180;
+        s.ownX = t07.worldX + System.Math.Sin(sb2) * 1500; s.ownY = t07.worldY + System.Math.Cos(sb2) * 1500;
+        s.vx = s.vy = 0; s.thr = 0;
+        s.hdg = s.ordHdg = ((int)System.Math.Round(t07.worldHdg) + 270) % 360;
+        s.target = "t07";
+        vxField.SetValue(plotPanel, (s.ownX + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.ownY + t07.worldY) / 2);
+        if (!Click("drawer", "hangar", "HGR key")) yield break;
+        yield return 0.8f;
+        if (s.CurrentSquad.key != "ih" && !Click("hangar.squad", null, "squadron selector (ASSAULT BOAT)")) yield break;
+        for (int k = 0; k < 3 && s.order != "disable"; k++) if (!Click("hangar.order", null, "order knob")) yield break;
+        Check("The assault boats are selected, on DISABLE", s.CurrentSquad.key == "ih" && s.order == "disable" && s.SquadReady(s.CurrentSquad) == 3, s.CurrentSquad.key + " " + s.order + ", " + s.SquadReady(s.CurrentSquad) + " ready");
+        s.SetLbrg(s.hdg.ToString()); // stand-in for typing the launch bearing
+        float defenders = s.defenderShare;
+        s.defenderShare = 0f; // stand-in: an undefended ship, so the marines win for certain (the odds are in the Tuning window)
+        var armourWas = (float[])dummyShip.SideArmour.Clone();
+        for (int k = 0; k < 4; k++) dummyShip.SideArmour[k] = Mathf.Max(dummyShip.SideArmour[k], 10f); // stand-in: no face open, so the boats must hold off at first
+        for (int i = 0; i < s.stages.Length; i++)
+        {
+            if (!Click("hangar.stage", i.ToString(), s.stages[i].label + " stage (boats)")) yield break;
+            int k = i;
+            yield return (Func<bool>)(() => s.stages[k].progress >= 100f);
+        }
+        int marinesBefore = s.marines;
+        if (!PlotDrag(board, hLeverAt, hLeverAt + new Vector2(240, 0), "pull the launch lever (boats)", "hangar.lever")) yield break;
+        yield return 0.4f;
+        var boats = s.Flights.Find(f => f.squad == "ih");
+        Check("Three boats launch with 18 marines", boats != null && boats.craft == 3 && boats.marines == 18 && s.marines == marinesBefore - 18,
+              boats != null ? boats.craft + " boats, " + boats.marines + " marines, " + s.marines + " left aboard" : "no flight");
+        if (boats == null) yield break;
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        yield return (Func<bool>)(() => boats.holding != null);
+        yield return (Func<bool>)(() => boats.holding != null);
+        Check("No face open: they hold off", interlockText() == "HOLDING OFF TRACK 07 · NO OPEN SIDE", "\"" + interlockText() + "\"");
+        Shot("28f_boats_holding");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        dummyShip.SideArmour[1] = 0f; // stand-in for a slug opening its starboard side
+        yield return (Func<bool>)(() => boats.aboard);
+        Check("A face open, the ship stopped: they board", boats.aboard && interlockText().StartsWith("BOARDING TRACK 07 · "), "\"" + interlockText() + "\"");
+        yield return (Func<bool>)(() => !boats.aboard);
+        Check("The marines win and disable it: engines and magazine wrecked, the ship still alive", boats.outcome == "TRACK 07 DISABLED" && dummyShip.Comp("eng").integ == 0 && dummyShip.Comp("mag").integ == 0 && !dummyShip.destroyed && !t07.wreck,
+              "\"" + boats.outcome + "\", ENG " + dummyShip.Comp("eng").integ + ", MAG " + dummyShip.Comp("mag").integ);
+        Check("The hangar reports it on the way home", interlockText().StartsWith("TRACK 07 DISABLED · RETURNING"), "\"" + interlockText() + "\"");
+        yield return (Func<bool>)(() => s.Flights.Count == 0);
+        yield return (Func<bool>)(() => s.Flights.Count == 0);
+        Check("They land: the marines are back aboard", s.Flights.Count == 0 && s.marines == marinesBefore && !s.Launched(s.CurrentSquad), s.marines + " marines aboard");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        System.Array.Copy(armourWas, dummyShip.SideArmour, armourWas.Length); // its armour as it was
+        s.defenderShare = defenders;
+        if (!Click("drawer", "fire control", "FIRE key")) yield break;
+        yield return 0.6f;
+
         // 22. A fight to the kill (Step 49; Step 58: the reactor sits behind the PORT face): close in off
         //     TRACK 07's port side and shoot until it is a wreck.
         var before = (float[])dummyShip.SideArmour.Clone(); // the shots above may have marked its sides

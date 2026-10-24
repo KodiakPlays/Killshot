@@ -78,7 +78,7 @@ public class TacticalWorld : MonoBehaviour
             ship.CopyDamageTuning(board.State);
             ship.TickConditions(board.Rate); // Step 59: its fires, vacuum and radiation, held still or not
             if (!brain || !brain.enabled) continue;
-            if (ship.destroyed) ship.thr = 0; // a wreck makes no way of its own
+            if (ship.destroyed || ship.captured) ship.thr = 0; // a wreck, or a prize our marines hold (Step 60), makes no way of its own
             else brain.Think(ship, board.State);
             ship.TickHelm(board.Rate);
             ship.TickMove(board.Rate);

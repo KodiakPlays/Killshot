@@ -334,6 +334,9 @@ public class HandoffPlotPanel : HandoffPanel
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f });
         }
+        // a prize our marines hold (Step 60): an own-force dot where it lies, no label (placeholder until its glyph)
+        foreach (var t in s.tracks)
+            if (t.captured && t.hasWorld) { var at = Screen(t.worldX, t.worldY); shapes.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f }); }
         if (marks) marks.Set(shapes);
 
         // our ship where it is (Step 41: it moves across the plot): the 3D model's top-down view, sized by zoom and clamped
