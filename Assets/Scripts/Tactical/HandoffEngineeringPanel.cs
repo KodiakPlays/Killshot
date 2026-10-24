@@ -54,10 +54,11 @@ public class HandoffEngineeringPanel : HandoffPanel
     [SerializeField] private RawImage shipPicture;
     [SerializeField] private Image[] compartmentLamps;
     [SerializeField] private string[] lampKeys = { "bri", "mag", "hab", "hgr", "rct", "eng" };
-    [Tooltip("Where each lamp sits on the hull, px from the diagram's centre (y up): bridge at the bow, magazine "
-           + "starboard, habitation and hangar port, reactor and engines at the stern (FTUE_PLAN §4.4).")]
+    [Tooltip("Where each lamp sits on the hull, px from the diagram's centre (y up), on the deck plan (Step 58, "
+           + "DAMAGE_README.md): magazine at the bow, reactor to port, hangar to starboard, bridge and habitation "
+           + "inboard, engines at the stern.")]
     [Tune("Engineering & orders")] [SerializeField] private Vector2[] lampOffsets =
-        { new Vector2(0, 74), new Vector2(20, 8), new Vector2(-20, 26), new Vector2(-20, -12), new Vector2(0, -44), new Vector2(0, -78) };
+        { new Vector2(0, 30), new Vector2(0, 74), new Vector2(0, -14), new Vector2(20, 8), new Vector2(-20, 8), new Vector2(0, -78) };
     [Tooltip("The ship's length in the diagram, px.")]
     [Tune("Engineering & orders")] [SerializeField] private float diagramShipPx = 190f;
     [Tooltip("Our ship's line colour (the plot's: ink.data).")]

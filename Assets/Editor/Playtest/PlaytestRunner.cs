@@ -811,14 +811,16 @@ public static class PlaytestRunner
         s.LookAt("t07");
         yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
         for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (missiles)")) yield break; yield return 0.15f; }
-        int cells0 = s.vlsCells, landed0 = s.shotResults, mag0 = dummyShip.Comp("mag").integ;
+        Func<HandoffBoardState, float> hull = sh => { float h = 0; foreach (var a in sh.SideArmour) h += a; foreach (var c in sh.compartments) h += c.integ; return h; };
+        int cells0 = s.vlsCells, landed0 = s.shotResults;
+        float hull0 = hull(dummyShip);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "launch (HE salvo of 2)", "fc.lever")) yield break;
         Check("A salvo of two leaves the launcher", s.Rounds.FindAll(r => r.missile).Count == 2 && s.vlsCells == cells0 - 2, s.vlsCells + " cells left");
         yield return (Func<bool>)(() => s.shotResults >= landed0 + 2);
         yield return (Func<bool>)(() => s.shotResults >= landed0 + 2);
-        Check("Both home in on the moving TRACK 07: HE through its open side", s.lastShotHit && s.shotReport.Contains(" · HE · ") && dummyShip.Comp("mag").integ == Mathf.Max(0, mag0 - 4),
-              "\"" + s.shotReport + "\", MAG " + mag0 + " → " + dummyShip.Comp("mag").integ);
+        Check("Both home in on the moving TRACK 07 and the HE does damage", s.lastShotHit && s.shotReport.Contains(" · HE") && hull(dummyShip) < hull0,
+              "\"" + s.shotReport + "\", armour + integrity " + hull0 + " → " + hull(dummyShip));
         //     EMP: no hull damage, its power goes down and it slows.
         if (!Click("fc.mount", null, "warhead selector (EMP)")) yield break;
         Check("The turret knob picks the warhead", s.warheads[s.warhead] == "EMP", s.warheads[s.warhead]);
@@ -977,6 +979,13 @@ public static class PlaytestRunner
         Check("With no PDC on AUTO, both hit us, with the alert tone", s.hitsTaken == taken0 + 2 && s.incomingReport != null && s.incomingReport.StartsWith("MISSILE HIT · ") && board.LastSound == "alert",
               (s.hitsTaken - taken0) + " hits, last \"" + s.incomingReport + "\", last cue \"" + board.LastSound + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     Our ship can die too (Step 58): its port side open, three slugs into the reactor (stand-in for enemy fire).
+        s.SideArmour[3] = 0f;
+        for (int k = 0; k < 3; k++) s.TakeSlug("PORT");
+        yield return 1f;
+        Check("Our reactor at 0: our ship is destroyed and goes dark", s.destroyed && s.Comp("rct").integ == 0 && s.TotalFill == 0,
+              "RCT " + s.Comp("rct").integ + ", power drawn " + s.TotalFill);
+        s.destroyed = false;
         //     Clean up for the steps below: TRACK 07 held still and quiet, our ship repaired (stand-in for damage control).
         brain.firesBack = false; brain.enabled = false; t07Ship.vx = t07Ship.vy = 0;
         s.pdcKillChance = 0.7f;
@@ -984,14 +993,15 @@ public static class PlaytestRunner
         for (int c = 0; c < s.compartments.Length; c++) s.compartments[c].integ = ourInteg[c];
         for (int k = 0; k < 3 && s.sys != "RG"; k++) { if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break; yield return 0.2f; }
 
-        // 22. A fight to the kill (Step 49): close in behind TRACK 07 and shoot until it is a wreck.
+        // 22. A fight to the kill (Step 49; Step 58: the reactor sits behind the PORT face): close in off
+        //     TRACK 07's port side and shoot until it is a wreck.
         var before = (float[])dummyShip.SideArmour.Clone(); // the shots above may have marked its sides
-        int bri0 = dummyShip.Comp("bri").integ, magB = dummyShip.Comp("mag").integ, hab0 = dummyShip.Comp("hab").integ, hgr0 = dummyShip.Comp("hgr").integ;
-        //     Stand-in for the helm: 10,000 km behind its stern, stopped, side-on so turret B (port) bears.
-        double tb = t07.worldHdg * System.Math.PI / 180;
-        s.ownX = t07.worldX - System.Math.Sin(tb) * 10000; s.ownY = t07.worldY - System.Math.Cos(tb) * 10000;
+        var integBefore = System.Array.ConvertAll(dummyShip.compartments, c => c.integ);
+        //     Stand-in for the helm: 10,000 km off its port beam, stopped, side-on so turret B (port) bears.
+        double tb = (t07.worldHdg - 90) * System.Math.PI / 180;
+        s.ownX = t07.worldX + System.Math.Sin(tb) * 10000; s.ownY = t07.worldY + System.Math.Cos(tb) * 10000;
         s.vx = s.vy = 0; s.thr = 0;
-        s.hdg = s.ordHdg = ((int)System.Math.Round(t07.worldHdg) + 90) % 360;
+        s.hdg = s.ordHdg = ((int)System.Math.Round(t07.worldHdg) + 180) % 360;
         yield return 1f;
         s.LookAt("t07");
         s.sol[s.SysIndex] = new HandoffBoardState.Solution(); // stand-in: clear the old solution
@@ -1014,15 +1024,18 @@ public static class PlaytestRunner
             reports.Add(s.shotReport);
         }
         string log = string.Join(" | ", reports);
-        Check("The first hit opens its stern", reports.Count > 0 && reports[0] == "HIT · TRACK 07 · AFT OPEN", log);
-        bool behindOnly = true;
-        for (int i = 1; i < reports.Count - 1; i++)
-            if (reports[i] != "HIT · TRACK 07 · AFT · RCT −2" && reports[i] != "HIT · TRACK 07 · AFT · ENG −2") behindOnly = false;
-        Check("Then each hit takes 2 off the reactor or the engines behind it", reports.Count > 2 && behindOnly, reports.Count + " shots");
+        int opened = reports.FindIndex(r => r == "HIT · TRACK 07 · PORT OPEN");
+        bool armourFirst = opened >= 0;
+        for (int i = 0; i < opened; i++) if (!reports[i].StartsWith("HIT · TRACK 07 · PORT ARMOUR ")) armourFirst = false;
+        Check("The first hits open its port side", armourFirst, log);
+        bool reactorOnly = opened >= 0;
+        for (int i = opened + 1; i < reports.Count - 1; i++) if (reports[i] != "HIT · TRACK 07 · PORT · RCT −2") reactorOnly = false;
+        Check("Then each hit takes 2 off the reactor behind it, the same room every time", reports.Count - opened - 2 > 0 && reactorOnly, reports.Count + " shots");
         Check("Its reactor gone, it is destroyed: a cold wreck", t07.wreck && dummyShip.destroyed && dummyShip.Comp("rct").integ == 0 && !s.Heard(t07) && reports[reports.Count - 1] == "TRACK 07 DESTROYED",
-              "RCT " + dummyShip.Comp("rct").integ + ", ENG " + dummyShip.Comp("eng").integ + ", last \"" + reports[reports.Count - 1] + "\"");
-        Check("Nothing else on it was touched", dummyShip.SideArmour[0] == before[0] && dummyShip.SideArmour[1] == before[1] && dummyShip.SideArmour[3] == before[3]
-              && dummyShip.Comp("bri").integ == bri0 && dummyShip.Comp("mag").integ == magB && dummyShip.Comp("hab").integ == hab0 && dummyShip.Comp("hgr").integ == hgr0, "");
+              "RCT " + dummyShip.Comp("rct").integ + ", last \"" + reports[reports.Count - 1] + "\"");
+        bool untouched = dummyShip.SideArmour[0] == before[0] && dummyShip.SideArmour[1] == before[1] && dummyShip.SideArmour[2] == before[2];
+        for (int c = 0; c < dummyShip.compartments.Length; c++) if (dummyShip.compartments[c].key != "rct" && dummyShip.compartments[c].integ != integBefore[c]) untouched = false;
+        Check("Nothing else on it was touched", untouched, "");
         yield return 0.4f;
         Check("The kill cue sounds", board.LastSound == "kill", "last cue \"" + board.LastSound + "\"");
         Shot("29_destroyed");

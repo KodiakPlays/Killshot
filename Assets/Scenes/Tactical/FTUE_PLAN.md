@@ -21,7 +21,7 @@ Status is not kept here. `BUILD_LOG.md` is the single living record; log each st
 | Who guides the player | **One XO.** Text only, in a comms-style box. "If you are Picard, this is Riker." No voice. |
 | Which stations the walkthrough covers | **All of them.** Power, helm, plot tools, sensors, comms, engineering, hangar, orders, periscope, fire control, time control. Engineering, comms and hangar must really exist, not be skipped. |
 | What the enemy is | **Our ship with different stats.** Same power, signature, sensors, helm, weapons and damage. A brain drives it instead of the board. One ship model, two drivers. §4. |
-| What a scan shows | **The enemy's ship state, drawn as ours is.** Class, hull sides, compartments and integrity, power and signal. Our hits update it. Side-to-compartment table in §4.4 is ruled. |
+| What a scan shows | **The enemy's ship state, drawn as ours is.** Class, hull sides, compartments and integrity, power and signal. Our hits update it. Side-to-room map: `DAMAGE_README.md` (owner 2026-10-24). |
 | Which weapons | **The handoff's.** Two railgun turrets, one on either side of the ship, two PDC groups, the VLS, with the design's arcs, ranges and arming rules. The GDD's weapon list is dated. |
 | Where the FTUE ends | **At the kill.** The XO's last line is "let's get out of here." The escape to a jump point is a later addition. |
 | Does the enemy shoot back | **Yes, but built later** (§9, step J). **No reinforcements**, ever, in this mission. |
@@ -175,18 +175,13 @@ it is not metronomic. The "enemy hits a little softer" factor of 0.65 (spec §8.
 tunable on its damage.
 
 **Where its hits land on us.** The side facing it takes the hit. Once a side is open, each further
-hit damages one compartment behind that side, at random. That is what makes engineering real.
+hit damages the room behind that side. That is what makes engineering real.
 
-| Side hit | Compartments behind it (board keys) |
-|---|---|
-| Prow | BRI |
-| Aft | RCT, ENG |
-| Starboard | MAG |
-| Port | HAB, HGR |
-
-> The spec's seven internals do not match the handoff's six compartments. The handoff is newer and is
-> what the board shows, so damage lands on compartments. **The table above is ruled (owner,
-> 2026-10-18).**
+> **Replaced 2026-10-24 (owner).** The 18 Oct table (prow BRI; aft RCT, ENG; starboard MAG; port HAB,
+> HGR, at random) gave way to the design audit's: **bow MAG, stern ENG, port RCT, starboard HGR**, one
+> fixed room per face; bridge and habitation inboard. See `DAMAGE_README.md`, next to this file.
+> The spec's seven internals still do not match the handoff's six compartments; damage lands on
+> compartments.
 
 **And our hits land on it the same way.** Its compartments take damage through the side we hit.
 Its kill conditions are ours. Its reactor compartment at zero kills it, as it would us.

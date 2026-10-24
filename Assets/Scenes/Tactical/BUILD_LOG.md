@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 57 are done, plus a final QA pass.**
+**Steps 1 to 58 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -97,8 +97,9 @@ Do not run ahead. Do one step, show it, wait.
 | 55 | PDCs, and the enemy fires back | **Done** — playtest 138/138 |
 | 56 | The intro: flat black, typed in place, straight cuts | **Done** — checked in play mode |
 | 57 | Everything in game time | **Done** — playtest 138/138 |
+| 58 | The audit's side map; our ship can die | **Done** — playtest 139/139 |
 
-Steps 6 to 28 and Steps 34 to 57 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 58 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -616,7 +617,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 57, in detail
+## 6 · Steps 6 to 28, and 34 to 58, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2403,6 +2404,39 @@ Two runs failed first:
 **Damage plan.** The damage model is written up in `DAMAGE_README.md`, next to this file. It is
 built in the order given there: side map, conditions, teams, breakdowns, displays. Boarding comes
 right after conditions.
+
+### Step 58 — The audit's side map; our ship can die
+
+**Owner decisions (2026-10-24).**
+
+- **The design audit's map** replaces the 18 Oct one: bow → magazine, stern → engine room, port →
+  reactor, starboard → hangar. One fixed room per face. Bridge and habitation sit inboard and are
+  never hit directly.
+- **A reactor at 0 destroys any ship, ours included.** This overrides the audit's "never
+  unrecoverable".
+
+**What changed.**
+
+- `HandoffBoardState.BehindSide` is one room per face. `Behind()` has no random pick; a wrecked room
+  reports "· RCT WRECKED" and takes no more.
+- **Destroyed** means the reactor's structure is at 0. It used to read `CompHealth`, which counts a
+  vented room as 0, so venting the reactor would have destroyed the ship.
+- A destroyed ship goes dark: `TickPower` holds every bus at 0. With no power there is no thrust, no
+  weapons and no sensors.
+- Fighters on DISABLE still go for the stern, which is now the engine room alone.
+- The engineering diagram's lamps follow the deck plan in `DAMAGE_README.md`.
+- `FTUE_PLAN` §4.4 points to the README.
+
+**Checked.** Playtest 139/139 PASS (`Logs/Playtests/2026-10-24_105807/`):
+
+- The fight to the kill now comes off TRACK 07's port beam: "PORT ARMOUR 50% / PORT OPEN /
+  PORT · RCT −2 / PORT · RCT −2 / DESTROYED". Nothing else on it was touched.
+- Missiles from its starboard beam hit the hangar ("STBD · HE · HGR −2").
+- New check: our port side opened and three slugs into our reactor destroy our ship, and its power
+  drops to 0. This is a stand-in for enemy fire.
+
+**Known.** Nothing happens on screen when our ship is destroyed beyond going dark. The game-over
+screen is still to be designed (`DAMAGE_README.md`, still open).
 
 ---
 

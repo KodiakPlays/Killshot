@@ -1020,8 +1020,10 @@ public class HandoffBoardState
     // The same model for every ship, ours included (the enemy is our ship with other stats).
 
     public static readonly string[] Sides = { "PROW", "STBD", "AFT", "PORT" };
-    // what sits behind each side (FTUE_PLAN §4.4, ruled by the owner 2026-10-18)
-    static readonly string[][] BehindSide = { new[] { "bri" }, new[] { "mag" }, new[] { "rct", "eng" }, new[] { "hab", "hgr" } };
+    // Step 58 (owner 2026-10-24, design audit §09.4): one fixed room behind each face — bow magazine,
+    // starboard hangar, stern engines, port reactor. Bridge and habitation sit inboard and are never hit
+    // directly. Replaces the 18 Oct map (FTUE_PLAN §4.4). DAMAGE_README.md.
+    static readonly string[] BehindSide = { "mag", "hgr", "eng", "rct" };
     [Tooltip("Armour per side: PROW, STBD, AFT, PORT. At 0 the side is open (owner: prow and flanks take 2 slugs, the aft 1).")]
     [Tune("Damage")] public float[] sideArmourMax = { 100f, 100f, 50f, 100f };
     [Tooltip("Armour one railgun slug takes off the side it hits.")]
@@ -1034,8 +1036,8 @@ public class HandoffBoardState
     [System.NonSerialized] public bool destroyed;
     [System.NonSerialized] private System.Random dice;
 
-    /// <summary>A slug strikes this ship's side. Armour first; once the side is open, a compartment behind
-    /// it that still stands, at random, loses integrity. Returns the report's tail (" OPEN", " · RCT −2").</summary>
+    /// <summary>A slug strikes this ship's side. Armour first; once the side is open, the room behind it
+    /// loses integrity. Returns the report's tail (" OPEN", " · RCT −2").</summary>
     public string TakeSlug(string side)
     {
         int i = System.Array.IndexOf(Sides, side);
@@ -1049,8 +1051,8 @@ public class HandoffBoardState
         return Behind(i);
     }
 
-    /// <summary>One fighter's attack run on this ship (Step 54). DESTROY: the side facing it, then a compartment
-    /// behind. DISABLE: always the aft armour, then the engines.</summary>
+    /// <summary>One fighter's attack run on this ship (Step 54). DESTROY: the side facing it, then the room
+    /// behind. DISABLE: always the stern, so the engine room (Step 58).</summary>
     public string TakeFighterRun(string side, bool disable, float armourDamage, int compartmentDamage)
     {
         if (destroyed) return "";
@@ -1062,27 +1064,19 @@ public class HandoffBoardState
             armour[i] = Mathf.Max(0f, armour[i] - armourDamage);
             return " " + Sides[i] + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + JsRound(armour[i] / sideArmourMax[i] * 100f) + "%");
         }
-        if (disable)
-        {
-            var eng = Comp("eng");
-            if (eng == null || eng.integ <= 0) return " AFT · ENG DOWN";
-            eng.integ = Mathf.Max(0, eng.integ - compartmentDamage);
-            return " AFT · ENG −" + compartmentDamage;
-        }
         return " " + Sides[i] + Behind(i, compartmentDamage);
     }
 
-    // One compartment behind side i that still stands, at random, loses the damage given.
+    // The room behind side i loses the damage given. A wrecked room takes no more. The ship is destroyed
+    // when its reactor's structure reaches 0 (any ship, ours too: owner 2026-10-24).
     string Behind(int i) => Behind(i, slugCompartmentDamage);
     string Behind(int i, int damage)
     {
-        var standing = new System.Collections.Generic.List<Compartment>();
-        foreach (var key in BehindSide[i]) { var c = Comp(key); if (c != null && c.integ > 0) standing.Add(c); }
-        if (standing.Count == 0) return " · NOTHING LEFT BEHIND IT";
-        if (dice == null) dice = new System.Random(49);
-        var hit = standing[dice.Next(standing.Count)];
+        var hit = Comp(BehindSide[i]);
+        if (hit == null) return "";
+        if (hit.integ <= 0) return " · " + hit.tag + " WRECKED";
         hit.integ = Mathf.Max(0, hit.integ - damage);
-        if (CompHealth("rct") <= 0) destroyed = true;
+        if (Comp("rct").integ <= 0) destroyed = true;
         return " · " + hit.tag + " −" + damage;
     }
 
@@ -1497,7 +1491,8 @@ public class HandoffBoardState
 
     public void TickPower(double dt)
     {
-        if (missionNow < empUntil) { foreach (var b in buses) b.fill = 0; return; } // EMP: power stays down (Step 53)
+        // EMP: power stays down (Step 53). Destroyed (Step 58): the ship goes dark for good.
+        if (missionNow < empUntil || destroyed) { foreach (var b in buses) b.fill = 0; return; }
         powerBank += dt;
         for (; powerBank >= 1 - 1e-9; powerBank -= 1) StepPower(); // a bus fills or drains one unit per game second
         // the reactor cap holds at once, whatever the rate
