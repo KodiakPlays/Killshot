@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 55 are done, plus a final QA pass.**
+**Steps 1 to 56 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -95,8 +95,9 @@ Do not run ahead. Do one step, show it, wait.
 | 53 | Missiles: the launcher, homing, three warheads | **Done** — playtest 121/121 |
 | 54 | Fighters: launch, fly out, attack runs, recall | **Done** — playtest 130/130 |
 | 55 | PDCs, and the enemy fires back | **Done** — playtest 138/138 |
+| 56 | The intro: flat black, typed in place, straight cuts | **Done** — checked in play mode |
 
-Steps 6 to 28 and Steps 34 to 55 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 56 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -614,7 +615,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 55, in detail
+## 6 · Steps 6 to 28, and 34 to 56, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2314,6 +2315,40 @@ ship stopped 6,000 km off TRACK 07's bow, turned so it bears 042° (PDC-A's arc)
 - TRACK 07 fires whatever its own power state is.
 - PDC-B covers astern-port (200° ±35°); nothing covers dead ahead or dead astern, as the design
   has it.
+
+### Step 56 — The intro: flat black, typed in place, straight cuts
+
+**Owner direction (2026-10-17, restated 2026-10-24).** The intro screen must be flat black. Each
+line appears in place, left to right, as if typed. Then a straight cut to the next thing. No
+zoom: the old pull-back shrank STARWOLF in place.
+
+**What was wrong.** The green was the intro package itself. Step 27 gave its shader a faint lit
+field (`_FieldGlow` .006 of the phosphor, plus the `#010601` background). On screen it measured
+(45, 77, 45), a mid green: the picture is still encoded twice on its way to the screen, which
+brightens anything near black.
+
+**What changed** (`Assets/StarwolfIntro/`, owner-supplied, changed at the owner's request):
+
+- `PhosphorDisplay.shader`:
+  - the field is pure black; `_FieldGlow` and `_Background` are gone;
+  - SECTION 36, INITIALISING... and STARWOLF each type in by cell column (`typed()`, driven by
+    `_Reveal`), the newest column fading up;
+  - the pull-back zoom and its grid are gone; the menu draws alone.
+- `StarwolfIntroController`:
+  - `pullbackDuration` is gone; the menu follows the title directly;
+  - `typeShare` (0.5): each line types over this share of its time, then holds;
+  - the old fade in and out is gone.
+- Timing in `00_Start` is unchanged: 4 / 2 / 4 s, then the menu (10 s, was 14).
+
+**Checked** in play mode, screenshots measured: the background is (0, 0, 0) on all three lines
+and on the menu. SECTION 36 shows half typed, STARWOLF fully typed in place, and the menu has no
+title behind it.
+
+**Known.**
+
+- The double encode is still there, so the text is a little paler than the reference
+  (`References/Company Logo.png`). Only black is immune to it.
+- `00_Start` still holds an unused `pullbackDuration: 4` line; Unity drops it on the next save.
 
 ---
 

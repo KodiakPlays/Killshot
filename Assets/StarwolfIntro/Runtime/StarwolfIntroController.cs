@@ -15,7 +15,8 @@ namespace Starwolf.Intro
         [Min(0.1f)] public float sectionDuration = 2.5f;
         [Min(0.1f)] public float initialisingDuration = 1.2f;
         [Min(0.1f)] public float titleDuration = 2.0f;
-        [Min(0.1f)] public float pullbackDuration = 3.0f;
+        [Tooltip("Owner 2026-10-24: each line types in left to right over this share of its time, holds, then cuts straight to the next. No pull-back.")]
+        [Range(0.1f, 1f)] public float typeShare = 0.5f;
         [Range(0, 0.3f)] public float humVolume = 0.12f;
         [Header("Connect these to the game's own systems")]
         public UnityEvent newGame = new UnityEvent();
@@ -24,9 +25,8 @@ namespace Starwolf.Intro
         public bool loadGameAvailable = true;
         public event Action<int> MenuAction;
         public bool MenuVisible => clock >= TotalDuration;
-        public float TotalDuration => Mathf.Max(.1f, sectionDuration) + Mathf.Max(.1f, initialisingDuration) + Mathf.Max(.1f, titleDuration) + Mathf.Max(.1f, pullbackDuration);
+        public float TotalDuration => Mathf.Max(.1f, sectionDuration) + Mathf.Max(.1f, initialisingDuration) + Mathf.Max(.1f, titleDuration);
         public float Elapsed => clock;
-        public Vector2 GridOriginPixels { get; private set; }
         public int GridPitchPixels { get; private set; }
 
         Material material;
@@ -53,7 +53,6 @@ namespace Starwolf.Intro
                     data.MakeMask("STARWOLF", true), data.MakeMask("NEW GAME", false),
                     data.MakeMask("LOAD GAME", false), data.MakeMask("SETTINGS", false) };
                 GridPitchPixels = data.Pitch;
-                GridOriginPixels = new Vector2(-masks[2].width * .5f, -masks[2].height * .5f);
                 ApplyStaticUniforms();
                 source = gameObject.AddComponent<AudioSource>();
                 source.clip = hardwareHum; source.loop = true; source.playOnAwake = false;
@@ -91,12 +90,11 @@ namespace Starwolf.Intro
                 material.SetTexture(MaskProperties[i], masks[i]);
                 material.SetVector(MaskProperties[i] + "Size", new Vector4(masks[i].width, masks[i].height, 0, 0));
             }
-            // _Phosphor and _Background are declared Color properties, so in Linear colour space
-            // Unity converts them from sRGB itself. Do not also call .linear or they convert twice.
+            // _Phosphor is a declared Color property, so in Linear colour space Unity converts it
+            // from sRGB itself. Do not also call .linear or it converts twice. The field is flat
+            // black (owner 2026-10-24), so data.background is not used.
             ColorUtility.TryParseHtmlString(data.phosphor, out var phosphor);
-            ColorUtility.TryParseHtmlString(data.background, out var background);
             material.SetColor("_Phosphor", phosphor);
-            material.SetColor("_Background", background);
             material.SetFloat("_Pitch", GridPitchPixels);
         }
         void DrawFrame()
@@ -114,18 +112,14 @@ namespace Starwolf.Intro
                 target.Create();
             }
             float s = Mathf.Max(.1f, sectionDuration), b = Mathf.Max(.1f, initialisingDuration);
-            float t = Mathf.Max(.1f, titleDuration), z = Mathf.Max(.1f, pullbackDuration);
-            float stage = clock < s ? 0 : clock < s + b ? 1 : clock < s + b + t ? 2 : clock < s + b + t + z ? 3 : 4;
-            float local = stage == 0 ? clock : stage == 1 ? clock - s : stage == 2 ? clock - s - b : clock - s - b - t;
-            float duration = stage == 0 ? s : stage == 1 ? b : stage == 2 ? t : z;
-            float fade = stage <= 1 ? Mathf.Clamp01(local / .2f) * Mathf.Clamp01((duration - local) / .2f) : 1;
-            // The grid is a flourish inside the pull-back only. It swells and goes again, so every
-            // beat the player actually rests on — the logos and the menu — sits on a black field.
-            material.SetFloat("_GridVisibility",
-                stage > 2.5f && stage < 3.5f ? Mathf.Sin(Mathf.Clamp01(local / z) * Mathf.PI) : 0f);
-            material.SetFloat("_Stage", stage); material.SetFloat("_Phase", local);
-            material.SetFloat("_Fade", fade); material.SetFloat("_Clock", clock);
-            material.SetFloat("_ZoomProgress", Mathf.Clamp01((clock - s - b - t) / z));
+            float t = Mathf.Max(.1f, titleDuration);
+            // Owner 2026-10-24: SECTION 36, INITIALISING..., STARWOLF, each typed in place, then a
+            // straight cut to the next; the menu (stage 4) follows the title with no pull-back.
+            float stage = clock < s ? 0 : clock < s + b ? 1 : clock < s + b + t ? 2 : 4;
+            float local = stage == 0 ? clock : stage == 1 ? clock - s : clock - s - b;
+            float duration = stage == 0 ? s : stage == 1 ? b : t;
+            material.SetFloat("_Stage", stage); material.SetFloat("_Clock", clock);
+            material.SetFloat("_Reveal", stage < 3 ? Mathf.Clamp01(local / (duration * typeShare)) : 1f);
             material.SetFloat("_Selected", selected); material.SetFloat("_LoadAvailable", loadGameAvailable ? 1 : 0);
             Graphics.Blit(Texture2D.blackTexture, target, material);
         }
