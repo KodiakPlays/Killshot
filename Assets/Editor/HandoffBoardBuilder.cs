@@ -964,18 +964,25 @@ public static class HandoffBoardBuilder
         EaseDial(so.FindProperty("actingOn"), 0.2f, Spring); // line 1030
         Hit(knob, "eng.cycle", null);
 
-        string[] ids = { "reboot", "party", "seal", "vent", "dum1", "dum2" };
+        // Step 59 (owner 2026-10-24): DUMMY 1 becomes RECALL (calls the damage-control team back), with the
+        // REPAIR / SEAL / VENT rocker art and its own legend. DUMMY 2 stays a blanking plate until a step needs it.
+        string[] ids = { "reboot", "party", "seal", "vent", "recall", "dum2" };
         int[] rockers = { 206, 209, 212, 215, 218, 221 };
         var rp = so.FindProperty("repairs");
         rp.arraySize = ids.Length;
         for (int i = 0; i < ids.Length; i++)
         {
             var e = rp.GetArrayElementAtIndex(i);
-            bool fitted = i < 4; // DUMMY 1 and 2 are blanking plates (tbd)
+            bool fitted = i < 5; // DUMMY 2 is a blanking plate (tbd)
             string family = i == 0 ? "rocker_reboot" : "rocker_22x30";
             e.FindPropertyRelative("id").stringValue = ids[i];
             e.FindPropertyRelative("fitted").boolValue = fitted;
             var rocker = Named(root, E, "sprite#" + rockers[i] + " ");
+            if (ids[i] == "recall")
+            {
+                rocker.GetComponent<Image>().sprite = LoadSprite(family + "_up");
+                Tmp(root, E, "text#" + (304 + i) + " ").text = "RECALL";
+            }
             e.FindPropertyRelative("rocker").objectReferenceValue = rocker.GetComponent<Image>();
             e.FindPropertyRelative("up").objectReferenceValue = LoadSprite(family + "_up");
             e.FindPropertyRelative("locked").objectReferenceValue = LoadSprite(family + "_locked");

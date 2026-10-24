@@ -241,10 +241,12 @@ public class HandoffBoardControls : MonoBehaviour
                 state.TickFlights(rate); // Step 54: fighters fly, attack, come home
                 state.TickIncoming(rate); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
                 state.TickParty(rate);
+                state.TickConditions(rate); // Step 59: fire, vacuum and radiation burn, kill and spread
                 state.TickLaunch(rate);
                 state.TickWeapons(rate);
                 state.TickSensors(rate);
                 if (Ticked != null) Ticked();
+                state.NoteWrecks(); // Step 59: a contact whose reactor burned out is a wreck
                 if (state.NoteNewContacts()) { ShowAlarm(); Play(alertSound, "alert"); }
             }
             RefreshPanels();

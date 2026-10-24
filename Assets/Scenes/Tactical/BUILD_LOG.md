@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 58 are done, plus a final QA pass.**
+**Steps 1 to 59 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -98,8 +98,9 @@ Do not run ahead. Do one step, show it, wait.
 | 56 | The intro: flat black, typed in place, straight cuts | **Done** — checked in play mode |
 | 57 | Everything in game time | **Done** — playtest 138/138 |
 | 58 | The audit's side map; our ship can die | **Done** — playtest 139/139 |
+| 59 | Conditions: fire, vacuum, radiation | **Done** — playtest 153/153 |
 
-Steps 6 to 28 and Steps 34 to 58 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 59 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -617,7 +618,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 58, in detail
+## 6 · Steps 6 to 28, and 34 to 59, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2437,6 +2438,81 @@ right after conditions.
 
 **Known.** Nothing happens on screen when our ship is destroyed beyond going dark. The game-over
 screen is still to be designed (`DAMAGE_README.md`, still open).
+
+### Step 59 — Conditions: fire, vacuum, radiation
+
+**Owner decisions (2026-10-24).** The rules are in `DAMAGE_README.md`, with the design audit §09.5 as
+the base:
+
+- The three conditions spread over the owner's deck plan.
+- **The weapon and the room decide what a hit starts:**
+  - HE and penetrators start fires;
+  - slugs breach a room;
+  - reactor hits leak radiation.
+- **More hits on a wrecked room** still start conditions.
+- **The audit's rules, on the design's own buttons.** DUMMY 1 becomes **RECALL**, with the REPAIR /
+  SEAL / VENT rocker art and its own legend. DUMMY 2 stays as it is.
+
+**What was built** (`HandoffBoardState`; the same model runs both ships):
+
+- **Room state.** Each room carries `fire`, `rad` and `doorsShut` next to `vented`. The design's
+  `cond` is derived from them: FIRE before RAD.
+- **What a hit starts.** `Strike()` rolls the condition chances on every hit through open armour.
+  The report says what started: "· MAG −2 · FIRE", "· HGR −2 · BREACH", "· RCT −2 · RADIATION".
+- **`TickConditions(dt)`**, per game second:
+  - fire takes 1 integrity every 30 s;
+  - radiation kills one crew member every 20 s;
+  - all three spread to neighbours: fire only into rooms with air; vacuum only from rooms whose
+    doors are open; radiation only while the reactor leaks (below integrity 3, not vented);
+  - radiation fades 90 s after the reactor is contained;
+  - a reactor burned to 0 destroys the ship.
+- **A breach** vents the room, puts out its fire, kills half its crew, and loses any team working
+  there.
+- **Engineering's rockers (and the orders station, now on the same rules):**
+  - REPAIR sends the team. It puts a fire out, or restores the air in a sealed room, or repairs.
+    It no longer needs crew in the room; it refuses an open airless room with "SEAL THE DOORS FIRST".
+  - SEAL shuts an airless room's doors.
+  - VENT dumps the air: the fire goes out, all crew inside die, and the doors shut.
+  - REBOOT adds 1 and no longer clears a condition.
+  - RECALL calls the team back.
+- **The enemy's ship** runs the same conditions with our Tuning numbers (`CopyDamageTuning`). One
+  whose reactor burns out becomes a wreck (`NoteWrecks`).
+- Tuning window, new section **"Damage control"**: every chance, rate and time in the README.
+
+**Behaviour changes to the design, flagged.**
+
+- SEAL no longer restores air at once.
+- REBOOT no longer clears conditions.
+- REPAIR no longer needs crew aboard.
+- The orders station's VENT no longer refuses with crew aboard, and its PARTY can work an airless
+  room once sealed.
+- DUMMY 1 is RECALL.
+
+**Checked.**
+
+- A quick check on a bare ship model first, all rules.
+- Then playtest 153/153 PASS (`Logs/Playtests/2026-10-24_111146/`), new step 24. Chances and spread
+  are set to certain for exact results, and the hits are stand-ins:
+  - HE through the open bow set the magazine on fire. It spread to the bridge, reactor and hangar,
+    and not to the engines or habitation. It burned the magazine 3 → 2.
+  - A team put it out. VENT put out the bridge fire and its 9 crew died.
+  - A slug breached the hangar ("HGR −2 · BREACH", crew 7 → 3). REPAIR refused until SEAL; with
+    the doors shut nothing spread; the team restored the air.
+  - RECALL called a team back with no repair landing.
+  - Two slugs into the reactor leaked radiation into the magazine and bridge, not the hangar, and
+    it killed magazine crew. Contained, it faded.
+- The engineering screen shows it with the design's own readouts (ATMO VENT, COND FIRE, crew 0, "3
+  COMPARTMENTS IN HAZARD").
+- Steps 1–23 run with the condition chances at 0 (a stand-in), so they stay as written.
+
+**Known.**
+
+- A room with both fire and radiation shows FIRE only, and doors shut on an airless room still show
+  VENT. Both wait for the displays step.
+- Teams take no travel time and no crew yet (the teams step).
+- Crew killed in a room are not replaced or moved.
+- The enemy does not fight its own fires: its rooms burn until we finish it, or a fire reaches its
+  reactor.
 
 ---
 

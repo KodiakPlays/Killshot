@@ -74,6 +74,9 @@ The orders station's PARTY, SEAL and VENT do the same, paid from the AUX pool.
 - SEAL no longer restores air at once.
 - VENT kills crew.
 - DUMMY 1 is given a job.
+- REPAIR no longer needs crew in the room: the team comes from elsewhere.
+- The orders station follows the same rules as engineering. In the design, its VENT refused with crew
+  aboard and its PARTY refused any airless room.
 
 ## Numbers
 
@@ -93,9 +96,9 @@ All are in **Starwolf → Tuning**, under "Damage control". These are the starti
 
 ## Build order
 
-1. **Game time:** every rate per game second, charging included.
-2. **Side map:** the audit's faces and rooms; a reactor at 0 destroys our ship too.
-3. **Conditions:** this file, with RECALL TEAM.
+1. **Game time:** every rate per game second, charging included. **Done, Step 57.**
+2. **Side map:** the audit's faces and rooms; a reactor at 0 destroys our ship too. **Done, Step 58.**
+3. **Conditions:** this file, with RECALL TEAM. **Done, Step 59.**
 4. **Teams** (audit §09.9): travel time, crew taken off stations, recall, losses; the alert level
    sets crew at stations.
 5. **Breakdowns** (audit §09.6): parts jam (needs a team) or overheat (clears when you ease off);

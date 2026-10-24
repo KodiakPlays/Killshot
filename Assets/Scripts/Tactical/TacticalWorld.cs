@@ -51,9 +51,7 @@ public class TacticalWorld : MonoBehaviour
             {
                 if (!c || c.trackKey != key) continue;
                 var ship = c.Ship;
-                var own = board.State;
-                ship.slugArmourDamage = own.slugArmourDamage;
-                ship.slugCompartmentDamage = own.slugCompartmentDamage;
+                ship.CopyDamageTuning(board.State);
                 return ship;
             }
             return null;
@@ -77,6 +75,8 @@ public class TacticalWorld : MonoBehaviour
             ship.missionNow = board.State.missionNow;
             // EMP (Step 53): power is out until it wears off; then its engines come back
             if (ship.empUntil > 0f && ship.missionNow >= ship.empUntil) { ship.empUntil = 0f; ship.buses[0].fill = ship.busMax; }
+            ship.CopyDamageTuning(board.State);
+            ship.TickConditions(board.Rate); // Step 59: its fires, vacuum and radiation, held still or not
             if (!brain || !brain.enabled) continue;
             if (ship.destroyed) ship.thr = 0; // a wreck makes no way of its own
             else brain.Think(ship, board.State);

@@ -261,6 +261,9 @@ public static class PlaytestRunner
         //     moves it with the same maths as ours.
         var brain = GameObject.Find("World").GetComponentInChildren<EnemyBrain>();
         if (brain) brain.firesBack = false; // stand-in: it holds its fire until the point-defence step (21e)
+        // stand-in: no hit starts a condition until the conditions step (24), so the steps before stay as written
+        float[] condChances = { s.fireChanceHE, s.fireChancePEN, s.breachChanceSlug, s.radChanceReactor };
+        s.fireChanceHE = s.fireChancePEN = s.breachChanceSlug = s.radChanceReactor = 0f;
         var t07Ship = brain ? brain.GetComponent<WorldContact>().Ship : null;
         Check("TRACK 07 has a patrol brain", brain && brain.enabled, "");
         if (!brain) yield break;
@@ -1068,6 +1071,98 @@ public static class PlaytestRunner
         s.Comp("hab").integ = 5; s.Comp("hgr").integ = 5;
         yield return 0.6f;
         Check("Repaired, they go green again", lit(lamps[2], green) && lit(lamps[3], green), "");
+
+        // 24. Conditions (Step 59, DAMAGE_README.md): fire, vacuum and radiation on our ship, handled with
+        //     engineering's own rockers. Hits are stand-ins (enemy fire comes with the ship AI); chances and
+        //     spread are set to certain so each result is exact; the real odds are in the Tuning window.
+        var armour0 = (float[])s.SideArmour.Clone();
+        var rooms0 = System.Array.ConvertAll(s.compartments, c => new[] { c.integ, c.crew });
+        float spreadF = s.fireSpreadPerSecond, spreadV = s.vacuumSpreadPerSecond, spreadR = s.radSpreadPerSecond;
+        s.fireSpreadPerSecond = s.vacuumSpreadPerSecond = s.radSpreadPerSecond = 0f;
+        var recallRocker = System.Array.Find((HandoffEngineeringPanel.Repair[])typeof(HandoffEngineeringPanel).GetField("repairs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(eng), r => r.id == "recall");
+        Check("DUMMY 1 is now RECALL, with the repair rockers' art", recallRocker != null && recallRocker.fitted && recallRocker.rocker.sprite.name.StartsWith("rocker_22x30") && recallRocker.label.text == "RECALL",
+              recallRocker != null ? recallRocker.rocker.sprite.name + ", \"" + recallRocker.label.text + "\"" : "missing");
+        //     An HE hit through our open bow sets the magazine on fire.
+        s.SideArmour[0] = 0f; s.fireChanceHE = 1f;
+        string heHit = s.TakeWarhead("PROW", "HE");
+        Check("HE through the open bow: the magazine catches fire", heHit.EndsWith(" · FIRE") && s.Comp("mag").fire && s.Comp("mag").cond == "FIRE", "\"" + heHit + "\"");
+        //     The fire spreads to the magazine's neighbours, and only those.
+        s.fireSpreadPerSecond = 1f;
+        float tickF = board.MissionSeconds;
+        yield return (Func<bool>)(() => board.MissionSeconds > tickF); // exactly one tick of spread
+        s.fireSpreadPerSecond = 0f;
+        Check("It spreads to the rooms next to it (bridge, reactor, hangar), not the others", s.Comp("bri").fire && s.Comp("rct").fire && s.Comp("hgr").fire && !s.Comp("eng").fire && !s.Comp("hab").fire,
+              "BRI " + s.Comp("bri").fire + ", RCT " + s.Comp("rct").fire + ", HGR " + s.Comp("hgr").fire + ", ENG " + s.Comp("eng").fire + ", HAB " + s.Comp("hab").fire);
+        //     A fire burns its room down.
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        int magBurn = s.Comp("mag").integ; float burnFrom = board.MissionSeconds;
+        yield return (Func<bool>)(() => board.MissionSeconds - burnFrom >= s.fireDamageSeconds + 1);
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        Check("A fire takes integrity off its room over time", s.Comp("mag").integ < magBurn, "MAG " + magBurn + " → " + s.Comp("mag").integ);
+        //     REPAIR sends the team to the magazine: it puts the fire out.
+        if (!Click("eng.pick", "mag", "MAG cell")) yield break;
+        if (!Click("eng.run", "party", "REPAIR rocker (MAG)")) yield break;
+        yield return (Func<bool>)(() => !s.PartyOut);
+        Check("The team puts the magazine's fire out", !s.Comp("mag").fire && s.Comp("mag").cond != "FIRE", "");
+        //     VENT the bridge: the fire goes, and so does its crew.
+        if (!Click("eng.pick", "bri", "BRI cell")) yield break;
+        if (!Click("eng.run", "vent", "VENT rocker (BRI)")) yield break;
+        Check("VENT puts the bridge's fire out, and its crew die", !s.Comp("bri").fire && s.Comp("bri").vented && s.Comp("bri").crew == 0 && s.Comp("bri").doorsShut, "crew " + s.Comp("bri").crew);
+        Shot("31_conditions");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        //     The reactor and hangar fires: out by stand-in, to keep the reactor whole for what follows.
+        s.Comp("rct").fire = false; s.Comp("hgr").fire = false;
+        //     A slug through our open starboard side breaches the hangar: half its crew die, and vacuum spreads.
+        s.SideArmour[1] = 0f; s.breachChanceSlug = 1f;
+        int hgrCrew = s.Comp("hgr").crew;
+        string slugHit = s.TakeSlug("STBD");
+        Check("A slug through the open starboard side breaches the hangar: half its crew die", slugHit.EndsWith(" · BREACH") && s.Comp("hgr").vented && !s.Comp("hgr").doorsShut && s.Comp("hgr").crew == hgrCrew - Mathf.CeilToInt(hgrCrew * s.breachCrewLoss),
+              "\"" + slugHit + "\", crew " + hgrCrew + " → " + s.Comp("hgr").crew);
+        if (!Click("eng.pick", "hgr", "HGR cell")) yield break;
+        Check("REPAIR waits until the doors are shut", s.EngBlock("party") == "SEAL THE DOORS FIRST", s.EngBlock("party") ?? "open");
+        if (!Click("eng.run", "seal", "SEAL rocker (HGR)")) yield break;
+        s.vacuumSpreadPerSecond = 1f;
+        float tickV = board.MissionSeconds;
+        yield return (Func<bool>)(() => board.MissionSeconds > tickV);
+        s.vacuumSpreadPerSecond = 0f;
+        Check("SEAL shuts its doors: the vacuum does not spread", s.Comp("hgr").doorsShut && !s.Comp("mag").vented && !s.Comp("hab").vented && !s.Comp("eng").vented, "");
+        if (!Click("eng.run", "party", "REPAIR rocker (HGR)")) yield break;
+        yield return (Func<bool>)(() => !s.PartyOut);
+        Check("The team restores the hangar's air", !s.Comp("hgr").vented && !s.Comp("hgr").doorsShut, "");
+        //     RECALL calls a team back before it finishes.
+        s.Comp("eng").integ = 3;
+        if (!Click("eng.pick", "eng", "ENG cell")) yield break;
+        if (!Click("eng.run", "party", "REPAIR rocker (ENG)")) yield break;
+        if (!Click("eng.run", "recall", "RECALL rocker")) yield break;
+        yield return 2f;
+        Check("RECALL brings the team back: no repair lands", !s.PartyOut && s.Comp("eng").integ == 3, "ENG " + s.Comp("eng").integ);
+        //     Two slugs into our open port side: the reactor leaks radiation.
+        s.SideArmour[3] = 0f; s.breachChanceSlug = 0f; s.radChanceReactor = 1f;
+        s.Comp("rct").integ = 5; // the fires above burned it a little; two slugs now leave it at 1
+        string radHit = s.TakeSlug("PORT") + " /" + s.TakeSlug("PORT");
+        s.radSpreadPerSecond = 1f;
+        float tickR = board.MissionSeconds;
+        yield return (Func<bool>)(() => board.MissionSeconds > tickR);
+        s.radSpreadPerSecond = 0f;
+        Check("The reactor leaks radiation into the rooms next to it", radHit.Contains("RADIATION") && s.Comp("rct").rad && s.Comp("mag").rad && s.Comp("bri").rad && !s.Comp("hgr").rad,
+              "\"" + radHit + "\", RCT " + s.Comp("rct").integ);
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        int magCrew = s.Comp("mag").crew; float radFrom = board.MissionSeconds;
+        yield return (Func<bool>)(() => board.MissionSeconds - radFrom >= s.radCrewLossSeconds + 1);
+        Check("Radiation kills crew while they stay", s.Comp("mag").crew < magCrew, "MAG crew " + magCrew + " → " + s.Comp("mag").crew);
+        s.Comp("rct").integ = s.reactorContainedAt; // stand-in for two repairs
+        yield return (Func<bool>)(() => !s.Comp("rct").rad && !s.Comp("mag").rad);
+        Check("Reactor repaired: the radiation fades", !s.Comp("rct").rad && !s.Comp("mag").rad && !s.Comp("bri").rad, "");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     Put our ship back (stand-in for damage control) and the real odds back.
+        System.Array.Copy(armour0, s.SideArmour, armour0.Length);
+        for (int c = 0; c < s.compartments.Length; c++)
+        {
+            var room = s.compartments[c];
+            room.integ = rooms0[c][0]; room.crew = rooms0[c][1]; room.fire = room.rad = room.vented = room.doorsShut = false; room.cond = null;
+        }
+        s.fireSpreadPerSecond = spreadF; s.vacuumSpreadPerSecond = spreadV; s.radSpreadPerSecond = spreadR;
+        s.fireChanceHE = condChances[0]; s.fireChancePEN = condChances[1]; s.breachChanceSlug = condChances[2]; s.radChanceReactor = condChances[3];
         if (!Click("drawer", "engineering", "ENGR key (close)")) yield break;
         yield return 1f;
     }

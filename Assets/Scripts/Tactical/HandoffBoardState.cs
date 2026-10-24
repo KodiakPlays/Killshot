@@ -32,8 +32,15 @@ public class HandoffBoardState
         [Range(0, 5)] public int integ;
         public int crew;
         public bool vented;
-        [Tooltip("FIRE, RAD or empty.")]
+        [Tooltip("What the design's row shows: FIRE, RAD or empty. Step 59: derived from fire and rad below.")]
         public string cond;
+        [Tooltip("Step 59 (DAMAGE_README.md): burning; integrity falls, and it spreads to neighbours with air.")]
+        public bool fire;
+        [Tooltip("Step 59: radiation in the room; its crew die while they stay.")]
+        public bool rad;
+        [Tooltip("Step 59: its doors are shut (SEAL on an airless room, or VENT), so vacuum cannot spread from it.")]
+        public bool doorsShut;
+        [System.NonSerialized] public double fireT, radT, fadeT;
     }
 
     [Header("Power — REACTOR_UNITS, BUS_MAX, BUSES")]
@@ -433,17 +440,21 @@ public class HandoffBoardState
     /// <summary>repairRate: Condition 1 doubles repair.</summary>
     public int RepairRate => alert == 2 ? 2 : 1;
 
-    /// <summary>engBlock: why an engineering repair is refused, or null.</summary>
+    /// <summary>engBlock: why an engineering repair is refused, or null. Step 59 (DAMAGE_README.md): the team
+    /// comes from elsewhere, so it needs no crew in the room; it fights a fire, restores the air once the doors
+    /// are shut, or repairs. SEAL shuts an airless room's doors. RECALL (the design's DUMMY 1) calls the team back.</summary>
     public string EngBlock(string id)
     {
         var c = Comp(engSel);
         switch (id)
         {
             case "party": return PartyOut ? "DC PARTY COMMITTED \u2014 " + Mathf.CeilToInt(partySeconds - partyT) + " TO RUN"
-                                          : c.crew < 1 ? "NO CREW ABOARD" : c.integ >= 5 ? "COMPARTMENT AT FULL INTEGRITY" : null;
-            case "seal": return !c.vented ? "COMPARTMENT ALREADY SEALED" : c.crew < 1 ? "NO CREW ABOARD" : null;
+                                          : c.vented && !c.doorsShut ? "SEAL THE DOORS FIRST"
+                                          : !c.fire && !c.vented && c.integ >= 5 ? "COMPARTMENT AT FULL INTEGRITY" : null;
+            case "seal": return !c.vented ? "COMPARTMENT ALREADY SEALED" : c.doorsShut ? "DOORS ALREADY SHUT" : null;
             case "vent": return c.vented ? "COMPARTMENT ALREADY VENTED" : null;
-            case "reboot": return (!string.IsNullOrEmpty(c.cond) || c.integ < 5) ? null : "SYSTEMS NOMINAL \u2014 NOTHING TO RESTART";
+            case "reboot": return c.integ < 5 ? null : "SYSTEMS NOMINAL \u2014 NOTHING TO RESTART";
+            case "recall": return PartyOut ? null : "NO TEAM OUT";
         }
         return "NOT FITTED";
     }
@@ -462,18 +473,21 @@ public class HandoffBoardState
         return true;
     }
 
-    /// <summary>applyOrder: a repair is dispatched, not applied; sealing restores air but not a
-    /// fire; venting takes the air, so a fire goes with it; reboot clears the condition and adds 1.</summary>
+    /// <summary>applyOrder: a repair is dispatched, not applied. Step 59 (DAMAGE_README.md): SEAL shuts an
+    /// airless room's doors (the air comes back with a repair); VENT dumps the air, so the fire goes, and the
+    /// crew and any team inside die; REBOOT adds 1 and no longer clears a condition; RECALL calls the team back.</summary>
     public void ApplyOrder(string id)
     {
         var c = Comp(engSel);
         switch (id)
         {
             case "party": partyComp = engSel; partyT = 0; break;
-            case "seal": c.vented = false; break;
-            case "vent": c.vented = true; if (c.cond == "FIRE") c.cond = null; break;
-            case "reboot": c.cond = null; c.integ = Mathf.Min(5, c.integ + 1); break;
+            case "seal": c.doorsShut = true; break;
+            case "vent": Breach(c, 1f); c.doorsShut = true; break;
+            case "reboot": c.integ = Mathf.Min(5, c.integ + 1); break;
+            case "recall": partyT = -1; partyComp = null; break;
         }
+        SyncCond();
     }
 
     public void FlickBack(string id, float now)
@@ -651,24 +665,9 @@ public class HandoffBoardState
     /// <summary>ENG_ORDERS cost for a fitted order, or -1 (FIRE, BLKHD, SCRUB are not fitted).</summary>
     public int OrderCost(string id) => id == "party" ? orderCostParty : id == "seal" ? orderCostSeal : id == "vent" ? orderCostVent : -1;
 
-    /// <summary>orderBlock: the orders station's own refusals (not engBlock's).</summary>
-    public string OrderBlock(string id)
-    {
-        var c = Comp(engSel);
-        if (id == "party")
-        {
-            if (c.integ >= 5) return "COMPARTMENT AT FULL INTEGRITY";
-            if (c.vented) return "CANNOT WORK A VENTED COMPARTMENT";
-            if (c.crew < 1) return "NO CREW ABOARD";
-        }
-        if (id == "seal" && !c.vented) return "COMPARTMENT ALREADY SEALED";
-        if (id == "vent")
-        {
-            if (c.vented) return "ALREADY VENTED";
-            if (c.crew > 0) return c.crew + " CREW ABOARD";
-        }
-        return null;
-    }
+    /// <summary>orderBlock: the orders station's refusals. Step 59: the same rules as engineering's rockers
+    /// (the design's two sets disagreed on crew; DAMAGE_README.md has one set of rules).</summary>
+    public string OrderBlock(string id) => id == "party" || id == "seal" || id == "vent" ? EngBlock(id) : null;
 
     /// <summary>runOrder: refused (too little AUX, or orderBlock) → the failure shows for 420 ms;
     /// otherwise spend the charge and apply. The rocker flicks back either way.</summary>
@@ -1064,20 +1063,144 @@ public class HandoffBoardState
             armour[i] = Mathf.Max(0f, armour[i] - armourDamage);
             return " " + Sides[i] + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + JsRound(armour[i] / sideArmourMax[i] * 100f) + "%");
         }
-        return " " + Sides[i] + Behind(i, compartmentDamage);
+        return " " + Sides[i] + Behind(i, compartmentDamage, "fighter");
     }
 
-    // The room behind side i loses the damage given. A wrecked room takes no more. The ship is destroyed
-    // when its reactor's structure reaches 0 (any ship, ours too: owner 2026-10-24).
-    string Behind(int i) => Behind(i, slugCompartmentDamage);
-    string Behind(int i, int damage)
+    // The room behind side i loses the damage given. A wrecked room takes no more, but the hit can still start
+    // a condition there (Step 59). The ship is destroyed when its reactor's structure reaches 0 (any ship, ours
+    // too: owner 2026-10-24).
+    string Behind(int i) => Behind(i, slugCompartmentDamage, "slug");
+    string Behind(int i, int damage, string weapon)
     {
         var hit = Comp(BehindSide[i]);
         if (hit == null) return "";
-        if (hit.integ <= 0) return " · " + hit.tag + " WRECKED";
+        string started = Strike(hit, weapon);
+        if (hit.integ <= 0) return " · " + hit.tag + " WRECKED" + started;
         hit.integ = Mathf.Max(0, hit.integ - damage);
         if (Comp("rct").integ <= 0) destroyed = true;
-        return " · " + hit.tag + " −" + damage;
+        return " · " + hit.tag + " −" + damage + started;
+    }
+
+    // ---- conditions: fire, vacuum, radiation (Step 59, owner 2026-10-24, DAMAGE_README.md) -------
+
+    [Header("Conditions (Step 59, DAMAGE_README.md): every rate per game second")]
+    [Tooltip("Chance a hit through open armour starts a fire: an HE warhead, a penetrator.")]
+    [Tune("Damage control")] [Range(0f, 1f)] public float fireChanceHE = 0.6f, fireChancePEN = 0.4f;
+    [Tooltip("Chance a railgun slug through open armour breaches the room (it loses its air).")]
+    [Tune("Damage control")] [Range(0f, 1f)] public float breachChanceSlug = 0.5f;
+    [Tooltip("Chance a hit on the reactor room (not a fighter's) leaks radiation.")]
+    [Tune("Damage control")] [Range(0f, 1f)] public float radChanceReactor = 0.5f;
+    [Tooltip("A fire takes 1 integrity off its room this often, game seconds.")]
+    [Tune("Damage control")] public float fireDamageSeconds = 30f;
+    [Tooltip("Chance per second that a fire, a vacuum or radiation spreads into each neighbouring room.")]
+    [Tune("Damage control")] [Range(0f, 1f)] public float fireSpreadPerSecond = 0.01f, vacuumSpreadPerSecond = 0.01f, radSpreadPerSecond = 0.01f;
+    [Tooltip("Share of a room's crew lost when it is breached (VENT loses all of them).")]
+    [Tune("Damage control")] [Range(0f, 1f)] public float breachCrewLoss = 0.5f;
+    [Tooltip("Radiation kills one crew member in its room this often, game seconds.")]
+    [Tune("Damage control")] public float radCrewLossSeconds = 20f;
+    [Tooltip("The reactor stops leaking once repaired to this integrity (or vented); then each room's radiation fades after radFadeSeconds.")]
+    [Tune("Damage control")] public int reactorContainedAt = 3;
+    [Tune("Damage control")] public float radFadeSeconds = 90f;
+    /// <summary>Teams lost when their room vented around them.</summary>
+    [System.NonSerialized] public int partiesLost;
+
+    // The deck plan (owner 2026-10-24): which rooms touch which.
+    static readonly System.Collections.Generic.Dictionary<string, string[]> Neighbours = new System.Collections.Generic.Dictionary<string, string[]>
+    {
+        { "mag", new[] { "bri", "rct", "hgr" } },        { "bri", new[] { "mag", "hab", "rct", "hgr" } },
+        { "hab", new[] { "bri", "eng", "rct", "hgr" } }, { "eng", new[] { "hab", "rct", "hgr" } },
+        { "rct", new[] { "mag", "bri", "hab", "eng" } }, { "hgr", new[] { "mag", "bri", "hab", "eng" } },
+    };
+
+    // What a hit through open armour starts: the weapon and the room decide (owner).
+    string Strike(Compartment c, string weapon)
+    {
+        string started = "";
+        float fireChance = weapon == "HE" ? fireChanceHE : weapon == "PEN" ? fireChancePEN : 0f;
+        if (!c.vented && !c.fire && Roll(fireChance)) { c.fire = true; c.fireT = 0; started += " · FIRE"; }
+        if (weapon == "slug" && !c.vented && Roll(breachChanceSlug)) { Breach(c, breachCrewLoss); started += " · BREACH"; }
+        if (c.key == "rct" && weapon != "fighter" && !c.rad && Roll(radChanceReactor)) { c.rad = true; c.fadeT = 0; started += " · RADIATION"; }
+        SyncCond();
+        return started;
+    }
+
+    bool Roll(double p)
+    {
+        if (p <= 0) return false;
+        if (dice == null) dice = new System.Random(49);
+        return dice.NextDouble() < p;
+    }
+
+    // A room loses its air: the fire goes out, that share of its crew die, and a team working there is lost.
+    void Breach(Compartment c, float crewLost)
+    {
+        c.vented = true;
+        c.fire = false;
+        c.crew -= Mathf.CeilToInt(c.crew * crewLost);
+        if (PartyOut && partyComp == c.key) { partyT = -1; partyComp = null; partiesLost++; }
+    }
+
+    // The design's row shows one condition: fire before radiation.
+    void SyncCond() { foreach (var c in compartments) c.cond = c.fire ? "FIRE" : c.rad ? "RAD" : null; }
+
+    /// <summary>Each tick: fires burn their rooms, radiation kills crew, and all three spread to neighbours
+    /// (fire only into rooms with air; vacuum only through open doors; radiation only while the reactor leaks).
+    /// Radiation fades once the reactor is contained. A reactor burned to 0 destroys the ship.</summary>
+    public void TickConditions(double dt)
+    {
+        if (destroyed) return;
+        var rct = Comp("rct");
+        bool leaking = rct != null && rct.rad && rct.integ < reactorContainedAt && !rct.vented;
+        // spread from what stood at the start of the tick, so a condition moves one room per tick at most
+        var burning = System.Array.FindAll(compartments, c => c.fire);
+        var airless = System.Array.FindAll(compartments, c => c.vented && !c.doorsShut);
+        var hot = leaking ? System.Array.FindAll(compartments, c => c.rad) : new Compartment[0];
+        double pf = 1 - System.Math.Pow(1 - fireSpreadPerSecond, dt), pv = 1 - System.Math.Pow(1 - vacuumSpreadPerSecond, dt),
+               pr = 1 - System.Math.Pow(1 - radSpreadPerSecond, dt);
+        foreach (var c in burning)
+            foreach (var k in Neighbours[c.key]) { var m = Comp(k); if (m != null && !m.fire && !m.vented && Roll(pf)) { m.fire = true; m.fireT = 0; } }
+        foreach (var c in airless)
+            foreach (var k in Neighbours[c.key]) { var m = Comp(k); if (m != null && !m.vented && Roll(pv)) Breach(m, breachCrewLoss); }
+        foreach (var c in hot)
+            foreach (var k in Neighbours[c.key]) { var m = Comp(k); if (m != null && !m.rad && Roll(pr)) { m.rad = true; m.fadeT = 0; } }
+        foreach (var c in compartments)
+        {
+            if (c.fire && c.vented) c.fire = false;
+            if (c.fire)
+                for (c.fireT += dt; c.fireT >= fireDamageSeconds; c.fireT -= fireDamageSeconds) c.integ = Mathf.Max(0, c.integ - 1);
+            if (!c.rad) continue;
+            if (c.crew > 0)
+                for (c.radT += dt; c.radT >= radCrewLossSeconds && c.crew > 0; c.radT -= radCrewLossSeconds) c.crew--;
+            if (leaking) c.fadeT = 0;
+            else if ((c.fadeT += dt) >= radFadeSeconds) { c.rad = false; c.radT = 0; c.fadeT = 0; }
+        }
+        if (rct != null && rct.integ <= 0) destroyed = true;
+        SyncCond();
+    }
+
+    /// <summary>A contact's ship takes damage by our numbers: one Tuning window for every ship (the enemy is our
+    /// ship with other stats; these are not among them).</summary>
+    public void CopyDamageTuning(HandoffBoardState from)
+    {
+        slugArmourDamage = from.slugArmourDamage; slugCompartmentDamage = from.slugCompartmentDamage;
+        heArmourDamage = from.heArmourDamage; empSeconds = from.empSeconds;
+        fireChanceHE = from.fireChanceHE; fireChancePEN = from.fireChancePEN; breachChanceSlug = from.breachChanceSlug;
+        radChanceReactor = from.radChanceReactor; fireDamageSeconds = from.fireDamageSeconds;
+        fireSpreadPerSecond = from.fireSpreadPerSecond; vacuumSpreadPerSecond = from.vacuumSpreadPerSecond;
+        radSpreadPerSecond = from.radSpreadPerSecond; breachCrewLoss = from.breachCrewLoss;
+        radCrewLossSeconds = from.radCrewLossSeconds; reactorContainedAt = from.reactorContainedAt; radFadeSeconds = from.radFadeSeconds;
+    }
+
+    /// <summary>A contact's ship destroyed without a hit landing (its reactor burned out) becomes a wreck too.</summary>
+    public void NoteWrecks()
+    {
+        if (ShipOf == null) return;
+        foreach (var t in tracks)
+        {
+            if (t.own || t.wreck) continue;
+            var ship = ShipOf(t.key);
+            if (ship != null && ship.destroyed) Kill(t);
+        }
     }
 
     [Tooltip("Armour an HE warhead takes off the side it hits (owner: it opens a side fast).")]
@@ -1107,7 +1230,8 @@ public class HandoffBoardState
             armour[i] = Mathf.Max(0f, armour[i] - heArmourDamage);
             return " · HE" + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + JsRound(armour[i] / sideArmourMax[i] * 100f) + "%");
         }
-        return " · " + (warheadName == "PENETRATOR" ? "PEN" : warheadName) + Behind(i);
+        string w = warheadName == "PENETRATOR" ? "PEN" : warheadName;
+        return " · " + w + Behind(i, slugCompartmentDamage, w);
     }
 
     public float HitRadiusKm(string klass)
@@ -1534,9 +1658,16 @@ public class HandoffBoardState
         partyT += (float)dt;
         if (partyT < partySeconds - 1e-4f) return;
         var c = Comp(partyComp);
-        if (c != null) c.integ = Mathf.Min(5, c.integ + RepairRate);
+        // Step 59: the team fights a fire first; in a sealed airless room it restores the air; otherwise it repairs
+        if (c != null)
+        {
+            if (c.fire) { c.fire = false; c.fireT = 0; }
+            else if (c.vented) { c.vented = false; c.doorsShut = false; }
+            else c.integ = Mathf.Min(5, c.integ + RepairRate);
+        }
         partyT = -1;
         partyComp = null;
+        SyncCond();
     }
 
     // ---- helm ------------------------------------------------------------------------------
