@@ -179,7 +179,8 @@ public class HandoffPlotPanel : HandoffPanel
         if (sweep && State.dradis && !Controls.Paused)
         {
             float turn = Mathf.Max(0.5f, sweepSecondsBase - State.senBoost * sweepSecondsPerGain);
-            float before = sweepDeg, step = 360f * Time.unscaledDeltaTime / turn;
+            // in game time (owner 2026-10-24): `turn` seconds a sweep at x1, ten times as fast at x10
+            float before = sweepDeg, step = 360f * Time.unscaledDeltaTime * Controls.Rate / turn;
             sweepDeg = (sweepDeg + step) % 360f;
             // Step 45: the sweep leaves a bearing line on each heard contact it passes
             foreach (var t in State.tracks)

@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 56 are done, plus a final QA pass.**
+**Steps 1 to 57 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -96,8 +96,9 @@ Do not run ahead. Do one step, show it, wait.
 | 54 | Fighters: launch, fly out, attack runs, recall | **Done** — playtest 130/130 |
 | 55 | PDCs, and the enemy fires back | **Done** — playtest 138/138 |
 | 56 | The intro: flat black, typed in place, straight cuts | **Done** — checked in play mode |
+| 57 | Everything in game time | **Done** — playtest 138/138 |
 
-Steps 6 to 28 and Steps 34 to 56 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 57 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -615,7 +616,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 56, in detail
+## 6 · Steps 6 to 28, and 34 to 57, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2367,6 +2368,42 @@ A trap: a screenshot taken right after `SeekPreview()` lands about half a second
 time asked for (the editor runs a few frames first). A shot asked for at 3.5 s showed STARWOLF's
 first letter, not SECTION 36.
 
+### Step 57 — Everything in game time
+
+**Owner decision (2026-10-24).** Every rate runs per game second, charging included. At x10
+everything is ten times as fast, together.
+
+**Why.** The board's per-tick amounts (weapon charge, AUX, bus fill, the bow's swing, launch stages,
+the damage-control party, signal) were applied once per 0.42 s tick whatever the rate. At x10, guns
+recharged ten times faster in game time than ships moved.
+
+**What changed** (`HandoffBoardState`):
+
+- `TickPower`, `TickAux`, `TickHelm`, `TickWeapons`, `TickLaunch`, `TickParty` and `TickSensors`
+  take the tick's game seconds (`rate`), as `TickMove` already did.
+- Whole-unit steps (a bus filling one unit, the bow swinging whole degrees) bank the fractions, so
+  x0.25 is exact too. The reactor cap still holds at once.
+- The party works `partySeconds` (6) game seconds; it was `partyTicks`. The engineering line reads
+  "n OF 6" in seconds.
+- `TacticalWorld` passes the rate to the enemy's helm. The radar sweep turns in game time, so x10
+  sweeps ten times as fast.
+- **x1 is unchanged:** a tick at x1 is one game second, so the design's numbers now read as per game
+  second.
+
+**Checked.** Playtest 138/138 PASS (`Logs/Playtests/2026-10-24_104850/`).
+
+Two runs failed first:
+
+- One because someone clicked the engineering key during the run; the fire-control drawer closed
+  under the test.
+- One because game time changed our ship's path in the helm step, so an earlier shot hit TRACK
+  07's bow. The fighter check had assumed an untouched bow; it now works from whatever the bow
+  holds.
+
+**Damage plan.** The damage model is written up in `DAMAGE_README.md`, next to this file. It is
+built in the order given there: side map, conditions, teams, breakdowns, displays. Boarding comes
+right after conditions.
+
 ---
 
 ## 7 · How to keep this log
@@ -2417,6 +2454,10 @@ order:
      (done, Step 52), missiles (done, Step 53), fighters (done, Step 54), PDCs and the enemy
      firing back (done, Step 55), **then the hangar launch** (what is left of it after Step 54:
      plan with the owner).
+   - **Owner, 2026-10-24: damage and damage control next,** built in the order in
+     `DAMAGE_README.md` (side map, conditions, teams, breakdowns, displays). **Boarding** (assault
+     boats: capture, scuttle, salvage) gets its own README right after conditions. Later: the
+     periscope shows the real enemy ship (today it shows the design.s decorative corridor).
    - **Owner's list (2026-10-23), each to be planned with the owner:**
      - ~~fighters: a launch puts a small triangle squadron on the plot, flying at the enemy~~ (done,
        Step 54);

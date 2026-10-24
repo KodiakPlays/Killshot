@@ -233,17 +233,17 @@ public class HandoffBoardControls : MonoBehaviour
             {
                 missionSeconds += rate; ShowClock();
                 state.missionNow = missionSeconds; // the solution's clock (Step 52)
-                state.TickPower();
-                state.TickAux();
-                state.TickHelm(); // reads the engine room before a repair lands this tick, as tickPower does
+                state.TickPower(rate);
+                state.TickAux(rate);
+                state.TickHelm(rate); // reads the engine room before a repair lands this tick, as tickPower does
                 state.TickMove(rate); // Step 41: the ship moves; each tick is `rate` mission seconds, as the clock
                 state.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
                 state.TickFlights(rate); // Step 54: fighters fly, attack, come home
                 state.TickIncoming(rate); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
-                state.TickParty();
-                state.TickLaunch();
-                state.TickWeapons();
-                state.TickSensors();
+                state.TickParty(rate);
+                state.TickLaunch(rate);
+                state.TickWeapons(rate);
+                state.TickSensors(rate);
                 if (Ticked != null) Ticked();
                 if (state.NoteNewContacts()) { ShowAlarm(); Play(alertSound, "alert"); }
             }

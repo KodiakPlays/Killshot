@@ -906,8 +906,10 @@ public static class PlaytestRunner
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         float prow0 = dummyShip.SideArmour[0];
         yield return (Func<bool>)(() => s.flightRuns >= 1);
-        Check("In range, one attack run: 10 armour per fighter off the side facing them, its bow", s.flightRuns == 1 && s.flightReport == " PROW ARMOUR 60%"
-              && Mathf.Approximately(dummyShip.SideArmour[0], prow0 - 4 * s.fighterArmourDamage),
+        float prowAfter = Mathf.Max(0f, prow0 - 4 * s.fighterArmourDamage);
+        Check("In range, one attack run: 10 armour per fighter off the side facing them, its bow", s.flightRuns == 1 && prow0 > 4 * s.fighterArmourDamage
+              && s.flightReport == " PROW ARMOUR " + HandoffBoardState.JsRound(prowAfter / dummyShip.sideArmourMax[0] * 100f) + "%"
+              && Mathf.Approximately(dummyShip.SideArmour[0], prowAfter),
               "\"" + s.flightReport + "\"; PROW armour " + prow0 + " → " + dummyShip.SideArmour[0]);
         Check("The hangar reports the attack", interlockText().StartsWith("ATTACKING TRACK 07"), "\"" + interlockText() + "\"");
         Shot("28d_fighters_attacking");

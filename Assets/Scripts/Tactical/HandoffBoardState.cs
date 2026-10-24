@@ -116,11 +116,11 @@ public class HandoffBoardState
            + "EMISSIONS meter, the cells and the alert. It climbs and falls gradually toward SignalTarget.")]
     [UnityEngine.Serialization.FormerlySerializedAs("ownSig")]
     [Range(0, 100)] public float signal;
-    [Tooltip("Signal climbs this much per tick toward its target.")]
+    [Tooltip("Signal climbs this much per game second toward its target.")]
     [UnityEngine.Serialization.FormerlySerializedAs("signalRise")]
     [Tune("Power & signal")]
     public float signalRise = 9f;
-    [Tooltip("Signal falls this much per tick toward its target.")]
+    [Tooltip("Signal falls this much per game second toward its target.")]
     [UnityEngine.Serialization.FormerlySerializedAs("signalFall")]
     [Tune("Power & signal")]
     public float signalFall = 6f;
@@ -189,12 +189,13 @@ public class HandoffBoardState
     public string engSel = "rct";
     [Tooltip("ALERTS index: 0 = CONDITION 3, 1 = CONDITION 2, 2 = CONDITION 1 (set on the orders station).")]
     [Range(0, 2)] public int alert;
-    [Tooltip("PARTY_TICKS: a damage-control party works this many ticks, then the repair lands.")]
+    [Tooltip("PARTY_TICKS: a damage-control party works this many game seconds (the design's 6 ticks at x1), then the repair lands.")]
     [Tune("Engineering & orders")]
-    public int partyTicks = 6;
-    [Tooltip("The party's compartment and its tick count; tick -1 when no party is out.")]
+    [UnityEngine.Serialization.FormerlySerializedAs("partyTicks")]
+    public float partySeconds = 6f;
+    [Tooltip("The party's compartment and how long it has worked, game seconds; -1 when no party is out.")]
     public string partyComp;
-    public int partyT = -1;
+    public float partyT = -1;
     [Tooltip("A thrown repair or order rocker flicks back after this long (flickBack).")]
     [Tune("Engineering & orders")]
     public float flickBackSeconds = 0.4f;
@@ -202,7 +203,7 @@ public class HandoffBoardState
     [Header("Orders station — AUX order pool (ENG_ORDERS)")]
     [Tooltip("AUX order pool, 0..100 (auxCharge).")]
     public double auxCharge;
-    [Tooltip("Pool gained per AUX unit per tick.")]
+    [Tooltip("Pool gained per AUX unit per game second.")]
     [Tune("Power & signal")]
     public double auxPerUnit = 3.2;
     [Tune("Engineering & orders")]
@@ -363,7 +364,7 @@ public class HandoffBoardState
     [Tooltip("Ordered heading step for the A and D keys, degrees (onKey).")]
     [Tune("Helm")]
     public int headingKeyStep = 3;
-    [Tooltip("Degrees the bow swings per tick at full engine-room integrity (tickPower).")]
+    [Tooltip("Degrees the bow swings per game second at full engine-room integrity (the design: per tick at x1).")]
     [Tune("Helm")]
     public float turnRate = 4f;
 
@@ -438,7 +439,7 @@ public class HandoffBoardState
         var c = Comp(engSel);
         switch (id)
         {
-            case "party": return PartyOut ? "DC PARTY COMMITTED \u2014 " + (partyTicks - partyT) + " TO RUN"
+            case "party": return PartyOut ? "DC PARTY COMMITTED \u2014 " + Mathf.CeilToInt(partySeconds - partyT) + " TO RUN"
                                           : c.crew < 1 ? "NO CREW ABOARD" : c.integ >= 5 ? "COMPARTMENT AT FULL INTEGRITY" : null;
             case "seal": return !c.vented ? "COMPARTMENT ALREADY SEALED" : c.crew < 1 ? "NO CREW ABOARD" : null;
             case "vent": return c.vented ? "COMPARTMENT ALREADY VENTED" : null;
@@ -680,10 +681,10 @@ public class HandoffBoardState
         FlickBack(id, now);
     }
 
-    /// <summary>The tick: AUX charges by units x 3.2 to 100.</summary>
-    public void TickAux()
+    /// <summary>The tick: AUX charges by units x 3.2 per game second to 100 (owner 2026-10-24: every rate in game time).</summary>
+    public void TickAux(double dt)
     {
-        double rate = BusUnits("aux") * auxPerUnit;
+        double rate = BusUnits("aux") * auxPerUnit * dt;
         if (rate > 0 && auxCharge < 100) auxCharge = System.Math.Min(100, auxCharge + rate);
     }
 
@@ -1489,9 +1490,24 @@ public class HandoffBoardState
 
     // ---- the tick (tickPower, every 420 ms) — power part ---------------------------------
 
-    public void TickPower()
+    // Owner 2026-10-24: every rate runs in game time. The design's per-tick amounts were per game second
+    // at x1 (a tick is `rate` game seconds), so they are now multiplied by the tick's game seconds; x1 is
+    // unchanged. Whole-unit steps (a bus filling, the bow swinging) bank fractions so x0.25 is exact too.
+    [System.NonSerialized] private double powerBank, turnBank;
+
+    public void TickPower(double dt)
     {
         if (missionNow < empUntil) { foreach (var b in buses) b.fill = 0; return; } // EMP: power stays down (Step 53)
+        powerBank += dt;
+        for (; powerBank >= 1 - 1e-9; powerBank -= 1) StepPower(); // a bus fills or drains one unit per game second
+        // the reactor cap holds at once, whatever the rate
+        int total = TotalFill, cap = ReactorCap;
+        for (int i = buses.Length - 1; i >= 0 && total > cap; i--)
+            while (buses[i].fill > 0 && total > cap) { buses[i].fill--; total--; }
+    }
+
+    void StepPower()
+    {
         int total = TotalFill, cap = ReactorCap;
         // drain first, so a bus dropping out of DRAW frees its units the same tick
         foreach (var b in buses) if (b.mode == BusMode.Vent && b.fill > 0) { b.fill--; total--; }
@@ -1500,35 +1516,32 @@ public class HandoffBoardState
             while (buses[i].fill > 0 && total > cap) { buses[i].fill--; total--; }
     }
 
-    // ---- the tick — weapons capacitor: +5 per WEP unit up to 100, bleeds 3 a tick with no WEP --
+    // ---- the tick — weapons capacitor: +5 per WEP unit per game second up to 100, bleeds 3 with no WEP --
 
-    public void TickWeapons()
+    public void TickWeapons(double dt)
     {
-        float feed = BusUnits("wep") * wepFeedPerUnit;
-        wepCharge = feed > 0f ? Mathf.Min(100f, wepCharge + feed) : Mathf.Max(0f, wepCharge - wepBleed);
+        float feed = BusUnits("wep") * wepFeedPerUnit * (float)dt;
+        wepCharge = feed > 0f ? Mathf.Min(100f, wepCharge + feed) : Mathf.Max(0f, wepCharge - wepBleed * (float)dt);
     }
 
-    // ---- the tick — launch telemetry: a thrown stage runs out over several ticks -------------
+    // ---- the tick — launch telemetry: a thrown stage runs out over several game seconds --------
 
-    public void TickLaunch()
+    public void TickLaunch(double dt)
     {
-        foreach (var g in stages) g.progress = g.on ? Mathf.Min(100f, g.progress + g.rate) : 0f;
+        foreach (var g in stages) g.progress = g.on ? Mathf.Min(100f, g.progress + g.rate * (float)dt) : 0f;
     }
 
     // ---- the tick — damage-control party ---------------------------------------------------
 
-    public void TickParty()
+    public void TickParty(double dt)
     {
         if (!PartyOut) return;
-        int t = partyT + 1;
-        if (t >= partyTicks)
-        {
-            var c = Comp(partyComp);
-            if (c != null) c.integ = Mathf.Min(5, c.integ + RepairRate);
-            partyT = -1;
-            partyComp = null;
-        }
-        else partyT = t;
+        partyT += (float)dt;
+        if (partyT < partySeconds - 1e-4f) return;
+        var c = Comp(partyComp);
+        if (c != null) c.integ = Mathf.Min(5, c.integ + RepairRate);
+        partyT = -1;
+        partyComp = null;
     }
 
     // ---- helm ------------------------------------------------------------------------------
@@ -1585,16 +1598,18 @@ public class HandoffBoardState
 
     /// <summary>The tick: the throttle falls to ENG units x 20 (no engine-room factor here, as the
     /// board does — HANDOFF_GAPS row 32); the bow swings toward the ordered heading.</summary>
-    public void TickHelm()
+    public void TickHelm(double dt)
     {
         int engCap = BusUnits("eng") * 20;
         if (thr > engCap) thr = engCap;
-        if (hdg != ordHdg)
-        {
-            int d = TurnLeft;
-            int rate = System.Math.Max(1, JsRound(turnRate * EngFactorD));
-            hdg = System.Math.Abs(d) <= rate ? ordHdg : ((hdg + System.Math.Sign(d) * rate) % 360 + 360) % 360;
-        }
+        if (hdg == ordHdg) { turnBank = 0; return; }
+        // degrees per game second (the design's per-tick swing at x1), banked so the bow turns whole degrees
+        turnBank += System.Math.Max(1, JsRound(turnRate * EngFactorD)) * dt;
+        int rate = (int)System.Math.Floor(turnBank + 1e-9);
+        if (rate < 1) return;
+        turnBank -= rate;
+        int d = TurnLeft;
+        hdg = System.Math.Abs(d) <= rate ? ordHdg : ((hdg + System.Math.Sign(d) * rate) % 360 + 360) % 360;
     }
 
     // ---- the tick — sensors part (reads the fill this tick committed) --------------------
@@ -1639,14 +1654,14 @@ public class HandoffBoardState
 
     public void PruneBearings(float now) { BearingFixes.RemoveAll(f => now - f.t >= bearingTrailSeconds); }
 
-    public void TickSensors()
+    public void TickSensors(double dt)
     {
         int senCap = Mathf.Max(1, BusUnits("sen"));
         if (senBoost > senCap) senBoost = senCap;
         // every unit drawn makes us louder, and so does ACTIVE SCAN (GDD p18, spec 3.1.b, prototype getSig)
         float want = SignalTarget;
-        if (signal < want) signal = Mathf.Min(want, signal + signalRise);
-        else if (signal > want) signal = Mathf.Max(want, signal - signalFall);
+        if (signal < want) signal = Mathf.Min(want, signal + signalRise * (float)dt);
+        else if (signal > want) signal = Mathf.Max(want, signal - signalFall * (float)dt);
     }
 
     /// <summary>Where our signal is heading: each bus's units × its signal per unit, plus ACTIVE SCAN, 0–100.</summary>

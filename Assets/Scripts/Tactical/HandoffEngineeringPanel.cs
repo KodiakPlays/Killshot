@@ -153,7 +153,7 @@ public class HandoffEngineeringPanel : HandoffPanel
         if (partyLine)
         {
             var pc = s.PartyOut ? s.Comp(s.partyComp) : null;
-            partyLine.text = Html(s.PartyOut ? "DC PARTY ▸ " + (pc != null ? pc.name : s.partyComp) + "   " + s.partyT + " OF " + s.partyTicks : "DC PARTY ▸ STANDBY");
+            partyLine.text = Html(s.PartyOut ? "DC PARTY ▸ " + (pc != null ? pc.name : s.partyComp) + "   " + Mathf.FloorToInt(s.partyT) + " OF " + Mathf.RoundToInt(s.partySeconds) : "DC PARTY ▸ STANDBY"); // game seconds (Step 57)
             Paint(partyLine, s.PartyOut ? ownForce : wellStencil);
         }
 

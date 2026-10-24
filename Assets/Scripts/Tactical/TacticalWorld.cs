@@ -80,7 +80,7 @@ public class TacticalWorld : MonoBehaviour
             if (!brain || !brain.enabled) continue;
             if (ship.destroyed) ship.thr = 0; // a wreck makes no way of its own
             else brain.Think(ship, board.State);
-            ship.TickHelm();
+            ship.TickHelm(board.Rate);
             ship.TickMove(board.Rate);
             c.transform.SetPositionAndRotation(new Vector3((float)ship.ownX, (float)ship.ownY, c.transform.position.z), Quaternion.Euler(0f, 0f, -ship.hdg));
         }
