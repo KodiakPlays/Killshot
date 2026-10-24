@@ -2457,7 +2457,7 @@ order:
    - **Owner, 2026-10-24: damage and damage control next,** built in the order in
      `DAMAGE_README.md` (side map, conditions, teams, breakdowns, displays). **Boarding** (assault
      boats: capture, scuttle, salvage) gets its own README right after conditions. Later: the
-     periscope shows the real enemy ship (today it shows the design.s decorative corridor).
+     periscope shows the real enemy ship (today it shows the design's decorative corridor).
    - **Owner's list (2026-10-23), each to be planned with the owner:**
      - ~~fighters: a launch puts a small triangle squadron on the plot, flying at the enemy~~ (done,
        Step 54);
