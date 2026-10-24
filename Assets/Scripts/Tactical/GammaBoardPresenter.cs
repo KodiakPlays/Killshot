@@ -16,6 +16,9 @@ public class GammaBoardPresenter : MonoBehaviour
     [SerializeField] private Camera boardCamera;
     [SerializeField] private Camera presentCamera;
     [SerializeField] private RawImage screen;
+    [Tooltip("Smoothing (MSAA samples) for the shapes the board draws itself — the compartment rings, bars, plot "
+           + "lines, wedges. The browser design is smoothed; at 1 they come out hard-edged and grainy (owner 2026-10-24).")]
+    [SerializeField] private int msaaSamples = 4;
 
     private RenderTexture target;
 
@@ -34,16 +37,17 @@ public class GammaBoardPresenter : MonoBehaviour
     {
         if (boardCamera == null || presentCamera == null || screen == null) return;
         int w = Mathf.Max(1, presentCamera.pixelWidth), h = Mathf.Max(1, presentCamera.pixelHeight);
-        if (target != null && target.width == w && target.height == h) return;
+        if (target != null && target.width == w && target.height == h && target.antiAliasing == Mathf.Max(1, msaaSamples)) return;
 
         if (target != null) { boardCamera.targetTexture = null; target.Release(); DestroyImmediate(target); }
         target = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear)
         {
             name = "HandoffBoard (gamma)",
             hideFlags = HideFlags.DontSave,
-            antiAliasing = 1,
+            antiAliasing = Mathf.Max(1, msaaSamples),
         };
         target.Create();
+        boardCamera.allowMSAA = msaaSamples > 1;
         boardCamera.targetTexture = target;
         screen.texture = target;
     }

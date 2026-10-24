@@ -122,7 +122,7 @@ public class HandoffPeriscopePanel : HandoffPanel
             bracketX = new float[brackets.Length];
             for (int i = 0; i < brackets.Length; i++) bracketX[i] = brackets[i] ? brackets[i].anchoredPosition.x : 0f;
         }
-        if (targetName) targetName.text = tgt != null ? tgt.name : "\u2014";
+        if (targetName) targetName.text = tgt != null ? s.NameOf(tgt) : "\u2014"; // Step 61: BOGEY until scanned
         bool visible = off.HasValue && System.Math.Abs(off.Value) < visibleDeg;
         float x = off.HasValue ? sightCentreX + Mathf.Clamp((float)off.Value * pxPerDeg, -maxShift, maxShift) : sightCentreX - 300f;
         for (int i = 0; i < brackets.Length; i++)
@@ -145,11 +145,42 @@ public class HandoffPeriscopePanel : HandoffPanel
         // subject and lamps
         var subj = s.ScopeSubject(down);
         bool cls = subj != null && s.classified.Contains(subj.key);
-        if (subjectName) subjectName.text = subj == null ? "—" : cls ? subj.name : "BOGEY " + subj.key.ToUpperInvariant();
-        if (subjectClass) subjectClass.text = subj == null ? "NO SUBJECT ON BEARING" : cls ? (string.IsNullOrEmpty(subj.klass) ? "UNKN" : subj.klass) + " HULL" : "HULL UNCLASSIFIED";
+        string klass = subj == null || string.IsNullOrEmpty(subj.klass) ? "UNKN" : subj.klass;
+        // Step 61 (owner 2026-10-24: the periscope is the targeting computer): a scanned subject shows its hull in the
+        // SUBJECT box's own two lines — name and class, then each face and, through an open one, the room behind it
+        var hull = subj != null && s.Scanned(subj) && s.ShipOf != null ? s.ShipOf(subj.key) : null;
+        if (hull != null)
+        {
+            if (subjectName) subjectName.text = subj.name + (cls ? " · " + klass : "");
+            if (subjectClass) subjectClass.text = HullLine(hull);
+        }
+        else
+        {
+            if (subjectName) subjectName.text = subj == null ? "—" : cls ? subj.name : "BOGEY " + subj.key.ToUpperInvariant();
+            if (subjectClass) subjectClass.text = subj == null ? "NO SUBJECT ON BEARING" : cls ? klass + " HULL" : "HULL UNCLASSIFIED";
+        }
         Color classInk = subj == null ? lampOffPanel : cls ? nominal : caution;
         Paint(classLamp, classInk); Paint(classGlow, classInk); Show(classGlow, subj != null);
         Color slewInk = s.ScopeOnAxis ? nominal : caution;
         Paint(slewLamp, slewInk); Paint(slewGlow, slewInk);
+    }
+
+    static readonly string[] FaceNames = { "BOW", "STBD", "AFT", "PORT" };
+
+    /// <summary>"BOW 100 · STBD ▸ HGR 3 · AFT 50 · PORT 50": armour per face in %, and through an open face (▸, as the
+    /// engineering lines use it) the room behind it and its integrity (DAMAGE_README.md). A wreck or a prize says so.</summary>
+    public static string HullLine(HandoffBoardState ship)
+    {
+        if (ship.destroyed) return "WRECK";
+        if (ship.captured) return "PRIZE — HELD BY OUR MARINES";
+        var parts = new string[4];
+        for (int i = 0; i < 4; i++)
+        {
+            float a = ship.SideArmour[i];
+            var room = ship.Comp(HandoffBoardState.RoomBehind(i));
+            parts[i] = a > 0f ? FaceNames[i] + " " + HandoffBoardState.JsRound(a / ship.sideArmourMax[i] * 100f)
+                              : FaceNames[i] + " ▸ " + (room != null ? room.tag + " " + room.integ : "OPEN");
+        }
+        return string.Join(" · ", parts);
     }
 }

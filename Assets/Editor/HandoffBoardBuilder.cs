@@ -211,7 +211,7 @@ public static class HandoffBoardBuilder
         cam.cullingMask = 1 << ui;
         cam.depth = main.depth - 1;
         cam.allowHDR = false;
-        cam.allowMSAA = false;
+        cam.allowMSAA = true; // owner 2026-10-24: drawn shapes (rings, bars, plot lines) smoothed as in the design; GammaBoardPresenter sets the samples
         var urp = Get<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>(boardGo);
         urp.renderPostProcessing = false;
         urp.antialiasing = UnityEngine.Rendering.Universal.AntialiasingMode.None;

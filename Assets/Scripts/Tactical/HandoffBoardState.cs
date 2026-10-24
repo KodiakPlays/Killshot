@@ -358,8 +358,9 @@ public class HandoffBoardState
     public float onBearingDeg = 4f;
 
     [Header("Helm (Step 33h-1)")]
-    [Range(0, 359)] public int hdg = 83;
-    [Range(0, 359)] public int ordHdg = 83;
+    [Tooltip("Our heading at load. Owner 2026-10-24: 000, bow straight up (the design's demo had 083).")]
+    [Range(0, 359)] public int hdg = 0;
+    [Range(0, 359)] public int ordHdg = 0;
     [Tooltip("Throttle %, 0..100 (thr).")]
     [Range(0, 100)] public int thr = 40;
     [Tooltip("Attitude hold: NOSE, STBD, PORT, TAIL, or empty for none (apAtt).")]
@@ -1026,6 +1027,8 @@ public class HandoffBoardState
     // starboard hangar, stern engines, port reactor. Bridge and habitation sit inboard and are never hit
     // directly. Replaces the 18 Oct map (FTUE_PLAN §4.4). DAMAGE_README.md.
     static readonly string[] BehindSide = { "mag", "hgr", "eng", "rct" };
+    /// <summary>The room behind face i (PROW, STBD, AFT, PORT).</summary>
+    public static string RoomBehind(int i) => BehindSide[i];
     [Tooltip("Armour per side: PROW, STBD, AFT, PORT. At 0 the side is open (owner: prow and flanks take 2 slugs, the aft 1).")]
     [Tune("Damage")] public float[] sideArmourMax = { 100f, 100f, 50f, 100f };
     [Tooltip("Armour one railgun slug takes off the side it hits.")]
@@ -1281,7 +1284,7 @@ public class HandoffBoardState
                 var ship = ShipOf != null ? ShipOf(struck.key) : null;
                 string damage = ship == null ? "" : r.missile ? ship.TakeWarhead(side, warheads[r.warhead]) : ship.TakeSlug(side);
                 if (ship != null && ship.destroyed) Kill(struck);
-                else { shotReport = "HIT · " + struck.name + " · " + side + damage; lastShotHit = true; shotResults++; }
+                else { shotReport = "HIT · " + NameOf(struck) + (Scanned(struck) ? " · " + side + damage : ""); lastShotHit = true; shotResults++; } // Step 61: detail once scanned
                 list.RemoveAt(i);
                 continue;
             }
@@ -1512,10 +1515,10 @@ public class HandoffBoardState
         if (f.returning) return (f.outcome != null ? f.outcome + " · " : "") + "RETURNING · " + JsRound(System.Math.Sqrt((f.x - ownX) * (f.x - ownX) + (f.y - ownY) * (f.y - ownY))).ToString("N0") + " KM";
         if (f.order == "escort") return "ESCORTING";
         var t = TrackOf(f.targetKey);
-        string name = t != null ? t.name : "TARGET";
+        string name = t != null ? NameOf(t) : "TARGET";
         if (f.aboard) return "BOARDING " + name + " · " + Mathf.CeilToInt(boardSeconds - f.boardT) + " S";
         if (f.holding != null) return "HOLDING OFF " + name + " · " + f.holding;
-        if (f.attacking) return (f.order == "disable" ? "DISABLING " : "ATTACKING ") + name + (flightReport != null ? " ·" + flightReport : "");
+        if (f.attacking) return (f.order == "disable" ? "DISABLING " : "ATTACKING ") + name + (Scanned(t) && flightReport != null ? " ·" + flightReport : ""); // Step 61: detail once scanned
         double d = t != null && t.hasWorld ? System.Math.Sqrt((t.worldX - f.x) * (t.worldX - f.x) + (t.worldY - f.y) * (t.worldY - f.y)) : 0;
         return "OUTBOUND TO " + name + " · " + JsRound(d).ToString("N0") + " KM";
     }
@@ -1594,9 +1597,9 @@ public class HandoffBoardState
         {
             ship.KillCrew(defenders);
             f.marines = Mathf.Max(0, f.marines - Mathf.RoundToInt(defenders * marineLossPerDefender));
-            if (f.order == "destroy") { ship.Comp("rct").integ = 0; ship.destroyed = true; Kill(t); f.outcome = t.name + " SCUTTLED"; }
-            else if (f.order == "disable") { ship.Comp("eng").integ = 0; ship.Comp("mag").integ = 0; f.outcome = t.name + " DISABLED"; }
-            else { ship.captured = true; t.captured = true; t.hostile = false; f.outcome = t.name + " SECURED"; }
+            if (f.order == "destroy") { ship.Comp("rct").integ = 0; ship.destroyed = true; Kill(t); f.outcome = NameOf(t) + " SCUTTLED"; }
+            else if (f.order == "disable") { ship.Comp("eng").integ = 0; ship.Comp("mag").integ = 0; f.outcome = NameOf(t) + " DISABLED"; }
+            else { ship.captured = true; t.captured = true; t.hostile = false; f.outcome = NameOf(t) + " SECURED"; }
         }
         else { ship.KillCrew(f.marines / 2); f.marines = 0; f.outcome = "BOARDING REPELLED"; }
         flightReport = f.outcome;
@@ -1622,10 +1625,15 @@ public class HandoffBoardState
     // The side of a ship facing a point (where the attack comes from), against its bow.
     static string SideFrom(Track t, double x, double y) => SideAt(System.Math.Atan2(x - t.worldX, y - t.worldY) * 180 / System.Math.PI, t.worldHdg);
 
+    /// <summary>Step 61 (owner 2026-10-24): a contact is named as the sensors board names it — "BOGEY T07" until an
+    /// active scan identifies it, then "TRACK 07" — and what our hits do to it is reported only once it is scanned.</summary>
+    public string NameOf(Track t) => Scanned(t) ? t.name : "BOGEY " + t.key.ToUpperInvariant();
+    public bool Scanned(Track t) => t != null && identified.Contains(t.key);
+
     void Kill(Track t)
     {
         t.wreck = true; t.hostile = false;
-        shotReport = t.name + " DESTROYED";
+        shotReport = NameOf(t) + " DESTROYED";
         kills++; shotResults++; lastShotHit = true;
     }
 

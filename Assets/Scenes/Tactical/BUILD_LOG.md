@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 60 are done, plus a final QA pass.**
+**Steps 1 to 61 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -100,8 +100,9 @@ Do not run ahead. Do one step, show it, wait.
 | 58 | The audit's side map; our ship can die | **Done** — playtest 139/139 |
 | 59 | Conditions: fire, vacuum, radiation | **Done** — playtest 153/153 |
 | 60 | Boarding: the assault boats | **Done** — playtest 160/160 |
+| 61 | Scan to know what you hit; smoothing; heading 000 | **Done** — playtest 161/161 |
 
-Steps 6 to 28 and Steps 34 to 60 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 61 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -619,7 +620,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 60, in detail
+## 6 · Steps 6 to 28, and 34 to 61, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2560,6 +2561,46 @@ the base:
   still open).
 - The boats are drawn as the fighters' wedges.
 
+### Step 61 — Scan to know what you hit; smoothing; heading 000 at load
+
+**Owner (2026-10-24).**
+
+- "You have to scan the ship to even be able to understand what you're damaging."
+- Use what is there, with no new art: engineering shows only our own ship, and the periscope is
+  really the targeting computer.
+- Separately: the room rings and bars looked grainy; and the ship should start pointing up.
+
+**What changed.**
+
+- **One naming rule, as the design's sensors board already had it.**
+  - A contact is "BOGEY T07" until an active scan identifies it, then "TRACK 07" (`NameOf`,
+    `Scanned`).
+  - Hit reports, the kill line, the hangar's lines and boarding outcomes all follow it.
+  - Unscanned, a hit reads only "HIT · BOGEY T07"; scanned, it gives side, room and condition.
+- **The targeting computer's SUBJECT box,** for a scanned subject, uses its own two lines:
+  - "TRACK 07 · CRUISER" (the class once CLASS is pressed);
+  - its hull: "BOW 100 · STBD ▸ HGR 3 · AFT 50 · PORT 50". Each face shows its armour %; through an
+    open face (▸, as engineering's lines use it) it shows the room behind and its integrity.
+  - The name under the brackets follows the scan rule.
+- **Smoothing.** The board was drawn into a render texture with no anti-aliasing, and the board
+  camera had MSAA off. So every shape the board draws itself came out hard-edged and grainy next to
+  the browser design: the compartment rings, bars, plot lines, the sweep, wedges. Now 4× MSAA
+  (`GammaBoardPresenter.msaaSamples`; the builder allows MSAA). The design's art and text are
+  unchanged.
+- **Heading 000 at load** (the design's demo had 083).
+
+**Checked.** Playtest 161/161 PASS (`Logs/Playtests/2026-10-24_154633/`):
+
+- The first two hits read "HIT · BOGEY T07", before any scan.
+- After a stand-in scan, the targeting computer read "TRACK 07" / "BOW ▸ MAG 0 · STBD ▸ HGR 0 · AFT
+  100 · PORT 100".
+- Rings checked zoomed in: smooth edges.
+
+Two runs before it failed: the window was used mid-run, then Unity was restarted mid-run.
+
+**Trap.** The playtest wait loop picked the newest run by modification time. The old run folders
+were touched when their videos were deleted, so it read an old report. Pick the newest run by name.
+
 ---
 
 ## 7 · How to keep this log
@@ -2796,6 +2837,19 @@ From `UI_INTEGRATION_LOG.md`, section 10. In order:
    verified:** `ASSET_AUDIT.md`. Of 28 items, 5 fit as-is, 7 fit after a small change, 10 get partial
    help, 6 have nothing. Nothing is used yet; each use needs the owner's yes.
 2. **The short Claude Design request**, when the owner asks.
+
+### Clean-up once the game is working (owner, 2026-10-24)
+
+Not now. Do these once the board plays end to end, in this order:
+
+1. **Find what is in use and what is not.** Send an agent to trace every script, scene, prefab and
+   asset: is it in a scene, used by code, or used by nothing? It writes a list. The owner picks what
+   to delete. Nothing is deleted without the owner's yes.
+2. **Drop the "Handoff" names.** `HandoffBoardState` becomes `BoardState`, `HandoffBoardControls`
+   becomes `BoardControls`, and the panels lose the prefix too (`HandoffHelmPanel` becomes `HelmPanel`;
+   the owner suggested "panel controls" for the shared base, `HandoffPanel`). Confirm the names
+   with the owner first. Do step 1 first: the old `BoardController` (used only by `02_Grid`) would
+   sit right next to the new `BoardControls`, which is confusing.
 
 ### Later — DRADIS (superseded for now)
 

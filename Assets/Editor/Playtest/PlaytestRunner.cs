@@ -16,7 +16,8 @@ using UnityEngine.UI;
 /// <summary>
 /// The standing end-of-feature playtest (owner, 2026-10-17): plays the real user flow — intro, menu
 /// NEW GAME, briefing, board — then sets up the ship, checking each step, and films the run with
-/// Unity Recorder. Output: Logs/Playtests/&lt;time&gt;/ — playtest.mp4, report.md, shots/*.png.
+/// Unity Recorder. Output: Logs/Playtests/&lt;time&gt;/ — playtest.mp4, report.md, shots/*.png. Only the
+/// newest KeepRunsWithMedia runs keep their video and shots; every report stays.
 /// Board controls are clicked where they are on screen, through the EventSystem, after checking the
 /// control is the topmost thing there (so a blocked control fails). The intro menu and the
 /// briefing's Enter are read through the old Input class, which a script cannot press, so the run
@@ -97,9 +98,32 @@ public static class PlaytestRunner
 
     // ---- run --------------------------------------------------------------------------------
 
+    // Each run's video and screenshots are about 140 MB; keep them for the newest few runs only
+    // (owner, 2026-10-24). Every report.md stays: BUILD_LOG cites runs as evidence.
+    const int KeepRunsWithMedia = 3;
+
+    static void PruneOldRuns(string playtests)
+    {
+        if (!Directory.Exists(playtests)) return;
+        var runs = Directory.GetDirectories(playtests);
+        Array.Sort(runs, StringComparer.Ordinal); // folder names are timestamps, so oldest first
+        for (int i = 0; i < runs.Length - (KeepRunsWithMedia - 1); i++) // this run makes the last one
+        {
+            try
+            {
+                File.Delete(Path.Combine(runs[i], "playtest.mp4"));
+                string shots = Path.Combine(runs[i], "shots");
+                if (Directory.Exists(shots)) Directory.Delete(shots, true);
+            }
+            catch (Exception e) { Debug.LogWarning("[Playtest] could not clear " + runs[i] + ": " + e.Message); }
+        }
+    }
+
     static void Begin(string stamp)
     {
-        runDir = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/Playtests/" + stamp));
+        string playtests = Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/Playtests"));
+        PruneOldRuns(playtests);
+        runDir = Path.Combine(playtests, stamp);
         Directory.CreateDirectory(Path.Combine(runDir, "shots"));
         report.Length = 0; passed = failed = 0;
         report.AppendLine("# Playtest — power-up run, " + stamp).AppendLine();
@@ -717,8 +741,8 @@ public static class PlaytestRunner
         board.SetZoom(1.0);
         yield return (Func<bool>)(() => s.Rounds.Count == 0);
         yield return (Func<bool>)(() => s.Rounds.Count == 0); // 15 s each; the flight is about 20 s at x10
-        Check("The slug lands as the aim says: " + (expectHit ? "a HIT" : "a MISS"),
-              expectHit ? s.shotReport != null && s.shotReport.StartsWith("HIT · TRACK 07 · ") : s.shotReport == "MISS",
+        Check("The slug lands as the aim says: " + (expectHit ? "a HIT, no detail on a ship we have not scanned" : "a MISS"),
+              expectHit ? s.shotReport == "HIT · BOGEY T07" : s.shotReport == "MISS",
               "\"" + s.shotReport + "\"; the aim passes " + predicted.ToString("N0") + " km from it (hit radius " + s.HitRadiusKm(t07.klass) + " km)");
         yield return 0.3f;
         Check("Fire control reports it, with its cue", board.LastSound == (expectHit ? "hit" : "miss"), "last cue \"" + board.LastSound + "\"");
@@ -783,7 +807,7 @@ public static class PlaytestRunner
         int landedLed = s.shotResults;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (led)", "fc.lever")) yield break;
         yield return (Func<bool>)(() => s.shotResults > landedLed);
-        Check("Led from the track, it hits the moving TRACK 07", s.shotReport != null && s.shotReport.StartsWith("HIT · TRACK 07"),
+        Check("Led from the track, it hits the moving TRACK 07 (unscanned: a bare HIT)", s.lastShotHit && s.shotReport == "HIT · BOGEY T07",
               "\"" + s.shotReport + "\"; aimed straight it would pass " + unled.ToString("N0") + " km off, led " + led.ToString("N0") + " km (hit radius " + s.HitRadiusKm(t07.klass) + ")");
         Check("Unled, the same shot would have missed", unled > s.HitRadiusKm(t07.klass), unled.ToString("N0") + " km");
         if (!Click("rate", "1", "x1 rate key")) yield break;
@@ -857,6 +881,7 @@ public static class PlaytestRunner
         if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break;
         brain.enabled = false; t07Ship.vx = t07Ship.vy = 0; s.identified.Remove("t07");
 
+        s.identified.Add("t07"); // stand-in for an active scan: from here on we see what our hits do (Step 61)
         // 21d. Fighters (Step 54): the interceptors launch from the hangar, fly to TRACK 07, make attack runs
         //     on the side facing them, and RECALL brings them home to land.
         //     Stand-in for the helm: 2,000 km ahead of its bow (never hit yet), stopped, facing it.
@@ -1068,6 +1093,19 @@ public static class PlaytestRunner
         for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.hdg + s.Sol.brg + d) < MissKm(s, t07, s.hdg + s.Sol.brg + best)) best = d;
         if (best != 0 && !PlotDrag(board, brgAt, brgAt + new Vector2(6 * best, 0), "turn the BRG knob to the nearest degree", "fc.knob")) yield break;
         s.SlewTo();
+        //     The targeting computer (the periscope) shows a scanned ship's hull in its SUBJECT box (Step 61).
+        if (board.Motion) board.Motion.SetScopeDown(true);
+        yield return 1.2f;
+        var scope = board.GetComponent<HandoffPeriscopePanel>();
+        var subjName = typeof(HandoffPeriscopePanel).GetField("subjectName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as TMPro.TMP_Text;
+        var subjHull = typeof(HandoffPeriscopePanel).GetField("subjectClass", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as TMPro.TMP_Text;
+        string hullNow = HandoffPeriscopePanel.HullLine(dummyShip);
+        Check("Scanned, the targeting computer shows its hull: each face, and the room behind an open one", subjName && subjHull && subjName.text.StartsWith("TRACK 07") && subjHull.text == hullNow && hullNow.StartsWith("BOW ") && hullNow.Contains(" \u25B8 "),
+              subjName && subjHull ? "\"" + subjName.text + "\" / \"" + subjHull.text + "\"" : "no readout");
+        Shot("28g_targeting_computer");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        if (board.Motion) board.Motion.SetScopeDown(false);
+        yield return 0.6f;
         if (s.mount != "RGB" && !Click("fc.mount", null, "turret selector (RG-B)")) yield break;
         if (!Click("rate", "10", "x10 rate key")) yield break;
         var reports = new List<string>();
