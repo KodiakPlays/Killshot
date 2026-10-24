@@ -210,7 +210,7 @@ public class HandoffEngineeringPanel : HandoffPanel
     {
         if (shipPicture)
         {
-            if (!shipView) shipView = FindAnyObjectByType<ShipView>();
+            if (!shipView) shipView = ShipView.Own();
             shipPicture.texture = shipView ? shipView.Texture : null;
             shipPicture.enabled = shipView && shipView.Texture;
             shipPicture.color = shipInk.gamma; // the board canvas linearises vertex colours; pre-encode

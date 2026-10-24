@@ -25,6 +25,16 @@ public class ShipView : MonoBehaviour
     private float shipLength = 1f;
 
     public Texture Texture => rt;
+    /// <summary>The ship it watches (our ship, or a contact's model).</summary>
+    public Transform Target => target;
+
+    /// <summary>The view of our own ship: the one whose target is not a contact (there may be contact views too).</summary>
+    public static ShipView Own()
+    {
+        foreach (var v in FindObjectsByType<ShipView>(FindObjectsSortMode.None))
+            if (v.target && !v.target.GetComponentInParent<WorldContact>()) return v;
+        return null;
+    }
     /// <summary>The ship's length as a share of the image, so the plot can size the image by the ship.</summary>
     public float ShipFill => shipFill;
 

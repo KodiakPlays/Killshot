@@ -55,6 +55,10 @@ public class HandoffPlotPanel : HandoffPanel
     [Tooltip("One turn takes base − perGain × gain seconds (sweepDur: 5.4 − senBoost × .5). It holds still while the board is paused (owner rule).")]
     [Tune("Sensors")] [SerializeField] private float sweepSecondsBase = 5.4f, sweepSecondsPerGain = 0.5f;
     private float sweepDeg;
+    [Tooltip("The small circle round our ship (owner 2026-10-24) sits this far outside the ship's picture, px; the sweep starts there.")]
+    [Tune("Sensors")] [SerializeField] private float innerRingMarginPx = 8f;
+    /// <summary>The inner circle's radius on screen: half our ship's drawn length plus the margin.</summary>
+    float InnerRingPx => Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx) / 2f + innerRingMarginPx;
     /// <summary>The sweep's bearing now, degrees clockwise from north; and whether it shows.</summary>
     public float SweepDeg => sweepDeg;
     public bool SweepShown => sweep && sweep.isActiveAndEnabled;
@@ -78,6 +82,12 @@ public class HandoffPlotPanel : HandoffPanel
     [Tooltip("Stand-in art until Claude Design's contact glyphs arrive (CLAUDE_DESIGN_NEEDS 1.2).")]
     [SerializeField] private HandoffMarksGraphic contactMarks;
     [SerializeField] private TMP_Text contactLabelTemplate;
+    [Tooltip("Owner 2026-10-24: once classified (CLASS in the targeting computer), a scanned contact shows as its own 3D "
+           + "model seen from above, in red, in place of its dot (a ShipView camera on the contact's model).")]
+    [SerializeField] private RawImage contactShipImage;
+    private ShipView[] shipViews;
+    /// <summary>A contact's ship picture is on the plot (the playtest reads it).</summary>
+    public bool ContactShipShown => contactShipImage && contactShipImage.enabled;
     [Tune("Plot & our ship")]
     [SerializeField] private Vector2 contactLabelOffset = new Vector2(10, 0);
     private readonly List<TMP_Text> contactLabels = new List<TMP_Text>();
@@ -342,7 +352,7 @@ public class HandoffPlotPanel : HandoffPanel
         // our ship where it is (Step 41: it moves across the plot): the 3D model's top-down view, sized by zoom and clamped
         if (ownShipImage)
         {
-            if (!shipView) shipView = FindAnyObjectByType<ShipView>();
+            if (!shipView) shipView = ShipView.Own();
             ownShipImage.texture = shipView ? shipView.Texture : null;
             ownShipImage.enabled = shipView && shipView.Texture;
             var shipInk = ownShipColor.gamma; // the board canvas linearises vertex colours; pre-encode
@@ -417,6 +427,7 @@ public class HandoffPlotPanel : HandoffPanel
         // identified). km to plot px at 1x: 60.9 px per 1000 km, then the zoom.
         var dots = new List<HandoffMarksGraphic.Shape>();
         int n = 0;
+        bool pictured = false;
         foreach (var t in s.tracks)
         {
             if (!t.hostile || !s.identified.Contains(t.key)) continue;
@@ -429,12 +440,28 @@ public class HandoffPlotPanel : HandoffPanel
                 double b = t.bearing * System.Math.PI / 180.0, px = t.rangeKm * pxPer1000Km / 1000.0 * Controls.ZoomExact;
                 at = Screen(s.ownX, s.ownY) + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
             }
-            dots.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
+            var view = s.classified.Contains(t.key) ? ViewOf(t.key) : null;
+            float labelPush = 0f; // a pictured contact's label sits clear of its picture
+            if (contactShipImage && !pictured && view && view.Texture)
+            {
+                // classified: its model from above, sized as ours is, red; north up like ours (the model turns)
+                contactShipImage.texture = view.Texture;
+                var ink = alarm.gamma;
+                contactShipImage.color = ink;
+                float px = Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx) / view.ShipFill;
+                contactShipImage.rectTransform.sizeDelta = new Vector2(px, px);
+                Put(contactShipImage.rectTransform, at, 0f);
+                contactShipImage.enabled = true;
+                pictured = true;
+                labelPush = px * view.ShipFill / 2f;
+            }
+            else dots.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
             var cl = ContactLabel(n++);
             cl.text = t.name + "\nRNG " + HandoffBoardState.JsRound(t.rangeKm).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
-            Place(cl.rectTransform, at + contactLabelOffset, 0f);
+            Place(cl.rectTransform, at + contactLabelOffset + new Vector2(labelPush, 0f), 0f);
         }
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
+        if (contactShipImage && !pictured) contactShipImage.enabled = false;
         // enemy missiles coming at us (Step 55): a red dot with a short trail, like our own rounds, no label
         foreach (var r in s.Incoming)
         {
@@ -504,6 +531,8 @@ public class HandoffPlotPanel : HandoffPanel
             Vector2 c = Screen(s.ownX, s.ownY), e = c + new Vector2((float)(sensorKm / KmPerPx * Controls.ZoomExact), 0f);
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "disc", a = c, b = e, alpha = amber ? senGlowAlphaAmber : senGlowAlpha });
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "circle", a = c, b = e, alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
+            // owner 2026-10-24: a small circle just outside our ship; the sweep runs from it to the rim
+            shapes.Add(new HandoffMarksGraphic.Shape { kind = "circle", a = c, b = c + new Vector2(InnerRingPx, 0f), alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
         }
         sensorRing.Set(shapes);
 
@@ -514,6 +543,7 @@ public class HandoffPlotPanel : HandoffPanel
         bool red = Controls.GridAmber;
         Paint(sweep, red ? sweepInkAmber : data);
         sweep.SetAlphas(red ? 0.75f : 0.7f, red ? 0.11f : 0.09f); // sweepEdge, sweepTail
+        sweep.SetInner(InnerRingPx);
         float d = 2f * (float)(sensorKm / KmPerPx * Controls.ZoomExact);
         if (sweep.rectTransform.sizeDelta != new Vector2(d, d)) sweep.rectTransform.sizeDelta = new Vector2(d, d);
         Put(sweep.rectTransform, Screen(s.ownX, s.ownY), -sweepDeg);
@@ -555,6 +585,18 @@ public class HandoffPlotPanel : HandoffPanel
         }
         passiveLabels[i].gameObject.SetActive(true);
         return passiveLabels[i];
+    }
+
+    // The ShipView watching a contact's model, if there is one.
+    ShipView ViewOf(string key)
+    {
+        if (shipViews == null) shipViews = FindObjectsByType<ShipView>(FindObjectsSortMode.None);
+        foreach (var v in shipViews)
+        {
+            var wc = v && v.Target ? v.Target.GetComponentInParent<WorldContact>() : null;
+            if (wc && wc.trackKey == key) return v;
+        }
+        return null;
     }
 
     Image Fighter(int i)

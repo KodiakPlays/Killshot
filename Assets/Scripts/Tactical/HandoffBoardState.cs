@@ -299,13 +299,15 @@ public class HandoffBoardState
     [System.NonSerialized] public float missionNow;
 
     [Header("Fire control — MOUNTS, SYSTEMS, WARHEADS, SWITCHES and the board's initial state")]
+    // Owner 2026-10-24: railgun and missile reach = the DRADIS at full gain (12,000 + 5 × 7,000 km), not tied to the gain
+    // set now (the design had 30,000 and 40,000). You can dumb-fire that far; a lock still needs a scan.
     public Mount[] mounts =
     {
-        new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 30000, label = "RAILGUN TURRET A", shortName = "RG-A", loaded = "2 / 2", ammo = "22" },
-        new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 30000, label = "RAILGUN TURRET B", shortName = "RG-B", loaded = "1 / 2", ammo = "19" },
+        new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 47000, label = "RAILGUN TURRET A", shortName = "RG-A", loaded = "2 / 2", ammo = "22" },
+        new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 47000, label = "RAILGUN TURRET B", shortName = "RG-B", loaded = "1 / 2", ammo = "19" },
         new Mount { id = "PDA", arc = 42, halfArc = 35, rangeKm = 4000, label = "PDC GROUP A", shortName = "PDC-A", loaded = "BELT", ammo = "2400" },
         new Mount { id = "PDB", arc = 200, halfArc = 35, rangeKm = 4000, label = "PDC GROUP B", shortName = "PDC-B", loaded = "BELT", ammo = "2180" },
-        new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 40000, label = "MISSILE VLS", shortName = "VLS", loaded = "8 / 8", ammo = "8" },
+        new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 47000, label = "MISSILE VLS", shortName = "VLS", loaded = "8 / 8", ammo = "8" },
     };
     public WeaponSystem[] systems =
     {

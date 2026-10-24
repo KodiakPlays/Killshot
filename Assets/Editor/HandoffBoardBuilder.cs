@@ -1568,6 +1568,17 @@ public static class HandoffBoardBuilder
         shipRt.anchoredPosition = new Vector2(960 - 104, -(545 - 100));
         so.FindProperty("ownShipImage").objectReferenceValue = shipImg;
 
+        // owner 2026-10-24: a classified contact's own model seen from above, in red, in place of its dot
+        var cShipRt = layer("Contact ship (3D view)");
+        cShipRt.gameObject.AddComponent<CanvasRenderer>();
+        var cShipImg = cShipRt.gameObject.AddComponent<RawImage>();
+        cShipImg.material = ShipImageMaterial();
+        cShipImg.raycastTarget = false;
+        cShipImg.enabled = false; // the panel turns it on for a classified contact
+        cShipRt.pivot = new Vector2(0.5f, 0.5f);
+        cShipRt.sizeDelta = new Vector2(95, 95);
+        so.FindProperty("contactShipImage").objectReferenceValue = cShipImg;
+
         // Step 54 (owner 2026-10-23): our fighters, small wedges in own-force blue; the panel clones,
         // places and turns one per craft
         var ftRt = NewRect("Fighter (template)", layer("Fighters"));

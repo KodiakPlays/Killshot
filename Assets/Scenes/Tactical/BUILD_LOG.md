@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 61 are done, plus a final QA pass.**
+**Steps 1 to 62 are done (62 awaits its playtest), plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -101,8 +101,9 @@ Do not run ahead. Do one step, show it, wait.
 | 59 | Conditions: fire, vacuum, radiation | **Done** — playtest 153/153 |
 | 60 | Boarding: the assault boats | **Done** — playtest 160/160 |
 | 61 | Scan to know what you hit; smoothing; heading 000 | **Done** — playtest 161/161 |
+| 62 | Weapon reach, the sweep's inner circle, the enemy's picture | **Built**, checked in play mode; playtest not yet run |
 
-Steps 6 to 28 and Steps 34 to 61 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 62 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -620,7 +621,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 61, in detail
+## 6 · Steps 6 to 28, and 34 to 62, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2601,6 +2602,38 @@ Two runs before it failed: the window was used mid-run, then Unity was restarted
 **Trap.** The playtest wait loop picked the newest run by modification time. The old run folders
 were touched when their videos were deleted, so it read an old report. Pick the newest run by name.
 
+
+### Step 62 — Weapon reach, the sweep's inner circle, the enemy's picture
+
+**Owner decisions (2026-10-24).**
+
+- **Weapon reach equals the DRADIS at full gain:** railgun and missiles reach 47,000 km (12,000 +
+  5 × 7,000). It doesn't depend on the gain set now. You can dumb-fire that far; a lock still needs
+  a scan. The design had 30,000 and 40,000. PDCs stay at 4,000.
+- **A small circle round our ship.** The sweep runs from it to the DRADIS edge, not from the ship.
+- **Enemy picture after CLASS.** Once scanned and classified, a contact shows on the plot as its
+  own 3D model seen from above, in red, turned to its heading, instead of its dot.
+
+**What changed.**
+
+- `HandoffBoardState.mounts`: RGA, RGB and VLS reach 47,000 km.
+- `HandoffSweepGraphic.SetInner` draws the band and the edge from an inner radius.
+- `HandoffPlotPanel` draws the inner circle, half our ship's drawn length plus `innerRingMarginPx`
+  (8). It also shows `contactShipImage` for a classified contact, with its label pushed clear.
+- **New in `02.1_Grid` (World):** "Contact View Camera · TRACK 07", a copy of our ship's view camera
+  aimed at TRACK 07's model (StarWolf_Cruiser). The builder adds a "Contact ship (3D view)" layer.
+- `ShipView.Own()`: our ship's picture (plot and engineering) now finds our own camera, not any
+  ShipView.
+
+**Checked** in play mode, with a screenshot:
+
+- the inner circle and the sweep starting from it;
+- our ship pointing up;
+- TRACK 07 drawn as a red cruiser, turned to its heading.
+
+**Not yet run through the full playtest.** The owner's laptop was about to die. It has two new
+checks (CLASS shows the picture; the sweep starts at the inner circle) and the updated range check.
+Run it first next session.
 ---
 
 ## 7 · How to keep this log

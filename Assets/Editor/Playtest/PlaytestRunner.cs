@@ -627,7 +627,7 @@ public static class PlaytestRunner
         Check("No weapon ring with Fire Control shut", plotPanel.WeaponRingKm == 0f, "");
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
-        Check("Fire Control open: the railgun's reach shows round our ship", plotPanel.WeaponRingKm == 30000f, plotPanel.WeaponRingKm.ToString("N0") + " km");
+        Check("Fire Control open: the railgun's reach shows round our ship, as far as the DRADIS at full gain", plotPanel.WeaponRingKm == s.senRangeBaseKm + 5 * s.senRangePerStepKm, plotPanel.WeaponRingKm.ToString("N0") + " km");
         board.SetZoom(0.25);
         yield return 0.4f;
         Shot("25_weapon_ring");
@@ -1102,6 +1102,15 @@ public static class PlaytestRunner
         string hullNow = HandoffPeriscopePanel.HullLine(dummyShip);
         Check("Scanned, the targeting computer shows its hull: each face, and the room behind an open one", subjName && subjHull && subjName.text.StartsWith("TRACK 07") && subjHull.text == hullNow && hullNow.StartsWith("BOW ") && hullNow.Contains(" \u25B8 "),
               subjName && subjHull ? "\"" + subjName.text + "\" / \"" + subjHull.text + "\"" : "no readout");
+        //     CLASS in the targeting computer: the plot shows TRACK 07 as its own ship, in red (owner 2026-10-24).
+        if (!Click("scope.classify", null, "CLASS key")) yield break;
+        yield return 0.6f;
+        Check("Classified: TRACK 07 shows on the plot as its own ship model, in place of its dot", s.classified.Contains("t07") && plotPanel.ContactShipShown && subjName.text == "TRACK 07 · CRUISER",
+              "\"" + subjName.text + "\", picture " + plotPanel.ContactShipShown);
+        //     The sweep runs from a small circle round our ship, not from the ship itself.
+        var sweepInner = (float)typeof(HandoffSweepGraphic).GetField("innerPx", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                                .GetValue(plotPanel.GetComponentInChildren<HandoffSweepGraphic>(true));
+        Check("The sweep starts at a small circle just outside our ship", sweepInner > 15f, sweepInner.ToString("0") + " px");
         Shot("28g_targeting_computer");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (board.Motion) board.Motion.SetScopeDown(false);
