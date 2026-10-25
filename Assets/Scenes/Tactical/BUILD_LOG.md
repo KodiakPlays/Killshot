@@ -6,13 +6,13 @@ A running record of the new scene flow being built under `Assets/Scenes/Tactical
 exists, what is wired to what, which step we are on, and what to do next. You should not have to
 work any of that out again.
 
-Last updated: 2026-10-25. Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
+Last updated: 2026-10-26. Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
 
 ---
 
 ## 1 · Where we are
 
-**Steps 1 to 69 are done, plus a final QA pass.**
+**Steps 1 to 74 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing; Enter shows INITIALISING... and then the board in `02.1_Grid`.
@@ -116,8 +116,9 @@ Do not run ahead. Do one step, show it, wait.
 | 70 | Intro colour: drawn through a Canvas (no double encode); dark green field | **Done** — measured in play mode against the reference shots |
 | 71 | Welcome page on the phosphor screen (DEMO title); loading bar under INITIALISING | **Done** — checked on screen and by the owner; playtest not run (owner) |
 | 72 | Mission clock and signal box lined up with the plot edges | **Done** — measured on screen |
+| 74 | Engineering's ship picture shows side armour; the room rings change colour | **Done** — playtest 168/168 |
 
-Steps 6 to 28 and Steps 34 to 69 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 74 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -205,6 +206,12 @@ Added in Steps 66 and 68 (under `Board/HandoffBoard`):
   and clips them to the frame's opening with a `RectMask2D` (Step 66).
 - `SignalBox` — just after `TimeControl`, in the frame's top-right. A copy of the Sensors E-SIG row,
   filled in by `HandoffSensorsPanel` (Step 68).
+
+Changed in Step 74 (under `Board/HandoffBoard/Drawers/State · engineering/Ship diagram`):
+
+- The six `Lamp · …` objects are gone.
+- Four RawImages, one per side: `Ship · PROW`, `Ship · STBD`, `Ship · AFT`, `Ship · PORT`. Each
+  shows one part of our ship from `Assets/Art/Board/Hull/`, through `BoardLinearImage`.
 
 ### `Level_01` — made in Step 67
 
@@ -504,6 +511,10 @@ These are settled. Do not reopen them.
 35. **The metal frame is in front** (owner, 2026-10-25). Anything a button opens should slide out
     from behind it: clipped to the frame's opening, under the rails and stations. Done for the six
     drawers. Helm, Orders and the periscope don't slide yet (Open items). Details in Step 66.
+37. **Engineering shows side armour on the ship picture** (owner, 2026-10-26). The picture is our
+    ship in four parts, one per side. Each part is white while its armour is full, amber once hit,
+    red once open. No compartment dots: the room rings show the rooms, white, amber or red by
+    health. The plot ship stays plain white. Details in Step 74.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -698,11 +709,15 @@ The new layout throws that split away:
     same scene and code. The periscope names a ship only if it is heard and on bearing, and the
     run's power spread varies a little with timing (that run had AUX at 2 units, not 3). If it
     fails, re-run before hunting a bug.
-38. Nothing else. The Unity console is clean: no errors, no warnings.
+38. **Engineering's hull pictures are their own images, not the shared `ShipView` render.** Never
+    colour `ShipView`: the plot uses it, and the plot ship must stay white. The images in
+    `Assets/Art/Board/Hull/` must import with sRGB off, or the lines come out the wrong brightness.
+    To remake them for a new model, see Step 74.
+39. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 69, in detail
+## 6 · Steps 6 to 28, and 34 to 74, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3114,6 +3129,81 @@ The plot runs 104–1,816 px.
 **Trap.** In edit mode the board is drawn by `Board Camera` into a render texture, which does not
 redraw on its own. Call `Render()` on that camera before an edit-mode screenshot, or it shows the
 old layout.
+
+### Step 74 — Engineering's ship picture shows side armour; the room rings change colour
+
+**Owner direction (2026-10-26).** The engineering drawer's ship picture shows **side armour**. It
+uses the four-part models in `Assets/3D Assets/UpdatedStarships/`. Each model is cut into four parts,
+each with its own material slot: `Prow(front)`, `Port(left)`, `Star(right)`, `Aft(back)` (on the
+Carrier the front slot is just `Front`). These match the damage model's four faces
+(`HandoffBoardState.Sides`: PROW, STBD, AFT, PORT).
+
+- Each part takes its side's armour colour: **white** while full, **amber** once hit, **red** once
+  open (armour 0, so hits now reach the room behind). The owner's pick. Claude agreed: the room
+  rings are white when whole, and our ship is white on the plot.
+- The six compartment dots are gone. The room rings on the right of the drawer already show the
+  rooms.
+- The room rings change colour too. Lit segments are white at health 4–5, amber at 2–3, red at 0–1
+  (`CompHealth`, so a vented room counts as 0). Same thresholds as the dots had, white in place of
+  green.
+- The plot ship stays plain white and is not touched. This lives on engineering only.
+- Four flat top-down pictures, not a live 3D camera. The drawer's ship is always bow up, so it
+  never turns.
+
+With today's numbers, one slug turns the prow, port or starboard amber, and a second opens it. The
+aft has half the armour, so one slug opens it. A fighter run takes 10% of a side's armour, so one
+run turns that side amber.
+
+**What changed.**
+
+- New `Assets/Art/Board/Hull/hull_prow.png`, `hull_stbd.png`, `hull_aft.png`, `hull_port.png`
+  (512 px, with .meta files).
+  - How they were made: `StarWolf_Destroyer_PlayerShip_mesh.fbx` was drawn in an editor preview
+    scene, copying the plot's `Ship View Camera`: orthographic, looking along +z, ship filling 0.8
+    of the frame, model turned (0, 180, 0), `Ship Light` at (325, 25, 0) with intensity 1.2. It
+    drew through `PC_Renderer`, so the VectorModel line pass applied.
+  - Each part was drawn alone. The other three slots got an invisible transparent material: the
+    line pass reads depth and normals, which transparent objects don't write.
+  - Import: sRGB **off** (saved straight from the linear camera image, like the live ship view), no
+    mipmaps, clamp, uncompressed.
+  - Shown through the existing `BoardLinearImage` material, the same one the plot ship uses: black
+    becomes see-through, and the lines take the image's colour.
+  - Port lines centre at x 0.40 of the frame and starboard at 0.60, so port is on the left.
+- `HandoffEngineeringPanel.cs`:
+  - Removed `shipPicture`, `compartmentLamps`, `lampKeys`, `lampOffsets` and the `ShipView` lookup.
+  - Added `hullSides` (four RawImages: PROW, STBD, AFT, PORT) and `pictureFill` (0.8). Kept
+    `diagramShipPx` (190, under "Engineering & orders" in Tuning) and `shipInk`.
+  - `ShowDiagram` sizes the four pictures and paints each from `SideArmour` against
+    `sideArmourMax`.
+  - The ring loop colours lit segments by `CompHealth`.
+- `02.1_Grid`, under `Drawers/State · engineering/Ship diagram` (set in the scene; the board
+  builder is retired):
+  - The six `Lamp · …` objects are deleted.
+  - `Ship (bow up)` became `Ship · PROW`, plus three copies: `Ship · STBD`, `Ship · AFT`,
+    `Ship · PORT`. RawImages, 237.5 px square, with `BoardLinearImage`, wired to `hullSides`. They
+    show in edit mode too, not only in play.
+  - `Assets/Editor/HandoffBoardBuilder.cs` still names `shipPicture` and `compartmentLamps` by
+    string. Not updated: the builder no longer runs.
+- `PlaytestRunner.cs`, check 23 rewritten:
+  - all four parts white, rings white;
+  - STBD at half armour, AFT open, HAB at 2, HGR at 1: STBD amber, AFT red, PROW and PORT white,
+    HAB ring amber, HGR ring red; screenshot;
+  - repaired: everything white again.
+
+**Checked.** Playtest **PASS, 168/168** (`Logs/Playtests/2026-10-26_003801/`). The engineering
+checks are rows 150–154. The screenshot `shots/30_engineering_diagram.png` shows starboard amber,
+aft red, prow and port white, the HAB ring amber and the HGR ring red. The same run covered Step 73.
+
+**Traps.**
+
+- Don't colour the shared `ShipView` render. The plot uses it, and the plot ship must stay white.
+- The pictures must import with sRGB off, or the lines come out the wrong brightness through
+  `BoardLinearImage`.
+- To remake the pictures for a new model: draw each material slot alone through `PC_Renderer` (for
+  the line pass), with the other slots invisible. Find the slots by name. Their order differs per
+  model: the Battleship's is Prow, Aft, Port, Star.
+- The ship is about 120 px wide in a 112 px box, so the side pods poke slightly past the dark box.
+  It was the same before; not new.
 
 ---
 

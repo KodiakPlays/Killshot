@@ -1172,30 +1172,36 @@ public static class PlaytestRunner
         if (!Click("drawer", "fire control", "FIRE key (close)")) yield break;
         yield return 0.5f;
 
-        // 23. Engineering's ship diagram (Step 50): our ship bow up, a lamp per compartment.
+        // 23. Engineering's ship diagram (Step 74): our ship in four parts, each side coloured by its armour;
+        //     the room rings coloured by their integrity. White whole, amber hurt, red open or nearly gone.
         if (!Click("drawer", "engineering", "ENGR key")) yield break;
         yield return 0.8f;
         var eng = board.GetComponent<HandoffEngineeringPanel>();
-        var picField = typeof(HandoffEngineeringPanel).GetField("shipPicture", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var lampsField = typeof(HandoffEngineeringPanel).GetField("compartmentLamps", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var pic = picField.GetValue(eng) as UnityEngine.UI.RawImage;
-        var lamps = lampsField.GetValue(eng) as UnityEngine.UI.Image[];
-        Check("Engineering shows our ship, bow up", pic && pic.enabled && pic.texture != null && Mathf.Approximately(Mathf.DeltaAngle(pic.rectTransform.localEulerAngles.z, s.nav.heading), 0f),
-              pic ? "turned back " + pic.rectTransform.localEulerAngles.z.ToString("0") + "° for heading " + s.nav.heading.ToString("000") + "°" : "no picture");
-        Color green = ((Color)new Color32(0x8F, 0xC3, 0x3A, 0xFF)).gamma, amber = ((Color)new Color32(0xE0, 0xA0, 0x20, 0xFF)).gamma, red = ((Color)new Color32(0xE0, 0x4B, 0x3C, 0xFF)).gamma;
-        System.Func<UnityEngine.UI.Image, Color, bool> lit = (l, c) => Mathf.Abs(l.color.r - c.r) < 0.01f && Mathf.Abs(l.color.g - c.g) < 0.01f && Mathf.Abs(l.color.b - c.b) < 0.01f;
-        bool allGreen = lamps != null && lamps.Length == 6;
-        if (allGreen) foreach (var l in lamps) if (!lit(l, green)) allGreen = false;
-        Check("Six compartment lamps, all green: undamaged", allGreen, lamps != null ? lamps.Length + " lamps" : "none");
-        //     Stand-in for an enemy hit: habitation hurt, hangar nearly gone.
+        var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        var sides = typeof(HandoffEngineeringPanel).GetField("hullSides", flags).GetValue(eng) as UnityEngine.UI.RawImage[];
+        var engRows = typeof(HandoffEngineeringPanel).GetField("rows", flags).GetValue(eng) as HandoffEngineeringPanel.Row[];
+        System.Func<string, HandoffWedge> ring = k => { foreach (var r in engRows) if (r.key == k) return r.ring[0]; return null; };
+        Color white = new Color32(0xE8, 0xED, 0xF0, 0xFF), amber = new Color32(0xE0, 0xA0, 0x20, 0xFF), red = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
+        // the pictures are pre-encoded for the board (Paint); the ring segments encode themselves
+        System.Func<UnityEngine.UI.Graphic, Color, bool> lit = (g, c) => g && Mathf.Abs(g.color.r - c.r) < 0.01f && Mathf.Abs(g.color.g - c.g) < 0.01f && Mathf.Abs(g.color.b - c.b) < 0.01f;
+        System.Func<int, Color, bool> sideLit = (i, c) => lit(sides[i], c.gamma);
+        bool allWhite = sides != null && sides.Length == 4;
+        if (allWhite) for (int i = 0; i < 4; i++) if (!sides[i] || !sides[i].enabled || !sides[i].texture || !sideLit(i, white)) allWhite = false;
+        Check("Engineering shows our ship in four parts, all white: armour full", allWhite, sides != null ? sides.Length + " parts" : "none");
+        Check("The room rings are white: undamaged", lit(ring("hab"), white) && lit(ring("hgr"), white), "");
+        //     Stand-in for enemy fire: starboard hit once, the aft open; habitation hurt, hangar nearly gone.
+        var armour = s.SideArmour;
+        armour[1] = s.sideArmourMax[1] / 2f; armour[2] = 0f;
         s.Comp("hab").integ = 2; s.Comp("hgr").integ = 1;
         yield return 0.6f;
-        Check("A hurt compartment's lamp turns amber, a nearly-gone one red", lit(lamps[2], amber) && lit(lamps[3], red) && lit(lamps[0], green), "HAB 2, HGR 1");
+        Check("A hit side turns amber, an open side red", sideLit(1, amber) && sideLit(2, red) && sideLit(0, white) && sideLit(3, white), "STBD half, AFT open");
+        Check("A hurt room's ring turns amber, a nearly-gone one red", lit(ring("hab"), amber) && lit(ring("hgr"), red) && lit(ring("mag"), white), "HAB 2, HGR 1");
         Shot("30_engineering_diagram");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        armour[1] = s.sideArmourMax[1]; armour[2] = s.sideArmourMax[2];
         s.Comp("hab").integ = 5; s.Comp("hgr").integ = 5;
         yield return 0.6f;
-        Check("Repaired, they go green again", lit(lamps[2], green) && lit(lamps[3], green), "");
+        Check("Repaired, they go white again", sideLit(1, white) && sideLit(2, white) && lit(ring("hab"), white) && lit(ring("hgr"), white), "");
 
         // 24. Conditions (Step 59, DAMAGE_README.md): fire, vacuum and radiation on our ship, handled with
         //     engineering's own rockers. Hits are stand-ins (enemy fire comes with the ship AI); chances and

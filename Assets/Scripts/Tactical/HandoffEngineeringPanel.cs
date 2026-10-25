@@ -49,21 +49,16 @@ public class HandoffEngineeringPanel : HandoffPanel
     [SerializeField] private float ringDimAlpha = 0.72f;
 
     [Header("Colours (design sRGB)")]
-    [Header("Ship diagram (Step 50, owner 2026-10-23): our ship's top-down picture, bow up, a lamp per compartment")]
-    [Tooltip("Shows the plot's ship view (ShipView), turned back by our heading so the bow is always up.")]
-    [SerializeField] private RawImage shipPicture;
-    [SerializeField] private Image[] compartmentLamps;
-    [SerializeField] private string[] lampKeys = { "bri", "mag", "hab", "hgr", "rct", "eng" };
-    [Tooltip("Where each lamp sits on the hull, px from the diagram's centre (y up), on the deck plan (Step 58, "
-           + "DAMAGE_README.md): magazine at the bow, reactor to port, hangar to starboard, bridge and habitation "
-           + "inboard, engines at the stern.")]
-    [Tune("Engineering & orders")] [SerializeField] private Vector2[] lampOffsets =
-        { new Vector2(0, 30), new Vector2(0, 74), new Vector2(0, -14), new Vector2(20, 8), new Vector2(-20, 8), new Vector2(0, -78) };
+    [Header("Ship diagram (Step 74, owner 2026-10-26): our ship bow up, each side coloured by its armour")]
+    [Tooltip("Top-down pictures of the four parts of our ship (UpdatedStarships model), stacked, in the order "
+           + "PROW, STBD, AFT, PORT. Each is white while its side's armour is full, amber once hit, red once open.")]
+    [SerializeField] private RawImage[] hullSides;
     [Tooltip("The ship's length in the diagram, px.")]
     [Tune("Engineering & orders")] [SerializeField] private float diagramShipPx = 190f;
-    [Tooltip("Our ship's line colour (the plot's: ink.data).")]
+    [Tooltip("The ship's length as a share of each picture (they were saved at 0.8, like the plot's ship view).")]
+    [SerializeField] private float pictureFill = 0.8f;
+    [Tooltip("Our ship's line colour while a side's armour is full (the plot's: ink.data).")]
     [SerializeField] private Color shipInk = new Color32(0xE8, 0xED, 0xF0, 0xFF);
-    private ShipView shipView;
 
     [SerializeField] private Color nominal = new Color32(0x8F, 0xC3, 0x3A, 0xFF);
     [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
@@ -109,12 +104,15 @@ public class HandoffEngineeringPanel : HandoffPanel
             bool on = r.key == s.engSel;
             Fill(r.cell, data, on ? 0.16f : 0.05f);
             Fill(r.rowBg, data, on ? 0.07f : 0f);
+            // Step 74: lit segments white whole (4–5), amber hurt (2–3), red nearly gone (0–1)
+            int health = s.CompHealth(r.key);
+            Color ringLit = health >= 4 ? data : health >= 2 ? caution : alarm;
             for (int i = 0; i < r.ring.Length; i++)
             {
                 var w = r.ring[i];
                 if (!w) continue;
                 w.Set(fromDeg + i * segmentDeg, segmentDeg - gapDeg);
-                w.color = (c.integ >= i + 1 ? data : ringUnlit).WithAlpha(on ? 1f : ringDimAlpha);
+                w.color = (c.integ >= i + 1 ? ringLit : ringUnlit).WithAlpha(on ? 1f : ringDimAlpha);
             }
             Paint(r.tag, on ? data : secondary);
             if (r.atmo) { r.atmo.text = c.vented ? "VENT" : "SEAL"; Paint(r.atmo, c.vented ? alarm : nominal); }
@@ -205,28 +203,19 @@ public class HandoffEngineeringPanel : HandoffPanel
     // ENG_REPAIRS labels
     static string Label(string id) => id == "reboot" ? "REBOOT" : id == "party" ? "REPAIR" : id == "seal" ? "SEAL" : id == "vent" ? "VENT" : id.ToUpperInvariant();
 
-    // Step 50: our ship, bow up, with each compartment's lamp: green whole (4–5), amber hurt (2–3), red nearly gone (0–1)
+    // Step 74: our ship, bow up, each side coloured by its armour: white full, amber hit, red open.
+    // The rooms behind are the rings beside it.
     void ShowDiagram(HandoffBoardState s)
     {
-        if (shipPicture)
+        if (hullSides == null) return;
+        var armour = s.SideArmour;
+        float side = diagramShipPx / pictureFill;
+        for (int i = 0; i < hullSides.Length && i < armour.Length; i++)
         {
-            if (!shipView) shipView = ShipView.Own();
-            shipPicture.texture = shipView ? shipView.Texture : null;
-            shipPicture.enabled = shipView && shipView.Texture;
-            shipPicture.color = shipInk.gamma; // the board canvas linearises vertex colours; pre-encode
-            float side = diagramShipPx / (shipView ? shipView.ShipFill : 1f);
-            shipPicture.rectTransform.sizeDelta = new Vector2(side, side);
-            // the model turns with our heading; turn the picture back so the bow stays up
-            shipPicture.rectTransform.localEulerAngles = new Vector3(0f, 0f, s.nav.heading);
-        }
-        if (compartmentLamps == null) return;
-        for (int i = 0; i < compartmentLamps.Length && i < lampKeys.Length; i++)
-        {
-            var lamp = compartmentLamps[i];
-            if (!lamp) continue;
-            if (i < lampOffsets.Length) lamp.rectTransform.anchoredPosition = lampOffsets[i];
-            int integ = s.CompHealth(lampKeys[i]);
-            Paint(lamp, integ >= 4 ? nominal : integ >= 2 ? caution : alarm);
+            var pic = hullSides[i];
+            if (!pic) continue;
+            pic.rectTransform.sizeDelta = new Vector2(side, side);
+            Paint(pic, armour[i] >= s.sideArmourMax[i] ? shipInk : armour[i] > 0f ? caution : alarm);
         }
     }
 }

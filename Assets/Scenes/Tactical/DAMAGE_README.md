@@ -106,6 +106,9 @@ All are in **Starwolf → Tuning**: the team's time under "Engineering & orders"
    REBOOT.
 7. **Displays** (audit §09.10): armour per face, conditions per room, broken parts, team roster,
    door state. Request the art from Claude Design; working placeholders meanwhile.
+   **Armour per face started, Step 74:** engineering's ship picture colours each side white
+   (full), amber (hit) or red (open), and the room rings go white, amber or red by health
+   (`BUILD_LOG.md`, Step 74).
 
 ## Still open
 
