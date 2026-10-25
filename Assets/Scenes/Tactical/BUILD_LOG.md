@@ -39,6 +39,10 @@ section 8. Power P1 (Step 35), the plot tools (Step 36), press and click (Step 4
 (Step 41) are done. The UI asset audit is done (`ASSET_AUDIT.md`). The Claude Design request still
 stands, but placeholder art is fine, so it does not block a demo.
 
+**Agreed on 2026-10-25, not started:** the board refactor (prefab panels, ship parts, no "Handoff"
+names), and the combat autopilot with W/S throttle. Both are in section 8, with the owner's ruling on
+Soham's old scripts.
+
 The owner is building this one step at a time and checking each step before starting the next one.
 Do not run ahead. Do one step, show it, wait.
 
@@ -109,6 +113,7 @@ Do not run ahead. Do one step, show it, wait.
 | 67 | The Level tool: each level is a scene; the enemy spawn box | **Done** — playtest 163/163; spawn checked in play mode |
 | 68 | The signal alarm: a box in the frame's top-right, and the alert tone | **Done** — playtest 165/165 |
 | 69 | Each DRADIS sweep pass beeps | **Done** — its check passed; full run still to re-run |
+| 70 | Intro colour: drawn through a Canvas (no double encode); dark green field | **Done** — measured in play mode against the reference shots |
 
 Steps 6 to 28 and Steps 34 to 69 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -471,7 +476,13 @@ These are settled. Do not reopen them.
       edit that ship's stats file (a ScriptableObject, one per ship, same fields).
     - **Level** is a separate tool: where things are (debris, spawn points, the battle space).
     - **Art:** on each panel's own inspector. Panels are prefabs. Replaces the board builder and
-      the import menu.
+      the import menu. When the prefabs are made (owner, 2026-10-25):
+      - Each object is named after its control ("LOCK rocker"), not its export record
+        (`sprite#178 rocker_30x38_locked`).
+      - Each control's parts (body, pointer, lamp, label) go under one parent, so they move together.
+      - Once the prefabs exist, one guide for UI artists is written. It covers where each panel's
+        art files are, how to swap a sprite, font or colour, the import settings, and the two
+        export README rules that do not apply here (sRGB, token hex).
     - **Checks:** the playtest and the intro's letter check run in Unity's Test Runner.
     - **Deleted outright:** `Starwolf/Tuning/Apply` and `/Capture` (nothing reads that asset), Soham's
       `Wire UI References` / `Wire Button OnClicks` (old UI only), `Tools/Starwolf/Create Intro
@@ -2822,14 +2833,15 @@ zoom stops when the **sides** fill, and you pan up and down for the rest.
   numbers: the layer they are made under (`Plot/Scale`), the two titles, font (Share Tech Mono),
   material (its thickened "Small" one), size (11) and colour. The design's 12 fixed number labels
   were deleted from `02.1_Grid`. The board builder (`WirePlot`) does the same on a rebuild: it
-  deletes them and fills the slots from their look. Compiled, not yet run.
+  deletes them and fills the slots from their look. Checked on the full rebuild of 2026-10-25 (Step 68's
+  notes): 12 deleted, every slot filled, live numbers in play.
 - **`C` centres the plot on our ship** (owner asked for a key). Near the map's edge the view stops
   at the edge, so the ship can sit off-centre.
 
 **Checked** in play mode, with screenshots (before the x0.35 limit): at x0.28 the grid fills the plot's width; panning is
 locked side to side and stops at the top and bottom edges; at x0.5 and x1 it stops at all four.
 Axis numbers checked in play mode at x1 and x0.35, panned: each number sits on its line, our ship
-reads 0, 0. The `C` key was not pressed in the check; MCP can't press a key. Playtest 163/163
+reads 0, 0. The `C` key: MCP can't press a key; the owner pressed it in play and it works (2026-10-25). Playtest 163/163
 (`Logs/Playtests/2026-10-25_221753/`); it has no battle-space checks yet.
 
 ### Step 66 — Our ship stops blinking; drawers slide out from behind the frame
@@ -3006,6 +3018,50 @@ tag beeps. Naming the ship has no sound of its own.
 stopped at check 158: the engineering BRI cell click landed off the board, at x 3375. It ran while
 another session was rebuilding the board, and this step does not touch engineering. Re-run the
 full playtest once that work is in. An earlier try stopped at step 15 on a reload.
+
+### Step 70 — Intro colour: drawn through a Canvas; dark green field
+
+**Owner direction (2026-10-25).** Match two reference shots of the intro (SECTION 36 and STARWOLF
+on a green CRT): deep black-green field, strong green dots, a faint glow, lit screen edges,
+scanlines. This replaces the flat black of Step 56. Colour first; the frame, subtitle, corner text
+and screen surface come after.
+
+**Measured from the shots.** Lit dots (150, 249, 163): the existing `#A2F9A0` already matches.
+Field (0, 17, 0), with faint scanline bands. Gaps between dots ~60. Screen rim ~80, fading inward;
+outside the screen ~4. The paleness in Unity was only the double encode.
+
+**The cause.** `OnGUI`'s `GUI.DrawTexture` sRGB-encoded the picture twice, and cut it to 8 bits
+before that. Undoing one encode in the shader was tried first: the dots came right, but anything
+that dark rounds to zero before the encodes, so the field stayed black. (Also: `GammaToLinearSpace`
+is a fit that is ~6x too dark near black; use the `Exact` form if you ever need it.) The same
+picture on a uGUI `RawImage` came out encoded once, with the field intact.
+
+**What changed** (`Assets/StarwolfIntro/`):
+
+- `StarwolfIntroController`:
+  - `BuildCanvas()` makes a child `Phosphor screen`: an overlay canvas (sort order 32767), a black
+    backing, and a 16:9 `Display` `RawImage` showing the render target. Hidden while suspended or
+    disabled.
+  - `OnGUI` now only handles menu input; it no longer draws. The hit rectangles are unchanged
+    (`ScreenRect()` is the same rectangle as the 16:9 fit).
+  - sets `_Background` from the glyph data.
+- `PhosphorDisplay.shader`: `_Background` is back, under the lit text. The near glow is .015 (was
+  .027) to match the gaps in the shots.
+- `glyphs.json`: `background` is `#001100` (was `#010601`).
+
+**Checked** in play mode, screenshots measured against the shots:
+
+| | Unity | Reference |
+|---|---|---|
+| Lit dots | (158, 244, 156) | (150, 249, 163) |
+| Field | (0, 15, 0) | (0, 17, 0) |
+| Gaps between dots | 55–62 | 50–64 |
+
+The menu draws on the same field. Playtest after the canvas change: 166/166 PASS
+(`Logs/Playtests/2026-10-26_000216/`).
+
+**Still to do (owner's order).** The frame with open sides, the STRATEGIC SYSTEMS DIVISION line,
+the corner text and clearance squares, and the screen surface (lit rim, visible scanline bands).
 
 ---
 
@@ -3265,18 +3321,119 @@ Found by the doc check after Step 66. Fix each with the owner.
 5. **The playtest has no battle-space checks:** the warning, countdown, x1 drop, zoom limit, pan
    limit, axis numbers and the `C` key.
 
-### Clean-up once the game is working (owner, 2026-10-24)
+### Board refactor (owner, 2026-10-25). Agreed, not started
 
-Not now. Do these once the board plays end to end, in this order:
+Replaces the 2026-10-24 "clean-up once the game is working" list.
 
-1. **Find what is in use and what is not.** Send an agent to trace every script, scene, prefab and
-   asset: is it in a scene, used by code, or used by nothing? It writes a list. The owner picks what
-   to delete. Nothing is deleted without the owner's yes.
-2. **Drop the "Handoff" names.** `HandoffBoardState` becomes `BoardState`, `HandoffBoardControls`
-   becomes `BoardControls`, and the panels lose the prefix too (`HandoffHelmPanel` becomes `HelmPanel`;
-   the owner suggested "panel controls" for the shared base, `HandoffPanel`). Confirm the names
-   with the owner first. Do step 1 first: the old `BoardController` (used only by `02_Grid`) would
-   sit right next to the new `BoardControls`, which is confusing.
+**Why.** The board is hard to follow:
+- One 1,915-line class (`HandoffBoardState`) holds every rule.
+- The builder makes the scene from code and deletes it on every run, so hand edits are lost.
+- Drawer parts are named by export record (`sprite#178 rocker_30x38_locked`).
+- The code uses "Handoff" names.
+
+On 2026-10-25, three read-only checks found that a UI artist could not work on the board without a
+programmer.
+
+**Rules.** Do the steps in order, one step per commit. The playtest must pass before the next step.
+Confirm each step with the owner before starting it. Managers are scene-wide, one of each. Systems
+are ship parts, one set per ship. **When to start:** the owner decides. Claude recommended starting
+once the open work is committed, rather than waiting until the board plays end to end.
+
+1. **Commit the open work.**
+2. **Move the playtest and the intro letter check into Unity's Test Runner** (decision 31).
+3. **Find what is used and what is not.** An agent traces every script, scene, prefab and asset,
+   and writes a list. The owner picks what to delete. **Nothing is deleted without the owner's yes,
+   Soham's old scripts included.** The `02_Grid`-only scripts must go before step 4, because
+   `BoardAction.cs` declares a type called `Panel`, which would clash.
+4. **Drop "Handoff" from the names.** Nothing else changes. Confirm the names with the owner first.
+   Proposed:
+   - `HandoffBoardControls` → `UIManager`
+   - `TacticalWorld` → `WorldManager`
+   - `HandoffPanel` → `Panel`
+   - `HandoffPowerPanel` → `PowerPanel`, and the same for every panel
+   - `HandoffHit` → `Hit`, and the same for the other shared pieces
+   - `HandoffBoardState`: not decided, see step 7
+
+   Rename the builder too, so it still runs.
+5. **Move files into folders:** `Scripts/Core`, `Scripts/Ship`, `Scripts/UI`, `Scripts/UI/Panels`
+   and `Scripts/UI/Widgets`. Move only.
+6. **Make the panels prefabs** (decision 31). Run the builder one last time and save each drawer and
+   station as its own prefab. Then:
+   - Each panel's sprites and fonts are fields in its own inspector.
+   - Shared colours go in one palette asset that every panel points at. You type a colour as it
+     should look, and the code converts it.
+   - Each object is named after its control, and each control's parts go under one parent.
+   - Delete the builder and the import menu.
+   - Write the guide for UI artists.
+7. **Split `HandoffBoardState` into ship parts,** one component each: power, sensors, comms, helm,
+   weapons, hangar, damage and orders. Our ship and the enemy carry the same parts. Each ship's
+   numbers go in its own stats file (decision 31). Where the board already works, its rules stay.
+   *Proposed, owner to confirm:* use Soham's components as the frame where they fit (see below).
+8. **Move the clock, pause and tick out of `UIManager` into `GameManager`.** First move
+   `ReadOnlyAttribute` out of the old `GameManager.cs`, then delete that file.
+
+### Soham's old scripts (owner, 2026-10-25)
+
+`Assets/Scripts/` (outside `Tactical/`) is Soham Aradhye's work. The board doesn't use it, but that
+does not make it dead code. **Keep all of it until the owner decides.** Read a script in full before
+judging it. `CODEBASE_BASELINE.md` has a line-by-line read of each one.
+
+Where the board already works, the board's version stays. That covers power, damage, sensors, comms,
+the weapon rules, the hangar and the game-time tick.
+
+His code has things the board lacks:
+- **The mission:**
+  - `GameManager`: spawning, winning and losing.
+  - `GameClock`: the mission time limit.
+  - `QuestSystem`: locate, eliminate, exit.
+  - `WorldBoundary`: leaving the map. It overlaps the battle-space edge from Step 65.
+
+  These scripts need the board's tick and its "ship destroyed" flag instead of Unity frame time and
+  deleted objects.
+- **One component per ship part,** talking to each other through events.
+- **One class per weapon** on a shared base (`WeaponBase`, `WeaponManager`). `CLAUDE.md` asks for
+  this.
+- **Enemy types with their own stats, and patrol, chase and combat states** (`EnemyShip`). Move these
+  into `EnemyBrain`, which gives orders instead of using physics.
+- **Contacts that sign themselves up** (`RadarTarget`), for enemies spawned mid-mission.
+- **A stability that drains on hard turns** (`ShipStability`). Today the board's stability is only a
+  number on the helm. Open: should it be a mechanic?
+
+Don't copy:
+- Unity frame time.
+- Physics bodies.
+- Finding the player by tag.
+- Pausing by freezing Unity's time.
+
+`Autopilot.cs` is set aside (see below).
+
+### Combat autopilot and W/S (owner, 2026-10-25). Agreed, not built
+
+The full rules are in `TACTICAL_BOARD_SPEC.md` §4.6. In short:
+
+**Settings**
+- The target is fire control's selected target. It must be identified by an active scan.
+- The facing (NOSE, STBD, PORT, TAIL) is the side kept toward the target.
+- It tries to stay at the approach range.
+- The approach mode (DIRECT, FLANKING, EVASIVE) sets the speed. The owner tunes the speeds.
+
+**How it moves**
+- A beam facing circles the target: STBD clockwise, PORT counterclockwise.
+- NOSE closes to the range and keeps the nose on the target. If the target stops, ours stops too.
+- TAIL is not defined yet.
+
+**Engaging and disengaging**
+- Nothing moves until a new **A/P** key on the helm is pressed. The status line then reads
+  AUTOPILOT ENGAGED.
+- W, A, S or D, or dragging the throttle, disengages it at once. The settings stay, so one press of
+  A/P resumes.
+
+**W and S.** W steps the throttle up and S steps it down. Start at 10% a step, tuned in the
+inspector. Still capped by ENG. The README's control list is for the old board. Rewrite it when W and
+S are wired.
+
+Neither the design package nor the audit gives the autopilot any behaviour. Its controls only set
+values, and approach mode only adds G.
 
 ### The Level tool, next (owner, 2026-10-25)
 
