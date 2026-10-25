@@ -381,23 +381,54 @@ velocity *= SPACE_DRAG
 Collision pushes the ship out, reflects velocity × 1.2, costs up to 40 stability, and above 35 u/s
 impact deals `round((speed − 30) × 0.25)` hull damage to the quadrant that hit.
 
-### 4.6 Autopilot
+### 4.6 Autopilot (combat)
 
-Three settings: `target`, `range ∈ {0, 5000, 10000, 18000, 25000}`, `facing ∈ {Bow, Port,
-Starboard, Aft}`.
+**Owner, 2026-10-25.** A combat autopilot. It only works on a target. Its settings are on the helm.
+
+- **Target:** fire control's selected target. It must be identified by an active scan, because an
+  autopilot cannot hold range on a ship you can't see.
+- **Facing:** NOSE, STBD, PORT or TAIL (the helm's attitude keys). That side is kept toward the
+  target.
+- **Range:** the helm's approach range: 2,000, 4,000, 8,000, 12,000, 18,000 or 24,000 km. It tries
+  to stay at that range.
+- **Speed:** the approach mode. DIRECT, FLANKING and EVASIVE each set a throttle, which is still
+  capped by the ENG bus. The numbers are in the inspector, and the owner tunes them.
 
 ```
-offset = { Bow: 0, Starboard: -90, Port: +90, Aft: 180 }[facing]
-commanded.heading = bearing(target - self) + offset
+offset = { NOSE: 0, STBD: -90, PORT: +90, TAIL: 180 }[facing]
+ordered heading = bearing to target + offset
 ```
 
-It closes or opens the range until `|distance − range| ≤ rangeDeadZone` (default 500).
+With a beam facing, the heading turns a little inward when the ship is outside the range, and a
+little outward when it is inside. So the ship settles onto a circle at that range.
 
-> **Rule 4.6.a** `DIVERGES` — the prototype has no autopilot. The four facings extend Unity's
-> Port/Starboard pair, by owner decision.
+> **Rule 4.6.a** A beam facing circles the target: STBD circles clockwise, PORT counterclockwise.
+> The ship moves where its nose points, so the side sets the direction.
 
-> **Rule 4.6.b** Autopilot does not avoid terrain and does not slow down on approach. Any manual
-> movement input switches it off at once.
+> **Rule 4.6.b** NOSE closes to the range and keeps the nose on the target. If the target stops, our
+> ship stops. If the target moves, our ship keeps repositioning. TAIL is not defined yet.
+
+> **Rule 4.6.c** Nothing moves until **A/P** is pressed. A/P is a push button with a lamp on the
+> helm. Picking a facing, range or mode on its own does nothing. While A/P is engaged, a changed
+> setting takes effect at once. The helm's status line reads AUTOPILOT ENGAGED or AUTOPILOT
+> DISENGAGED.
+
+> **Rule 4.6.d** A/P refuses to engage if any of these is missing: a target, a scan of the target, a
+> facing, or power on ENG. The helm says which one is missing.
+
+> **Rule 4.6.e** W, A, S or D, or dragging the throttle, disengages it at once. The ship keeps its
+> heading and speed. The lamp goes out and a short tone plays. The settings stay, so one press of A/P
+> resumes. There is no grace window.
+
+> **Rule 4.6.f** If the target is destroyed, it disengages and says so. *Proposed, not confirmed:*
+> if the target leaves sensor range, it disengages and reads TARGET LOST.
+
+> **Rule 4.6.g** It does not avoid terrain.
+
+> **Rule 4.6.h** `DIVERGES` — the prototype, the design handoff and the audit give the autopilot no
+> behaviour. The handoff's controls only set values, and approach mode only adds G. Soham's
+> `Autopilot.cs` is set aside: it cannot hold range while keeping a beam to the target, and it never
+> backs off.
 
 ---
 

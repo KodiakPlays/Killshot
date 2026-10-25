@@ -21,7 +21,7 @@ Assets/Scenes/Tactical/00_Start.unity
 ```
 
 Press play. The start screen leads to a briefing, then to the tactical board.
-To skip straight to the board, open `02_Grid.unity` instead.
+To skip straight to the board, open `02.1_Grid.unity` instead.
 
 ## Controls
 

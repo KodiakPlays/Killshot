@@ -64,7 +64,7 @@ pages, and most of it has been overtaken.
 | Why the game exists, the fantasy, the tone | `References/Starwolf GDD.pdf` |
 | What a system does and what number it uses | `Assets/TACTICAL_BOARD_SPEC.md`, then `References/starwolf-prototype.html` |
 | Why a design decision was made, and what was rejected | `Assets/TACTICAL_BOARD_PLAN.md` |
-| What the board looks like — colour, type, spacing, markers | `Assets/UI2/Claude Design handoff/export/README.md`, then the older handoff zip's `README.md` |
+| What the board looks like — colour, type, spacing, markers | `Assets/UI2/Claude Design handoff/export/README.md`, then the older handoff zip's `README.md`. Two of the export README's rules are wrong in this project: sprites are imported with sRGB **off**, and colours are not typed in as the token's hex. See `UI_INTEGRATION_LOG.md`, "Problems found on screen, and fixed", item (a). |
 | How each control on the new board behaves, state by state | `export/reference/UIStateSpec.md` and `export/reference/board-logic.js` |
 | Where every element sits on the new board, in pixels | `export/layout/layout.json` |
 | How the new handoff was built into `02.1_Grid`, step by step | `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md` |
@@ -74,7 +74,7 @@ pages, and most of it has been overtaken.
 | How the prototype actually behaves, without opening 4,472 lines | `Assets/PROTOTYPE_BASELINE.md` |
 | What C# exists today | `Assets/CODEBASE_BASELINE.md` |
 | What is built in the tactical scene, and the traps already hit | `Assets/Scenes/Tactical/BUILD_LOG.md` |
-| Which canvas, camera, render texture and GameObject feeds each panel and button | `Assets/Scenes/Tactical/UICONTROLLER_PARTS.md` |
+| Which canvas, camera, render texture and GameObject feeds each panel and button **of the old cockpit UI** (not the current board) | `Assets/Scenes/Tactical/UICONTROLLER_PARTS.md` |
 | What exists for weapons, tracks and contacts, and what still has to be built | `Assets/Scenes/Tactical/TARGETING_AUDIT.md` |
 | How the targeting drawer is built, to the pixel | `Assets/Scenes/Tactical/TARGETING_COMPUTER_SPEC.md` |
 | The first mission, the tutorial walkthrough, and the first enemy AI — the plan | `Assets/Scenes/Tactical/FTUE_PLAN.md` |
@@ -154,12 +154,13 @@ as historical.
 
 ### The tactical scene — `Assets/Scenes/Tactical/`
 
-**`BUILD_LOG.md`** — ~1,200 lines. The build history of the tactical board, step by step: what exists,
+**`BUILD_LOG.md`** — ~3,300 lines. The build history of the tactical board, step by step: what exists,
 what is wired to what, which step we are on, what to do next. It ends with a long **Known issues**
 list of traps already hit. **Read it before touching that scene.**
 
 **`UICONTROLLER_PARTS.md`** — which `UIController` field, canvas, camera and render texture feeds each
-panel and button.
+panel and button. This is the old cockpit UI (`UI.prefab`, `Canvas.prefab`). The current board in
+`02.1_Grid` does not use any of it.
 
 **`TARGETING_AUDIT.md`** — what already exists for weapons, tracks and contacts, and what has to be
 built. Short answer: almost nothing is reusable, and the mechanic is already written in
@@ -168,7 +169,7 @@ built. Short answer: almost nothing is reusable, and the mechanic is already wri
 **`UI_INTEGRATION_LOG.md`** — the full record of building the new handoff into `02.1_Grid`, Steps
 28–33 and the final QA. `BUILD_LOG.md` stays the pickup point.
 
-**`HANDOFF_GAPS.md`** — 105 rows of what the handoff package left out.
+**`HANDOFF_GAPS.md`** — 106 rows of what the handoff package left out.
 
 **`CLAUDE_DESIGN_NEEDS.md`** — the verified, bucketed list of everything Claude Design must still
 provide. Checked against every source. The basis for the Claude Design request.
@@ -235,10 +236,11 @@ plays. Then feature by feature, one system at a time. A reader should be able to
 summary and still know what the game is.
 
 **Every tunable number goes in the inspector. Never a literal in a method body.** Speeds, ranges,
-timers, damage, layout constants, arena size — all of it. The owner tunes by hand. That means a
-`ScriptableObject` tuning profile — see `Assets/Scripts/Tactical/TacticalTuning.cs`. Art references
-work the same way — a swappable profile, `Assets/Scripts/Tactical/TacticalArtProfile.cs`, nothing
-hard-wired.
+timers, damage, layout constants, arena size — all of it. The owner tunes by hand. Art references
+work the same way: swappable, nothing hard-wired. `TacticalTuning.cs` and `TacticalArtProfile.cs`
+belong to the old `02_Grid` board. On the current board, numbers are fields marked `[Tune]` on its
+scripts. The plan is one stats file per ship, and each panel's art as fields on its own prefab (see
+`BUILD_LOG.md`, section 4).
 
 **Do not invent design to fill a gap.** If a document is silent, say it is open and stop. Mark it
 `TBD` or put it in an "Open" list. Guessing and writing it down as if it were decided is the worst
@@ -254,10 +256,10 @@ ceiling.
 **The current effort is the Unity tactical board, in `Assets/Scenes/Tactical/`.**
 
 The flow is `00_Start` → `01_Briefing` → `02.1_Grid`. The new Claude Design handoff is fully built
-into `02.1_Grid` and passed its final QA. Every control is clickable and shows its states. Nothing is
-wired to game systems yet. The older board in `02_Grid` is still in Build Settings, but nothing leads
-to it. Next: an audit of existing UI assets against `CLAUDE_DESIGN_NEEDS.md`, then the Claude Design
-request, then wiring.
+into `02.1_Grid` and passed its final QA. Every control is clickable and shows its states. Wiring to
+game systems started in Step 34 and is ongoing. The asset audit is done (`ASSET_AUDIT.md`). The older
+board in `02_Grid` is still in Build Settings, but nothing leads to it. For the current step, read
+section 1 of `BUILD_LOG.md`.
 
 **Read `Assets/Scenes/Tactical/BUILD_LOG.md` before you touch that scene.** The owner builds one step
 at a time and checks each step on screen before the next one starts. Do one step, show it, wait.
