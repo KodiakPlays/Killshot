@@ -140,6 +140,8 @@ public class HandoffBoardControls : MonoBehaviour
     [Tune("Sound")] [SerializeField] private Tone missSound = new Tone(150f, 0.08f, 0.025f, true);
     [Tooltip("A ship destroyed (the prototype's kill cue, its first tone).")]
     [Tune("Sound")] [SerializeField] private Tone killSound = new Tone(120f, 0.28f, 0.04f, true);
+    [Tooltip("The DRADIS sweep tags a ship: with ACTIVE on, every pass over it (owner 2026-10-25, Step 69).")]
+    [Tune("Sound")] [SerializeField] private Tone tagSound = new Tone(880f, 0.05f, 0.02f, false);
     [SerializeField] private AudioSource voice;
     // the prototype's "tab" cue is a view change: the rails, the latches and the station headers
     static readonly string[] TabActions = { "tool", "drawer", "helm", "orders", "scope" };
@@ -296,6 +298,11 @@ public class HandoffBoardControls : MonoBehaviour
         else if (System.Array.IndexOf(TabActions, action) >= 0) Play(tabSound, "tab");
         else if (owned) Play(switchSound, "switch");
     }
+
+    /// <summary>Step 69: sweep tags so far. Counted apart from <see cref="Sounds"/>, so a tag never stands in for
+    /// the click cue a check waits on. The playtest reads it.</summary>
+    public int Tags { get; private set; }
+    public void SweepTag() { Tags++; if (voice) voice.PlayOneShot(tagSound.Clip("tag")); }
 
     void Play(Tone t, string name)
     {

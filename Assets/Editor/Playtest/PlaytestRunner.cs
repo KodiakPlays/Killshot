@@ -900,6 +900,15 @@ public static class PlaytestRunner
         s.vx = s.vy = 0; s.thr = 0;
         s.hdg = s.ordHdg = ((int)System.Math.Round(t07.worldHdg) + 180) % 360;
         s.target = "t07";
+        //     Step 69 (owner 2026-10-25): with ACTIVE on, every pass of the sweep over TRACK 07 beeps, scanned or not.
+        //     Stand-in for the ACTIVE key and the cone dial.
+        yield return 0.5f; // a tick, so TRACK 07's bearing and range are measured from here
+        s.active = true; s.coneBrg = t07.bearing;
+        int tags0 = board.Tags;
+        yield return (Func<bool>)(() => board.Tags > tags0);
+        yield return (Func<bool>)(() => board.Tags > tags0 + 1);
+        Check("ACTIVE on: each sweep pass over TRACK 07 beeps", board.Tags >= tags0 + 2, (board.Tags - tags0) + " beeps");
+        s.active = false;
         var vxField = typeof(HandoffPlotPanel).GetField("viewX", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var vyField = typeof(HandoffPlotPanel).GetField("viewY", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         vxField.SetValue(plotPanel, (s.ownX + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.ownY + t07.worldY) / 2); // stand-in for panning the plot

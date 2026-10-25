@@ -12,7 +12,7 @@ Last updated: 2026-10-25. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 68 are done, plus a final QA pass.**
+**Steps 1 to 69 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing; Enter shows INITIALISING... and then the board in `02.1_Grid`.
@@ -108,8 +108,9 @@ Do not run ahead. Do one step, show it, wait.
 | 66 | Our ship stops blinking; drawers slide out from behind the frame | **Done** — playtest 163/163 |
 | 67 | The Level tool: each level is a scene; the enemy spawn box | **Done** — playtest 163/163; spawn checked in play mode |
 | 68 | The signal alarm: a box in the frame's top-right, and the alert tone | **Done** — playtest 165/165 |
+| 69 | Each DRADIS sweep pass beeps | **Done** — compiled; playtest not run yet |
 
-Steps 6 to 28 and Steps 34 to 68 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 69 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -694,7 +695,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 68, in detail
+## 6 · Steps 6 to 28, and 34 to 69, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2905,8 +2906,8 @@ file and line evidence. Most claims held. The scale sim still matches the game's
 - 30 game seconds is 12.6 real seconds at x1. Straight out at full speed, the fastest return is
   about 75 game seconds: brake, then turn. The 2,500 km warning is the time to turn.
 
-**Still to ask.** You turn on ACTIVE and the sweep passes a ship. Its name appears. If DRADIS could
-already hear that ship, there is no beep. That is the usual case. Should there be a beep?
+**Answered later the same day.** You turn on ACTIVE and the sweep passes a ship. Every pass beeps.
+Step 69.
 
 **Not yet.** The bugs this check found that are not fixed are in Open items, "Bugs, not fixed yet".
 
@@ -2986,6 +2987,25 @@ the rebuild: 164/165 (`2026-10-25_230225`, check 140 failed, trap 37), then 165/
 
 **Known.** The box only exists in `02.1_Grid`. The tone isn't checked by the playtest: other cues
 (new contact, edge) use the same tone, so `LastSound` can't tell them apart.
+
+### Step 69 — Each DRADIS sweep pass beeps
+
+**Owner decision (2026-10-25).** "Every time that thing is tagged by the sweep, that's when that
+beep should come." With ACTIVE on, the DRADIS sweep tags a ship in the cone on every pass, and every
+tag beeps. Naming the ship has no sound of its own.
+
+**What changed.**
+
+- `HandoffPlotPanel`: the sweep looks at ships already scanned too. A ship in the cone and in DRADIS
+  range is tagged on every pass: a beep, and it is scanned if it was not.
+- `HandoffBoardControls`: the beep is `tagSound` (880 Hz, 0.05 s), in **Starwolf → Tuning →
+  Sound**. `Tags` counts the beeps apart from the click cues, so a beep never stands in for the cue
+  a check waits on.
+- Playtest: a new check where our ship is put 2,000 km off TRACK 07's bow (step 21d). ACTIVE on and
+  the cone on TRACK 07: two passes, two beeps.
+
+**Checked.** Compiles clean. The playtest has not run yet: the first try stopped at step 15, when a
+reload came in while another session was changing the board. Run it once that work is in.
 
 ---
 
