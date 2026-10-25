@@ -857,6 +857,33 @@ within 40,000     → awareness >= 1 ? LARGE MASS RETURN : DISTANT MASS RETURN
 otherwise         → UNKNOWN
 ```
 
+### 9.6 What the plot shows of a ship
+
+**Owner, 2026-10-26.** How a ship shows on the plot depends on how you know it.
+
+- **Our ship** glides smoothly across the plot.
+- **Heard, not identified:** a bearing line from our ship. It appears when the sweep first touches
+  the contact. It keeps that bearing until the sweep passes again.
+- **Identified, outside visual range:** a dot where the sweep last touched it, labelled with the
+  range at that moment. The dot moves when the sweep passes again.
+- **Inside visual range:** the ship's own model, seen from above, gliding. It is red once
+  identified. Until then it is amber and labelled BOGEY with its track number, and you cannot
+  target it.
+- **Destroyed:** it stays on the plot. Inside visual range its model turns grey and drifts. Outside
+  visual range, a dim dot drifts.
+
+> **Rule 9.6.a** The rules step once per board tick. Between ticks, each ship is drawn moving on
+> along its velocity, up to one tick ahead. Rules use the position from the last tick.
+
+> **Rule 9.6.b** Seeing a ship does not identify it. Only identification gives its name and lets you
+> target it.
+
+> **Rule 9.6.c** A destroyed ship never leaves the plot.
+
+> **Rule 9.6.d** Starting numbers on the board, to be tuned: visual range 10,000 km. DRADIS reaches
+> 12,000 km plus 3,600 km per gain step: 15,600 km at gain 1, 30,000 km at gain 5. Railguns and
+> missiles reach 30,000 km.
+
 ---
 
 ## 10 · Comms

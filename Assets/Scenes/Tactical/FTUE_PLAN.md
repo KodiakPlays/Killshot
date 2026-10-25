@@ -58,7 +58,7 @@ This plan is items 5 and 7, with the alert net removed. It needs:
 
 Everything lives under the `World` root in `02.1_Grid`, as `WorldContact`s, the way the dummy
 enemy does today. Units are the board's km (`TacticalWorld`: 1 unit = 1 km). The board's own
-numbers already use this scale (sensor range 12,000 + 7,000 per step, railgun 30,000), so the
+numbers already use this scale (sensor range 12,000 + 3,600 per gain step, railgun 30,000), so the
 spec's distances carry over as they are.
 
 | Thing | Count | Where | What it does |

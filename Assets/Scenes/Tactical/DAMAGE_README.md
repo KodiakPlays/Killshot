@@ -108,7 +108,7 @@ All are in **Starwolf → Tuning**: the team's time under "Engineering & orders"
    door state. Request the art from Claude Design; working placeholders meanwhile.
    **Armour per face started, Step 74:** engineering's ship picture colours each side white
    (full), amber (hit) or red (open), and the room rings go white, amber or red by health
-   (`BUILD_LOG.md`, Step 74).
+   (`BUILD_LOG.md`, Step 74). Since Step 75 each side is a dim fill with a bright outline.
 
 ## Still open
 
