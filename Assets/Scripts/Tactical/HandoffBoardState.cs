@@ -1442,8 +1442,11 @@ public class HandoffBoardState
         if (Launched(q) || LaunchBlock() != null || !AllStagesDone) return;
         launchedSquads.Add(q.key);
         launchedOrders.Add(order);
-        // Step 54: the squadron's ready craft take off from our ship, for fire control's target
-        var f = new Flight { squad = q.key, order = order, targetKey = target, craft = SquadReady(q), x = ownX, y = ownY, hdg = lbrg };
+        // Step 54: the squadron's ready craft take off from our ship, for fire control's target;
+        // owner 2026-10-26: on the launch bearing, just outside the small circle round our ship, never on the hull
+        double lb = lbrg * System.Math.PI / 180.0;
+        var f = new Flight { squad = q.key, order = order, targetKey = target, craft = SquadReady(q),
+                             x = ownX + System.Math.Sin(lb) * launchClearKm, y = ownY + System.Math.Cos(lb) * launchClearKm, hdg = lbrg };
         if (q.key == "ih") { f.marines = Mathf.Min(marines, f.craft * marinesPerBoat); marines -= f.marines; } // Step 60: the boats take marines
         Flights.Add(f);
     }
@@ -1477,6 +1480,10 @@ public class HandoffBoardState
     }
     [System.NonSerialized] private System.Collections.Generic.List<Flight> flights;
     public System.Collections.Generic.List<Flight> Flights => flights ?? (flights = new System.Collections.Generic.List<Flight>());
+    /// <summary>How far out a squadron takes off, and lands, km: the plot sets both each frame from the small circle
+    /// round our ship at the current zoom, so the whole V takes off clear of it and lands as its leader reaches it.</summary>
+    [System.NonSerialized] public double launchClearKm, landClearKm;
+    double LandKm => System.Math.Max(50, landClearKm);
     [Tooltip("Fighter speed, km/s (owner: three times our top speed; Step 63: x5).")]
     [Tune("Hangar & fighters")] public double fighterSpeedKms = 40;
     [Tooltip("Inside this distance of the target the squadron makes its attack runs, km.")]
@@ -1513,7 +1520,7 @@ public class HandoffBoardState
     {
         var f = Flights.Find(k => k.squad == squadKey);
         if (f == null) return null;
-        if (f.returning) return (f.outcome != null ? f.outcome + " · " : "") + "RETURNING · " + JsRound(System.Math.Sqrt((f.x - ownX) * (f.x - ownX) + (f.y - ownY) * (f.y - ownY))).ToString("N0") + " KM";
+        if (f.returning) return (f.outcome != null ? f.outcome + " · " : "") + "RETURNING · " + JsRound(System.Math.Max(0, System.Math.Sqrt((f.x - ownX) * (f.x - ownX) + (f.y - ownY) * (f.y - ownY)) - LandKm)).ToString("N0") + " KM"; // to the circle, where they land
         if (f.order == "escort") return "ESCORTING";
         var t = TrackOf(f.targetKey);
         string name = t != null ? NameOf(t) : "TARGET";
@@ -1538,7 +1545,8 @@ public class HandoffBoardState
             var t = f.returning || f.order == "escort" ? null : TrackOf(f.targetKey);
             if (!f.returning && f.order != "escort" && (t == null || !t.hasWorld || t.wreck || t.captured)) { f.returning = true; f.attacking = false; f.aboard = false; t = null; }
             double gx = t != null ? t.worldX : ownX, gy = t != null ? t.worldY : ownY;
-            double reach = f.returning ? 50 : f.order == "escort" ? 300 : boats ? dockKm : fighterAttackKm;
+            // an escort holds where it took off, outside the small circle round our ship (owner 2026-10-26), not on the hull
+            double reach = f.returning ? LandKm : f.order == "escort" ? System.Math.Max(300, launchClearKm) : boats ? dockKm : fighterAttackKm;
             double dx = gx - f.x, dy = gy - f.y, d = System.Math.Sqrt(dx * dx + dy * dy);
             if (d > reach)
             {

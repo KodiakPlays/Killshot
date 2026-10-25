@@ -966,6 +966,9 @@ public static class PlaytestRunner
               s.Flights.Count + " flight, " + (s.Flights.Count > 0 ? s.Flights[0].craft : 0) + " craft, " + plotPanel.FightersShown + " drawn");
         var flight = s.Flights.Count > 0 ? s.Flights[0] : null;
         if (flight == null) yield break;
+        double out0 = System.Math.Sqrt((flight.x - s.nav.x) * (flight.x - s.nav.x) + (flight.y - s.nav.y) * (flight.y - s.nav.y));
+        Check("They take off outside the small circle round our ship, not on its hull", s.launchClearKm > 0 && out0 >= s.launchClearKm * 0.95,
+              out0.ToString("N0") + " km out; the V clears the circle at " + s.launchClearKm.ToString("N0") + " km");
         double fx0 = flight.x, fy0 = flight.y; float ft0 = board.MissionSeconds;
         yield return 1f; // at x1: a few game seconds, well before they arrive
         double flown = System.Math.Sqrt((flight.x - fx0) * (flight.x - fx0) + (flight.y - fy0) * (flight.y - fy0)), took = board.MissionSeconds - ft0;

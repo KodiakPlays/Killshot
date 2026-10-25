@@ -154,7 +154,7 @@ public class HandoffPlotPanel : HandoffPanel
     [Tooltip("A PDC arc's curved edge is drawn in steps this many degrees long (Step 55).")]
     [SerializeField] private float pdcArcStepDeg = 2f;
 
-    [Header("Fighters (Step 54): one small wedge per craft, own-force blue, no labels")]
+    [Header("Fighters (Step 54): one small wedge per craft, white like our ship (owner 2026-10-26), no labels")]
     [Tooltip("A hidden wedge image (hull_wedge_filled, nose up; the outline vanishes this small), cloned per fighter in flight.")]
     [SerializeField] private Image fighterTemplate;
     [Tooltip("A fighter's length on screen, px.")]
@@ -404,12 +404,19 @@ public class HandoffPlotPanel : HandoffPanel
         int nf = 0;
         if (fighterTemplate)
         {
-            var ink = ownForce.gamma;
+            var ink = ownShipColor.gamma; // owner 2026-10-26: white, like our ship
             foreach (var f in s.Flights)
             {
                 double h = f.hdg * System.Math.PI / 180.0;
                 Vector2 ahead = new Vector2((float)System.Math.Sin(h), (float)-System.Math.Cos(h)), right = new Vector2(-ahead.y, ahead.x); // board y is down
                 Vector2 lead = Screen(f.x, f.y);
+                if (f.order == "escort" && !f.returning)
+                {
+                    // owner 2026-10-26: an escort holds outside the small circle, whole V clear, even after zooming out grows it
+                    Vector2 off = lead - OwnAt;
+                    float clear = InnerRingPx + f.craft / 2 * fighterGapPx + fighterPx / 2f;
+                    if (off.magnitude < clear) lead = OwnAt + (off.sqrMagnitude > 0f ? off.normalized : ahead) * clear;
+                }
                 for (int c = 0; c < f.craft; c++)
                 {
                     int row = (c + 1) / 2;
@@ -422,6 +429,11 @@ public class HandoffPlotPanel : HandoffPanel
             for (int i = nf; i < fighters.Count; i++) fighters[i].gameObject.SetActive(false);
         }
         FightersShown = nf;
+        // a squadron takes off with its whole V (rows behind the leader, half a craft) outside the small circle round
+        // our ship, and lands when its leader's nose reaches the circle
+        double kmPx = KmPerPx / Controls.ZoomExact;
+        s.landClearKm = (InnerRingPx + fighterPx / 2f) * kmPx;
+        s.launchClearKm = s.landClearKm + s.SquadReady(s.CurrentSquad) / 2 * fighterGapPx * kmPx;
 
         // the selected weapon's reach while Fire Control is open (Step 46)
         if (weaponRing)
