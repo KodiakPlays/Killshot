@@ -108,7 +108,7 @@ Do not run ahead. Do one step, show it, wait.
 | 66 | Our ship stops blinking; drawers slide out from behind the frame | **Done** — playtest 163/163 |
 | 67 | The Level tool: each level is a scene; the enemy spawn box | **Done** — playtest 163/163; spawn checked in play mode |
 | 68 | The signal alarm: a box in the frame's top-right, and the alert tone | **Done** — playtest 165/165 |
-| 69 | Each DRADIS sweep pass beeps | **Done** — compiled; playtest not run yet |
+| 69 | Each DRADIS sweep pass beeps | **Done** — its check passed; full run still to re-run |
 
 Steps 6 to 28 and Steps 34 to 69 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -3004,8 +3004,10 @@ tag beeps. Naming the ship has no sound of its own.
 - Playtest: a new check where our ship is put 2,000 km off TRACK 07's bow (step 21d). ACTIVE on and
   the cone on TRACK 07: two passes, two beeps.
 
-**Checked.** Compiles clean. The playtest has not run yet: the first try stopped at step 15, when a
-reload came in while another session was changing the board. Run it once that work is in.
+**Checked.** The new check passed: 2 beeps (`Logs/Playtests/2026-10-25_232343/`). That run then
+stopped at check 158: the engineering BRI cell click landed off the board, at x 3375. It ran while
+another session was rebuilding the board, and this step does not touch engineering. Re-run the
+full playtest once that work is in. An earlier try stopped at step 15 on a reload.
 
 ---
 
