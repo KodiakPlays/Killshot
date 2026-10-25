@@ -217,7 +217,7 @@ public class HandoffEngineeringPanel : HandoffPanel
             float side = diagramShipPx / (shipView ? shipView.ShipFill : 1f);
             shipPicture.rectTransform.sizeDelta = new Vector2(side, side);
             // the model turns with our heading; turn the picture back so the bow stays up
-            shipPicture.rectTransform.localEulerAngles = new Vector3(0f, 0f, s.hdg);
+            shipPicture.rectTransform.localEulerAngles = new Vector3(0f, 0f, s.nav.heading);
         }
         if (compartmentLamps == null) return;
         for (int i = 0; i < compartmentLamps.Length && i < lampKeys.Length; i++)

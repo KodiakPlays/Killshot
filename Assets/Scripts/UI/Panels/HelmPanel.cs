@@ -4,14 +4,15 @@ using UnityEngine.EventSystems;
 using TMPro;
 
 /// <summary>
-/// Step 33h-1. The helm: the header readouts (closed and open), the throttle fader, the heading
+/// The helm panel (Step 33h-1): the header readouts (closed and open), the throttle fader, the heading
 /// dial, the attitude hold keys, approach range and mode, the stability readout, and the A and D
 /// heading keys. Rules and values from board-logic.js (thrDown, setAtt, setApMode, apRangeUp/Down,
 /// onKey, gLoadNum, stabNum, the heading swing in tickPower; renderVals helmHdg, turnLabel, turnInk,
 /// hdgRing, helmThr, thrTrack, thrCapBottom, apAtt, apAttNote, apModes, apRangeLabel, apState,
-/// apLamp, gLoad, gInk, stabPct, stabCells) and UIStateSpec §11 "Helm".
+/// apLamp, gLoad, gInk, stabPct, stabCells) and UIStateSpec §11 "Helm". It shows the ship's
+/// NavSystem and passes the throttle, the keys and the clicks to it; the movement rules are there.
 /// </summary>
-public class HandoffHelmPanel : HandoffPanel
+public class HelmPanel : HandoffPanel
 {
     [System.Serializable]
     public class Header
@@ -93,12 +94,12 @@ public class HandoffHelmPanel : HandoffPanel
 
     public override bool Click(string action, string arg)
     {
-        var s = State;
+        var h = State.nav;
         switch (action)
         {
-            case "helm.att": s.SetAtt(arg); return true;
-            case "helm.mode": s.SetApMode(arg); return true;
-            case "helm.range": s.StepApRange(int.Parse(arg)); return true;
+            case "helm.att": h.ToggleAttitude(arg); return true;
+            case "helm.mode": h.SetApproachMode(arg); return true;
+            case "helm.range": h.StepApproachRange(int.Parse(arg)); return true;
         }
         return false;
     }
@@ -106,7 +107,7 @@ public class HandoffHelmPanel : HandoffPanel
     public override bool Down(string action, string arg, Vector2 board)
     {
         if (action != "helm.thr") return false;
-        thrPressCap = State.ThrCap; // thrDown reads the cap once, at the press
+        thrPressCap = State.nav.ThrottleCap; // thrDown reads the cap once, at the press
         SetThr(board);
         return true;
     }
@@ -118,7 +119,7 @@ public class HandoffHelmPanel : HandoffPanel
         return true;
     }
 
-    void SetThr(Vector2 board) => State.SetThr((board.y - thrWell.y) / (double)thrWell.height, thrPressCap);
+    void SetThr(Vector2 board) => State.nav.SetThrottle((board.y - thrWell.y) / (double)thrWell.height, thrPressCap);
 
     private void Update()
     {
@@ -134,39 +135,39 @@ public class HandoffHelmPanel : HandoffPanel
         if (heldDir != 0 && Time.unscaledTime >= nextRepeat) { nextRepeat += repeatInterval; Step(heldDir); }
     }
 
-    void Step(int dir) { State.StepOrdHdg(dir); Refresh(); }
+    void Step(int dir) { State.nav.StepOrderedHeading(dir); Refresh(); }
 
     public override void Refresh()
     {
-        var s = State;
+        var s = State.nav;
         int turn = s.TurnLeft;
         string turnLabel = System.Math.Abs(turn) < 1 ? "STEADY"
             : (turn < 0 ? "PORT " : "STBD ") + System.Math.Abs(turn).ToString("000") + "°";
-        Color turnInk = s.hdg == s.ordHdg ? nominal : caution;
-        string hdg = s.hdg.ToString("000");
+        Color turnInk = s.heading == s.orderedHeading ? nominal : caution;
+        string hdg = s.heading.ToString("000");
         double g = s.GLoad;
         string gText = HandoffBoardState.JsToFixed(g, 1) + " G";
         Color gInk = g >= 3.4 ? alarm : g >= 2.2 ? caution : data;
-        string apState = string.IsNullOrEmpty(s.apAtt) ? "MANUAL" : "AUTO — " + s.apMode;
-        Color apLamp = string.IsNullOrEmpty(s.apAtt) ? stencilDim : nominal;
+        string apState = string.IsNullOrEmpty(s.attitude) ? "MANUAL" : "AUTO — " + s.approachMode;
+        Color apLamp = string.IsNullOrEmpty(s.attitude) ? stencilDim : nominal;
 
-        foreach (var h in new[] { closed, open }) PaintHeader(h, hdg, turnLabel, turnInk, s.thr.ToString(), gText, gInk, apState, apLamp);
+        foreach (var h in new[] { closed, open }) PaintHeader(h, hdg, turnLabel, turnInk, s.throttle.ToString(), gText, gInk, apState, apLamp);
 
         // 01 FLIGHT
         float bottom = thrWell.yMax;
         if (thrCap)
         {
-            float capBottom = bottom - (capBase + s.thr / 100f * capSpan);
+            float capBottom = bottom - (capBase + s.throttle / 100f * capSpan);
             thrCap.anchoredPosition = new Vector2(thrCap.anchoredPosition.x, -(capBottom - capHeight / 2f));
         }
         if (thrTrack)
         {
-            float h = trackBase + s.thr / 100f * trackSpan;
+            float h = trackBase + s.throttle / 100f * trackSpan;
             float trackBottom = bottom - capBase;
             thrTrack.sizeDelta = new Vector2(thrTrack.sizeDelta.x, h);
             thrTrack.anchoredPosition = new Vector2(thrTrack.anchoredPosition.x, -(trackBottom - h / 2f));
         }
-        if (hdgRing) ringMotion.Set(s.hdg, z => hdgRing.localEulerAngles = new Vector3(0, 0, z)); // CSS rotate(-hdg), .12s linear
+        if (hdgRing) ringMotion.Set(s.heading, z => hdgRing.localEulerAngles = new Vector3(0, 0, z)); // CSS rotate(-hdg), .12s linear
         if (dialHdg) dialHdg.text = hdg;
         if (dialTurn) { dialTurn.text = turnLabel; Paint(dialTurn, turnInk); }
 
@@ -174,7 +175,7 @@ public class HandoffHelmPanel : HandoffPanel
         string note = null;
         foreach (var k in attKeys)
         {
-            bool on = k.key == s.apAtt;
+            bool on = k.key == s.attitude;
             if (on) note = k.note;
             Paint(k.stem, on ? data : stencil);
             Paint(k.stemCore, on ? data : Color.black);
@@ -186,13 +187,13 @@ public class HandoffHelmPanel : HandoffPanel
         if (attNote) attNote.text = note != null ? "HOLDING " + note : "NO ATTITUDE HOLD — FREE DRIFT";
 
         // 03 APPROACH
-        int last = s.apRanges.Length - 1;
-        Paint(rangeDown, s.apRange <= 0 ? stencilDim : label);
-        Paint(rangeUp, s.apRange >= last ? stencilDim : label);
-        if (rangeLabel) rangeLabel.text = (s.apRanges[s.apRange] / 1000.0).ToString(System.Globalization.CultureInfo.InvariantCulture) + "k KM";
+        int last = s.approachRanges.Length - 1;
+        Paint(rangeDown, s.approachRange <= 0 ? stencilDim : label);
+        Paint(rangeUp, s.approachRange >= last ? stencilDim : label);
+        if (rangeLabel) rangeLabel.text = (s.approachRanges[s.approachRange] / 1000.0).ToString(System.Globalization.CultureInfo.InvariantCulture) + "k KM";
         foreach (var m in modes)
         {
-            bool on = m.key == s.apMode;
+            bool on = m.key == s.approachMode;
             if (on) Fill(m.bg, data, 0.07f); else Fill(m.bg, Color.black, 0.4f);
             foreach (var e in m.edge) if (on) Fill(e, data, 0.42f); else Fill(e, Color.white, 0.08f);
             Color lamp = on ? (m.key == "EVASIVE" ? caution : nominal) : lampOffPanel;
@@ -201,7 +202,7 @@ public class HandoffHelmPanel : HandoffPanel
         }
 
         // 04 STABILITY
-        double stab = s.Stab;
+        double stab = s.Stability;
         int lit = HandoffBoardState.JsRound(stab / 100.0 * 9);
         for (int i = 0; i < stabCells.Length; i++) Paint(stabCells[i], 9 - i <= lit ? data : stabCellOff);
         if (stabPct) stabPct.text = HandoffBoardState.JsRound(stab) + "%";

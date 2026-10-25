@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Step 51 (owner 2026-10-23). The first enemy brain (FTUE_PLAN §4.5): it only writes orders — an
 /// ordered heading and a throttle — into its ship's own HandoffBoardState. The ship turns and moves with
-/// the same maths as ours (TickHelm, TickMove; TacticalWorld runs them each board tick). For now it
+/// the same maths as ours (its NavSystem; TacticalWorld ticks it each board tick). For now it
 /// patrols a loop of waypoints at a cruising speed. Step 55: when we hit it, it fires a missile salvo
 /// back at us. Hearing and hunting come in later steps.
 /// </summary>
@@ -43,22 +43,22 @@ public class EnemyBrain : MonoBehaviour
         foreach (var c in ship.compartments) now += c.integ;
         bool hit = health >= 0f && now < health;
         health = now;
-        double dx = us.ownX - ship.ownX, dy = us.ownY - ship.ownY;
+        double dx = us.nav.x - ship.nav.x, dy = us.nav.y - ship.nav.y;
         var vls = ship.MountOf("VLS");
         if (firesBack && hit && ship.MagOk && ship.missionNow >= nextSalvo && ship.vlsCells > 0 && vls != null && dx * dx + dy * dy <= (double)vls.rangeKm * vls.rangeKm)
         {
             int n = Mathf.Min(fireBackSalvo, ship.vlsCells);
-            us.LaunchAt(ship.ownX, ship.ownY, n, 0, vls.rangeKm); // HE
+            us.LaunchAt(ship.nav.x, ship.nav.y, n, 0, vls.rangeKm); // HE
             ship.vlsCells -= n;
             nextSalvo = ship.missionNow + fireBackSeconds;
         }
 
-        if (route == null || route.Length < 2) { ship.thr = 0; return; }
-        var at = new Vector2((float)ship.ownX, (float)ship.ownY);
+        if (route == null || route.Length < 2) { ship.nav.throttle = 0; return; }
+        var at = new Vector2((float)ship.nav.x, (float)ship.nav.y);
         if (!started) { home = at; started = true; }
         if ((Waypoint - at).magnitude <= arriveKm) leg = (leg + 1) % route.Length;
-        ship.ordHdg = TacticalWorld.Bearing(Waypoint - at);
+        ship.nav.orderedHeading = TacticalWorld.Bearing(Waypoint - at);
         // a damaged engine room holds it back, as our lever is; wrecked, it drifts (DISABLE, BOARDING_README)
-        ship.thr = Mathf.Clamp(Mathf.RoundToInt(cruiseKms / (float)ship.topSpeedKms * 100f), 0, ship.ThrCap);
+        ship.nav.throttle = Mathf.Clamp(Mathf.RoundToInt(cruiseKms / (float)ship.nav.topSpeedKms * 100f), 0, ship.nav.ThrottleCap);
     }
 }

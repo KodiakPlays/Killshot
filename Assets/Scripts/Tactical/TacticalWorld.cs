@@ -13,7 +13,6 @@ using UnityEngine.SceneManagement;
 public class TacticalWorld : MonoBehaviour
 {
     [SerializeField] private HandoffBoardControls board;
-    [SerializeField] private Transform ownShip;
     [Tooltip("Drop board tracks that no world contact drives (owner 2026-10-17: the mock-up contacts go).")]
     [SerializeField] private bool dropTracksWithoutContact = true;
     [Tooltip("The level loaded on top of the board at play: a scene in Assets/Scenes/Levels, by name. If a level is already open in the editor, that one plays instead.")]
@@ -38,8 +37,9 @@ public class TacticalWorld : MonoBehaviour
             foreach (var c in contacts) keys.Add(c.trackKey);
             board.State.KeepTracks(keys);
         }
-        // where our ship starts; from here on the board moves it (Step 41) and this places the model
-        if (ownShip) { board.State.ownX = ownShip.position.x; board.State.ownY = ownShip.position.y; }
+        // our ship starts where its model is; from here on its NavSystem moves it (Step 41)
+        var us = board.State.nav;
+        if (us) { us.x = us.transform.position.x; us.y = us.transform.position.y; us.PlaceModel(); }
         // Step 49: each contact's ship takes our hits; its damage numbers follow ours from the tuning window
         board.State.ShipOf = key =>
         {
@@ -69,9 +69,7 @@ public class TacticalWorld : MonoBehaviour
     static void StartShip(WorldContact c)
     {
         var ship = c.Ship;
-        ship.ownX = c.transform.position.x; ship.ownY = c.transform.position.y;
-        ship.hdg = ship.ordHdg = HandoffBoardState.JsRound(((-c.transform.eulerAngles.z) % 360 + 360) % 360) % 360;
-        ship.thr = 0;
+        ship.nav.PlaceAt(c.transform.position.x, c.transform.position.y, HandoffBoardState.JsRound(((-c.transform.eulerAngles.z) % 360 + 360) % 360) % 360);
         var eng = ship.buses[0];
         eng.mode = HandoffBoardState.BusMode.Draw;
         eng.fill = ship.busMax;
@@ -108,23 +106,18 @@ public class TacticalWorld : MonoBehaviour
             ship.CopyDamageTuning(board.State);
             ship.TickConditions(board.Rate); // Step 59: its fires, vacuum and radiation, held still or not
             if (!brain || !brain.enabled) continue;
-            if (ship.destroyed || ship.captured) ship.thr = 0; // a wreck, or a prize our marines hold (Step 60), makes no way of its own
+            if (ship.destroyed || ship.captured) ship.nav.throttle = 0; // a wreck, or a prize our marines hold (Step 60), makes no way of its own
             else brain.Think(ship, board.State);
-            ship.TickHelm(board.Rate);
-            ship.TickMove(board.Rate);
-            c.transform.SetPositionAndRotation(new Vector3((float)ship.ownX, (float)ship.ownY, c.transform.position.z), Quaternion.Euler(0f, 0f, -ship.hdg));
+            ship.nav.Tick(board.Rate); // it steers, moves, and puts its model where it is
         }
         Sync();
     }
 
-    /// <summary>Place our ship's model where the board has it, and write each contact's true
-    /// bearing and range from our ship into its board track.</summary>
+    /// <summary>Write each contact's true bearing and range from our ship into its board track.
+    /// (Each ship's NavSystem puts its own model in place.)</summary>
     public void Sync()
     {
         var s = board.State;
-        // the 3D ship sits where the board moved it and faces our heading (clockwise from north;
-        // about +z in the x/y plane that is −hdg)
-        if (ownShip) ownShip.SetPositionAndRotation(new Vector3((float)s.ownX, (float)s.ownY, ownShip.position.z), Quaternion.Euler(0f, 0f, -s.hdg));
         foreach (var c in contacts)
         {
             if (!c) continue;
@@ -134,9 +127,9 @@ public class TacticalWorld : MonoBehaviour
             t.worldX = c.transform.position.x;
             t.worldY = c.transform.position.y;
             t.worldHdg = ((-c.transform.eulerAngles.z) % 360 + 360) % 360; // its bow, clockwise from north (Step 48)
-            t.speed = (float)c.Ship.SpeedKms; // its real speed (Step 51); TRACK reads it
-            t.course = c.Ship.CourseDeg;       // and which way it is really going (Step 52)
-            var d = new Vector2((float)(t.worldX - s.ownX), (float)(t.worldY - s.ownY));
+            t.speed = (float)c.Ship.nav.SpeedKms; // its real speed (Step 51); TRACK reads it
+            t.course = c.Ship.nav.CourseDeg;       // and which way it is really going (Step 52)
+            var d = new Vector2((float)(t.worldX - s.nav.x), (float)(t.worldY - s.nav.y));
             t.bearing = Bearing(d);
             t.rangeKm = HandoffBoardState.JsRound(d.magnitude); // the board's tracks hold whole km
         }

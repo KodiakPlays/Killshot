@@ -137,7 +137,8 @@ public static class HandoffBoardBuilder
     static StringBuilder report;
     static Dictionary<string, int> counts;
 
-    [MenuItem("Starwolf/Handoff/2 · Build static board in 02.1_Grid")]
+    // No menu item (owner 2026-10-26): the board is no longer built from code. The scene is what gets
+    // edited now, and running this would delete it and every change made in it since.
     public static void Build()
     {
         var scene = EditorSceneManager.GetActiveScene();
@@ -1336,7 +1337,7 @@ public static class HandoffBoardBuilder
     static void WireHelm(RectTransform root)
     {
         const string O = "State · helm", C = "Helm";
-        var p = root.gameObject.AddComponent<HandoffHelmPanel>();
+        var p = root.gameObject.AddComponent<HelmPanel>();
         var so = new SerializedObject(p);
 
         // header readouts: closed (default texts #90–99, lamp #30) and open (texts #407–416, lamp #88)

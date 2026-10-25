@@ -85,6 +85,9 @@ public class HandoffBoardControls : MonoBehaviour
 
     [Tooltip("The board's own state and rules (board-logic.js). Panels read it.")]
     [SerializeField] private HandoffBoardState state = new HandoffBoardState();
+    [Tooltip("Our ship's navigation (the NavSystem on OwnShip): its position, heading, throttle and movement.")]
+    [UnityEngine.Serialization.FormerlySerializedAs("helm")]
+    [SerializeField] private NavSystem nav;
     [SerializeField] private HandoffBoardMotion motion;
     [SerializeField] private HandoffPlotGrid grid;
     [SerializeField] private Canvas canvas;
@@ -165,7 +168,8 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private Color tintInkOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), tintInkOff = new Color32(0x77, 0x82, 0x8A, 0xFF);
     [SerializeField] private Color tintLampOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), tintLampOff = new Color32(0x1B, 0x20, 0x24, 0xFF);
 
-    public HandoffBoardState State => state;
+    // Other objects can read State in their own Awake, before ours runs, so it hands our ship its NavSystem first.
+    public HandoffBoardState State { get { if (state.nav == null) state.UseNav(nav); return state; } }
     /// <summary>Raised once per board tick, after the board's own rules and before the panels
     /// redraw. The tactical world steps here, inside the board's single timer (Step 34).</summary>
     public event System.Action Ticked;
@@ -190,6 +194,12 @@ public class HandoffBoardControls : MonoBehaviour
     private HandoffRockers rockers;
     private int shotsHeard, resultsHeard, killsHeard, hitsTakenHeard;
     private bool edgeWarned, trackedWarned;
+
+    private void Awake()
+    {
+        if (!nav) Debug.LogError("[HandoffBoardControls] our ship's NavSystem is not set");
+        state.UseNav(nav);
+    }
 
     private void Start()
     {
@@ -241,8 +251,7 @@ public class HandoffBoardControls : MonoBehaviour
                 state.missionNow = missionSeconds; // the solution's clock (Step 52)
                 state.TickPower(rate);
                 state.TickAux(rate);
-                state.TickHelm(rate); // reads the engine room before a repair lands this tick, as tickPower does
-                state.TickMove(rate); // Step 41: the ship moves; each tick is `rate` mission seconds, as the clock
+                state.nav.Tick(rate); // the ship steers and moves; it reads the engine room before a repair lands this tick, as tickPower does
                 // Step 65: the battle space. Crossing out drops time to x1, so a fast rate can't kill you in a blink
                 if (state.TickArena(rate)) { rate = 1f; ShowTime(); Play(alertSound, "alert"); }
                 bool nearEdge = state.NearArenaEdge || state.outsideFor >= 0f;

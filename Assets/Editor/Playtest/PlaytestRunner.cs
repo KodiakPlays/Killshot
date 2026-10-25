@@ -292,26 +292,26 @@ public static class PlaytestRunner
         var t07Ship = brain ? brain.GetComponent<WorldContact>().Ship : null;
         Check("TRACK 07 has a patrol brain", brain && brain.enabled, "");
         if (!brain) yield break;
-        double ex0 = t07Ship.ownX, ey0 = t07Ship.ownY;
-        s.thr = 0; // stand-in: our helm at zero throttle, so our own ship holds still while TRACK 07 moves
+        double ex0 = t07Ship.nav.x, ey0 = t07Ship.nav.y;
+        s.nav.throttle = 0; // stand-in: our helm at zero throttle, so our own ship holds still while TRACK 07 moves
         if (!Click("rate", "10", "x10 rate key")) yield break;
         yield return 3f;
         if (!Click("rate", "1", "x1 rate key")) yield break;
-        s.vx = s.vy = 0;
-        double movedKm = System.Math.Sqrt((t07Ship.ownX - ex0) * (t07Ship.ownX - ex0) + (t07Ship.ownY - ey0) * (t07Ship.ownY - ey0));
+        s.nav.vx = s.nav.vy = 0;
+        double movedKm = System.Math.Sqrt((t07Ship.nav.x - ex0) * (t07Ship.nav.x - ex0) + (t07Ship.nav.y - ey0) * (t07Ship.nav.y - ey0));
         var wp = brain.Waypoint;
-        int toWp = TacticalWorld.Bearing(new Vector2((float)(wp.x - t07Ship.ownX), (float)(wp.y - t07Ship.ownY)));
-        Check("TRACK 07 gets under way on its patrol, toward its next waypoint", movedKm > 1 && t07Ship.SpeedKms > 0.05 && System.Math.Abs(((t07Ship.ordHdg - toWp + 540) % 360) - 180) <= 1,
-              movedKm.ToString("0") + " km, " + t07Ship.SpeedKms.ToString("0.00") + " km/s, ordered " + t07Ship.ordHdg.ToString("000") + "°, heading " + t07Ship.hdg.ToString("000") + "°");
+        int toWp = TacticalWorld.Bearing(new Vector2((float)(wp.x - t07Ship.nav.x), (float)(wp.y - t07Ship.nav.y)));
+        Check("TRACK 07 gets under way on its patrol, toward its next waypoint", movedKm > 1 && t07Ship.nav.SpeedKms > 0.05 && System.Math.Abs(((t07Ship.nav.orderedHeading - toWp + 540) % 360) - 180) <= 1,
+              movedKm.ToString("0") + " km, " + t07Ship.nav.SpeedKms.ToString("0.00") + " km/s, ordered " + t07Ship.nav.orderedHeading.ToString("000") + "°, heading " + t07Ship.nav.heading.ToString("000") + "°");
         var dummyT = brain.transform;
-        Check("Its 3D model follows it", Mathf.Abs(dummyT.position.x - (float)t07Ship.ownX) < 0.05f && Mathf.Abs(dummyT.position.y - (float)t07Ship.ownY) < 0.05f, "");
-        Check("The board's track reads its real speed", Mathf.Abs(s.TrackOf("t07").speed - (float)t07Ship.SpeedKms) < 0.01f, s.TrackOf("t07").speed.ToString("0.00") + " km/s");
+        Check("Its 3D model follows it", Mathf.Abs(dummyT.position.x - (float)t07Ship.nav.x) < 0.05f && Mathf.Abs(dummyT.position.y - (float)t07Ship.nav.y) < 0.05f, "");
+        Check("The board's track reads its real speed", Mathf.Abs(s.TrackOf("t07").speed - (float)t07Ship.nav.SpeedKms) < 0.01f, s.TrackOf("t07").speed.ToString("0.00") + " km/s");
         //     Stand-in: hold it still for the static-target checks below, until leading lands (Step 52).
         brain.enabled = false;
-        t07Ship.vx = t07Ship.vy = 0;
+        t07Ship.nav.vx = t07Ship.nav.vy = 0;
 
         // 10. What the power now drives (board rules)
-        Check("ENG power raises the throttle limit", s.ThrCap > 0, "throttle cap " + s.ThrCap + "%");
+        Check("ENG power raises the throttle limit", s.nav.ThrottleCap > 0, "throttle cap " + s.nav.ThrottleCap + "%");
         Check("SEN power raises the sensor gain limit", s.GainCap > 1, "gain limit " + s.GainCap + " (range is " + s.SenRangeKm.ToString("N0") + " km until the gain is turned up — sensors feature)");
         float wep0 = s.wepCharge; double aux0 = s.auxCharge;
         yield return 2f;
@@ -388,9 +388,9 @@ public static class PlaytestRunner
         //     put and the ship moves across it, so marks keep their place on screen.
         var own = GameObject.Find("World").transform.Find("OwnShip");
         var shipImg = (RectTransform)GameObject.Find("Own ship (3D view)").transform;
-        double home = s.ownX;
+        double home = s.nav.x;
         Vector2 ship0 = shipImg.anchoredPosition;
-        s.ownX = home + 5000.0;
+        s.nav.x = home + 5000.0;
         double shift = 5000.0 * 60.9 / 1000.0 * board.ZoomExact; // px our ship travels on the plot
         yield return 1.2f; // a few board ticks
         string pt1 = MarkLabel(board, 0), ru1 = MarkLabel(board, 1), co1 = MarkLabel(board, 2);
@@ -403,7 +403,7 @@ public static class PlaytestRunner
         Check("The COMPASS re-measures from our ship", co1 != co0 && co1.StartsWith("RNG "), "\"" + co0 + "\" → \"" + co1 + "\"");
         Shot("11_ship_moved");
         yield return 0.2f;
-        s.ownX = home;
+        s.nav.x = home;
         yield return 1.2f;
         Check("Moving back restores every label", MarkLabel(board, 0) == pt0 && MarkLabel(board, 1) == ru0 && MarkLabel(board, 2) == co0, "");
 
@@ -466,36 +466,36 @@ public static class PlaytestRunner
         if (!Click("power.shed", null, "LOAD SHED (release)")) yield break;
         if (!Click("power.bus", "0", "ENG selector")) yield break;
         Check("ENG back on DRAW after the shed", !s.shed && s.buses[0].mode == HandoffBoardState.BusMode.Draw, Buses(s));
-        yield return (Func<bool>)(() => s.ThrCap >= 60);
+        yield return (Func<bool>)(() => s.nav.ThrottleCap >= 60);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         if (!Click("helm", null, "HELM header")) yield break;
         yield return 0.8f;
         if (!Click("helm.thr", null, "throttle (press mid-well)")) yield break;
-        Check("The throttle takes a setting", s.thr > 0, "throttle " + s.thr + "%, target " + (s.thr / 100.0 * s.topSpeedKms).ToString("0.00") + " km/s");
-        double x0 = s.ownX, y0 = s.ownY;
+        Check("The throttle takes a setting", s.nav.throttle > 0, "throttle " + s.nav.throttle + "%, target " + (s.nav.throttle / 100.0 * s.nav.topSpeedKms).ToString("0.00") + " km/s");
+        double x0 = s.nav.x, y0 = s.nav.y;
         Vector2 img0 = shipImg.anchoredPosition, grid0 = board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx;
         yield return 4f;
-        double moved = System.Math.Sqrt((s.ownX - x0) * (s.ownX - x0) + (s.ownY - y0) * (s.ownY - y0));
-        Check("The ship gathers speed", s.SpeedKms > 0.01, s.SpeedKms.ToString("0.000") + " km/s after 4 s at x10");
-        Check("It moves along its heading", moved > 0 && System.Math.Abs(((s.CourseDeg - s.hdg + 540) % 360) - 180) < 2,
-              moved.ToString("0.0") + " km, course " + s.CourseDeg.ToString("000") + "°, heading " + s.hdg.ToString("000") + "°");
+        double moved = System.Math.Sqrt((s.nav.x - x0) * (s.nav.x - x0) + (s.nav.y - y0) * (s.nav.y - y0));
+        Check("The ship gathers speed", s.nav.SpeedKms > 0.01, s.nav.SpeedKms.ToString("0.000") + " km/s after 4 s at x10");
+        Check("It moves along its heading", moved > 0 && System.Math.Abs(((s.nav.CourseDeg - s.nav.heading + 540) % 360) - 180) < 2,
+              moved.ToString("0.0") + " km, course " + s.nav.CourseDeg.ToString("000") + "°, heading " + s.nav.heading.ToString("000") + "°");
         Check("Our ship's image moves; the grid stays put", shipImg.anchoredPosition != img0 && board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx == grid0, "");
         Shot("16_under_way");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
 
         //     A hard turn: the hull swings, the ship slides on its old course, then lines up.
-        s.ordHdg = (s.hdg + 90) % 360; // stand-in: set the ordered heading (the helm dial is a drag)
-        yield return (Func<bool>)(() => s.hdg == s.ordHdg);
-        double lag = System.Math.Abs(((s.CourseDeg - s.hdg + 540) % 360) - 180);
-        Check("After a turn the ship slides: course lags the heading", lag > 5, "heading " + s.hdg.ToString("000") + "°, course " + s.CourseDeg.ToString("000") + "°");
+        s.nav.orderedHeading = (s.nav.heading + 90) % 360; // stand-in: set the ordered heading (the helm dial is a drag)
+        yield return (Func<bool>)(() => s.nav.heading == s.nav.orderedHeading);
+        double lag = System.Math.Abs(((s.nav.CourseDeg - s.nav.heading + 540) % 360) - 180);
+        Check("After a turn the ship slides: course lags the heading", lag > 5, "heading " + s.nav.heading.ToString("000") + "°, course " + s.nav.CourseDeg.ToString("000") + "°");
         Shot("17_sliding");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
 
         //     Pause freezes the ship.
         if (!Click("pause", null, "PAUSE key")) yield break;
-        double px = s.ownX, py = s.ownY;
+        double px = s.nav.x, py = s.nav.y;
         yield return 2f;
-        Check("Paused, the ship stops where it is", s.ownX == px && s.ownY == py, "");
+        Check("Paused, the ship stops where it is", s.nav.x == px && s.nav.y == py, "");
         if (!Click("pause", null, "RUN key")) yield break;
 
         //     Pan the plot: drag the empty grid; marks, contacts, the ship and the grid all move together.
@@ -609,7 +609,7 @@ public static class PlaytestRunner
         if (!PlotDrag(board, new Vector2(500, 300), new Vector2(620, 300), "draw a RULER")) yield break;
         yield return 0.3f;
         string timed = MarkLabel(board, 0);
-        Check("A RULER shows the time to cover it at our speed", timed.Contains(" MIN") || timed.EndsWith(" S"), "\"" + timed + "\" at " + s.SpeedKms.ToString("0.00") + " km/s");
+        Check("A RULER shows the time to cover it at our speed", timed.Contains(" MIN") || timed.EndsWith(" S"), "\"" + timed + "\" at " + s.nav.SpeedKms.ToString("0.00") + " km/s");
 
         //     Two timed POINTs, and a RULER between them, make a track: course, speed, projection.
         if (!Click("tool", "POINT", "POINT tool")) yield break;
@@ -653,7 +653,7 @@ public static class PlaytestRunner
         Check("No firing solution yet", !s.Sol.set, "");
         if (!Click("fc.track", null, "TRACK (contact not identified)")) yield break;
         Check("TRACK refuses a contact that is only heard", !s.Sol.set, "");
-        int expBrg = (HandoffBoardState.JsRound(s.scopeBrg) - s.hdg + 540) % 360 - 180;
+        int expBrg = (HandoffBoardState.JsRound(s.scopeBrg) - s.nav.heading + 540) % 360 - 180;
         var rngKnob = Hit("fc.knob", "rng");
         Vector2 knobAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(rngKnob.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
                                          rngKnob.transform.TransformPoint(((RectTransform)rngKnob.transform).rect.center)));
@@ -667,7 +667,7 @@ public static class PlaytestRunner
         var tidText = tidField != null ? tidField.GetValue(fc) as TMPro.TMP_Text : null;
         Check("The readout says MANUAL", tidText && tidText.text == "MANUAL", tidText ? "\"" + tidText.text + "\"" : "no readout");
         //     BEARING follows the dialled bearing (a point in space), not a locked contact.
-        double dialled = ((s.hdg + s.Sol.brg) % 360 + 360) % 360;
+        double dialled = ((s.nav.heading + s.Sol.brg) % 360 + 360) % 360;
         s.scopeBrg = (dialled + 10) % 360;
         bool offOk = !s.OnBearing;
         s.SlewTo();
@@ -713,12 +713,12 @@ public static class PlaytestRunner
         Vector2 brgAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(brgKnob.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
                                          brgKnob.transform.TransformPoint(((RectTransform)brgKnob.transform).rect.center)));
         int best = 0;
-        for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.hdg + s.Sol.brg + d) < MissKm(s, t07, s.hdg + s.Sol.brg + best)) best = d;
+        for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.nav.heading + s.Sol.brg + d) < MissKm(s, t07, s.nav.heading + s.Sol.brg + best)) best = d;
         if (best != 0 && !PlotDrag(board, brgAt, brgAt + new Vector2(6 * best, 0), "turn the BRG knob to the nearest degree", "fc.knob")) yield break;
         s.SlewTo(); // stand-in for the periscope's SLEW TO key: onto the dialled bearing
-        double predicted = MissKm(s, t07, s.hdg + s.Sol.brg);
+        double predicted = MissKm(s, t07, s.nav.heading + s.Sol.brg);
         bool expectHit = predicted <= s.HitRadiusKm(t07.klass);
-        Check("Turret A can't bear on it: ANGLE is out of arc", s.mount == "RGA" && !s.InArc, "REL BRG " + s.Sol.brg + "°, heading " + s.hdg + "°");
+        Check("Turret A can't bear on it: ANGLE is out of arc", s.mount == "RGA" && !s.InArc, "REL BRG " + s.Sol.brg + "°, heading " + s.nav.heading + "°");
         if (!Click("fc.mount", null, "turret selector (RG-B)")) yield break;
         Check("Turret B bears", s.mount == "RGB" && s.InArc, "");
         for (int i = 0; i < 4; i++) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1))) yield break; yield return 0.2f; }
@@ -772,30 +772,30 @@ public static class PlaytestRunner
         // 21b. Leading a moving target (Step 52). TRACK 07 gets under way on its patrol again.
         brain.enabled = true;
         if (!Click("rate", "10", "x10 rate key")) yield break;
-        yield return (Func<bool>)(() => t07Ship.SpeedKms > 1.0);
-        yield return (Func<bool>)(() => t07Ship.hdg == t07Ship.ordHdg); // steady on its leg before we plot it
+        yield return (Func<bool>)(() => t07Ship.nav.SpeedKms > 1.0);
+        yield return (Func<bool>)(() => t07Ship.nav.heading == t07Ship.nav.orderedHeading); // steady on its leg before we plot it
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Stand-in for the helm: 12,000 km off its starboard beam, stopped, on its course, so turret B bears.
-        double beam = (t07Ship.CourseDeg + 90) * System.Math.PI / 180;
-        s.ownX = t07Ship.ownX + System.Math.Sin(beam) * 12000; s.ownY = t07Ship.ownY + System.Math.Cos(beam) * 12000;
-        s.vx = s.vy = 0; s.thr = 0;
-        s.hdg = s.ordHdg = HandoffBoardState.JsRound(t07Ship.CourseDeg) % 360;
+        double beam = (t07Ship.nav.CourseDeg + 90) * System.Math.PI / 180;
+        s.nav.x = t07Ship.nav.x + System.Math.Sin(beam) * 12000; s.nav.y = t07Ship.nav.y + System.Math.Cos(beam) * 12000;
+        s.nav.vx = s.nav.vy = 0; s.nav.throttle = 0;
+        s.nav.heading = s.nav.orderedHeading = HandoffBoardState.JsRound(t07Ship.nav.CourseDeg) % 360;
         yield return 1f;
         //     Its track: two POINTs on it two minutes apart (stand-in for accurate plotting; the plot itself was tested above).
         s.marks.Clear();
-        var trackA = new HandoffBoardState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.ownX, y = t07Ship.ownY, t = board.MissionSeconds };
+        var trackA = new HandoffBoardState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.nav.x, y = t07Ship.nav.y, t = board.MissionSeconds };
         s.marks.Add(trackA);
         //     The solution: the periscope on it, the RNG knob starts one, dialled to its range (stand-in for reading the plot).
         s.LookAt("t07");
         s.sol[s.SysIndex] = new HandoffBoardState.Solution();
         if (!PlotDrag(board, knobAt, knobAt + new Vector2(8, 0), "turn the RNG knob (1 step)", "fc.knob")) yield break;
-        s.Sol.rangeKm = (float)System.Math.Sqrt((t07Ship.ownX - s.ownX) * (t07Ship.ownX - s.ownX) + (t07Ship.ownY - s.ownY) * (t07Ship.ownY - s.ownY));
+        s.Sol.rangeKm = (float)System.Math.Sqrt((t07Ship.nav.x - s.nav.x) * (t07Ship.nav.x - s.nav.x) + (t07Ship.nav.y - s.nav.y) * (t07Ship.nav.y - s.nav.y));
         s.NudgeSol("rng", 0);
         Check("Without a track the solution has no course", s.Sol.set && s.Sol.manual && !s.Sol.hasCourse, "");
         if (!Click("rate", "10", "x10 rate key")) yield break;
         yield return (Func<bool>)(() => board.MissionSeconds - trackA.t >= 120f);
         if (!Click("rate", "1", "x1 rate key")) yield break;
-        var trackB = new HandoffBoardState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.ownX, y = t07Ship.ownY, t = board.MissionSeconds };
+        var trackB = new HandoffBoardState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.nav.x, y = t07Ship.nav.y, t = board.MissionSeconds };
         s.marks.Add(trackB);
         s.MarkDown("RULER", trackA.x, trackA.y, board.MissionSeconds); s.draft.ptA = trackA.id;
         s.MarkMove(trackB.x, trackB.y); s.draft.ptB = trackB.id;
@@ -805,14 +805,14 @@ public static class PlaytestRunner
         float legSpd = (float)(System.Math.Sqrt((trackB.x - trackA.x) * (trackB.x - trackA.x) + (trackB.y - trackA.y) * (trackB.y - trackA.y)) / (trackB.t - trackA.t));
         Check("A POINT-to-POINT track feeds the solution its course and speed",
               s.Sol.hasCourse && Mathf.Abs(Mathf.DeltaAngle(s.Sol.course, legCrs)) < 0.01f && Mathf.Abs(s.Sol.spd - legSpd) < 0.006f,
-              "CRS " + s.Sol.course.ToString("000") + "°, SPD " + s.Sol.spd.ToString("0.00") + " (its true course now " + t07Ship.CourseDeg.ToString("000") + "°, speed " + t07Ship.SpeedKms.ToString("0.00") + ")");
+              "CRS " + s.Sol.course.ToString("000") + "°, SPD " + s.Sol.spd.ToString("0.00") + " (its true course now " + t07Ship.nav.CourseDeg.ToString("000") + "°, speed " + t07Ship.nav.SpeedKms.ToString("0.00") + ")");
         //     Arm and fire, led. The same shot unled would miss.
         if (s.mount != "RGB" && !Click("fc.mount", null, "turret selector (RG-B)")) yield break;
         yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
         for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (led shot)")) yield break; yield return 0.15f; }
-        double tvx = t07Ship.vx, tvy = t07Ship.vy;
-        double unled = PassKm(s.ownX, s.ownY, s.hdg + s.Sol.brg, s.slugSpeedKms, t07Ship.ownX, t07Ship.ownY, tvx, tvy, 600);
-        double led = PassKm(s.ownX, s.ownY, s.LeadBearing(), s.slugSpeedKms, t07Ship.ownX, t07Ship.ownY, tvx, tvy, 600);
+        double tvx = t07Ship.nav.vx, tvy = t07Ship.nav.vy;
+        double unled = PassKm(s.nav.x, s.nav.y, s.nav.heading + s.Sol.brg, s.slugSpeedKms, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
+        double led = PassKm(s.nav.x, s.nav.y, s.LeadBearing(), s.slugSpeedKms, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         int landedLed = s.shotResults;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (led)", "fc.lever")) yield break;
@@ -836,7 +836,7 @@ public static class PlaytestRunner
         Check("TRACK's led shot hits", s.shotReport != null && s.shotReport.StartsWith("HIT · TRACK 07"), "\"" + s.shotReport + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Hold it still again for the fight below; clear the plot.
-        brain.enabled = false; t07Ship.vx = t07Ship.vy = 0; s.marks.Clear(); s.identified.Remove("t07");
+        brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0; s.marks.Clear(); s.identified.Remove("t07");
 
         // 21c. Missiles (Step 53): a lock, the launcher, three warheads, homing on the moving TRACK 07.
         brain.enabled = true;
@@ -869,10 +869,10 @@ public static class PlaytestRunner
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "launch (EMP)", "fc.lever")) yield break;
         yield return (Func<bool>)(() => s.shotResults > landed1);
         yield return (Func<bool>)(() => s.shotResults > landed1);
-        double spdHit = t07Ship.SpeedKms;
+        double spdHit = t07Ship.nav.SpeedKms;
         Check("EMP: its power goes down", s.shotReport != null && s.shotReport.EndsWith(" · EMP · POWER DOWN") && dummyShip.buses[0].fill == 0, "\"" + s.shotReport + "\"");
         yield return 2f;
-        Check("Without power it slows", t07Ship.SpeedKms < spdHit, spdHit.ToString("0.00") + " → " + t07Ship.SpeedKms.ToString("0.00") + " km/s");
+        Check("Without power it slows", t07Ship.nav.SpeedKms < spdHit, spdHit.ToString("0.00") + " → " + t07Ship.nav.SpeedKms.ToString("0.00") + " km/s");
         //     PENETRATOR: straight to a compartment behind the side.
         if (!Click("fc.mount", null, "warhead selector (PENETRATOR)")) yield break;
         s.LookAt("t07");
@@ -889,16 +889,16 @@ public static class PlaytestRunner
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Back to the railgun; hold TRACK 07 still for the fight.
         if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break;
-        brain.enabled = false; t07Ship.vx = t07Ship.vy = 0; s.identified.Remove("t07");
+        brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0; s.identified.Remove("t07");
 
         s.identified.Add("t07"); // stand-in for an active scan: from here on we see what our hits do (Step 61)
         // 21d. Fighters (Step 54): the interceptors launch from the hangar, fly to TRACK 07, make attack runs
         //     on the side facing them, and RECALL brings them home to land.
         //     Stand-in for the helm: 2,000 km ahead of its bow (never hit yet), stopped, facing it.
         double sbd = t07.worldHdg * System.Math.PI / 180;
-        s.ownX = t07.worldX + System.Math.Sin(sbd) * 2000; s.ownY = t07.worldY + System.Math.Cos(sbd) * 2000;
-        s.vx = s.vy = 0; s.thr = 0;
-        s.hdg = s.ordHdg = ((int)System.Math.Round(t07.worldHdg) + 180) % 360;
+        s.nav.x = t07.worldX + System.Math.Sin(sbd) * 2000; s.nav.y = t07.worldY + System.Math.Cos(sbd) * 2000;
+        s.nav.vx = s.nav.vy = 0; s.nav.throttle = 0;
+        s.nav.heading = s.nav.orderedHeading = ((int)System.Math.Round(t07.worldHdg) + 180) % 360;
         s.target = "t07";
         //     Step 69 (owner 2026-10-25): with ACTIVE on, every pass of the sweep over TRACK 07 beeps, scanned or not.
         //     Stand-in for the ACTIVE key and the cone dial.
@@ -911,7 +911,7 @@ public static class PlaytestRunner
         s.active = false;
         var vxField = typeof(HandoffPlotPanel).GetField("viewX", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var vyField = typeof(HandoffPlotPanel).GetField("viewY", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        vxField.SetValue(plotPanel, (s.ownX + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.ownY + t07.worldY) / 2); // stand-in for panning the plot
+        vxField.SetValue(plotPanel, (s.nav.x + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.nav.y + t07.worldY) / 2); // stand-in for panning the plot
         var ilField = typeof(HandoffHangarPanel).GetField("interlock", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var hangarPanel = board.GetComponent<HandoffHangarPanel>();
         Func<string> interlockText = () => { var t = ilField.GetValue(hangarPanel) as TMPro.TMP_Text; return t ? t.text : ""; };
@@ -925,7 +925,7 @@ public static class PlaytestRunner
         if (!Click("drawer", "hangar", "HGR key")) yield break;
         yield return 0.8f;
         Check("The interceptors are selected, on DESTROY", s.CurrentSquad.key == "gw" && s.order == "destroy" && s.SquadReady(s.CurrentSquad) == 4, s.CurrentSquad.key + " " + s.order + ", " + s.SquadReady(s.CurrentSquad) + " ready");
-        s.SetLbrg(s.hdg.ToString()); // stand-in for typing the launch bearing: dead ahead
+        s.SetLbrg(s.nav.heading.ToString()); // stand-in for typing the launch bearing: dead ahead
         if (!s.doorsOpen && !Click("hangar.doors", null, "bay door master")) yield break;
         Check("The catapult can charge (AUX powered)", s.StageBlock("cat") == null, (s.StageBlock("cat") ?? "") + " AUX " + s.BusUnits("aux") + " units, ENG " + s.buses[0].mode);
         for (int i = 0; i < s.stages.Length; i++)
@@ -950,7 +950,7 @@ public static class PlaytestRunner
         if (!Click("rate", "10", "x10 rate key")) yield break;
         Check("They fly toward TRACK 07 at " + s.fighterSpeedKms + " km/s", took > 0 && System.Math.Abs(flown / took - s.fighterSpeedKms) < 0.5 && interlockText().StartsWith("OUTBOUND TO TRACK 07"),
               (flown / took).ToString("0.00") + " km/s; \"" + interlockText() + "\"");
-        yield return (Func<bool>)(() => System.Math.Sqrt((flight.x - s.ownX) * (flight.x - s.ownX) + (flight.y - s.ownY) * (flight.y - s.ownY)) > 1000); // clear of our ship's picture
+        yield return (Func<bool>)(() => System.Math.Sqrt((flight.x - s.nav.x) * (flight.x - s.nav.x) + (flight.y - s.nav.y) * (flight.y - s.nav.y)) > 1000); // clear of our ship's picture
         Shot("28c_fighters_outbound");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         float prow0 = dummyShip.SideArmour[0];
@@ -978,10 +978,10 @@ public static class PlaytestRunner
         //     with its ladder dropped, the next salvo gets through and hits us.
         //     Stand-in for the helm: 6,000 km off its bow, stopped, turned so it bears 042° from our bow (PDC-A's arc).
         double pdb = t07.worldHdg * System.Math.PI / 180;
-        s.ownX = t07.worldX + System.Math.Sin(pdb) * 6000; s.ownY = t07.worldY + System.Math.Cos(pdb) * 6000;
-        s.vx = s.vy = 0; s.thr = 0;
-        s.hdg = s.ordHdg = (((int)System.Math.Round(t07.worldHdg) + 180 - 42) % 360 + 360) % 360;
-        vxField.SetValue(plotPanel, (s.ownX + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.ownY + t07.worldY) / 2); // stand-in for panning the plot
+        s.nav.x = t07.worldX + System.Math.Sin(pdb) * 6000; s.nav.y = t07.worldY + System.Math.Cos(pdb) * 6000;
+        s.nav.vx = s.nav.vy = 0; s.nav.throttle = 0;
+        s.nav.heading = s.nav.orderedHeading = (((int)System.Math.Round(t07.worldHdg) + 180 - 42) % 360 + 360) % 360;
+        vxField.SetValue(plotPanel, (s.nav.x + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.nav.y + t07.worldY) / 2); // stand-in for panning the plot
         brain.enabled = true; // it thinks again (it holds its fire for a tick, so old damage doesn't count)
         yield return 1f;
         for (int k = 0; k < 3 && s.sys != "PD"; k++) { if (!Click("fc.system", null, "weapon selector")) yield break; yield return 0.2f; }
@@ -999,7 +999,7 @@ public static class PlaytestRunner
         float salvo1At = board.MissionSeconds;
         Check("Hit, TRACK 07 fires a salvo of two back at us", s.Incoming.Count == 2 && dummyShip.vlsCells == enemyCells - 2, s.Incoming.Count + " incoming, its cells " + enemyCells + " → " + dummyShip.vlsCells);
         if (!Click("rate", "10", "x10 rate key")) yield break;
-        yield return (Func<bool>)(() => s.Incoming.Count == 0 || System.Math.Sqrt((s.Incoming[0].x - s.ownX) * (s.Incoming[0].x - s.ownX) + (s.Incoming[0].y - s.ownY) * (s.Incoming[0].y - s.ownY)) < 4600);
+        yield return (Func<bool>)(() => s.Incoming.Count == 0 || System.Math.Sqrt((s.Incoming[0].x - s.nav.x) * (s.Incoming[0].x - s.nav.x) + (s.Incoming[0].y - s.nav.y) * (s.Incoming[0].y - s.nav.y)) < 4600);
         Shot("28e_incoming_pdc_arc");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         yield return (Func<bool>)(() => s.Incoming.Count == 0);
@@ -1036,7 +1036,7 @@ public static class PlaytestRunner
               "RCT " + s.Comp("rct").integ + ", power drawn " + s.TotalFill);
         s.destroyed = false;
         //     Clean up for the steps below: TRACK 07 held still and quiet, our ship repaired (stand-in for damage control).
-        brain.firesBack = false; brain.enabled = false; t07Ship.vx = t07Ship.vy = 0;
+        brain.firesBack = false; brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0;
         s.pdcKillChance = 0.7f;
         System.Array.Copy(ourArmour, s.SideArmour, ourArmour.Length);
         for (int c = 0; c < s.compartments.Length; c++) s.compartments[c].integ = ourInteg[c];
@@ -1047,17 +1047,17 @@ public static class PlaytestRunner
         //     alive for the fight below; DESTROY and SECURE were checked on the bare ship model.
         //     Stand-in for the helm: 1,500 km off its starboard beam, stopped.
         double sb2 = (t07.worldHdg + 90) * System.Math.PI / 180;
-        s.ownX = t07.worldX + System.Math.Sin(sb2) * 1500; s.ownY = t07.worldY + System.Math.Cos(sb2) * 1500;
-        s.vx = s.vy = 0; s.thr = 0;
-        s.hdg = s.ordHdg = ((int)System.Math.Round(t07.worldHdg) + 270) % 360;
+        s.nav.x = t07.worldX + System.Math.Sin(sb2) * 1500; s.nav.y = t07.worldY + System.Math.Cos(sb2) * 1500;
+        s.nav.vx = s.nav.vy = 0; s.nav.throttle = 0;
+        s.nav.heading = s.nav.orderedHeading = ((int)System.Math.Round(t07.worldHdg) + 270) % 360;
         s.target = "t07";
-        vxField.SetValue(plotPanel, (s.ownX + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.ownY + t07.worldY) / 2);
+        vxField.SetValue(plotPanel, (s.nav.x + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.nav.y + t07.worldY) / 2);
         if (!Click("drawer", "hangar", "HGR key")) yield break;
         yield return 0.8f;
         if (s.CurrentSquad.key != "ih" && !Click("hangar.squad", null, "squadron selector (ASSAULT BOAT)")) yield break;
         for (int k = 0; k < 3 && s.order != "disable"; k++) if (!Click("hangar.order", null, "order knob")) yield break;
         Check("The assault boats are selected, on DISABLE", s.CurrentSquad.key == "ih" && s.order == "disable" && s.SquadReady(s.CurrentSquad) == 3, s.CurrentSquad.key + " " + s.order + ", " + s.SquadReady(s.CurrentSquad) + " ready");
-        s.SetLbrg(s.hdg.ToString()); // stand-in for typing the launch bearing
+        s.SetLbrg(s.nav.heading.ToString()); // stand-in for typing the launch bearing
         float defenders = s.defenderShare;
         s.defenderShare = 0f; // stand-in: an undefended ship, so the marines win for certain (the odds are in the Tuning window)
         var armourWas = (float[])dummyShip.SideArmour.Clone();
@@ -1095,7 +1095,7 @@ public static class PlaytestRunner
         System.Array.Copy(armourWas, dummyShip.SideArmour, armourWas.Length); // its armour as it was
         s.defenderShare = defenders;
         brain.Think(dummyShip, s); // one thought, brain still off: with its engine room wrecked it makes no way
-        Check("Disabled, its brain cannot drive it", dummyShip.thr == 0, "throttle " + dummyShip.thr + "%");
+        Check("Disabled, its brain cannot drive it", dummyShip.nav.throttle == 0, "throttle " + dummyShip.nav.throttle + "%");
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
 
@@ -1105,15 +1105,15 @@ public static class PlaytestRunner
         var integBefore = System.Array.ConvertAll(dummyShip.compartments, c => c.integ);
         //     Stand-in for the helm: 10,000 km off its port beam, stopped, side-on so turret B (port) bears.
         double tb = (t07.worldHdg - 90) * System.Math.PI / 180;
-        s.ownX = t07.worldX + System.Math.Sin(tb) * 10000; s.ownY = t07.worldY + System.Math.Cos(tb) * 10000;
-        s.vx = s.vy = 0; s.thr = 0;
-        s.hdg = s.ordHdg = ((int)System.Math.Round(t07.worldHdg) + 180) % 360;
+        s.nav.x = t07.worldX + System.Math.Sin(tb) * 10000; s.nav.y = t07.worldY + System.Math.Cos(tb) * 10000;
+        s.nav.vx = s.nav.vy = 0; s.nav.throttle = 0;
+        s.nav.heading = s.nav.orderedHeading = ((int)System.Math.Round(t07.worldHdg) + 180) % 360;
         yield return 1f;
         s.LookAt("t07");
         s.sol[s.SysIndex] = new HandoffBoardState.Solution(); // stand-in: clear the old solution
         if (!PlotDrag(board, knobAt, knobAt + new Vector2(8, 0), "turn the RNG knob (1 step)", "fc.knob")) yield break;
         best = 0;
-        for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.hdg + s.Sol.brg + d) < MissKm(s, t07, s.hdg + s.Sol.brg + best)) best = d;
+        for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.nav.heading + s.Sol.brg + d) < MissKm(s, t07, s.nav.heading + s.Sol.brg + best)) best = d;
         if (best != 0 && !PlotDrag(board, brgAt, brgAt + new Vector2(6 * best, 0), "turn the BRG knob to the nearest degree", "fc.knob")) yield break;
         s.SlewTo();
         //     The targeting computer (the periscope) shows a scanned ship's hull in its SUBJECT box (Step 61).
@@ -1180,8 +1180,8 @@ public static class PlaytestRunner
         var lampsField = typeof(HandoffEngineeringPanel).GetField("compartmentLamps", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var pic = picField.GetValue(eng) as UnityEngine.UI.RawImage;
         var lamps = lampsField.GetValue(eng) as UnityEngine.UI.Image[];
-        Check("Engineering shows our ship, bow up", pic && pic.enabled && pic.texture != null && Mathf.Approximately(Mathf.DeltaAngle(pic.rectTransform.localEulerAngles.z, s.hdg), 0f),
-              pic ? "turned back " + pic.rectTransform.localEulerAngles.z.ToString("0") + "° for heading " + s.hdg.ToString("000") + "°" : "no picture");
+        Check("Engineering shows our ship, bow up", pic && pic.enabled && pic.texture != null && Mathf.Approximately(Mathf.DeltaAngle(pic.rectTransform.localEulerAngles.z, s.nav.heading), 0f),
+              pic ? "turned back " + pic.rectTransform.localEulerAngles.z.ToString("0") + "° for heading " + s.nav.heading.ToString("000") + "°" : "no picture");
         Color green = ((Color)new Color32(0x8F, 0xC3, 0x3A, 0xFF)).gamma, amber = ((Color)new Color32(0xE0, 0xA0, 0x20, 0xFF)).gamma, red = ((Color)new Color32(0xE0, 0x4B, 0x3C, 0xFF)).gamma;
         System.Func<UnityEngine.UI.Image, Color, bool> lit = (l, c) => Mathf.Abs(l.color.r - c.r) < 0.01f && Mathf.Abs(l.color.g - c.g) < 0.01f && Mathf.Abs(l.color.b - c.b) < 0.01f;
         bool allGreen = lamps != null && lamps.Length == 6;
@@ -1304,7 +1304,7 @@ public static class PlaytestRunner
     // How far a straight shot from our ship on this bearing passes from a contact, km (huge if it's behind us).
     static double MissKm(HandoffBoardState s, HandoffBoardState.Track t, double aimDeg)
     {
-        double a = aimDeg * System.Math.PI / 180, px = t.worldX - s.ownX, py = t.worldY - s.ownY;
+        double a = aimDeg * System.Math.PI / 180, px = t.worldX - s.nav.x, py = t.worldY - s.nav.y;
         double along = px * System.Math.Sin(a) + py * System.Math.Cos(a);
         return along < 0 ? double.MaxValue : System.Math.Abs(px * System.Math.Cos(a) - py * System.Math.Sin(a));
     }

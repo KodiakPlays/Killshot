@@ -3357,9 +3357,34 @@ Found by the doc check after Step 66. Fix each with the owner.
 5. **The playtest has no battle-space checks:** the warning, countdown, x1 drop, zoom limit, pan
    limit, axis numbers and the `C` key.
 
-### Board refactor (owner, 2026-10-25). Agreed, not started
+### Board refactor (owner, 2026-10-25). In progress
 
 Replaces the 2026-10-24 "clean-up once the game is working" list.
+
+**How it is being done (owner, 2026-10-26).** Not everything at once. One ship system at a time, all
+the way through, then a playtest and a commit. The scripts go into three folders:
+- **`Scripts/Systems`:** the ship's parts. Each holds rules only, nothing on screen. Our ship and the
+  enemy carry the same ones.
+- **`Scripts/UI`:** the panels, and the pieces they are made from. A panel shows its system and passes
+  input to it.
+- **`Scripts/Game`:** everything bigger than one ship or one panel: the game manager, the clock, the
+  world, levels, the mission and enemy brains.
+
+The board builder is no longer used. Its menu item is gone, and the scene is what gets edited now.
+
+**Done:**
+- **Navigation (2026-10-26).** All ship movement is in `Systems/NavSystem.cs`: position, heading,
+  throttle, turning, speed, drift and placing the 3D model. It replaced `TickHelm` and `TickMove`
+  in `HandoffBoardState`, and the model placing in `TacticalWorld`.
+  - `OwnShip` and `Dummy · TRACK 07` each carry a NavSystem. `HandoffBoardControls.nav` points at
+    ours, and every ship state reaches its own through `.nav`.
+  - `HandoffHelmPanel` became `UI/Panels/HelmPanel`. It only shows the NavSystem and passes the
+    throttle, the A and D keys and the clicks to it.
+  - No behaviour change. The playtest passed 166/166 after the move (run 2026-10-26_002152), and
+    again after the rename to NavSystem (run 2026-10-26_002808).
+
+**Next:** power, then sensors, comms, weapons, hangar, damage and orders, the same way. The step list
+below is the reference for what each part needs.
 
 **Why.** The board is hard to follow:
 - One 1,915-line class (`HandoffBoardState`) holds every rule.

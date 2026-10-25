@@ -215,7 +215,7 @@ public class HandoffPlotPanel : HandoffPanel
         var typing = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
         if (typing && typing.GetComponent<TMP_InputField>()) return;
         // Step 65 (owner 2026-10-25): C centres the plot on our ship again after panning away
-        if (Input.GetKeyDown(KeyCode.C)) { viewX = State.ownX; viewY = State.ownY; Refresh(); return; }
+        if (Input.GetKeyDown(KeyCode.C)) { viewX = State.nav.x; viewY = State.nav.y; Refresh(); return; }
         float x = (Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.LeftArrow) ? 1f : 0f);
         float y = (Input.GetKey(KeyCode.UpArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.DownArrow) ? 1f : 0f);
         if (x == 0f && y == 0f) return;
@@ -283,7 +283,7 @@ public class HandoffPlotPanel : HandoffPanel
     public override void Refresh()
     {
         var s = State;
-        if (!viewSet) { viewX = s.ownX; viewY = s.ownY; viewSet = true; }
+        if (!viewSet) { viewX = s.nav.x; viewY = s.nav.y; viewSet = true; }
         if (!grid) grid = FindAnyObjectByType<HandoffPlotGrid>();
         if (grid)
         {
@@ -292,7 +292,7 @@ public class HandoffPlotPanel : HandoffPanel
             Rect r = grid.rectTransform.rect;
             double k = KmPerPx / Controls.ZoomExact;
             double lx = System.Math.Max(0, s.ArenaHalfW - r.width / 2 * k), ly = System.Math.Max(0, s.ArenaHalfH - r.height / 2 * k);
-            if (s.OutsideArena) { lx = System.Math.Max(lx, System.Math.Abs(s.ownX)); ly = System.Math.Max(ly, System.Math.Abs(s.ownY)); }
+            if (s.OutsideArena) { lx = System.Math.Max(lx, System.Math.Abs(s.nav.x)); ly = System.Math.Max(ly, System.Math.Abs(s.nav.y)); }
             viewX = System.Math.Max(-lx, System.Math.Min(lx, viewX));
             viewY = System.Math.Max(-ly, System.Math.Min(ly, viewY));
             // the lines move with the world: the view's offset from the world origin, in board px
@@ -338,7 +338,7 @@ public class HandoffPlotPanel : HandoffPanel
                         shapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = Screen(toPt.x, toPt.y),
                             b = Screen(toPt.x + System.Math.Sin(rc) * ahead, toPt.y + System.Math.Cos(rc) * ahead), alpha = alpha });
                     }
-                    else if (s.SpeedKms >= 0.01) label.text += " · " + Duration(s.MarkLen(m) / s.SpeedKms); // time to cover it at our speed
+                    else if (s.nav.SpeedKms >= 0.01) label.text += " · " + Duration(s.MarkLen(m) / s.nav.SpeedKms); // time to cover it at our speed
                     // the board rounds the label's spot to whole layer px from the plot centre. km→px
                     // leaves float dust (250.49999999999997 for 250.5), so trim it before rounding
                     double mx = HandoffBoardState.JsRound(System.Math.Round((m.x + dx / 2.0 - viewX) / KmPerPx, 6));
@@ -381,7 +381,7 @@ public class HandoffPlotPanel : HandoffPanel
             float shipPx = Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx);
             float side = shipPx / (shipView ? shipView.ShipFill : 1f);
             ownShipImage.rectTransform.sizeDelta = new Vector2(side, side);
-            Put(ownShipImage.rectTransform, Screen(s.ownX, s.ownY), 0f);
+            Put(ownShipImage.rectTransform, Screen(s.nav.x, s.nav.y), 0f);
         }
 
         // fighters in flight (Step 54): a V behind the leader, each wedge pointing where the flight flies
@@ -414,7 +414,7 @@ public class HandoffPlotPanel : HandoffPanel
             var mount = s.MountOf(s.mount);
             if (Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && mount != null && mount.rangeKm > 0f)
             {
-                Vector2 c = Screen(s.ownX, s.ownY);
+                Vector2 c = Screen(s.nav.x, s.nav.y);
                 reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeKm / KmPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
             }
             // Step 55: each PDC group on AUTO shows its arc, a dashed sector off our hull (the design's PDC arc, accent.caution at .45)
@@ -423,10 +423,10 @@ public class HandoffPlotPanel : HandoffPanel
             {
                 var pm = s.MountOf(pdGroups[g]);
                 if (!s.pdcAuto[g] || pm == null) continue;
-                Vector2 c = Screen(s.ownX, s.ownY);
+                Vector2 c = Screen(s.nav.x, s.nav.y);
                 float r = (float)(pm.rangeKm / KmPerPx * Controls.ZoomExact);
                 System.Func<float, Vector2> at = deg => c + new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)) * r; // board y is down
-                float from = s.hdg + pm.arc - pm.halfArc, to = s.hdg + pm.arc + pm.halfArc;
+                float from = s.nav.heading + pm.arc - pm.halfArc, to = s.nav.heading + pm.arc + pm.halfArc;
                 reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = c, b = at(from), alpha = 0.45f });
                 reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = c, b = at(to), alpha = 0.45f });
                 for (float d = from; d < to; d += pdcArcStepDeg)
@@ -458,7 +458,7 @@ public class HandoffPlotPanel : HandoffPanel
             else
             {
                 double b = t.bearing * System.Math.PI / 180.0, px = t.rangeKm * pxPer1000Km / 1000.0 * Controls.ZoomExact;
-                at = Screen(s.ownX, s.ownY) + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
+                at = Screen(s.nav.x, s.nav.y) + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
             }
             var view = s.classified.Contains(t.key) ? ViewOf(t.key) : null;
             float labelPush = 0f; // a pictured contact's label sits clear of its picture
@@ -496,7 +496,7 @@ public class HandoffPlotPanel : HandoffPanel
         bool down = Controls.Motion && Controls.Motion.ScopeDown;
         var bearings = new List<HandoffMarksGraphic.Shape>();
         int np = 0;
-        Vector2 ownAt = Screen(s.ownX, s.ownY);
+        Vector2 ownAt = Screen(s.nav.x, s.nav.y);
         float reach = (float)(s.PassiveRangeKm / KmPerPx * Controls.ZoomExact);
         // the bearing trail (Step 45): each line from where our ship was, fading over bearingTrailSeconds
         s.PruneBearings(Controls.MissionSeconds);
@@ -548,7 +548,7 @@ public class HandoffPlotPanel : HandoffPanel
         {
             bool amber = Controls.GridAmber;
             Paint(sensorRing, amber ? alarm : data);
-            Vector2 c = Screen(s.ownX, s.ownY), e = c + new Vector2((float)(sensorKm / KmPerPx * Controls.ZoomExact), 0f);
+            Vector2 c = Screen(s.nav.x, s.nav.y), e = c + new Vector2((float)(sensorKm / KmPerPx * Controls.ZoomExact), 0f);
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "disc", a = c, b = e, alpha = amber ? senGlowAlphaAmber : senGlowAlpha });
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "circle", a = c, b = e, alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
             // owner 2026-10-24: a small circle just outside our ship; the sweep runs from it to the rim
@@ -566,7 +566,7 @@ public class HandoffPlotPanel : HandoffPanel
         sweep.SetInner(InnerRingPx);
         float d = 2f * (float)(sensorKm / KmPerPx * Controls.ZoomExact);
         if (sweep.rectTransform.sizeDelta != new Vector2(d, d)) sweep.rectTransform.sizeDelta = new Vector2(d, d);
-        Put(sweep.rectTransform, Screen(s.ownX, s.ownY), -sweepDeg);
+        Put(sweep.rectTransform, Screen(s.nav.x, s.nav.y), -sweepDeg);
     }
 
     /// <summary>The selected weapon's reach drawn now, km, or 0 (the playtest reads it).</summary>

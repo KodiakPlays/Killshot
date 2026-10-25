@@ -37165,7 +37165,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TacticalWorld
   board: {fileID: 1765047281}
-  ownShip: {fileID: 891763122}
   dropTracksWithoutContact: 1
   levelScene: Level_01
 --- !u!4 &506961321
@@ -57384,6 +57383,7 @@ GameObject:
   - component: {fileID: 765287327}
   - component: {fileID: 765287328}
   - component: {fileID: 765287329}
+  - component: {fileID: 765287331}
   m_Layer: 0
   m_Name: "Dummy \xB7 TRACK 07"
   m_TagString: Untagged
@@ -57442,6 +57442,34 @@ MonoBehaviour:
   firesBack: 1
   fireBackSalvo: 2
   fireBackSeconds: 120
+--- !u!114 &765287331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765287326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0bc5c1abf6aa47b28cc3e5ffcbe37ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HelmSystem
+  x: 0
+  y: 0
+  heading: 0
+  orderedHeading: 0
+  throttle: 0
+  attitude: NOSE
+  approachMode: DIRECT
+  approachRange: 2
+  approachRanges: d0070000a00f0000401f0000e02e000050460000c05d0000
+  headingKeyStep: 3
+  turnRate: 20
+  topSpeedKms: 12.5
+  accelKms2: 0.2175
+  brakeKms2: 0.4075
+  driftKeepPerS: 0.96307
+  dragKeepPerS: 0.997502
 --- !u!1 &765774873
 GameObject:
   m_ObjectHideFlags: 0
@@ -66058,6 +66086,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 891763122}
+  - component: {fileID: 891763123}
   m_Layer: 0
   m_Name: OwnShip
   m_TagString: Untagged
@@ -66081,6 +66110,34 @@ Transform:
   - {fileID: 2146131405}
   m_Father: {fileID: 506961321}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &891763123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891763121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0bc5c1abf6aa47b28cc3e5ffcbe37ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HelmSystem
+  x: 0
+  y: 0
+  heading: 0
+  orderedHeading: 0
+  throttle: 0
+  attitude: NOSE
+  approachMode: DIRECT
+  approachRange: 2
+  approachRanges: d0070000a00f0000401f0000e02e000050460000c05d0000
+  headingKeyStep: 3
+  turnRate: 20
+  topSpeedKms: 12.5
+  accelKms2: 0.2175
+  brakeKms2: 0.4075
+  driftKeepPerS: 0.96307
+  dragKeepPerS: 0.997502
 --- !u!1 &893004185
 GameObject:
   m_ObjectHideFlags: 0
@@ -130624,26 +130681,10 @@ MonoBehaviour:
     slewing: 0
     slewDx: 0
     onBearingDeg: 4
-    hdg: 0
-    ordHdg: 0
-    thr: 0
-    apAtt: NOSE
-    apMode: DIRECT
-    apRange: 2
-    apRanges: d0070000a00f0000401f0000e02e000050460000c05d0000
-    headingKeyStep: 3
-    turnRate: 20
-    ownX: 0
-    ownY: 0
     arenaWidthKm: 100000
     arenaHeightKm: 100000
     arenaWarnKm: 2500
     arenaReturnSeconds: 30
-    topSpeedKms: 12.5
-    accelKms2: 0.2175
-    brakeKms2: 0.4075
-    driftKeepPerS: 0.96307
-    dragKeepPerS: 0.997502
     marks: []
     markSeq: 0
     markMinLen: 4
@@ -130700,6 +130741,7 @@ MonoBehaviour:
     defenderShare: 0.25
     marineLossPerDefender: 0.5
     bearingTrailSeconds: 120
+  nav: {fileID: 891763123}
   motion: {fileID: 1765047285}
   grid: {fileID: 261411404}
   canvas: {fileID: 519620959}

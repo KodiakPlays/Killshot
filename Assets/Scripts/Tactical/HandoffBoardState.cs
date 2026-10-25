@@ -361,26 +361,14 @@ public class HandoffBoardState
     [Tune("Periscope & fire control")]
     public float onBearingDeg = 4f;
 
-    [Header("Helm (Step 33h-1)")]
-    [Tooltip("Our heading at load. Owner 2026-10-24: 000, bow straight up (the design's demo had 083).")]
-    [Range(0, 359)] public int hdg = 0;
-    [Range(0, 359)] public int ordHdg = 0;
-    [Tooltip("Throttle %, held to what the ENG bus carries. Owner 2026-10-25: 0 at load (power is cold; the design's demo had 40); if ENG can no longer carry it, it drops to 0.")]
-    [Range(0, 100)] public int thr = 0;
-    [Tooltip("Attitude hold: NOSE, STBD, PORT, TAIL, or empty for none (apAtt).")]
-    public string apAtt = "NOSE";
-    [Tooltip("Approach mode: DIRECT, FLANK, EVASIVE (apMode).")]
-    public string apMode = "DIRECT";
-    [Tooltip("Index into apRanges (apRange).")]
-    public int apRange = 2;
-    [Tooltip("Approach hold ranges, km (AP_RANGES).")]
-    public int[] apRanges = { 2000, 4000, 8000, 12000, 18000, 24000 };
-    [Tooltip("Ordered heading step for the A and D keys, degrees (onKey).")]
-    [Tune("Helm")]
-    public int headingKeyStep = 3;
-    [Tooltip("Degrees the bow swings per game second at full engine-room integrity (the design: 4 per tick at x1; Step 63: x5).")]
-    [Tune("Helm")]
-    public float turnRate = 20f;
+    /// <summary>This ship's navigation: its position, heading, throttle and movement (owner 2026-10-26).</summary>
+    [System.NonSerialized] public NavSystem nav;
+    /// <summary>Give this ship its navigation. It reads this ship's ENG bus and engine room.</summary>
+    public void UseNav(NavSystem n) { nav = n; if (n) n.ship = this; }
+    // The ship's position and heading, read by the rules below. Only its NavSystem changes them.
+    double ownX => nav.x;
+    double ownY => nav.y;
+    int hdg => nav.heading;
 
     // ---- gates ---------------------------------------------------------------------------
 
@@ -534,9 +522,6 @@ public class HandoffBoardState
         public int ptA, ptB;
     }
 
-    [Header("Our ship in the world, km (x east, y north). The board moves it (TickMove); TacticalWorld places the model")]
-    public double ownX, ownY;
-
     // ---- the battle space (Step 65, owner 2026-10-25) --------------------------------------------
     // A rectangle centred on the world origin, 100,000 x 100,000 km to start (20 x 20 big squares of 5,000 km at x1).
     // Near the edge a warning; past it, a countdown to get back inside, or the ship is lost (the GDD's desertion rule;
@@ -569,50 +554,6 @@ public class HandoffBoardState
         outsideFor = crossed ? 0f : outsideFor + (float)dt;
         if (outsideFor >= arenaReturnSeconds) { destroyed = true; deserted = true; }
         return crossed;
-    }
-
-    // Step 41 (owner 2026-10-18): the ship moves. Spec §4: actual chases commanded at capped rates;
-    // the hull turns, the velocity follows, and the sideways part bleeds off (the ship slides). The
-    // prototype's numbers (MAX_SPEED 240, ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988 and
-    // SPACE_DRAG .9992 per 1/60 s) were slowed to a 2.5 km/s top speed (time stretched by 96). Step 63 (owner
-    // 2026-10-24, measured with docs/scale-sim): everything that moves runs 5x faster — speeds and turns x5,
-    // acceleration x25 and the keep rates to the 5th power, as if motion ran five times as fast. The map and
-    // the ranges stay. A fight then takes about 7 minutes at x1 instead of 35.
-    [Header("Movement (Step 41; 5x in Step 63)")]
-    [Tooltip("Speed at 100% throttle, km/s (Step 63: 5x the design's 2.5).")]
-    [Tune("Helm")] public double topSpeedKms = 12.5;
-    [Tooltip("Speeding up, km/s per mission second (Step 63: 25x, so full speed comes 5x sooner).")]
-    [Tune("Helm")] public double accelKms2 = 0.2175;
-    [Tooltip("Slowing down, km/s per mission second (Step 63: 25x).")]
-    [Tune("Helm")] public double brakeKms2 = 0.4075;
-    [Tooltip("Share of sideways speed kept each mission second: after a turn the ship slides, then lines up (Step 63: 0.9925^5).")]
-    [Tune("Helm")] public double driftKeepPerS = 0.96307;
-    [Tooltip("Share of all speed kept each mission second (Step 63: 0.9995^5).")]
-    [Tune("Helm")] public double dragKeepPerS = 0.997502;
-    [System.NonSerialized] public double vx, vy; // km/s
-
-    public double SpeedKms => System.Math.Sqrt(vx * vx + vy * vy);
-    /// <summary>Course over ground, degrees clockwise from north (the way we are actually going).</summary>
-    public double CourseDeg => (System.Math.Atan2(vx, vy) * 180 / System.Math.PI + 360) % 360;
-
-    /// <summary>Advance our ship by dt mission seconds: speed along the nose chases the throttle's
-    /// target, sideways speed bleeds off, then the position moves.</summary>
-    public void TickMove(double dt)
-    {
-        if (dt <= 0) return;
-        double h = hdg * System.Math.PI / 180;
-        double nx = System.Math.Sin(h), ny = System.Math.Cos(h); // the nose
-        double fwd = vx * nx + vy * ny, side = vx * ny - vy * nx; // side: to starboard
-        double keep = System.Math.Pow(dragKeepPerS, dt);
-        fwd *= keep;
-        side *= keep * System.Math.Pow(driftKeepPerS, dt);
-        double target = thr / 100.0 * topSpeedKms; // thr is already held to what ENG power allows (TickHelm)
-        double step = (fwd < target ? accelKms2 : brakeKms2) * dt;
-        fwd = System.Math.Abs(target - fwd) <= step ? target : fwd + System.Math.Sign(target - fwd) * step;
-        vx = fwd * nx + side * ny;
-        vy = fwd * ny - side * nx;
-        ownX += vx * dt;
-        ownY += vy * dt;
     }
 
     [Header("Plot marks (§8.4)")]
@@ -1757,7 +1698,7 @@ public class HandoffBoardState
     // Owner 2026-10-24: every rate runs in game time. The design's per-tick amounts were per game second
     // at x1 (a tick is `rate` game seconds), so they are now multiplied by the tick's game seconds; x1 is
     // unchanged. Whole-unit steps (a bus filling, the bow swinging) bank fractions so x0.25 is exact too.
-    [System.NonSerialized] private double powerBank, turnBank;
+    [System.NonSerialized] private double powerBank;
 
     public void TickPower(double dt)
     {
@@ -1816,7 +1757,7 @@ public class HandoffBoardState
         SyncCond();
     }
 
-    // ---- helm ------------------------------------------------------------------------------
+    // ---- number helpers (JS rounding, as the browser board does) ----------------------------
 
     /// <summary>JS Math.round on a double: half rounds up.</summary>
     public static int JsRound(double x) => (int)System.Math.Floor(x + 0.5);
@@ -1846,43 +1787,6 @@ public class HandoffBoardState
 
     /// <summary>offBearingLabel: "+1.5°" / "-14.0°" / "—" (toFixed(1), sign kept on a negative).</summary>
     public static string OffLabel(double? o) => o == null ? "\u2014" : (o.Value > 0 ? "+" : o.Value < 0 ? "-" : "") + JsToFixed(System.Math.Abs(o.Value), 1) + "\u00B0";
-
-    /// <summary>thrCap: ENG units x 20 x engine-room factor.</summary>
-    public int ThrCap => JsRound((double)BusUnits("eng") * 20 * EngFactorD);
-    double EngFactorD => CompHealth("eng") / 5.0;
-
-    /// <summary>gLoadNum: 1 G plus 1 G at full throttle, plus the approach mode's extra.</summary>
-    public double GLoad => 1 + thr / 100.0 + (apMode == "FLANK" ? 0.5 : apMode == "EVASIVE" ? 1.2 : 0);
-    /// <summary>stabNum: 45 points lost per G over 1, 0..100.</summary>
-    public double Stab => System.Math.Max(0, System.Math.Min(100, 100 - (GLoad - 1) * 45));
-
-    /// <summary>Ordered heading minus heading, -180..179.</summary>
-    public int TurnLeft => ((ordHdg - hdg + 540) % 360) - 180;
-
-    /// <summary>thrDown: from the pointer's height in the fader well, top = 100, capped at the press.</summary>
-    public void SetThr(double fromTop01, int cap) => thr = System.Math.Max(0, System.Math.Min(System.Math.Min(100, cap), JsRound((1 - fromTop01) * 100)));
-    /// <summary>setAtt: click to hold, click again to release.</summary>
-    public void SetAtt(string k) => apAtt = apAtt == k ? "" : k;
-    public void SetApMode(string k) => apMode = k;
-    public void StepApRange(int d) => apRange = System.Math.Max(0, System.Math.Min(apRanges.Length - 1, apRange + d));
-    /// <summary>onKey: A and D step the ordered heading and clear the attitude hold.</summary>
-    public void StepOrdHdg(int dir) { ordHdg = ((ordHdg + dir * headingKeyStep) % 360 + 360) % 360; apAtt = ""; }
-
-    /// <summary>The tick: the throttle falls to ENG units x 20 (no engine-room factor here, as the
-    /// board does — HANDOFF_GAPS row 32); the bow swings toward the ordered heading.</summary>
-    public void TickHelm(double dt)
-    {
-        int engCap = BusUnits("eng") * 20;
-        if (thr > engCap) thr = 0; // owner 2026-10-25: power lost, the throttle goes back to zero (the design held it at the cap); you set it again
-        if (hdg == ordHdg) { turnBank = 0; return; }
-        // degrees per game second (the design's per-tick swing at x1), banked so the bow turns whole degrees
-        turnBank += System.Math.Max(1, JsRound(turnRate * EngFactorD)) * dt;
-        int rate = (int)System.Math.Floor(turnBank + 1e-9);
-        if (rate < 1) return;
-        turnBank -= rate;
-        int d = TurnLeft;
-        hdg = System.Math.Abs(d) <= rate ? ordHdg : ((hdg + System.Math.Sign(d) * rate) % 360 + 360) % 360;
-    }
 
     // ---- the tick — sensors part (reads the fill this tick committed) --------------------
 
