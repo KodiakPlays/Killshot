@@ -75,9 +75,6 @@ public class HandoffPlotPanel : HandoffPanel
     [Tune("Sensors")] [SerializeField] private float trailAlpha = 0.45f;
     private readonly List<TMP_Text> passiveLabels = new List<TMP_Text>();
 
-    [Tooltip("bd-blink: our ship blinks while we are loud enough to be tracked (UIStateSpec §9.2, 1.1 s, steps).")]
-    [SerializeField] private float trackedBlinkSeconds = 1.1f, trackedBlinkLow = 0.2f;
-
     [Header("Contacts on the plot (Step 34): identified hostiles at their true range and bearing")]
     [Tooltip("Stand-in art until Claude Design's contact glyphs arrive (CLAUDE_DESIGN_NEEDS 1.2).")]
     [SerializeField] private HandoffMarksGraphic contactMarks;
@@ -182,10 +179,6 @@ public class HandoffPlotPanel : HandoffPanel
     private void Update()
     {
         if (Controls == null) return;
-        if (ownShipImage && ownShipImage.color.a != ShipAlpha())
-        {
-            var k = ownShipImage.color; k.a = ShipAlpha(); ownShipImage.color = k;
-        }
         if (sweep && State.dradis && !Controls.Paused)
         {
             float turn = Mathf.Max(0.5f, sweepSecondsBase - State.senBoost * sweepSecondsPerGain);
@@ -208,6 +201,8 @@ public class HandoffPlotPanel : HandoffPanel
         // not while typing in a field (the hangar's launch bearing)
         var typing = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
         if (typing && typing.GetComponent<TMP_InputField>()) return;
+        // Step 65 (owner 2026-10-25): C centres the plot on our ship again after panning away
+        if (Input.GetKeyDown(KeyCode.C)) { viewX = State.ownX; viewY = State.ownY; Refresh(); return; }
         float x = (Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.LeftArrow) ? 1f : 0f);
         float y = (Input.GetKey(KeyCode.UpArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.DownArrow) ? 1f : 0f);
         if (x == 0f && y == 0f) return;
@@ -279,9 +274,19 @@ public class HandoffPlotPanel : HandoffPanel
         if (!grid) grid = FindAnyObjectByType<HandoffPlotGrid>();
         if (grid)
         {
+            // Step 65: the view stays inside the battle space, so the plot never shows black past its edge,
+            // unless our ship has left it: then the view may follow the ship out
+            Rect r = grid.rectTransform.rect;
+            double k = KmPerPx / Controls.ZoomExact;
+            double lx = System.Math.Max(0, s.ArenaHalfW - r.width / 2 * k), ly = System.Math.Max(0, s.ArenaHalfH - r.height / 2 * k);
+            if (s.OutsideArena) { lx = System.Math.Max(lx, System.Math.Abs(s.ownX)); ly = System.Math.Max(ly, System.Math.Abs(s.ownY)); }
+            viewX = System.Math.Max(-lx, System.Math.Min(lx, viewX));
+            viewY = System.Math.Max(-ly, System.Math.Min(ly, viewY));
             // the lines move with the world: the view's offset from the world origin, in board px
             double z = Controls.ZoomExact / KmPerPx;
             grid.OffsetPx = new Vector2((float)(-viewX * z), (float)(viewY * z));
+            grid.ArenaHalfKm = new Vector2((float)s.ArenaHalfW, (float)s.ArenaHalfH); // Step 65: the grid is the battle space
+            ShowAxes(s);
         }
         if (capture) capture.raycastTarget = Capturing;
         bool erasing = Controls.Tool == "ERASE";
@@ -359,9 +364,7 @@ public class HandoffPlotPanel : HandoffPanel
             if (!shipView) shipView = ShipView.Own();
             ownShipImage.texture = shipView ? shipView.Texture : null;
             ownShipImage.enabled = shipView && shipView.Texture;
-            var shipInk = ownShipColor.gamma; // the board canvas linearises vertex colours; pre-encode
-            shipInk.a = ShipAlpha();
-            ownShipImage.color = shipInk;
+            ownShipImage.color = ownShipColor.gamma; // the board canvas linearises vertex colours; pre-encode
             float shipPx = Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx);
             float side = shipPx / (shipView ? shipView.ShipFill : 1f);
             ownShipImage.rectTransform.sizeDelta = new Vector2(side, side);
@@ -571,14 +574,6 @@ public class HandoffPlotPanel : HandoffPanel
         return min < 60 ? min + " MIN" : (min / 60) + " H " + (min % 60) + " MIN";
     }
 
-    // bd-blink while tracked: full for the first half of each 1.1 s, then dim
-    float ShipAlpha()
-    {
-        var s = State;
-        if (s == null || s.signal < s.signalTrackedAt) return 1f;
-        return Time.unscaledTime % trackedBlinkSeconds < trackedBlinkSeconds * 0.5f ? 1f : trackedBlinkLow;
-    }
-
     TMP_Text PassiveLabel(int i)
     {
         while (passiveLabels.Count <= i)
@@ -657,6 +652,70 @@ public class HandoffPlotPanel : HandoffPanel
             hits.Add(h);
         }
         return hits[i];
+    }
+
+    // Step 65 (owner 2026-10-25): the axis numbers follow the grid. One on each big-square line, along the top
+    // and left edges, in thousands of km from the world origin (+ east and north), clear of the two titles. The
+    // design's were fixed text, right only with our ship at the centre; its bottom row went, as the ORDERS panel
+    // covers that edge's left end and the top row already gives it.
+    private RectTransform axisScale, axisXTitle, axisYTitle;
+    private TextMeshProUGUI axisTemplate;
+    private readonly List<TextMeshProUGUI> axisLabels = new List<TextMeshProUGUI>();
+    const float AxisTopPx = 38f, AxisLeftPx = 23f, AxisEdgePx = 20f; // the design's top row and left column, plot px
+
+    void ShowAxes(HandoffBoardState s)
+    {
+        if (!axisScale)
+        {
+            axisScale = grid.transform.parent.Find("Scale") as RectTransform;
+            if (!axisScale) return;
+            foreach (var t in axisScale.GetComponentsInChildren<TextMeshProUGUI>(true))
+            {
+                if (t.text == "X (") axisXTitle = t.rectTransform;
+                if (t.text == "Y (") axisYTitle = t.rectTransform;
+                if (!System.Text.RegularExpressions.Regex.IsMatch(t.text, @"^[+−]?\d+$")) continue;
+                if (!axisTemplate) axisTemplate = t;
+                t.gameObject.SetActive(false);
+            }
+        }
+        if (!axisTemplate) return;
+        Rect r = grid.rectTransform.rect;
+        var o = marks ? marks.origin : Vector2.zero;
+        float cellPx;
+        double major = grid.CellKm(out cellPx) * grid.MajorEvery;
+        int used = 0;
+        // lines from the battle space's corner, as the grid draws them
+        for (double wx = -s.ArenaHalfW; wx <= s.ArenaHalfW + 1; wx += major)
+        {
+            float x = Screen(wx, 0).x;
+            if (x - o.x < AxisEdgePx || x - o.x > r.width - AxisEdgePx) continue;
+            if (axisXTitle && Mathf.Abs(x - o.x - axisXTitle.anchoredPosition.x) < axisXTitle.sizeDelta.x / 2f + 14f) continue;
+            AxisLabel(used++, wx, new Vector2(x, o.y + AxisTopPx));
+        }
+        for (double wy = -s.ArenaHalfH; wy <= s.ArenaHalfH + 1; wy += major)
+        {
+            float y = Screen(0, wy).y;
+            if (y - o.y < AxisEdgePx || y - o.y > r.height - AxisEdgePx) continue;
+            if (axisYTitle && Mathf.Abs(-(y - o.y) - axisYTitle.anchoredPosition.y) < axisYTitle.sizeDelta.x / 2f + 10f) continue;
+            AxisLabel(used++, wy, new Vector2(o.x + AxisLeftPx, y));
+        }
+        for (int i = used; i < axisLabels.Count; i++) if (axisLabels[i].gameObject.activeSelf) axisLabels[i].gameObject.SetActive(false);
+    }
+
+    void AxisLabel(int i, double km, Vector2 board)
+    {
+        while (axisLabels.Count <= i)
+        {
+            var t = Instantiate(axisTemplate, axisScale);
+            t.name = "Axis number";
+            t.alignment = TextAlignmentOptions.Center;
+            axisLabels.Add(t);
+        }
+        var l = axisLabels[i];
+        int n = (int)System.Math.Round(km / 1000);
+        l.text = n > 0 ? "+" + n : n < 0 ? "−" + (-n) : "0";
+        if (!l.gameObject.activeSelf) l.gameObject.SetActive(true);
+        Put(l.rectTransform, board, 0f);
     }
 
     // Children of a plot-sized rect anchored top-left at the plot origin (104,100).

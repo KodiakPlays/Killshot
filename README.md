@@ -32,6 +32,7 @@ To skip straight to the board, open `02_Grid.unity` instead.
 | `A` / `D` | Turn left and right |
 | Scroll wheel | Zoom, anchored on the cursor |
 | Middle-drag or right-drag | Pan the board |
+| `C` | Centre the plot on our ship |
 | Left rail | Pick a tool: mouse, point, ruler, compass, eraser |
 | Left-click / drag on the board | Use the live tool |
 

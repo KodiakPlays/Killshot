@@ -537,6 +537,40 @@ public class HandoffBoardState
     [Header("Our ship in the world, km (x east, y north). The board moves it (TickMove); TacticalWorld places the model")]
     public double ownX, ownY;
 
+    // ---- the battle space (Step 65, owner 2026-10-25) --------------------------------------------
+    // A rectangle centred on the world origin, 100,000 x 100,000 km to start (20 x 20 big squares of 5,000 km at x1).
+    // Near the edge a warning; past it, a countdown to get back inside, or the ship is lost (the GDD's desertion rule;
+    // Assets/Scripts/WorldBoundary.cs in the old build). Crossing drops the time rate to x1 (HandoffBoardControls).
+    [Header("Battle space (Step 65)")]
+    [Tooltip("East to west, km, centred on the world origin. Zooming out stops when it fills the plot's width. A multiple of 50,000 keeps the edge on a grid line at every zoom.")]
+    [Tune("Arena")] public double arenaWidthKm = 100000;
+    [Tooltip("North to south, km. Less than about half the width (the plot's shape) leaves black above and below it at full zoom-out. A multiple of 50,000 keeps the edge on a grid line.")]
+    [Tune("Arena")] public double arenaHeightKm = 100000;
+    public double ArenaHalfW => arenaWidthKm / 2;
+    public double ArenaHalfH => arenaHeightKm / 2;
+    [Tooltip("The edge warning shows this far inside the edge, km (half a big square).")]
+    [Tune("Arena")] public double arenaWarnKm = 2500;
+    [Tooltip("Game seconds to get back inside once out. At full speed the fastest return takes about 110.")]
+    [Tune("Arena")] public float arenaReturnSeconds = 150f;
+    /// <summary>Game seconds spent outside the battle space, or -1 while inside.</summary>
+    [System.NonSerialized] public float outsideFor = -1f;
+    /// <summary>Lost for leaving the battle space and not coming back in time.</summary>
+    [System.NonSerialized] public bool deserted;
+    public bool OutsideArena => System.Math.Abs(ownX) > ArenaHalfW || System.Math.Abs(ownY) > ArenaHalfH;
+    public bool NearArenaEdge => !OutsideArena && System.Math.Min(ArenaHalfW - System.Math.Abs(ownX), ArenaHalfH - System.Math.Abs(ownY)) <= arenaWarnKm;
+
+    /// <summary>Each tick, after we move: count the time outside, and lose the ship when it runs out.
+    /// True on the tick we cross out.</summary>
+    public bool TickArena(double dt)
+    {
+        if (destroyed) return false;
+        if (!OutsideArena) { outsideFor = -1f; return false; }
+        bool crossed = outsideFor < 0f;
+        outsideFor = crossed ? 0f : outsideFor + (float)dt;
+        if (outsideFor >= arenaReturnSeconds) { destroyed = true; deserted = true; }
+        return crossed;
+    }
+
     // Step 41 (owner 2026-10-18): the ship moves. Spec §4: actual chases commanded at capped rates;
     // the hull turns, the velocity follows, and the sideways part bleeds off (the ship slides). The
     // prototype's numbers (MAX_SPEED 240, ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988 and

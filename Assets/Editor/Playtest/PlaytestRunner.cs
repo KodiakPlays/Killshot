@@ -565,13 +565,13 @@ public static class PlaytestRunner
         if (!Click("ack", null, "alarm strip (acknowledge)")) yield break;
         Check("Clicking the strip acknowledges it", s.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, "");
 
-        //     Loud enough to be tracked: our ship blinks (bd-blink).
+        //     Loud enough to be tracked: our ship stays solid (owner 2026-10-25: the lamp and meter warn, not the ship).
         yield return (Func<bool>)(() => s.signal >= s.signalTrackedAt);
         var shipRaw = GameObject.Find("Own ship (3D view)").GetComponent<UnityEngine.UI.RawImage>();
-        bool bright = false, dim = false;
+        bool dim = false;
         float blinkUntil = Time.realtimeSinceStartup + 1.3f;
-        yield return (Func<bool>)(() => { if (shipRaw.color.a > 0.9f) bright = true; else if (shipRaw.color.a < 0.3f) dim = true; return Time.realtimeSinceStartup > blinkUntil; });
-        Check("Tracked, our ship blinks", bright && dim, "signal " + s.signal.ToString("0") + "%");
+        yield return (Func<bool>)(() => { if (shipRaw.color.a < 0.9f) dim = true; return Time.realtimeSinceStartup > blinkUntil; });
+        Check("Tracked, our ship does not blink", !dim, "signal " + s.signal.ToString("0") + "%");
 
         // 18. The bearing trail (Step 45): each sweep leaves TRACK 07's bearing where we were. As we
         //     move, the lines cross at it. They fade out over two minutes of mission time.

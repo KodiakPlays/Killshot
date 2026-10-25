@@ -146,6 +146,9 @@ public class HandoffBoardControls : MonoBehaviour
 
     [Header("Console — SCALE knob and grid tint")]
     [SerializeField, Range(0.1f, 1f)] private float zoom = 1f;
+    [Tooltip("Full zoom-out (owner 2026-10-25). If the battle space is too narrow to fill the plot's width at this zoom, zooming stops sooner, where it does.")]
+    [Tune("Board & time")]
+    [SerializeField, Range(0.1f, 1f)] private float zoomOutLimit = 0.35f;
     [Tooltip("SCALE knob: zoom x10 per this many px of drag (UIStateSpec §8.2).")]
     [Tune("Board & time")]
     [SerializeField] private float zoomDragPxPerDecade = 160f;
@@ -184,6 +187,7 @@ public class HandoffBoardControls : MonoBehaviour
     private HandoffPanel[] panels = new HandoffPanel[0];
     private HandoffRockers rockers;
     private int shotsHeard, resultsHeard, killsHeard, hitsTakenHeard;
+    private bool edgeWarned;
 
     private void Start()
     {
@@ -237,6 +241,12 @@ public class HandoffBoardControls : MonoBehaviour
                 state.TickAux(rate);
                 state.TickHelm(rate); // reads the engine room before a repair lands this tick, as tickPower does
                 state.TickMove(rate); // Step 41: the ship moves; each tick is `rate` mission seconds, as the clock
+                // Step 65: the battle space. Crossing out drops time to x1, so a fast rate can't kill you in a blink
+                if (state.TickArena(rate)) { rate = 1f; ShowTime(); Play(alertSound, "alert"); }
+                bool nearEdge = state.NearArenaEdge || state.outsideFor >= 0f;
+                if (nearEdge && !edgeWarned) Play(alertSound, "alert");
+                edgeWarned = nearEdge;
+                ShowAlarm();
                 state.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
                 state.TickFlights(rate); // Step 54: fighters fly, attack, come home
                 state.TickIncoming(rate); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
@@ -363,11 +373,16 @@ public class HandoffBoardControls : MonoBehaviour
 
     void ShowAlarm()
     {
-        bool on = state.newContacts > 0;
+        // Step 65: the battle space's warnings take the strip over; its count shows the seconds left
+        string edge = state.deserted ? "SHIP LOST — LEFT THE BATTLE SPACE"
+                    : state.outsideFor >= 0f ? "EXITING THE BATTLE SPACE — TURN BACK"
+                    : state.NearArenaEdge ? "APPROACHING THE EDGE OF THE BATTLE SPACE" : null;
+        bool on = edge != null || state.newContacts > 0;
         foreach (var p in alarmParts) if (p && p.activeSelf != on) p.SetActive(on);
         if (!on) return;
-        if (alarmCount) alarmCount.text = state.newContacts.ToString();
-        if (alarmText) alarmText.text = state.newContacts == 1 ? "NEW CONTACT SINCE COMMIT" : "NEW CONTACTS SINCE COMMIT";
+        if (alarmCount) alarmCount.text = edge == null ? state.newContacts.ToString()
+            : state.outsideFor >= 0f && !state.deserted ? Mathf.CeilToInt(state.arenaReturnSeconds - state.outsideFor).ToString() : "!";
+        if (alarmText) alarmText.text = edge ?? (state.newContacts == 1 ? "NEW CONTACT SINCE COMMIT" : "NEW CONTACTS SINCE COMMIT");
     }
 
     // ---- systems rail --------------------------------------------------------------------
@@ -405,11 +420,16 @@ public class HandoffBoardControls : MonoBehaviour
 
     // ---- console -------------------------------------------------------------------------
 
+    /// <summary>Step 65 (owner 2026-10-25): zooming out stops at `zoomOutLimit`, or sooner where the battle space's left
+    /// and right edges reach the plot's sides (1712 px at 60.9 px per 1,000 km; x0.28 for 100,000 km wide), so there's
+    /// never black down the sides. The top and bottom run on past the plot and you pan to them. The design went to 0.1.</summary>
+    public double MinZoom => System.Math.Max(zoomOutLimit, System.Math.Min(1.0, (grid ? grid.rectTransform.rect.width : 1712.0) / (state.arenaWidthKm * 60.9 / 1000.0)));
+
     public void SetZoom(double z)
     {
         // z*100 in double, as the browser does, so near-half products round the same way; the
         // exact double is kept for the next step, the float only for display and the grid
-        zoomExact = System.Math.Max(0.1, System.Math.Min(1, System.Math.Floor(z * 100.0 + 0.5) / 100));
+        zoomExact = System.Math.Max(MinZoom, System.Math.Min(1, System.Math.Floor(z * 100.0 + 0.5) / 100));
         zoom = (float)zoomExact;
         if (grid) grid.Zoom = zoom;
         if (zoomLabel) zoomLabel.text = "x" + (zoom >= 1f ? "1.0" : zoom.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));

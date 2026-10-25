@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 64 are done, plus a final QA pass.**
+**Steps 1 to 65 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -104,6 +104,8 @@ Do not run ahead. Do one step, show it, wait.
 | 62 | Weapon reach, the sweep's inner circle, the enemy's picture | **Done** — playtest passed with Step 63 |
 | 63 | Scale: everything that moves 5× faster; ACTIVE scans; the gain comes back | **Done** — playtest 163/163 |
 | 64 | Lose power, lose the setting | **Done** — playtest 163/163 |
+| 65 | The battle space: a map with edges, the grid resizing inside it | **Done** — checked in play mode; playtest not run |
+| 66 | Our ship stops blinking; drawers slide out from behind the frame | **Done** — checked by render; playtest not run |
 
 Steps 6 to 28 and Steps 34 to 64 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -413,7 +415,8 @@ These are settled. Do not reopen them.
 22. **Plot marks stay put in space** (owner, 2026-10-17). POINT is a timestamp, RULER a distance,
     COMPASS sits around our ship. Plots feed fire control later. Details in Step 36.
 23. **Every tunable value is in one window**, Starwolf → Tuning (owner, 2026-10-17). Tag every new
-    tunable with `[Tune("Section")]`. Details in Step 38.
+    tunable with `[Tune("Section")]`. Details in Step 38. **Being replaced by 31:** the window goes
+    when each ship's numbers move into its stats file.
 24. **Nothing standing on the plot** (owner, 2026-10-18). No always-on labels. Readouts come from
     using a tool. The PDC arcs show once the PDCs are activated; the alarm strip shows only for a
     real alert. Details in Step 39.
@@ -434,6 +437,22 @@ These are settled. Do not reopen them.
     us. Details in Step 54.
 30. **PDCs: arm the ladder for AUTO, a chance per missile; the enemy fires back when hit** (owner,
     2026-10-24). Enemy PDCs wait for the ship AI. Details in Step 55.
+31. **The Starwolf menu holds only the owner's tools** (owner, 2026-10-25): **Tuning**, **Level**,
+    and later **Mission** (the mission scripter). Build and test helpers don't get menu items. The
+    rest of the `Starwolf` and `Tools/Starwolf` menus are removed as the board refactor reaches them:
+    - **Tuning** has three tabs: **Ship**, **Enemy**, **Board**. Numbers only. Ship and Enemy each
+      edit that ship's stats file (a ScriptableObject, one per ship, same fields).
+    - **Level** is a separate tool: where things are (debris, spawn points, the battle space).
+    - **Art:** on each panel's own inspector. Panels are prefabs. Replaces the board builder and
+      the import menu.
+    - **Checks:** the playtest and the intro's letter check run in Unity's Test Runner.
+    - **Deleted outright:** `Starwolf/Tuning/Apply` and `/Capture` (nothing reads that asset), Soham's
+      `Wire UI References` / `Wire Button OnClicks` (old UI only), `Tools/Starwolf/Create Intro
+      Scene` (the intro lives in `00_Start`).
+32. **The map has edges; the grid still resizes** (owner, 2026-10-25). The battle space is a
+    rectangle with its own width and height. Zooming out stops when its **left and right** edges
+    reach the plot's sides, never the top and bottom: no black down the sides, and you pan up and
+    down for the rest. Details in Step 65.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -623,7 +642,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 64, in detail
+## 6 · Steps 6 to 28, and 34 to 65, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2714,6 +2733,68 @@ to zero." This replaces Step 63's "the gain comes back".
   is on.
 
 **Checked.** Playtest 163/163 PASS (`Logs/Playtests/2026-10-25_185453/`).
+
+### Step 65 — The battle space: a map with edges, the grid resizing inside it
+
+**Owner decisions (2026-10-25).** A first try used fixed 1,000 km squares and a 10 x 10 square
+map, with zoom stopping when the map filled the plot's height. It left black down both sides. The
+owner wants: the squares resize as you zoom, as before; the map has a separate width and height;
+zoom stops when the **sides** fill, and you pan up and down for the rest.
+
+**Where to change it.** `Board/HandoffBoard` → Handoff Board Controls → State → Battle space:
+**Arena Width Km** and **Arena Height Km** (100,000 each to start: 20 x 20 big squares at x1),
+**Arena Warn Km** (2,500), **Arena Return Seconds** (150).
+
+**What changed.**
+
+- `HandoffBoardState`: `arenaWidthKm`, `arenaHeightKm`. Near the edge a warning; past it a
+  countdown; not back in time and the ship is lost. Crossing out drops the rate to x1.
+- `HandoffPlotGrid`: the minor square is again the step nearest 61 px (1,000 km to x0.67, then
+  2,000, then 5,000 at full zoom-out). Lines start from the map's corner, so its edge is always a
+  line if each side is a multiple of 50,000 km. Drawn only inside the map, and square.
+- `HandoffBoardControls.MinZoom`: full zoom-out is **Zoom Out Limit** on Handoff Board Controls,
+  x0.35 (owner). If the map is too narrow to fill the plot's width there, zoom stops sooner, where
+  it does (x0.28 for 100,000 km wide), so the sides are never black. At x0.35 the squares are
+  2,000 km and the map is wider than the plot, so you pan side to side as well.
+- `HandoffPlotPanel`: panning stops at the map's edges. If our ship is outside, you can pan out
+  to it.
+- The alarm strip shows the edge warning and the countdown.
+- **Axis numbers follow the grid** (owner agreed). One on each big-square line, along the top and
+  left edges of the plot, in thousands of km from the world centre (+ east and north). They slide
+  when you pan and spread out when you zoom. A number that would sit on the "X (1,000 KM)" or
+  "Y (1,000 KM)" title is skipped. The design's fixed numbers (under `Plot/Scale`) are hidden at
+  run time, and the first of them is the template. The design's bottom row is gone: the ORDERS
+  panel covers its left end, and the top row already gives the same numbers.
+- **`C` centres the plot on our ship** (owner asked for a key). Near the map's edge the view stops
+  at the edge, so the ship can sit off-centre.
+
+**Checked** in play mode, with screenshots (before the x0.35 limit): at x0.28 the grid fills the plot's width; panning is
+locked side to side and stops at the top and bottom edges; at x0.5 and x1 it stops at all four.
+Axis numbers checked in play mode at x1 and x0.35, panned: each number sits on its line, our ship
+reads 0, 0. The `C` key was not pressed in the check; MCP can't press a key.
+
+### Step 66 — Our ship stops blinking; drawers slide out from behind the frame
+
+**Owner decisions (2026-10-25).**
+
+- **Our ship no longer blinks when we're tracked.** The owner saw it as a bug. The warning is the
+  red E-SIG lamp and meter on the Sensors panel (and the SIG lamp on Comms). Signal may later get
+  its own readout at the top of the board. Step 44's blink is gone from `HandoffPlotPanel`. The
+  playtest now checks that the ship does **not** blink.
+- **The metal frame is in front of the drawers**, so a drawer slides out from behind it.
+
+**How the frame is in front.** The frame is one solid steel sheet under everything; the plot covers
+its middle. So the frame isn't moved. The six drawers are moved under a new
+`Board/HandoffBoard/Drawers` object, just above `Plot`. It has a `RectMask2D` whose padding cuts it
+to the frame's opening (the `PlotRing` rect: 98, 84, 98, 94). Rails, Console, Helm, Orders and the
+alarm strip now draw on top of the drawers. The drawers' cast shadows no longer spill onto the
+frame.
+
+`HandoffBoardBuilder.TuckDrawersUnderFrame` does this as the builder's last step, so a rebuild keeps
+it. It must stay last: every Wire step finds the drawers as direct children of `HandoffBoard`.
+
+**Checked** by rendering the Board Camera with Sensors half open (cut cleanly at the frame's inner
+edge, under the rail) and fully open (unchanged). Not run in play mode; playtest not run.
 ---
 
 ## 7 · How to keep this log

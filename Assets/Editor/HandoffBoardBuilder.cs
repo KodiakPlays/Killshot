@@ -186,6 +186,7 @@ public static class HandoffBoardBuilder
         WirePlot(root);
         WireRockers(root);
         RelinkWorld(root);
+        TuckDrawersUnderFrame(root);
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
@@ -405,6 +406,20 @@ public static class HandoffBoardBuilder
     {
         var e = Child(g, name, r, false);
         Img(e.rt.gameObject, null, c, false);
+    }
+
+    // Owner 2026-10-25: the metal frame is in front, so a drawer slides out from behind it. The frame
+    // is one solid sheet under the plot, so the drawers are clipped to its opening (PlotRing) and drawn
+    // just above the plot, under the rails and stations mounted on the frame. Runs last: every Wire
+    // step finds the drawers as direct children of the root.
+    static void TuckDrawersUnderFrame(RectTransform root)
+    {
+        var ring = (RectTransform)root.Find("PlotRing");
+        float x = ring.anchoredPosition.x, y = -ring.anchoredPosition.y;
+        var g = Child(new Group { rt = root, origin = Vector2.zero }, "Drawers", new Rect(0, 0, 1920, 1080), true);
+        g.rt.GetComponent<RectMask2D>().padding = new Vector4(x, 1080 - y - ring.rect.height, 1920 - x - ring.rect.width, y);
+        g.rt.SetSiblingIndex(root.Find("Plot").GetSiblingIndex() + 1);
+        foreach (var s in DrawerStates) root.Find("State · " + s).SetParent(g.rt, false);
     }
 
     static void AddReferenceOverlay(Group board)
