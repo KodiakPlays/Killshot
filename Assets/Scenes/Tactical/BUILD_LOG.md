@@ -2743,7 +2743,7 @@ zoom stops when the **sides** fill, and you pan up and down for the rest.
 
 **Where to change it.** `Board/HandoffBoard` → Handoff Board Controls → State → Battle space:
 **Arena Width Km** and **Arena Height Km** (100,000 each to start: 20 x 20 big squares at x1),
-**Arena Warn Km** (2,500), **Arena Return Seconds** (150).
+**Arena Warn Km** (2,500), **Arena Return Seconds** (30; owner, 2026-10-25, was 150).
 
 **What changed.**
 

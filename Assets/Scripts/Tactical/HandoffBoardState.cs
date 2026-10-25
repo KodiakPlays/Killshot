@@ -550,8 +550,8 @@ public class HandoffBoardState
     public double ArenaHalfH => arenaHeightKm / 2;
     [Tooltip("The edge warning shows this far inside the edge, km (half a big square).")]
     [Tune("Arena")] public double arenaWarnKm = 2500;
-    [Tooltip("Game seconds to get back inside once out. At full speed the fastest return takes about 110.")]
-    [Tune("Arena")] public float arenaReturnSeconds = 150f;
+    [Tooltip("Game seconds to get back inside once out (owner: 30). At full speed the fastest return takes about 110, so crossing at speed is fatal: the warning is the time to turn.")]
+    [Tune("Arena")] public float arenaReturnSeconds = 30f;
     /// <summary>Game seconds spent outside the battle space, or -1 while inside.</summary>
     [System.NonSerialized] public float outsideFor = -1f;
     /// <summary>Lost for leaving the battle space and not coming back in time.</summary>
