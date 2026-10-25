@@ -2893,15 +2893,17 @@ file and line evidence. Most claims held. The scale sim still matches the game's
 - The battle space's return countdown is 30 game seconds (owner). The tooltip's fastest return is
   corrected from about 110 to about 75 game seconds.
 
-**For the owner.**
+**Owner answers (2026-10-25).**
 
+- A ship with no power should not hear on DRADIS. Logged as a bug in Open items.
+- Coming back inside for a moment restarts the 30 seconds. That is fine.
 - 30 game seconds is 12.6 real seconds at x1. Straight out at full speed, the fastest return is
-  about 75 game seconds: brake, then turn. 30 is enough below about 4.4 km/s, or crossing at under
-  about 18°. The 2,500 km warning gives 200 game seconds at full speed; it does not drop the rate.
-- One tick back inside resets the countdown.
-- The sweep's identification is silent when DRADIS already hears the contact, the usual case.
+  about 75 game seconds: brake, then turn. The 2,500 km warning is the time to turn.
 
-**Not yet.** The playtest has no battle-space checks.
+**Still to ask.** You turn on ACTIVE and the sweep passes a ship. Its name appears. If DRADIS could
+already hear that ship, there is no beep. That is the usual case. Should there be a beep?
+
+**Not yet.** The bugs this check found that are not fixed are in Open items, "Bugs, not fixed yet".
 
 **Checked.** With Step 68: playtest 165/165, including "Disabled, its brain cannot drive it"
 (`Logs/Playtests/2026-10-25_224013/`).
@@ -3215,6 +3217,21 @@ From `UI_INTEGRATION_LOG.md`, section 10. In order:
 3. **Helm, Orders and the periscope don't slide yet** (decision 35). They open at once, or drop
    inside their own clip. If they are made to slide, clip them to the frame's opening and keep them
    under the rails, as Step 66 did for the drawers.
+
+### Bugs, not fixed yet (2026-10-25)
+
+Found by the doc check after Step 66. Fix each with the owner.
+
+1. **A ship with no power still hears on DRADIS.** The owner: no power, no hearing.
+   `HandoffBoardState.Heard()` checks only the DRADIS switch.
+2. **A ship lost at the battle space's edge stays "SHIP LOST".** `deserted` is never cleared. It
+   matters once there is a restart.
+3. **Boats can be dragged along mid-boarding.** If the target gets under way during the 60 s fight
+   (its EMP wears off), the boats follow it and the hangar line stays on BOARDING.
+4. **Enter can do nothing on the briefing.** If the INITIALISING screen's controller switches
+   itself off (a missing shader), `finished` never fires. Not seen in a run.
+5. **The playtest has no battle-space checks:** the warning, countdown, x1 drop, zoom limit, pan
+   limit, axis numbers and the `C` key.
 
 ### Clean-up once the game is working (owner, 2026-10-24)
 
