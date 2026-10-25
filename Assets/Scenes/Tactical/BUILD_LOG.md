@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 63 are done, plus a final QA pass.**
+**Steps 1 to 64 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -103,8 +103,9 @@ Do not run ahead. Do one step, show it, wait.
 | 61 | Scan to know what you hit; smoothing; heading 000 | **Done** — playtest 161/161 |
 | 62 | Weapon reach, the sweep's inner circle, the enemy's picture | **Done** — playtest passed with Step 63 |
 | 63 | Scale: everything that moves 5× faster; ACTIVE scans; the gain comes back | **Done** — playtest 163/163 |
+| 64 | Lose power, lose the setting | **Done** — playtest 163/163 |
 
-Steps 6 to 28 and Steps 34 to 63 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 64 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -622,7 +623,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 63, in detail
+## 6 · Steps 6 to 28, and 34 to 64, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2696,6 +2697,23 @@ comes back once the power does.
 - With all four buses on DRAW, ENG gets 3 of 10 units, so throttle stops at 60%. That is the
   power trade-off as designed.
 - The mission clock starts at 2:03:32, the design's demo time.
+
+### Step 64 — Lose power, lose the setting
+
+**Owner decision (2026-10-25).** "If the power goes, you have to redo everything. It just sets back
+to zero." This replaces Step 63's "the gain comes back".
+
+**What changed** (`HandoffBoardState`):
+
+- **Gain:** if the SEN bus can no longer carry it, the gain drops to 1 (its lowest) and stays there.
+  `gainSet` is gone.
+- **Throttle:** if the ENG bus can no longer carry it, the throttle drops to 0 and the ship brakes to
+  a stop. The design held it at what the bus could carry.
+- **At load** power is cold, so the gain starts at 1 and the throttle at 0. The design's demo had 2
+  and 40. Powering up no longer knocks anything back without telling you. Set them once the power
+  is on.
+
+**Checked.** Playtest 163/163 PASS (`Logs/Playtests/2026-10-25_185453/`).
 ---
 
 ## 7 · How to keep this log

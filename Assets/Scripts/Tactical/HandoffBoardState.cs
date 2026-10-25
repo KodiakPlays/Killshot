@@ -105,10 +105,9 @@ public class HandoffBoardState
     [Header("Sensors — the board's initial state")]
     public bool dradis = true;
     public bool active;
-    [Range(1, 5)] public int senBoost = 2;
-    [Tooltip("Step 63 (owner 2026-10-24): the gain you set. The gain in use (senBoost) is held down to the SEN bus's units "
-           + "while it is short, and comes back up to this when the power does.")]
-    [Range(1, 5)] public int gainSet = 2;
+    [Tooltip("DRADIS gain, 1–5, capped by the SEN bus. Owner 2026-10-25: at load it is at its lowest (power is cold); "
+           + "if the SEN bus can no longer carry it, it drops back to 1 and stays there until you raise it again.")]
+    [Range(1, 5)] public int senBoost = 1;
     [Tooltip("Sensor range = base + per step x gain (senRangeKm).")]
     [Tune("Sensors")]
     public float senRangeBaseKm = 12000f, senRangePerStepKm = 7000f;
@@ -366,8 +365,8 @@ public class HandoffBoardState
     [Tooltip("Our heading at load. Owner 2026-10-24: 000, bow straight up (the design's demo had 083).")]
     [Range(0, 359)] public int hdg = 0;
     [Range(0, 359)] public int ordHdg = 0;
-    [Tooltip("Throttle %, 0..100 (thr).")]
-    [Range(0, 100)] public int thr = 40;
+    [Tooltip("Throttle %, held to what the ENG bus carries. Owner 2026-10-25: 0 at load (power is cold; the design's demo had 40); if ENG can no longer carry it, it drops to 0.")]
+    [Range(0, 100)] public int thr = 0;
     [Tooltip("Attitude hold: NOSE, STBD, PORT, TAIL, or empty for none (apAtt).")]
     public string apAtt = "NOSE";
     [Tooltip("Approach mode: DIRECT, FLANK, EVASIVE (apMode).")]
@@ -1657,7 +1656,7 @@ public class HandoffBoardState
     public void ToggleActive() { active = !active; }
 
     /// <summary>startGain: 1..5, capped by the SEN bus.</summary>
-    public void SetGain(int v) { gainSet = Mathf.Max(1, Mathf.Min(5, v)); senBoost = Mathf.Max(1, Mathf.Min(gainSet, GainCap)); }
+    public void SetGain(int v) { senBoost = Mathf.Max(1, Mathf.Min(5, Mathf.Min(GainCap, v))); }
 
     public void SetSpectrum(string band) { spectrum = band; }
     public void SetCone(int brg) { coneBrg = Mathf.Clamp(brg, 0, 360); }
@@ -1839,7 +1838,7 @@ public class HandoffBoardState
     public void TickHelm(double dt)
     {
         int engCap = BusUnits("eng") * 20;
-        if (thr > engCap) thr = engCap;
+        if (thr > engCap) thr = 0; // owner 2026-10-25: power lost, the throttle goes back to zero (the design held it at the cap); you set it again
         if (hdg == ordHdg) { turnBank = 0; return; }
         // degrees per game second (the design's per-tick swing at x1), banked so the bow turns whole degrees
         turnBank += System.Math.Max(1, JsRound(turnRate * EngFactorD)) * dt;
@@ -1895,7 +1894,7 @@ public class HandoffBoardState
     public void TickSensors(double dt)
     {
         int senCap = Mathf.Max(1, BusUnits("sen"));
-        senBoost = Mathf.Max(1, Mathf.Min(gainSet, senCap)); // Step 63: held down while SEN is short, back up when it isn't
+        if (senBoost > senCap) senBoost = 1; // owner 2026-10-25: power lost, the setting goes back to the bottom; you set it again
         // every unit drawn makes us louder, and so does ACTIVE SCAN (GDD p18, spec 3.1.b, prototype getSig)
         float want = SignalTarget;
         if (signal < want) signal = Mathf.Min(want, signal + signalRise * (float)dt);
