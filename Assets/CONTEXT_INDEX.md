@@ -81,6 +81,7 @@ pages, and most of it has been overtaken.
 | The first mission, the tutorial walkthrough, and the first enemy AI — the plan | `Assets/Scenes/Tactical/FTUE_PLAN.md` |
 | A mechanic that is already written, before you port it to C# | `docs/reference-sim/` |
 | Where a panel's prefab and art are, and how to swap its art | `Assets/UI/Board/README.md` |
+| Spoken orders, and how an outside program (or Claude) could drive the built game — an idea, not built | `docs/voice-command-exploration.md` |
 | Ship silhouettes, class size table, obstacle tiers | `References/Starwolf_ Art Spec.pdf` |
 | Working rules — MCP, C# style, repo hygiene | `CLAUDE.md` |
 
