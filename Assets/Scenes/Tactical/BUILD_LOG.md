@@ -685,7 +685,12 @@ The new layout throws that split away:
     Wire step, because they find the drawers as direct children of `HandoffBoard`. Then
     `BuildSignalBox` runs, because it copies from `Drawers/State · sensors`. Since Step 66 the six
     drawers live under `HandoffBoard/Drawers`; look for them there.
-37. Nothing else. The Unity console is clean: no errors, no warnings.
+37. **Playtest check 140 ("Scanned, the targeting computer shows its hull") can fail by chance.**
+    It failed once (`2026-10-25_230225`, "NO SUBJECT ON BEARING") and passed on a re-run with the
+    same scene and code. The periscope names a ship only if it is heard and on bearing, and the
+    run's power spread varies a little with timing (that run had AUX at 2 units, not 3). If it
+    fails, re-run before hunting a bug.
+38. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
@@ -2971,6 +2976,13 @@ periscope housing and the corner bolt, and reads 0% and RUNNING SILENT. Playtest
 (`Logs/Playtests/2026-10-25_224013/`): 163 plus two new checks, this step's signal box and the doc
 check's "Disabled, its brain cannot drive it". Tracked at 100%, the box read "100%" and "1 HOSTILE
 SET HAS YOUR RANGE"; the run's shot `23_bearing_trail.png` shows it red in the top-right.
+
+**Full rebuild checked (owner asked).** `Starwolf/Handoff/2` rebuilt the whole board with this
+step's code and the axis-number change. Every setting on the board, the World and the cameras was
+listed before and after: no value changed. The only additions were 2 text sub-objects TMP makes by
+itself for the "▸" glyph. The build counts show "deleted: fixed axis number: 12". Playtest after
+the rebuild: 164/165 (`2026-10-25_230225`, check 140 failed, trap 37), then 165/165 on a re-run
+(`2026-10-25_230646`), with live axis numbers on the plot.
 
 **Known.** The box only exists in `02.1_Grid`. The tone isn't checked by the playtest: other cues
 (new contact, edge) use the same tone, so `LastSound` can't tell them apart.
