@@ -74,6 +74,7 @@ pages, and most of it has been overtaken.
 | How the prototype actually behaves, without opening 4,472 lines | `Assets/PROTOTYPE_BASELINE.md` |
 | What C# exists today | `Assets/CODEBASE_BASELINE.md` |
 | What is built in the tactical scene, and the traps already hit | `Assets/Scenes/Tactical/BUILD_LOG.md` |
+| How the green phosphor screen works (intro, welcome page, INITIALISING), and how to put it on a new screen | `Assets/StarwolfIntro/README.md` |
 | Which canvas, camera, render texture and GameObject feeds each panel and button **of the old cockpit UI** (not the current board) | `Assets/Scenes/Tactical/UICONTROLLER_PARTS.md` |
 | What exists for weapons, tracks and contacts, and what still has to be built | `Assets/Scenes/Tactical/TARGETING_AUDIT.md` |
 | How the targeting drawer is built, to the pixel | `Assets/Scenes/Tactical/TARGETING_COMPUTER_SPEC.md` |

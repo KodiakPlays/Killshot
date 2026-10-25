@@ -114,6 +114,7 @@ Do not run ahead. Do one step, show it, wait.
 | 68 | The signal alarm: a box in the frame's top-right, and the alert tone | **Done** — playtest 165/165 |
 | 69 | Each DRADIS sweep pass beeps | **Done** — its check passed; full run still to re-run |
 | 70 | Intro colour: drawn through a Canvas (no double encode); dark green field | **Done** — measured in play mode against the reference shots |
+| 71 | Welcome page on the phosphor screen (DEMO title); loading bar under INITIALISING | **Done** — checked on screen and by the owner; playtest not run (owner) |
 
 Steps 6 to 28 and Steps 34 to 69 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -3062,6 +3063,41 @@ The menu draws on the same field. Playtest after the canvas change: 166/166 PASS
 
 **Still to do (owner's order).** The frame with open sides, the STRATEGIC SYSTEMS DIVISION line,
 the corner text and clearance squares, and the screen surface (lit rim, visible scanline bands).
+
+### Step 71 — The welcome page on the phosphor screen; a loading bar under INITIALISING
+
+**Owner direction (2026-10-26).** The page after NEW GAME gets the intro's look: the same screen, a
+short dot title, the lines in green monospace with the same glow, the Enter prompt green. The title
+is **DEMO** (owner: "demo" or "WIP"). The first line is "Welcome to Starwolf." (was "Welcome to
+Starwolf Tactical Grid Test."). INITIALISING... gets a loading bar under it that fills left to right.
+
+**What changed.**
+
+- `StarwolfIntroController`, four new fields:
+  - `titleOnly`: types the title in, then holds it; no menu, no `finished`.
+  - `titleText` (default STARWOLF), `titleOffset` (pixels up), `canvasOrder` (default 32767).
+  - sends `_Progress` (share of the line's time gone) to the shader.
+- `PhosphorDisplay.shader`: `_TitleOffset` moves the title; `bar()` draws the loading bar under
+  INITIALISING... in the same dots (one-cell outline, one-cell gap, fill by `_Progress`).
+- `01_Briefing`:
+  - new `WELCOME Screen`: a `StarwolfIntroController` copied from `INITIALISING`, with `titleOnly`,
+    `titleText` DEMO, `titleOffset` 300, `canvasOrder` 0, `titleDuration` 2.
+  - `Canvas` is now Screen Space Overlay, sort order 1, so its text draws over the phosphor screen.
+    Its two texts had z 1195.77 left over from camera mode, which hid them; set to 0.
+  - `BriefingText` (30 pt) and `EnterPrompt` (26 pt): Share Tech Mono, `#A2F9A0`, upper case,
+    letter-spaced, on the new material below.
+- New `Assets/StarwolfIntro/Materials/ShareTechMono-Regular SDF Phosphor Glow.mat`: the font's mobile
+  shader with a soft green underlay as the glow.
+- `INITIALISING` keeps sort order 32767, so it covers the welcome page when Enter is pressed.
+
+**Checked** in play mode with screenshots: the welcome page (title, lines, prompt, glow), and
+INITIALISING over it with the bar part filled.
+
+**Traps.**
+
+- The full `TextMeshPro/Distance Field` shader draws magenta blocks here. Stay on the mobile shader;
+  its underlay is the glow.
+- A canvas switched from camera to overlay keeps its children's z. Zero it or the text vanishes.
 
 ---
 

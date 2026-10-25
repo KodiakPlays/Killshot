@@ -270,7 +270,7 @@ Canvas:
   m_GameObject: {fileID: 625657230}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 1
+  m_RenderMode: 0
   m_Camera: {fileID: 251360597}
   m_PlaneDistance: 1
   m_PixelPerfect: 0
@@ -283,7 +283,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!224 &625657234
 RectTransform:
@@ -306,6 +306,76 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &751530470
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 751530472}
+  - component: {fileID: 751530471}
+  m_Layer: 0
+  m_Name: WELCOME Screen
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &751530471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751530470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e22b0be2be252fbb5aefb5efc8197d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Starwolf.Intro.StarwolfIntroController
+  glyphData: {fileID: 0}
+  displayShader: {fileID: 4800000, guid: 322627cc3a3e54c8bdaa4dc899202abd, type: 3}
+  hardwareHum: {fileID: 0}
+  sectionDuration: 2.5
+  initialisingDuration: 2
+  titleDuration: 2
+  typeShare: 0.5
+  initialisingOnly: 0
+  titleOnly: 1
+  titleText: DEMO
+  titleOffset: 300
+  canvasOrder: 0
+  finished:
+    m_PersistentCalls:
+      m_Calls: []
+  humVolume: 0.12
+  newGame:
+    m_PersistentCalls:
+      m_Calls: []
+  loadGame:
+    m_PersistentCalls:
+      m_Calls: []
+  settings:
+    m_PersistentCalls:
+      m_Calls: []
+  loadGameAvailable: 0
+--- !u!4 &751530472
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751530470}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &976202080
 GameObject:
   m_ObjectHideFlags: 0
@@ -343,6 +413,10 @@ MonoBehaviour:
   titleDuration: 2
   typeShare: 0.5
   initialisingOnly: 1
+  titleOnly: 0
+  titleText: STARWOLF
+  titleOffset: 0
+  canvasOrder: 32767
   finished:
     m_PersistentCalls:
       m_Calls:
@@ -410,7 +484,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1360786927}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 1195.7684}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -443,15 +517,15 @@ MonoBehaviour:
       m_Calls: []
   m_text: PRESS ENTER TO GO AHEAD
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: dd6af4969680345e096ddea908528c28, type: 2}
-  m_sharedMaterial: {fileID: -8546432007511967011, guid: dd6af4969680345e096ddea908528c28, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: fd602e880ee9b4f7983f406dfaa96245, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4282229736
-  m_fontColor: {r: 0.909, g: 0.639, b: 0.239, a: 1}
+    rgba: 4288739746
+  m_fontColor: {r: 0.63529414, g: 0.9764706, b: 0.627451, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -468,17 +542,17 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32
-  m_fontSizeBase: 32
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
-  m_characterSpacing: 14
+  m_characterSpacing: 16
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
@@ -662,7 +736,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2117669297}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 1195.7684}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -670,7 +744,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 60}
+  m_AnchoredPosition: {x: 0, y: 20}
   m_SizeDelta: {x: 1300, y: 420}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2117669299
@@ -693,24 +767,24 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Welcome to Starwolf Tactical Grid Test.
+  m_text: 'Welcome to Starwolf.
 
 
-    Gameplay, everything here
-    is a work in progress.
+    Gameplay, everything here is a work in progress.
 
 
-    Thank you for playing.'
+    Thank
+    you for playing.'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: dd6af4969680345e096ddea908528c28, type: 2}
-  m_sharedMaterial: {fileID: -8546432007511967011, guid: dd6af4969680345e096ddea908528c28, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: fd602e880ee9b4f7983f406dfaa96245, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4293979624
-  m_fontColor: {r: 0.909, g: 0.929, b: 0.941, a: 1}
+    rgba: 4288739746
+  m_fontColor: {r: 0.63529414, g: 0.9764706, b: 0.627451, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -727,17 +801,17 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 44
-  m_fontSizeBase: 44
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
-  m_characterSpacing: 0
+  m_characterSpacing: 8
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 12
@@ -788,4 +862,5 @@ SceneRoots:
   - {fileID: 2112797141}
   - {fileID: 625657234}
   - {fileID: 1675068443}
+  - {fileID: 751530472}
   - {fileID: 976202082}
