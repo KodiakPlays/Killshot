@@ -118,7 +118,7 @@ Do not run ahead. Do one step, show it, wait.
 | 72 | Mission clock and signal box lined up with the plot edges | **Done** — measured on screen |
 | 73 | Ruins in the level: the starbase husk and a debris belt; a Player Spawn at the bottom, the enemy's at the top | **Done** — playtest 168/168 |
 | 74 | Engineering's ship picture shows side armour; the room rings change colour | **Done** — playtest 168/168 |
-| 75 | Ships glide between ticks; DRADIS shows a contact where the sweep last touched it; in sight (10,000 km) its model shows; wrecks stay, grey; engineering's hull filled; weapons and DRADIS reach 30,000 km | **Done** — playtest 170/170 |
+| 75 | Ships glide between ticks; DRADIS shows a contact where the sweep last touched it; in sight (10,000 km) its model shows; wrecks stay, grey; engineering's hull redrawn; weapons and DRADIS reach 30,000 km | **Done** — playtest 170/170 |
 | 76 | Axis numbers are distances from our ship; the axis titles and the frame stencils TCB-1 and ACC 07 are gone | **Done** — playtest 171/171 |
 
 Steps 6 to 28 and Steps 34 to 76 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
@@ -536,8 +536,15 @@ These are settled. Do not reopen them.
 35. **The metal frame is in front** (owner, 2026-10-25). Anything a button opens should slide out
     from behind it: clipped to the frame's opening, under the rails and stations. Done for the six
     drawers. Helm, Orders and the periscope don't slide yet (Open items). Details in Step 66.
+36. **Spoken orders, once the board is finished** (owner, 2026-10-26). The captain can speak orders
+    ("come about to port", "all ahead full", "sweep bearing 045", "sweep there" while pointing) with
+    push-to-talk. Voice sits beside the buttons, never replacing them. The crew takes a moment to
+    carry an order out and answers with a quiet "roger". Speech is heard offline, on the player's
+    machine. Firing stays on buttons. Not built yet. Until then, every action keeps going through
+    `HandoffBoardControls.Click`, so a spoken order can use the same path and its refusals.
+    Details in `docs/voice-command-exploration.md`.
 37. **Engineering shows side armour on the ship picture** (owner, 2026-10-26). The picture is our
-    ship in four parts, one per side. Each part is a dim fill with a bright outline (Step 75). Each
+    ship in four parts, one per side. Each part is a bright outline with its panel lines in grey (Step 75). Each
     part is white while its armour is full, amber once hit, red once open. No compartment dots: the
     room rings show the rooms, white, amber or red by health. The plot ship stays plain white.
     Details in Steps 74 and 75.
@@ -3325,7 +3332,8 @@ tick. The owner asked for this:
 - Guns reach 30,000 km. DRADIS at full gain reaches 30,000 km. Visual range is 10,000 km. These are
   starting numbers, to be tuned.
 - The engineering hull picture looked greasy: every panel line of the model showed as a hairline.
-  The owner picked a dim fill with a bright outline.
+  The owner wanted the panel lines grey and the outline bright. (A solid grey fill was built first by
+  mistake; the owner turned it down the same day.)
 
 **What changed.**
 
@@ -3363,7 +3371,9 @@ tick. The owner asked for this:
 - **Engineering hull pictures.** The four images in `Assets/Art/Board/Hull/` were redrawn from the
   Step 74 line pictures.
   - Each part is the gap it leaves in the other three.
-  - The fill is at 35% brightness. A 3 px outline is at full brightness. Edges are smoothed at 4×.
+  - A 3 px outline is at full brightness, edges smoothed at 4×. Inside it, the Step 74 panel lines
+    are at 40% brightness, so they read grey (or dim amber or red). No fill. The lines stop 3 px
+    short of the outline.
   - The frame and the file names did not change, so nothing else had to.
   - To remake them for a new model, make the line pictures as in Step 74, then redraw them this way.
     `BoardLinearImage` encodes first and then uses brightness as alpha. So store each brightness as
@@ -3383,8 +3393,9 @@ tick. The owner asked for this:
 
 **Checked.** Playtest **PASS, 170/170** (`Logs/Playtests/2026-10-26_011622/`). The first run
 (`2026-10-26_011116`) failed only "Nothing heard yet": the east stand-in, fixed above. The
-screenshot `30_engineering_diagram.png` shows the filled hull: starboard amber, aft red, prow and
-port white.
+screenshot `30_engineering_diagram.png` shows the hull: starboard amber, aft red, prow and
+port white. That run had the solid fill. The grey-line version was checked by hand:
+`Logs/Checks/hull_inner_lines.png` (starboard half, aft open).
 
 Then, with the GARUDA renames and the fighter take-off change in the same build: playtest **PASS,
 171/171** (`Logs/Playtests/2026-10-26_013236/`).
