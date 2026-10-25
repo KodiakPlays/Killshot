@@ -80,6 +80,7 @@ pages, and most of it has been overtaken.
 | How the targeting drawer is built, to the pixel | `Assets/Scenes/Tactical/TARGETING_COMPUTER_SPEC.md` |
 | The first mission, the tutorial walkthrough, and the first enemy AI — the plan | `Assets/Scenes/Tactical/FTUE_PLAN.md` |
 | A mechanic that is already written, before you port it to C# | `docs/reference-sim/` |
+| Where a panel's prefab and art are, and how to swap its art | `Assets/UI/Board/README.md` |
 | Ship silhouettes, class size table, obstacle tiers | `References/Starwolf_ Art Spec.pdf` |
 | Working rules — MCP, C# style, repo hygiene | `CLAUDE.md` |
 
@@ -123,7 +124,9 @@ instruments are stations not a HUD, information costs time, uncertainty is drawn
 ### The new Claude Design handoff — `Assets/UI2/Claude Design handoff/export/`
 
 The newer handoff, and the one built into `02.1_Grid`. The full board cut into images, fonts and
-measurements. Treat it as owner input: read it, do not edit it.
+measurements. Read it, but don't change what's in it. The art the board uses is being moved out of it,
+one panel at a time, into `Assets/UI/Board/Art/` (owner, 2026-10-26). Once everything is out, the
+owner deletes the export. See `Assets/UI/Board/README.md`.
 
 - `README.md` — what the package is and how to use it.
 - `reference/UIStateSpec.md` — every control's states.

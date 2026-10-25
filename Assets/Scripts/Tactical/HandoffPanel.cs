@@ -8,6 +8,18 @@ using UnityEngine.UI;
 /// </summary>
 public abstract class HandoffPanel : MonoBehaviour
 {
+    /// <summary>One piece of the panel's art: a sprite and every image that shows it.</summary>
+    [System.Serializable]
+    public class ArtSlot
+    {
+        public string name;
+        public Sprite sprite;
+        public Image[] images;
+    }
+
+    [Tooltip("This panel's art. Swap a sprite here and every image listed under it changes.")]
+    [SerializeField] private ArtSlot[] art;
+
     protected HandoffBoardControls Controls { get; private set; }
     protected HandoffBoardState State => Controls.State;
 
@@ -35,6 +47,18 @@ public abstract class HandoffPanel : MonoBehaviour
     }
 
     public static void Show(Component c, bool on) { if (c) c.gameObject.SetActive(on); }
+
+#if UNITY_EDITOR
+    // a sprite swapped in the art list goes onto its images
+    private void OnValidate()
+    {
+        if (art == null) return;
+        foreach (var a in art)
+            if (a != null && a.sprite && a.images != null)
+                foreach (var img in a.images)
+                    if (img && img.sprite != a.sprite) { img.sprite = a.sprite; UnityEditor.EditorUtility.SetDirty(img); }
+    }
+#endif
 
     /// <summary>Text as the browser shows it: runs of spaces collapse to one (white-space: normal).
     /// The board's code builds some lines with "   " that never render (Step 33e verification).</summary>

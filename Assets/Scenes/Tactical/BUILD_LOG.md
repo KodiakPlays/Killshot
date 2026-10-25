@@ -3687,14 +3687,32 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
 - **Navigation (2026-10-26).** All ship movement is in `Systems/NavSystem.cs`: position, heading,
   throttle, turning, speed, drift and placing the 3D model. It replaced `TickHelm` and `TickMove`
   in `HandoffBoardState`, and the model placing in `TacticalWorld`.
-  - `OwnShip` and `Dummy · TRACK 07` each carry a NavSystem. `HandoffBoardControls.nav` points at
+  - `OwnShip` and `Garuda · Cruiser` (was `Dummy · TRACK 07`) each carry a NavSystem. `HandoffBoardControls.nav` points at
     ours, and every ship state reaches its own through `.nav`.
   - `HandoffHelmPanel` became `UI/Panels/HelmPanel`. It only shows the NavSystem and passes the
     throttle, the A and D keys and the clicks to it.
   - No behaviour change. The playtest passed 166/166 after the move (run 2026-10-26_002152), and
     again after the rename to NavSystem (run 2026-10-26_002808).
+- **The enemy is GARUDA (2026-10-26).** Track t07 is named GARUDA, a Garuda-class cruiser, in code and
+  in the scene. The contact is `Garuda · Cruiser`, its model is the StarWolf cruiser mesh, and
+  Level_01's spawn is `Enemy Spawn · Garuda`. Playtest 171/171 (run 2026-10-26_013236).
+- **Helm panel prefab (2026-10-26).** `Assets/UI/Board/Panels/Helm.prefab`, built from the scene, not
+  the builder. How to use it: `Assets/UI/Board/README.md`.
+  - The helm is one object, `Helm`, under `HandoffBoard`. It holds `Closed` and `Open` (were `Helm`
+    and `State · helm`). `HelmPanel` moved onto it. The board now finds panels on child objects too.
+  - Every part is named after its control, and each control's parts sit under one parent, for
+    example `Open/01 Flight/Throttle/Cap`. Draw order is unchanged: screenshots before and after
+    match pixel for pixel, closed and open.
+  - The helm's art is a list on `HelmPanel` (**Art**, 20 entries). Swap a sprite there and every
+    image under it changes. The list lives on `HandoffPanel`, so every panel gets one.
+  - Art files moved, keeping their links: the helm's own to `Assets/UI/Board/Art/Helm`, art other
+    panels use too to `Art/Shared`, and four shapes to `Art/Shared/Shapes`. Only the @2x files the
+    board uses moved. The 1x copies stay in the export.
+  - Playtest 171/171 (run 2026-10-26_014759).
+  - Not done yet: the palette asset. The helm's colours are still fields on `HelmPanel`.
 
-**Next:** power, then sensors, comms, weapons, hangar, damage and orders, the same way. The step list
+**Next:** the other panels as prefabs, the same way as the helm. Then power, sensors, comms, weapons,
+hangar, damage and orders as systems, the way navigation was done. The step list
 below is the reference for what each part needs.
 
 **Why.** The board is hard to follow:

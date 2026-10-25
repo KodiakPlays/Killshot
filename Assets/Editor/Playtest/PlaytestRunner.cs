@@ -16,8 +16,8 @@ using UnityEngine.UI;
 /// <summary>
 /// The standing end-of-feature playtest (owner, 2026-10-17): plays the real user flow — intro, menu
 /// NEW GAME, briefing, board — then sets up the ship, checking each step, and films the run with
-/// Unity Recorder. Output: Logs/Playtests/&lt;time&gt;/ — playtest.mp4, report.md, shots/*.png. Only the
-/// newest KeepRunsWithMedia runs keep their video and shots; every report stays.
+/// Unity Recorder. Output: Logs/Playtests/&lt;time&gt;/ — playtest.mp4, report.md, shots/*.png. Each run
+/// deletes every earlier run's video; screenshots stay for the newest KeepRunsWithShots runs; every report stays.
 /// Board controls are clicked where they are on screen, through the EventSystem, after checking the
 /// control is the topmost thing there (so a blocked control fails). The intro menu and the
 /// briefing's Enter are read through the old Input class, which a script cannot press, so the run

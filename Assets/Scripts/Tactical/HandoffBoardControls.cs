@@ -209,7 +209,7 @@ public class HandoffBoardControls : MonoBehaviour
         frameHome = selectedFrame ? selectedFrame.anchoredPosition : Vector2.zero;
         barHome = selectedBar ? selectedBar.anchoredPosition : Vector2.zero;
         if (motion) motion.Changed += ShowSystems;
-        panels = GetComponents<HandoffPanel>();
+        panels = GetComponentsInChildren<HandoffPanel>(true); // a panel can sit on its own station object (a prefab)
         rockers = GetComponent<HandoffRockers>();
         foreach (var p in panels) p.Bind(this);
         RefreshPanels();
