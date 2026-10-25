@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Step 34. The real world behind the tactical board: our ship and the contacts, in km
@@ -15,6 +16,11 @@ public class TacticalWorld : MonoBehaviour
     [SerializeField] private Transform ownShip;
     [Tooltip("Drop board tracks that no world contact drives (owner 2026-10-17: the mock-up contacts go).")]
     [SerializeField] private bool dropTracksWithoutContact = true;
+    [Tooltip("The level loaded on top of the board at play: a scene in Assets/Scenes/Levels, by name. If a level is already open in the editor, that one plays instead.")]
+    [SerializeField] private string levelScene = "Level_01";
+
+    /// <summary>Where the level scenes live (owner 2026-10-25: each level is its own scene).</summary>
+    public const string LevelFolder = "Assets/Scenes/Levels";
 
     private WorldContact[] contacts = new WorldContact[0];
     private EnemyBrain[] brains = new EnemyBrain[0];
@@ -25,17 +31,7 @@ public class TacticalWorld : MonoBehaviour
         if (!board) { Debug.LogError("[TacticalWorld] no HandoffBoardControls in the scene"); enabled = false; return; }
         contacts = GetComponentsInChildren<WorldContact>();
         brains = System.Array.ConvertAll(contacts, c => c.GetComponent<EnemyBrain>());
-        // Step 51: each contact's ship starts where its model is, facing its way, engines powered
-        foreach (var c in contacts)
-        {
-            var ship = c.Ship;
-            ship.ownX = c.transform.position.x; ship.ownY = c.transform.position.y;
-            ship.hdg = ship.ordHdg = HandoffBoardState.JsRound(((-c.transform.eulerAngles.z) % 360 + 360) % 360) % 360;
-            ship.thr = 0;
-            var eng = ship.buses[0];
-            eng.mode = HandoffBoardState.BusMode.Draw;
-            eng.fill = ship.busMax;
-        }
+        foreach (var c in contacts) StartShip(c);
         if (dropTracksWithoutContact)
         {
             var keys = new HashSet<string>();
@@ -58,6 +54,40 @@ public class TacticalWorld : MonoBehaviour
         };
         Sync(); // before the board's first refresh (its Start), so it never shows mock numbers
         board.Ticked += OnTick;
+        // the level arrives a frame later; the board starts paused, so nothing has moved by then
+        if (!string.IsNullOrEmpty(levelScene) && !LevelOpen()) SceneManager.LoadSceneAsync(levelScene, LoadSceneMode.Additive);
+    }
+
+    static bool LevelOpen()
+    {
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+            if (SceneManager.GetSceneAt(i).path.StartsWith(LevelFolder + "/")) return true;
+        return false;
+    }
+
+    // Step 51: a contact's ship starts where its model is, facing its way, engines powered
+    static void StartShip(WorldContact c)
+    {
+        var ship = c.Ship;
+        ship.ownX = c.transform.position.x; ship.ownY = c.transform.position.y;
+        ship.hdg = ship.ordHdg = HandoffBoardState.JsRound(((-c.transform.eulerAngles.z) % 360 + 360) % 360) % 360;
+        ship.thr = 0;
+        var eng = ship.buses[0];
+        eng.mode = HandoffBoardState.BusMode.Draw;
+        eng.fill = ship.busMax;
+    }
+
+    /// <summary>A level's spawn point (EnemySpawn): this contact's ship starts there instead, facing
+    /// the spawn's way. Its patrol route goes with it.</summary>
+    public void Spawn(string key, Vector3 at, float zDeg)
+    {
+        foreach (var c in contacts)
+        {
+            if (!c || c.trackKey != key) continue;
+            c.transform.SetPositionAndRotation(new Vector3(at.x, at.y, c.transform.position.z), Quaternion.Euler(0f, 0f, zDeg));
+            StartShip(c);
+        }
+        Sync();
     }
 
     private void OnDestroy() { if (board) board.Ticked -= OnTick; }
