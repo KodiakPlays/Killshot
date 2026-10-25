@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 public class EnemySpawn : MonoBehaviour
 {
-    [Tooltip("The board track whose ship starts here, e.g. t07 (TRACK 07).")]
+    [Tooltip("The board track whose ship starts here, e.g. t07 (GARUDA).")]
     public string trackKey = "t07";
 
     // Start, not Awake: TacticalWorld has set its ships up by now, whether this level was open with

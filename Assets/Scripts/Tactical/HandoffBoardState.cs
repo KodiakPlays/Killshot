@@ -101,7 +101,7 @@ public class HandoffBoardState
     [Header("Contacts — TRACKS and CLASSES (the board's fixed mock-up contacts)")]
     public Track[] tracks =
     {
-        new Track { key = "t07", name = "TRACK 07", klass = "CRUISER", bearing = 48, rangeKm = 24300, speed = 1.10f, hostile = true, sig = new[] { "THERM", "RAD" } },
+        new Track { key = "t07", name = "GARUDA", klass = "CRUISER", bearing = 48, rangeKm = 24300, speed = 1.10f, hostile = true, sig = new[] { "THERM", "RAD" } },
         new Track { key = "c17", name = "CONTACT 17", klass = "CORVETTE", bearing = 325, rangeKm = 31000, speed = 0.82f, hostile = true, sig = new[] { "RAD", "EM" } },
         new Track { key = "c22", name = "CONTACT 22", klass = "FRIGATE", bearing = 149, rangeKm = 16800, speed = 1.44f, hostile = true, sig = new[] { "THERM", "EM" } },
         new Track { key = "ftr", name = "FTR-2", klass = "FIGHTER", bearing = 241, rangeKm = 12200, speed = 2.60f, own = true, sig = new[] { "THERM", "UV" } },
@@ -1004,7 +1004,7 @@ public class HandoffBoardState
     };
     [Tooltip("Firing the railgun spikes our signal by this much (GDD p.42); it falls back at the usual rate.")]
     [Tune("Power & signal")] public float fireSignalSpike = 25f;
-    /// <summary>The last shot's outcome: "HIT · TRACK 07 · STBD", "MISS", or null while none has landed.</summary>
+    /// <summary>The last shot's outcome: "HIT · GARUDA · STBD", "MISS", or null while none has landed.</summary>
     [System.NonSerialized] public string shotReport;
     [System.NonSerialized] public bool lastShotHit;
     [System.NonSerialized] public int shotsFired, shotResults;
@@ -1328,7 +1328,7 @@ public class HandoffBoardState
     public System.Collections.Generic.List<Round> Incoming => incoming ?? (incoming = new System.Collections.Generic.List<Round>());
     [Tooltip("The chance a PDC group on AUTO shoots down an enemy missile that enters its arc (owner: a chance per missile).")]
     [Tune("Periscope & fire control")] [Range(0f, 1f)] public float pdcKillChance = 0.7f;
-    [Tooltip("An enemy missile hits our ship if it passes within this distance, km (cruiser-sized, like TRACK 07).")]
+    [Tooltip("An enemy missile hits our ship if it passes within this distance, km (cruiser-sized, like the Garuda).")]
     [Tune("Damage")] public float ownHitRadiusKm = 210f;
     /// <summary>The PDCs' last result ("PDC-A · MISSILE DOWN"), and the last enemy missile to hit us.</summary>
     [System.NonSerialized] public string pdcReport, incomingReport;
@@ -1627,7 +1627,7 @@ public class HandoffBoardState
     static string SideFrom(Track t, double x, double y) => SideAt(System.Math.Atan2(x - t.worldX, y - t.worldY) * 180 / System.Math.PI, t.worldHdg);
 
     /// <summary>Step 61 (owner 2026-10-24): a contact is named as the sensors board names it — "BOGEY T07" until an
-    /// active scan identifies it, then "TRACK 07" — and what our hits do to it is reported only once it is scanned.</summary>
+    /// active scan identifies it, then "GARUDA" — and what our hits do to it is reported only once it is scanned.</summary>
     public string NameOf(Track t) => Scanned(t) ? t.name : "BOGEY " + t.key.ToUpperInvariant();
     public bool Scanned(Track t) => t != null && identified.Contains(t.key);
 

@@ -303,7 +303,7 @@ public static class PlaytestRunner
         float[] condChances = { s.fireChanceHE, s.fireChancePEN, s.breachChanceSlug, s.radChanceReactor };
         s.fireChanceHE = s.fireChancePEN = s.breachChanceSlug = s.radChanceReactor = 0f;
         var t07Ship = brain ? brain.GetComponent<WorldContact>().Ship : null;
-        Check("TRACK 07 has a patrol brain", brain && brain.enabled, "");
+        Check("GARUDA has a patrol brain", brain && brain.enabled, "");
         if (!brain) yield break;
         double ex0 = t07Ship.nav.x, ey0 = t07Ship.nav.y;
         s.nav.throttle = 0; // stand-in: our helm at zero throttle, so our own ship holds still while TRACK 07 moves
@@ -315,7 +315,7 @@ public static class PlaytestRunner
         double movedKm = System.Math.Sqrt((t07Ship.nav.x - ex0) * (t07Ship.nav.x - ex0) + (t07Ship.nav.y - ey0) * (t07Ship.nav.y - ey0));
         var wp = brain.Waypoint;
         int toWp = TacticalWorld.Bearing(new Vector2((float)(wp.x - t07Ship.nav.x), (float)(wp.y - t07Ship.nav.y)));
-        Check("TRACK 07 gets under way on its patrol, toward its next waypoint", movedKm > 1 && t07Ship.nav.SpeedKms > 0.05 && System.Math.Abs(((t07Ship.nav.orderedHeading - toWp + 540) % 360) - 180) <= 1,
+        Check("GARUDA gets under way on its patrol, toward its next waypoint", movedKm > 1 && t07Ship.nav.SpeedKms > 0.05 && System.Math.Abs(((t07Ship.nav.orderedHeading - toWp + 540) % 360) - 180) <= 1,
               movedKm.ToString("0") + " km, " + t07Ship.nav.SpeedKms.ToString("0.00") + " km/s, ordered " + t07Ship.nav.orderedHeading.ToString("000") + "°, heading " + t07Ship.nav.heading.ToString("000") + "°");
         var dummyT = brain.transform;
         //     Step 75: the model glides on between ticks, never more than one tick's travel ahead.
@@ -572,7 +572,7 @@ public static class PlaytestRunner
         s.SetGain(2); // stand-in: the gain fader is a drag
         var t07 = s.TrackOf("t07");
         yield return (Func<bool>)(() => s.Heard(t07) && s.newContacts > 0);
-        Check("At gain 2 DRADIS hears TRACK 07", s.Heard(t07), "range " + t07.rangeKm.ToString("N0") + " km, hearing range " + s.PassiveRangeKm.ToString("N0") + " km");
+        Check("At gain 2 DRADIS hears GARUDA", s.Heard(t07), "range " + t07.rangeKm.ToString("N0") + " km, hearing range " + s.PassiveRangeKm.ToString("N0") + " km");
         //     Step 75: the line comes with the sweep's first touch, and holds that bearing until the next pass.
         yield return (Func<bool>)(() => t07.seen);
         yield return 0.1f;
@@ -613,7 +613,7 @@ public static class PlaytestRunner
         double crossX, crossY;
         bool crosses = Cross(fa, fb, out crossX, out crossY);
         double missKm = crosses ? System.Math.Sqrt((crossX - t07.worldX) * (crossX - t07.worldX) + (crossY - t07.worldY) * (crossY - t07.worldY)) : -1;
-        Check("Two bearing lines from different spots cross at TRACK 07", crosses && missKm < 0.01 * t07.rangeKm,
+        Check("Two bearing lines from different spots cross at GARUDA", crosses && missKm < 0.01 * t07.rangeKm,
               fixes.Count + " lines, " + baseKm.ToString("N0") + " km apart; they cross " + missKm.ToString("N1") + " km from the target");
         Shot("23_bearing_trail");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
@@ -705,9 +705,9 @@ public static class PlaytestRunner
         bool whole = true;
         foreach (var c in dummyShip.compartments) if (c.integ != 5) whole = false;
         foreach (var a in dummyShip.SideArmour) if (a <= 0f) whole = false;
-        Check("TRACK 07 starts undamaged", whole, "");
+        Check("GARUDA starts undamaged", whole, "");
         //     The periscope onto the contact, by its bearing label (it is still heard).
-        if (!Click("plot.look", "t07", "BRG label (periscope onto TRACK 07)")) yield break;
+        if (!Click("plot.look", "t07", "BRG label (periscope onto GARUDA)")) yield break;
         yield return 0.6f;
         //     Weapons released: CONDITION 2 from the orders station.
         if (!Click("orders", null, "ORDERS header")) yield break;
@@ -839,7 +839,7 @@ public static class PlaytestRunner
         int landedLed = s.shotResults;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (led)", "fc.lever")) yield break;
         yield return (Func<bool>)(() => s.shotResults > landedLed);
-        Check("Led from the track, it hits the moving TRACK 07 (unscanned: a bare HIT)", s.lastShotHit && s.shotReport == "HIT · BOGEY T07",
+        Check("Led from the track, it hits the moving GARUDA (unscanned: a bare HIT)", s.lastShotHit && s.shotReport == "HIT · BOGEY T07",
               "\"" + s.shotReport + "\"; aimed straight it would pass " + unled.ToString("N0") + " km off, led " + led.ToString("N0") + " km (hit radius " + s.HitRadiusKm(t07.klass) + ")");
         Check("Unled, the same shot would have missed", unled > s.HitRadiusKm(t07.klass), unled.ToString("N0") + " km");
         if (!Click("rate", "1", "x1 rate key")) yield break;
@@ -855,7 +855,7 @@ public static class PlaytestRunner
         int landedTrack = s.shotResults;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (TRACK)", "fc.lever")) yield break;
         yield return (Func<bool>)(() => s.shotResults > landedTrack);
-        Check("TRACK's led shot hits", s.shotReport != null && s.shotReport.StartsWith("HIT · TRACK 07"), "\"" + s.shotReport + "\"");
+        Check("TRACK's led shot hits", s.shotReport != null && s.shotReport.StartsWith("HIT · GARUDA"), "\"" + s.shotReport + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Hold it still again for the fight below; clear the plot.
         brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0; s.marks.Clear(); s.identified.Remove("t07");
@@ -878,7 +878,7 @@ public static class PlaytestRunner
         Check("A salvo of two leaves the launcher", s.Rounds.FindAll(r => r.missile).Count == 2 && s.vlsCells == cells0 - 2, s.vlsCells + " cells left");
         yield return (Func<bool>)(() => s.shotResults >= landed0 + 2);
         yield return (Func<bool>)(() => s.shotResults >= landed0 + 2);
-        Check("Both home in on the moving TRACK 07 and the HE does damage", s.lastShotHit && s.shotReport.Contains(" · HE") && hull(dummyShip) < hull0,
+        Check("Both home in on the moving GARUDA and the HE does damage", s.lastShotHit && s.shotReport.Contains(" · HE") && hull(dummyShip) < hull0,
               "\"" + s.shotReport + "\", armour + integrity " + hull0 + " → " + hull(dummyShip));
         //     EMP: no hull damage, its power goes down and it slows.
         if (!Click("fc.mount", null, "warhead selector (EMP)")) yield break;
@@ -929,7 +929,7 @@ public static class PlaytestRunner
         int tags0 = board.Tags;
         yield return (Func<bool>)(() => board.Tags > tags0);
         yield return (Func<bool>)(() => board.Tags > tags0 + 1);
-        Check("ACTIVE on: each sweep pass over TRACK 07 beeps", board.Tags >= tags0 + 2, (board.Tags - tags0) + " beeps");
+        Check("ACTIVE on: each sweep pass over GARUDA beeps", board.Tags >= tags0 + 2, (board.Tags - tags0) + " beeps");
         s.active = false;
         var vxField = typeof(HandoffPlotPanel).GetField("viewX", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var vyField = typeof(HandoffPlotPanel).GetField("viewY", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -982,7 +982,7 @@ public static class PlaytestRunner
               && s.flightReport == " PROW ARMOUR " + HandoffBoardState.JsRound(prowAfter / dummyShip.sideArmourMax[0] * 100f) + "%"
               && Mathf.Approximately(dummyShip.SideArmour[0], prowAfter),
               "\"" + s.flightReport + "\"; PROW armour " + prow0 + " → " + dummyShip.SideArmour[0]);
-        Check("The hangar reports the attack", interlockText().StartsWith("ATTACKING TRACK 07"), "\"" + interlockText() + "\"");
+        Check("The hangar reports the attack", interlockText().StartsWith("ATTACKING GARUDA"), "\"" + interlockText() + "\"");
         Shot("28d_fighters_attacking");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("hangar.recall", null, "RECALL")) yield break;
@@ -1019,7 +1019,7 @@ public static class PlaytestRunner
         dummyShip.TakeSlug("PROW");
         yield return (Func<bool>)(() => s.Incoming.Count > 0);
         float salvo1At = board.MissionSeconds;
-        Check("Hit, TRACK 07 fires a salvo of two back at us", s.Incoming.Count == 2 && dummyShip.vlsCells == enemyCells - 2, s.Incoming.Count + " incoming, its cells " + enemyCells + " → " + dummyShip.vlsCells);
+        Check("Hit, GARUDA fires a salvo of two back at us", s.Incoming.Count == 2 && dummyShip.vlsCells == enemyCells - 2, s.Incoming.Count + " incoming, its cells " + enemyCells + " → " + dummyShip.vlsCells);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         yield return (Func<bool>)(() => s.Incoming.Count == 0 || System.Math.Sqrt((s.Incoming[0].x - s.nav.x) * (s.Incoming[0].x - s.nav.x) + (s.Incoming[0].y - s.nav.y) * (s.Incoming[0].y - s.nav.y)) < 4600);
         Shot("28e_incoming_pdc_arc");
@@ -1100,16 +1100,16 @@ public static class PlaytestRunner
         if (!Click("rate", "10", "x10 rate key")) yield break;
         yield return (Func<bool>)(() => boats.holding != null);
         yield return (Func<bool>)(() => boats.holding != null);
-        Check("No face open: they hold off", interlockText() == "HOLDING OFF TRACK 07 · NO OPEN SIDE", "\"" + interlockText() + "\"");
+        Check("No face open: they hold off", interlockText() == "HOLDING OFF GARUDA · NO OPEN SIDE", "\"" + interlockText() + "\"");
         Shot("28f_boats_holding");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         dummyShip.SideArmour[1] = 0f; // stand-in for a slug opening its starboard side
         yield return (Func<bool>)(() => boats.aboard);
-        Check("A face open, the ship stopped: they board", boats.aboard && interlockText().StartsWith("BOARDING TRACK 07 · "), "\"" + interlockText() + "\"");
+        Check("A face open, the ship stopped: they board", boats.aboard && interlockText().StartsWith("BOARDING GARUDA · "), "\"" + interlockText() + "\"");
         yield return (Func<bool>)(() => !boats.aboard);
-        Check("The marines win and disable it: engines and magazine wrecked, the ship still alive", boats.outcome == "TRACK 07 DISABLED" && dummyShip.Comp("eng").integ == 0 && dummyShip.Comp("mag").integ == 0 && !dummyShip.destroyed && !t07.wreck,
+        Check("The marines win and disable it: engines and magazine wrecked, the ship still alive", boats.outcome == "GARUDA DISABLED" && dummyShip.Comp("eng").integ == 0 && dummyShip.Comp("mag").integ == 0 && !dummyShip.destroyed && !t07.wreck,
               "\"" + boats.outcome + "\", ENG " + dummyShip.Comp("eng").integ + ", MAG " + dummyShip.Comp("mag").integ);
-        Check("The hangar reports it on the way home", interlockText().StartsWith("TRACK 07 DISABLED · RETURNING"), "\"" + interlockText() + "\"");
+        Check("The hangar reports it on the way home", interlockText().StartsWith("GARUDA DISABLED · RETURNING"), "\"" + interlockText() + "\"");
         yield return (Func<bool>)(() => s.Flights.Count == 0);
         yield return (Func<bool>)(() => s.Flights.Count == 0);
         Check("They land: the marines are back aboard", s.Flights.Count == 0 && s.marines == marinesBefore && !s.Launched(s.CurrentSquad), s.marines + " marines aboard");
@@ -1145,13 +1145,13 @@ public static class PlaytestRunner
         var subjName = typeof(HandoffPeriscopePanel).GetField("subjectName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as TMPro.TMP_Text;
         var subjHull = typeof(HandoffPeriscopePanel).GetField("subjectClass", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as TMPro.TMP_Text;
         string hullNow = HandoffPeriscopePanel.HullLine(dummyShip);
-        Check("Scanned, the targeting computer shows its hull: each face, and the room behind an open one", subjName && subjHull && subjName.text.StartsWith("TRACK 07") && subjHull.text == hullNow && hullNow.StartsWith("BOW ") && hullNow.Contains(" \u25B8 "),
+        Check("Scanned, the targeting computer shows its hull: each face, and the room behind an open one", subjName && subjHull && subjName.text.StartsWith("GARUDA") && subjHull.text == hullNow && hullNow.StartsWith("BOW ") && hullNow.Contains(" \u25B8 "),
               subjName && subjHull ? "\"" + subjName.text + "\" / \"" + subjHull.text + "\"" : "no readout");
         //     CLASS in the targeting computer names its class (owner 2026-10-24). Step 75 (owner 2026-10-26): the plot shows
         //     TRACK 07 as its own ship, in red, because it is in sight (10,000 km), not because of CLASS.
         if (!Click("scope.classify", null, "CLASS key")) yield break;
         yield return 0.6f;
-        Check("Classified and in sight: TRACK 07 shows on the plot as its own ship model, in place of its dot", s.classified.Contains("t07") && s.InSight(t07) && plotPanel.ContactShipShown && subjName.text == "TRACK 07 · CRUISER",
+        Check("Classified and in sight: GARUDA shows on the plot as its own ship model, in place of its dot", s.classified.Contains("t07") && s.InSight(t07) && plotPanel.ContactShipShown && subjName.text == "GARUDA · CRUISER",
               "\"" + subjName.text + "\", " + t07.rangeKm.ToString("N0") + " km, picture " + plotPanel.ContactShipShown);
         float sightWas = s.visualRangeKm;
         s.visualRangeKm = t07.rangeKm - 1000f; // stand-in for drawing off out of sight
@@ -1181,14 +1181,14 @@ public static class PlaytestRunner
             reports.Add(s.shotReport);
         }
         string log = string.Join(" | ", reports);
-        int opened = reports.FindIndex(r => r == "HIT · TRACK 07 · PORT OPEN");
+        int opened = reports.FindIndex(r => r == "HIT · GARUDA · PORT OPEN");
         bool armourFirst = opened >= 0;
-        for (int i = 0; i < opened; i++) if (!reports[i].StartsWith("HIT · TRACK 07 · PORT ARMOUR ")) armourFirst = false;
+        for (int i = 0; i < opened; i++) if (!reports[i].StartsWith("HIT · GARUDA · PORT ARMOUR ")) armourFirst = false;
         Check("The first hits open its port side", armourFirst, log);
         bool reactorOnly = opened >= 0;
-        for (int i = opened + 1; i < reports.Count - 1; i++) if (reports[i] != "HIT · TRACK 07 · PORT · RCT −2") reactorOnly = false;
+        for (int i = opened + 1; i < reports.Count - 1; i++) if (reports[i] != "HIT · GARUDA · PORT · RCT −2") reactorOnly = false;
         Check("Then each hit takes 2 off the reactor behind it, the same room every time", reports.Count - opened - 2 > 0 && reactorOnly, reports.Count + " shots");
-        Check("Its reactor gone, it is destroyed: a cold wreck", t07.wreck && dummyShip.destroyed && dummyShip.Comp("rct").integ == 0 && !s.Heard(t07) && reports[reports.Count - 1] == "TRACK 07 DESTROYED",
+        Check("Its reactor gone, it is destroyed: a cold wreck", t07.wreck && dummyShip.destroyed && dummyShip.Comp("rct").integ == 0 && !s.Heard(t07) && reports[reports.Count - 1] == "GARUDA DESTROYED",
               "RCT " + dummyShip.Comp("rct").integ + ", last \"" + reports[reports.Count - 1] + "\"");
         bool untouched = dummyShip.SideArmour[0] == before[0] && dummyShip.SideArmour[1] == before[1] && dummyShip.SideArmour[2] == before[2];
         for (int c = 0; c < dummyShip.compartments.Length; c++) if (dummyShip.compartments[c].key != "rct" && dummyShip.compartments[c].integ != integBefore[c]) untouched = false;

@@ -8,7 +8,7 @@ using UnityEngine;
 [RequireComponent(typeof(NavSystem))]
 public class WorldContact : MonoBehaviour
 {
-    [Tooltip("The board track this contact drives, e.g. t07 (TRACK 07).")]
+    [Tooltip("The board track this contact drives, e.g. t07 (GARUDA).")]
     public string trackKey = "t07";
 
     /// <summary>Step 49: this ship's own model — the same one ours runs on (the enemy is our ship
