@@ -88,6 +88,18 @@ public class TacticalWorld : MonoBehaviour
         Sync();
     }
 
+    /// <summary>Step 73: a level's Player Spawn (PlayerSpawn). The player's ship starts there, facing the
+    /// box's way, and the plot opens on it.</summary>
+    public void SpawnPlayer(Vector3 at, float zDeg)
+    {
+        var us = board.State.nav;
+        if (!us) return;
+        us.PlaceAt(at.x, at.y, HandoffBoardState.JsRound(((-zDeg) % 360 + 360) % 360) % 360);
+        var plot = FindAnyObjectByType<HandoffPlotPanel>();
+        if (plot) plot.CentreOnOurShip();
+        Sync();
+    }
+
     private void OnDestroy() { if (board) board.Ticked -= OnTick; }
 
     // One board tick: each contact with a brain takes its orders and moves (the same maths as our ship),

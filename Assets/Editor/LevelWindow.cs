@@ -38,7 +38,10 @@ public class LevelWindow : EditorWindow
         var level = OpenLevelScene();
         EditorGUILayout.LabelField(level.IsValid() ? "Add to " + level.name : "Open a level to add to it", EditorStyles.boldLabel);
         using (new EditorGUI.DisabledScope(!level.IsValid()))
-            if (GUILayout.Button("Enemy spawn")) AddEnemySpawn(level);
+        {
+            if (GUILayout.Button("Enemy spawn")) Add<EnemySpawn>(level, "Enemy Spawn");
+            if (GUILayout.Button("Player spawn")) AddPlayerSpawn(level);
+        }
     }
 
     static string[] Levels() => !AssetDatabase.IsValidFolder(TacticalWorld.LevelFolder) ? new string[0] :
@@ -81,16 +84,30 @@ public class LevelWindow : EditorWindow
     }
 
     // where the Scene view is looking, so it lands on screen; drag it from there
-    static void AddEnemySpawn(Scene level)
+    static void Add<T>(Scene level, string name) where T : Component
     {
         var view = SceneView.lastActiveSceneView;
         var at = view ? view.pivot : Vector3.zero;
-        var go = new GameObject("Enemy Spawn", typeof(EnemySpawn));
+        var go = new GameObject(name, typeof(T));
         SceneManager.MoveGameObjectToScene(go, level);
         go.transform.position = new Vector3(at.x, at.y, 0f);
-        Undo.RegisterCreatedObjectUndo(go, "Add enemy spawn");
+        Undo.RegisterCreatedObjectUndo(go, "Add " + name);
         EditorSceneManager.MarkSceneDirty(level);
         Selection.activeGameObject = go;
+    }
+
+    // Step 73: one per level, so a second press finds the one it has
+    static void AddPlayerSpawn(Scene level)
+    {
+        foreach (var root in level.GetRootGameObjects())
+        {
+            var start = root.GetComponentInChildren<PlayerSpawn>(true);
+            if (!start) continue;
+            Selection.activeGameObject = start.gameObject;
+            if (SceneView.lastActiveSceneView) SceneView.lastActiveSceneView.LookAt(start.transform.position);
+            return;
+        }
+        Add<PlayerSpawn>(level, "Player Spawn");
     }
 
     // seen from above, north up

@@ -108,6 +108,14 @@ public class HandoffPlotPanel : HandoffPanel
     private Vector2 panPress;
     /// <summary>The world point at the plot centre, km.</summary>
     public Vector2 View => new Vector2((float)viewX, (float)viewY);
+    /// <summary>C, and a level's start point (Step 73): the view jumps to our ship. Before the board is up
+    /// there is nothing to do: its first refresh centres on our ship anyway.</summary>
+    public void CentreOnOurShip()
+    {
+        if (!Controls) return;
+        viewX = State.nav.x; viewY = State.nav.y; viewSet = true;
+        Refresh();
+    }
 
     [Header("Axis numbers (Step 65)")]
     [Tooltip("The numbers are made under this, at run time (Plot/Scale).")]
@@ -215,7 +223,7 @@ public class HandoffPlotPanel : HandoffPanel
         var typing = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
         if (typing && typing.GetComponent<TMP_InputField>()) return;
         // Step 65 (owner 2026-10-25): C centres the plot on our ship again after panning away
-        if (Input.GetKeyDown(KeyCode.C)) { viewX = State.nav.x; viewY = State.nav.y; Refresh(); return; }
+        if (Input.GetKeyDown(KeyCode.C)) { CentreOnOurShip(); return; }
         float x = (Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.LeftArrow) ? 1f : 0f);
         float y = (Input.GetKey(KeyCode.UpArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.DownArrow) ? 1f : 0f);
         if (x == 0f && y == 0f) return;

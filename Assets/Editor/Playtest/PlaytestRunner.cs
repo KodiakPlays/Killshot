@@ -231,6 +231,17 @@ public static class PlaytestRunner
         Shot("03_board");
         yield return 0.2f;
 
+        // 3b. Step 73: the level starts the player's ship at its Player Spawn (Level_01: centre bottom, facing north). The
+        //     checks below were written for the board's own spots, so both ships go back there before time starts.
+        var playerSpawn = UnityEngine.Object.FindAnyObjectByType<PlayerSpawn>();
+        int startHdg = playerSpawn ? HandoffBoardState.JsRound(((-playerSpawn.transform.eulerAngles.z) % 360 + 360) % 360) % 360 : -1;
+        Check("The player's ship starts at the level's Player Spawn, facing its way",
+              playerSpawn && System.Math.Abs(s.nav.x - playerSpawn.transform.position.x) < 0.5 && System.Math.Abs(s.nav.y - playerSpawn.transform.position.y) < 0.5 && s.nav.heading == startHdg,
+              playerSpawn ? "at " + s.nav.x.ToString("N0") + ", " + s.nav.y.ToString("N0") + " km, heading " + s.nav.heading.ToString("000") + "°" : "no Player Spawn in the level");
+        var world = UnityEngine.Object.FindAnyObjectByType<TacticalWorld>();
+        world.SpawnPlayer(Vector3.zero, 0f);
+        world.Spawn("t07", new Vector3(18058.42f, 16259.874f, 0f), 0f);
+
         // 4. Starting state: undamaged, dummy present, power cold
         bool undamaged = true;
         foreach (var c in s.compartments) if (c.integ != 5 || c.vented || !string.IsNullOrEmpty(c.cond)) undamaged = false;

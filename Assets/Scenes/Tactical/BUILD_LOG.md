@@ -116,6 +116,7 @@ Do not run ahead. Do one step, show it, wait.
 | 70 | Intro colour: drawn through a Canvas (no double encode); dark green field | **Done** — measured in play mode against the reference shots |
 | 71 | Welcome page on the phosphor screen (DEMO title); loading bar under INITIALISING | **Done** — checked on screen and by the owner; playtest not run (owner) |
 | 72 | Mission clock and signal box lined up with the plot edges | **Done** — measured on screen |
+| 73 | Ruins in the level: the starbase husk and a debris belt; a Player Spawn at the bottom, the enemy's at the top | **Done** — playtest 168/168 |
 | 74 | Engineering's ship picture shows side armour; the room rings change colour | **Done** — playtest 168/168 |
 
 Steps 6 to 28 and Steps 34 to 74 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
@@ -216,8 +217,13 @@ Changed in Step 74 (under `Board/HandoffBoard/Drawers/State · engineering/Ship 
 ### `Level_01` — made in Step 67
 
 - In `Assets/Scenes/Levels/` and in Build Settings. Loaded on top of `02.1_Grid` at play.
-- `Enemy Spawn · TRACK 07` at (18058.42, 16259.87, 0), facing north, with `EnemySpawn` (trackKey
-  `t07`): exactly where the dummy sits, so play is unchanged.
+- `Enemy Spawn · TRACK 07` with `EnemySpawn` (trackKey `t07`). Since Step 73 at (0, +45,000), centre
+  top, facing south (z 180). It was at (18058.42, 16259.87), where the dummy sits in `02.1_Grid`.
+- `Player Spawn` (Step 73) with `PlayerSpawn`, at (0, −45,000), centre bottom, 5,000 km above the
+  edge, facing north. (Named `Our Ship Start` until the owner renamed it.)
+- `Terrain` (Step 73): `Base Husk` at (0, 0), then groups Wrecks (5), Asteroid field 1–4 (34 rocks),
+  Debris · in the husk (81), · near (216), · middle (228), · far (202). 767 prefab copies, 826
+  colliders, all `WorldTerrain`.
 - No camera and no light: the board's are used.
 
 ### Deleted in Step 1
@@ -301,7 +307,21 @@ Details in section 6, Step 34.
 | File | On what | What it is |
 |---|---|---|
 | `Assets/Scripts/Tactical/EnemySpawn.cs` | a node in a level scene | Where an enemy ship starts. A box in the Scene view only, never on the board. |
-| `Assets/Editor/LevelWindow.cs` | menu **Starwolf → Level** | Lists, opens and makes levels; adds an enemy spawn. |
+| `Assets/Editor/LevelWindow.cs` | menu **Starwolf → Level** | Lists, opens and makes levels; adds an enemy spawn, and the one Player Spawn (Step 73). |
+| `Assets/Scripts/Tactical/PlayerSpawn.cs` | a node in a level scene | Step 73. Where our ship starts: a white box in the Scene view only. At play our ship starts there facing its way (`TacticalWorld.SpawnPlayer`), and the plot opens on it (`HandoffPlotPanel.CentreOnOurShip`, which the C key uses too). One per level. |
+
+### Terrain prefabs — new in Step 73
+
+All in `Assets/Prefabs/Terrain/`, all on layer `WorldTerrain` (slot 10). Each is 1 km along its
+longest side; a level stretches each copy to its size in km. Placeholder shapes: change a piece's
+mesh and every copy changes. No script on any of them.
+
+| Prefab | What it is |
+|---|---|
+| `Pieces/Girder`, `Pieces/Plate`, `Pieces/Block`, `Pieces/Drum` | The kit: Unity cubes and a cylinder, one collider each. |
+| `BaseHusk` | The broken starbase, ~13,000 × 12,000 km: 60 kit pieces in groups (Core, Ring, Spokes, Dock arm, Drydock, Spine, Pylon, Antenna, Debris). |
+| `Rock` | The meteor model (`3D Assets/metore.fbx`), capsule collider. |
+| `Wreck_Carrier`, `Wreck_Cruiser`, `Wreck_Battleship`, `Wreck_Corvette` | `UpdatedStarships` models laid flat, top toward the plot camera, box collider. Whole ships. |
 
 `TacticalWorld` loads the level at play (`levelScene`) and moves a contact to its spawn (`Spawn`).
 Details in section 6, Step 67.
@@ -515,6 +535,17 @@ These are settled. Do not reopen them.
     ship in four parts, one per side. Each part is white while its armour is full, amber once hit,
     red once open. No compartment dots: the room rings show the rooms, white, amber or red by
     health. The plot ship stays plain white. Details in Step 74.
+38. **Ruins live in the level, sized for play** (owner, 2026-10-25/26). Placed copies go in the
+    level scene; the prefabs are shared in `Assets/Prefabs/Terrain/`; what is the same in every level
+    (drawing ruins on the plot, the "found" rule) stays on the board. The starbase's hard core sits at
+    the grid centre and debris gets thicker toward it. Our ship starts at one edge (Level_01: the
+    bottom), the enemy at the other (the top): you each come through the core to find the other.
+    Ships are really 100–500 m long, but ruins are sized for how the ship plays (gaps of a few hundred
+    km), not for the 13 km models, which stay until the outside cameras come. Details in Step 73.
+39. **Ship names** (owner, 2026-10-26). Our ship is an **Asura-class destroyer**, not "the
+    Starwolf" (that is the game's name). The enemy is a **Garuda-class cruiser**, not "TRACK 07":
+    once scanned it reads **GARUDA · CRUISER**; before a scan it stays **BOGEY T07**. Its model is the
+    `UpdatedStarships` cruiser. Not applied yet: see Open items.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -3130,6 +3161,58 @@ The plot runs 104–1,816 px.
 redraw on its own. Call `Render()` on that camera before an edit-mode screenshot, or it shows the
 old layout.
 
+### Step 73 — Ruins in the level: the starbase husk, a debris belt, and where each ship starts
+
+**What it is.** Space has stuff in it now. `Level_01` holds a broken starbase at the grid centre and
+766 pieces of wreckage, rock and dead ships around it, thicker the closer you get. Our ship starts at
+the bottom edge, the enemy at the top, and the core is between you. Nothing of it shows on the plot or
+blocks anything yet: this step places it.
+
+**Owner direction (2026-10-25/26).** The prototype and the GDD both call for ruined starbases and big
+debris. The **hard core of the starbase sits at the grid centre**, the debris is **radial and thicker
+toward the core**, and you **start at one edge and work inward**. The enemy starts at the other edge:
+"You have to get through the core. It'll come to the core as well. You're going to circle through
+them and try to find each other. It's going to hunt you. You're going to hunt it." (The hunt is not
+built; see Open items.)
+
+**Scale (owner).** Ships are really 100–500 m long, by tonnage. Ruins are sized for **how the ship
+plays**, not for the 13 km models: a full-speed 90° turn takes about 300 km, stopping about 180 km,
+and a slug hits within 95–600 km. So gaps of a few hundred km let you fly through, hide behind, and
+play chicken with collision. The base husk is **double the prototype's**, about 13,000 km across.
+The ship models stay as they are until the outside cameras come; nothing in play reads their size.
+
+**What was built.**
+
+- **Layer `WorldTerrain`** (slot 10). No board camera draws it and no live code does physics queries,
+  so the terrain changes nothing in play yet.
+- **The terrain prefabs** (section 3): four kit pieces, `BaseHusk`, `Rock`, four `Wreck_` prefabs.
+  The husk's core is four blocks of 500–1,400 km with cracks of 200–300 km.
+- **`Level_01` → `Terrain`:** the husk at (0, 0); 766 pieces thinning outward, gaps about 350 km
+  inside the husk, 500 km at its rim and thousands near the battle space's edges; four asteroid fields;
+  five wrecks named after the prototype's, WRECK-2, -4, -7, -9 and -11. Station wreckage near the core,
+  mostly rock far out. Placed by a one-off script, so it is the same every play; edit it by hand in the
+  Scene view (Starwolf → Level → Open).
+- **`PlayerSpawn`** (section 3) and the Level window's **Player spawn** button. `Level_01`'s Player
+  Spawn is at (0, −45,000), facing north, clear of the 2,500 km edge warning. The enemy spawn moved
+  to (0, +45,000), facing south. The ships start 90,000 km apart, beyond either one's hearing.
+- **Playtest check 3b:** our ship starts at the level's Player Spawn, facing its way. Then both ships
+  go back to the board's own spots (ours (0, 0) heading 000, TRACK 07 at (18058, 16260)), so every
+  later check keeps its numbers whatever the level does.
+
+**Checked.** Playtest 168/168 (`Logs/Playtests/2026-10-26_003801/`): our ship started at
+(0, −45,000), heading 000, and the plot opened on it just above the map's bottom edge. The saved
+scene holds 767 prefab copies and 826 colliders.
+
+**Traps.**
+
+- The ship and rock models import turned 270° on X and scaled ×100 (made in Blender). Unturned, a
+  ship's length points straight out of the map. The terrain prefabs replace that turn.
+- Soham's `Asteroid.cs` (health, breaking apart) is not on the rock. Asteroids can't be destroyed yet,
+  and it sets an "Asteroid" tag this project doesn't have, which throws.
+- The playtest's TRACK 07 checks assume its old spot; check 3b puts it back there.
+- Several chats shared Unity during this step. Each terrain edit was one call that opened `Level_01`
+  beside whatever was open, saved it and closed it again, only while Unity was idle.
+
 ### Step 74 — Engineering's ship picture shows side armour; the room rings change colour
 
 **Owner direction (2026-10-26).** The engineering drawer's ship picture shows **side armour**. It
@@ -3606,14 +3689,48 @@ values, and approach mode only adds G.
 
 Step 67 made the tool and the enemy spawn box. Plan each of these with the owner first:
 
-1. Our ship's start point in the level.
+1. ~~Our ship's start point in the level.~~ **Done in Step 73** (Player Spawn).
 2. The battle space size moves from the board into the level.
 3. Debris fields: a shape (circle, ring, band, line), which pieces (Block, Drum, Girder, Plate, the
-   base husk), how many and how big, how they spread, and Reshuffle. Same every play.
-4. Debris on the board: shown once found. Whether it blocks shots or hides us is a later talk.
+   base husk), how many and how big, how they spread, and Reshuffle. Same every play. *(Step 73
+   placed `Level_01`'s debris with a one-off script; the tool itself is not built.)*
+4. Debris on the board: shown once found. Whether it blocks shots or hides us is a later talk. *(See
+   "Ruins and the level, next" below.)*
 5. The Tuning window's tabs: Ship, Enemy, Board (decision 31).
 6. The mission scripter, its own menu item. Proposed, not agreed: a chain of steps, each with
    "when this happens, do that" rules.
+
+### Ruins and the level, next (from Step 73, 2026-10-26)
+
+Left unfinished when the Step 73 chat closed. Plan each with the owner before building.
+
+1. **Ruins on the plot.** A camera that draws the `WorldTerrain` layer at the plot's pan and zoom,
+   as line art like our ship's picture, true to scale, behind the marks. Board side, the same for
+   every level. **Agreed:** a ruin shows **once found, then stays** (the prototype's rule: within
+   sensor range plus half its size). Proposed, not agreed: found only while DRADIS is on, like
+   hearing a contact; a whole set piece (the husk) is found at once.
+2. **What ruins do, one step each.** Block shots (the prototype's penetration against toughness:
+   asteroid 3, structure 4, ruins 3, starbase 5); hide us from sensors (line of sight); hurt us
+   when we hit them (the prototype pushes the ship out and damages it above an impact speed). Our
+   ship's collision size is not decided.
+3. **The names (decision 39), not applied yet.** The `t07` track's name `TRACK 07` → `GARUDA`
+   (`HandoffBoardState`, class stays CRUISER, key stays `t07`); playtest checks that expect
+   `HIT · TRACK 07` and `ATTACKING TRACK 07`, and check names that say TRACK 07; in `02.1_Grid`,
+   `Dummy · TRACK 07` → a Garuda name, its `Model` swapped to
+   `UpdatedStarships/StarWolf_Cruiser_mesh.fbx` (same length as the old one, local rotation
+   (0, 180, 0) so its top faces the plot camera), and `Contact View Camera · TRACK 07` renamed;
+   in `Level_01`, `Enemy Spawn · TRACK 07` renamed. Handed to the board-refactor chat.
+4. **The Garuda hunts you.** It comes in through the core, searches, hunts you when it hears you,
+   and goes to where it last heard you. Not built; the owner wants it planned properly. Today it
+   patrols a loop about 12,000 × 8,000 km round its spawn, so from the top it stays near the top.
+5. **The grid forms as the board appears** (owner approved the look, 2026-10-26): grid lines glide
+   in from off-screen and ease to a stop, vertical lines alternately from the top and bottom,
+   horizontal lines alternately from the left and right, big squares first, then small; about
+   2 s; then our ship, the sensor circle and the sweep fade in. Not built. Idea: offset each line
+   in `HandoffPlotGrid`'s mesh and clip it to the plot.
+6. **Smaller.** The wrecks are whole ships (break some apart later). Soham's `Asteroid.cs` could make rocks
+   breakable later (add the "Asteroid" tag first). WRECK-4 and WRECK-11 use the same cruiser model
+   as the Garuda. The ship models go to 100–500 m when the outside cameras come.
 
 ### Later — DRADIS (superseded for now)
 
