@@ -115,6 +115,7 @@ Do not run ahead. Do one step, show it, wait.
 | 69 | Each DRADIS sweep pass beeps | **Done** — its check passed; full run still to re-run |
 | 70 | Intro colour: drawn through a Canvas (no double encode); dark green field | **Done** — measured in play mode against the reference shots |
 | 71 | Welcome page on the phosphor screen (DEMO title); loading bar under INITIALISING | **Done** — checked on screen and by the owner; playtest not run (owner) |
+| 72 | Mission clock and signal box lined up with the plot edges | **Done** — measured on screen |
 
 Steps 6 to 28 and Steps 34 to 69 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -3098,6 +3099,21 @@ INITIALISING over it with the bar part filled.
 - The full `TextMeshPro/Distance Field` shader draws magenta blocks here. Stay on the mobile shader;
   its underlay is the glow.
 - A canvas switched from camera to overlay keeps its children's z. Zero it or the text vanishes.
+
+### Step 72 — Mission clock and signal box lined up with the plot
+
+**Owner direction (2026-10-26).** The mission clock's left edge lines up with the plot's left edge,
+and the signal box's right edge with the plot's right edge.
+
+**What changed** (`02.1_Grid`, set in the scene; the board builder is retired):
+`TimeControl` x +72 (left edge 32 → 104 px) and `SignalBox` x −59 (right edge 1,875 → 1,816 px).
+The plot runs 104–1,816 px.
+
+**Checked** by measuring the screenshot: both edges sit on the plot's edges.
+
+**Trap.** In edit mode the board is drawn by `Board Camera` into a render texture, which does not
+redraw on its own. Call `Render()` on that camera before an edit-mode screenshot, or it shows the
+old layout.
 
 ---
 
