@@ -12,8 +12,8 @@ public class EnemyBrain : MonoBehaviour
 {
     [Tooltip("The patrol loop, km from where the ship starts (x east, y north). It sails from point to point and round again.")]
     [Tune("Enemy")] [SerializeField] private Vector2[] route = { new Vector2(0, 0), new Vector2(-6000, -4000), new Vector2(0, -8000), new Vector2(6000, -4000) };
-    [Tooltip("Cruising speed, km/s (the design's TRACK 07: 1.10).")]
-    [Tune("Enemy")] [SerializeField] private float cruiseKms = 1.1f;
+    [Tooltip("Cruising speed, km/s (the design's TRACK 07: 1.10; Step 63: x5).")]
+    [Tune("Enemy")] [SerializeField] private float cruiseKms = 5.5f;
     [Tooltip("A waypoint counts as reached inside this distance, km.")]
     [Tune("Enemy")] [SerializeField] private float arriveKm = 300f;
 

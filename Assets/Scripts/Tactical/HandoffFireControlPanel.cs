@@ -215,7 +215,7 @@ public class HandoffFireControlPanel : HandoffPanel
         if (solSpd) { solSpd.text = sol.set ? sol.spd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "—"; Paint(solSpd, valInk); }
         rngKnob.Set(sol.set ? (sol.rangeKm / 100f * 12f) % 360f : 0f);
         brgKnob.Set(sol.set ? sol.brg * 6f : 0f);
-        spdKnob.Set(sol.set ? (HandoffBoardState.JsRound(sol.spd / 0.05f) * 12) % 360 : 0f);
+        spdKnob.Set(sol.set ? (HandoffBoardState.JsRound(sol.spd / s.spdStep) * 12) % 360 : 0f);
 
         // 03 capacitor
         float cost = s.ShotCost;

@@ -192,12 +192,16 @@ public class HandoffPlotPanel : HandoffPanel
             // in game time (owner 2026-10-24): `turn` seconds a sweep at x1, ten times as fast at x10
             float before = sweepDeg, step = 360f * Time.unscaledDeltaTime * Controls.Rate / turn;
             sweepDeg = (sweepDeg + step) % 360f;
-            // Step 45: the sweep leaves a bearing line on each heard contact it passes
+            // Step 45: the sweep leaves a bearing line on each heard contact it passes. Step 63 (owner 2026-10-24):
+            // with ACTIVE on, a contact the cone covers is identified as the sweep passes it (the design needed
+            // the cone dial let go, or a contact-board row clicked, and said nothing).
             foreach (var t in State.tracks)
             {
-                if (t.own || !State.Heard(t) || State.identified.Contains(t.key)) continue;
+                if (t.own || t.wreck || State.identified.Contains(t.key)) continue;
                 float past = Mathf.Repeat((float)State.ExactBearing(t) - before, 360f);
-                if (past > 0f && past <= step) { State.LayBearing(t, Controls.MissionSeconds); Refresh(); }
+                if (past <= 0f || past > step) continue;
+                if (State.ConeCovers(t)) { State.identified.Add(t.key); Refresh(); continue; }
+                if (State.Heard(t)) { State.LayBearing(t, Controls.MissionSeconds); Refresh(); }
             }
             sweep.rectTransform.localEulerAngles = new Vector3(0f, 0f, -sweepDeg); // clockwise on screen
         }

@@ -12,7 +12,7 @@ Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 62 are done (62 awaits its playtest), plus a final QA pass.**
+**Steps 1 to 63 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing, Enter leads to the board in `02.1_Grid`.
@@ -101,9 +101,10 @@ Do not run ahead. Do one step, show it, wait.
 | 59 | Conditions: fire, vacuum, radiation | **Done** — playtest 153/153 |
 | 60 | Boarding: the assault boats | **Done** — playtest 160/160 |
 | 61 | Scan to know what you hit; smoothing; heading 000 | **Done** — playtest 161/161 |
-| 62 | Weapon reach, the sweep's inner circle, the enemy's picture | **Built**, checked in play mode; playtest not yet run |
+| 62 | Weapon reach, the sweep's inner circle, the enemy's picture | **Done** — playtest passed with Step 63 |
+| 63 | Scale: everything that moves 5× faster; ACTIVE scans; the gain comes back | **Done** — playtest 163/163 |
 
-Steps 6 to 28 and Steps 34 to 62 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 63 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -621,7 +622,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 62, in detail
+## 6 · Steps 6 to 28, and 34 to 63, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -2631,9 +2632,70 @@ were touched when their videos were deleted, so it read an old report. Pick the 
 - our ship pointing up;
 - TRACK 07 drawn as a red cruiser, turned to its heading.
 
-**Not yet run through the full playtest.** The owner's laptop was about to die. It has two new
+**Playtest:** first run with Step 63 (163/163). The owner's laptop had died before it could run here. It has two new
 checks (CLASS shows the picture; the sweep starts at the inner circle) and the updated range check.
 Run it first next session.
+
+### Step 63 — Scale: everything that moves 5× faster; ACTIVE scans; the gain comes back
+
+**Why (owner, 2026-10-24).** After playing: the ships felt too slow, plotting gave no data, and the
+active scan "didn't seem to be working".
+
+**Played and measured.**
+
+- **In the game, before the change:**
+  - at x1, 30 real seconds at full throttle moved our ship 3 px and TRACK 07 4 px;
+  - powering up quietly dropped the DRADIS gain from 2 to 1 for good, so TRACK 07 (24,300 km)
+    fell out of the 19,000 km DRADIS;
+  - ACTIVE on identified nothing: only letting go of the cone dial, or clicking a contact-board
+    row, did.
+- **The scale study.** `docs/scale-sim/` (new, kept as a tool; README there) played whole fights at
+  several speed scales:
+  - at the old speeds a win took 35 minutes at x1, and two marks read a course only to ±20°;
+  - at 5×, about 7 minutes and ±4°; at 10×, about 4 minutes;
+  - engagement range barely mattered;
+  - at x5 and x10, people arm too slowly and TRACK 07 can win.
+
+**Owner decisions.** **5×** ("slow but not tediously slow"). ACTIVE scans while it is on. The gain
+comes back once the power does.
+
+**What changed.**
+
+- **Everything that moves, 5×** (`HandoffBoardState`; `EnemyBrain` default and the scene's value):
+  - our top speed 12.5 km/s;
+  - acceleration and braking ×25, so full speed comes 5× sooner;
+  - drift and drag keep rates to the 5th power;
+  - turn 20°/s; TRACK 07 cruises at 5.5 km/s;
+  - slugs 250 km/s, missiles 100 km/s (turn 6.5°/s), fighters 40, assault boats 30;
+  - boarding speed limit 0.5;
+  - the SPD knob steps 0.25 (`spdStep`).
+  - The map, sensor and weapon ranges, charge and timings are unchanged.
+- **The hit test follows the target's motion within a tick** (`TickRounds`). At these speeds and
+  x10 a ship moves further in one tick than its hit radius.
+- **ACTIVE scan:** with ACTIVE on, a contact inside the cone and DRADIS range is identified as the
+  sweep passes it (`HandoffPlotPanel`). The alarm strip and alert tone say so. Letting go of the
+  cone dial and clicking a row still work.
+- **Gain:** `gainSet` remembers the gain you set. While the SEN bus is short of power the gain is
+  held down, then comes back to it.
+
+**Checked.**
+
+- In the game after the change, the same opening: the gain held at 2, ACTIVE identified TRACK 07
+  on its own, and TRACK 07 moved 19 px in 30 s at x1.
+- Playtest 163/163 PASS (`Logs/Playtests/2026-10-25_184602/`), including Step 62's checks. Tests
+  adjusted for the new speeds:
+  - the gain starts at 1 so hearing still comes at step 17;
+  - a marginal aim may land either way;
+  - fighters' speed is measured at x1;
+  - the second salvo waits out TRACK 07's reload.
+
+**Found, not changed (for the owner).**
+
+- The throttle has the same trap the gain had. Set full throttle while the ENG bus is still filling
+  and it is clamped to 20%, then stays there: the design's "the lever stops where the bus stops".
+- With all four buses on DRAW, ENG gets 3 of 10 units, so throttle stops at 60%. That is the
+  power trade-off as designed.
+- The mission clock starts at 2:03:32, the design's demo time.
 ---
 
 ## 7 · How to keep this log

@@ -106,6 +106,9 @@ public class HandoffBoardState
     public bool dradis = true;
     public bool active;
     [Range(1, 5)] public int senBoost = 2;
+    [Tooltip("Step 63 (owner 2026-10-24): the gain you set. The gain in use (senBoost) is held down to the SEN bus's units "
+           + "while it is short, and comes back up to this when the power does.")]
+    [Range(1, 5)] public int gainSet = 2;
     [Tooltip("Sensor range = base + per step x gain (senRangeKm).")]
     [Tune("Sensors")]
     public float senRangeBaseKm = 12000f, senRangePerStepKm = 7000f;
@@ -376,9 +379,9 @@ public class HandoffBoardState
     [Tooltip("Ordered heading step for the A and D keys, degrees (onKey).")]
     [Tune("Helm")]
     public int headingKeyStep = 3;
-    [Tooltip("Degrees the bow swings per game second at full engine-room integrity (the design: per tick at x1).")]
+    [Tooltip("Degrees the bow swings per game second at full engine-room integrity (the design: 4 per tick at x1; Step 63: x5).")]
     [Tune("Helm")]
-    public float turnRate = 4f;
+    public float turnRate = 20f;
 
     // ---- gates ---------------------------------------------------------------------------
 
@@ -538,19 +541,21 @@ public class HandoffBoardState
     // Step 41 (owner 2026-10-18): the ship moves. Spec §4: actual chases commanded at capped rates;
     // the hull turns, the velocity follows, and the sideways part bleeds off (the ship slides). The
     // prototype's numbers (MAX_SPEED 240, ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988 and
-    // SPACE_DRAG .9992 per 1/60 s) are slowed to the owner's top speed: time stretches by 240/2.5 = 96,
-    // so rates divide by 96 squared. That gives about 0.9 G, the design helm's 1.0 G.
-    [Header("Movement (Step 41)")]
-    [Tooltip("Speed at 100% throttle, km/s (owner: the design's scale; its contacts run 0.4–2.6 km/s).")]
-    [Tune("Helm")] public double topSpeedKms = 2.5;
-    [Tooltip("Speeding up, km/s per mission second (about 0.9 G).")]
-    [Tune("Helm")] public double accelKms2 = 0.0087;
-    [Tooltip("Slowing down, km/s per mission second (about 1.7 G).")]
-    [Tune("Helm")] public double brakeKms2 = 0.0163;
-    [Tooltip("Share of sideways speed kept each mission second: after a turn the ship slides, then lines up.")]
-    [Tune("Helm")] public double driftKeepPerS = 0.9925;
-    [Tooltip("Share of all speed kept each mission second.")]
-    [Tune("Helm")] public double dragKeepPerS = 0.9995;
+    // SPACE_DRAG .9992 per 1/60 s) were slowed to a 2.5 km/s top speed (time stretched by 96). Step 63 (owner
+    // 2026-10-24, measured with docs/scale-sim): everything that moves runs 5x faster — speeds and turns x5,
+    // acceleration x25 and the keep rates to the 5th power, as if motion ran five times as fast. The map and
+    // the ranges stay. A fight then takes about 7 minutes at x1 instead of 35.
+    [Header("Movement (Step 41; 5x in Step 63)")]
+    [Tooltip("Speed at 100% throttle, km/s (Step 63: 5x the design's 2.5).")]
+    [Tune("Helm")] public double topSpeedKms = 12.5;
+    [Tooltip("Speeding up, km/s per mission second (Step 63: 25x, so full speed comes 5x sooner).")]
+    [Tune("Helm")] public double accelKms2 = 0.2175;
+    [Tooltip("Slowing down, km/s per mission second (Step 63: 25x).")]
+    [Tune("Helm")] public double brakeKms2 = 0.4075;
+    [Tooltip("Share of sideways speed kept each mission second: after a turn the ship slides, then lines up (Step 63: 0.9925^5).")]
+    [Tune("Helm")] public double driftKeepPerS = 0.96307;
+    [Tooltip("Share of all speed kept each mission second (Step 63: 0.9995^5).")]
+    [Tune("Helm")] public double dragKeepPerS = 0.997502;
     [System.NonSerialized] public double vx, vy; // km/s
 
     public double SpeedKms => System.Math.Sqrt(vx * vx + vy * vy);
@@ -843,7 +848,10 @@ public class HandoffBoardState
         ClearSwitches(); fired = false;
     }
 
-    /// <summary>nudgeSol: RNG ±100 km, BRG ±1° (±180), SPD ±0.05 (2 dp); clears the ladder.</summary>
+    [Tooltip("The SPD knob's step, km/s (the design's 0.05, x5 with the speeds in Step 63).")]
+    [Tune("Periscope & fire control")] public float spdStep = 0.25f;
+
+    /// <summary>nudgeSol: RNG ±100 km, BRG ±1° (±180), SPD ±spdStep (2 dp; the design had 0.05, x5 in Step 63); clears the ladder.</summary>
     public void NudgeSol(string field, int d)
     {
         var cur = Sol;
@@ -858,7 +866,7 @@ public class HandoffBoardState
         }
         if (field == "rng") cur.rangeKm = Mathf.Max(0f, cur.rangeKm + d * 100f);
         if (field == "brg") cur.brg = Mathf.Max(-180, Mathf.Min(180, cur.brg + d));
-        if (field == "spd") cur.spd = Mathf.Max(0f, (float)System.Math.Round(cur.spd + d * 0.05, 2, System.MidpointRounding.AwayFromZero));
+        if (field == "spd") cur.spd = Mathf.Max(0f, (float)System.Math.Round(cur.spd + d * spdStep, 2, System.MidpointRounding.AwayFromZero));
         if (cur.manual) Fix(cur); // the dialled point is where the target is now
         ClearSwitches();
     }
@@ -994,12 +1002,12 @@ public class HandoffBoardState
 
     [System.NonSerialized] private System.Collections.Generic.List<Round> rounds;
     public System.Collections.Generic.List<Round> Rounds => rounds ?? (rounds = new System.Collections.Generic.List<Round>());
-    [Tooltip("Railgun slug speed, km/s: the prototype's 4,800 slowed x96 like our ship. About 8 minutes to 24,300 km.")]
-    [Tune("Periscope & fire control")] public double slugSpeedKms = 50;
-    [Tooltip("Missile speed, km/s (owner 2026-10-23): slower than a slug, but it homes. About 10 minutes to 12,000 km.")]
-    [Tune("Periscope & fire control")] public double missileSpeedKms = 20;
-    [Tooltip("How fast a missile can turn toward its target, degrees per mission second (the prototype's 2.2 rad/s slowed x96).")]
-    [Tune("Periscope & fire control")] public double missileTurnDegPerS = 1.3;
+    [Tooltip("Railgun slug speed, km/s (Step 63: 5x the 50 that matched the prototype's slowed ship). About 100 s to 24,300 km.")]
+    [Tune("Periscope & fire control")] public double slugSpeedKms = 250;
+    [Tooltip("Missile speed, km/s (owner 2026-10-23: slower than a slug, but it homes; Step 63: x5). About 2 minutes to 12,000 km.")]
+    [Tune("Periscope & fire control")] public double missileSpeedKms = 100;
+    [Tooltip("How fast a missile can turn toward its target, degrees per mission second (Step 63: x5).")]
+    [Tune("Periscope & fire control")] public double missileTurnDegPerS = 6.5;
     [Tooltip("A salvo leaves the launcher fanned this many degrees apart.")]
     [Tune("Periscope & fire control")] public double missileSpreadDeg = 3;
     [Tooltip("VLS cells left (the design's 8 / 8).")]
@@ -1260,7 +1268,9 @@ public class HandoffBoardState
     }
 
     /// <summary>Fly every round dt mission seconds. Its whole path this tick is tested, so a fast slug
-    /// cannot skip past a ship: the first ship it passes within that ship's hit radius is hit.</summary>
+    /// cannot skip past a ship: the first ship it passes within that ship's hit radius is hit. Step 63: the
+    /// test follows the ship's own motion through the tick too (at 5x speeds and x10 a ship moves further
+    /// in a tick than its hit radius).</summary>
     public void TickRounds(double dt)
     {
         var list = Rounds;
@@ -1269,15 +1279,19 @@ public class HandoffBoardState
             var r = list[i];
             if (r.missile) Steer(r, dt);
             double step = System.Math.Min(r.speed * dt, r.maxKm - r.travelled);
+            double flight = r.speed > 0 ? step / r.speed : 0; // seconds of this tick the round is flying
             Track struck = null;
             double first = double.MaxValue;
             foreach (var t in tracks)
             {
                 if (t.own || !t.hasWorld || t.wreck) continue;
-                double px = t.worldX - r.x, py = t.worldY - r.y;
-                double u = System.Math.Max(0, System.Math.Min(step, px * r.dx + py * r.dy)); // closest point along the path
-                double cx = px - r.dx * u, cy = py - r.dy * u, rad = HitRadiusKm(t.klass);
-                if (cx * cx + cy * cy <= rad * rad && u < first) { struck = t; first = u; }
+                // the ship relative to the round, and how that changes: its velocity less the round's
+                double c = t.course * System.Math.PI / 180;
+                double wx = t.speed * System.Math.Sin(c) - r.dx * r.speed, wy = t.speed * System.Math.Cos(c) - r.dy * r.speed;
+                double px = t.worldX - r.x, py = t.worldY - r.y, ww = wx * wx + wy * wy;
+                double s = ww > 0 ? System.Math.Max(0, System.Math.Min(flight, -(px * wx + py * wy) / ww)) : 0; // closest moment
+                double cx = px + wx * s, cy = py + wy * s, rad = HitRadiusKm(t.klass);
+                if (cx * cx + cy * cy <= rad * rad && s < first) { struck = t; first = s; }
             }
             if (struck != null)
             {
@@ -1478,8 +1492,8 @@ public class HandoffBoardState
     }
     [System.NonSerialized] private System.Collections.Generic.List<Flight> flights;
     public System.Collections.Generic.List<Flight> Flights => flights ?? (flights = new System.Collections.Generic.List<Flight>());
-    [Tooltip("Fighter speed, km/s (owner: three times our top speed).")]
-    [Tune("Hangar & fighters")] public double fighterSpeedKms = 8;
+    [Tooltip("Fighter speed, km/s (owner: three times our top speed; Step 63: x5).")]
+    [Tune("Hangar & fighters")] public double fighterSpeedKms = 40;
     [Tooltip("Inside this distance of the target the squadron makes its attack runs, km.")]
     [Tune("Hangar & fighters")] public double fighterAttackKm = 200;
     [Tooltip("One attack run by every fighter this often, mission seconds.")]
@@ -1489,8 +1503,8 @@ public class HandoffBoardState
     [Tooltip("Integrity each fighter takes off a compartment through an open side, per run.")]
     [Tune("Hangar & fighters")] public int fighterCompartmentDamage = 1;
     [Header("Assault boats (Step 60, BOARDING_README.md)")]
-    [Tooltip("Assault boat speed, km/s.")]
-    [Tune("Hangar & fighters")] public double boatSpeedKms = 6;
+    [Tooltip("Assault boat speed, km/s (Step 63: x5).")]
+    [Tune("Hangar & fighters")] public double boatSpeedKms = 30;
     [Tooltip("Marines aboard our ship, carried by the assault boats; those lost aboard an enemy are gone.")]
     [Tune("Hangar & fighters")] public int marines = 18;
     [Tooltip("Marines each assault boat carries.")]
@@ -1498,7 +1512,7 @@ public class HandoffBoardState
     [Tooltip("Boats dock inside this distance of the target, km.")]
     [Tune("Hangar & fighters")] public double dockKm = 50;
     [Tooltip("A ship can be boarded only with a face open and slower than this, km/s (owner: fight it down first).")]
-    [Tune("Hangar & fighters")] public float boardMaxSpeedKms = 0.1f;
+    [Tune("Hangar & fighters")] public float boardMaxSpeedKms = 0.5f;
     [Tooltip("How long the marines fight aboard, game seconds.")]
     [Tune("Hangar & fighters")] public float boardSeconds = 60f;
     [Tooltip("Share of the enemy's crew that fights the boarders. The odds are marines ÷ (marines + defenders).")]
@@ -1643,7 +1657,7 @@ public class HandoffBoardState
     public void ToggleActive() { active = !active; }
 
     /// <summary>startGain: 1..5, capped by the SEN bus.</summary>
-    public void SetGain(int v) { senBoost = Mathf.Max(1, Mathf.Min(5, Mathf.Min(GainCap, v))); }
+    public void SetGain(int v) { gainSet = Mathf.Max(1, Mathf.Min(5, v)); senBoost = Mathf.Max(1, Mathf.Min(gainSet, GainCap)); }
 
     public void SetSpectrum(string band) { spectrum = band; }
     public void SetCone(int brg) { coneBrg = Mathf.Clamp(brg, 0, 360); }
@@ -1881,7 +1895,7 @@ public class HandoffBoardState
     public void TickSensors(double dt)
     {
         int senCap = Mathf.Max(1, BusUnits("sen"));
-        if (senBoost > senCap) senBoost = senCap;
+        senBoost = Mathf.Max(1, Mathf.Min(gainSet, senCap)); // Step 63: held down while SEN is short, back up when it isn't
         // every unit drawn makes us louder, and so does ACTIVE SCAN (GDD p18, spec 3.1.b, prototype getSig)
         float want = SignalTarget;
         if (signal < want) signal = Mathf.Min(want, signal + signalRise * (float)dt);
