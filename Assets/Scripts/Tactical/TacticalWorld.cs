@@ -136,9 +136,12 @@ public class TacticalWorld : MonoBehaviour
             var t = board.State.TrackOf(c.trackKey);
             if (t == null) continue;
             t.hasWorld = true;
-            t.worldX = c.transform.position.x;
-            t.worldY = c.transform.position.y;
-            t.worldHdg = ((-c.transform.eulerAngles.z) % 360 + 360) % 360; // its bow, clockwise from north (Step 48)
+            // its true spot from navigation, not the model: the model glides ahead between ticks (Step 75)
+            var nav = c.Ship.nav;
+            t.nav = nav;
+            t.worldX = nav.x;
+            t.worldY = nav.y;
+            t.worldHdg = nav.heading; // its bow, clockwise from north (Step 48)
             t.speed = (float)c.Ship.nav.SpeedKms; // its real speed (Step 51); TRACK reads it
             t.course = c.Ship.nav.CourseDeg;       // and which way it is really going (Step 52)
             var d = new Vector2((float)(t.worldX - s.nav.x), (float)(t.worldY - s.nav.y));

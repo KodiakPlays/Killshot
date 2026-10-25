@@ -130242,7 +130242,8 @@ MonoBehaviour:
     active: 0
     senBoost: 1
     senRangeBaseKm: 12000
-    senRangePerStepKm: 7000
+    senRangePerStepKm: 3600
+    visualRangeKm: 10000
     uvRangeFactor: 0.55
     spectra:
     - THERM
@@ -130406,7 +130407,7 @@ MonoBehaviour:
       ammo: 22
       arc: 42
       halfArc: 80
-      rangeKm: 47000
+      rangeKm: 30000
     - id: RGB
       label: RAILGUN TURRET B
       shortName: RG-B
@@ -130414,7 +130415,7 @@ MonoBehaviour:
       ammo: 19
       arc: 250
       halfArc: 80
-      rangeKm: 47000
+      rangeKm: 30000
     - id: PDA
       label: PDC GROUP A
       shortName: PDC-A
@@ -130438,7 +130439,7 @@ MonoBehaviour:
       ammo: 8
       arc: 0
       halfArc: 180
-      rangeKm: 47000
+      rangeKm: 30000
     systems:
     - id: RG
       label: RAILGUN

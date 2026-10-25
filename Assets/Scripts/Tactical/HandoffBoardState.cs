@@ -90,6 +90,12 @@ public class HandoffBoardState
         [System.NonSerialized] public double course;
         [Tooltip("Step 49: destroyed; cold, no longer hostile or heard, a wreck where it died.")]
         [System.NonSerialized] public bool wreck;
+        [Tooltip("Step 75: where the sweep last touched it (See). Out of sight, the plot shows it here.")]
+        [System.NonSerialized] public bool seen;
+        [System.NonSerialized] public double seenX, seenY, seenBrg;
+        [System.NonSerialized] public float seenRangeKm;
+        [Tooltip("Step 75: its navigation, written by TacticalWorld; in sight, the plot draws it where its model glides.")]
+        [System.NonSerialized] public NavSystem nav;
     }
 
     [Header("Contacts — TRACKS and CLASSES (the board's fixed mock-up contacts)")]
@@ -108,9 +114,13 @@ public class HandoffBoardState
     [Tooltip("DRADIS gain, 1–5, capped by the SEN bus. Owner 2026-10-25: at load it is at its lowest (power is cold); "
            + "if the SEN bus can no longer carry it, it drops back to 1 and stays there until you raise it again.")]
     [Range(1, 5)] public int senBoost = 1;
-    [Tooltip("Sensor range = base + per step x gain (senRangeKm).")]
+    [Tooltip("Sensor range = base + per step x gain (senRangeKm). Owner 2026-10-26: 30,000 km at full gain (was 47,000).")]
     [Tune("Sensors")]
-    public float senRangeBaseKm = 12000f, senRangePerStepKm = 7000f;
+    public float senRangeBaseKm = 12000f, senRangePerStepKm = 3600f;
+    [Tooltip("Owner 2026-10-26: inside this range a contact is in sight: its model shows and glides. Outside it, "
+           + "the plot shows it only where the sweep last touched it.")]
+    [Tune("Sensors")]
+    public float visualRangeKm = 10000f;
     [Tooltip("UV hears to this fraction of the range (passiveRangeKm).")]
     [Tune("Sensors")]
     public float uvRangeFactor = 0.55f;
@@ -301,15 +311,15 @@ public class HandoffBoardState
     [System.NonSerialized] public float missionNow;
 
     [Header("Fire control — MOUNTS, SYSTEMS, WARHEADS, SWITCHES and the board's initial state")]
-    // Owner 2026-10-24: railgun and missile reach = the DRADIS at full gain (12,000 + 5 × 7,000 km), not tied to the gain
-    // set now (the design had 30,000 and 40,000). You can dumb-fire that far; a lock still needs a scan.
+    // Owner 2026-10-24: railgun and missile reach = the DRADIS at full gain (12,000 + 5 × 3,600 km since 2026-10-26), not
+    // tied to the gain set now (the design had 30,000 and 40,000). You can dumb-fire that far; a lock still needs a scan.
     public Mount[] mounts =
     {
-        new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 47000, label = "RAILGUN TURRET A", shortName = "RG-A", loaded = "2 / 2", ammo = "22" },
-        new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 47000, label = "RAILGUN TURRET B", shortName = "RG-B", loaded = "1 / 2", ammo = "19" },
+        new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 30000, label = "RAILGUN TURRET A", shortName = "RG-A", loaded = "2 / 2", ammo = "22" },
+        new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 30000, label = "RAILGUN TURRET B", shortName = "RG-B", loaded = "1 / 2", ammo = "19" },
         new Mount { id = "PDA", arc = 42, halfArc = 35, rangeKm = 4000, label = "PDC GROUP A", shortName = "PDC-A", loaded = "BELT", ammo = "2400" },
         new Mount { id = "PDB", arc = 200, halfArc = 35, rangeKm = 4000, label = "PDC GROUP B", shortName = "PDC-B", loaded = "BELT", ammo = "2180" },
-        new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 47000, label = "MISSILE VLS", shortName = "VLS", loaded = "8 / 8", ammo = "8" },
+        new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 30000, label = "MISSILE VLS", shortName = "VLS", loaded = "8 / 8", ammo = "8" },
     };
     public WeaponSystem[] systems =
     {
@@ -1827,6 +1837,11 @@ public class HandoffBoardState
     }
 
     public void LayBearing(Track t, float now) { BearingFixes.Add(new BearingFix { key = t.key, x = ownX, y = ownY, brg = ExactBearing(t), t = now }); }
+
+    /// <summary>Step 75 (owner 2026-10-26): the sweep touches a contact. Out of sight, the plot shows it here until the next pass.</summary>
+    public void See(Track t) { t.seen = true; t.seenX = t.worldX; t.seenY = t.worldY; t.seenBrg = ExactBearing(t); t.seenRangeKm = t.rangeKm; }
+    /// <summary>Step 75: close enough to see with the eye.</summary>
+    public bool InSight(Track t) => t.hasWorld && t.rangeKm <= visualRangeKm;
 
     public void PruneBearings(float now) { BearingFixes.RemoveAll(f => now - f.t >= bearingTrailSeconds); }
 

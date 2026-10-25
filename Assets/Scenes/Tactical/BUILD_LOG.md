@@ -118,8 +118,9 @@ Do not run ahead. Do one step, show it, wait.
 | 72 | Mission clock and signal box lined up with the plot edges | **Done** — measured on screen |
 | 73 | Ruins in the level: the starbase husk and a debris belt; a Player Spawn at the bottom, the enemy's at the top | **Done** — playtest 168/168 |
 | 74 | Engineering's ship picture shows side armour; the room rings change colour | **Done** — playtest 168/168 |
+| 75 | Ships glide between ticks; DRADIS shows a contact where the sweep last touched it; in sight (10,000 km) its model shows; wrecks stay, grey; engineering's hull filled; weapons and DRADIS reach 30,000 km | **Done** — playtest 170/170 |
 
-Steps 6 to 28 and Steps 34 to 74 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 75 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -546,6 +547,11 @@ These are settled. Do not reopen them.
     Starwolf" (that is the game's name). The enemy is a **Garuda-class cruiser**, not "TRACK 07":
     once scanned it reads **GARUDA · CRUISER**; before a scan it stays **BOGEY T07**. Its model is the
     `UpdatedStarships` cruiser. Not applied yet: see Open items.
+40. **Motion and sight** (owner, 2026-10-26). Our ship is always in view, so it moves smoothly. An
+    enemy known only through DRADIS moves on the plot only when the sweep touches it. Inside visual
+    range (10,000 km) you see it: its model shows and glides. Seen but not identified, you get its
+    shape but not who it is, and you can't target it. A destroyed ship turns grey and drifts; it
+    never disappears. Weapons and DRADIS at full gain reach 30,000 km. All of it is tuning. Details in Step 75.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -743,12 +749,16 @@ The new layout throws that split away:
 38. **Engineering's hull pictures are their own images, not the shared `ShipView` render.** Never
     colour `ShipView`: the plot uses it, and the plot ship must stay white. The images in
     `Assets/Art/Board/Hull/` must import with sRGB off, or the lines come out the wrong brightness.
-    To remake them for a new model, see Step 74.
-39. Nothing else. The Unity console is clean: no errors, no warnings.
+    To remake them for a new model, see Steps 74 and 75.
+39. **Ship models glide ahead of the truth between ticks (Step 75).** A ship's true spot and bow are
+    `NavSystem.x`, `y` and `heading`. Its model's transform is where it is *drawn*, up to one tick's
+    travel ahead. Never read a ship's transform for a rule; read its `NavSystem` (or the track's
+    `worldX`/`worldY`, which `TacticalWorld.Sync` takes from it).
+40. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 74, in detail
+## 6 · Steps 6 to 28, and 34 to 75, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3287,6 +3297,73 @@ aft red, prow and port white, the HAB ring amber and the HGR ring red. The same 
   model: the Battleship's is Prow, Aft, Port, Star.
 - The ship is about 120 px wide in a 112 px box, so the side pods poke slightly past the dark box.
   It was the same before; not new.
+
+### Step 75 — Ships glide; DRADIS shows the sweep's last touch; visual range; wrecks stay; ranges 30,000 km
+
+**Owner direction (2026-10-26).** Our ship jumped across the plot every 0.42 s tick. The owner:
+our ship is always visible, so it should feel smooth. An enemy on DRADIS should update only each time
+the sweep touches it. Inside visual range its full model shows and flies smoothly. Seeing it with
+your eyes shows its shape, but not who it is, and you can't target it. A destroyed ship turns grey
+and floats; it never disappears. Guns 30,000 km, DRADIS at full gain 30,000 km, visual range
+10,000 km: starting numbers, to be tuned. The engineering hull picture looked greasy (every panel
+line of the model as a hairline); the owner picked a dim fill with a bright outline.
+
+**What changed.**
+
+- **The glide** (drawing only; the rules still step once per tick):
+  - `HandoffBoardControls.SinceTick`: game seconds since the last tick, up to one tick's worth, 0 while paused.
+  - `NavSystem.DrawnX`, `DrawnY`, `DrawnHeading`: the true spot carried on by its velocity for that
+    long, the bow still swinging toward the ordered heading. `PlaceModel` puts the model there, now
+    every frame (`Update`, so the ship cameras follow in `LateUpdate`).
+  - `HandoffPlotPanel` redraws every frame while time runs. Our ship's picture, the sensor circle,
+    the sweep, the weapon ring and the PDC arcs sit on the drawn spot.
+  - `TacticalWorld.Sync` reads each contact's true spot and bow from its `NavSystem`, not its model,
+    and gives the track its `nav` (trap 39).
+- **What DRADIS shows**: `HandoffBoardState.See` stores where the sweep touched a contact
+  (`Track.seen`, `seenX/Y`, `seenBrg`, `seenRangeKm`). Each pass over a heard or cone-covered contact
+  calls it. Out of sight, an identified hostile is a dot there, with that range. A heard,
+  unidentified contact's bearing line starts at the first touch and holds that bearing until the next.
+- **In sight** (`visualRangeKm`, 10,000 km, Tuning → Sensors; `InSight`): the contact shows as its
+  model from above, gliding. Red once identified. Amber and labelled **BOGEY T07** if not: it stays
+  unidentified, so the targeting computer can't use it. CLASS no longer brings up the picture;
+  being in sight does.
+- **Wrecks**: in sight, grey (`wreckInk`, ink.secondary #8A959D), drifting. Out of sight, the dim
+  dot as before, now where it drifts.
+- **Ranges**: `senRangePerStepKm` 7,000 → 3,600, so 15,600 km at gain 1 and 30,000 at gain 5. RGA,
+  RGB and VLS reach 30,000 km (still the DRADIS at full gain, Step 62). Set in the code and in
+  `02.1_Grid`'s saved board state; the enemy ships use the code's numbers.
+- **Engineering hull pictures**: the four `Assets/Art/Board/Hull/` images were redrawn from the
+  Step 74 line pictures. Each part is the gap it leaves in the other three. Fill at 35% brightness,
+  a 3 px outline at full, edges smoothed at 4×. Same frame and file names, so nothing else changed.
+  To remake for a new model: make the line pictures as in Step 74, then redraw them this way. The
+  stored brightness must be the shader's target run back through the sRGB curve, because
+  `BoardLinearImage` encodes first and then uses brightness as alpha.
+- `PlaytestRunner.cs`:
+  - TRACK 07 starts 17,500 km out on 048° (was 24,300), so gain 2 still hears it.
+  - The bearing-line check waits for the sweep's first touch.
+  - "Its 3D model follows it" allows one tick's glide.
+  - The CLASS check now needs it in sight, plus a new check: out of sight it is a dot again.
+  - New check: the wreck stays on the plot, in sight, as its model.
+  - The ship-shift stand-in moves 5,000 km west, not east: east took TRACK 07 inside gain 1's reach
+    early.
+  - Videos: every earlier run's `playtest.mp4` is deleted when a run starts (owner, 2026-10-26: not
+    needed once a run is checked). Screenshots stay for the newest three runs. Recording stays
+    1920×1080.
+
+**Checked.** Playtest **PASS, 170/170** (`Logs/Playtests/2026-10-26_011622/`). The first run
+(`2026-10-26_011116`) failed only "Nothing heard yet": the east stand-in, fixed above. The
+screenshot `30_engineering_diagram.png` shows the filled hull: starboard amber, aft red, prow and
+port white. The wreck check passed, but in `29_destroyed.png` the wreck sits just past the plot's
+top edge, so its grey hasn't been seen on screen yet.
+
+**Traps.**
+
+- Trap 39: a model is where a ship is drawn, not where it is.
+- `ponytail:` the glide is a straight-line guess. A ship speeding up or turning settles back a little
+  at each tick (about 0.2 km at x1). If that shows at high zoom or x10, predict the next tick instead.
+- The plot redraws every frame while time runs, as panning already did. If it costs too much, redraw
+  only what moves.
+- There is one contact picture (`contactShipImage`). A second contact in sight gets a dot.
 
 ---
 

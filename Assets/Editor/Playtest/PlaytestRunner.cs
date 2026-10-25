@@ -98,22 +98,23 @@ public static class PlaytestRunner
 
     // ---- run --------------------------------------------------------------------------------
 
-    // Each run's video and screenshots are about 140 MB; keep them for the newest few runs only
-    // (owner, 2026-10-24). Every report.md stays: BUILD_LOG cites runs as evidence.
-    const int KeepRunsWithMedia = 3;
+    // A run's video is about 120 MB and is not watched again once the run is checked (owner, 2026-10-26): every
+    // earlier run's video goes when a new run starts. Screenshots stay for the newest few runs (owner, 2026-10-24).
+    // Every report.md stays: BUILD_LOG cites runs as evidence.
+    const int KeepRunsWithShots = 3;
 
     static void PruneOldRuns(string playtests)
     {
         if (!Directory.Exists(playtests)) return;
         var runs = Directory.GetDirectories(playtests);
         Array.Sort(runs, StringComparer.Ordinal); // folder names are timestamps, so oldest first
-        for (int i = 0; i < runs.Length - (KeepRunsWithMedia - 1); i++) // this run makes the last one
+        for (int i = 0; i < runs.Length; i++)
         {
             try
             {
                 File.Delete(Path.Combine(runs[i], "playtest.mp4"));
                 string shots = Path.Combine(runs[i], "shots");
-                if (Directory.Exists(shots)) Directory.Delete(shots, true);
+                if (i < runs.Length - (KeepRunsWithShots - 1) && Directory.Exists(shots)) Directory.Delete(shots, true); // this run makes the last one
             }
             catch (Exception e) { Debug.LogWarning("[Playtest] could not clear " + runs[i] + ": " + e.Message); }
         }
@@ -240,7 +241,8 @@ public static class PlaytestRunner
               playerSpawn ? "at " + s.nav.x.ToString("N0") + ", " + s.nav.y.ToString("N0") + " km, heading " + s.nav.heading.ToString("000") + "°" : "no Player Spawn in the level");
         var world = UnityEngine.Object.FindAnyObjectByType<TacticalWorld>();
         world.SpawnPlayer(Vector3.zero, 0f);
-        world.Spawn("t07", new Vector3(18058.42f, 16259.874f, 0f), 0f);
+        // Step 75: 17,500 km on the board's bearing 048° (it was 24,300): DRADIS reaches 15,600 km at gain 1 and 19,200 at gain 2 now
+        world.Spawn("t07", new Vector3(13002.06f, 11707.11f, 0f), 0f);
 
         // 4. Starting state: undamaged, dummy present, power cold
         bool undamaged = true;
@@ -308,6 +310,7 @@ public static class PlaytestRunner
         if (!Click("rate", "10", "x10 rate key")) yield break;
         yield return 3f;
         if (!Click("rate", "1", "x1 rate key")) yield break;
+        yield return 0.1f; // Step 75: the models are drawn at the new rate from the next frame
         s.nav.vx = s.nav.vy = 0;
         double movedKm = System.Math.Sqrt((t07Ship.nav.x - ex0) * (t07Ship.nav.x - ex0) + (t07Ship.nav.y - ey0) * (t07Ship.nav.y - ey0));
         var wp = brain.Waypoint;
@@ -315,7 +318,10 @@ public static class PlaytestRunner
         Check("TRACK 07 gets under way on its patrol, toward its next waypoint", movedKm > 1 && t07Ship.nav.SpeedKms > 0.05 && System.Math.Abs(((t07Ship.nav.orderedHeading - toWp + 540) % 360) - 180) <= 1,
               movedKm.ToString("0") + " km, " + t07Ship.nav.SpeedKms.ToString("0.00") + " km/s, ordered " + t07Ship.nav.orderedHeading.ToString("000") + "°, heading " + t07Ship.nav.heading.ToString("000") + "°");
         var dummyT = brain.transform;
-        Check("Its 3D model follows it", Mathf.Abs(dummyT.position.x - (float)t07Ship.nav.x) < 0.05f && Mathf.Abs(dummyT.position.y - (float)t07Ship.nav.y) < 0.05f, "");
+        //     Step 75: the model glides on between ticks, never more than one tick's travel ahead.
+        float glideKm = (float)(t07Ship.nav.SpeedKms * board.Rate) + 0.05f;
+        Check("Its 3D model follows it", Mathf.Abs(dummyT.position.x - (float)t07Ship.nav.x) < glideKm && Mathf.Abs(dummyT.position.y - (float)t07Ship.nav.y) < glideKm,
+              "model " + new Vector2(dummyT.position.x - (float)t07Ship.nav.x, dummyT.position.y - (float)t07Ship.nav.y).magnitude.ToString("0.00") + " km off (one tick's glide " + glideKm.ToString("0.00") + ")");
         Check("The board's track reads its real speed", Mathf.Abs(s.TrackOf("t07").speed - (float)t07Ship.nav.SpeedKms) < 0.01f, s.TrackOf("t07").speed.ToString("0.00") + " km/s");
         //     Stand-in: hold it still for the static-target checks below, until leading lands (Step 52).
         brain.enabled = false;
@@ -395,18 +401,19 @@ public static class PlaytestRunner
         Shot("10_marks");
         yield return 0.2f;
 
-        //     Put our ship 5,000 km east (the board owns its position since Step 41). The grid stays
-        //     put and the ship moves across it, so marks keep their place on screen.
+        //     Put our ship 5,000 km west (the board owns its position since Step 41). The grid stays
+        //     put and the ship moves across it, so marks keep their place on screen. West, away from TRACK 07:
+        //     east took it inside gain 1's 15,600 km (Step 75), and it was heard before the hearing step.
         var own = GameObject.Find("World").transform.Find("OwnShip");
         var shipImg = (RectTransform)GameObject.Find("Own ship (3D view)").transform;
         double home = s.nav.x;
         Vector2 ship0 = shipImg.anchoredPosition;
-        s.nav.x = home + 5000.0;
-        double shift = 5000.0 * 60.9 / 1000.0 * board.ZoomExact; // px our ship travels on the plot
+        s.nav.x = home - 5000.0;
+        double shift = -5000.0 * 60.9 / 1000.0 * board.ZoomExact; // px our ship travels on the plot
         yield return 1.2f; // a few board ticks
         string pt1 = MarkLabel(board, 0), ru1 = MarkLabel(board, 1), co1 = MarkLabel(board, 2);
         Vector2 ptPos1 = MarkLabelPos(board, 0), ruPos1 = MarkLabelPos(board, 1);
-        Check("The 3D model follows the board's position", Mathf.Abs(own.position.x - (float)(home + 5000.0)) < 0.01f, "model x " + own.position.x.ToString("0") + " km");
+        Check("The 3D model follows the board's position", Mathf.Abs(own.position.x - (float)(home - 5000.0)) < 0.01f, "model x " + own.position.x.ToString("0") + " km");
         Check("Our ship moves across the plot", Mathf.Abs(shipImg.anchoredPosition.x - ship0.x - (float)shift) < 0.5f && Mathf.Abs(shipImg.anchoredPosition.y - ship0.y) < 0.5f,
               "moved " + (shipImg.anchoredPosition.x - ship0.x).ToString("0.0") + " px (expected " + shift.ToString("0.0") + ")");
         Check("The POINT stays put", (ptPos1 - ptPos0).magnitude < 0.01f && pt1 == pt0, "moved " + (ptPos1 - ptPos0).magnitude.ToString("0.00") + " px, label unchanged");
@@ -566,9 +573,13 @@ public static class PlaytestRunner
         var t07 = s.TrackOf("t07");
         yield return (Func<bool>)(() => s.Heard(t07) && s.newContacts > 0);
         Check("At gain 2 DRADIS hears TRACK 07", s.Heard(t07), "range " + t07.rangeKm.ToString("N0") + " km, hearing range " + s.PassiveRangeKm.ToString("N0") + " km");
+        //     Step 75: the line comes with the sweep's first touch, and holds that bearing until the next pass.
+        yield return (Func<bool>)(() => t07.seen);
+        yield return 0.1f;
         var pl = GameObject.Find("Passive label 0");
         string plText = pl ? pl.GetComponent<TMPro.TMP_Text>().text : "none";
-        Check("A bearing line and label point at it", pl && plText == "BRG " + t07.bearing.ToString("000"), "\"" + plText + "\"");
+        Check("When the sweep touches it, a bearing line and label point at it", pl && plText == "BRG " + (HandoffBoardState.JsRound(t07.seenBrg) % 360).ToString("000") && Mathf.Abs(Mathf.DeltaAngle((float)t07.seenBrg, t07.bearing)) <= 1f,
+              "\"" + plText + "\", bearing now " + t07.bearing.ToString("000"));
         Check("The alarm strip raises: 1 NEW CONTACT, with the alert tone", s.newContacts == 1 && alarmWords.gameObject.activeInHierarchy && alarmWords.text == "NEW CONTACT SINCE COMMIT",
               "\"" + alarmWords.text + "\", last cue \"" + board.LastSound + "\"");
         Shot("22_heard");
@@ -1136,11 +1147,18 @@ public static class PlaytestRunner
         string hullNow = HandoffPeriscopePanel.HullLine(dummyShip);
         Check("Scanned, the targeting computer shows its hull: each face, and the room behind an open one", subjName && subjHull && subjName.text.StartsWith("TRACK 07") && subjHull.text == hullNow && hullNow.StartsWith("BOW ") && hullNow.Contains(" \u25B8 "),
               subjName && subjHull ? "\"" + subjName.text + "\" / \"" + subjHull.text + "\"" : "no readout");
-        //     CLASS in the targeting computer: the plot shows TRACK 07 as its own ship, in red (owner 2026-10-24).
+        //     CLASS in the targeting computer names its class (owner 2026-10-24). Step 75 (owner 2026-10-26): the plot shows
+        //     TRACK 07 as its own ship, in red, because it is in sight (10,000 km), not because of CLASS.
         if (!Click("scope.classify", null, "CLASS key")) yield break;
         yield return 0.6f;
-        Check("Classified: TRACK 07 shows on the plot as its own ship model, in place of its dot", s.classified.Contains("t07") && plotPanel.ContactShipShown && subjName.text == "TRACK 07 · CRUISER",
-              "\"" + subjName.text + "\", picture " + plotPanel.ContactShipShown);
+        Check("Classified and in sight: TRACK 07 shows on the plot as its own ship model, in place of its dot", s.classified.Contains("t07") && s.InSight(t07) && plotPanel.ContactShipShown && subjName.text == "TRACK 07 · CRUISER",
+              "\"" + subjName.text + "\", " + t07.rangeKm.ToString("N0") + " km, picture " + plotPanel.ContactShipShown);
+        float sightWas = s.visualRangeKm;
+        s.visualRangeKm = t07.rangeKm - 1000f; // stand-in for drawing off out of sight
+        yield return 0.6f;
+        Check("Out of sight it is a dot again, where the sweep last touched it", !plotPanel.ContactShipShown && t07.seen, "picture " + plotPanel.ContactShipShown);
+        s.visualRangeKm = sightWas;
+        yield return 0.6f;
         //     The sweep runs from a small circle round our ship, not from the ship itself.
         var sweepInner = (float)typeof(HandoffSweepGraphic).GetField("innerPx", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                                 .GetValue(plotPanel.GetComponentInChildren<HandoffSweepGraphic>(true));
@@ -1176,6 +1194,7 @@ public static class PlaytestRunner
         for (int c = 0; c < dummyShip.compartments.Length; c++) if (dummyShip.compartments[c].key != "rct" && dummyShip.compartments[c].integ != integBefore[c]) untouched = false;
         Check("Nothing else on it was touched", untouched, "");
         yield return 0.4f;
+        Check("The wreck stays on the plot: in sight, its model shows (grey) and drifts on (owner 2026-10-26)", s.InSight(t07) && plotPanel.ContactShipShown, t07.rangeKm.ToString("N0") + " km, picture " + plotPanel.ContactShipShown);
         Check("The kill cue sounds", board.LastSound == "kill", "last cue \"" + board.LastSound + "\"");
         Shot("29_destroyed");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action

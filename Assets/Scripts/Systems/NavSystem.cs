@@ -57,6 +57,26 @@ public class NavSystem : MonoBehaviour
     [System.NonSerialized] public HandoffBoardState ship;
     // the bow turns whole degrees; fractions of a degree bank here so x0.25 turns at the right speed too
     [System.NonSerialized] private double turnBank;
+    // the board's clock, for drawing between ticks (Step 75)
+    private HandoffBoardControls board;
+
+    // Step 75 (owner 2026-10-26): the rules step once per board tick; between ticks the ship is drawn gliding on
+    // along its velocity, its bow still swinging, so a ship in view moves smoothly. Only the drawing; x and y stay true.
+    // ponytail: straight-line guess, so a speeding-up or turning ship settles back a little each tick; predict the next tick if that shows
+    double Ahead => board ? board.SinceTick : 0;
+    /// <summary>Where the ship is drawn now, km: its true spot, carried on by the time since the last tick.</summary>
+    public double DrawnX => x + vx * Ahead;
+    public double DrawnY => y + vy * Ahead;
+    /// <summary>The bow as drawn now, degrees: still swinging toward the ordered heading.</summary>
+    public double DrawnHeading
+    {
+        get
+        {
+            int d = TurnLeft;
+            if (d == 0 || ship == null) return heading;
+            return heading + System.Math.Sign(d) * System.Math.Min(System.Math.Abs(d), TurnPerS * Ahead);
+        }
+    }
 
     public double SpeedKms => System.Math.Sqrt(vx * vx + vy * vy);
     /// <summary>Course over ground, degrees clockwise from north (the way the ship is actually going).</summary>
@@ -65,6 +85,8 @@ public class NavSystem : MonoBehaviour
     public int TurnLeft => ((orderedHeading - heading + 540) % 360) - 180;
 
     double EngineRoom => ship.CompHealth("eng") / 5.0;
+    /// <summary>Degrees the bow swings per game second now (the design's per-tick swing at x1).</summary>
+    double TurnPerS => System.Math.Max(1, HandoffBoardState.JsRound(turnRate * EngineRoom));
     /// <summary>thrCap: ENG units x 20 x the engine room's integrity.</summary>
     public int ThrottleCap => HandoffBoardState.JsRound((double)ship.BusUnits("eng") * 20 * EngineRoom);
     /// <summary>gLoadNum: 1 G plus 1 G at full throttle, plus the approach mode's extra.</summary>
@@ -105,8 +127,8 @@ public class NavSystem : MonoBehaviour
         int engCap = ship.BusUnits("eng") * 20;
         if (throttle > engCap) throttle = 0; // owner 2026-10-25: power lost, the throttle goes back to zero (the design held it at the cap); you set it again
         if (heading == orderedHeading) { turnBank = 0; return; }
-        // degrees per game second (the design's per-tick swing at x1), banked so the bow turns whole degrees
-        turnBank += System.Math.Max(1, HandoffBoardState.JsRound(turnRate * EngineRoom)) * dt;
+        // banked so the bow turns whole degrees
+        turnBank += TurnPerS * dt;
         int step = (int)System.Math.Floor(turnBank + 1e-9);
         if (step < 1) return;
         turnBank -= step;
@@ -133,10 +155,15 @@ public class NavSystem : MonoBehaviour
         y += vy * dt;
     }
 
-    /// <summary>Put this ship's 3D model where navigation has it, facing its heading (clockwise from north;
+    private void Awake() => board = FindAnyObjectByType<HandoffBoardControls>();
+
+    // in Update, so the ship cameras (LateUpdate) follow the model where it is this frame
+    private void Update() => PlaceModel();
+
+    /// <summary>Put this ship's 3D model where it is drawn, facing its drawn heading (clockwise from north;
     /// about +z in the x/y plane that is −heading).</summary>
     public void PlaceModel()
     {
-        transform.SetPositionAndRotation(new Vector3((float)x, (float)y, transform.position.z), Quaternion.Euler(0f, 0f, -heading));
+        transform.SetPositionAndRotation(new Vector3((float)DrawnX, (float)DrawnY, transform.position.z), Quaternion.Euler(0f, 0f, -(float)DrawnHeading));
     }
 }

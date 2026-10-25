@@ -177,6 +177,9 @@ public class HandoffBoardControls : MonoBehaviour
     public string Tool { get; private set; }
     public bool Paused { get { return paused; } }
     public float Rate { get { return rate; } }
+    /// <summary>Step 75: game seconds since the last tick, up to one tick's worth; 0 while paused. Ships are drawn this far
+    /// along between ticks.</summary>
+    public float SinceTick => paused ? 0f : Mathf.Clamp01((Time.unscaledTime - (nextTick - tickSeconds)) / tickSeconds) * rate;
     public float Zoom { get { return zoom; } }
     /// <summary>The zoom as the browser holds it (a double, rounded to 0.01).</summary>
     public double ZoomExact { get { return zoomExact; } }

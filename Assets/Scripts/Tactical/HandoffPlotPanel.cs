@@ -79,9 +79,11 @@ public class HandoffPlotPanel : HandoffPanel
     [Tooltip("Stand-in art until Claude Design's contact glyphs arrive (CLAUDE_DESIGN_NEEDS 1.2).")]
     [SerializeField] private HandoffMarksGraphic contactMarks;
     [SerializeField] private TMP_Text contactLabelTemplate;
-    [Tooltip("Owner 2026-10-24: once classified (CLASS in the targeting computer), a scanned contact shows as its own 3D "
-           + "model seen from above, in red, in place of its dot (a ShipView camera on the contact's model).")]
+    [Tooltip("Owner 2026-10-26 (Step 75): a contact in sight (visualRangeKm) shows as its own 3D model seen from above, in "
+           + "place of its dot (a ShipView camera on the contact's model): red identified, amber unknown, grey a wreck.")]
     [SerializeField] private RawImage contactShipImage;
+    [Tooltip("A wreck in sight (Step 75): the design's ink.secondary.")]
+    [SerializeField] private Color wreckInk = new Color32(0x8A, 0x95, 0x9D, 0xFF);
     private ShipView[] shipViews;
     /// <summary>A contact's ship picture is on the plot (the playtest reads it).</summary>
     public bool ContactShipShown => contactShipImage && contactShipImage.enabled;
@@ -194,6 +196,8 @@ public class HandoffPlotPanel : HandoffPanel
         double z = Controls.ZoomExact / KmPerPx;
         return plotCentre + new Vector2((float)((wx - viewX) * z), (float)(-(wy - viewY) * z));
     }
+    /// <summary>Step 75: our ship where it is drawn now (it glides between ticks), in board px.</summary>
+    Vector2 OwnAt => Screen(State.nav.DrawnX, State.nav.DrawnY);
 
     private void Update()
     {
@@ -214,11 +218,15 @@ public class HandoffPlotPanel : HandoffPanel
                 float past = Mathf.Repeat((float)State.ExactBearing(t) - before, 360f);
                 if (past <= 0f || past > step) continue;
                 bool scanned = State.identified.Contains(t.key);
+                if (State.Heard(t) || State.ConeCovers(t)) State.See(t); // Step 75: out of sight, the plot shows it here until the next pass
                 if (State.ConeCovers(t)) { Controls.SweepTag(); if (!scanned) { State.identified.Add(t.key); Refresh(); } continue; }
                 if (!scanned && State.Heard(t)) { State.LayBearing(t, Controls.MissionSeconds); Refresh(); }
             }
             sweep.rectTransform.localEulerAngles = new Vector3(0f, 0f, -sweepDeg); // clockwise on screen
         }
+        // Step 75: ships glide between ticks, so while time runs the plot redraws every frame
+        // ponytail: redraws the whole plot, as panning already does; redraw only what moves if the profiler minds
+        if (!Controls.Paused) Refresh();
         // not while typing in a field (the hangar's launch bearing)
         var typing = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
         if (typing && typing.GetComponent<TMP_InputField>()) return;
@@ -389,7 +397,7 @@ public class HandoffPlotPanel : HandoffPanel
             float shipPx = Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx);
             float side = shipPx / (shipView ? shipView.ShipFill : 1f);
             ownShipImage.rectTransform.sizeDelta = new Vector2(side, side);
-            Put(ownShipImage.rectTransform, Screen(s.nav.x, s.nav.y), 0f);
+            Put(ownShipImage.rectTransform, OwnAt, 0f);
         }
 
         // fighters in flight (Step 54): a V behind the leader, each wedge pointing where the flight flies
@@ -422,7 +430,7 @@ public class HandoffPlotPanel : HandoffPanel
             var mount = s.MountOf(s.mount);
             if (Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && mount != null && mount.rangeKm > 0f)
             {
-                Vector2 c = Screen(s.nav.x, s.nav.y);
+                Vector2 c = OwnAt;
                 reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeKm / KmPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
             }
             // Step 55: each PDC group on AUTO shows its arc, a dashed sector off our hull (the design's PDC arc, accent.caution at .45)
@@ -431,10 +439,10 @@ public class HandoffPlotPanel : HandoffPanel
             {
                 var pm = s.MountOf(pdGroups[g]);
                 if (!s.pdcAuto[g] || pm == null) continue;
-                Vector2 c = Screen(s.nav.x, s.nav.y);
+                Vector2 c = OwnAt;
                 float r = (float)(pm.rangeKm / KmPerPx * Controls.ZoomExact);
                 System.Func<float, Vector2> at = deg => c + new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)) * r; // board y is down
-                float from = s.nav.heading + pm.arc - pm.halfArc, to = s.nav.heading + pm.arc + pm.halfArc;
+                float hdg = (float)s.nav.DrawnHeading, from = hdg + pm.arc - pm.halfArc, to = hdg + pm.arc + pm.halfArc;
                 reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = c, b = at(from), alpha = 0.45f });
                 reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = c, b = at(to), alpha = 0.45f });
                 for (float d = from; d < to; d += pdcArcStepDeg)
@@ -451,45 +459,56 @@ public class HandoffPlotPanel : HandoffPanel
             DrawSensorRing();
         }
 
-        // identified hostile contacts at their true spot (res_* in the board: a mark only once
-        // identified). km to plot px at 1x: 60.9 px per 1000 km, then the zoom.
+        // Step 75 (owner 2026-10-26): in sight (visualRangeKm) a ship shows as its own model from above, gliding: red
+        // once identified; amber and nameless if not (you see its shape, not who it is, and can't target it); grey
+        // once a wreck, drifting on. Out of sight an identified hostile is a dot where the sweep last touched it
+        // (res_* in the board: a mark only once identified). km to plot px at 1x: 60.9 px per 1000 km, then the zoom.
         var dots = new List<HandoffMarksGraphic.Shape>();
         int n = 0;
-        bool pictured = false;
+        string pictured = null; // the one contact picture's track
         foreach (var t in s.tracks)
         {
-            if (!t.hostile || !s.identified.Contains(t.key)) continue;
-            // drawn at its exact world spot, so it lines up with marks; the rounded bearing and range
-            // are for readouts only (Step 36 verification)
+            if (t.own || t.captured) continue;
+            bool known = t.hostile && s.identified.Contains(t.key), inSight = s.InSight(t);
+            if (!known && !inSight) continue;
             Vector2 at;
-            if (t.hasWorld) at = Screen(t.worldX, t.worldY);
+            if (inSight) at = t.nav ? Screen(t.nav.DrawnX, t.nav.DrawnY) : Screen(t.worldX, t.worldY);
+            else if (t.hasWorld)
+            {
+                if (!t.seen) s.See(t); // identified another way: its first fix is now
+                at = Screen(t.seenX, t.seenY);
+            }
             else
             {
                 double b = t.bearing * System.Math.PI / 180.0, px = t.rangeKm * pxPer1000Km / 1000.0 * Controls.ZoomExact;
-                at = Screen(s.nav.x, s.nav.y) + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
+                at = OwnAt + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
             }
-            var view = s.classified.Contains(t.key) ? ViewOf(t.key) : null;
+            Color ink = t.wreck ? wreckInk : known ? alarm : caution;
+            var view = inSight ? ViewOf(t.key) : null;
             float labelPush = 0f; // a pictured contact's label sits clear of its picture
-            if (contactShipImage && !pictured && view && view.Texture)
+            if (contactShipImage && pictured == null && view && view.Texture)
             {
-                // classified: its model from above, sized as ours is, red; north up like ours (the model turns)
+                // its model from above, sized as ours is; north up like ours (the model turns)
                 contactShipImage.texture = view.Texture;
-                var ink = alarm.gamma;
-                contactShipImage.color = ink;
+                contactShipImage.color = ink.gamma;
                 float px = Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx) / view.ShipFill;
                 contactShipImage.rectTransform.sizeDelta = new Vector2(px, px);
                 Put(contactShipImage.rectTransform, at, 0f);
                 contactShipImage.enabled = true;
-                pictured = true;
+                pictured = t.key;
                 labelPush = px * view.ShipFill / 2f;
             }
+            else if (t.wreck || !known) continue; // no picture: a wreck keeps its dim dot (below); an unknown shows nothing
             else dots.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
+            if (t.wreck) continue; // a wreck carries no label (Step 49)
             var cl = ContactLabel(n++);
-            cl.text = t.name + "\nRNG " + HandoffBoardState.JsRound(t.rangeKm).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
+            Paint(cl, ink);
+            float rng = inSight ? t.rangeKm : t.seenRangeKm;
+            cl.text = (known ? t.name : "BOGEY " + t.key.ToUpperInvariant()) + "\nRNG " + HandoffBoardState.JsRound(rng).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
             Place(cl.rectTransform, at + contactLabelOffset + new Vector2(labelPush, 0f), 0f);
         }
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
-        if (contactShipImage && !pictured) contactShipImage.enabled = false;
+        if (contactShipImage && pictured == null) contactShipImage.enabled = false;
         // enemy missiles coming at us (Step 55): a red dot with a short trail, like our own rounds, no label
         foreach (var r in s.Incoming)
         {
@@ -504,7 +523,7 @@ public class HandoffPlotPanel : HandoffPanel
         bool down = Controls.Motion && Controls.Motion.ScopeDown;
         var bearings = new List<HandoffMarksGraphic.Shape>();
         int np = 0;
-        Vector2 ownAt = Screen(s.nav.x, s.nav.y);
+        Vector2 ownAt = OwnAt;
         float reach = (float)(s.PassiveRangeKm / KmPerPx * Controls.ZoomExact);
         // the bearing trail (Step 45): each line from where our ship was, fading over bearingTrailSeconds
         s.PruneBearings(Controls.MissionSeconds);
@@ -517,13 +536,13 @@ public class HandoffPlotPanel : HandoffPanel
         }
         foreach (var t in s.tracks)
         {
-            if (t.own || !s.Heard(t) || s.identified.Contains(t.key)) continue;
-            double rad = s.ExactBearing(t) * System.Math.PI / 180.0; // the label shows it in whole degrees
+            if (t.own || !s.Heard(t) || s.identified.Contains(t.key) || !t.seen) continue; // Step 75: from the sweep's first touch
+            double rad = t.seenBrg * System.Math.PI / 180.0; // where the sweep last heard it; the label shows it in whole degrees
             var dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad)); // board y is down
             bool on = s.ScopeOn(t, down);
             bearings.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = ownAt, b = ownAt + dir * reach, alpha = on ? 1f : 0.6f });
             var pl = PassiveLabel(np++);
-            pl.text = "BRG " + t.bearing.ToString("000");
+            pl.text = "BRG " + (HandoffBoardState.JsRound(t.seenBrg) % 360).ToString("000");
             pl.alpha = on ? 1f : 0.6f;
             Paint(pl, on ? caution : Controls.GridAmber ? alarm : data);
             Place(pl.rectTransform, ownAt + dir * Mathf.Min(reach, passiveLabelPx), dir.x < 0f ? 1f : 0f);
@@ -531,9 +550,13 @@ public class HandoffPlotPanel : HandoffPanel
             if (look) look.arg = t.key;
         }
         for (int i = np; i < passiveLabels.Count; i++) passiveLabels[i].gameObject.SetActive(false);
-        // wrecks (Step 49): a dim dot where each destroyed ship died, no label
+        // wrecks (Step 49): a dim dot where each destroyed ship drifts, no label; in sight it shows grey as its model (Step 75)
         foreach (var t in s.tracks)
-            if (t.wreck && t.hasWorld) { var w = Screen(t.worldX, t.worldY); bearings.Add(new HandoffMarksGraphic.Shape { kind = "point", a = w, b = w, alpha = 0.45f }); }
+            if (t.wreck && t.hasWorld && t.key != pictured)
+            {
+                var w = t.nav ? Screen(t.nav.DrawnX, t.nav.DrawnY) : Screen(t.worldX, t.worldY);
+                bearings.Add(new HandoffMarksGraphic.Shape { kind = "point", a = w, b = w, alpha = 0.45f });
+            }
         if (passiveLines) { Paint(passiveLines, Controls.GridAmber ? alarm : data); passiveLines.Set(bearings); }
 
         // the export's own passive labels (none since Step 44; kept for a configured one)
@@ -556,7 +579,7 @@ public class HandoffPlotPanel : HandoffPanel
         {
             bool amber = Controls.GridAmber;
             Paint(sensorRing, amber ? alarm : data);
-            Vector2 c = Screen(s.nav.x, s.nav.y), e = c + new Vector2((float)(sensorKm / KmPerPx * Controls.ZoomExact), 0f);
+            Vector2 c = OwnAt, e = c + new Vector2((float)(sensorKm / KmPerPx * Controls.ZoomExact), 0f);
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "disc", a = c, b = e, alpha = amber ? senGlowAlphaAmber : senGlowAlpha });
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "circle", a = c, b = e, alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
             // owner 2026-10-24: a small circle just outside our ship; the sweep runs from it to the rim
@@ -574,7 +597,7 @@ public class HandoffPlotPanel : HandoffPanel
         sweep.SetInner(InnerRingPx);
         float d = 2f * (float)(sensorKm / KmPerPx * Controls.ZoomExact);
         if (sweep.rectTransform.sizeDelta != new Vector2(d, d)) sweep.rectTransform.sizeDelta = new Vector2(d, d);
-        Put(sweep.rectTransform, Screen(s.nav.x, s.nav.y), -sweepDeg);
+        Put(sweep.rectTransform, OwnAt, -sweepDeg);
     }
 
     /// <summary>The selected weapon's reach drawn now, km, or 0 (the playtest reads it).</summary>
