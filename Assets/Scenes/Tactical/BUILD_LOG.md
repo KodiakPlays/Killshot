@@ -120,6 +120,7 @@ Do not run ahead. Do one step, show it, wait.
 | 74 | Engineering's ship picture shows side armour; the room rings change colour | **Done** — playtest 168/168 |
 | 75 | Ships glide between ticks; DRADIS shows a contact where the sweep last touched it; in sight (10,000 km) its model shows; wrecks stay, grey; engineering's hull redrawn; weapons and DRADIS reach 30,000 km | **Done** — playtest 170/170 |
 | 76 | Axis numbers are distances from our ship; the axis titles and the frame stencils TCB-1 and ACC 07 are gone | **Done** — playtest 171/171 |
+| 77 | The debris scatter tool: a Debris Field in a level (shape, pieces, count, size, gap, spread; Scatter and Reshuffle) | **Done** — layout check ok; tried in `Level_01` (not saved); playtest not needed (nothing runs at play) |
 
 Steps 6 to 28 and Steps 34 to 76 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -311,7 +312,9 @@ Details in section 6, Step 34.
 | File | On what | What it is |
 |---|---|---|
 | `Assets/Scripts/Tactical/EnemySpawn.cs` | a node in a level scene | Where an enemy ship starts. A box in the Scene view only, never on the board. |
-| `Assets/Editor/LevelWindow.cs` | menu **Starwolf → Level** | Lists, opens and makes levels; adds an enemy spawn, and the one Player Spawn (Step 73). |
+| `Assets/Editor/LevelWindow.cs` | menu **Starwolf → Level** | Lists, opens and makes levels; adds an enemy spawn, the one Player Spawn (Step 73), and a Debris Field (Step 77). |
+| `Assets/Scripts/Game/DebrisField.cs` | a node in a level scene | Step 77. A shape filled with pieces; the pieces are saved under it. `Layout()` places them from the seed. Nothing runs at play. |
+| `Assets/Editor/DebrisFieldEditor.cs` | the Debris Field's inspector | Step 77. Scatter and Reshuffle; `Check()` is the layout's own test. |
 | `Assets/Scripts/Tactical/PlayerSpawn.cs` | a node in a level scene | Step 73. Where our ship starts: a white box in the Scene view only. At play our ship starts there facing its way (`TacticalWorld.SpawnPlayer`), and the plot opens on it (`HandoffPlotPanel.CentreOnOurShip`, which the C key uses too). One per level. |
 
 ### Terrain prefabs — new in Step 73
@@ -3443,6 +3446,38 @@ brackets or stencils.
 **Still on the frame:** the stencils "CL II EQUIP — 480V DC" and "CONSOLE HARNESS — DO NOT SERVICE
 UNDER LOAD". The owner has not decided on them.
 
+### Step 77 — The debris scatter tool
+
+**What it is.** **Starwolf → Level → Debris field** adds a Debris Field to the open level and fills it
+at once. You can then lay debris out by shape instead of by hand. Step 73's hand-placed debris in
+`Level_01` is unchanged.
+
+**Owner direction (2026-10-25/26).** A pattern maker in the level tool: pick a shape and scatter
+debris in it. The same every play; it changes only on Reshuffle. A tool in the Level window and the
+inspector, not in the menu bar (decision 31).
+
+**How to use it.** Select the field. In its inspector:
+
+- **Shape:** Circle, Ring, Band or Line, with its sizes in km. The field's outline shows in the Scene
+  view. Move and turn the field to place it.
+- **Pieces:** the prefabs to pick from (the button starts with Block, Drum, Girder, Plate and Rock;
+  add wrecks or anything else), **Count**, **Size Km** (each piece's size across, between two
+  numbers), and **Gap Km**, the smallest gap between two pieces' middles (400 to start).
+- **Spread:** Even, Thicker In Middle, or Clumps (with how many).
+- **Scatter** lays the pieces out again from the seed. **Reshuffle** picks a new seed. Both replace
+  every piece under the field, hand-moved ones too, in one undo. If the gap leaves no more room, it
+  places fewer than asked and says so.
+
+**Calls made without the owner (can be changed):** Scatter and Reshuffle replace hand-moved pieces
+(the inspector warns). A Line is a band one piece wide. Pieces turn only around the axis we look
+down, so they stay flat to the plot.
+
+**Checked.** `DebrisFieldEditor.Check()` (run through MCP): for every shape and spread, every piece
+is inside the shape, no two are closer than the gap, and the same seed gives the same layout: ok. In
+`Level_01` (closed without saving): a Circle of 120 pieces, then a Ring with Clumps (106 of 200 fit at
+a 400 km gap), and Scatter again gave the same layout. Playtest not run: nothing in the field runs at
+play, and `Level_01` is unchanged.
+
 ---
 
 ## 7 · How to keep this log
@@ -3903,9 +3938,8 @@ Step 67 made the tool and the enemy spawn box. Plan each of these with the owner
 
 1. ~~Our ship's start point in the level.~~ **Done in Step 73** (Player Spawn).
 2. The battle space size moves from the board into the level.
-3. Debris fields: a shape (circle, ring, band, line), which pieces (Block, Drum, Girder, Plate, the
-   base husk), how many and how big, how they spread, and Reshuffle. Same every play. *(Step 73
-   placed `Level_01`'s debris with a one-off script; the tool itself is not built.)*
+3. ~~Debris fields: a shape, which pieces, how many and how big, how they spread, and
+   Reshuffle.~~ **Done in Step 77** (Debris Field).
 4. Debris on the board: shown once found. Whether it blocks shots or hides us is a later talk. *(See
    "Ruins and the level, next" below.)*
 5. The Tuning window's tabs: Ship, Enemy, Board (decision 31).

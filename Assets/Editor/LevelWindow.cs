@@ -41,6 +41,7 @@ public class LevelWindow : EditorWindow
         {
             if (GUILayout.Button("Enemy spawn")) Add<EnemySpawn>(level, "Enemy Spawn");
             if (GUILayout.Button("Player spawn")) AddPlayerSpawn(level);
+            if (GUILayout.Button("Debris field")) AddDebrisField(level);
         }
     }
 
@@ -108,6 +109,16 @@ public class LevelWindow : EditorWindow
             return;
         }
         Add<PlayerSpawn>(level, "Player Spawn");
+    }
+
+    // Step 77: the kit's pieces and rock, scattered at once so the field shows
+    static void AddDebrisField(Scene level)
+    {
+        Add<DebrisField>(level, "Debris Field");
+        var f = Selection.activeGameObject.GetComponent<DebrisField>();
+        f.pieces = new[] { "Pieces/Block", "Pieces/Drum", "Pieces/Girder", "Pieces/Plate", "Rock" }
+            .Select(p => AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Terrain/" + p + ".prefab")).Where(p => p).ToArray();
+        DebrisFieldEditor.Scatter(f);
     }
 
     // seen from above, north up
