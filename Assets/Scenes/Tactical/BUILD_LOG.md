@@ -3769,6 +3769,19 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
     board uses moved. The 1x copies stay in the export.
   - Playtest 171/171 (run 2026-10-26_014759).
   - Not done yet: the palette asset. The helm's colours are still fields on `HelmPanel`.
+- **Power drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Power.prefab`, the same way as the
+  helm. Owner 2026-10-26: panels go in system order, so each system's rules can follow its panel.
+  - `Drawers/State · power` became `Drawers/Power`, and `HandoffPowerPanel` moved onto it. The
+    playtest finds the drawer by its script now, not by name.
+  - Parts named and grouped: `Frame`, `Header`, `Reactor`, `Load shed`, `Buses/ENG` … `Buses/AUX`
+    (each with `Cells` and `Selector`). Screenshots before and after match pixel for pixel.
+  - Art list: 20 entries. The load-shed rocker isn't in it, because the code swaps its sprite; its
+    two sprites are the panel's **Rocker Up** and **Rocker Thrown** fields.
+  - Art moved: 7 power-only files to `Art/Power` (the casting among them), 8 shared ones to
+    `Art/Shared`.
+  - The playtest now films the Game view at its own 16:9 size instead of a fixed 1920 × 1080
+    (owner 2026-10-26; written by another session, committed here).
+  - Playtest 171/171 (run 2026-10-26_021347).
 
 **Next:** the other panels as prefabs, the same way as the helm. Then power, sensors, comms, weapons,
 hangar, damage and orders as systems, the way navigation was done. The step list

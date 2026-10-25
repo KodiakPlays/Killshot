@@ -78,7 +78,7 @@ public static class PlaytestRunner
         }
     }
 
-    // The recorder switches the Game view to its own 1920x1080 size and leaves it there; give the owner
+    // If the recorder has to switch the Game view to its own size (an odd window), it leaves it there; give the owner
     // theirs back. Reads the Game view's size choice (set < 0) or sets it. Internal API, so guarded.
     static int GameViewSize(int set)
     {
@@ -183,7 +183,12 @@ public static class PlaytestRunner
         movie.name = "Playtest";
         movie.Enabled = true;
         movie.EncoderSettings = new CoreEncoderSettings { Codec = CoreEncoderSettings.OutputCodec.MP4, EncodingQuality = CoreEncoderSettings.VideoEncodingQuality.High };
-        movie.ImageInputSettings = new GameViewInputSettings { OutputWidth = 1920, OutputHeight = 1080 };
+        // Film the Game view as the owner has it — 16:9 at 1x — never a fixed 1920x1080 (owner, 2026-10-26).
+        // MP4 refuses odd sizes, so an odd window is trimmed by a pixel; only then does the recorder resize the view.
+        var view = new GameViewInputSettings();
+        int w = view.OutputWidth & ~1, h = view.OutputHeight & ~1;
+        if (w != view.OutputWidth || h != view.OutputHeight) { view.OutputWidth = w; view.OutputHeight = h; }
+        movie.ImageInputSettings = view;
         movie.CaptureAudio = false;
         movie.OutputFile = Path.Combine(runDir, "playtest");
         settings.AddRecorderSettings(movie);
@@ -261,7 +266,7 @@ public static class PlaytestRunner
         if (!Click("drawer", "power", "PWR key")) yield break;
         Check("A drawer key sounds the tab click (Step 40)", board.Sounds == snd + 1 && board.LastSound == "tab", (board.Sounds - snd) + " cue(s), last \"" + board.LastSound + "\"");
         yield return 0.8f;
-        var drawer = GameObject.Find("State · power");
+        var drawer = board.GetComponentInChildren<HandoffPowerPanel>(true).gameObject;
         Check("The Power drawer opens", drawer != null && drawer.activeInHierarchy, "");
         Shot("04_power_open");
         yield return 0.2f;
