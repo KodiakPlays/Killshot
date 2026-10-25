@@ -3695,6 +3695,22 @@ From `UI_INTEGRATION_LOG.md`, section 10. In order:
      tell apart.
    - Only one contact can show as its model at a time (`contactShipImage`). A second one in visual
      range shows as a dot, or not at all if it is not identified.
+5. **To do after Steps 75–76** (owner, 2026-10-26). Wait for the board refactor (Tooling session)
+   before board edits.
+   - Delete the last two frame stencils in `02.1_Grid`: "CL II EQUIP — 480V DC" (`Frame/text#5`) and
+     "CONSOLE HARNESS — DO NOT SERVICE UNDER LOAD" (`Frame/text#1`). The owner sees no use for them.
+     "TCB-1 / REV D" and "ACC 07" are already gone (Step 76).
+   - Tune visual range (10,000 km), DRADIS reach (30,000 km at full gain) and weapon reach
+     (30,000 km). They are starting numbers.
+   - Bring `docs/scale-sim/scalesim.py` up to date. It still uses the old ranges: weapons
+     47,000 km, DRADIS 12,000 + 7,000 per gain step.
+   - `TACTICAL_BOARD_SPEC.md` §8, §9 and §11 still give the HTML prototype's numbers (3 s radar
+     pulse, 38,000 railgun, 40,000 radar range). Update them when the ranges are tuned. §9.6 is
+     current.
+   - Section 1 of this log and decision 18 say the dummy enemy does not move or fire. It has done
+     both since Steps 51–55. Correct them.
+   - Section 8's playtest notes say the recorder switches the Game view to 1920x1080. It now films
+     the Game view as it is (16:9, owner). Correct the note.
 
 ### Bugs, not fixed yet (2026-10-25)
 
