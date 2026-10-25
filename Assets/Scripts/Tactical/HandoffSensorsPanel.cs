@@ -32,6 +32,12 @@ public class HandoffSensorsPanel : HandoffPanel
     [SerializeField] private Image[] sigCells;
     [SerializeField] private Image sigLamp, sigGlow;
 
+    [Header("Signal box, top-right of the frame (Step 68): the same row, shown with the drawer shut")]
+    [SerializeField] private TMP_Text boxPct;
+    [SerializeField] private TMP_Text boxNote;
+    [SerializeField] private Image[] boxCells;
+    [SerializeField] private Image boxLamp, boxGlow;
+
     [Header("Array gain")]
     [SerializeField] private TMP_Text rangeHeader, rangeEnvelope, gainValue, boostCost;
     [SerializeField] private RectTransform gainCap, gainTrack;
@@ -157,9 +163,42 @@ public class HandoffSensorsPanel : HandoffPanel
         if (Controls == null || !sigLamp) return;
         bool tracked = State.signal >= State.signalTrackedAt;
         bool lit = !tracked || (Time.unscaledTime % blinkSeconds) / blinkSeconds < blinkLitFraction;
-        var c = sigLamp.color; c.a = sigLampAlpha * (lit ? 1f : blinkLowAlpha); sigLamp.color = c;
+        Blink(sigLamp, sigGlow, lit);
+        Blink(boxLamp, boxGlow, lit);
+    }
+
+    void Blink(Image lamp, Image glow, bool lit)
+    {
+        if (lamp) { var c = lamp.color; c.a = sigLampAlpha * (lit ? 1f : blinkLowAlpha); lamp.color = c; }
         // opacity on the lamp element dims its box-shadow glow too
-        if (sigGlow) { if (sigGlowBase < 0f) sigGlowBase = sigGlow.color.a; var g = sigGlow.color; g.a = sigGlowBase * (lit ? 1f : blinkLowAlpha); sigGlow.color = g; }
+        if (glow) { if (sigGlowBase < 0f) sigGlowBase = glow.color.a; var g = glow.color; g.a = sigGlowBase * (lit ? 1f : blinkLowAlpha); glow.color = g; }
+    }
+
+    void ShowSignal(TMP_Text pctText, TMP_Text note, Image[] cells, Image lamp, Image glow)
+    {
+        var s = State;
+        int pct = HandoffBoardState.JsRound(s.signal);
+        Color sigInk = s.signal >= s.signalTrackedAt ? alarm : s.signal > 0 ? caution : label;
+        if (pctText) { pctText.text = pct + "%"; Paint(pctText, sigInk); }
+        int litCells = HandoffBoardState.JsRound(s.signal / 100f * 10f);
+        for (int k = 0; cells != null && k < cells.Length; k++)
+        {
+            int n = k + 1;
+            Paint(cells[k], n <= litCells ? (n >= 8 ? alarm : n >= 5 ? caution : Color.white) : cellUnlit);
+        }
+        Color lampInk = s.signal >= s.signalTrackedAt ? alarm : s.signal > 0 ? caution : lampOffPanel;
+        Paint(lamp, lampInk);
+        Paint(glow, lampInk);
+        Show(glow, s.signal > 0);
+        if (note)
+        {
+            int n = s.Trackers();
+            note.text = s.signal >= s.signalTrackedAt
+                ? n + " HOSTILE " + (n == 1 ? "SET HAS" : "SETS HAVE") + " YOUR RANGE"
+                : s.signal <= 0 ? "RUNNING SILENT"
+                : s.signal > s.SignalTarget ? "EMISSIONS DECAYING — NOT YET RESOLVED"
+                : "POWER SIGNATURE — NOT YET RESOLVED"; // stand-in: the design has no line for power-driven signal below the line (Step 35)
+        }
     }
 
     public override void Refresh()
@@ -170,30 +209,10 @@ public class HandoffSensorsPanel : HandoffPanel
         SetMaster(dradis, s.dradis, nominal);
         SetMaster(active, s.active, caution);
 
-        // own emissions
-        int pct = HandoffBoardState.JsRound(s.signal);
-        Color sigInk = s.signal >= s.signalTrackedAt ? alarm : s.signal > 0 ? caution : label;
-        if (sigPct) { sigPct.text = pct + "%"; Paint(sigPct, sigInk); }
-        int litCells = HandoffBoardState.JsRound(s.signal / 100f * 10f);
-        for (int k = 0; k < sigCells.Length; k++)
-        {
-            int n = k + 1;
-            Paint(sigCells[k], n <= litCells ? (n >= 8 ? alarm : n >= 5 ? caution : Color.white) : cellUnlit);
-        }
-        Color lampInk = s.signal >= s.signalTrackedAt ? alarm : s.signal > 0 ? caution : lampOffPanel;
-        Paint(sigLamp, lampInk);
-        Paint(sigGlow, lampInk);
-        Show(sigGlow, s.signal > 0);
+        // own emissions, on the drawer and in the signal box (Step 68)
+        ShowSignal(sigPct, sigNote, sigCells, sigLamp, sigGlow);
+        ShowSignal(boxPct, boxNote, boxCells, boxLamp, boxGlow);
         if (sigLamp) sigLampAlpha = 1f;
-        if (sigNote)
-        {
-            int n = s.Trackers();
-            sigNote.text = s.signal >= s.signalTrackedAt
-                ? n + " HOSTILE " + (n == 1 ? "SET HAS" : "SETS HAVE") + " YOUR RANGE"
-                : s.signal <= 0 ? "RUNNING SILENT"
-                : s.signal > s.SignalTarget ? "EMISSIONS DECAYING — NOT YET RESOLVED"
-                : "POWER SIGNATURE — NOT YET RESOLVED"; // stand-in: the design has no line for power-driven signal below the line (Step 35)
-        }
 
         // array gain
         string range = s.SenRangeKm.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " KM";

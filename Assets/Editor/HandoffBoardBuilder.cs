@@ -425,7 +425,7 @@ public static class HandoffBoardBuilder
 
     // Step 68 (owner 2026-10-25): the signal alarm. A copy of the Sensors drawer's E-SIG row sits in the
     // frame's top-right, opposite the mission clock, so the signal shows with the drawer shut.
-    // HandoffMirror keeps each copy's text, colour and blink in step with the drawer's own.
+    // HandoffSensorsPanel fills it in, the same way as its own row.
     static readonly Vector2 SignalBoxAt = new Vector2(1519, 30); // board px: the row's top-left, clear of the corner bolt
 
     static void BuildSignalBox(RectTransform root)
@@ -444,15 +444,16 @@ public static class HandoffBoardBuilder
             rt.anchoredPosition += shift;
             return rt.GetComponent<Graphic>();
         };
+        // in draw order: the well, then the cells, then the lamp over its glow, then the text
         copy("sprite#149 ", "well");
         copy("text#131 ", "label");
-        // drawn first, so the lamp sits over its glow and the text over the well
-        var live = Enumerable.Range(131, 10).Select(i => ("drawn#" + i + " ", "cell " + (i - 130)))
-            .Concat(new[] { ("glow · lamp#43 ", "glow"), ("lamp#43 ", "lamp"), ("text#132 ", "percent"), ("text#133 ", "note") }).ToArray();
-        var copies = live.Select(l => (Object)copy(l.Item1, l.Item2)).ToArray();
-        var so = new SerializedObject(g.rt.gameObject.AddComponent<HandoffMirror>());
-        SetRefs(so.FindProperty("originals"), live.Select(l => (Object)Gfx(root, S, l.Item1)).ToArray());
-        SetRefs(so.FindProperty("copies"), copies);
+        var cells = Enumerable.Range(131, 10).Select(i => (Object)copy("drawn#" + i + " ", "cell " + (i - 130))).ToArray();
+        var so = new SerializedObject(root.GetComponent<HandoffSensorsPanel>());
+        so.FindProperty("boxGlow").objectReferenceValue = copy("glow · lamp#43 ", "glow");
+        so.FindProperty("boxLamp").objectReferenceValue = copy("lamp#43 ", "lamp");
+        so.FindProperty("boxPct").objectReferenceValue = copy("text#132 ", "percent");
+        so.FindProperty("boxNote").objectReferenceValue = copy("text#133 ", "note");
+        SetRefs(so.FindProperty("boxCells"), cells);
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 

@@ -197,7 +197,7 @@ Added in Steps 66 and 68 (under `Board/HandoffBoard`):
 - `Drawers` — just above `Plot`. Holds the six drawers (`State · power` … `State · fire control`)
   and clips them to the frame's opening with a `RectMask2D` (Step 66).
 - `SignalBox` — just after `TimeControl`, in the frame's top-right. A copy of the Sensors E-SIG row,
-  with `HandoffMirror` on it (Step 68).
+  filled in by `HandoffSensorsPanel` (Step 68).
 
 ### `Level_01` — made in Step 67
 
@@ -291,12 +291,6 @@ Details in section 6, Step 34.
 
 `TacticalWorld` loads the level at play (`levelScene`) and moves a contact to its spawn (`Spawn`).
 Details in section 6, Step 67.
-
-### The signal box — new in Step 68
-
-| File | On what | What it is |
-|---|---|---|
-| `Assets/Scripts/Tactical/HandoffMirror.cs` | `Board/HandoffBoard/SignalBox` | Each frame, copies take their originals' colour, text and visibility. |
 
 ### Grid shader and material — new in Step 5
 
@@ -2962,9 +2956,13 @@ and the note ("RUNNING SILENT", or "1 HOSTILE SET HAS YOUR RANGE" once tracked).
 - `Board/HandoffBoard/SignalBox`, just after `TimeControl`. The row's dark backing (`well_r3`)
   sits at board px 1519, 30 (356 x 50), clear of the corner bolt. Copies are named `Signal · well`, `· label`, `· cell 1`–`10`, `· glow`,
   `· lamp`, `· percent`, `· note`.
-- `HandoffMirror` (new) on it. Each frame, the cells, glow, lamp, percent and note take their
-  original's colour (blink included), text and visibility. The well and label are plain copies. The rules stay in `HandoffSensorsPanel`, which redraws its row even with the
-  drawer shut.
+- `HandoffSensorsPanel` fills in the box exactly as it fills in its own row: same rules, same
+  blink. Its `Box …` slots (under "Signal box" in its inspector) point at the box's cells, lamp,
+  glow, percent and note. The well and label are plain copies. The panel sits on
+  `Board/HandoffBoard`, so it keeps working with the drawer shut.
+- No new script (owner, 2026-10-25). A first version used a separate `HandoffMirror` script to
+  copy the row; the owner found it confusing, and it was removed the same day. Playtest after
+  removing HandoffMirror: 166/166 (`Logs/Playtests/2026-10-25_233126/`).
 - `HandoffBoardControls`: after `TickSensors`, the alert tone plays once as the signal crosses
   `signalTrackedAt` (45). It plays again only after the signal drops below and comes back.
 - `HandoffBoardBuilder.BuildSignalBox` builds it, after `TuckDrawersUnderFrame`, so a rebuild keeps
