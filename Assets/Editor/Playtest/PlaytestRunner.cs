@@ -973,7 +973,7 @@ public static class PlaytestRunner
         yield return 1f; // at x1: a few game seconds, well before they arrive
         double flown = System.Math.Sqrt((flight.x - fx0) * (flight.x - fx0) + (flight.y - fy0) * (flight.y - fy0)), took = board.MissionSeconds - ft0;
         if (!Click("rate", "10", "x10 rate key")) yield break;
-        Check("They fly toward TRACK 07 at " + s.fighterSpeedKms + " km/s", took > 0 && System.Math.Abs(flown / took - s.fighterSpeedKms) < 0.5 && interlockText().StartsWith("OUTBOUND TO TRACK 07"),
+        Check("They fly toward GARUDA at " + s.fighterSpeedKms + " km/s", took > 0 && System.Math.Abs(flown / took - s.fighterSpeedKms) < 0.5 && interlockText().StartsWith("OUTBOUND TO GARUDA"),
               (flown / took).ToString("0.00") + " km/s; \"" + interlockText() + "\"");
         yield return (Func<bool>)(() => System.Math.Sqrt((flight.x - s.nav.x) * (flight.x - s.nav.x) + (flight.y - s.nav.y) * (flight.y - s.nav.y)) > 1000); // clear of our ship's picture
         Shot("28c_fighters_outbound");
