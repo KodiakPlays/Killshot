@@ -109,6 +109,17 @@ public class HandoffPlotPanel : HandoffPanel
     /// <summary>The world point at the plot centre, km.</summary>
     public Vector2 View => new Vector2((float)viewX, (float)viewY);
 
+    [Header("Axis numbers (Step 65)")]
+    [Tooltip("The numbers are made under this, at run time (Plot/Scale).")]
+    [SerializeField] private RectTransform axisLayer;
+    [Tooltip("The titles on the top and left edges. A number that would sit on one is skipped.")]
+    [SerializeField] private RectTransform axisXTitle, axisYTitle;
+    [SerializeField] private TMP_FontAsset axisFont;
+    [Tooltip("The board thickens Share Tech Mono at small sizes with its own material. Empty uses the font's own.")]
+    [SerializeField] private Material axisMaterial;
+    [SerializeField] private float axisFontSize = 11f;
+    [SerializeField] private Color axisColour = new Color(0.7314692f, 0.759380937f, 0.7812595f, 1f);
+
     [Header("Labels — offsets have no value in the package (HANDOFF_GAPS)")]
     [Tune("Plot tools")]
     [SerializeField] private Vector2 pointLabelOffset = new Vector2(10, 0);
@@ -656,29 +667,14 @@ public class HandoffPlotPanel : HandoffPanel
 
     // Step 65 (owner 2026-10-25): the axis numbers follow the grid. One on each big-square line, along the top
     // and left edges, in thousands of km from the world origin (+ east and north), clear of the two titles. The
-    // design's were fixed text, right only with our ship at the centre; its bottom row went, as the ORDERS panel
-    // covers that edge's left end and the top row already gives it.
-    private RectTransform axisScale, axisXTitle, axisYTitle;
-    private TextMeshProUGUI axisTemplate;
+    // design's were fixed text, right only with our ship at the centre, and are deleted; its bottom row went, as the
+    // ORDERS panel covers that edge's left end and the top row already gives it. The look is on the inspector.
     private readonly List<TextMeshProUGUI> axisLabels = new List<TextMeshProUGUI>();
     const float AxisTopPx = 38f, AxisLeftPx = 23f, AxisEdgePx = 20f; // the design's top row and left column, plot px
 
     void ShowAxes(HandoffBoardState s)
     {
-        if (!axisScale)
-        {
-            axisScale = grid.transform.parent.Find("Scale") as RectTransform;
-            if (!axisScale) return;
-            foreach (var t in axisScale.GetComponentsInChildren<TextMeshProUGUI>(true))
-            {
-                if (t.text == "X (") axisXTitle = t.rectTransform;
-                if (t.text == "Y (") axisYTitle = t.rectTransform;
-                if (!System.Text.RegularExpressions.Regex.IsMatch(t.text, @"^[+−]?\d+$")) continue;
-                if (!axisTemplate) axisTemplate = t;
-                t.gameObject.SetActive(false);
-            }
-        }
-        if (!axisTemplate) return;
+        if (!axisLayer || !axisFont) return;
         Rect r = grid.rectTransform.rect;
         var o = marks ? marks.origin : Vector2.zero;
         float cellPx;
@@ -706,9 +702,19 @@ public class HandoffPlotPanel : HandoffPanel
     {
         while (axisLabels.Count <= i)
         {
-            var t = Instantiate(axisTemplate, axisScale);
-            t.name = "Axis number";
+            var go = new GameObject("Axis number", typeof(RectTransform));
+            go.transform.SetParent(axisLayer, false);
+            var t = go.AddComponent<TextMeshProUGUI>();
+            t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0f, 1f); // as Put expects
+            t.rectTransform.sizeDelta = new Vector2(30f, 12f);
+            t.font = axisFont; // through the properties, not serialization (BUILD_LOG trap 2)
+            t.fontSharedMaterial = axisMaterial ? axisMaterial : axisFont.material;
+            t.fontSize = axisFontSize;
+            t.color = axisColour;
             t.alignment = TextAlignmentOptions.Center;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.richText = false;
+            t.raycastTarget = false;
             axisLabels.Add(t);
         }
         var l = axisLabels[i];

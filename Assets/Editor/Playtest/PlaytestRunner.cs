@@ -572,6 +572,13 @@ public static class PlaytestRunner
         float blinkUntil = Time.realtimeSinceStartup + 1.3f;
         yield return (Func<bool>)(() => { if (shipRaw.color.a < 0.9f) dim = true; return Time.realtimeSinceStartup > blinkUntil; });
         Check("Tracked, our ship does not blink", !dim, "signal " + s.signal.ToString("0") + "%");
+        //     Step 68: the signal box in the frame's top-right shows it too, with the Sensors drawer shut.
+        var sigBox = GameObject.Find("Board/HandoffBoard/SignalBox").transform;
+        var boxPct = sigBox.Find("Signal · percent").GetComponent<TMPro.TMP_Text>();
+        var boxNote = sigBox.Find("Signal · note").GetComponent<TMPro.TMP_Text>();
+        yield return (Func<bool>)(() => boxPct.text == HandoffBoardState.JsRound(s.signal) + "%");
+        Check("Tracked, the top-right signal box reads the signal and the trackers", boxPct.text == HandoffBoardState.JsRound(s.signal) + "%" && boxNote.text.EndsWith("YOUR RANGE"),
+              "\"" + boxPct.text + "\", \"" + boxNote.text + "\"");
 
         // 18. The bearing trail (Step 45): each sweep leaves TRACK 07's bearing where we were. As we
         //     move, the lines cross at it. They fade out over two minutes of mission time.
@@ -1078,6 +1085,8 @@ public static class PlaytestRunner
         if (!Click("rate", "1", "x1 rate key")) yield break;
         System.Array.Copy(armourWas, dummyShip.SideArmour, armourWas.Length); // its armour as it was
         s.defenderShare = defenders;
+        brain.Think(dummyShip, s); // one thought, brain still off: with its engine room wrecked it makes no way
+        Check("Disabled, its brain cannot drive it", dummyShip.thr == 0, "throttle " + dummyShip.thr + "%");
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
 

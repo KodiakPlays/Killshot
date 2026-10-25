@@ -19,12 +19,14 @@ captures it. Then they fly home. No design source defined these orders; the owne
 
 1. **Launch** as for fighters: hangar stages, launch lever, a target from fire control. Each ready
    boat carries 6 marines from the ship's 18.
-2. **Fly out** at 6 km/s, drawn as the fighters' wedges.
+2. **Fly out** at 30 km/s, drawn as the fighters' wedges.
 3. **Hold off** until the target can be boarded. The hangar line says why it is waiting:
    - "HOLDING OFF TRACK 07 · NO OPEN SIDE": no face of its armour is broken;
-   - "HOLDING OFF TRACK 07 · TARGET UNDER WAY": it is moving faster than 0.1 km/s.
+   - "HOLDING OFF TRACK 07 · TARGET UNDER WAY": it is moving faster than 0.5 km/s.
 
-   You have to fight it down first.
+   You have to fight it down first: wreck its engine room, or knock its power out with EMP.
+   Targets are named as everywhere else: "BOGEY T07" until an active scan identifies it, then
+   "TRACK 07".
 4. **Board.** The boats dock and the marines fight for 60 game seconds: "BOARDING TRACK 07 · 42 S".
 5. **The odds:** marines ÷ (marines + defenders). A quarter of the enemy's crew defend.
    - **Win:** the defenders die; we lose half a marine per defender; the order is carried out.
@@ -39,7 +41,7 @@ captures it. Then they fly home. No design source defined these orders; the owne
 | Order | When the marines win |
 |---|---|
 | DESTROY | They blow its reactor: the ship is destroyed, a wreck. "TRACK 07 SCUTTLED" |
-| DISABLE | They wreck its engine room and magazine (integrity 0): it drifts, alive, and cannot fight. "TRACK 07 DISABLED" |
+| DISABLE | They wreck its engine room and magazine (integrity 0): it comes to a stop, alive, and cannot fire. "TRACK 07 DISABLED" |
 | SECURE | They take it: it stops fighting and is a prize, shown on the plot as an own-force dot. "TRACK 07 SECURED" |
 
 ## Numbers
@@ -48,10 +50,10 @@ All are in **Starwolf → Tuning**, under "Hangar & fighters".
 
 | | |
 |---|---|
-| Boat speed | 6 km/s |
+| Boat speed | 30 km/s |
 | Marines: ship's pool / per boat | 18 / 6 |
 | Docking distance | 50 km |
-| Target speed to board below | 0.1 km/s |
+| Target speed to board below | 0.5 km/s |
 | Fight aboard | 60 s |
 | Share of enemy crew defending | 25% |
 | Marines lost per defender, on a win | 0.5 |
@@ -63,3 +65,5 @@ All are in **Starwolf → Tuning**, under "Hangar & fighters".
   each craft a fuel figure.
 - Enemy boats boarding us.
 - The prize's own glyph on the plot.
+- A target that gets under way again during the fight (its EMP wears off) drags the boats along;
+  the hangar line stays on BOARDING until it stops.

@@ -45,7 +45,7 @@ public class EnemyBrain : MonoBehaviour
         health = now;
         double dx = us.ownX - ship.ownX, dy = us.ownY - ship.ownY;
         var vls = ship.MountOf("VLS");
-        if (firesBack && hit && ship.missionNow >= nextSalvo && ship.vlsCells > 0 && vls != null && dx * dx + dy * dy <= (double)vls.rangeKm * vls.rangeKm)
+        if (firesBack && hit && ship.MagOk && ship.missionNow >= nextSalvo && ship.vlsCells > 0 && vls != null && dx * dx + dy * dy <= (double)vls.rangeKm * vls.rangeKm)
         {
             int n = Mathf.Min(fireBackSalvo, ship.vlsCells);
             us.LaunchAt(ship.ownX, ship.ownY, n, 0, vls.rangeKm); // HE
@@ -58,6 +58,7 @@ public class EnemyBrain : MonoBehaviour
         if (!started) { home = at; started = true; }
         if ((Waypoint - at).magnitude <= arriveKm) leg = (leg + 1) % route.Length;
         ship.ordHdg = TacticalWorld.Bearing(Waypoint - at);
-        ship.thr = Mathf.Clamp(Mathf.RoundToInt(cruiseKms / (float)ship.topSpeedKms * 100f), 0, 100);
+        // a damaged engine room holds it back, as our lever is; wrecked, it drifts (DISABLE, BOARDING_README)
+        ship.thr = Mathf.Clamp(Mathf.RoundToInt(cruiseKms / (float)ship.topSpeedKms * 100f), 0, ship.ThrCap);
     }
 }

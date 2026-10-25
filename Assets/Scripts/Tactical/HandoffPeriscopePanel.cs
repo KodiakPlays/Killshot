@@ -156,7 +156,7 @@ public class HandoffPeriscopePanel : HandoffPanel
         }
         else
         {
-            if (subjectName) subjectName.text = subj == null ? "—" : cls ? subj.name : "BOGEY " + subj.key.ToUpperInvariant();
+            if (subjectName) subjectName.text = subj == null ? "—" : s.NameOf(subj); // classified or not, BOGEY until scanned
             if (subjectClass) subjectClass.text = subj == null ? "NO SUBJECT ON BEARING" : cls ? klass + " HULL" : "HULL UNCLASSIFIED";
         }
         Color classInk = subj == null ? lampOffPanel : cls ? nominal : caution;

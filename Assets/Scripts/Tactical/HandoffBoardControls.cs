@@ -187,7 +187,7 @@ public class HandoffBoardControls : MonoBehaviour
     private HandoffPanel[] panels = new HandoffPanel[0];
     private HandoffRockers rockers;
     private int shotsHeard, resultsHeard, killsHeard, hitsTakenHeard;
-    private bool edgeWarned;
+    private bool edgeWarned, trackedWarned;
 
     private void Start()
     {
@@ -255,6 +255,10 @@ public class HandoffBoardControls : MonoBehaviour
                 state.TickLaunch(rate);
                 state.TickWeapons(rate);
                 state.TickSensors(rate);
+                // Step 68 (owner 2026-10-25): the alert tone once as our signal crosses the tracked line
+                bool tracked = state.signal >= state.signalTrackedAt;
+                if (tracked && !trackedWarned) Play(alertSound, "alert");
+                trackedWarned = tracked;
                 if (Ticked != null) Ticked();
                 state.NoteWrecks(); // Step 59: a contact whose reactor burned out is a wreck
                 if (state.NoteNewContacts()) { ShowAlarm(); Play(alertSound, "alert"); }
@@ -421,8 +425,9 @@ public class HandoffBoardControls : MonoBehaviour
     // ---- console -------------------------------------------------------------------------
 
     /// <summary>Step 65 (owner 2026-10-25): zooming out stops at `zoomOutLimit`, or sooner where the battle space's left
-    /// and right edges reach the plot's sides (1712 px at 60.9 px per 1,000 km; x0.28 for 100,000 km wide), so there's
-    /// never black down the sides. The top and bottom run on past the plot and you pan to them. The design went to 0.1.</summary>
+    /// and right edges reach the plot's sides (1712 px at 60.9 px per 1,000 km), so there's never black down the sides.
+    /// A 100,000 km map fills at x0.28, past the x0.35 limit; only one under about 80,000 km wide stops sooner. The top
+    /// and bottom run on past the plot and you pan to them. The design went to 0.1.</summary>
     public double MinZoom => System.Math.Max(zoomOutLimit, System.Math.Min(1.0, (grid ? grid.rectTransform.rect.width : 1712.0) / (state.arenaWidthKm * 60.9 / 1000.0)));
 
     public void SetZoom(double z)

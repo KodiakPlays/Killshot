@@ -6,16 +6,16 @@ A running record of the new scene flow being built under `Assets/Scenes/Tactical
 exists, what is wired to what, which step we are on, and what to do next. You should not have to
 work any of that out again.
 
-Last updated: 2026-10-17. Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
+Last updated: 2026-10-25. Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
 
 ---
 
 ## 1 · Where we are
 
-**Steps 1 to 65 are done, plus a final QA pass.**
+**Steps 1 to 68 are done, plus a final QA pass.**
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
-the briefing, Enter leads to the board in `02.1_Grid`.
+the briefing; Enter shows INITIALISING... and then the board in `02.1_Grid`.
 
 The board looks and clicks right. **Wiring to real game systems began in Step 34.** One dummy enemy
 now sits in a real world at TRACK 07's spot, and the board reads it. It does not move or fire. There
@@ -102,12 +102,14 @@ Do not run ahead. Do one step, show it, wait.
 | 60 | Boarding: the assault boats | **Done** — playtest 160/160 |
 | 61 | Scan to know what you hit; smoothing; heading 000 | **Done** — playtest 161/161 |
 | 62 | Weapon reach, the sweep's inner circle, the enemy's picture | **Done** — playtest passed with Step 63 |
-| 63 | Scale: everything that moves 5× faster; ACTIVE scans; the gain comes back | **Done** — playtest 163/163 |
+| 63 | Scale: everything that moves 5× faster; ACTIVE scans; the gain comes back (undone in Step 64) | **Done** — playtest 163/163 |
 | 64 | Lose power, lose the setting | **Done** — playtest 163/163 |
-| 65 | The battle space: a map with edges, the grid resizing inside it | **Done** — checked in play mode; playtest not run |
-| 66 | Our ship stops blinking; drawers slide out from behind the frame | **Done** — checked by render; playtest not run |
+| 65 | The battle space: a map with edges, the grid resizing inside it | **Done** — playtest 163/163 |
+| 66 | Our ship stops blinking; drawers slide out from behind the frame | **Done** — playtest 163/163 |
+| 67 | The Level tool: each level is a scene; the enemy spawn box | **Done** — playtest 163/163; spawn checked in play mode |
+| 68 | The signal alarm: a box in the frame's top-right, and the alert tone | **Done** — playtest 165/165 |
 
-Steps 6 to 28 and Steps 34 to 64 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 68 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -189,6 +191,20 @@ Added in Step 34:
   - Both models at scale 0.11612, about 12–14 km long. Models only, no old scripts.
 - The 26 mock contact art objects on the plot are hidden, not deleted.
 
+Added in Steps 66 and 68 (under `Board/HandoffBoard`):
+
+- `Drawers` — just above `Plot`. Holds the six drawers (`State · power` … `State · fire control`)
+  and clips them to the frame's opening with a `RectMask2D` (Step 66).
+- `SignalBox` — just after `TimeControl`, in the frame's top-right. A copy of the Sensors E-SIG row,
+  with `HandoffMirror` on it (Step 68).
+
+### `Level_01` — made in Step 67
+
+- In `Assets/Scenes/Levels/` and in Build Settings. Loaded on top of `02.1_Grid` at play.
+- `Enemy Spawn · TRACK 07` at (18058.42, 16259.87, 0), facing north, with `EnemySpawn` (trackKey
+  `t07`): exactly where the dummy sits, so play is unchanged.
+- No camera and no light: the board's are used.
+
 ### Deleted in Step 1
 
 These were leftovers from an earlier attempt that was abandoned. They are gone on purpose. Do not
@@ -264,6 +280,22 @@ Changed for it:
   art, and `RelinkWorld` re-points the World at the new board after every rebuild.
 
 Details in section 6, Step 34.
+
+### The Level tool — new in Step 67
+
+| File | On what | What it is |
+|---|---|---|
+| `Assets/Scripts/Tactical/EnemySpawn.cs` | a node in a level scene | Where an enemy ship starts. A box in the Scene view only, never on the board. |
+| `Assets/Editor/LevelWindow.cs` | menu **Starwolf → Level** | Lists, opens and makes levels; adds an enemy spawn. |
+
+`TacticalWorld` loads the level at play (`levelScene`) and moves a contact to its spawn (`Spawn`).
+Details in section 6, Step 67.
+
+### The signal box — new in Step 68
+
+| File | On what | What it is |
+|---|---|---|
+| `Assets/Scripts/Tactical/HandoffMirror.cs` | `Board/HandoffBoard/SignalBox` | Each frame, copies take their originals' colour, text and visibility. |
 
 ### Grid shader and material — new in Step 5
 
@@ -432,7 +464,7 @@ These are settled. Do not reopen them.
 28. **Railgun: a 50 km/s slug that hits within a class radius, aimed in whole degrees** (owner,
     2026-10-23). Whole degrees stay on purpose: from ~24,000 km even the best aim can just miss a
     cruiser. Close in for a sure shot. Details in Step 48.
-29. **Fighters fly and fight on the plot; RECALL brings them home** (owner, 2026-10-23). 8 km/s,
+29. **Fighters fly and fight on the plot; RECALL brings them home** (owner, 2026-10-23). 40 km/s (8 before Step 63's 5×),
     attack runs of 10 armour per fighter, wedges in a V with no labels. They land when they reach
     us. Details in Step 54.
 30. **PDCs: arm the ladder for AUTO, a chance per missile; the enemy fires back when hit** (owner,
@@ -450,9 +482,20 @@ These are settled. Do not reopen them.
       `Wire UI References` / `Wire Button OnClicks` (old UI only), `Tools/Starwolf/Create Intro
       Scene` (the intro lives in `00_Start`).
 32. **The map has edges; the grid still resizes** (owner, 2026-10-25). The battle space is a
-    rectangle with its own width and height. Zooming out stops when its **left and right** edges
-    reach the plot's sides, never the top and bottom: no black down the sides, and you pan up and
-    down for the rest. Details in Step 65.
+    rectangle with its own width and height. Zooming out stops at the Zoom Out Limit (x0.35), or
+    sooner where its **left and right** edges reach the plot's sides, never the top and bottom: no
+    black down the sides, and you pan up and down for the rest. Leaving it starts a 30 game-second
+    countdown. Details in Step 65.
+33. **Each level is its own scene, loaded on top of the board** (owner, 2026-10-25). Levels live in
+    `Assets/Scenes/Levels` and are made and opened with **Starwolf → Level**. The enemy spawn is a
+    box seen only in the Scene view. Debris will be the same every play; it changes only on
+    Reshuffle. The mission scripter will be its own menu item, later. Details in Step 67.
+34. **Our ship never blinks; the signal warning sits on the frame** (owner, 2026-10-25). The ship on
+    the plot stays solid. The signal shows in a box in the frame's top-right, always visible, and the
+    alert tone plays once as it crosses the tracked line. Details in Steps 66 and 68.
+35. **The metal frame is in front** (owner, 2026-10-25). Anything a button opens should slide out
+    from behind it: clipped to the frame's opening, under the rails and stations. Done for the six
+    drawers. Helm, Orders and the periscope don't slide yet (Open items). Details in Step 66.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -638,11 +681,15 @@ The new layout throws that split away:
     was wrong.) Since Step 53, the playtest's `Click` tries every matching target and uses the
     first one on top at its centre.
 
-36. Nothing else. The Unity console is clean: no errors, no warnings.
+36. **The builder's last two steps must stay in order.** `TuckDrawersUnderFrame` runs after every
+    Wire step, because they find the drawers as direct children of `HandoffBoard`. Then
+    `BuildSignalBox` runs, because it copies from `Drawers/State · sensors`. Since Step 66 the six
+    drawers live under `HandoffBoard/Drawers`; look for them there.
+37. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 65, in detail
+## 6 · Steps 6 to 28, and 34 to 68, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -1704,8 +1751,9 @@ is the newest source.
 - Turning still runs at the design's 4° per board tick at every time rate, while movement scales
   with the rate. So at ×10 the ship slides further during a turn.
 - The axis numbers on the plot's edge (−30 … +30) are fixed. They read as distance from the plot
-  centre, not world position.
-- Nothing recentres the plot on our ship. Panning is the only way to follow it.
+  centre, not world position. (Fixed in Step 65.)
+- Nothing recentres the plot on our ship. Panning is the only way to follow it. (Fixed in Step 65:
+  the `C` key.)
 
 ### Step 42 — The sensor circle: DRADIS's hearing range around our ship
 
@@ -1786,7 +1834,7 @@ delivers Power P2, which was parked here: hearing on the plot.
   again; this trigger is ours, after the owner's direction.
 - **The tracked blink.** While our signal is at or above the tracked line (45%), our ship blinks:
   full for the first half of each 1.1 s, then at 20% (the design's `bd-blink` on its own-ship
-  glyph).
+  glyph). (Removed in Step 66.)
 
 **Checked.** Playtest 68/68 PASS, console clean (`Logs/Playtests/2026-10-23_000923/`).
 
@@ -2365,7 +2413,8 @@ brightens anything near black.
   - `pullbackDuration` is gone; the menu follows the title directly;
   - `typeShare` (0.5): each line types over this share of its time, then holds;
   - the old fade in and out is gone.
-- Timing in `00_Start` is unchanged: 4 / 2 / 4 s, then the menu (10 s, was 14).
+- Timing in `00_Start` is unchanged: 4 / 2 / 4 s, then the menu (10 s, was 14). After the reorder
+  below, INITIALISING... no longer plays here, so the menu comes at 8 s.
 
 **Checked** in play mode, screenshots measured: the background is (0, 0, 0) on all three lines
 and on the menu. SECTION 36 shows half typed, STARWOLF fully typed in place, and the menu has no
@@ -2414,7 +2463,7 @@ recharged ten times faster in game time than ships moved.
 - `TacticalWorld` passes the rate to the enemy's helm. The radar sweep turns in game time, so x10
   sweeps ten times as fast.
 - **x1 is unchanged:** a tick at x1 is one game second, so the design's numbers now read as per game
-  second.
+  second. (Step 63 later made everything that moves 5x.)
 
 **Checked.** Playtest 138/138 PASS (`Logs/Playtests/2026-10-24_104850/`).
 
@@ -2445,9 +2494,11 @@ right after conditions.
 - `HandoffBoardState.BehindSide` is one room per face. `Behind()` has no random pick; a wrecked room
   reports "· RCT WRECKED" and takes no more.
 - **Destroyed** means the reactor's structure is at 0. It used to read `CompHealth`, which counts a
-  vented room as 0, so venting the reactor would have destroyed the ship.
-- A destroyed ship goes dark: `TickPower` holds every bus at 0. With no power there is no thrust, no
-  weapons and no sensors.
+  vented room as 0, so venting the reactor would have destroyed the ship. (Step 65: staying outside
+  the battle space too long also sets `destroyed`, with `deserted`.)
+- Our ship, when destroyed, goes dark: `TickPower` holds every bus at 0. With no power there is no
+  thrust and no weapons. DRADIS still listens at the lowest gain: hearing needs no power. A destroyed
+  enemy becomes a cold wreck instead.
 - Fighters on DISABLE still go for the stern, which is now the engine room alone.
 - The engineering diagram's lamps follow the deck plan in `DAMAGE_README.md`.
 - `FTUE_PLAN` §4.4 points to the README.
@@ -2481,7 +2532,7 @@ the base:
 
 - **Room state.** Each room carries `fire`, `rad` and `doorsShut` next to `vented`. The design's
   `cond` is derived from them: FIRE before RAD.
-- **What a hit starts.** `Strike()` rolls the condition chances on every hit through open armour.
+- **What a hit starts.** `Strike()` rolls the condition chances on every hit that reaches a room.
   The report says what started: "· MAG −2 · FIRE", "· HGR −2 · BREACH", "· RCT −2 · RADIATION".
 - **`TickConditions(dt)`**, per game second:
   - fire takes 1 integrity every 30 s;
@@ -2656,7 +2707,7 @@ were touched when their videos were deleted, so it read an old report. Pick the 
 checks (CLASS shows the picture; the sweep starts at the inner circle) and the updated range check.
 Run it first next session.
 
-### Step 63 — Scale: everything that moves 5× faster; ACTIVE scans; the gain comes back
+### Step 63 — Scale: everything that moves 5× faster; ACTIVE scans; the gain comes back (undone in Step 64)
 
 **Why (owner, 2026-10-24).** After playing: the ships felt too slow, plotting gave no data, and the
 active scan "didn't seem to be working".
@@ -2677,7 +2728,7 @@ active scan "didn't seem to be working".
   - at x5 and x10, people arm too slowly and TRACK 07 can win.
 
 **Owner decisions.** **5×** ("slow but not tediously slow"). ACTIVE scans while it is on. The gain
-comes back once the power does.
+comes back once the power does. (Step 64 reversed this: lose power, the gain drops to 1.)
 
 **What changed.**
 
@@ -2693,10 +2744,12 @@ comes back once the power does.
 - **The hit test follows the target's motion within a tick** (`TickRounds`). At these speeds and
   x10 a ship moves further in one tick than its hit radius.
 - **ACTIVE scan:** with ACTIVE on, a contact inside the cone and DRADIS range is identified as the
-  sweep passes it (`HandoffPlotPanel`). The alarm strip and alert tone say so. Letting go of the
+  sweep passes it (`HandoffPlotPanel`). The alarm strip and alert tone sound only for a
+  contact DRADIS had not already heard; one already heard is identified silently. Letting go of the
   cone dial and clicking a row still work.
 - **Gain:** `gainSet` remembers the gain you set. While the SEN bus is short of power the gain is
-  held down, then comes back to it.
+  held down, then comes back to it. **Superseded by Step 64:** `gainSet` is gone; the gain drops to 1
+  and stays.
 
 **Checked.**
 
@@ -2749,12 +2802,13 @@ zoom stops when the **sides** fill, and you pan up and down for the rest.
 
 - `HandoffBoardState`: `arenaWidthKm`, `arenaHeightKm`. Near the edge a warning; past it a
   countdown; not back in time and the ship is lost. Crossing out drops the rate to x1.
-- `HandoffPlotGrid`: the minor square is again the step nearest 61 px (1,000 km to x0.67, then
-  2,000, then 5,000 at full zoom-out). Lines start from the map's corner, so its edge is always a
+- `HandoffPlotGrid`: the minor square is again the step nearest 61 px (1,000 km down to x0.67, then
+  2,000 down to the x0.35 limit; 5,000 only below x0.29). Lines start from the map's corner, so its edge is always a
   line if each side is a multiple of 50,000 km. Drawn only inside the map, and square.
 - `HandoffBoardControls.MinZoom`: full zoom-out is **Zoom Out Limit** on Handoff Board Controls,
-  x0.35 (owner). If the map is too narrow to fill the plot's width there, zoom stops sooner, where
-  it does (x0.28 for 100,000 km wide), so the sides are never black. At x0.35 the squares are
+  x0.35 (owner). If the map is too narrow to fill the plot's width there (under about 80,000 km
+  wide), zoom stops sooner, where it fills, so the sides are never black. A 100,000 km map would fill
+  at x0.28, so the limit applies. At x0.35 the squares are
   2,000 km and the map is wider than the plot, so you pan side to side as well.
 - `HandoffPlotPanel`: panning stops at the map's edges. If our ship is outside, you can pan out
   to it.
@@ -2762,39 +2816,163 @@ zoom stops when the **sides** fill, and you pan up and down for the rest.
 - **Axis numbers follow the grid** (owner agreed). One on each big-square line, along the top and
   left edges of the plot, in thousands of km from the world centre (+ east and north). They slide
   when you pan and spread out when you zoom. A number that would sit on the "X (1,000 KM)" or
-  "Y (1,000 KM)" title is skipped. The design's fixed numbers (under `Plot/Scale`) are hidden at
-  run time, and the first of them is the template. The design's bottom row is gone: the ORDERS
-  panel covers its left end, and the top row already gives the same numbers.
+  "Y (1,000 KM)" title is skipped. The design's bottom row is gone: the ORDERS panel covers its
+  left end, and the top row already gives the same numbers.
+- **The axis numbers' look is on the inspector** (owner): `Plot` → Handoff Plot Panel → Axis
+  numbers: the layer they are made under (`Plot/Scale`), the two titles, font (Share Tech Mono),
+  material (its thickened "Small" one), size (11) and colour. The design's 12 fixed number labels
+  were deleted from `02.1_Grid`. The board builder (`WirePlot`) does the same on a rebuild: it
+  deletes them and fills the slots from their look. Compiled, not yet run.
 - **`C` centres the plot on our ship** (owner asked for a key). Near the map's edge the view stops
   at the edge, so the ship can sit off-centre.
 
 **Checked** in play mode, with screenshots (before the x0.35 limit): at x0.28 the grid fills the plot's width; panning is
 locked side to side and stops at the top and bottom edges; at x0.5 and x1 it stops at all four.
 Axis numbers checked in play mode at x1 and x0.35, panned: each number sits on its line, our ship
-reads 0, 0. The `C` key was not pressed in the check; MCP can't press a key.
+reads 0, 0. The `C` key was not pressed in the check; MCP can't press a key. Playtest 163/163
+(`Logs/Playtests/2026-10-25_221753/`); it has no battle-space checks yet.
 
 ### Step 66 — Our ship stops blinking; drawers slide out from behind the frame
 
 **Owner decisions (2026-10-25).**
 
 - **Our ship no longer blinks when we're tracked.** The owner saw it as a bug. The warning is the
-  red E-SIG lamp and meter on the Sensors panel (and the SIG lamp on Comms). Signal may later get
-  its own readout at the top of the board. Step 44's blink is gone from `HandoffPlotPanel`. The
+  red E-SIG lamp and meter on the Sensors panel (and the SIG lamp on Comms). Step 68 copied that
+  whole row into a box in the frame's top-right. Step 44's blink is gone from `HandoffPlotPanel`. The
   playtest now checks that the ship does **not** blink.
 - **The metal frame is in front of the drawers**, so a drawer slides out from behind it.
 
 **How the frame is in front.** The frame is one solid steel sheet under everything; the plot covers
 its middle. So the frame isn't moved. The six drawers are moved under a new
-`Board/HandoffBoard/Drawers` object, just above `Plot`. It has a `RectMask2D` whose padding cuts it
-to the frame's opening (the `PlotRing` rect: 98, 84, 98, 94). Rails, Console, Helm, Orders and the
-alarm strip now draw on top of the drawers. The drawers' cast shadows no longer spill onto the
-frame.
+`Board/HandoffBoard/Drawers` object, just above `Plot`. It clips the drawers to the frame's opening
+(`RectMask2D`, padding 98, 84, 98, 94: left, bottom, right, top). Everything on the frame (alarm
+strip, clock, rails, Console, Orders, Helm, periscope, and since Step 68 the signal box) now draws
+on top of the drawers. The drawers' cast shadows no longer spill onto the frame.
 
-`HandoffBoardBuilder.TuckDrawersUnderFrame` does this as the builder's last step, so a rebuild keeps
-it. It must stay last: every Wire step finds the drawers as direct children of `HandoffBoard`.
+`HandoffBoardBuilder.TuckDrawersUnderFrame` does this near the end of the build, so a rebuild keeps
+it. It must run after every Wire step, because they find the drawers as direct children of
+`HandoffBoard`. Since Step 68, `BuildSignalBox` runs after it (trap 36).
+
+The draw order in `UI_INTEGRATION_LOG.md` ("What the builder does") is from before this step. The
+drawers now sit in `Drawers`, between `Plot` and `AlarmStrip`.
 
 **Checked** by rendering the Board Camera with Sensors half open (cut cleanly at the frame's inner
-edge, under the rail) and fully open (unchanged). Not run in play mode; playtest not run.
+edge, under the rail) and fully open (unchanged). Not looked at by eye in play mode. Playtest 163/163 (`Logs/Playtests/2026-10-25_221753/`), including "Tracked,
+our ship does not blink" and every drawer click through the new mask.
+
+### Doc check — Steps 56 to 66 (2026-10-25)
+
+**What.** Four independent, read-only checks compared the write-ups of Steps 56 to 66,
+`DAMAGE_README.md`, `BOARDING_README.md` and `docs/scale-sim/` with the code, claim by claim, with
+file and line evidence. Most claims held. The scale sim still matches the game's numbers.
+
+**Docs fixed.**
+
+- Earlier steps now point to the later step that changed them: Step 57's speeds, Step 58's
+  "destroyed", Step 63's gain, decision 29's fighter speed, Step 41's axis numbers and recentring,
+  Step 44's blink.
+- Step 58: with no power, DRADIS still listens. It was written as "no sensors".
+- Step 63: the sweep's identification sounds the alert only for a contact not already heard.
+- Step 65: the grid steps and zoom limit as they are at x0.35. Decision 32 names the limit and the
+  countdown. Steps 65 and 66 had passed the playtest (163/163).
+- `BOARDING_README`: boats 30 km/s, boarding below 0.5 km/s (Step 63's numbers); names follow the
+  scan rule.
+- `DAMAGE_README`: radiation starts on a slug, HE or penetrator hit, not a fighter's; REBOOT adds 1;
+  the button reads RECALL; boarding sits in the build order where it was built; where the team's
+  time is tuned.
+
+**Code fixed.**
+
+- **A disabled enemy still drove and fired.** Its brain set cruise and fired back without looking
+  at its own engine room or magazine. Now its throttle is held to what its engine room allows
+  (`ThrCap`, as our lever is), and it fires back only with its magazine whole (`EnemyBrain`). This
+  also makes "fight it down" for boarding work: wreck its engine room and it stops. New playtest
+  check after step 21f.
+- **The targeting computer named a classified ship before it was scanned.** It now uses the same
+  rule as everywhere else, BOGEY until scanned (`HandoffPeriscopePanel`).
+- The battle space's return countdown is 30 game seconds (owner). The tooltip's fastest return is
+  corrected from about 110 to about 75 game seconds.
+
+**For the owner.**
+
+- 30 game seconds is 12.6 real seconds at x1. Straight out at full speed, the fastest return is
+  about 75 game seconds: brake, then turn. 30 is enough below about 4.4 km/s, or crossing at under
+  about 18°. The 2,500 km warning gives 200 game seconds at full speed; it does not drop the rate.
+- One tick back inside resets the countdown.
+- The sweep's identification is silent when DRADIS already hears the contact, the usual case.
+
+**Not yet.** The playtest has no battle-space checks.
+
+**Checked.** With Step 68: playtest 165/165, including "Disabled, its brain cannot drive it"
+(`Logs/Playtests/2026-10-25_224013/`).
+
+### Step 67 — The Level tool: each level is a scene; the enemy spawn box
+
+**Owner decisions (2026-10-25).** Each level is its own small scene, loaded on top of the board.
+**Starwolf → Level** is the tool. To start, the enemy spawn is just a box: seen in the Scene view so
+it can be moved, never on the board. Debris (not built yet) will be the same every play. The
+mission scripter gets its own menu item later. Decision 33.
+
+**What changed.**
+
+- `EnemySpawn` (new): a filled box with a bow line and its name, the same size on screen at any
+  zoom. At play, in `Start`, it calls `TacticalWorld.Spawn`, which moves its contact there, facing
+  the box's way. The patrol route goes with it: `EnemyBrain` takes its home on its first think.
+- `TacticalWorld`: `levelScene` (default `Level_01`) loads on top at play, unless a level is
+  already open in the editor; then that one plays. New `Spawn(key, at, zDeg)`. The ship start code
+  moved into `StartShip`.
+- `LevelWindow` (new): **Open** loads the board with the level on top and shows the map from above,
+  north up. **New level** makes the next `Level_NN` and adds it to Build Settings. **Enemy spawn**
+  adds a box where the Scene view is looking.
+- The board stays the active scene, so its lighting and settings are the ones that play.
+
+**Checked.** Playtest 163/163 (`Logs/Playtests/2026-10-25_221753/`), with `Level_01` loading on
+top. In play mode: with only the board open, `Level_01` loads by itself; with the spawn moved (not
+saved) to (0, 20,000) facing 090, the enemy started there, heading 090.
+
+**Known.**
+
+- The dummy's model still sits at its old spot in `02.1_Grid` in the editor. At play it jumps to
+  the box. Only the box matters.
+- Something you add by hand goes into the active scene (the board), not the level. Use the window's
+  buttons, or drag it into the level in the Hierarchy.
+- The box was made screen-sized after the playtest (drawing only) and checked on screen: at the
+  whole-map view it shows as a filled red square, its bow line and its name.
+
+### Step 68 — The signal alarm: a box in the frame's top-right, and the alert tone
+
+**Owner decisions (2026-10-25).** After Step 66 removed our ship's blink, the signal needed a
+warning you can see with the Sensors drawer shut. The owner chose a box in the empty top-right of
+the frame, opposite the mission clock, and the alert tone once when you become trackable.
+
+**What it shows.** The Sensors drawer's E-SIG row, copied: the E-SIG label, the 10 cells (white,
+then amber, then red), the percent, the lamp (amber with any signal, red and blinking once tracked),
+and the note ("RUNNING SILENT", or "1 HOSTILE SET HAS YOUR RANGE" once tracked).
+
+**How.**
+
+- `Board/HandoffBoard/SignalBox`, just after `TimeControl`. The row's dark backing (`well_r3`)
+  sits at board px 1519, 30 (356 x 50), clear of the corner bolt. Copies are named `Signal · well`, `· label`, `· cell 1`–`10`, `· glow`,
+  `· lamp`, `· percent`, `· note`.
+- `HandoffMirror` (new) on it. Each frame, the cells, glow, lamp, percent and note take their
+  original's colour (blink included), text and visibility. The well and label are plain copies. The rules stay in `HandoffSensorsPanel`, which redraws its row even with the
+  drawer shut.
+- `HandoffBoardControls`: after `TickSensors`, the alert tone plays once as the signal crosses
+  `signalTrackedAt` (45). It plays again only after the signal drops below and comes back.
+- `HandoffBoardBuilder.BuildSignalBox` builds it, after `TuckDrawersUnderFrame`, so a rebuild keeps
+  it. It copies from `Drawers/State · sensors`.
+- Playtest: a new check after "Tracked, our ship does not blink". The box reads the signal and
+  the trackers line.
+
+**Checked.** Rendered the Board Camera at rest: the box sits in the top-right band, clear of the
+periscope housing and the corner bolt, and reads 0% and RUNNING SILENT. Playtest 165/165 PASS
+(`Logs/Playtests/2026-10-25_224013/`): 163 plus two new checks, this step's signal box and the doc
+check's "Disabled, its brain cannot drive it". Tracked at 100%, the box read "100%" and "1 HOSTILE
+SET HAS YOUR RANGE"; the run's shot `23_bearing_trail.png` shows it red in the top-right.
+
+**Known.** The box only exists in `02.1_Grid`. The tone isn't checked by the playtest: other cues
+(new contact, edge) use the same tone, so `LastSound` can't tell them apart.
+
 ---
 
 ## 7 · How to keep this log
@@ -2831,7 +3009,8 @@ order:
 5. **Next:** back into the sequence: sensors, then periscope and fire control against the
    dummy, then fire, then hit.
    - **Sensors step:** the sensor circle (Step 42), the radar sweep (Step 43), and hearing, with
-     bearing lines, the alarm strip trigger and the tracked blink (Step 44), are done. Still to do:
+     bearing lines, the alarm strip trigger and the tracked blink (Step 44; removed in Step 66, the
+     signal box of Step 68 warns instead), are done. Still to do:
      the enemy noticing us (P3, `FTUE_PLAN.md` step B).
    - **Plotting feeds the firing solution (owner, 2026-10-23).** Step 45, the bearing trail, is done.
      Step 46, the intercept helpers, is done too:
@@ -2901,7 +3080,8 @@ and `shots/`. It leaves play mode and reopens the scene you were in. First good 
 LOAD SHED. Since Step 36: 37/37 PASS, 37 s, and it also drops a POINT, a RULER and a COMPASS, moves
 our ship and checks the marks stay put. Since Step 40: 48/48 PASS. It also checks the click sounds,
 the LOAD SHED slide, a refused locked rocker, and the TRACK and RECALL presses. Since Step 41: 57/57.
-It also drives the helm (ENG power, throttle, a turn, pause) and pans the plot. It grows as features land: add steps to `PowerUpRun()`. There is only one
+It also drives the helm (ENG power, throttle, a turn, pause) and pans the plot. Now 165 checks
+(Step 68); each step's count is in the table in section 1. It grows as features land: add steps to `PowerUpRun()`. There is only one
 Unity editor, so it runs when no other agent is using Unity.
 
 What it can't do yet: the intro menu and the briefing's Enter read Unity's old Input class, which
@@ -3030,7 +3210,11 @@ From `UI_INTEGRATION_LOG.md`, section 10. In order:
 1. **Audit the project's existing UI assets** against `CLAUDE_DESIGN_NEEDS.md`. **Done 2026-10-05,
    verified:** `ASSET_AUDIT.md`. Of 28 items, 5 fit as-is, 7 fit after a small change, 10 get partial
    help, 6 have nothing. Nothing is used yet; each use needs the owner's yes.
-2. **The short Claude Design request**, when the owner asks.
+2. **The short Claude Design request**, when the owner asks. Drop row 2.7 of
+   `CLAUDE_DESIGN_NEEDS.md` (own-ship blink): decision 34 says our ship never blinks.
+3. **Helm, Orders and the periscope don't slide yet** (decision 35). They open at once, or drop
+   inside their own clip. If they are made to slide, clip them to the frame's opening and keep them
+   under the rails, as Step 66 did for the drawers.
 
 ### Clean-up once the game is working (owner, 2026-10-24)
 
@@ -3044,6 +3228,19 @@ Not now. Do these once the board plays end to end, in this order:
    the owner suggested "panel controls" for the shared base, `HandoffPanel`). Confirm the names
    with the owner first. Do step 1 first: the old `BoardController` (used only by `02_Grid`) would
    sit right next to the new `BoardControls`, which is confusing.
+
+### The Level tool, next (owner, 2026-10-25)
+
+Step 67 made the tool and the enemy spawn box. Plan each of these with the owner first:
+
+1. Our ship's start point in the level.
+2. The battle space size moves from the board into the level.
+3. Debris fields: a shape (circle, ring, band, line), which pieces (Block, Drum, Girder, Plate, the
+   base husk), how many and how big, how they spread, and Reshuffle. Same every play.
+4. Debris on the board: shown once found. Whether it blocks shots or hides us is a later talk.
+5. The Tuning window's tabs: Ship, Enemy, Board (decision 31).
+6. The mission scripter, its own menu item. Proposed, not agreed: a chain of steps, each with
+   "when this happens, do that" rules.
 
 ### Later — DRADIS (superseded for now)
 

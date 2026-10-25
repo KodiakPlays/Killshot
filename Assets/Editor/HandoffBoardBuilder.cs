@@ -187,6 +187,7 @@ public static class HandoffBoardBuilder
         WireRockers(root);
         RelinkWorld(root);
         TuckDrawersUnderFrame(root);
+        BuildSignalBox(root);
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
@@ -410,8 +411,8 @@ public static class HandoffBoardBuilder
 
     // Owner 2026-10-25: the metal frame is in front, so a drawer slides out from behind it. The frame
     // is one solid sheet under the plot, so the drawers are clipped to its opening (PlotRing) and drawn
-    // just above the plot, under the rails and stations mounted on the frame. Runs last: every Wire
-    // step finds the drawers as direct children of the root.
+    // just above the plot, under the rails and stations mounted on the frame. Runs after every Wire
+    // step: they find the drawers as direct children of the root.
     static void TuckDrawersUnderFrame(RectTransform root)
     {
         var ring = (RectTransform)root.Find("PlotRing");
@@ -420,6 +421,39 @@ public static class HandoffBoardBuilder
         g.rt.GetComponent<RectMask2D>().padding = new Vector4(x, 1080 - y - ring.rect.height, 1920 - x - ring.rect.width, y);
         g.rt.SetSiblingIndex(root.Find("Plot").GetSiblingIndex() + 1);
         foreach (var s in DrawerStates) root.Find("State · " + s).SetParent(g.rt, false);
+    }
+
+    // Step 68 (owner 2026-10-25): the signal alarm. A copy of the Sensors drawer's E-SIG row sits in the
+    // frame's top-right, opposite the mission clock, so the signal shows with the drawer shut.
+    // HandoffMirror keeps each copy's text, colour and blink in step with the drawer's own.
+    static readonly Vector2 SignalBoxAt = new Vector2(1519, 30); // board px: the row's top-left, clear of the corner bolt
+
+    static void BuildSignalBox(RectTransform root)
+    {
+        const string S = "Drawers/State · sensors";
+        var g = Child(new Group { rt = root, origin = Vector2.zero }, "SignalBox", new Rect(0, 0, 1920, 1080), false);
+        g.rt.SetSiblingIndex(root.Find("TimeControl").GetSiblingIndex() + 1);
+        var corners = new Vector3[4];
+        Named(root, S, "sprite#149 ").GetWorldCorners(corners); // well_r3, the row's well
+        Vector2 tl = root.InverseTransformPoint(corners[1]); // root space: centre origin, y up
+        var shift = new Vector2(SignalBoxAt.x - 960f - tl.x, 540f - SignalBoxAt.y - tl.y);
+        System.Func<string, string, Graphic> copy = (prefix, name) =>
+        {
+            var rt = (RectTransform)Object.Instantiate(Named(root, S, prefix).gameObject, g.rt).transform;
+            rt.name = "Signal · " + name;
+            rt.anchoredPosition += shift;
+            return rt.GetComponent<Graphic>();
+        };
+        copy("sprite#149 ", "well");
+        copy("text#131 ", "label");
+        // drawn first, so the lamp sits over its glow and the text over the well
+        var live = Enumerable.Range(131, 10).Select(i => ("drawn#" + i + " ", "cell " + (i - 130)))
+            .Concat(new[] { ("glow · lamp#43 ", "glow"), ("lamp#43 ", "lamp"), ("text#132 ", "percent"), ("text#133 ", "note") }).ToArray();
+        var copies = live.Select(l => (Object)copy(l.Item1, l.Item2)).ToArray();
+        var so = new SerializedObject(g.rt.gameObject.AddComponent<HandoffMirror>());
+        SetRefs(so.FindProperty("originals"), live.Select(l => (Object)Gfx(root, S, l.Item1)).ToArray());
+        SetRefs(so.FindProperty("copies"), copies);
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     static void AddReferenceOverlay(Group board)
@@ -1653,6 +1687,23 @@ public static class HandoffBoardBuilder
         Hit(brg, "plot.look", null);
         so.FindProperty("passiveLabelTemplate").objectReferenceValue = brg.GetComponent<TMPro.TMP_Text>();
         Count("built: plot marks layers");
+
+        // Step 65 (owner 2026-10-25): the axis numbers follow the grid (HandoffPlotPanel.ShowAxes). The design's
+        // fixed ones go; their look and the two titles fill the panel's Axis numbers slots.
+        var scale = (RectTransform)plot.Find("Scale");
+        so.FindProperty("axisLayer").objectReferenceValue = scale;
+        foreach (var t in scale.GetComponentsInChildren<TMPro.TMP_Text>(true))
+        {
+            if (t.text == "X (") so.FindProperty("axisXTitle").objectReferenceValue = t.rectTransform;
+            if (t.text == "Y (") so.FindProperty("axisYTitle").objectReferenceValue = t.rectTransform;
+            if (!Regex.IsMatch(t.text, @"^[+−]?\d+$")) continue;
+            so.FindProperty("axisFont").objectReferenceValue = t.font;
+            so.FindProperty("axisMaterial").objectReferenceValue = t.fontSharedMaterial;
+            so.FindProperty("axisFontSize").floatValue = t.fontSize;
+            so.FindProperty("axisColour").colorValue = t.color;
+            Object.DestroyImmediate(t.gameObject);
+            Count("deleted: fixed axis number");
+        }
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 

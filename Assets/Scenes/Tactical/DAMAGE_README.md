@@ -1,6 +1,6 @@
 # Damage and damage control
 
-**Summary.** Once the armour on one face of a ship is gone, hits land in the room behind it. Rooms
+**Summary.** Once the armour on one face of a ship is gone, hits land in the room behind it (a penetrator gets through anyway). Rooms
 can catch fire, lose their air (vacuum), or take radiation, and all three spread to neighbouring
 rooms. Engineering handles them with the design's existing buttons. A reactor at 0 destroys any
 ship, ours included. This is built one step at a time, in the order at the bottom.
@@ -51,7 +51,7 @@ Every rate is per game second, so x10 runs everything ten times as fast.
 
 | | Fire | Vacuum | Radiation |
 |---|---|---|---|
-| **Starts** | an HE or penetrator hit, by chance | a slug hit, by chance; or VENT | any hit on the reactor room, by chance |
+| **Starts** | an HE or penetrator hit, by chance | a slug hit, by chance; or VENT | a slug, HE or penetrator hit on the reactor room, by chance (not a fighter's) |
 | **Spreads** | to neighbours that have air | to neighbours, unless this room's doors are shut | outward from the reactor, room by room, while it leaks |
 | **Does** | integrity −1 every 30 s; no repair work there except fighting the fire | the room can't be crewed, so its system counts as integrity 0; crew caught in it die (half on a breach, all on VENT) | crew in the room die, one every 20 s |
 | **Cleared by** | a team (REPAIR), or VENT | SEAL to stop the spread, then REPAIR to restore the air | repair the reactor to 3 or more (or vent it); then it fades from each room after 90 s |
@@ -63,8 +63,8 @@ Every rate is per game second, so x10 runs everything ten times as fast.
 | REPAIR | Sends the team. When it finishes: puts a fire out; or, in a sealed airless room, restores the air; otherwise adds integrity (2 at Condition 1). |
 | SEAL | Shuts a vented room's doors, so vacuum stops spreading. No crew needed. |
 | VENT | Dumps the room's air: the fire goes out, and the crew and any team inside die. |
-| REBOOT | Unchanged for now. It restarts broken parts in the breakdowns step. |
-| DUMMY 1 | Becomes **RECALL TEAM**: brings the team back before it finishes. |
+| REBOOT | Adds 1 integrity to a damaged room; no longer clears a condition. It restarts broken parts in the breakdowns step. |
+| DUMMY 1 | Becomes **RECALL**: brings the team back before it finishes. |
 
 The orders station's PARTY, SEAL and VENT do the same, paid from the AUX pool.
 
@@ -80,7 +80,7 @@ The orders station's PARTY, SEAL and VENT do the same, paid from the AUX pool.
 
 ## Numbers
 
-All are in **Starwolf → Tuning**, under "Damage control". These are the starting values.
+All are in **Starwolf → Tuning**: the team's time under "Engineering & orders", the rest under "Damage control". These are the starting values.
 
 | | |
 |---|---|
@@ -98,14 +98,14 @@ All are in **Starwolf → Tuning**, under "Damage control". These are the starti
 
 1. **Game time:** every rate per game second, charging included. **Done, Step 57.**
 2. **Side map:** the audit's faces and rooms; a reactor at 0 destroys our ship too. **Done, Step 58.**
-3. **Conditions:** this file, with RECALL TEAM. **Done, Step 59.**
-4. **Teams** (audit §09.9): travel time, crew taken off stations, recall, losses; the alert level
+3. **Conditions:** this file, with RECALL. **Done, Step 59.**
+4. **Boarding:** `BOARDING_README.md`. **Done, Step 60.**
+5. **Teams** (audit §09.9): travel time, crew taken off stations, recall, losses; the alert level
    sets crew at stations.
-5. **Breakdowns** (audit §09.6): parts jam (needs a team) or overheat (clears when you ease off);
+6. **Breakdowns** (audit §09.6): parts jam (needs a team) or overheat (clears when you ease off);
    REBOOT.
-6. **Displays** (audit §09.10): armour per face, conditions per room, broken parts, team roster,
+7. **Displays** (audit §09.10): armour per face, conditions per room, broken parts, team roster,
    door state. Request the art from Claude Design; working placeholders meanwhile.
-7. **Boarding:** `BOARDING_README.md`. **Done, Step 60.**
 
 ## Still open
 
