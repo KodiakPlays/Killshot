@@ -1691,13 +1691,11 @@ public static class HandoffBoardBuilder
         Count("built: plot marks layers");
 
         // Step 65 (owner 2026-10-25): the axis numbers follow the grid (HandoffPlotPanel.ShowAxes). The design's
-        // fixed ones go; their look and the two titles fill the panel's Axis numbers slots.
+        // fixed ones go; their look fills the panel's Axis numbers slots. Step 76: no titles.
         var scale = (RectTransform)plot.Find("Scale");
         so.FindProperty("axisLayer").objectReferenceValue = scale;
         foreach (var t in scale.GetComponentsInChildren<TMPro.TMP_Text>(true))
         {
-            if (t.text == "X (") so.FindProperty("axisXTitle").objectReferenceValue = t.rectTransform;
-            if (t.text == "Y (") so.FindProperty("axisYTitle").objectReferenceValue = t.rectTransform;
             if (!Regex.IsMatch(t.text, @"^[+−]?\d+$")) continue;
             so.FindProperty("axisFont").objectReferenceValue = t.font;
             so.FindProperty("axisMaterial").objectReferenceValue = t.fontSharedMaterial;

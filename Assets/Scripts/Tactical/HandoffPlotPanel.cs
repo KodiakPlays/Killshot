@@ -119,11 +119,9 @@ public class HandoffPlotPanel : HandoffPanel
         Refresh();
     }
 
-    [Header("Axis numbers (Step 65)")]
+    [Header("Axis numbers (Step 65; distances from our ship since Step 76)")]
     [Tooltip("The numbers are made under this, at run time (Plot/Scale).")]
     [SerializeField] private RectTransform axisLayer;
-    [Tooltip("The titles on the top and left edges. A number that would sit on one is skipped.")]
-    [SerializeField] private RectTransform axisXTitle, axisYTitle;
     [SerializeField] private TMP_FontAsset axisFont;
     [Tooltip("The board thickens Share Tech Mono at small sizes with its own material. Empty uses the font's own.")]
     [SerializeField] private Material axisMaterial;
@@ -315,7 +313,7 @@ public class HandoffPlotPanel : HandoffPanel
             double z = Controls.ZoomExact / KmPerPx;
             grid.OffsetPx = new Vector2((float)(-viewX * z), (float)(viewY * z));
             grid.ArenaHalfKm = new Vector2((float)s.ArenaHalfW, (float)s.ArenaHalfH); // Step 65: the grid is the battle space
-            ShowAxes(s);
+            ShowAxes();
         }
         if (capture) capture.raycastTarget = Capturing;
         bool erasing = Controls.Tool == "ERASE";
@@ -710,36 +708,27 @@ public class HandoffPlotPanel : HandoffPanel
         return hits[i];
     }
 
-    // Step 65 (owner 2026-10-25): the axis numbers follow the grid. One on each big-square line, along the top
-    // and left edges, in thousands of km from the world origin (+ east and north), clear of the two titles. The
-    // design's were fixed text, right only with our ship at the centre, and are deleted; its bottom row went, as the
-    // ORDERS panel covers that edge's left end and the top row already gives it. The look is on the inspector.
+    // Step 76 (owner 2026-10-26): the axis numbers are distances from our ship, in km, along the top and left edges.
+    // 0 is level with our ship, then one number per big square: they slide as the ship moves and spread as you zoom.
+    // No titles. The design's bottom row stays gone: the ORDERS panel covers that edge's left end. The look is on the inspector.
     private readonly List<TextMeshProUGUI> axisLabels = new List<TextMeshProUGUI>();
     const float AxisTopPx = 38f, AxisLeftPx = 23f, AxisEdgePx = 20f; // the design's top row and left column, plot px
 
-    void ShowAxes(HandoffBoardState s)
+    void ShowAxes()
     {
         if (!axisLayer || !axisFont) return;
         Rect r = grid.rectTransform.rect;
         var o = marks ? marks.origin : Vector2.zero;
         float cellPx;
         double major = grid.CellKm(out cellPx) * grid.MajorEvery;
+        float step = cellPx * grid.MajorEvery; // px per big square
+        if (step < 1f) return;
+        Vector2 own = OwnAt;
         int used = 0;
-        // lines from the battle space's corner, as the grid draws them
-        for (double wx = -s.ArenaHalfW; wx <= s.ArenaHalfW + 1; wx += major)
-        {
-            float x = Screen(wx, 0).x;
-            if (x - o.x < AxisEdgePx || x - o.x > r.width - AxisEdgePx) continue;
-            if (axisXTitle && Mathf.Abs(x - o.x - axisXTitle.anchoredPosition.x) < axisXTitle.sizeDelta.x / 2f + 14f) continue;
-            AxisLabel(used++, wx, new Vector2(x, o.y + AxisTopPx));
-        }
-        for (double wy = -s.ArenaHalfH; wy <= s.ArenaHalfH + 1; wy += major)
-        {
-            float y = Screen(0, wy).y;
-            if (y - o.y < AxisEdgePx || y - o.y > r.height - AxisEdgePx) continue;
-            if (axisYTitle && Mathf.Abs(-(y - o.y) - axisYTitle.anchoredPosition.y) < axisYTitle.sizeDelta.x / 2f + 10f) continue;
-            AxisLabel(used++, wy, new Vector2(o.x + AxisLeftPx, y));
-        }
+        for (int k = Mathf.CeilToInt((o.x + AxisEdgePx - own.x) / step); own.x + k * step <= o.x + r.width - AxisEdgePx; k++)
+            AxisLabel(used++, System.Math.Abs(k) * major, new Vector2(own.x + k * step, o.y + AxisTopPx));
+        for (int k = Mathf.CeilToInt((o.y + AxisEdgePx - own.y) / step); own.y + k * step <= o.y + r.height - AxisEdgePx; k++)
+            AxisLabel(used++, System.Math.Abs(k) * major, new Vector2(o.x + AxisLeftPx, own.y + k * step));
         for (int i = used; i < axisLabels.Count; i++) if (axisLabels[i].gameObject.activeSelf) axisLabels[i].gameObject.SetActive(false);
     }
 
@@ -751,7 +740,7 @@ public class HandoffPlotPanel : HandoffPanel
             go.transform.SetParent(axisLayer, false);
             var t = go.AddComponent<TextMeshProUGUI>();
             t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0f, 1f); // as Put expects
-            t.rectTransform.sizeDelta = new Vector2(30f, 12f);
+            t.rectTransform.sizeDelta = new Vector2(50f, 12f); // room for "100,000"
             t.font = axisFont; // through the properties, not serialization (BUILD_LOG trap 2)
             t.fontSharedMaterial = axisMaterial ? axisMaterial : axisFont.material;
             t.fontSize = axisFontSize;
@@ -763,8 +752,7 @@ public class HandoffPlotPanel : HandoffPanel
             axisLabels.Add(t);
         }
         var l = axisLabels[i];
-        int n = (int)System.Math.Round(km / 1000);
-        l.text = n > 0 ? "+" + n : n < 0 ? "−" + (-n) : "0";
+        l.text = km.ToString("#,0", System.Globalization.CultureInfo.InvariantCulture);
         if (!l.gameObject.activeSelf) l.gameObject.SetActive(true);
         Put(l.rectTransform, board, 0f);
     }

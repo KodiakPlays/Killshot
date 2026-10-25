@@ -119,8 +119,9 @@ Do not run ahead. Do one step, show it, wait.
 | 73 | Ruins in the level: the starbase husk and a debris belt; a Player Spawn at the bottom, the enemy's at the top | **Done** — playtest 168/168 |
 | 74 | Engineering's ship picture shows side armour; the room rings change colour | **Done** — playtest 168/168 |
 | 75 | Ships glide between ticks; DRADIS shows a contact where the sweep last touched it; in sight (10,000 km) its model shows; wrecks stay, grey; engineering's hull filled; weapons and DRADIS reach 30,000 km | **Done** — playtest 170/170 |
+| 76 | Axis numbers are distances from our ship; the axis titles and the frame stencils TCB-1 and ACC 07 are gone | **Done** — playtest 171/171 |
 
-Steps 6 to 28 and Steps 34 to 75 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 76 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -562,6 +563,9 @@ These are settled. Do not reopen them.
       visual range, a dim dot drifts.
     - DRADIS at full gain and the weapons reach 30,000 km.
     - These are starting numbers, to be tuned. Details in Step 75.
+41. **Axis numbers measure from our ship** (owner, 2026-10-26). The numbers on the top and left
+    edges of the plot read 0 level with our ship, then 5,000, 10,000 and on, in km. They move with
+    the ship and spread out as you zoom in. There are no axis titles. Details in Step 76.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -768,7 +772,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 75, in detail
+## 6 · Steps 6 to 28, and 34 to 76, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3375,7 +3379,7 @@ tick. The owner asked for this:
     too early.
   - Videos: when a run starts, it deletes every earlier run's `playtest.mp4` (owner, 2026-10-26: a
     video is not needed once its run is checked). Screenshots stay for the newest three runs. Every
-    `report.md` stays. Recording stays 1920×1080.
+    `report.md` stays. The recording keeps the Game view's 16:9 shape (owner).
 
 **Checked.** Playtest **PASS, 170/170** (`Logs/Playtests/2026-10-26_011622/`). The first run
 (`2026-10-26_011116`) failed only "Nothing heard yet": the east stand-in, fixed above. The
@@ -3400,6 +3404,33 @@ Checked by hand in play mode (2026-10-26):
   much, redraw only what moves.
 - There is one contact picture (`contactShipImage`). A second contact in visual range shows as a dot
   if it is identified, and not at all if it is not. A second wreck shows as a dim dot.
+
+### Step 76 — Axis numbers measured from our ship; old titles and stencils gone
+
+**Owner direction (2026-10-26).** The numbers along the top and left of the plot should change as
+our ship moves and as you zoom. The "X (1,000 KM)" and "Y (1,000 KM)" titles go. The frame stencils
+"TCB-1 / REV D" and "ACC 07" go.
+
+**What changed.**
+
+- `HandoffPlotPanel.ShowAxes`: each number is a distance from our ship, in km.
+  - 0 is level with our ship. Then one number per big square: 5,000, 10,000 and on at x1.
+  - The numbers move with the ship and spread out or close up with the zoom.
+  - They redraw every frame while time runs (Step 75).
+- `HandoffPlotPanel`: the `axisXTitle` and `axisYTitle` fields are gone. The retired board builder
+  no longer sets them.
+- `02.1_Grid`, deleted: under `Plot/Scale`, `text#21 X ( )`, `text#21 X ( ) (close)`,
+  `text#22 1,000 KM`, `text#23 Y ( )`, `text#23 Y ( ) (close)` and `text#24 1,000 KM`; under
+  `Frame`, `text#4 TCB-1 / REV D` and `text#3 ACC 07`.
+
+**Checked.** Playtest **PASS, 171/171** (`Logs/Playtests/2026-10-26_015950/`). In its shots
+`11_ship_moved.png` and `18_panned.png` the 0 sits on our ship, and moves with it. That run still
+showed the two closing brackets. They were deleted after it. A play-mode screenshot after that,
+`Logs/Checks/step76_axis.png`, shows 10,000, 5,000, 0, 5,000, 10,000 across the top, and no titles,
+brackets or stencils.
+
+**Still on the frame:** the stencils "CL II EQUIP — 480V DC" and "CONSOLE HARNESS — DO NOT SERVICE
+UNDER LOAD". The owner has not decided on them.
 
 ---
 
@@ -3646,8 +3677,9 @@ From `UI_INTEGRATION_LOG.md`, section 10. In order:
    inside their own clip. If they are made to slide, clip them to the frame's opening and keep them
    under the rails, as Step 66 did for the drawers.
 4. **Left from Step 75.**
-   - A wreck slows to a stop. From full speed it takes about 30 game seconds. Its navigation still
-     brakes toward zero throttle. Owner to decide if a wreck should coast instead.
+   - A wreck slows to a stop. From full speed it takes about 30 game seconds. Owner 2026-10-26:
+     keep it that way, or a little quicker. A wreck must not coast on at its speed. The rate is
+     `NavSystem.brakeKms2`, shared with live ships.
    - The wreck's grey (`wreckInk`, #8A959D) is pale next to our white ship. Tune it if it is hard to
      tell apart.
    - Only one contact can show as its model at a time (`contactShipImage`). A second one in visual
