@@ -426,7 +426,7 @@ public static class HandoffBoardBuilder
 
     // Step 68 (owner 2026-10-25): the signal alarm. A copy of the Sensors drawer's E-SIG row sits in the
     // frame's top-right, opposite the mission clock, so the signal shows with the drawer shut.
-    // HandoffSensorsPanel fills it in, the same way as its own row.
+    // SensorsPanel fills it in, the same way as its own row.
     static readonly Vector2 SignalBoxAt = new Vector2(1519, 30); // board px: the row's top-left, clear of the corner bolt
 
     static void BuildSignalBox(RectTransform root)
@@ -449,7 +449,7 @@ public static class HandoffBoardBuilder
         copy("sprite#149 ", "well");
         copy("text#131 ", "label");
         var cells = Enumerable.Range(131, 10).Select(i => (Object)copy("drawn#" + i + " ", "cell " + (i - 130))).ToArray();
-        var so = new SerializedObject(root.GetComponent<HandoffSensorsPanel>());
+        var so = new SerializedObject(root.GetComponent<SensorsPanel>());
         so.FindProperty("boxGlow").objectReferenceValue = copy("glow · lamp#43 ", "glow");
         so.FindProperty("boxLamp").objectReferenceValue = copy("lamp#43 ", "lamp");
         so.FindProperty("boxPct").objectReferenceValue = copy("text#132 ", "percent");
@@ -717,7 +717,7 @@ public static class HandoffBoardBuilder
     {
         const string S = "State · sensors";
         var group = (RectTransform)root.Find(S);
-        var p = root.gameObject.AddComponent<HandoffSensorsPanel>();
+        var p = root.gameObject.AddComponent<SensorsPanel>();
         var so = new SerializedObject(p);
 
         System.Action<string, string, int> master = (prop, sprite, lamp) =>

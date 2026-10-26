@@ -90,6 +90,8 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private NavSystem nav;
     [Tooltip("Our ship's power (the PowerSystem on OwnShip): its reactor, buses and load shed.")]
     [SerializeField] private PowerSystem power;
+    [Tooltip("Our ship's sensors (the SensorSystem on OwnShip): DRADIS, active scan, its signal, what it has identified.")]
+    [SerializeField] private SensorSystem sensors;
     [SerializeField] private HandoffBoardMotion motion;
     [SerializeField] private HandoffPlotGrid grid;
     [SerializeField] private Canvas canvas;
@@ -172,7 +174,7 @@ public class HandoffBoardControls : MonoBehaviour
 
     // Other objects can read State in their own Awake, before ours runs, so it hands our ship its systems first.
     public HandoffBoardState State { get { if (state.nav == null) UseSystems(); return state; } }
-    void UseSystems() { state.UseNav(nav); state.UsePower(power); }
+    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); }
     /// <summary>Raised once per board tick, after the board's own rules and before the panels
     /// redraw. The tactical world steps here, inside the board's single timer (Step 34).</summary>
     public event System.Action Ticked;
@@ -205,6 +207,7 @@ public class HandoffBoardControls : MonoBehaviour
     {
         if (!nav) Debug.LogError("[HandoffBoardControls] our ship's NavSystem is not set");
         if (!power) Debug.LogError("[HandoffBoardControls] our ship's PowerSystem is not set");
+        if (!sensors) Debug.LogError("[HandoffBoardControls] our ship's SensorSystem is not set");
         UseSystems();
     }
 
@@ -272,14 +275,14 @@ public class HandoffBoardControls : MonoBehaviour
                 state.TickConditions(rate); // Step 59: fire, vacuum and radiation burn, kill and spread
                 state.TickLaunch(rate);
                 state.TickWeapons(rate);
-                state.TickSensors(rate);
+                state.sensors.Tick(rate);
                 // Step 68 (owner 2026-10-25): the alert tone once as our signal crosses the tracked line
-                bool tracked = state.signal >= state.signalTrackedAt;
+                bool tracked = state.sensors.signal >= state.sensors.signalTrackedAt;
                 if (tracked && !trackedWarned) Play(alertSound, "alert");
                 trackedWarned = tracked;
                 if (Ticked != null) Ticked();
                 state.NoteWrecks(); // Step 59: a contact whose reactor burned out is a wreck
-                if (state.NoteNewContacts()) { ShowAlarm(); Play(alertSound, "alert"); }
+                if (state.sensors.NoteNewContacts()) { ShowAlarm(); Play(alertSound, "alert"); }
             }
             RefreshPanels();
         }
@@ -301,7 +304,7 @@ public class HandoffBoardControls : MonoBehaviour
             case "scope": motion.ToggleScope(); RefreshPanels(); break;
             case "pause": paused = !paused; ShowTime(); break;
             case "rate": rate = float.Parse(arg, System.Globalization.CultureInfo.InvariantCulture); paused = false; ShowTime(); break;
-            case "ack": state.AckContacts(); ShowAlarm(); break;
+            case "ack": state.sensors.AckContacts(); ShowAlarm(); break;
             case "tint": grid.GridTint = grid.GridTint == HandoffPlotGrid.Tint.White ? HandoffPlotGrid.Tint.Amber : HandoffPlotGrid.Tint.White; ShowTint(); RefreshPanels(); break;
             default:
                 owned = false;
@@ -392,7 +395,7 @@ public class HandoffBoardControls : MonoBehaviour
     // ERASE again while ERASE is live clears the plot and returns to CURSOR (§8.4).
     void PressErase()
     {
-        if (Tool == "ERASE") { state.marks.Clear(); state.BearingFixes.Clear(); PickTool(tools[0]); }
+        if (Tool == "ERASE") { state.marks.Clear(); state.sensors.BearingFixes.Clear(); PickTool(tools[0]); }
         else PickTool("ERASE");
     }
 
@@ -404,12 +407,12 @@ public class HandoffBoardControls : MonoBehaviour
         string edge = state.deserted ? "SHIP LOST — LEFT THE BATTLE SPACE"
                     : state.outsideFor >= 0f ? "EXITING THE BATTLE SPACE — TURN BACK"
                     : state.NearArenaEdge ? "APPROACHING THE EDGE OF THE BATTLE SPACE" : null;
-        bool on = edge != null || state.newContacts > 0;
+        bool on = edge != null || state.sensors.newContacts > 0;
         foreach (var p in alarmParts) if (p && p.activeSelf != on) p.SetActive(on);
         if (!on) return;
-        if (alarmCount) alarmCount.text = edge == null ? state.newContacts.ToString()
+        if (alarmCount) alarmCount.text = edge == null ? state.sensors.newContacts.ToString()
             : state.outsideFor >= 0f && !state.deserted ? Mathf.CeilToInt(state.arenaReturnSeconds - state.outsideFor).ToString() : "!";
-        if (alarmText) alarmText.text = edge ?? (state.newContacts == 1 ? "NEW CONTACT SINCE COMMIT" : "NEW CONTACTS SINCE COMMIT");
+        if (alarmText) alarmText.text = edge ?? (state.sensors.newContacts == 1 ? "NEW CONTACT SINCE COMMIT" : "NEW CONTACTS SINCE COMMIT");
     }
 
     // ---- systems rail --------------------------------------------------------------------

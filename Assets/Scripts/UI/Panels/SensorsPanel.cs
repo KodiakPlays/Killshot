@@ -9,7 +9,7 @@ using TMPro;
 /// gainCapTop, gainTrack, boostCost, senRangeLabel, cone*, emit*, bogeyCount, bogeys) and
 /// UIStateSpec §8.2 (startGain, startCone) and §11 "Sensors: listen, then look, then ping".
 /// </summary>
-public class HandoffSensorsPanel : HandoffPanel
+public class SensorsPanel : HandoffPanel
 {
     [System.Serializable]
     public class Master { public Image rocker; public Image lamp, glow; }
@@ -98,15 +98,15 @@ public class HandoffSensorsPanel : HandoffPanel
         var s = State;
         switch (action)
         {
-            case "sensors.dradis": s.ToggleDradis(); return true;
-            case "sensors.active": s.ToggleActive(); return true;
-            case "sensors.band": s.SetSpectrum(arg); return true;
-            case "sensors.narrow": s.ConeNarrow(); return true;
-            case "sensors.widen": s.ConeWiden(); return true;
+            case "sensors.dradis": s.sensors.ToggleDradis(); return true;
+            case "sensors.active": s.sensors.ToggleActive(); return true;
+            case "sensors.band": s.sensors.SetSpectrum(arg); return true;
+            case "sensors.narrow": s.sensors.ConeNarrow(); return true;
+            case "sensors.widen": s.sensors.ConeWiden(); return true;
             case "sensors.identify":
                 int i = int.Parse(arg);
                 var list = Bogeys();
-                if (i < list.Count) s.Identify(list[i].key);
+                if (i < list.Count) s.sensors.Identify(list[i].key);
                 return true;
         }
         return false;
@@ -128,7 +128,7 @@ public class HandoffSensorsPanel : HandoffPanel
 
     public override bool Up(string action, string arg, Vector2 board)
     {
-        if (action == "sensors.cone" && dragging) { dragging = false; State.ResolveLit(); return true; }
+        if (action == "sensors.cone" && dragging) { dragging = false; State.sensors.ResolveLit(); return true; }
         return false;
     }
 
@@ -136,7 +136,7 @@ public class HandoffSensorsPanel : HandoffPanel
     void Gain(float y)
     {
         float t = 1f - (y - (wellTop + wellStop)) / (wellHeight - 2f * wellStop);
-        State.SetGain(HandoffBoardState.JsRound(1f + t * 4f));
+        State.sensors.SetGain(HandoffBoardState.JsRound(1f + t * 4f));
     }
 
     // moveCone: bearing of the pointer from the dial centre, 0 up, clockwise.
@@ -144,7 +144,7 @@ public class HandoffSensorsPanel : HandoffPanel
     {
         // in double, as the browser does, so angles a hair from a half round the same way
         double a = System.Math.Atan2(board.x - dialCentre.x, dialCentre.y - board.y) * 180.0 / System.Math.PI;
-        State.SetCone((int)System.Math.Floor((a + 360.0) % 360.0 + 0.5));
+        State.sensors.SetCone((int)System.Math.Floor((a + 360.0) % 360.0 + 0.5));
     }
 
     System.Collections.Generic.List<HandoffBoardState.Track> Bogeys()
@@ -152,7 +152,7 @@ public class HandoffSensorsPanel : HandoffPanel
         var s = State;
         var list = new System.Collections.Generic.List<HandoffBoardState.Track>();
         foreach (var t in s.tracks)
-            if (!t.own && (s.Heard(t) || s.identified.Contains(t.key) || s.classified.Contains(t.key))) list.Add(t);
+            if (!t.own && (s.sensors.Heard(t) || s.sensors.identified.Contains(t.key) || s.classified.Contains(t.key))) list.Add(t);
         return list;
     }
 
@@ -161,7 +161,7 @@ public class HandoffSensorsPanel : HandoffPanel
     private void Update()
     {
         if (Controls == null || !sigLamp) return;
-        bool tracked = State.signal >= State.signalTrackedAt;
+        bool tracked = State.sensors.signal >= State.sensors.signalTrackedAt;
         bool lit = !tracked || (Time.unscaledTime % blinkSeconds) / blinkSeconds < blinkLitFraction;
         Blink(sigLamp, sigGlow, lit);
         Blink(boxLamp, boxGlow, lit);
@@ -177,26 +177,26 @@ public class HandoffSensorsPanel : HandoffPanel
     void ShowSignal(TMP_Text pctText, TMP_Text note, Image[] cells, Image lamp, Image glow)
     {
         var s = State;
-        int pct = HandoffBoardState.JsRound(s.signal);
-        Color sigInk = s.signal >= s.signalTrackedAt ? alarm : s.signal > 0 ? caution : label;
+        int pct = HandoffBoardState.JsRound(s.sensors.signal);
+        Color sigInk = s.sensors.signal >= s.sensors.signalTrackedAt ? alarm : s.sensors.signal > 0 ? caution : label;
         if (pctText) { pctText.text = pct + "%"; Paint(pctText, sigInk); }
-        int litCells = HandoffBoardState.JsRound(s.signal / 100f * 10f);
+        int litCells = HandoffBoardState.JsRound(s.sensors.signal / 100f * 10f);
         for (int k = 0; cells != null && k < cells.Length; k++)
         {
             int n = k + 1;
             Paint(cells[k], n <= litCells ? (n >= 8 ? alarm : n >= 5 ? caution : Color.white) : cellUnlit);
         }
-        Color lampInk = s.signal >= s.signalTrackedAt ? alarm : s.signal > 0 ? caution : lampOffPanel;
+        Color lampInk = s.sensors.signal >= s.sensors.signalTrackedAt ? alarm : s.sensors.signal > 0 ? caution : lampOffPanel;
         Paint(lamp, lampInk);
         Paint(glow, lampInk);
-        Show(glow, s.signal > 0);
+        Show(glow, s.sensors.signal > 0);
         if (note)
         {
-            int n = s.Trackers();
-            note.text = s.signal >= s.signalTrackedAt
+            int n = s.sensors.Trackers();
+            note.text = s.sensors.signal >= s.sensors.signalTrackedAt
                 ? n + " HOSTILE " + (n == 1 ? "SET HAS" : "SETS HAVE") + " YOUR RANGE"
-                : s.signal <= 0 ? "RUNNING SILENT"
-                : s.signal > s.SignalTarget ? "EMISSIONS DECAYING — NOT YET RESOLVED"
+                : s.sensors.signal <= 0 ? "RUNNING SILENT"
+                : s.sensors.signal > s.sensors.SignalTarget ? "EMISSIONS DECAYING — NOT YET RESOLVED"
                 : "POWER SIGNATURE — NOT YET RESOLVED"; // stand-in: the design has no line for power-driven signal below the line (Step 35)
         }
     }
@@ -206,8 +206,8 @@ public class HandoffSensorsPanel : HandoffPanel
         var s = State;
 
         // masters
-        SetMaster(dradis, s.dradis, nominal);
-        SetMaster(active, s.active, caution);
+        SetMaster(dradis, s.sensors.dradis, nominal);
+        SetMaster(active, s.sensors.active, caution);
 
         // own emissions, on the drawer and in the signal box (Step 68)
         ShowSignal(sigPct, sigNote, sigCells, sigLamp, sigGlow);
@@ -215,54 +215,54 @@ public class HandoffSensorsPanel : HandoffPanel
         if (sigLamp) sigLampAlpha = 1f;
 
         // array gain
-        string range = s.SenRangeKm.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " KM";
+        string range = s.sensors.SenRangeKm.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " KM";
         if (rangeHeader) rangeHeader.text = range;
         if (rangeEnvelope) rangeEnvelope.text = range;
         if (envelopeRange) envelopeRange.text = range; // senRangeLabel
         if (envelopeLabel != null && envelopeLabel.Length > 0)
         {
             if (envelopeLabelHomeY == null) envelopeLabelHomeY = System.Array.ConvertAll(envelopeLabel, r => r ? r.anchoredPosition.y : 0f);
-            float up = (s.senBoost - envelopeLabelHomeGain) * envelopeLabelPxPerGain; // board px, upward
+            float up = (s.sensors.senBoost - envelopeLabelHomeGain) * envelopeLabelPxPerGain; // board px, upward
             for (int i = 0; i < envelopeLabel.Length; i++)
                 if (envelopeLabel[i]) envelopeLabel[i].anchoredPosition = new Vector2(envelopeLabel[i].anchoredPosition.x, envelopeLabelHomeY[i] + up);
         }
-        if (gainValue) gainValue.text = s.senBoost.ToString();
-        if (boostCost) { boostCost.text = "SEN BUS ALLOWS " + s.GainCap + " OF 5"; Paint(boostCost, s.GainCap < 5 ? caution : nominal); }
+        if (gainValue) gainValue.text = s.sensors.senBoost.ToString();
+        if (boostCost) { boostCost.text = "SEN BUS ALLOWS " + s.sensors.GainCap + " OF 5"; Paint(boostCost, s.sensors.GainCap < 5 ? caution : nominal); }
         if (gainCap)
         {
-            float top = wellTop + capTopAtFive + (5 - s.senBoost) * stepPx; // element top, board px
+            float top = wellTop + capTopAtFive + (5 - s.sensors.senBoost) * stepPx; // element top, board px
             gainCapMotion.Set(top, t => gainCap.anchoredPosition = new Vector2(gainCap.anchoredPosition.x, -(t + capHalf)));
         }
         if (gainTrack)
         {
-            float h = capTopAtFive + (s.senBoost - 1) * stepPx + 10f;
+            float h = capTopAtFive + (s.sensors.senBoost - 1) * stepPx + 10f;
             gainTrack.sizeDelta = new Vector2(gainTrack.sizeDelta.x, h);
             gainTrack.anchoredPosition = new Vector2(gainTrack.anchoredPosition.x, -(trackBottom - h / 2f));
         }
-        for (int b = 0; b < bands.Length && b < s.spectra.Length; b++)
+        for (int b = 0; b < bands.Length && b < s.sensors.spectra.Length; b++)
         {
-            bool on = s.spectra[b] == s.spectrum;
+            bool on = s.sensors.spectra[b] == s.sensors.spectrum;
             var row = bands[b];
             if (row.bg) row.bg.color = (on ? bandRowOn : Color.clear).gamma.WithAlpha(on ? bandRowOn.a : 0f);
             Paint(row.name, on ? phosphor : nominal);
-            if (row.count) { row.count.text = s.CountIn(s.spectra[b]).ToString(); Paint(row.count, on ? phosphor : nominal); }
+            if (row.count) { row.count.text = s.sensors.CountIn(s.sensors.spectra[b]).ToString(); Paint(row.count, on ? phosphor : nominal); }
             Paint(row.lamp, on ? phosphor : phosphorOff);
             Paint(row.glow, phosphor);
             Show(row.glow, on);
         }
 
         // active scan
-        needle.Set(s.coneBrg - 180f);
-        if (cone) cone.Set(s.coneBrg - s.coneArc, s.coneArc * 2f);
-        if (coneBearing) coneBearing.text = s.coneBrg.ToString("000");
+        needle.Set(s.sensors.coneBrg - 180f);
+        if (cone) cone.Set(s.sensors.coneBrg - s.sensors.coneArc, s.sensors.coneArc * 2f);
+        if (coneBearing) coneBearing.text = s.sensors.coneBrg.ToString("000");
         // "ARC 80°": the degree sign follows the value (the label text#162 holds only "ARC")
-        if (coneArcLabel) coneArcLabel.text = (s.coneArc * 2) + "\u00B0";
-        if (emitLabel) { emitLabel.text = s.active ? "EMITTING" : "SET OFF"; Paint(emitLabel, s.active ? caution : stencil); }
+        if (coneArcLabel) coneArcLabel.text = (s.sensors.coneArc * 2) + "\u00B0";
+        if (emitLabel) { emitLabel.text = s.sensors.active ? "EMITTING" : "SET OFF"; Paint(emitLabel, s.sensors.active ? caution : stencil); }
 
         // contact board
         int heard = 0;
-        foreach (var t in s.tracks) if (s.Heard(t)) heard++;
-        if (bogeyCount) bogeyCount.text = heard + " ON " + s.spectrum;
+        foreach (var t in s.tracks) if (s.sensors.Heard(t)) heard++;
+        if (bogeyCount) bogeyCount.text = heard + " ON " + s.sensors.spectrum;
         var list = Bogeys();
         for (int i = 0; i < rows.Length; i++)
         {
@@ -272,8 +272,8 @@ public class HandoffSensorsPanel : HandoffPanel
             if (row.bg) row.bg.gameObject.SetActive(used);
             if (!used) { Show(row.dotGlow, false); continue; }
             var t = list[i];
-            bool pinged = s.identified.Contains(t.key), seen = s.classified.Contains(t.key), audible = s.Heard(t);
-            bool lit = s.ConeCovers(t) && audible;
+            bool pinged = s.sensors.identified.Contains(t.key), seen = s.classified.Contains(t.key), audible = s.sensors.Heard(t);
+            bool lit = s.sensors.ConeCovers(t) && audible;
             row.name.text = pinged ? t.name : "BOGEY " + t.key.ToUpperInvariant();
             row.brg.text = t.bearing.ToString("000");
             row.rng.text = pinged ? HandoffBoardState.JsRound(t.rangeKm / 1000f) + "k" : "—";

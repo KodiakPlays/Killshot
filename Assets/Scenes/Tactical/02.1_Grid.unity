@@ -40988,6 +40988,7 @@ GameObject:
   - component: {fileID: 765287329}
   - component: {fileID: 765287331}
   - component: {fileID: 765287332}
+  - component: {fileID: 765287333}
   m_Layer: 0
   m_Name: "Garuda \xB7 Cruiser"
   m_TagString: Untagged
@@ -41114,6 +41115,44 @@ MonoBehaviour:
     dir: 1
     signalPerUnit: 10
   shed: 0
+--- !u!114 &765287333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765287326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3d6532bff89d4d879ac26f4afa4912e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SensorSystem
+  dradis: 1
+  active: 0
+  senBoost: 1
+  senRangeBaseKm: 12000
+  senRangePerStepKm: 3600
+  visualRangeKm: 10000
+  uvRangeFactor: 0.55
+  spectra:
+  - THERM
+  - RAD
+  - UV
+  - EM
+  spectrum: THERM
+  coneBrg: 62
+  coneArc: 40
+  coneArcMin: 15
+  coneArcMax: 90
+  coneArcStep: 10
+  signal: 0
+  signalRise: 9
+  signalFall: 6
+  activeScanSignal: 35
+  signalTrackedAt: 45
+  identified:
+  - bc1
+  bearingTrailSeconds: 120
 --- !u!1 &765774873
 GameObject:
   m_ObjectHideFlags: 0
@@ -46868,6 +46907,7 @@ GameObject:
   - component: {fileID: 891763122}
   - component: {fileID: 891763123}
   - component: {fileID: 891763124}
+  - component: {fileID: 891763125}
   m_Layer: 0
   m_Name: OwnShip
   m_TagString: Untagged
@@ -46959,6 +46999,44 @@ MonoBehaviour:
     dir: 1
     signalPerUnit: 10
   shed: 0
+--- !u!114 &891763125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891763121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3d6532bff89d4d879ac26f4afa4912e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SensorSystem
+  dradis: 1
+  active: 0
+  senBoost: 1
+  senRangeBaseKm: 12000
+  senRangePerStepKm: 3600
+  visualRangeKm: 10000
+  uvRangeFactor: 0.55
+  spectra:
+  - THERM
+  - RAD
+  - UV
+  - EM
+  spectrum: THERM
+  coneBrg: 62
+  coneArc: 40
+  coneArcMin: 15
+  coneArcMax: 90
+  coneArcStep: 10
+  signal: 0
+  signalRise: 9
+  signalFall: 6
+  activeScanSignal: 35
+  signalTrackedAt: 45
+  identified:
+  - bc1
+  bearingTrailSeconds: 120
 --- !u!1 &896206256
 GameObject:
   m_ObjectHideFlags: 0
@@ -93561,31 +93639,6 @@ MonoBehaviour:
       sig:
       - UV
       - EM
-    dradis: 1
-    active: 0
-    senBoost: 1
-    senRangeBaseKm: 12000
-    senRangePerStepKm: 3600
-    visualRangeKm: 10000
-    uvRangeFactor: 0.55
-    spectra:
-    - THERM
-    - RAD
-    - UV
-    - EM
-    spectrum: THERM
-    coneBrg: 62
-    coneArc: 40
-    coneArcMin: 15
-    coneArcMax: 90
-    coneArcStep: 10
-    signal: 0
-    signalRise: 9
-    signalFall: 6
-    activeScanSignal: 35
-    signalTrackedAt: 45
-    identified:
-    - bc1
     classified:
     - bc1
     chan: 1
@@ -93902,9 +93955,9 @@ MonoBehaviour:
     boardSeconds: 60
     defenderShare: 0.25
     marineLossPerDefender: 0.5
-    bearingTrailSeconds: 120
   nav: {fileID: 891763123}
   power: {fileID: 891763124}
+  sensors: {fileID: 891763125}
   motion: {fileID: 1765047285}
   grid: {fileID: 261411404}
   canvas: {fileID: 519620959}

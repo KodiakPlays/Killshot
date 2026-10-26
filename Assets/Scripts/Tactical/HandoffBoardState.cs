@@ -79,52 +79,7 @@ public class HandoffBoardState
         new Track { key = "bc1", name = "BC-01", klass = "BOAT", bearing = 71, rangeKm = 9500, speed = 0.41f, own = true, sig = new[] { "UV", "EM" } },
     };
 
-    [Header("Sensors — the board's initial state")]
-    public bool dradis = true;
-    public bool active;
-    [Tooltip("DRADIS gain, 1–5, capped by the SEN bus. Owner 2026-10-25: at load it is at its lowest (power is cold); "
-           + "if the SEN bus can no longer carry it, it drops back to 1 and stays there until you raise it again.")]
-    [Range(1, 5)] public int senBoost = 1;
-    [Tooltip("Sensor range = base + per step x gain (senRangeKm). Owner 2026-10-26: 30,000 km at full gain (was 47,000).")]
-    [Tune("Sensors")]
-    public float senRangeBaseKm = 12000f, senRangePerStepKm = 3600f;
-    [Tooltip("Owner 2026-10-26: inside this range a contact is in sight: its model shows and glides. Outside it, "
-           + "the plot shows it only where the sweep last touched it.")]
-    [Tune("Sensors")]
-    public float visualRangeKm = 10000f;
-    [Tooltip("UV hears to this fraction of the range (passiveRangeKm).")]
-    [Tune("Sensors")]
-    public float uvRangeFactor = 0.55f;
-    public string[] spectra = { "THERM", "RAD", "UV", "EM" };
-    public string spectrum = "THERM";
-    [Tooltip("0..360: the board stores a rounded 360 as 360, not 0 (moveCone).")]
-    [Range(0, 360)] public int coneBrg = 62;
-    [Tooltip("Half-width of the active scan cone, degrees; NARROW / WIDEN step it.")]
-    public int coneArc = 40;
-    [Tune("Sensors")]
-    public int coneArcMin = 15, coneArcMax = 90, coneArcStep = 10;
-    [Header("Signal — how detectable our ship is, 0–100 (Step 35, owner 2026-10-17)")]
-    [Tooltip("Our signal: how detectable we are, 0–100. Internal; the player sees a whole percent on the OWN "
-           + "EMISSIONS meter, the cells and the alert. It climbs and falls gradually toward SignalTarget.")]
-    [UnityEngine.Serialization.FormerlySerializedAs("ownSig")]
-    [Range(0, 100)] public float signal;
-    [Tooltip("Signal climbs this much per game second toward its target.")]
-    [UnityEngine.Serialization.FormerlySerializedAs("signalRise")]
-    [Tune("Power & signal")]
-    public float signalRise = 9f;
-    [Tooltip("Signal falls this much per game second toward its target.")]
-    [UnityEngine.Serialization.FormerlySerializedAs("signalFall")]
-    [Tune("Power & signal")]
-    public float signalFall = 6f;
-    [Tooltip("Signal ACTIVE SCAN adds while it is on. Default 35 (reference sim: a scan is worth 3.5 units).")]
-    [Tune("Power & signal")]
-    public float activeScanSignal = 35f;
-    [Tooltip("Own emissions at or above this mean hostile sets have your range (sigNote, blink).")]
-    [UnityEngine.Serialization.FormerlySerializedAs("signalTrackedAt")]
-    [Tune("Power & signal")]
-    public float signalTrackedAt = 45f;
-    [Tooltip("Identified by sensors (idd) and classified by the periscope (cls).")]
-    public System.Collections.Generic.List<string> identified = new System.Collections.Generic.List<string> { "bc1" };
+    [Tooltip("Classified by the periscope (cls). Identified is on the SensorSystem.")]
     public System.Collections.Generic.List<string> classified = new System.Collections.Generic.List<string> { "bc1" };
 
     /// <summary>JS Math.round: halves round up. Mathf.RoundToInt rounds halves to even
@@ -350,6 +305,10 @@ public class HandoffBoardState
     [System.NonSerialized] public PowerSystem power;
     /// <summary>Give this ship its power. It reads this ship's reactor room, EMP and death.</summary>
     public void UsePower(PowerSystem p) { power = p; if (p) p.ship = this; }
+    /// <summary>This ship's sensors: DRADIS, active scan, its signal, what it has identified (owner 2026-10-26).</summary>
+    [System.NonSerialized] public SensorSystem sensors;
+    /// <summary>Give this ship its sensors. They read this ship's contacts, SEN bus and position.</summary>
+    public void UseSensors(SensorSystem n) { sensors = n; if (n) n.ship = this; }
     // The ship's position and heading, read by the rules below. Only its NavSystem changes them.
     double ownX => nav.x;
     double ownY => nav.y;
@@ -367,35 +326,12 @@ public class HandoffBoardState
     // A bus's units, read by the rules below. Only this ship's PowerSystem changes them.
     int BusUnits(string key) => power.BusUnits(key);
 
-    public float SenRangeKm => senRangeBaseKm + senBoost * senRangePerStepKm;
-    public float PassiveRangeKm => spectrum == "UV" ? SenRangeKm * uvRangeFactor : SenRangeKm;
-    public int GainCap => Mathf.Max(1, BusUnits("sen"));
+    public static int AngDiff(int a, int b) => Mathf.Abs(((a - b) % 360 + 540) % 360 - 180);
 
-    static int AngDiff(int a, int b) => Mathf.Abs(((a - b) % 360 + 540) % 360 - 180);
-
-    /// <summary>heard: DRADIS on, the contact emits in the chosen band, and it is in range.</summary>
-    public bool Heard(Track t) => !t.own && !t.wreck && dradis && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeKm <= PassiveRangeKm;
-
-    /// <summary>coneCovers: active scan on, inside the cone, inside sensor range.</summary>
-    public bool ConeCovers(Track t) => active && AngDiff(t.bearing, coneBrg) <= coneArc && t.rangeKm <= SenRangeKm;
-
-    /// <summary>Contacts in band and range for a spectrum key (spectra[].count).</summary>
-    public int CountIn(string band)
-    {
-        float range = band == "UV" ? SenRangeKm * uvRangeFactor : SenRangeKm;
-        int n = 0;
-        foreach (var t in tracks) if (!t.own && System.Array.IndexOf(t.sig, band) >= 0 && t.rangeKm <= range) n++;
-        return n;
-    }
-
-    /// <summary>trackers: hostile sets that have your range once emissions reach the threshold.</summary>
-    public int Trackers()
-    {
-        if (signal < signalTrackedAt) return 0;
-        int n = 0;
-        foreach (var t in tracks) if (!t.own && t.hostile) n++;
-        return n;
-    }
+    // What this ship's sensors hear and scan, read by the rules below. Only its SensorSystem changes them.
+    bool Heard(Track t) => sensors.Heard(t);
+    bool ConeCovers(Track t) => sensors.ConeCovers(t);
+    System.Collections.Generic.List<string> identified => sensors.identified;
 
     public Compartment Comp(string key) { foreach (var c in compartments) if (c.key == key) return c; return null; }
     public int CompIndex(string key) { for (int i = 0; i < compartments.Length; i++) if (compartments[i].key == key) return i; return 0; }
@@ -863,7 +799,7 @@ public class HandoffBoardState
             double b = LeadBearing() * System.Math.PI / 180;
             Rounds.Add(new Round { x = ownX, y = ownY, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm, speed = slugSpeedKms });
             shotReport = null;
-            signal = Mathf.Min(100f, signal + fireSignalSpike);
+            sensors.signal = Mathf.Min(100f, sensors.signal + fireSignalSpike);
         }
         if (sys == "MS" && m != null)
         {
@@ -878,7 +814,7 @@ public class HandoffBoardState
             }
             vlsCells -= n;
             shotReport = null;
-            signal = Mathf.Min(100f, signal + fireSignalSpike);
+            sensors.signal = Mathf.Min(100f, sensors.signal + fireSignalSpike);
         }
     }
 
@@ -1608,17 +1544,6 @@ public class HandoffBoardState
         kills++; shotResults++; lastShotHit = true;
     }
 
-    public void ToggleDradis() { dradis = !dradis; }
-    public void ToggleActive() { active = !active; }
-
-    /// <summary>startGain: 1..5, capped by the SEN bus.</summary>
-    public void SetGain(int v) { senBoost = Mathf.Max(1, Mathf.Min(5, Mathf.Min(GainCap, v))); }
-
-    public void SetSpectrum(string band) { spectrum = band; }
-    public void SetCone(int brg) { coneBrg = Mathf.Clamp(brg, 0, 360); }
-    public void ConeWiden() { coneArc = Mathf.Min(coneArcMax, coneArc + coneArcStep); }
-    public void ConeNarrow() { coneArc = Mathf.Max(coneArcMin, coneArc - coneArcStep); }
-
     /// <summary>cycleChan: band 1 → 2 → 3 → 1; drops any lock.</summary>
     public void CycleChan() { chan = chan >= 3 ? 1 : chan + 1; locked = false; }
 
@@ -1639,19 +1564,6 @@ public class HandoffBoardState
         dials[i] = ((dials[i] + (back ? -1 : 1)) % 26 + 26) % 26;
         activeDial = i;
         return true;
-    }
-
-    /// <summary>resolveLit: on releasing the cone dial, every contact inside the cone is identified.</summary>
-    public void ResolveLit()
-    {
-        foreach (var t in tracks) if (ConeCovers(t) && !identified.Contains(t.key)) identified.Add(t.key);
-    }
-
-    /// <summary>identify: a contact-board row identifies its contact if the cone covers it and it is heard.</summary>
-    public void Identify(string key)
-    {
-        foreach (var t in tracks)
-            if (t.key == key && ConeCovers(t) && Heard(t) && !identified.Contains(key)) identified.Add(key);
     }
 
     // ---- the tick (tickPower, every 420 ms). The buses fill in PowerSystem.Tick (owner 2026-10-26). --
@@ -1725,72 +1637,4 @@ public class HandoffBoardState
 
     /// <summary>offBearingLabel: "+1.5°" / "-14.0°" / "—" (toFixed(1), sign kept on a negative).</summary>
     public static string OffLabel(double? o) => o == null ? "\u2014" : (o.Value > 0 ? "+" : o.Value < 0 ? "-" : "") + JsToFixed(System.Math.Abs(o.Value), 1) + "\u00B0";
-
-    // ---- the tick — sensors part (reads the fill this tick committed) --------------------
-
-    /// <summary>Contacts first heard or identified since the alarm strip was last acknowledged
-    /// (Step 44; owner 2026-10-18: an alert shows only for a real alert). The design raised the strip
-    /// once at load and never again.</summary>
-    [System.NonSerialized] public int newContacts;
-    [System.NonSerialized] private System.Collections.Generic.HashSet<string> seenContacts;
-
-    /// <summary>Count each contact once: the first time DRADIS hears it or a scan identifies it.
-    /// Returns true when there is a new one.</summary>
-    public bool NoteNewContacts()
-    {
-        if (seenContacts == null) seenContacts = new System.Collections.Generic.HashSet<string>();
-        int before = newContacts;
-        foreach (var t in tracks)
-            if (!t.own && (Heard(t) || identified.Contains(t.key)) && seenContacts.Add(t.key)) newContacts++;
-        return newContacts > before;
-    }
-
-    public void AckContacts() { newContacts = 0; }
-
-    /// <summary>Step 45 (owner 2026-10-23): each radar sweep that passes a heard contact leaves its
-    /// bearing line where our ship was. As we move, the lines cross at the target: that is how a
-    /// passive contact's range is found. Exact bearings; the lines fade out.</summary>
-    [System.Serializable]
-    public class BearingFix { public string key; public double x, y, brg; public float t; }
-    [System.NonSerialized] private System.Collections.Generic.List<BearingFix> bearingFixes;
-    public System.Collections.Generic.List<BearingFix> BearingFixes => bearingFixes ?? (bearingFixes = new System.Collections.Generic.List<BearingFix>());
-    [Tooltip("A bearing line fades out over this much mission time (owner 2026-10-23: 2 minutes).")]
-    [Tune("Sensors")] public float bearingTrailSeconds = 120f;
-
-    /// <summary>True bearing from our ship to a contact, degrees, unrounded.</summary>
-    public double ExactBearing(Track t)
-    {
-        if (!t.hasWorld) return t.bearing;
-        return (System.Math.Atan2(t.worldX - ownX, t.worldY - ownY) * 180 / System.Math.PI + 360) % 360;
-    }
-
-    public void LayBearing(Track t, float now) { BearingFixes.Add(new BearingFix { key = t.key, x = ownX, y = ownY, brg = ExactBearing(t), t = now }); }
-
-    /// <summary>Step 75 (owner 2026-10-26): the sweep touches a contact. Out of sight, the plot shows it here until the next pass.</summary>
-    public void See(Track t) { t.seen = true; t.seenX = t.worldX; t.seenY = t.worldY; t.seenBrg = ExactBearing(t); t.seenRangeKm = t.rangeKm; }
-    /// <summary>Step 75: close enough to see with the eye.</summary>
-    public bool InSight(Track t) => t.hasWorld && t.rangeKm <= visualRangeKm;
-
-    public void PruneBearings(float now) { BearingFixes.RemoveAll(f => now - f.t >= bearingTrailSeconds); }
-
-    public void TickSensors(double dt)
-    {
-        int senCap = Mathf.Max(1, BusUnits("sen"));
-        if (senBoost > senCap) senBoost = 1; // owner 2026-10-25: power lost, the setting goes back to the bottom; you set it again
-        // every unit drawn makes us louder, and so does ACTIVE SCAN (GDD p18, spec 3.1.b, prototype getSig)
-        float want = SignalTarget;
-        if (signal < want) signal = Mathf.Min(want, signal + signalRise * (float)dt);
-        else if (signal > want) signal = Mathf.Max(want, signal - signalFall * (float)dt);
-    }
-
-    /// <summary>Where our signal is heading: each bus's units × its signal per unit, plus ACTIVE SCAN, 0–100.</summary>
-    public float SignalTarget
-    {
-        get
-        {
-            float t = active ? activeScanSignal : 0f;
-            foreach (var b in power.buses) t += b.fill * b.signalPerUnit;
-            return Mathf.Clamp(t, 0f, 100f);
-        }
-    }
 }

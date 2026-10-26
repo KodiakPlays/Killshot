@@ -3848,9 +3848,21 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
     panel uses now sits in a folder for its kind: `Art/Lamps`, `Bolts`, `Knobs`, `Switches`,
     `Latches`, `Screens`, `Plates`, `Wells` and `Shapes`.
   - Playtest 171/171 (run 2026-10-26_080658).
+- **Sensors (2026-10-26).** DRADIS and the active scan are in `Systems/SensorSystem.cs`: gain, band,
+  scan cone, the ship's own signal, which contacts are identified, the new-contact count, the bearing
+  trail, and what is heard, covered by the cone or in sight. It replaced those fields and rules in
+  `HandoffBoardState`, and `TickSensors`.
+  - `OwnShip` and `Garuda · Cruiser` each carry a SensorSystem, with the board's numbers.
+    `HandoffBoardControls.sensors` points at ours, and every ship state reaches its own through
+    `.sensors`.
+  - The contact list (`tracks`) stays on the ship state, and the sensors read it. `classified` stays
+    too: the periscope fills it, and it moves with the periscope.
+  - `HandoffSensorsPanel` became `UI/Panels/SensorsPanel` (its link kept, so the prefab and the 17
+    links on the board's copy still hold).
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_081854).
 
-**Next:** the sensors panel as a prefab (UI Restructure), then the sensors system (Tooling), and so
-on in order: comms, weapons, hangar, damage and orders. Owner 2026-10-26: "split, take turns". One
+**Next:** the comms panel as a prefab (UI Restructure), then the comms system (Tooling), and so on
+in order: weapons, hangar, damage and orders. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.
 

@@ -63,7 +63,7 @@ public class HandoffPlotPanel : HandoffPanel
     public float SweepDeg => sweepDeg;
     public bool SweepShown => sweep && sweep.isActiveAndEnabled;
     /// <summary>The sensor circle's radius now, km (it eases), or 0 while DRADIS is off.</summary>
-    public float SensorRingKm => State != null && State.dradis ? sensorKm : 0f;
+    public float SensorRingKm => State != null && State.sensors.dradis ? sensorKm : 0f;
 
     [Header("Passive bearings (Step 44): contacts DRADIS hears but has not identified")]
     [SerializeField] private HandoffMarksGraphic passiveLines;
@@ -200,9 +200,9 @@ public class HandoffPlotPanel : HandoffPanel
     private void Update()
     {
         if (Controls == null) return;
-        if (sweep && State.dradis && !Controls.Paused)
+        if (sweep && State.sensors.dradis && !Controls.Paused)
         {
-            float turn = Mathf.Max(0.5f, sweepSecondsBase - State.senBoost * sweepSecondsPerGain);
+            float turn = Mathf.Max(0.5f, sweepSecondsBase - State.sensors.senBoost * sweepSecondsPerGain);
             // in game time (owner 2026-10-24): `turn` seconds a sweep at x1, ten times as fast at x10
             float before = sweepDeg, step = 360f * Time.unscaledDeltaTime * Controls.Rate / turn;
             sweepDeg = (sweepDeg + step) % 360f;
@@ -213,12 +213,12 @@ public class HandoffPlotPanel : HandoffPanel
             foreach (var t in State.tracks)
             {
                 if (t.own || t.wreck) continue;
-                float past = Mathf.Repeat((float)State.ExactBearing(t) - before, 360f);
+                float past = Mathf.Repeat((float)State.sensors.ExactBearing(t) - before, 360f);
                 if (past <= 0f || past > step) continue;
-                bool scanned = State.identified.Contains(t.key);
-                if (State.Heard(t) || State.ConeCovers(t)) State.See(t); // Step 75: out of sight, the plot shows it here until the next pass
-                if (State.ConeCovers(t)) { Controls.SweepTag(); if (!scanned) { State.identified.Add(t.key); Refresh(); } continue; }
-                if (!scanned && State.Heard(t)) { State.LayBearing(t, Controls.MissionSeconds); Refresh(); }
+                bool scanned = State.sensors.identified.Contains(t.key);
+                if (State.sensors.Heard(t) || State.sensors.ConeCovers(t)) State.sensors.See(t); // Step 75: out of sight, the plot shows it here until the next pass
+                if (State.sensors.ConeCovers(t)) { Controls.SweepTag(); if (!scanned) { State.sensors.identified.Add(t.key); Refresh(); } continue; }
+                if (!scanned && State.sensors.Heard(t)) { State.sensors.LayBearing(t, Controls.MissionSeconds); Refresh(); }
             }
             sweep.rectTransform.localEulerAngles = new Vector3(0f, 0f, -sweepDeg); // clockwise on screen
         }
@@ -465,7 +465,7 @@ public class HandoffPlotPanel : HandoffPanel
         if (sensorRing)
         {
             if (setSensorKm == null) setSensorKm = km => { sensorKm = km; DrawSensorRing(); };
-            sensorRingMotion.Set(s.PassiveRangeKm, setSensorKm);
+            sensorRingMotion.Set(s.sensors.PassiveRangeKm, setSensorKm);
             DrawSensorRing();
         }
 
@@ -479,13 +479,13 @@ public class HandoffPlotPanel : HandoffPanel
         foreach (var t in s.tracks)
         {
             if (t.own || t.captured) continue;
-            bool known = t.hostile && s.identified.Contains(t.key), inSight = s.InSight(t);
+            bool known = t.hostile && s.sensors.identified.Contains(t.key), inSight = s.sensors.InSight(t);
             if (!known && !inSight) continue;
             Vector2 at;
             if (inSight) at = t.nav ? Screen(t.nav.DrawnX, t.nav.DrawnY) : Screen(t.worldX, t.worldY);
             else if (t.hasWorld)
             {
-                if (!t.seen) s.See(t); // identified another way: its first fix is now
+                if (!t.seen) s.sensors.See(t); // identified another way: its first fix is now
                 at = Screen(t.seenX, t.seenY);
             }
             else
@@ -534,19 +534,19 @@ public class HandoffPlotPanel : HandoffPanel
         var bearings = new List<HandoffMarksGraphic.Shape>();
         int np = 0;
         Vector2 ownAt = OwnAt;
-        float reach = (float)(s.PassiveRangeKm / KmPerPx * Controls.ZoomExact);
+        float reach = (float)(s.sensors.PassiveRangeKm / KmPerPx * Controls.ZoomExact);
         // the bearing trail (Step 45): each line from where our ship was, fading over bearingTrailSeconds
-        s.PruneBearings(Controls.MissionSeconds);
-        foreach (var f in s.BearingFixes)
+        s.sensors.PruneBearings(Controls.MissionSeconds);
+        foreach (var f in s.sensors.BearingFixes)
         {
-            float life = 1f - (Controls.MissionSeconds - f.t) / Mathf.Max(1f, s.bearingTrailSeconds);
+            float life = 1f - (Controls.MissionSeconds - f.t) / Mathf.Max(1f, s.sensors.bearingTrailSeconds);
             double rad = f.brg * System.Math.PI / 180.0;
             Vector2 from = Screen(f.x, f.y), dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad));
             bearings.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = from, b = from + dir * reach, alpha = trailAlpha * life });
         }
         foreach (var t in s.tracks)
         {
-            if (t.own || !s.Heard(t) || s.identified.Contains(t.key) || !t.seen) continue; // Step 75: from the sweep's first touch
+            if (t.own || !s.sensors.Heard(t) || s.sensors.identified.Contains(t.key) || !t.seen) continue; // Step 75: from the sweep's first touch
             double rad = t.seenBrg * System.Math.PI / 180.0; // where the sweep last heard it; the label shows it in whole degrees
             var dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad)); // board y is down
             bool on = s.ScopeOn(t, down);
@@ -575,7 +575,7 @@ public class HandoffPlotPanel : HandoffPanel
             var t = s.TrackOf(p.key);
             if (!p.label) continue;
             if (t == null) { p.label.gameObject.SetActive(false); continue; } // its contact is gone (Step 34)
-            if (passiveVisibility) p.label.gameObject.SetActive(s.Heard(t) && !s.identified.Contains(t.key));
+            if (passiveVisibility) p.label.gameObject.SetActive(s.sensors.Heard(t) && !s.sensors.identified.Contains(t.key));
             Paint(p.label, s.ScopeOn(t, down) ? caution : Controls.GridAmber ? alarm : data);
         }
     }
@@ -585,7 +585,7 @@ public class HandoffPlotPanel : HandoffPanel
     {
         var s = State;
         var shapes = new List<HandoffMarksGraphic.Shape>();
-        if (s.dradis && sensorKm > 0f)
+        if (s.sensors.dradis && sensorKm > 0f)
         {
             bool amber = Controls.GridAmber;
             Paint(sensorRing, amber ? alarm : data);
@@ -598,7 +598,7 @@ public class HandoffPlotPanel : HandoffPanel
         sensorRing.Set(shapes);
 
         if (!sweep) return;
-        bool on = s.dradis && sensorKm > 0f;
+        bool on = s.sensors.dradis && sensorKm > 0f;
         if (sweep.gameObject.activeSelf != on) sweep.gameObject.SetActive(on);
         if (!on) return;
         bool red = Controls.GridAmber;

@@ -259,7 +259,7 @@ public static class PlaytestRunner
 
         // 5. Paused at load; signal silent
         Check("The board starts paused", board.Paused, "");
-        Check("Signal starts at 0 — RUNNING SILENT", s.signal == 0f && SigNote(board) == "RUNNING SILENT", s.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
+        Check("Signal starts at 0 — RUNNING SILENT", s.sensors.signal == 0f && SigNote(board) == "RUNNING SILENT", s.sensors.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
 
         // 6. Open the Power drawer from the systems rail
         int snd = board.Sounds;
@@ -288,7 +288,7 @@ public static class PlaytestRunner
         Shot("05_all_draw");
         yield return 0.2f;
 
-        s.SetGain(1); // stand-in: the gain fader down, so TRACK 07 is first heard when step 17 raises it
+        s.sensors.SetGain(1); // stand-in: the gain fader down, so TRACK 07 is first heard when step 17 raises it
         // 8. RUN
         if (!Click("pause", null, "PAUSE/RUN key")) yield break;
         Check("RUN starts time", !board.Paused, "");
@@ -334,7 +334,7 @@ public static class PlaytestRunner
 
         // 10. What the power now drives (board rules)
         Check("ENG power raises the throttle limit", s.nav.ThrottleCap > 0, "throttle cap " + s.nav.ThrottleCap + "%");
-        Check("SEN power raises the sensor gain limit", s.GainCap > 1, "gain limit " + s.GainCap + " (range is " + s.SenRangeKm.ToString("N0") + " km until the gain is turned up — sensors feature)");
+        Check("SEN power raises the sensor gain limit", s.sensors.GainCap > 1, "gain limit " + s.sensors.GainCap + " (range is " + s.sensors.SenRangeKm.ToString("N0") + " km until the gain is turned up — sensors feature)");
         float wep0 = s.wepCharge; double aux0 = s.auxCharge;
         yield return 2f;
         Check("WEP power charges the capacitor", s.wepCharge > wep0 || s.wepCharge >= 100f, wep0.ToString("0") + " → " + s.wepCharge.ToString("0") + "%");
@@ -343,13 +343,13 @@ public static class PlaytestRunner
         // 11. Power makes us loud (Step 35): signal climbs to its target on the OWN EMISSIONS meter
         if (!Click("drawer", "sensors", "SENS key")) yield break;
         yield return 0.8f;
-        float target = s.SignalTarget;
+        float target = s.sensors.SignalTarget;
         Check("Power sets the signal target", Mathf.Approximately(target, Mathf.Min(100f, s.power.TotalFill * 10f)), "target " + target.ToString("0.0") + " from " + s.power.TotalFill + " units");
         Shot("07_signal_climbing");
         yield return 0.2f;
-        yield return (Func<bool>)(() => s.signal >= target);
-        Check("The signal climbs to its target", s.signal >= target, s.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
-        Check("Loud enough to be tracked", s.signal < s.signalTrackedAt || SigNote(board).Contains("YOUR RANGE"), "\"" + SigNote(board) + "\"");
+        yield return (Func<bool>)(() => s.sensors.signal >= target);
+        Check("The signal climbs to its target", s.sensors.signal >= target, s.sensors.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
+        Check("Loud enough to be tracked", s.sensors.signal < s.sensors.signalTrackedAt || SigNote(board).Contains("YOUR RANGE"), "\"" + SigNote(board) + "\"");
         Shot("08_signal_loud");
         yield return 0.2f;
 
@@ -369,8 +369,8 @@ public static class PlaytestRunner
               shed0.name + " → " + shed.sprite.name + (slid ? ", slide seen, now at rest" : ", no slide seen"));
         yield return (Func<bool>)(() => s.power.TotalFill == 0);
         if (!Click("drawer", "sensors", "SENS key")) yield break;
-        yield return (Func<bool>)(() => s.signal <= 0f);
-        Check("With no power out, the signal falls to silent", s.signal <= 0f && SigNote(board) == "RUNNING SILENT", s.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
+        yield return (Func<bool>)(() => s.sensors.signal <= 0f);
+        Check("With no power out, the signal falls to silent", s.sensors.signal <= 0f && SigNote(board) == "RUNNING SILENT", s.sensors.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
         Shot("09_silent");
         yield return 0.2f;
 
@@ -536,8 +536,8 @@ public static class PlaytestRunner
         if (!Click("rate", "1", "x1 rate key")) yield break;
 
         // 16. The sensor circle (Step 42): while DRADIS is on, a circle round our ship at the hearing range.
-        Check("DRADIS on: the sensor circle shows at the hearing range", s.dradis && Mathf.Abs(plotPanel.SensorRingKm - s.PassiveRangeKm) < 1f,
-              plotPanel.SensorRingKm.ToString("N0") + " km (hearing range " + s.PassiveRangeKm.ToString("N0") + " km)");
+        Check("DRADIS on: the sensor circle shows at the hearing range", s.sensors.dradis && Mathf.Abs(plotPanel.SensorRingKm - s.sensors.PassiveRangeKm) < 1f,
+              plotPanel.SensorRingKm.ToString("N0") + " km (hearing range " + s.sensors.PassiveRangeKm.ToString("N0") + " km)");
         //     The radar sweep (Step 43) turns inside the circle, and holds still while paused.
         float sw0 = plotPanel.SweepDeg;
         yield return 0.5f;
@@ -556,12 +556,12 @@ public static class PlaytestRunner
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("sensors.dradis", null, "DRADIS rocker (off)")) yield break;
         yield return 0.3f;
-        Check("DRADIS off: the circle and the sweep go", !s.dradis && plotPanel.SensorRingKm == 0f && !plotPanel.SweepShown, "dradis " + s.dradis);
+        Check("DRADIS off: the circle and the sweep go", !s.sensors.dradis && plotPanel.SensorRingKm == 0f && !plotPanel.SweepShown, "dradis " + s.sensors.dradis);
         Shot("20_dradis_off");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("sensors.dradis", null, "DRADIS rocker (on)")) yield break;
         yield return 0.8f;
-        Check("DRADIS on again: the circle is back", s.dradis && Mathf.Abs(plotPanel.SensorRingKm - s.PassiveRangeKm) < 1f, plotPanel.SensorRingKm.ToString("N0") + " km");
+        Check("DRADIS on again: the circle is back", s.sensors.dradis && Mathf.Abs(plotPanel.SensorRingKm - s.sensors.PassiveRangeKm) < 1f, plotPanel.SensorRingKm.ToString("N0") + " km");
         Shot("21_dradis_on_again");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         board.SetZoom(1.0);
@@ -569,15 +569,15 @@ public static class PlaytestRunner
 
         // 17. Hearing (Step 44): power SEN, raise the gain, and TRACK 07 comes into hearing range.
         var alarmWords = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/" + FirstChildName(GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip"), "text#14 ")).GetComponent<TMPro.TMP_Text>();
-        Check("Nothing heard yet: the alarm strip is quiet", s.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, s.newContacts + " new");
+        Check("Nothing heard yet: the alarm strip is quiet", s.sensors.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, s.sensors.newContacts + " new");
         if (!Click("drawer", "power", "PWR key")) yield break;
         yield return 0.8f;
         if (!Click("power.bus", "2", "SEN selector")) yield break;
-        yield return (Func<bool>)(() => s.GainCap >= 2);
-        s.SetGain(2); // stand-in: the gain fader is a drag
+        yield return (Func<bool>)(() => s.sensors.GainCap >= 2);
+        s.sensors.SetGain(2); // stand-in: the gain fader is a drag
         var t07 = s.TrackOf("t07");
-        yield return (Func<bool>)(() => s.Heard(t07) && s.newContacts > 0);
-        Check("At gain 2 DRADIS hears GARUDA", s.Heard(t07), "range " + t07.rangeKm.ToString("N0") + " km, hearing range " + s.PassiveRangeKm.ToString("N0") + " km");
+        yield return (Func<bool>)(() => s.sensors.Heard(t07) && s.sensors.newContacts > 0);
+        Check("At gain 2 DRADIS hears GARUDA", s.sensors.Heard(t07), "range " + t07.rangeKm.ToString("N0") + " km, hearing range " + s.sensors.PassiveRangeKm.ToString("N0") + " km");
         //     Step 75: the line comes with the sweep's first touch, and holds that bearing until the next pass.
         yield return (Func<bool>)(() => t07.seen);
         yield return 0.1f;
@@ -585,34 +585,34 @@ public static class PlaytestRunner
         string plText = pl ? pl.GetComponent<TMPro.TMP_Text>().text : "none";
         Check("When the sweep touches it, a bearing line and label point at it", pl && plText == "BRG " + (HandoffBoardState.JsRound(t07.seenBrg) % 360).ToString("000") && Mathf.Abs(Mathf.DeltaAngle((float)t07.seenBrg, t07.bearing)) <= 1f,
               "\"" + plText + "\", bearing now " + t07.bearing.ToString("000"));
-        Check("The alarm strip raises: 1 NEW CONTACT, with the alert tone", s.newContacts == 1 && alarmWords.gameObject.activeInHierarchy && alarmWords.text == "NEW CONTACT SINCE COMMIT",
+        Check("The alarm strip raises: 1 NEW CONTACT, with the alert tone", s.sensors.newContacts == 1 && alarmWords.gameObject.activeInHierarchy && alarmWords.text == "NEW CONTACT SINCE COMMIT",
               "\"" + alarmWords.text + "\", last cue \"" + board.LastSound + "\"");
         Shot("22_heard");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("ack", null, "alarm strip (acknowledge)")) yield break;
-        Check("Clicking the strip acknowledges it", s.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, "");
+        Check("Clicking the strip acknowledges it", s.sensors.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, "");
 
         //     Loud enough to be tracked: our ship stays solid (owner 2026-10-25: the lamp and meter warn, not the ship).
-        yield return (Func<bool>)(() => s.signal >= s.signalTrackedAt);
+        yield return (Func<bool>)(() => s.sensors.signal >= s.sensors.signalTrackedAt);
         var shipRaw = GameObject.Find("Own ship (3D view)").GetComponent<UnityEngine.UI.RawImage>();
         bool dim = false;
         float blinkUntil = Time.realtimeSinceStartup + 1.3f;
         yield return (Func<bool>)(() => { if (shipRaw.color.a < 0.9f) dim = true; return Time.realtimeSinceStartup > blinkUntil; });
-        Check("Tracked, our ship does not blink", !dim, "signal " + s.signal.ToString("0") + "%");
+        Check("Tracked, our ship does not blink", !dim, "signal " + s.sensors.signal.ToString("0") + "%");
         //     Step 68: the signal box in the frame's top-right shows it too, with the Sensors drawer shut.
         var sigBox = GameObject.Find("Board/HandoffBoard/SignalBox").transform;
         var boxPct = sigBox.Find("Signal · percent").GetComponent<TMPro.TMP_Text>();
         var boxNote = sigBox.Find("Signal · note").GetComponent<TMPro.TMP_Text>();
-        yield return (Func<bool>)(() => boxPct.text == HandoffBoardState.JsRound(s.signal) + "%");
-        Check("Tracked, the top-right signal box reads the signal and the trackers", boxPct.text == HandoffBoardState.JsRound(s.signal) + "%" && boxNote.text.EndsWith("YOUR RANGE"),
+        yield return (Func<bool>)(() => boxPct.text == HandoffBoardState.JsRound(s.sensors.signal) + "%");
+        Check("Tracked, the top-right signal box reads the signal and the trackers", boxPct.text == HandoffBoardState.JsRound(s.sensors.signal) + "%" && boxNote.text.EndsWith("YOUR RANGE"),
               "\"" + boxPct.text + "\", \"" + boxNote.text + "\"");
 
         // 18. The bearing trail (Step 45): each sweep leaves TRACK 07's bearing where we were. As we
         //     move, the lines cross at it. They fade out over two minutes of mission time.
         if (!Click("rate", "10", "x10 rate key")) yield break;
-        s.BearingFixes.Clear();
-        yield return (Func<bool>)(() => s.BearingFixes.FindAll(f => f.key == "t07").Count >= 2);
-        var fixes = s.BearingFixes.FindAll(f => f.key == "t07");
+        s.sensors.BearingFixes.Clear();
+        yield return (Func<bool>)(() => s.sensors.BearingFixes.FindAll(f => f.key == "t07").Count >= 2);
+        var fixes = s.sensors.BearingFixes.FindAll(f => f.key == "t07");
         var fa = fixes[0]; var fb = fixes[fixes.Count - 1];
         double baseKm = System.Math.Sqrt((fb.x - fa.x) * (fb.x - fa.x) + (fb.y - fa.y) * (fb.y - fa.y));
         double crossX, crossY;
@@ -623,9 +623,9 @@ public static class PlaytestRunner
         Shot("23_bearing_trail");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         float firstLaid = fa.t;
-        yield return (Func<bool>)(() => board.MissionSeconds - firstLaid > s.bearingTrailSeconds + 2f);
+        yield return (Func<bool>)(() => board.MissionSeconds - firstLaid > s.sensors.bearingTrailSeconds + 2f);
         yield return 0.5f;
-        Check("A bearing line is gone after two minutes", !s.BearingFixes.Contains(fa), (board.MissionSeconds - firstLaid).ToString("0") + " s after it was laid");
+        Check("A bearing line is gone after two minutes", !s.sensors.BearingFixes.Contains(fa), (board.MissionSeconds - firstLaid).ToString("0") + " s after it was laid");
         if (!Click("rate", "1", "x1 rate key")) yield break;
 
         // 19. Intercept helpers (Step 46). Our ship is under way.
@@ -662,7 +662,7 @@ public static class PlaytestRunner
         Check("No weapon ring with Fire Control shut", plotPanel.WeaponRingKm == 0f, "");
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
-        Check("Fire Control open: the railgun's reach shows round our ship, as far as the DRADIS at full gain", plotPanel.WeaponRingKm == s.senRangeBaseKm + 5 * s.senRangePerStepKm, plotPanel.WeaponRingKm.ToString("N0") + " km");
+        Check("Fire Control open: the railgun's reach shows round our ship, as far as the DRADIS at full gain", plotPanel.WeaponRingKm == s.sensors.senRangeBaseKm + 5 * s.sensors.senRangePerStepKm, plotPanel.WeaponRingKm.ToString("N0") + " km");
         board.SetZoom(0.25);
         yield return 0.4f;
         Shot("25_weapon_ring");
@@ -755,11 +755,11 @@ public static class PlaytestRunner
         var lever = Hit("fc.lever", null);
         Vector2 leverAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(lever.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
                                            lever.transform.TransformPoint(((RectTransform)lever.transform).rect.center)));
-        s.signal = 50f; // stand-in: room for the spike to show (we are at 100% with this much power drawn)
-        float sig0 = s.signal;
+        s.sensors.signal = 50f; // stand-in: room for the spike to show (we are at 100% with this much power drawn)
+        float sig0 = s.sensors.signal;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever", "fc.lever")) yield break;
         Check("The lever fires one slug and releases ARM", s.Rounds.Count == 1 && !s.sw[3], s.Rounds.Count + " in flight");
-        Check("Firing spikes our signal", Mathf.Approximately(s.signal, sig0 + s.fireSignalSpike), sig0.ToString("0") + " → " + s.signal.ToString("0"));
+        Check("Firing spikes our signal", Mathf.Approximately(s.sensors.signal, sig0 + s.fireSignalSpike), sig0.ToString("0") + " → " + s.sensors.signal.ToString("0"));
         yield return 0.4f;
         Check("The fire cue sounds", board.Sounds > 0 && (board.LastSound == "railgun" || board.LastSound == "hit"), "last cue \"" + board.LastSound + "\"");
         //     Paused, the slug stops.
@@ -849,7 +849,7 @@ public static class PlaytestRunner
         Check("Unled, the same shot would have missed", unled > s.HitRadiusKm(t07.klass), unled.ToString("N0") + " km");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     An active-scan lock: TRACK knows its true course and speed and leads exactly.
-        s.identified.Add("t07"); // stand-in for an active scan identifying it
+        s.sensors.identified.Add("t07"); // stand-in for an active scan identifying it
         yield return 0.6f;
         if (!Click("fc.track", null, "TRACK (locked)")) yield break;
         Check("TRACK's solution carries the target's course", s.Sol.set && !s.Sol.manual && s.Sol.hasCourse, "CRS " + s.Sol.course.ToString("000") + "°, SPD " + s.Sol.spd.ToString("0.00"));
@@ -863,11 +863,11 @@ public static class PlaytestRunner
         Check("TRACK's led shot hits", s.shotReport != null && s.shotReport.StartsWith("HIT · GARUDA"), "\"" + s.shotReport + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Hold it still again for the fight below; clear the plot.
-        brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0; s.marks.Clear(); s.identified.Remove("t07");
+        brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0; s.marks.Clear(); s.sensors.identified.Remove("t07");
 
         // 21c. Missiles (Step 53): a lock, the launcher, three warheads, homing on the moving TRACK 07.
         brain.enabled = true;
-        s.identified.Add("t07"); // stand-in for an active-scan lock
+        s.sensors.identified.Add("t07"); // stand-in for an active-scan lock
         for (int k = 0; k < 3 && s.sys != "MS"; k++) { if (!Click("fc.system", null, "weapon selector")) yield break; yield return 0.2f; }
         s.salvo = 2; // stand-in for the Tuning window (its default is 2)
         Check("MISSILE selected: the launcher, HE", s.sys == "MS" && s.mount == "VLS" && s.warheads[s.warhead] == "HE", s.sys + " " + s.mount + " " + s.warheads[s.warhead]);
@@ -916,9 +916,9 @@ public static class PlaytestRunner
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Back to the railgun; hold TRACK 07 still for the fight.
         if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break;
-        brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0; s.identified.Remove("t07");
+        brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0; s.sensors.identified.Remove("t07");
 
-        s.identified.Add("t07"); // stand-in for an active scan: from here on we see what our hits do (Step 61)
+        s.sensors.identified.Add("t07"); // stand-in for an active scan: from here on we see what our hits do (Step 61)
         // 21d. Fighters (Step 54): the interceptors launch from the hangar, fly to TRACK 07, make attack runs
         //     on the side facing them, and RECALL brings them home to land.
         //     Stand-in for the helm: 2,000 km ahead of its bow (never hit yet), stopped, facing it.
@@ -930,12 +930,12 @@ public static class PlaytestRunner
         //     Step 69 (owner 2026-10-25): with ACTIVE on, every pass of the sweep over TRACK 07 beeps, scanned or not.
         //     Stand-in for the ACTIVE key and the cone dial.
         yield return 0.5f; // a tick, so TRACK 07's bearing and range are measured from here
-        s.active = true; s.coneBrg = t07.bearing;
+        s.sensors.active = true; s.sensors.coneBrg = t07.bearing;
         int tags0 = board.Tags;
         yield return (Func<bool>)(() => board.Tags > tags0);
         yield return (Func<bool>)(() => board.Tags > tags0 + 1);
         Check("ACTIVE on: each sweep pass over GARUDA beeps", board.Tags >= tags0 + 2, (board.Tags - tags0) + " beeps");
-        s.active = false;
+        s.sensors.active = false;
         var vxField = typeof(HandoffPlotPanel).GetField("viewX", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var vyField = typeof(HandoffPlotPanel).GetField("viewY", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         vxField.SetValue(plotPanel, (s.nav.x + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.nav.y + t07.worldY) / 2); // stand-in for panning the plot
@@ -1159,13 +1159,13 @@ public static class PlaytestRunner
         //     TRACK 07 as its own ship, in red, because it is in sight (10,000 km), not because of CLASS.
         if (!Click("scope.classify", null, "CLASS key")) yield break;
         yield return 0.6f;
-        Check("Classified and in sight: GARUDA shows on the plot as its own ship model, in place of its dot", s.classified.Contains("t07") && s.InSight(t07) && plotPanel.ContactShipShown && subjName.text == "GARUDA · CRUISER",
+        Check("Classified and in sight: GARUDA shows on the plot as its own ship model, in place of its dot", s.classified.Contains("t07") && s.sensors.InSight(t07) && plotPanel.ContactShipShown && subjName.text == "GARUDA · CRUISER",
               "\"" + subjName.text + "\", " + t07.rangeKm.ToString("N0") + " km, picture " + plotPanel.ContactShipShown);
-        float sightWas = s.visualRangeKm;
-        s.visualRangeKm = t07.rangeKm - 1000f; // stand-in for drawing off out of sight
+        float sightWas = s.sensors.visualRangeKm;
+        s.sensors.visualRangeKm = t07.rangeKm - 1000f; // stand-in for drawing off out of sight
         yield return 0.6f;
         Check("Out of sight it is a dot again, where the sweep last touched it", !plotPanel.ContactShipShown && t07.seen, "picture " + plotPanel.ContactShipShown);
-        s.visualRangeKm = sightWas;
+        s.sensors.visualRangeKm = sightWas;
         yield return 0.6f;
         //     The sweep runs from a small circle round our ship, not from the ship itself.
         var sweepInner = (float)typeof(HandoffSweepGraphic).GetField("innerPx", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
@@ -1196,13 +1196,13 @@ public static class PlaytestRunner
         bool reactorOnly = opened >= 0;
         for (int i = opened + 1; i < reports.Count - 1; i++) if (reports[i] != "HIT · GARUDA · PORT · RCT −2") reactorOnly = false;
         Check("Then each hit takes 2 off the reactor behind it, the same room every time", reports.Count - opened - 2 > 0 && reactorOnly, reports.Count + " shots");
-        Check("Its reactor gone, it is destroyed: a cold wreck", t07.wreck && dummyShip.destroyed && dummyShip.Comp("rct").integ == 0 && !s.Heard(t07) && reports[reports.Count - 1] == "GARUDA DESTROYED",
+        Check("Its reactor gone, it is destroyed: a cold wreck", t07.wreck && dummyShip.destroyed && dummyShip.Comp("rct").integ == 0 && !s.sensors.Heard(t07) && reports[reports.Count - 1] == "GARUDA DESTROYED",
               "RCT " + dummyShip.Comp("rct").integ + ", last \"" + reports[reports.Count - 1] + "\"");
         bool untouched = dummyShip.SideArmour[0] == before[0] && dummyShip.SideArmour[1] == before[1] && dummyShip.SideArmour[2] == before[2];
         for (int c = 0; c < dummyShip.compartments.Length; c++) if (dummyShip.compartments[c].key != "rct" && dummyShip.compartments[c].integ != integBefore[c]) untouched = false;
         Check("Nothing else on it was touched", untouched, "");
         yield return 0.4f;
-        Check("The wreck stays on the plot: in sight, its model shows (grey) and drifts on (owner 2026-10-26)", s.InSight(t07) && plotPanel.ContactShipShown, t07.rangeKm.ToString("N0") + " km, picture " + plotPanel.ContactShipShown);
+        Check("The wreck stays on the plot: in sight, its model shows (grey) and drifts on (owner 2026-10-26)", s.sensors.InSight(t07) && plotPanel.ContactShipShown, t07.rangeKm.ToString("N0") + " km, picture " + plotPanel.ContactShipShown);
         Check("The kill cue sounds", board.LastSound == "kill", "last cue \"" + board.LastSound + "\"");
         Shot("29_destroyed");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
@@ -1354,7 +1354,7 @@ public static class PlaytestRunner
     }
 
     // Where two bearing lines meet (world km; bearings clockwise from north). False if near parallel.
-    static bool Cross(HandoffBoardState.BearingFix a, HandoffBoardState.BearingFix b, out double x, out double y)
+    static bool Cross(SensorSystem.BearingFix a, SensorSystem.BearingFix b, out double x, out double y)
     {
         double ra = a.brg * System.Math.PI / 180, rb = b.brg * System.Math.PI / 180;
         double ax = System.Math.Sin(ra), ay = System.Math.Cos(ra), bx = System.Math.Sin(rb), by = System.Math.Cos(rb);
@@ -1423,8 +1423,8 @@ public static class PlaytestRunner
 
     static string SigNote(HandoffBoardControls board)
     {
-        var panel = board.GetComponentInChildren<HandoffSensorsPanel>(true);
-        var f = typeof(HandoffSensorsPanel).GetField("sigNote", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var panel = board.GetComponentInChildren<SensorsPanel>(true);
+        var f = typeof(SensorsPanel).GetField("sigNote", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var t = panel && f != null ? f.GetValue(panel) as TMPro.TMP_Text : null;
         return t ? t.text : "?";
     }
