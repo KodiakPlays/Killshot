@@ -1080,7 +1080,7 @@ public static class HandoffBoardBuilder
     {
         const string H = "State · hangar";
         var group = (RectTransform)root.Find(H);
-        var p = root.gameObject.AddComponent<HandoffHangarPanel>();
+        var p = root.gameObject.AddComponent<HangarPanel>();
         var so = new SerializedObject(p);
         Color nominal = Hex("accent.nominal", 1f).linear; // design sRGB (Hex pre-encodes; undo for FillAt)
 
@@ -1203,7 +1203,7 @@ public static class HandoffBoardBuilder
     // The launch bearing field (setLbrg, a text input — no record: the measurement skipped the
     // input's value). Right edge flush with its "°" label (text #344 at x 1636), the site's 32 px
     // width, the "°" label's line box and size; Share Tech Mono, ink.data. See HANDOFF_GAPS.
-    static TMPro.TMP_InputField BearingField(RectTransform group, HandoffHangarPanel panel, RectTransform degree)
+    static TMPro.TMP_InputField BearingField(RectTransform group, HangarPanel panel, RectTransform degree)
     {
         var deg = degree.GetComponent<TMPro.TextMeshProUGUI>();
         var field = NewRect("Launch bearing (input field)", group);

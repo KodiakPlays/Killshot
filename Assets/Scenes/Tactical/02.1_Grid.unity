@@ -21627,6 +21627,7 @@ GameObject:
   - component: {fileID: 765287333}
   - component: {fileID: 765287334}
   - component: {fileID: 765287335}
+  - component: {fileID: 765287336}
   m_Layer: 0
   m_Name: "Garuda \xB7 Cruiser"
   m_TagString: Untagged
@@ -21957,6 +21958,140 @@ MonoBehaviour:
   spdStep: 0.25
   pdcKillChance: 0.7
   ownHitRadiusKm: 210
+--- !u!114 &765287336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765287326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6429248f03be3420288c7ba28ad63bfa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HangarSystem
+  squads:
+  - key: gw
+    name: INTERCEPTOR
+    shortName: INTCP
+    type: STARFIGHTER
+    role: INTERCEPT / ESCORT
+    orders:
+    - destroy
+    - disable
+    - escort
+    orderLabels:
+    - DESTROY
+    - DISABLE
+    - ESCORT
+    craft:
+    - tag: 01
+      pilot: HALLORAN
+      state: READY
+      fuel: 100
+    - tag: 02
+      pilot: VOSS
+      state: READY
+      fuel: 100
+    - tag: 03
+      pilot: IDE
+      state: READY
+      fuel: 96
+    - tag: 04
+      pilot: MARCHETTI
+      state: READY
+      fuel: 88
+    - tag: 05
+      pilot: REYES
+      state: REARM
+      fuel: 41
+    - tag: 06
+      pilot: OKONKWO
+      state: DOWN
+      fuel: 0
+  - key: ih
+    name: ASSAULT BOAT
+    shortName: ASSLT
+    type: ASSAULT BOAT
+    role: BOARDING / SECURE
+    orders:
+    - destroy
+    - disable
+    - secure
+    orderLabels:
+    - DESTROY
+    - DISABLE
+    - SECURE
+    craft:
+    - tag: 11
+      pilot: DRAKOS
+      state: READY
+      fuel: 100
+    - tag: 12
+      pilot: SANTOS
+      state: READY
+      fuel: 100
+    - tag: 13
+      pilot: ELLERY
+      state: READY
+      fuel: 74
+    - tag: 14
+      pilot: BRENNAN
+      state: REARM
+      fuel: 62
+  squad: 0
+  order: destroy
+  launchedSquads: []
+  launchedOrders: []
+  stages:
+  - id: crew
+    label: CREW
+    rate: 22
+    on: 0
+    progress: 0
+  - id: fuel
+    label: FUEL
+    rate: 18
+    on: 0
+    progress: 0
+  - id: ord
+    label: ORDNANCE
+    rate: 14
+    on: 0
+    progress: 0
+  - id: evac
+    label: EVAC
+    rate: 20
+    on: 0
+    progress: 0
+  - id: doors
+    label: DOORS
+    rate: 26
+    on: 0
+    progress: 0
+  - id: cat
+    label: CATAPULT
+    rate: 12
+    on: 0
+    progress: 0
+  doorsOpen: 0
+  lbrg: 62
+  launchConeDeg: 60
+  launchLever: 0
+  leverFireAt: 0.9
+  fighterSpeedKms: 40
+  fighterAttackKm: 200
+  fighterRunSeconds: 30
+  fighterArmourDamage: 10
+  fighterCompartmentDamage: 1
+  boatSpeedKms: 30
+  marines: 18
+  marinesPerBoat: 6
+  dockKm: 50
+  boardMaxSpeedKms: 0.5
+  boardSeconds: 60
+  defenderShare: 0.25
+  marineLossPerDefender: 0.5
 --- !u!1 &765774873
 GameObject:
   m_ObjectHideFlags: 0
@@ -25899,6 +26034,7 @@ GameObject:
   - component: {fileID: 891763125}
   - component: {fileID: 891763126}
   - component: {fileID: 891763127}
+  - component: {fileID: 891763128}
   m_Layer: 0
   m_Name: OwnShip
   m_TagString: Untagged
@@ -26194,6 +26330,140 @@ MonoBehaviour:
   spdStep: 0.25
   pdcKillChance: 0.7
   ownHitRadiusKm: 210
+--- !u!114 &891763128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891763121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6429248f03be3420288c7ba28ad63bfa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HangarSystem
+  squads:
+  - key: gw
+    name: INTERCEPTOR
+    shortName: INTCP
+    type: STARFIGHTER
+    role: INTERCEPT / ESCORT
+    orders:
+    - destroy
+    - disable
+    - escort
+    orderLabels:
+    - DESTROY
+    - DISABLE
+    - ESCORT
+    craft:
+    - tag: 01
+      pilot: HALLORAN
+      state: READY
+      fuel: 100
+    - tag: 02
+      pilot: VOSS
+      state: READY
+      fuel: 100
+    - tag: 03
+      pilot: IDE
+      state: READY
+      fuel: 96
+    - tag: 04
+      pilot: MARCHETTI
+      state: READY
+      fuel: 88
+    - tag: 05
+      pilot: REYES
+      state: REARM
+      fuel: 41
+    - tag: 06
+      pilot: OKONKWO
+      state: DOWN
+      fuel: 0
+  - key: ih
+    name: ASSAULT BOAT
+    shortName: ASSLT
+    type: ASSAULT BOAT
+    role: BOARDING / SECURE
+    orders:
+    - destroy
+    - disable
+    - secure
+    orderLabels:
+    - DESTROY
+    - DISABLE
+    - SECURE
+    craft:
+    - tag: 11
+      pilot: DRAKOS
+      state: READY
+      fuel: 100
+    - tag: 12
+      pilot: SANTOS
+      state: READY
+      fuel: 100
+    - tag: 13
+      pilot: ELLERY
+      state: READY
+      fuel: 74
+    - tag: 14
+      pilot: BRENNAN
+      state: REARM
+      fuel: 62
+  squad: 0
+  order: destroy
+  launchedSquads: []
+  launchedOrders: []
+  stages:
+  - id: crew
+    label: CREW
+    rate: 22
+    on: 0
+    progress: 0
+  - id: fuel
+    label: FUEL
+    rate: 18
+    on: 0
+    progress: 0
+  - id: ord
+    label: ORDNANCE
+    rate: 14
+    on: 0
+    progress: 0
+  - id: evac
+    label: EVAC
+    rate: 20
+    on: 0
+    progress: 0
+  - id: doors
+    label: DOORS
+    rate: 26
+    on: 0
+    progress: 0
+  - id: cat
+    label: CATAPULT
+    rate: 12
+    on: 0
+    progress: 0
+  doorsOpen: 0
+  lbrg: 62
+  launchConeDeg: 60
+  launchLever: 0
+  leverFireAt: 0.9
+  fighterSpeedKms: 40
+  fighterAttackKm: 200
+  fighterRunSeconds: 30
+  fighterArmourDamage: 10
+  fighterCompartmentDamage: 1
+  boatSpeedKms: 30
+  marines: 18
+  marinesPerBoat: 6
+  dockKm: 50
+  boardMaxSpeedKms: 0.5
+  boardSeconds: 60
+  defenderShare: 0.25
+  marineLossPerDefender: 0.5
 --- !u!1 &896206256
 GameObject:
   m_ObjectHideFlags: 0
@@ -50754,115 +51024,6 @@ MonoBehaviour:
     orderCostVent: 15
     orderFailSeconds: 0.42
     orderFail: 
-    squads:
-    - key: gw
-      name: INTERCEPTOR
-      shortName: INTCP
-      type: STARFIGHTER
-      role: INTERCEPT / ESCORT
-      orders:
-      - destroy
-      - disable
-      - escort
-      orderLabels:
-      - DESTROY
-      - DISABLE
-      - ESCORT
-      craft:
-      - tag: 01
-        pilot: HALLORAN
-        state: READY
-        fuel: 100
-      - tag: 02
-        pilot: VOSS
-        state: READY
-        fuel: 100
-      - tag: 03
-        pilot: IDE
-        state: READY
-        fuel: 96
-      - tag: 04
-        pilot: MARCHETTI
-        state: READY
-        fuel: 88
-      - tag: 05
-        pilot: REYES
-        state: REARM
-        fuel: 41
-      - tag: 06
-        pilot: OKONKWO
-        state: DOWN
-        fuel: 0
-    - key: ih
-      name: ASSAULT BOAT
-      shortName: ASSLT
-      type: ASSAULT BOAT
-      role: BOARDING / SECURE
-      orders:
-      - destroy
-      - disable
-      - secure
-      orderLabels:
-      - DESTROY
-      - DISABLE
-      - SECURE
-      craft:
-      - tag: 11
-        pilot: DRAKOS
-        state: READY
-        fuel: 100
-      - tag: 12
-        pilot: SANTOS
-        state: READY
-        fuel: 100
-      - tag: 13
-        pilot: ELLERY
-        state: READY
-        fuel: 74
-      - tag: 14
-        pilot: BRENNAN
-        state: REARM
-        fuel: 62
-    squad: 0
-    order: destroy
-    launchedSquads: []
-    launchedOrders: []
-    stages:
-    - id: crew
-      label: CREW
-      rate: 22
-      on: 0
-      progress: 0
-    - id: fuel
-      label: FUEL
-      rate: 18
-      on: 0
-      progress: 0
-    - id: ord
-      label: ORDNANCE
-      rate: 14
-      on: 0
-      progress: 0
-    - id: evac
-      label: EVAC
-      rate: 20
-      on: 0
-      progress: 0
-    - id: doors
-      label: DOORS
-      rate: 26
-      on: 0
-      progress: 0
-    - id: cat
-      label: CATAPULT
-      rate: 12
-      on: 0
-      progress: 0
-    doorsOpen: 0
-    lbrg: 62
-    launchConeDeg: 60
-    launchLever: 0
-    leverFireAt: 0.9
     scopeBrg: 62
     scopeZoom: 1.4
     slewDegPerPx: 0.34
@@ -50899,24 +51060,12 @@ MonoBehaviour:
     radFadeSeconds: 90
     heArmourDamage: 100
     empSeconds: 60
-    fighterSpeedKms: 40
-    fighterAttackKm: 200
-    fighterRunSeconds: 30
-    fighterArmourDamage: 10
-    fighterCompartmentDamage: 1
-    boatSpeedKms: 30
-    marines: 18
-    marinesPerBoat: 6
-    dockKm: 50
-    boardMaxSpeedKms: 0.5
-    boardSeconds: 60
-    defenderShare: 0.25
-    marineLossPerDefender: 0.5
   nav: {fileID: 891763123}
   power: {fileID: 891763124}
   sensors: {fileID: 891763125}
   comms: {fileID: 891763126}
   weapons: {fileID: 891763127}
+  hangar: {fileID: 891763128}
   motion: {fileID: 1765047285}
   grid: {fileID: 261411404}
   canvas: {fileID: 519620959}

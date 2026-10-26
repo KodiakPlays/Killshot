@@ -3803,10 +3803,10 @@ Found by the doc check after Step 66. Fix each with the owner.
 
 ### Board refactor (owner, 2026-10-25). In progress (paused and restarted by the owner, 2026-10-26)
 
-**Where it stands (2026-10-26).** Navigation, power, sensors, comms and weapons are moved into
-systems. The helm, power, sensors, comms, fire control and hangar drawers are prefabs. Next: the
-hangar system (Tooling), then the engineering prefab (UI Restructure) and the damage system, then
-orders, then the periscope.
+**Where it stands (2026-10-26).** Navigation, power, sensors, comms, weapons and hangar are moved
+into systems. The helm, power, sensors, comms, fire control and hangar drawers are prefabs. Next: the
+engineering prefab (UI Restructure), then the damage system (Tooling), then orders, then the
+periscope.
 
 Replaces the 2026-10-24 "clean-up once the game is working" list.
 
@@ -3982,9 +3982,22 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
     game time and has to be led. Hitting debris can be added to the board's own code. `CLAUDE.md`
     now says where the board's weapons are.
   - No behaviour change. Playtest 171/171 (run 2026-10-26_231109).
+- **Hangar (2026-10-26).** The hangar is in `Systems/HangarSystem.cs`: the squadrons and their craft,
+  the launch stages, the bay doors, the launch bearing and lever, squadrons in flight, the fighters'
+  attack runs, and the assault boats with the marines they carry.
+  - `OwnShip` and `Garuda · Cruiser` each carry a HangarSystem, with the board's numbers.
+    `HandoffBoardControls.hangar` points at ours, and every ship state reaches its own through
+    `.hangar`.
+  - Stays on the ship state: `captured` (the ship's own status, like `destroyed`), the crew
+    (`TotalCrew`, `KillCrew`), damage, kills and the alert gates. Boarding still rolls the ship's
+    shared dice (`Roll`), so every roll falls as before.
+  - The fire lever's threshold is the hangar's `leverFireAt` (0.9), as it always was; fire control now
+    reads it as `hangar.leverFireAt`.
+  - `HandoffHangarPanel` became `UI/Panels/HangarPanel` (its link kept, so the prefab still holds it).
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_232330).
 
-**Next:** the hangar system (Tooling), then the engineering panel as a prefab (UI Restructure) and the
-damage system, then orders, then the periscope. Owner 2026-10-26: "split, take turns". One
+**Next:** the engineering panel as a prefab (UI Restructure), then the damage system (Tooling), then
+orders, then the periscope. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.
 

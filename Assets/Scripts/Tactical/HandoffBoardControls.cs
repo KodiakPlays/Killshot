@@ -96,6 +96,8 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private CommsSystem comms;
     [Tooltip("Our ship's weapons (the WeaponSystem on OwnShip): fire control, rounds in flight and point defence.")]
     [SerializeField] private WeaponSystem weapons;
+    [Tooltip("Our ship's hangar (the HangarSystem on OwnShip): squadrons, launches, fighters and assault boats.")]
+    [SerializeField] private HangarSystem hangar;
     [SerializeField] private HandoffBoardMotion motion;
     [SerializeField] private HandoffPlotGrid grid;
     [SerializeField] private Canvas canvas;
@@ -178,7 +180,7 @@ public class HandoffBoardControls : MonoBehaviour
 
     // Other objects can read State in their own Awake, before ours runs, so it hands our ship its systems first.
     public HandoffBoardState State { get { if (state.nav == null) UseSystems(); return state; } }
-    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); state.UseComms(comms); state.UseWeapons(weapons); }
+    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); state.UseComms(comms); state.UseWeapons(weapons); state.UseHangar(hangar); }
     /// <summary>Raised once per board tick, after the board's own rules and before the panels
     /// redraw. The tactical world steps here, inside the board's single timer (Step 34).</summary>
     public event System.Action Ticked;
@@ -214,6 +216,7 @@ public class HandoffBoardControls : MonoBehaviour
         if (!sensors) Debug.LogError("[HandoffBoardControls] our ship's SensorSystem is not set");
         if (!comms) Debug.LogError("[HandoffBoardControls] our ship's CommsSystem is not set");
         if (!weapons) Debug.LogError("[HandoffBoardControls] our ship's WeaponSystem is not set");
+        if (!hangar) Debug.LogError("[HandoffBoardControls] our ship's HangarSystem is not set");
         UseSystems();
     }
 
@@ -275,11 +278,11 @@ public class HandoffBoardControls : MonoBehaviour
                 edgeWarned = nearEdge;
                 ShowAlarm();
                 state.weapons.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
-                state.TickFlights(rate); // Step 54: fighters fly, attack, come home
+                state.hangar.TickFlights(rate); // Step 54: fighters fly, attack, come home
                 state.weapons.TickIncoming(rate); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
                 state.TickParty(rate);
                 state.TickConditions(rate); // Step 59: fire, vacuum and radiation burn, kill and spread
-                state.TickLaunch(rate);
+                state.hangar.TickLaunch(rate);
                 state.weapons.TickCharge(rate);
                 state.sensors.Tick(rate);
                 // Step 68 (owner 2026-10-25): the alert tone once as our signal crosses the tracked line

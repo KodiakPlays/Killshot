@@ -11,7 +11,7 @@ using TMPro;
 /// squads, squadAngle, orderAngle, devLabel/Ink, interlock/Ink, launchLamp, llLeft, llTrack,
 /// llHint/Ink, recallLamp) and UIStateSpec §8.2 and §11 "Hangar: launching a squadron".
 /// </summary>
-public class HandoffHangarPanel : HandoffPanel
+public class HangarPanel : HandoffPanel
 {
     [System.Serializable]
     public class SquadRow
@@ -91,11 +91,11 @@ public class HandoffHangarPanel : HandoffPanel
         var s = State;
         switch (action)
         {
-            case "hangar.doors": s.ToggleDoors(); return true;
-            case "hangar.squad": s.CycleSquad(); return true;
-            case "hangar.order": s.CycleOrder(); return true;
-            case "hangar.stage": s.PressStage(int.Parse(arg)); return true;
-            case "hangar.recall": s.RecallSquad(); return true;
+            case "hangar.doors": s.hangar.ToggleDoors(); return true;
+            case "hangar.squad": s.hangar.CycleSquad(); return true;
+            case "hangar.order": s.hangar.CycleOrder(); return true;
+            case "hangar.stage": s.hangar.PressStage(int.Parse(arg)); return true;
+            case "hangar.recall": s.hangar.RecallSquad(); return true;
         }
         return false;
     }
@@ -106,9 +106,9 @@ public class HandoffHangarPanel : HandoffPanel
         if (action != "hangar.lever") return false;
         var s = State;
         // llDown: refused unless the launch is clear and every stage is at 100%
-        if (s.LaunchBlock() != null || !s.AllStagesDone) return true;
+        if (s.hangar.LaunchBlock() != null || !s.hangar.AllStagesDone) return true;
         leverHeld = true; launchedThisPull = false;
-        leverX0 = board.x; leverV0 = s.launchLever;
+        leverX0 = board.x; leverV0 = s.hangar.launchLever;
         return true;
     }
 
@@ -116,8 +116,8 @@ public class HandoffHangarPanel : HandoffPanel
     {
         if (action != "hangar.lever" || !leverHeld) return false;
         var s = State;
-        s.launchLever = Mathf.Clamp01(leverV0 + (board.x - leverX0) / leverTravelPx);
-        if (s.launchLever > s.leverFireAt && !launchedThisPull) { launchedThisPull = true; s.LaunchSquad(); }
+        s.hangar.launchLever = Mathf.Clamp01(leverV0 + (board.x - leverX0) / leverTravelPx);
+        if (s.hangar.launchLever > s.hangar.leverFireAt && !launchedThisPull) { launchedThisPull = true; s.hangar.LaunchSquad(); }
         return true;
     }
 
@@ -126,7 +126,7 @@ public class HandoffHangarPanel : HandoffPanel
         if (action == "hangar.recall") { recallHeld = false; return true; }
         if (action != "hangar.lever") return false;
         leverHeld = false;
-        State.launchLever = 0f; // springs back
+        State.hangar.launchLever = 0f; // springs back
         return true;
     }
 
@@ -134,15 +134,15 @@ public class HandoffHangarPanel : HandoffPanel
     public void OnBearingTyped(string text)
     {
         if (Controls == null) return;
-        State.SetLbrg(text);
+        State.hangar.SetLbrg(text);
         Refresh();
     }
 
     public void OnBearingDone(string text)
     {
         if (Controls == null) return;
-        State.SetLbrg(text);
-        if (bearing) bearing.SetTextWithoutNotify(State.lbrg.ToString("000"));
+        State.hangar.SetLbrg(text);
+        if (bearing) bearing.SetTextWithoutNotify(State.hangar.lbrg.ToString("000"));
         Refresh();
     }
 
@@ -159,13 +159,13 @@ public class HandoffHangarPanel : HandoffPanel
         if (showRecall == null) showRecall = ShowRecall;
         recallPress.Set(recallHeld ? 1f : 0f, showRecall);
         var s = State;
-        var q = s.CurrentSquad;
-        bool out_ = s.Launched(q);
+        var q = s.hangar.CurrentSquad;
+        bool out_ = s.hangar.Launched(q);
 
         // header: hangarReady
         int nReady = 0;
-        foreach (var sq in s.squads) nReady += s.SquadReady(sq);
-        int air = s.launchedSquads.Count;
+        foreach (var sq in s.hangar.squads) nReady += s.hangar.SquadReady(sq);
+        int air = s.hangar.launchedSquads.Count;
         if (ready) ready.text = air > 0 ? nReady + " READY / " + air + " AIRBORNE" : nReady + " CRAFT READY";
         if (ready && headerScreen)
         {
@@ -175,13 +175,13 @@ public class HandoffHangarPanel : HandoffPanel
         }
 
         // bay status
-        doorSelector.Set(s.doorsOpen ? 120f : 60f);
-        Paint(doorLamp, s.doorsOpen ? alarm : nominal); Paint(doorGlow, s.doorsOpen ? alarm : nominal);
-        if (doorLabel) doorLabel.text = s.doorsOpen ? "OPEN" : "SEALED";
-        Paint(doorInkLamp, s.doorsOpen ? ownForce : stencil);
-        if (pressLabel) pressLabel.text = s.doorsOpen ? "VACUUM" : "1.0 ATM";
-        Paint(pressInkLamp, s.doorsOpen ? caution : nominal);
-        float cat = s.stages[5].progress;
+        doorSelector.Set(s.hangar.doorsOpen ? 120f : 60f);
+        Paint(doorLamp, s.hangar.doorsOpen ? alarm : nominal); Paint(doorGlow, s.hangar.doorsOpen ? alarm : nominal);
+        if (doorLabel) doorLabel.text = s.hangar.doorsOpen ? "OPEN" : "SEALED";
+        Paint(doorInkLamp, s.hangar.doorsOpen ? ownForce : stencil);
+        if (pressLabel) pressLabel.text = s.hangar.doorsOpen ? "VACUUM" : "1.0 ATM";
+        Paint(pressInkLamp, s.hangar.doorsOpen ? caution : nominal);
+        float cat = s.hangar.stages[5].progress;
         Color catInk = cat >= 100f ? ownForce : cat > 0f ? caution : stencil;
         if (catLabel) catLabel.text = cat >= 100f ? "CHARGED" : cat > 0f ? "CHARGING" : "HOLD";
         Paint(catInkLamp, catInk);
@@ -189,14 +189,14 @@ public class HandoffHangarPanel : HandoffPanel
         Bar(catFill, catWell, HandoffBoardState.JsRound(cat) / 100f, catInk, catBarMotion); // Math.round(lprog.cat) + "%"
 
         // squadrons
-        for (int r = 0; r < squadRows.Length && r < s.squads.Length; r++)
+        for (int r = 0; r < squadRows.Length && r < s.hangar.squads.Length; r++)
         {
             var row = squadRows[r];
-            var sq = s.squads[r];
-            bool sel = r == s.squad, sqOut = s.Launched(sq);
+            var sq = s.hangar.squads[r];
+            bool sel = r == s.hangar.squad, sqOut = s.hangar.Launched(sq);
             Paint(row.name, sel ? data : label);
-            if (row.state) { row.state.text = sqOut ? "AIRBORNE — " + Label(sq, s.LaunchedOrder(sq)) : "IN BAY"; Paint(row.state, sqOut ? ownForce : label); }
-            if (row.ready) row.ready.text = s.SquadReady(sq) + " OF " + sq.craft.Length + " READY";
+            if (row.state) { row.state.text = sqOut ? "AIRBORNE — " + Label(sq, s.hangar.LaunchedOrder(sq)) : "IN BAY"; Paint(row.state, sqOut ? ownForce : label); }
+            if (row.ready) row.ready.text = s.hangar.SquadReady(sq) + " OF " + sq.craft.Length + " READY";
             Paint(row.selLamp, sel ? data : lampOffSelector);
             Paint(row.selGlow, data); Show(row.selGlow, sel);
             for (int c = 0; c < sq.craft.Length; c++)
@@ -210,26 +210,26 @@ public class HandoffHangarPanel : HandoffPanel
         if (bezel)
         {
             if (float.IsNaN(bezelHomeY)) bezelHomeY = bezel.anchoredPosition.y;
-            bezel.anchoredPosition = new Vector2(bezel.anchoredPosition.x, bezelHomeY - squadPitch * s.squad);
+            bezel.anchoredPosition = new Vector2(bezel.anchoredPosition.x, bezelHomeY - squadPitch * s.hangar.squad);
         }
 
         // launch order
-        shipSelector.Set(60f + s.squad * 60f);
-        int oi = Mathf.Max(0, System.Array.IndexOf(q.orders, s.order));
+        shipSelector.Set(60f + s.hangar.squad * 60f);
+        int oi = Mathf.Max(0, System.Array.IndexOf(q.orders, s.hangar.order));
         commandSelector.Set(60f + oi * 30f);
         if (squadName) squadName.text = q.name;
-        if (orderName) orderName.text = Label(q, s.order);
-        int dev = s.LaunchDev;
-        if (devLabel) { devLabel.text = (dev > s.launchConeDeg ? "+" : "") + dev + "°"; Paint(devLabel, dev > s.launchConeDeg ? alarm : dev > 40 ? caution : nominal); }
-        if (bearing && !bearing.isFocused) bearing.SetTextWithoutNotify(s.lbrg.ToString("000"));
+        if (orderName) orderName.text = Label(q, s.hangar.order);
+        int dev = s.hangar.LaunchDev;
+        if (devLabel) { devLabel.text = (dev > s.hangar.launchConeDeg ? "+" : "") + dev + "°"; Paint(devLabel, dev > s.hangar.launchConeDeg ? alarm : dev > 40 ? caution : nominal); }
+        if (bearing && !bearing.isFocused) bearing.SetTextWithoutNotify(s.hangar.lbrg.ToString("000"));
 
         // launch sequence: stageCells
-        for (int i = 0; i < stages.Length && i < s.stages.Length; i++)
+        for (int i = 0; i < stages.Length && i < s.hangar.stages.Length; i++)
         {
-            var g = s.stages[i];
+            var g = s.hangar.stages[i];
             var row = stages[i];
-            bool prevOk = i == 0 || s.stages[i - 1].progress >= 100f;
-            bool live = prevOk && s.StageBlock(g.id) == null && !out_;
+            bool prevOk = i == 0 || s.hangar.stages[i - 1].progress >= 100f;
+            bool live = prevOk && s.hangar.StageBlock(g.id) == null && !out_;
             bool done = g.progress >= 100f;
             Color ink = done ? nominal : g.on ? caution : alarm;
             if (row.rocker) row.rocker.sprite = g.on ? rockerThrown : live ? rockerUp : rockerLocked;
@@ -237,21 +237,21 @@ public class HandoffHangarPanel : HandoffPanel
             Paint(row.label, done ? data : live ? label : stencil);
             Bar(row.fill, row.well, g.progress / 100f, ink, StageMotion(row.fill));
         }
-        string block = s.LaunchBlock();
+        string block = s.hangar.LaunchBlock();
         if (interlock)
         {
             string t = null;
-            if (out_) t = s.FlightStatus(q.key) ?? "SQUADRON AIRBORNE — RECALL TO RECOVER"; // Step 54: what it is doing
+            if (out_) t = s.hangar.FlightStatus(q.key) ?? "SQUADRON AIRBORNE — RECALL TO RECOVER"; // Step 54: what it is doing
             else
             {
-                foreach (var g in s.stages) if (g.on && g.progress < 100f) { t = g.label + " — " + HandoffBoardState.JsRound(g.progress) + "%"; break; }
-                if (t == null) foreach (var g in s.stages) if (g.progress < 100f) { t = s.StageBlock(g.id) ?? g.label + " NOT SET"; break; }
+                foreach (var g in s.hangar.stages) if (g.on && g.progress < 100f) { t = g.label + " — " + HandoffBoardState.JsRound(g.progress) + "%"; break; }
+                if (t == null) foreach (var g in s.hangar.stages) if (g.progress < 100f) { t = s.hangar.StageBlock(g.id) ?? g.label + " NOT SET"; break; }
                 if (t == null) t = block ?? "ALL SYSTEMS GO";
             }
             interlock.text = t;
-            Paint(interlock, out_ ? ownForce : block != null ? caution : s.AllStagesDone ? nominal : caution);
+            Paint(interlock, out_ ? ownForce : block != null ? caution : s.hangar.AllStagesDone ? nominal : caution);
         }
-        bool ready_ = block == null && s.AllStagesDone;
+        bool ready_ = block == null && s.hangar.AllStagesDone;
         Paint(launchLamp, out_ ? ownForce : ready_ ? nominal : lampOffPanel);
 
         // lever
@@ -259,11 +259,11 @@ public class HandoffHangarPanel : HandoffPanel
         {
             float slotLeft = leverSlot.anchoredPosition.x - leverSlot.sizeDelta.x / 2f + slotMargin;
             float slotW = leverSlot.sizeDelta.x - 2f * slotMargin;
-            float capLeft = slotLeft + slotW * (capLeftPct + s.launchLever * capTravelPct) / 100f;
+            float capLeft = slotLeft + slotW * (capLeftPct + s.hangar.launchLever * capTravelPct) / 100f;
             leverCap.anchoredPosition = new Vector2(capLeft - capMargin + leverCap.sizeDelta.x / 2f, leverCap.anchoredPosition.y);
             if (leverFill)
             {
-                leverFill.sizeDelta = new Vector2(slotW * s.launchLever, leverFill.sizeDelta.y);
+                leverFill.sizeDelta = new Vector2(slotW * s.hangar.launchLever, leverFill.sizeDelta.y);
                 leverFill.anchoredPosition = new Vector2(slotLeft + leverFill.sizeDelta.x / 2f, leverFill.anchoredPosition.y);
             }
         }
@@ -278,7 +278,7 @@ public class HandoffHangarPanel : HandoffPanel
     [Tooltip("Shadow margins of the lever slot and cap sprites as built (their rects include them).")]
     [SerializeField] private float slotMargin = 4f, capMargin = 12f;
 
-    static string Label(HandoffBoardState.Squad q, string order)
+    static string Label(HangarSystem.Squad q, string order)
     {
         int i = System.Array.IndexOf(q.orders, order);
         return i >= 0 ? q.orderLabels[i] : "—";

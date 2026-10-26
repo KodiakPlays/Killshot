@@ -117,7 +117,7 @@ public class FireControlPanel : HandoffPanel
         if (action == "fc.lever" && leverHeld)
         {
             s.weapons.fireLever = Mathf.Clamp01(leverV0 + (board.x - leverX0) / leverTravelPx);
-            if (s.weapons.fireLever > s.leverFireAt && s.weapons.AllSet && !shotThisPull) { shotThisPull = true; s.weapons.Fire(); }
+            if (s.weapons.fireLever > s.hangar.leverFireAt && s.weapons.AllSet && !shotThisPull) { shotThisPull = true; s.weapons.Fire(); }
             return true;
         }
         return false;

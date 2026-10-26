@@ -410,7 +410,7 @@ public class HandoffPlotPanel : HandoffPanel
         if (fighterTemplate)
         {
             var ink = ownShipColor.gamma; // owner 2026-10-26: white, like our ship
-            foreach (var f in s.Flights)
+            foreach (var f in s.hangar.Flights)
             {
                 double h = f.hdg * System.Math.PI / 180.0;
                 Vector2 ahead = new Vector2((float)System.Math.Sin(h), (float)-System.Math.Cos(h)), right = new Vector2(-ahead.y, ahead.x); // board y is down
@@ -437,8 +437,8 @@ public class HandoffPlotPanel : HandoffPanel
         // a squadron takes off with its whole V (rows behind the leader, half a craft) outside the small circle round
         // our ship, and lands when its leader's nose reaches the circle
         double kmPx = KmPerPx / Controls.ZoomExact;
-        s.landClearKm = (InnerRingPx + fighterPx / 2f) * kmPx;
-        s.launchClearKm = s.landClearKm + s.SquadReady(s.CurrentSquad) / 2 * fighterGapPx * kmPx;
+        s.hangar.landClearKm = (InnerRingPx + fighterPx / 2f) * kmPx;
+        s.hangar.launchClearKm = s.hangar.landClearKm + s.hangar.SquadReady(s.hangar.CurrentSquad) / 2 * fighterGapPx * kmPx;
 
         // the selected weapon's reach while Fire Control is open (Step 46)
         if (weaponRing)
