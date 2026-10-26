@@ -525,7 +525,7 @@ public static class PlaytestRunner
         if (!Click("helm", null, "HELM header (close)")) yield break;
         yield return 0.6f;
         if (!Click("tool", "CURSOR", "CURSOR tool")) yield break;
-        var plotPanel = board.GetComponent<HandoffPlotPanel>();
+        var plotPanel = board.GetComponentInChildren<HandoffPlotPanel>(true);
         Vector2 v0 = plotPanel.View, gridA = board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx;
         if (!PlotDrag(board, new Vector2(700, 300), new Vector2(800, 300), "drag the grid 100 px right", "plot.pan")) yield break;
         float dragKm = (float)(100 / (60.9 / 1000.0 * board.ZoomExact));
@@ -689,7 +689,7 @@ public static class PlaytestRunner
         Check("The RNG knob starts a hand-dialled solution on the periscope's bearing",
               s.Sol.set && s.Sol.manual && s.Sol.brg == expBrg && s.Sol.spd == 0f && Mathf.Abs(s.Sol.rangeKm - (s.manualStartRangeKm + 1000f)) < 0.01f,
               "RNG " + s.Sol.rangeKm.ToString("N0") + " km, REL BRG " + s.Sol.brg + "°, SPD " + s.Sol.spd.ToString("0.00"));
-        var fc = board.GetComponent<HandoffFireControlPanel>();
+        var fc = board.GetComponentInChildren<HandoffFireControlPanel>(true);
         var tidField = typeof(HandoffFireControlPanel).GetField("trackId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var tidText = tidField != null ? tidField.GetValue(fc) as TMPro.TMP_Text : null;
         Check("The readout says MANUAL", tidText && tidText.text == "MANUAL", tidText ? "\"" + tidText.text + "\"" : "no readout");
@@ -940,7 +940,7 @@ public static class PlaytestRunner
         var vyField = typeof(HandoffPlotPanel).GetField("viewY", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         vxField.SetValue(plotPanel, (s.nav.x + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.nav.y + t07.worldY) / 2); // stand-in for panning the plot
         var ilField = typeof(HandoffHangarPanel).GetField("interlock", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var hangarPanel = board.GetComponent<HandoffHangarPanel>();
+        var hangarPanel = board.GetComponentInChildren<HandoffHangarPanel>(true);
         Func<string> interlockText = () => { var t = ilField.GetValue(hangarPanel) as TMPro.TMP_Text; return t ? t.text : ""; };
         if (board.Motion && board.Motion.ScopeDown) board.Motion.SetScopeDown(false); // the periscope covers the plot's middle
         //     Power for the catapult: ENG and WEP hold all ten units, so ENG gives its back (we are stopped) and AUX draws.
@@ -1149,7 +1149,7 @@ public static class PlaytestRunner
         //     The targeting computer (the periscope) shows a scanned ship's hull in its SUBJECT box (Step 61).
         if (board.Motion) board.Motion.SetScopeDown(true);
         yield return 1.2f;
-        var scope = board.GetComponent<HandoffPeriscopePanel>();
+        var scope = board.GetComponentInChildren<HandoffPeriscopePanel>(true);
         var subjName = typeof(HandoffPeriscopePanel).GetField("subjectName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as TMPro.TMP_Text;
         var subjHull = typeof(HandoffPeriscopePanel).GetField("subjectClass", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as TMPro.TMP_Text;
         string hullNow = HandoffPeriscopePanel.HullLine(dummyShip);
@@ -1214,7 +1214,7 @@ public static class PlaytestRunner
         //     the room rings coloured by their integrity. White whole, amber hurt, red open or nearly gone.
         if (!Click("drawer", "engineering", "ENGR key")) yield break;
         yield return 0.8f;
-        var eng = board.GetComponent<HandoffEngineeringPanel>();
+        var eng = board.GetComponentInChildren<HandoffEngineeringPanel>(true);
         var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
         var sides = typeof(HandoffEngineeringPanel).GetField("hullSides", flags).GetValue(eng) as UnityEngine.UI.RawImage[];
         var engRows = typeof(HandoffEngineeringPanel).GetField("rows", flags).GetValue(eng) as HandoffEngineeringPanel.Row[];
@@ -1401,7 +1401,7 @@ public static class PlaytestRunner
     static TMPro.TMP_Text MarkLabelText(HandoffBoardControls board, int i)
     {
         var f = typeof(HandoffPlotPanel).GetField("labels", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var list = f.GetValue(board.GetComponent<HandoffPlotPanel>()) as List<TMPro.TMP_Text>;
+        var list = f.GetValue(board.GetComponentInChildren<HandoffPlotPanel>(true)) as List<TMPro.TMP_Text>;
         return list != null && i < list.Count ? list[i] : null;
     }
     static string MarkLabel(HandoffBoardControls board, int i) { var t = MarkLabelText(board, i); return t ? t.text : "?"; }
@@ -1423,7 +1423,7 @@ public static class PlaytestRunner
 
     static string SigNote(HandoffBoardControls board)
     {
-        var panel = board.GetComponent<HandoffSensorsPanel>();
+        var panel = board.GetComponentInChildren<HandoffSensorsPanel>(true);
         var f = typeof(HandoffSensorsPanel).GetField("sigNote", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var t = panel && f != null ? f.GetValue(panel) as TMPro.TMP_Text : null;
         return t ? t.text : "?";

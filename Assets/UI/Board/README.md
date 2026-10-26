@@ -4,19 +4,28 @@ Each panel of the tactical board is a prefab in `Panels/`. Its art sits in `Art/
 panel's look, open its prefab and swap sprites in the **Art** list on its script. You don't need
 to touch code.
 
-Done so far: the helm and the power drawer. The other panels are still built into the scene
+Done so far: the helm and the power and sensors drawers. The other panels are still built into the scene
 (`Assets/Scenes/Tactical/02.1_Grid.unity`, under `Board/HandoffBoard`), and their art is still in
 `Assets/UI2/Claude Design handoff/export/sprites/@2x/`. They move here one at a time.
 
 ## Folders
 
 ```
-Panels/          one prefab per panel (Helm.prefab, Power.prefab)
-Art/Helm/        art only the helm uses
-Art/Power/       art only the power drawer uses
-Art/Shared/      art several panels use: lamps, bolts, label plates, screens, latches
-Art/Shared/Shapes/  plain rounded shapes the code colours (key faces, stability cells, the dial ring)
+Panels/          one prefab per panel (Helm, Power, Sensors)
+Art/Helm/        art only the helm uses; the same for Art/Power and Art/Sensors
+Art/Lamps/       indicator lamps and their glow
+Art/Bolts/       round and slotted bolts
+Art/Knobs/       rotary knobs, their pointers and tick marks
+Art/Switches/    rocker switches, up and thrown
+Art/Latches/     drawer latches, latch tracks and sliders
+Art/Screens/     screen glass with its bezel
+Art/Plates/      label plates
+Art/Wells/       recessed wells that controls sit in
+Art/Shapes/      plain rounded shapes the code colours (key faces, cells, the dial ring)
 ```
+
+Art one panel uses lives in that panel's folder. Art more than one panel uses lives in the folder
+for its kind.
 
 ## Changing a panel's art
 
@@ -54,3 +63,10 @@ you edit.
 
 Each group covers the whole board (1920 × 1080, top-left corner) so that the parts keep their
 positions. Don't resize or move a group. Move the parts inside it.
+
+## Fields that are empty in the prefab
+
+Some panels also drive things outside themselves. The sensors drawer fills the signal box in the
+frame's top-right and the plot's SENSOR RANGE label. A prefab can't link to objects outside it,
+so those fields show as empty when you open the prefab. They are set on the panel's copy in the
+board scene. Leave them alone in the prefab.

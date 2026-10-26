@@ -3800,8 +3800,8 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - The helm's art is a list on `HelmPanel` (**Art**, 20 entries). Swap a sprite there and every
     image under it changes. The list lives on `HandoffPanel`, so every panel gets one.
   - Art files moved, keeping their links: the helm's own to `Assets/UI/Board/Art/Helm`, art other
-    panels use too to `Art/Shared`, and four shapes to `Art/Shared/Shapes`. Only the @2x files the
-    board uses moved. The 1x copies stay in the export.
+    panels use too to the folder for its kind (`Art/Lamps`, `Art/Bolts` …), and four shapes to
+    `Art/Shapes`. Only the @2x files the board uses moved. The 1x copies stay in the export.
   - Playtest 171/171 (run 2026-10-26_014759).
   - Not done yet: the palette asset. The helm's colours are still fields on `HelmPanel`.
 - **Power drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Power.prefab`, the same way as the
@@ -3812,8 +3812,8 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
     (each with `Cells` and `Selector`). Screenshots before and after match pixel for pixel.
   - Art list: 20 entries. The load-shed rocker isn't in it, because the code swaps its sprite; its
     two sprites are the panel's **Rocker Up** and **Rocker Thrown** fields.
-  - Art moved: 7 power-only files to `Art/Power` (the casting among them), 8 shared ones to
-    `Art/Shared`.
+  - Art moved: 7 power-only files to `Art/Power` (the casting among them), and 8 that other panels
+    use too to the folder for their kind.
   - The playtest now films the Game view at its own 16:9 size instead of a fixed 1920 × 1080
     (owner 2026-10-26; written by another session, committed here).
   - Playtest 171/171 (run 2026-10-26_021347).
@@ -3830,6 +3830,24 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
     nothing was deleted.
   - Kept though nothing uses them: `Climbing` and `Available` (the design's p1–p5). The audit decides.
   - No behaviour change. Playtest 171/171 (run 2026-10-26_075922).
+- **Sensors drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Sensors.prefab`, the same way.
+  - `Drawers/State · sensors` became `Drawers/Sensors`, and `HandoffSensorsPanel` moved onto it.
+    The playtest finds every panel with `GetComponentInChildren` now, so it works before and after
+    each panel moves.
+  - Parts grouped: `Frame`, `Header`, `Masters/DRADIS` and `Masters/ACTIVE SCAN`, `E-SIG`,
+    `01 Sensor array` (`Gain`, `Bands/THERM` …), `02 Active scan` (`Cone dial`, `Narrow`, `Widen`),
+    `03 Contact board` (`Row 1` … `Row 3`). Screenshots before and after match pixel for pixel.
+  - Art list: 19 entries. The two master rockers' sprites stay as the **Rocker Up** and **Rocker
+    Thrown** fields, since the code swaps them.
+  - **Links outside the drawer.** The panel also fills the signal box in the frame's top-right and
+    the plot's SENSOR RANGE label. A prefab can't hold links to objects outside it, so those 17
+    fields are empty in the prefab file and set on the board's copy. Open the board scene to see them.
+  - Art moved: 7 sensors-only files to `Art/Sensors`, `well_r3` (the signal box uses it too) to
+    `Art/Wells`, `round_2` to `Art/Shapes`.
+  - **No folder called "Shared"** (owner 2026-10-26: name it after what it holds). Art more than one
+    panel uses now sits in a folder for its kind: `Art/Lamps`, `Bolts`, `Knobs`, `Switches`,
+    `Latches`, `Screens`, `Plates`, `Wells` and `Shapes`.
+  - Playtest 171/171 (run 2026-10-26_080658).
 
 **Next:** the sensors panel as a prefab (UI Restructure), then the sensors system (Tooling), and so
 on in order: comms, weapons, hangar, damage and orders. Owner 2026-10-26: "split, take turns". One
