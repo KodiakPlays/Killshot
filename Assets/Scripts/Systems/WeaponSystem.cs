@@ -15,6 +15,65 @@ public class WeaponSystem : MonoBehaviour
     /// and its damage model.</summary>
     [System.NonSerialized] public HandoffBoardState ship;
 
+    /// <summary>This ship's numbers for weapons: its section of the ship's stats file (Assets/Ships,
+    /// Starwolf → Tuning).</summary>
+    [System.Serializable]
+    public class Stats
+    {
+        [Header("Mounts: reach, arcs and ammunition at the start")]
+        // Owner 2026-10-26: each weapon has its own reach. Railguns 25,000 km (a slug takes about 100 s; at that range even a
+        // good aim can just miss a cruiser), missiles 35,000 km (slower, but they home), PDCs 10,000 km. Was 30,000 for railguns
+        // and missiles (the DRADIS at full gain) and 4,000 for PDCs. You can dumb-fire that far; a lock still needs a scan.
+        // Owner 2026-10-27: every mount starts full (the design had RG-B at 19 and PDC-B at 2180). The ammunition here is what
+        // each mount has at the start; the running game counts down its own copy, never the file.
+        public Mount[] mounts =
+        {
+            new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET A", shortName = "RG-A", ammo = 22 },
+            new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET B", shortName = "RG-B", ammo = 22 },
+            new Mount { id = "PDA", arc = 42, halfArc = 35, rangeKm = 10000, label = "PDC GROUP A", shortName = "PDC-A", ammo = 2400 },
+            new Mount { id = "PDB", arc = 200, halfArc = 35, rangeKm = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
+            new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 35000, label = "MISSILE VLS", shortName = "VLS", ammo = 8 },
+        };
+        [Tooltip("A knob turned with no solution starts one here, on the periscope's bearing at speed 0 (owner 2026-10-23).")]
+        public float manualStartRangeKm = 10000f;
+        [Tooltip("Missiles launched together (owner 2026-10-23: set here until the design's salvo stepper has art).")]
+        [Range(1, 8)] public int salvo = 2;
+        [Tooltip("PDC autoloaders. Step 55: engaged at load (the design starts them off) and set here until the design's LOADERS pushbutton has art (HANDOFF_GAPS row 73); without them PDCs cannot arm.")]
+        public bool loaders = true;
+        public float wepFeedPerUnit = 5f, wepBleed = 3f;
+        [Tooltip("Railgun slug speed, km/s (Step 63: 5x the 50 that matched the prototype's slowed ship). About 100 s to 24,300 km.")]
+        public double slugSpeedKms = 250;
+        [Tooltip("Missile speed, km/s (owner 2026-10-23: slower than a slug, but it homes; Step 63: x5). About 2 minutes to 12,000 km.")]
+        public double missileSpeedKms = 100;
+        [Tooltip("How fast a missile can turn toward its target, degrees per mission second (Step 63: x5).")]
+        public double missileTurnDegPerS = 6.5;
+        [Tooltip("A salvo leaves the launcher fanned this many degrees apart.")]
+        public double missileSpreadDeg = 3;
+        [Tooltip("Rounds one PDC group spends on each go at an enemy missile (owner 2026-10-27).")]
+        public int pdcRoundsPerGo = 100;
+        [Tooltip("A slug hits a ship it passes within this distance of, by class (the prototype's radii, km). Others: 150.")]
+        public HitRadius[] hitRadii =
+        {
+            new HitRadius { klass = "FRIGATE", km = 95 }, new HitRadius { klass = "DESTROYER", km = 135 },
+            new HitRadius { klass = "CRUISER", km = 210 }, new HitRadius { klass = "CARRIER", km = 600 },
+        };
+        [Tooltip("Firing the railgun spikes our signal by this much (GDD p.42); it falls back at the usual rate.")]
+        public float fireSignalSpike = 25f;
+        [Tooltip("The SPD knob's step, km/s (the design's 0.05, x5 with the speeds in Step 63).")]
+        public float spdStep = 0.25f;
+        [Tooltip("The chance a PDC group on AUTO shoots down an enemy missile that enters its arc (owner: a chance per missile).")]
+        [Range(0f, 1f)] public float pdcKillChance = 0.7f;
+        [Tooltip("An enemy missile hits our ship if it passes within this distance, km (cruiser-sized, like the Garuda).")]
+        public float ownHitRadiusKm = 210f;
+    }
+    /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
+    public Stats stats => shipStats ? shipStats.Stats.weapons : (shipStats = GetComponent<Ship>()).Stats.weapons;
+    [System.NonSerialized] Ship shipStats;
+    /// <summary>The salvo now: it starts from the stats file (Ship), then changes as the ship plays.</summary>
+    [System.NonSerialized] public int salvo = 2;
+    /// <summary>The loaders now: it starts from the stats file (Ship), then changes as the ship plays.</summary>
+    [System.NonSerialized] public bool loaders = true;
+
     [System.Serializable]
     public class Mount
     {
@@ -39,22 +98,8 @@ public class WeaponSystem : MonoBehaviour
         public double wx, wy;
         public float t;
     }
-    [Tooltip("A knob turned with no solution starts one here, on the periscope's bearing at speed 0 (owner 2026-10-23).")]
-    [Tune("Periscope & fire control")] public float manualStartRangeKm = 10000f;
 
     [Header("Fire control — MOUNTS, SYSTEMS, WARHEADS, SWITCHES and the board's initial state")]
-    // Owner 2026-10-26: each weapon has its own reach. Railguns 25,000 km (a slug takes about 100 s; at that range even a
-    // good aim can just miss a cruiser), missiles 35,000 km (slower, but they home), PDCs 10,000 km. Was 30,000 for railguns
-    // and missiles (the DRADIS at full gain) and 4,000 for PDCs. You can dumb-fire that far; a lock still needs a scan.
-    // Owner 2026-10-27: every mount starts full (the design had RG-B at 19 and PDC-B at 2180).
-    public Mount[] mounts =
-    {
-        new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET A", shortName = "RG-A", ammo = 22 },
-        new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET B", shortName = "RG-B", ammo = 22 },
-        new Mount { id = "PDA", arc = 42, halfArc = 35, rangeKm = 10000, label = "PDC GROUP A", shortName = "PDC-A", ammo = 2400 },
-        new Mount { id = "PDB", arc = 200, halfArc = 35, rangeKm = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
-        new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 35000, label = "MISSILE VLS", shortName = "VLS", ammo = 8 },
-    };
     public Group[] systems =
     {
         new Group { id = "RG", label = "RAILGUN", mounts = new[] { "RGA", "RGB" }, shot = 70 },
@@ -71,18 +116,12 @@ public class WeaponSystem : MonoBehaviour
     [Tooltip("A firing solution per system, in SYSTEMS order (sol).")]
     public Solution[] sol = { new Solution(), new Solution(), new Solution() };
     public int warhead;
-    [Tooltip("Missiles launched together (owner 2026-10-23: set here until the design's salvo stepper has art).")]
-    [Tune("Periscope & fire control")] [Range(1, 8)] public int salvo = 2;
-    [Tooltip("PDC autoloaders. Step 55: engaged at load (the design starts them off) and set here until the design's LOADERS pushbutton has art (HANDOFF_GAPS row 73); without them PDCs cannot arm.")]
-    [Tune("Periscope & fire control")] public bool loaders = true;
     [Tooltip("PDC quadrants FWD, STBD, AFT, PORT (quads).")]
     public bool[] quads = { true, true, false, false };
     [Tooltip("Step 55: PDC groups on AUTO (PDC-A, PDC-B). Arming the ladder with a group selected puts it on AUTO; it then shoots by itself at enemy missiles in its arc.")]
     public bool[] pdcAuto = new bool[2];
     public bool fired;
     [Range(0f, 100f)] public float wepCharge;
-    [Tune("Power & signal")]
-    public float wepFeedPerUnit = 5f, wepBleed = 3f;
     [Tooltip("The fire lever, 0..1; fires once past leverFireAt with the ladder set.")]
     [Range(0f, 1f)] public float fireLever;
 
@@ -105,37 +144,18 @@ public class WeaponSystem : MonoBehaviour
 
     [System.NonSerialized] private System.Collections.Generic.List<Round> rounds;
     public System.Collections.Generic.List<Round> Rounds => rounds ?? (rounds = new System.Collections.Generic.List<Round>());
-    [Tooltip("Railgun slug speed, km/s (Step 63: 5x the 50 that matched the prototype's slowed ship). About 100 s to 24,300 km.")]
-    [Tune("Periscope & fire control")] public double slugSpeedKms = 250;
-    [Tooltip("Missile speed, km/s (owner 2026-10-23: slower than a slug, but it homes; Step 63: x5). About 2 minutes to 12,000 km.")]
-    [Tune("Periscope & fire control")] public double missileSpeedKms = 100;
-    [Tooltip("How fast a missile can turn toward its target, degrees per mission second (Step 63: x5).")]
-    [Tune("Periscope & fire control")] public double missileTurnDegPerS = 6.5;
-    [Tooltip("A salvo leaves the launcher fanned this many degrees apart.")]
-    [Tune("Periscope & fire control")] public double missileSpreadDeg = 3;
     /// <summary>VLS cells left: the launcher's count.</summary>
     public int vlsCells { get { return MountOf("VLS").ammo; } set { MountOf("VLS").ammo = value; } }
-    [Tooltip("Rounds one PDC group spends on each go at an enemy missile (owner 2026-10-27).")]
-    [Tune("Periscope & fire control")] public int pdcRoundsPerGo = 100;
     /// <summary>The selected mount can't fire again: no slug or cell left, or too few rounds for a PDC go.</summary>
-    public bool Empty { get { var m = MountOf(mount); return m == null || m.ammo < (sys == "PD" ? pdcRoundsPerGo : 1); } }
-    [Tooltip("A slug hits a ship it passes within this distance of, by class (the prototype's radii, km). Others: 150.")]
-    [Tune("Periscope & fire control")] public HitRadius[] hitRadii =
-    {
-        new HitRadius { klass = "FRIGATE", km = 95 }, new HitRadius { klass = "DESTROYER", km = 135 },
-        new HitRadius { klass = "CRUISER", km = 210 }, new HitRadius { klass = "CARRIER", km = 600 },
-    };
-    [Tooltip("Firing the railgun spikes our signal by this much (GDD p.42); it falls back at the usual rate.")]
-    [Tune("Power & signal")] public float fireSignalSpike = 25f;
+    public bool Empty { get { var m = MountOf(mount); return m == null || m.ammo < (sys == "PD" ? stats.pdcRoundsPerGo : 1); } }
     /// <summary>The last shot's outcome: "HIT · GARUDA · STBD", "MISS", or null while none has landed.</summary>
     [System.NonSerialized] public string shotReport;
     [System.NonSerialized] public bool lastShotHit;
     [System.NonSerialized] public int shotsFired, shotResults;
 
-
     public Group Sys { get { foreach (var y in systems) if (y.id == sys) return y; return systems[0]; } }
     public int SysIndex { get { for (int i = 0; i < systems.Length; i++) if (systems[i].id == sys) return i; return 0; } }
-    public Mount MountOf(string id) { foreach (var m in mounts) if (m.id == id) return m; return null; }
+    public Mount MountOf(string id) { foreach (var m in stats.mounts) if (m.id == id) return m; return null; }
 
     public Solution Sol => sol[SysIndex];
     public float ShotCost => Sys != null ? Sys.shot : 50f;
@@ -157,7 +177,6 @@ public class WeaponSystem : MonoBehaviour
             var o = OffBearing(); return o.HasValue && System.Math.Abs(o.Value) <= ship.onBearingDeg;
         }
     }
-
 
     public bool AllSet
     {
@@ -211,10 +230,7 @@ public class WeaponSystem : MonoBehaviour
         ClearSwitches(); fired = false;
     }
 
-    [Tooltip("The SPD knob's step, km/s (the design's 0.05, x5 with the speeds in Step 63).")]
-    [Tune("Periscope & fire control")] public float spdStep = 0.25f;
-
-    /// <summary>nudgeSol: RNG ±100 km, BRG ±1° (±180), SPD ±spdStep (2 dp; the design had 0.05, x5 in Step 63); clears the ladder.</summary>
+    /// <summary>nudgeSol: RNG ±100 km, BRG ±1° (±180), SPD ±stats.spdStep (2 dp; the design had 0.05, x5 in Step 63); clears the ladder.</summary>
     public void NudgeSol(string field, int d)
     {
         var cur = Sol;
@@ -222,14 +238,14 @@ public class WeaponSystem : MonoBehaviour
         {
             // Step 47 (owner 2026-10-23): a knob starts a hand-dialled solution, from the plot
             cur.set = true; cur.manual = true;
-            cur.rangeKm = manualStartRangeKm;
+            cur.rangeKm = stats.manualStartRangeKm;
             cur.brg = (HandoffBoardState.JsRound(ship.scopeBrg) - ship.nav.heading + 540) % 360 - 180; // relative, as TRACK stores it
             cur.spd = 0f;
             ApplyTrack(cur);
         }
         if (field == "rng") cur.rangeKm = Mathf.Max(0f, cur.rangeKm + d * 100f);
         if (field == "brg") cur.brg = Mathf.Max(-180, Mathf.Min(180, cur.brg + d));
-        if (field == "spd") cur.spd = Mathf.Max(0f, (float)System.Math.Round(cur.spd + d * spdStep, 2, System.MidpointRounding.AwayFromZero));
+        if (field == "spd") cur.spd = Mathf.Max(0f, (float)System.Math.Round(cur.spd + d * stats.spdStep, 2, System.MidpointRounding.AwayFromZero));
         if (cur.manual) Fix(cur); // the dialled point is where the target is now
         ClearSwitches();
     }
@@ -278,10 +294,10 @@ public class WeaponSystem : MonoBehaviour
         if (sys == "RG" && m != null)
         {
             double b = LeadBearing() * System.Math.PI / 180;
-            Rounds.Add(new Round { x = ship.nav.x, y = ship.nav.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm, speed = slugSpeedKms });
+            Rounds.Add(new Round { x = ship.nav.x, y = ship.nav.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm, speed = stats.slugSpeedKms });
             m.ammo--;
             shotReport = null;
-            ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + fireSignalSpike);
+            ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + stats.fireSignalSpike);
         }
         if (sys == "MS" && m != null)
         {
@@ -290,13 +306,13 @@ public class WeaponSystem : MonoBehaviour
             int n = Mathf.Min(salvo, vlsCells);
             for (int i = 0; i < n; i++)
             {
-                double b = (tgt.bearing + (i - (n - 1) / 2.0) * missileSpreadDeg) * System.Math.PI / 180;
+                double b = (tgt.bearing + (i - (n - 1) / 2.0) * stats.missileSpreadDeg) * System.Math.PI / 180;
                 Rounds.Add(new Round { x = ship.nav.x, y = ship.nav.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm,
-                                       speed = missileSpeedKms, missile = true, targetKey = tgt.key, warhead = warhead });
+                                       speed = stats.missileSpeedKms, missile = true, targetKey = tgt.key, warhead = warhead });
             }
             vlsCells -= n;
             shotReport = null;
-            ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + fireSignalSpike);
+            ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + stats.fireSignalSpike);
         }
         if (Empty) ClearSwitches(); // the last one gone: nothing left to load
     }
@@ -340,7 +356,7 @@ public class WeaponSystem : MonoBehaviour
         double c = cur.course * System.Math.PI / 180, vx = cur.spd * System.Math.Sin(c), vy = cur.spd * System.Math.Cos(c);
         double age = System.Math.Max(0, ship.missionNow - cur.t);
         double tx = cur.wx + vx * age - ship.nav.x, ty = cur.wy + vy * age - ship.nav.y;
-        double a = vx * vx + vy * vy - slugSpeedKms * slugSpeedKms, bq = 2 * (tx * vx + ty * vy), cq = tx * tx + ty * ty;
+        double a = vx * vx + vy * vy - stats.slugSpeedKms * stats.slugSpeedKms, bq = 2 * (tx * vx + ty * vy), cq = tx * tx + ty * ty;
         double disc = bq * bq - 4 * a * cq;
         if (a >= 0 || disc < 0) return straight; // can't catch it
         double tHit = (-bq - System.Math.Sqrt(disc)) / (2 * a);
@@ -348,10 +364,9 @@ public class WeaponSystem : MonoBehaviour
         return (System.Math.Atan2(tx + vx * tHit, ty + vy * tHit) * 180 / System.Math.PI + 360) % 360;
     }
 
-
     public float HitRadiusKm(string klass)
     {
-        foreach (var h in hitRadii) if (h.klass == klass) return h.km;
+        foreach (var h in stats.hitRadii) if (h.klass == klass) return h.km;
         return 150f;
     }
 
@@ -408,7 +423,7 @@ public class WeaponSystem : MonoBehaviour
         }
     }
 
-    // A missile turns toward its target, no faster than missileTurnDegPerS. With no target left it flies on.
+    // A missile turns toward its target, no faster than stats.missileTurnDegPerS. With no target left it flies on.
     void Steer(Round r, double dt)
     {
         var t = ship.TrackOf(r.targetKey);
@@ -420,7 +435,7 @@ public class WeaponSystem : MonoBehaviour
     {
         double want = System.Math.Atan2(x - r.x, y - r.y) * 180 / System.Math.PI;
         double now = System.Math.Atan2(r.dx, r.dy) * 180 / System.Math.PI;
-        double turn = ((want - now) % 360 + 540) % 360 - 180, most = missileTurnDegPerS * dt;
+        double turn = ((want - now) % 360 + 540) % 360 - 180, most = stats.missileTurnDegPerS * dt;
         double head = (now + System.Math.Max(-most, System.Math.Min(most, turn))) * System.Math.PI / 180;
         r.dx = System.Math.Sin(head); r.dy = System.Math.Cos(head);
     }
@@ -428,16 +443,11 @@ public class WeaponSystem : MonoBehaviour
     // The side facing the shot (reference sim sideFacing): where it came from, against the ship's bow.
     static string SideStruck(HandoffBoardState.Track t, Round r) => HandoffBoardState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, t.worldHdg);
 
-
     // ---- enemy missiles and our point defence (Step 55, owner 2026-10-24) -----------------------
 
     [System.NonSerialized] private System.Collections.Generic.List<Round> incoming;
     /// <summary>Enemy missiles flying at our ship.</summary>
     public System.Collections.Generic.List<Round> Incoming => incoming ?? (incoming = new System.Collections.Generic.List<Round>());
-    [Tooltip("The chance a PDC group on AUTO shoots down an enemy missile that enters its arc (owner: a chance per missile).")]
-    [Tune("Periscope & fire control")] [Range(0f, 1f)] public float pdcKillChance = 0.7f;
-    [Tooltip("An enemy missile hits our ship if it passes within this distance, km (cruiser-sized, like the Garuda).")]
-    [Tune("Damage")] public float ownHitRadiusKm = 210f;
     /// <summary>The PDCs' last result ("PDC-A · MISSILE DOWN"), and the last enemy missile to hit us.</summary>
     [System.NonSerialized] public string pdcReport, incomingReport;
     [System.NonSerialized] public int pdcKills, hitsTaken;
@@ -448,14 +458,14 @@ public class WeaponSystem : MonoBehaviour
         double brg = System.Math.Atan2(ship.nav.x - x, ship.nav.y - y) * 180 / System.Math.PI;
         for (int i = 0; i < n; i++)
         {
-            double b = (brg + (i - (n - 1) / 2.0) * missileSpreadDeg) * System.Math.PI / 180;
+            double b = (brg + (i - (n - 1) / 2.0) * stats.missileSpreadDeg) * System.Math.PI / 180;
             Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = maxKm,
-                                     speed = missileSpeedKms, missile = true, warhead = warheadIndex });
+                                     speed = stats.missileSpeedKms, missile = true, warhead = warheadIndex });
         }
     }
 
     /// <summary>Each tick: our PDCs take their chances, then every enemy missile homes on us; one that
-    /// passes within ownHitRadiusKm strikes the side facing it.</summary>
+    /// passes within stats.ownHitRadiusKm strikes the side facing it.</summary>
     public void TickIncoming(double dt)
     {
         var list = Incoming;
@@ -468,7 +478,7 @@ public class WeaponSystem : MonoBehaviour
             double px = ship.nav.x - r.x, py = ship.nav.y - r.y;
             double u = System.Math.Max(0, System.Math.Min(step, px * r.dx + py * r.dy)); // closest point along the path
             double cx = px - r.dx * u, cy = py - r.dy * u;
-            if (cx * cx + cy * cy <= ownHitRadiusKm * ownHitRadiusKm)
+            if (cx * cx + cy * cy <= stats.ownHitRadiusKm * stats.ownHitRadiusKm)
             {
                 string side = HandoffBoardState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, ship.nav.heading);
                 incomingReport = "MISSILE HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead]);
@@ -482,7 +492,7 @@ public class WeaponSystem : MonoBehaviour
     }
 
     // A PDC group on AUTO, loaded and powered, gets one chance at each enemy missile inside its arc and range.
-    // Each go spends pdcRoundsPerGo; a group too low for another go drops off AUTO (owner 2026-10-27).
+    // Each go spends stats.pdcRoundsPerGo; a group too low for another go drops off AUTO (owner 2026-10-27).
     bool PdcStops(Round r)
     {
         if (!loaders || !WepReady) return false;
@@ -495,22 +505,21 @@ public class WeaponSystem : MonoBehaviour
             if (!pdcAuto[g] || m == null || (r.pdcTried & (1 << g)) != 0) continue;
             if (dx * dx + dy * dy > (double)m.rangeKm * m.rangeKm || HandoffBoardState.AngDiff(rel, m.arc) > m.halfArc) continue;
             r.pdcTried |= 1 << g;
-            m.ammo -= pdcRoundsPerGo;
-            if (m.ammo < pdcRoundsPerGo) { pdcAuto[g] = false; if (g == PdcGroup) ClearSwitches(); }
-            bool down = ship.NextDie() < pdcKillChance;
+            m.ammo -= stats.pdcRoundsPerGo;
+            if (m.ammo < stats.pdcRoundsPerGo) { pdcAuto[g] = false; if (g == PdcGroup) ClearSwitches(); }
+            bool down = ship.NextDie() < stats.pdcKillChance;
             pdcReport = m.shortName + (down ? " · MISSILE DOWN" : " · MISSED");
             if (down) { pdcKills++; return true; }
         }
         return false;
     }
 
-
     // ---- the tick — weapons capacitor: +5 per WEP unit per game second up to 100, bleeds 3 with no WEP --
 
     public void TickCharge(double dt)
     {
-        float feed = ship.power.BusUnits("wep") * wepFeedPerUnit * (float)dt;
-        wepCharge = feed > 0f ? Mathf.Min(100f, wepCharge + feed) : Mathf.Max(0f, wepCharge - wepBleed * (float)dt);
+        float feed = ship.power.BusUnits("wep") * stats.wepFeedPerUnit * (float)dt;
+        wepCharge = feed > 0f ? Mathf.Min(100f, wepCharge + feed) : Mathf.Max(0f, wepCharge - stats.wepBleed * (float)dt);
     }
 
     /// <summary>validSet: hostile contacts inside the current mount's range and arc.</summary>

@@ -15,6 +15,46 @@ public class DamageSystem : MonoBehaviour
     /// alert condition and its dice, and empties its power on an EMP.</summary>
     [System.NonSerialized] public HandoffBoardState ship;
 
+    /// <summary>This ship's numbers for damage and damage control: its section of the ship's stats file (Assets/Ships,
+    /// Starwolf → Tuning).</summary>
+    [System.Serializable]
+    public class Stats
+    {
+        [Tooltip("PARTY_TICKS: a damage-control party works this many game seconds (the design's 6 ticks at x1), then the repair lands.")]
+        public float partySeconds = 6f;
+        [Tooltip("Armour per side: PROW, STBD, AFT, PORT. At 0 the side is open (owner: prow and flanks take 2 slugs, the aft 1).")]
+        public float[] sideArmourMax = { 100f, 100f, 50f, 100f };
+        [Tooltip("Armour one railgun slug takes off the side it hits.")]
+        public float slugArmourDamage = 50f;
+        [Tooltip("Integrity one slug through an open side takes off one compartment behind it (owner: 2 of 5).")]
+        public int slugCompartmentDamage = 2;
+        [Header("Conditions (Step 59, DAMAGE_README.md): every rate per game second")]
+        [Tooltip("Chance a hit through open armour starts a fire: an HE warhead, a penetrator.")]
+        [Range(0f, 1f)] public float fireChanceHE = 0.6f, fireChancePEN = 0.4f;
+        [Tooltip("Chance a railgun slug through open armour breaches the room (it loses its air).")]
+        [Range(0f, 1f)] public float breachChanceSlug = 0.5f;
+        [Tooltip("Chance a hit on the reactor room (not a fighter's) leaks radiation.")]
+        [Range(0f, 1f)] public float radChanceReactor = 0.5f;
+        [Tooltip("A fire takes 1 integrity off its room this often, game seconds.")]
+        public float fireDamageSeconds = 30f;
+        [Tooltip("Chance per second that a fire, a vacuum or radiation spreads into each neighbouring room.")]
+        [Range(0f, 1f)] public float fireSpreadPerSecond = 0.01f, vacuumSpreadPerSecond = 0.01f, radSpreadPerSecond = 0.01f;
+        [Tooltip("Share of a room's crew lost when it is breached (VENT loses all of them).")]
+        [Range(0f, 1f)] public float breachCrewLoss = 0.5f;
+        [Tooltip("Radiation kills one crew member in its room this often, game seconds.")]
+        public float radCrewLossSeconds = 20f;
+        [Tooltip("The reactor stops leaking once repaired to this integrity (or vented); then each room's radiation fades after radFadeSeconds.")]
+        public int reactorContainedAt = 3;
+        public float radFadeSeconds = 90f;
+        [Tooltip("Armour an HE warhead takes off the side it hits (owner: it opens a side fast).")]
+        public float heArmourDamage = 100f;
+        [Tooltip("An EMP knocks a ship's power out for this many mission seconds.")]
+        public float empSeconds = 60f;
+    }
+    /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
+    public Stats stats => shipStats ? shipStats.Stats.damage : (shipStats = GetComponent<Ship>()).Stats.damage;
+    [System.NonSerialized] Ship shipStats;
+
     [System.Serializable]
     public class Compartment
     {
@@ -45,12 +85,7 @@ public class DamageSystem : MonoBehaviour
         new Compartment { key = "eng", tag = "ENG", name = "ENGINE ROOM", integ = 5, crew = 8 },
     };
 
-
     public string engSel = "rct";
-    [Tooltip("PARTY_TICKS: a damage-control party works this many game seconds (the design's 6 ticks at x1), then the repair lands.")]
-    [Tune("Engineering & orders")]
-    [UnityEngine.Serialization.FormerlySerializedAs("partyTicks")]
-    public float partySeconds = 6f;
     [Tooltip("The party's compartment and how long it has worked, game seconds; -1 when no party is out.")]
     public string partyComp;
     public float partyT = -1;
@@ -61,7 +96,6 @@ public class DamageSystem : MonoBehaviour
         foreach (var c in compartments) if (c.key == key) return c.vented ? 0 : c.integ;
         return 0;
     }
-
 
     public Compartment Comp(string key) { foreach (var c in compartments) if (c.key == key) return c; return null; }
     public int CompIndex(string key) { for (int i = 0; i < compartments.Length; i++) if (compartments[i].key == key) return i; return 0; }
@@ -81,7 +115,7 @@ public class DamageSystem : MonoBehaviour
         var c = Comp(engSel);
         switch (id)
         {
-            case "party": return PartyOut ? "DC PARTY COMMITTED \u2014 " + Mathf.CeilToInt(partySeconds - partyT) + " TO RUN"
+            case "party": return PartyOut ? "DC PARTY COMMITTED \u2014 " + Mathf.CeilToInt(stats.partySeconds - partyT) + " TO RUN"
                                           : c.vented && !c.doorsShut ? "SEAL THE DOORS FIRST"
                                           : !c.fire && !c.vented && c.integ >= 5 ? "COMPARTMENT AT FULL INTEGRITY" : null;
             case "seal": return !c.vented ? "COMPARTMENT ALREADY SEALED" : c.doorsShut ? "DOORS ALREADY SHUT" : null;
@@ -91,7 +125,6 @@ public class DamageSystem : MonoBehaviour
         }
         return "NOT FITTED";
     }
-
 
     public void CycleComp() { engSel = compartments[(CompIndex(engSel) + 1) % compartments.Length].key; }
     public void PickComp(string key) { if (Comp(key) != null) engSel = key; }
@@ -122,7 +155,6 @@ public class DamageSystem : MonoBehaviour
         SyncCond();
     }
 
-
     // ---- hull sides and damage (Step 49, owner 2026-10-23) --------------------------------------
     // The same model for every ship, ours included (the enemy is our ship with other stats).
 
@@ -133,14 +165,8 @@ public class DamageSystem : MonoBehaviour
     static readonly string[] BehindSide = { "mag", "hgr", "eng", "rct" };
     /// <summary>The room behind face i (PROW, STBD, AFT, PORT).</summary>
     public static string RoomBehind(int i) => BehindSide[i];
-    [Tooltip("Armour per side: PROW, STBD, AFT, PORT. At 0 the side is open (owner: prow and flanks take 2 slugs, the aft 1).")]
-    [Tune("Damage")] public float[] sideArmourMax = { 100f, 100f, 50f, 100f };
-    [Tooltip("Armour one railgun slug takes off the side it hits.")]
-    [Tune("Damage")] public float slugArmourDamage = 50f;
-    [Tooltip("Integrity one slug through an open side takes off one compartment behind it (owner: 2 of 5).")]
-    [Tune("Damage")] public int slugCompartmentDamage = 2;
     [System.NonSerialized] private float[] sideArmour;
-    public float[] SideArmour => sideArmour ?? (sideArmour = (float[])sideArmourMax.Clone());
+    public float[] SideArmour => sideArmour ?? (sideArmour = (float[])stats.sideArmourMax.Clone());
 
     /// <summary>A slug strikes this ship's side. Armour first; once the side is open, the room behind it
     /// loses integrity. Returns the report's tail (" OPEN", " · RCT −2").</summary>
@@ -151,8 +177,8 @@ public class DamageSystem : MonoBehaviour
         var armour = SideArmour;
         if (armour[i] > 0f)
         {
-            armour[i] = Mathf.Max(0f, armour[i] - slugArmourDamage);
-            return armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / sideArmourMax[i] * 100f) + "%";
+            armour[i] = Mathf.Max(0f, armour[i] - stats.slugArmourDamage);
+            return armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%";
         }
         return Behind(i);
     }
@@ -168,7 +194,7 @@ public class DamageSystem : MonoBehaviour
         if (armour[i] > 0f)
         {
             armour[i] = Mathf.Max(0f, armour[i] - armourDamage);
-            return " " + Sides[i] + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / sideArmourMax[i] * 100f) + "%");
+            return " " + Sides[i] + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%");
         }
         return " " + Sides[i] + Behind(i, compartmentDamage, "fighter");
     }
@@ -176,7 +202,7 @@ public class DamageSystem : MonoBehaviour
     // The room behind side i loses the damage given. A wrecked room takes no more, but the hit can still start
     // a condition there (Step 59). The ship is destroyed when its reactor's structure reaches 0 (any ship, ours
     // too: owner 2026-10-24).
-    string Behind(int i) => Behind(i, slugCompartmentDamage, "slug");
+    string Behind(int i) => Behind(i, stats.slugCompartmentDamage, "slug");
     string Behind(int i, int damage, string weapon)
     {
         var hit = Comp(BehindSide[i]);
@@ -188,27 +214,8 @@ public class DamageSystem : MonoBehaviour
         return " · " + hit.tag + " −" + damage + started;
     }
 
-
     // ---- conditions: fire, vacuum, radiation (Step 59, owner 2026-10-24, DAMAGE_README.md) -------
 
-    [Header("Conditions (Step 59, DAMAGE_README.md): every rate per game second")]
-    [Tooltip("Chance a hit through open armour starts a fire: an HE warhead, a penetrator.")]
-    [Tune("Damage control")] [Range(0f, 1f)] public float fireChanceHE = 0.6f, fireChancePEN = 0.4f;
-    [Tooltip("Chance a railgun slug through open armour breaches the room (it loses its air).")]
-    [Tune("Damage control")] [Range(0f, 1f)] public float breachChanceSlug = 0.5f;
-    [Tooltip("Chance a hit on the reactor room (not a fighter's) leaks radiation.")]
-    [Tune("Damage control")] [Range(0f, 1f)] public float radChanceReactor = 0.5f;
-    [Tooltip("A fire takes 1 integrity off its room this often, game seconds.")]
-    [Tune("Damage control")] public float fireDamageSeconds = 30f;
-    [Tooltip("Chance per second that a fire, a vacuum or radiation spreads into each neighbouring room.")]
-    [Tune("Damage control")] [Range(0f, 1f)] public float fireSpreadPerSecond = 0.01f, vacuumSpreadPerSecond = 0.01f, radSpreadPerSecond = 0.01f;
-    [Tooltip("Share of a room's crew lost when it is breached (VENT loses all of them).")]
-    [Tune("Damage control")] [Range(0f, 1f)] public float breachCrewLoss = 0.5f;
-    [Tooltip("Radiation kills one crew member in its room this often, game seconds.")]
-    [Tune("Damage control")] public float radCrewLossSeconds = 20f;
-    [Tooltip("The reactor stops leaking once repaired to this integrity (or vented); then each room's radiation fades after radFadeSeconds.")]
-    [Tune("Damage control")] public int reactorContainedAt = 3;
-    [Tune("Damage control")] public float radFadeSeconds = 90f;
     /// <summary>Teams lost when their room vented around them.</summary>
     [System.NonSerialized] public int partiesLost;
 
@@ -224,10 +231,10 @@ public class DamageSystem : MonoBehaviour
     string Strike(Compartment c, string weapon)
     {
         string started = "";
-        float fireChance = weapon == "HE" ? fireChanceHE : weapon == "PEN" ? fireChancePEN : 0f;
+        float fireChance = weapon == "HE" ? stats.fireChanceHE : weapon == "PEN" ? stats.fireChancePEN : 0f;
         if (!c.vented && !c.fire && ship.Roll(fireChance)) { c.fire = true; c.fireT = 0; started += " · FIRE"; }
-        if (weapon == "slug" && !c.vented && ship.Roll(breachChanceSlug)) { Breach(c, breachCrewLoss); started += " · BREACH"; }
-        if (c.key == "rct" && weapon != "fighter" && !c.rad && ship.Roll(radChanceReactor)) { c.rad = true; c.fadeT = 0; started += " · RADIATION"; }
+        if (weapon == "slug" && !c.vented && ship.Roll(stats.breachChanceSlug)) { Breach(c, stats.breachCrewLoss); started += " · BREACH"; }
+        if (c.key == "rct" && weapon != "fighter" && !c.rad && ship.Roll(stats.radChanceReactor)) { c.rad = true; c.fadeT = 0; started += " · RADIATION"; }
         SyncCond();
         return started;
     }
@@ -250,52 +257,33 @@ public class DamageSystem : MonoBehaviour
     {
         if (ship.destroyed) return;
         var rct = Comp("rct");
-        bool leaking = rct != null && rct.rad && rct.integ < reactorContainedAt && !rct.vented;
+        bool leaking = rct != null && rct.rad && rct.integ < stats.reactorContainedAt && !rct.vented;
         // spread from what stood at the start of the tick, so a condition moves one room per tick at most
         var burning = System.Array.FindAll(compartments, c => c.fire);
         var airless = System.Array.FindAll(compartments, c => c.vented && !c.doorsShut);
         var hot = leaking ? System.Array.FindAll(compartments, c => c.rad) : new Compartment[0];
-        double pf = 1 - System.Math.Pow(1 - fireSpreadPerSecond, dt), pv = 1 - System.Math.Pow(1 - vacuumSpreadPerSecond, dt),
-               pr = 1 - System.Math.Pow(1 - radSpreadPerSecond, dt);
+        double pf = 1 - System.Math.Pow(1 - stats.fireSpreadPerSecond, dt), pv = 1 - System.Math.Pow(1 - stats.vacuumSpreadPerSecond, dt),
+               pr = 1 - System.Math.Pow(1 - stats.radSpreadPerSecond, dt);
         foreach (var c in burning)
             foreach (var k in Neighbours[c.key]) { var m = Comp(k); if (m != null && !m.fire && !m.vented && ship.Roll(pf)) { m.fire = true; m.fireT = 0; } }
         foreach (var c in airless)
-            foreach (var k in Neighbours[c.key]) { var m = Comp(k); if (m != null && !m.vented && ship.Roll(pv)) Breach(m, breachCrewLoss); }
+            foreach (var k in Neighbours[c.key]) { var m = Comp(k); if (m != null && !m.vented && ship.Roll(pv)) Breach(m, stats.breachCrewLoss); }
         foreach (var c in hot)
             foreach (var k in Neighbours[c.key]) { var m = Comp(k); if (m != null && !m.rad && ship.Roll(pr)) { m.rad = true; m.fadeT = 0; } }
         foreach (var c in compartments)
         {
             if (c.fire && c.vented) c.fire = false;
             if (c.fire)
-                for (c.fireT += dt; c.fireT >= fireDamageSeconds; c.fireT -= fireDamageSeconds) c.integ = Mathf.Max(0, c.integ - 1);
+                for (c.fireT += dt; c.fireT >= stats.fireDamageSeconds; c.fireT -= stats.fireDamageSeconds) c.integ = Mathf.Max(0, c.integ - 1);
             if (!c.rad) continue;
             if (c.crew > 0)
-                for (c.radT += dt; c.radT >= radCrewLossSeconds && c.crew > 0; c.radT -= radCrewLossSeconds) c.crew--;
+                for (c.radT += dt; c.radT >= stats.radCrewLossSeconds && c.crew > 0; c.radT -= stats.radCrewLossSeconds) c.crew--;
             if (leaking) c.fadeT = 0;
-            else if ((c.fadeT += dt) >= radFadeSeconds) { c.rad = false; c.radT = 0; c.fadeT = 0; }
+            else if ((c.fadeT += dt) >= stats.radFadeSeconds) { c.rad = false; c.radT = 0; c.fadeT = 0; }
         }
         if (rct != null && rct.integ <= 0) ship.destroyed = true;
         SyncCond();
     }
-
-    /// <summary>A contact's ship takes damage by our numbers: one Tuning window for every ship (the enemy is our
-    /// ship with other stats; these are not among them).</summary>
-    public void CopyDamageTuning(DamageSystem from)
-    {
-        slugArmourDamage = from.slugArmourDamage; slugCompartmentDamage = from.slugCompartmentDamage;
-        heArmourDamage = from.heArmourDamage; empSeconds = from.empSeconds;
-        fireChanceHE = from.fireChanceHE; fireChancePEN = from.fireChancePEN; breachChanceSlug = from.breachChanceSlug;
-        radChanceReactor = from.radChanceReactor; fireDamageSeconds = from.fireDamageSeconds;
-        fireSpreadPerSecond = from.fireSpreadPerSecond; vacuumSpreadPerSecond = from.vacuumSpreadPerSecond;
-        radSpreadPerSecond = from.radSpreadPerSecond; breachCrewLoss = from.breachCrewLoss;
-        radCrewLossSeconds = from.radCrewLossSeconds; reactorContainedAt = from.reactorContainedAt; radFadeSeconds = from.radFadeSeconds;
-    }
-
-
-    [Tooltip("Armour an HE warhead takes off the side it hits (owner: it opens a side fast).")]
-    [Tune("Damage")] public float heArmourDamage = 100f;
-    [Tooltip("An EMP knocks a ship's power out for this many mission seconds.")]
-    [Tune("Damage")] public float empSeconds = 60f;
 
     /// <summary>A missile's warhead strikes this ship (Step 53, owner 2026-10-23). HE hits the armour hard,
     /// then what is behind it; PENETRATOR goes straight to a compartment behind the side; EMP does no
@@ -306,7 +294,7 @@ public class DamageSystem : MonoBehaviour
         if (warheadName == "EMP")
         {
             ship.power.BlackOut();
-            ship.empUntil = ship.missionNow + empSeconds;
+            ship.empUntil = ship.missionNow + stats.empSeconds;
             return " · EMP · POWER DOWN";
         }
         int i = System.Array.IndexOf(Sides, side);
@@ -314,11 +302,11 @@ public class DamageSystem : MonoBehaviour
         var armour = SideArmour;
         if (warheadName == "HE" && armour[i] > 0f)
         {
-            armour[i] = Mathf.Max(0f, armour[i] - heArmourDamage);
-            return " · HE" + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / sideArmourMax[i] * 100f) + "%");
+            armour[i] = Mathf.Max(0f, armour[i] - stats.heArmourDamage);
+            return " · HE" + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%");
         }
         string w = warheadName == "PENETRATOR" ? "PEN" : warheadName;
-        return " · " + w + Behind(i, slugCompartmentDamage, w);
+        return " · " + w + Behind(i, stats.slugCompartmentDamage, w);
     }
 
     // The side of a ship whose bow points bowDeg that faces a bearing fromDeg (both clockwise from north).
@@ -337,14 +325,13 @@ public class DamageSystem : MonoBehaviour
         }
     }
 
-
     // ---- the tick — damage-control party ---------------------------------------------------
 
     public void TickParty(double dt)
     {
         if (!PartyOut) return;
         partyT += (float)dt;
-        if (partyT < partySeconds - 1e-4f) return;
+        if (partyT < stats.partySeconds - 1e-4f) return;
         var c = Comp(partyComp);
         // Step 59: the team fights a fire first; in a sealed airless room it restores the air; otherwise it repairs
         if (c != null)

@@ -549,7 +549,7 @@ public class HandoffPlotPanel : HandoffPanel
         s.sensors.PruneBearings(Controls.MissionSeconds);
         foreach (var f in s.sensors.BearingFixes)
         {
-            float life = 1f - (Controls.MissionSeconds - f.t) / Mathf.Max(1f, s.sensors.bearingTrailSeconds);
+            float life = 1f - (Controls.MissionSeconds - f.t) / Mathf.Max(1f, s.sensors.stats.bearingTrailSeconds);
             double rad = f.brg * System.Math.PI / 180.0;
             Vector2 from = Screen(f.x, f.y), dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad));
             bearings.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = from, b = from + dir * reach, alpha = trailAlpha * life });

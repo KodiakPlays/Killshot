@@ -293,7 +293,7 @@ public class HandoffBoardControls : MonoBehaviour
                 state.weapons.TickCharge(rate);
                 state.sensors.Tick(rate);
                 // Step 68 (owner 2026-10-25): the alert tone once as our signal crosses the tracked line
-                bool tracked = state.sensors.signal >= state.sensors.signalTrackedAt;
+                bool tracked = state.sensors.signal >= state.sensors.stats.signalTrackedAt;
                 if (tracked && !trackedWarned) Play(alertSound, "alert");
                 trackedWarned = tracked;
                 if (Ticked != null) Ticked();

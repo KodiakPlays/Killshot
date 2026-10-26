@@ -296,7 +296,7 @@ public static class PlaytestRunner
         // 9. Let the reactor fill the buses
         yield return (Func<bool>)(() => s.power.TotalFill >= s.power.ReactorCap || AllFull(s));
         yield return 1f;
-        Check("The reactor fills the buses up to its output", s.power.TotalFill == Mathf.Min(s.power.ReactorCap, s.power.busMax * 4), "total " + s.power.TotalFill + " of " + s.power.ReactorCap + " — " + Buses(s));
+        Check("The reactor fills the buses up to its output", s.power.TotalFill == Mathf.Min(s.power.ReactorCap, s.power.stats.busMax * 4), "total " + s.power.TotalFill + " of " + s.power.ReactorCap + " — " + Buses(s));
         Shot("06_powered");
         yield return 0.2f;
 
@@ -305,9 +305,11 @@ public static class PlaytestRunner
         var brain = GameObject.Find("World").GetComponentInChildren<EnemyBrain>();
         if (brain) brain.firesBack = false; // stand-in: it holds its fire until the point-defence step (21e)
         // stand-in: no hit starts a condition until the conditions step (24), so the steps before stay as written
-        float[] condChances = { s.damage.fireChanceHE, s.damage.fireChancePEN, s.damage.breachChanceSlug, s.damage.radChanceReactor };
-        s.damage.fireChanceHE = s.damage.fireChancePEN = s.damage.breachChanceSlug = s.damage.radChanceReactor = 0f;
+        float[] condChances = { s.damage.stats.fireChanceHE, s.damage.stats.fireChancePEN, s.damage.stats.breachChanceSlug, s.damage.stats.radChanceReactor };
+        s.damage.stats.fireChanceHE = s.damage.stats.fireChancePEN = s.damage.stats.breachChanceSlug = s.damage.stats.radChanceReactor = 0f;
         var t07Ship = brain ? brain.GetComponent<WorldContact>().Ship : null;
+        // the Garuda has its own stats file (Step 80), no longer a copy of ours: its hits start no condition either
+        if (t07Ship != null) t07Ship.damage.stats.fireChanceHE = t07Ship.damage.stats.fireChancePEN = t07Ship.damage.stats.breachChanceSlug = t07Ship.damage.stats.radChanceReactor = 0f;
         Check("GARUDA has a patrol brain", brain && brain.enabled, "");
         if (!brain) yield break;
         double ex0 = t07Ship.nav.x, ey0 = t07Ship.nav.y;
@@ -349,7 +351,7 @@ public static class PlaytestRunner
         yield return 0.2f;
         yield return (Func<bool>)(() => s.sensors.signal >= target);
         Check("The signal climbs to its target", s.sensors.signal >= target, s.sensors.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
-        Check("Loud enough to be tracked", s.sensors.signal < s.sensors.signalTrackedAt || SigNote(board).Contains("YOUR RANGE"), "\"" + SigNote(board) + "\"");
+        Check("Loud enough to be tracked", s.sensors.signal < s.sensors.stats.signalTrackedAt || SigNote(board).Contains("YOUR RANGE"), "\"" + SigNote(board) + "\"");
         Shot("08_signal_loud");
         yield return 0.2f;
 
@@ -494,7 +496,7 @@ public static class PlaytestRunner
         if (!Click("helm", null, "HELM header")) yield break;
         yield return 0.8f;
         if (!Click("helm.thr", null, "throttle (press mid-well)")) yield break;
-        Check("The throttle takes a setting", s.nav.throttle > 0, "throttle " + s.nav.throttle + "%, target " + (s.nav.throttle / 100.0 * s.nav.topSpeedKms).ToString("0.00") + " km/s");
+        Check("The throttle takes a setting", s.nav.throttle > 0, "throttle " + s.nav.throttle + "%, target " + (s.nav.throttle / 100.0 * s.nav.stats.topSpeedKms).ToString("0.00") + " km/s");
         double x0 = s.nav.x, y0 = s.nav.y;
         Vector2 img0 = shipImg.anchoredPosition, grid0 = board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx;
         yield return 4f;
@@ -593,7 +595,7 @@ public static class PlaytestRunner
         Check("Clicking the strip acknowledges it", s.sensors.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, "");
 
         //     Loud enough to be tracked: our ship stays solid (owner 2026-10-25: the lamp and meter warn, not the ship).
-        yield return (Func<bool>)(() => s.sensors.signal >= s.sensors.signalTrackedAt);
+        yield return (Func<bool>)(() => s.sensors.signal >= s.sensors.stats.signalTrackedAt);
         var shipRaw = GameObject.Find("Own ship (3D view)").GetComponent<UnityEngine.UI.RawImage>();
         bool dim = false;
         float blinkUntil = Time.realtimeSinceStartup + 1.3f;
@@ -623,7 +625,7 @@ public static class PlaytestRunner
         Shot("23_bearing_trail");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         float firstLaid = fa.t;
-        yield return (Func<bool>)(() => board.MissionSeconds - firstLaid > s.sensors.bearingTrailSeconds + 2f);
+        yield return (Func<bool>)(() => board.MissionSeconds - firstLaid > s.sensors.stats.bearingTrailSeconds + 2f);
         yield return 0.5f;
         Check("A bearing line is gone after two minutes", !s.sensors.BearingFixes.Contains(fa), (board.MissionSeconds - firstLaid).ToString("0") + " s after it was laid");
         if (!Click("rate", "1", "x1 rate key")) yield break;
@@ -687,7 +689,7 @@ public static class PlaytestRunner
         if (!PlotDrag(board, knobAt, knobAt + new Vector2(80, 0), "turn the RNG knob (10 steps)", "fc.knob")) yield break;
         yield return 0.3f;
         Check("The RNG knob starts a hand-dialled solution on the periscope's bearing",
-              s.weapons.Sol.set && s.weapons.Sol.manual && s.weapons.Sol.brg == expBrg && s.weapons.Sol.spd == 0f && Mathf.Abs(s.weapons.Sol.rangeKm - (s.weapons.manualStartRangeKm + 1000f)) < 0.01f,
+              s.weapons.Sol.set && s.weapons.Sol.manual && s.weapons.Sol.brg == expBrg && s.weapons.Sol.spd == 0f && Mathf.Abs(s.weapons.Sol.rangeKm - (s.weapons.stats.manualStartRangeKm + 1000f)) < 0.01f,
               "RNG " + s.weapons.Sol.rangeKm.ToString("N0") + " km, REL BRG " + s.weapons.Sol.brg + "°, SPD " + s.weapons.Sol.spd.ToString("0.00"));
         var fc = board.GetComponentInChildren<FireControlPanel>(true);
         var tidField = typeof(FireControlPanel).GetField("trackId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -761,7 +763,7 @@ public static class PlaytestRunner
         int slugs0 = rgb.ammo;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever", "fc.lever")) yield break;
         Check("The lever fires one slug and releases ARM", s.weapons.Rounds.Count == 1 && !s.weapons.sw[3], s.weapons.Rounds.Count + " in flight");
-        Check("Firing spikes our signal", Mathf.Approximately(s.sensors.signal, sig0 + s.weapons.fireSignalSpike), sig0.ToString("0") + " → " + s.sensors.signal.ToString("0"));
+        Check("Firing spikes our signal", Mathf.Approximately(s.sensors.signal, sig0 + s.weapons.stats.fireSignalSpike), sig0.ToString("0") + " → " + s.sensors.signal.ToString("0"));
         yield return 0.4f;
         Check("The fire cue sounds", board.Sounds > 0 && (board.LastSound == "railgun" || board.LastSound == "hit"), "last cue \"" + board.LastSound + "\"");
         //     Owner 2026-10-27: the slugs are a real count; the drawer shows it.
@@ -860,8 +862,8 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
         for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (led shot)")) yield break; yield return 0.15f; }
         double tvx = t07Ship.nav.vx, tvy = t07Ship.nav.vy;
-        double unled = PassKm(s.nav.x, s.nav.y, s.nav.heading + s.weapons.Sol.brg, s.weapons.slugSpeedKms, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
-        double led = PassKm(s.nav.x, s.nav.y, s.weapons.LeadBearing(), s.weapons.slugSpeedKms, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
+        double unled = PassKm(s.nav.x, s.nav.y, s.nav.heading + s.weapons.Sol.brg, s.weapons.stats.slugSpeedKms, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
+        double led = PassKm(s.nav.x, s.nav.y, s.weapons.LeadBearing(), s.weapons.stats.slugSpeedKms, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         int landedLed = s.weapons.shotResults;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (led)", "fc.lever")) yield break;
@@ -1014,16 +1016,16 @@ public static class PlaytestRunner
         yield return 1f; // at x1: a few game seconds, well before they arrive
         double flown = System.Math.Sqrt((flight.x - fx0) * (flight.x - fx0) + (flight.y - fy0) * (flight.y - fy0)), took = board.MissionSeconds - ft0;
         if (!Click("rate", "10", "x10 rate key")) yield break;
-        Check("They fly toward GARUDA at " + s.hangar.fighterSpeedKms + " km/s", took > 0 && System.Math.Abs(flown / took - s.hangar.fighterSpeedKms) < 0.5 && interlockText().StartsWith("OUTBOUND TO GARUDA"),
+        Check("They fly toward GARUDA at " + s.hangar.stats.fighterSpeedKms + " km/s", took > 0 && System.Math.Abs(flown / took - s.hangar.stats.fighterSpeedKms) < 0.5 && interlockText().StartsWith("OUTBOUND TO GARUDA"),
               (flown / took).ToString("0.00") + " km/s; \"" + interlockText() + "\"");
         yield return (Func<bool>)(() => System.Math.Sqrt((flight.x - s.nav.x) * (flight.x - s.nav.x) + (flight.y - s.nav.y) * (flight.y - s.nav.y)) > 1000); // clear of our ship's picture
         Shot("28c_fighters_outbound");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         float prow0 = dummyShip.damage.SideArmour[0];
         yield return (Func<bool>)(() => s.hangar.flightRuns >= 1);
-        float prowAfter = Mathf.Max(0f, prow0 - 4 * s.hangar.fighterArmourDamage);
-        Check("In range, one attack run: 10 armour per fighter off the side facing them, its bow", s.hangar.flightRuns == 1 && prow0 > 4 * s.hangar.fighterArmourDamage
-              && s.hangar.flightReport == " PROW ARMOUR " + HandoffBoardState.JsRound(prowAfter / dummyShip.damage.sideArmourMax[0] * 100f) + "%"
+        float prowAfter = Mathf.Max(0f, prow0 - 4 * s.hangar.stats.fighterArmourDamage);
+        Check("In range, one attack run: 10 armour per fighter off the side facing them, its bow", s.hangar.flightRuns == 1 && prow0 > 4 * s.hangar.stats.fighterArmourDamage
+              && s.hangar.flightReport == " PROW ARMOUR " + HandoffBoardState.JsRound(prowAfter / dummyShip.damage.stats.sideArmourMax[0] * 100f) + "%"
               && Mathf.Approximately(dummyShip.damage.SideArmour[0], prowAfter),
               "\"" + s.hangar.flightReport + "\"; PROW armour " + prow0 + " → " + dummyShip.damage.SideArmour[0]);
         Check("The hangar reports the attack", interlockText().StartsWith("ATTACKING GARUDA"), "\"" + interlockText() + "\"");
@@ -1057,7 +1059,7 @@ public static class PlaytestRunner
         for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (PDC-A)")) yield break; yield return 0.15f; }
         Check("The ladder arms with no solution: PDC-A is on AUTO", noSol && System.Array.TrueForAll(s.weapons.sw, b => b) && s.weapons.pdcAuto[0] && !s.weapons.pdcAuto[1], string.Join(",", System.Array.ConvertAll(s.weapons.sw, b => b ? "1" : "0")));
         //     We hit it (stand-in for a railgun hit, tested above): it fires back.
-        s.weapons.pdcKillChance = 1f; // stand-in: a sure PDC, so the result is certain (the real chance is in the Tuning window)
+        s.weapons.stats.pdcKillChance = 1f; // stand-in: a sure PDC, so the result is certain (the real chance is in the Tuning window)
         brain.firesBack = true;
         int enemyCells = dummyShip.weapons.vlsCells, kills0 = s.weapons.pdcKills, taken0 = s.weapons.hitsTaken;
         var pdcA = s.weapons.MountOf("PDA"); var pdcB = s.weapons.MountOf("PDB");
@@ -1074,8 +1076,8 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0); // 15 s each; the flight is about 13 s at x10
         Check("PDC-A shoots both down; nothing hits us", s.weapons.pdcKills == kills0 + 2 && s.weapons.hitsTaken == taken0 && s.weapons.pdcReport == "PDC-A · MISSILE DOWN",
               (s.weapons.pdcKills - kills0) + " down, " + (s.weapons.hitsTaken - taken0) + " hits on us, \"" + s.weapons.pdcReport + "\"");
-        Check("Each go took " + s.weapons.pdcRoundsPerGo + " rounds from PDC-A, and the drawer shows it; PDC-B untouched",
-              pdcA0 == 2400 && pdcA.ammo == pdcA0 - 2 * s.weapons.pdcRoundsPerGo && pdcB.ammo == pdcB0 && sysText().StartsWith(pdcA.ammo + " RDS"),
+        Check("Each go took " + s.weapons.stats.pdcRoundsPerGo + " rounds from PDC-A, and the drawer shows it; PDC-B untouched",
+              pdcA0 == 2400 && pdcA.ammo == pdcA0 - 2 * s.weapons.stats.pdcRoundsPerGo && pdcB.ammo == pdcB0 && sysText().StartsWith(pdcA.ammo + " RDS"),
               "PDC-A " + pdcA0 + " → " + pdcA.ammo + ", PDC-B " + pdcB0 + " → " + pdcB.ammo + ", \"" + sysText() + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Changing weapons leaves PDC-A on AUTO; back on PDC-A its ladder shows armed.
@@ -1103,7 +1105,7 @@ public static class PlaytestRunner
         s.nav.heading = s.nav.orderedHeading = ((t07.bearing - 200) % 360 + 360) % 360; // it has been patrolling since 21e
         if (!Click("fc.mount", null, "PDC selector (PDC-B)")) yield break;
         int pdbWas = pdcB.ammo;
-        pdcB.ammo = s.weapons.pdcRoundsPerGo; // stand-in: one go left
+        pdcB.ammo = s.weapons.stats.pdcRoundsPerGo; // stand-in: one go left
         yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
         for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (PDC-B)")) yield break; yield return 0.15f; }
         Check("PDC-B arms and goes on AUTO", s.weapons.mount == "PDB" && s.weapons.pdcAuto[1] && !s.weapons.pdcAuto[0], s.weapons.mount + ", AUTO " + s.weapons.pdcAuto[0] + "/" + s.weapons.pdcAuto[1]);
@@ -1129,7 +1131,7 @@ public static class PlaytestRunner
         s.destroyed = false;
         //     Clean up for the steps below: TRACK 07 held still and quiet, our ship repaired (stand-in for damage control).
         brain.firesBack = false; brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0;
-        s.weapons.pdcKillChance = 0.7f;
+        s.weapons.stats.pdcKillChance = 0.7f;
         System.Array.Copy(ourArmour, s.damage.SideArmour, ourArmour.Length);
         for (int c = 0; c < s.damage.compartments.Length; c++) s.damage.compartments[c].integ = ourInteg[c];
         for (int k = 0; k < 3 && s.weapons.sys != "RG"; k++) { if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break; yield return 0.2f; }
@@ -1150,8 +1152,8 @@ public static class PlaytestRunner
         for (int k = 0; k < 3 && s.hangar.order != "disable"; k++) if (!Click("hangar.order", null, "order knob")) yield break;
         Check("The assault boats are selected, on DISABLE", s.hangar.CurrentSquad.key == "ih" && s.hangar.order == "disable" && s.hangar.SquadReady(s.hangar.CurrentSquad) == 3, s.hangar.CurrentSquad.key + " " + s.hangar.order + ", " + s.hangar.SquadReady(s.hangar.CurrentSquad) + " ready");
         s.hangar.SetLbrg(s.nav.heading.ToString()); // stand-in for typing the launch bearing
-        float defenders = s.hangar.defenderShare;
-        s.hangar.defenderShare = 0f; // stand-in: an undefended ship, so the marines win for certain (the odds are in the Tuning window)
+        float defenders = s.hangar.stats.defenderShare;
+        s.hangar.stats.defenderShare = 0f; // stand-in: an undefended ship, so the marines win for certain (the odds are in the Tuning window)
         var armourWas = (float[])dummyShip.damage.SideArmour.Clone();
         for (int k = 0; k < 4; k++) dummyShip.damage.SideArmour[k] = Mathf.Max(dummyShip.damage.SideArmour[k], 10f); // stand-in: no face open, so the boats must hold off at first
         for (int i = 0; i < s.hangar.stages.Length; i++)
@@ -1179,14 +1181,14 @@ public static class PlaytestRunner
         //     Owner 2026-10-27: under way again with marines aboard, it fights on and the boats ride with it.
         //     Stand-in for its engines: top speed along its heading, its brain on (the world moves it only then).
         double bh = t07.worldHdg * System.Math.PI / 180;
-        t07Ship.nav.vx = System.Math.Sin(bh) * t07Ship.nav.topSpeedKms; t07Ship.nav.vy = System.Math.Cos(bh) * t07Ship.nav.topSpeedKms;
+        t07Ship.nav.vx = System.Math.Sin(bh) * t07Ship.nav.stats.topSpeedKms; t07Ship.nav.vy = System.Math.Cos(bh) * t07Ship.nav.stats.topSpeedKms;
         brain.enabled = true;
         float boardT0 = boats.boardT, boardAt = board.MissionSeconds;
         yield return (Func<bool>)(() => board.MissionSeconds - boardAt >= 15f); // two ticks at x10
         // the ship moves after the boats in a tick, so they trail it by up to one tick of its way
         double boatGap = System.Math.Sqrt((boats.x - t07.worldX) * (boats.x - t07.worldX) + (boats.y - t07.worldY) * (boats.y - t07.worldY));
-        Check("Under way, the marines fight on and the boats ride with it", boats.aboard && t07Ship.nav.SpeedKms > s.hangar.boardMaxSpeedKms
-              && boats.boardT - boardT0 >= board.MissionSeconds - boardAt - 0.01f && boatGap <= s.hangar.dockKm + t07Ship.nav.topSpeedKms * board.Rate
+        Check("Under way, the marines fight on and the boats ride with it", boats.aboard && t07Ship.nav.SpeedKms > s.hangar.stats.boardMaxSpeedKms
+              && boats.boardT - boardT0 >= board.MissionSeconds - boardAt - 0.01f && boatGap <= s.hangar.stats.dockKm + t07Ship.nav.stats.topSpeedKms * board.Rate
               && interlockText().StartsWith("BOARDING GARUDA · "),
               "its speed " + t07Ship.nav.SpeedKms.ToString("0.0") + " km/s, fight clock +" + (boats.boardT - boardT0).ToString("0") + " s in " + (board.MissionSeconds - boardAt).ToString("0") + " s, boats "
               + boatGap.ToString("0") + " km off, \"" + interlockText() + "\"");
@@ -1200,7 +1202,7 @@ public static class PlaytestRunner
         //     SECURE and DESTROY, in the run (owner 2026-10-27). Each is put back after, for the fight below.
         //     Stand-in for the stage rockers and launch lever (checked above).
         Action<string> launchBoats = order => { s.hangar.order = order; foreach (var g in s.hangar.stages) { g.on = true; g.progress = 100f; } s.hangar.LaunchSquad(); };
-        yield return (Func<bool>)(() => t07Ship.nav.SpeedKms <= s.hangar.boardMaxSpeedKms); // its engines wrecked, it slows to a stop
+        yield return (Func<bool>)(() => t07Ship.nav.SpeedKms <= s.hangar.stats.boardMaxSpeedKms); // its engines wrecked, it slows to a stop
         brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0;
         launchBoats("secure");
         boats = s.hangar.Flights.Find(f => f.squad == "ih");
@@ -1255,8 +1257,8 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.hangar.Flights.Count == 0); // 15 s each; 10,000 km is about 14 s at x10
         Check("They land: every marine back", s.hangar.Flights.Count == 0 && s.hangar.marines == marinesBefore, s.hangar.marines + " marines aboard");
         if (!Click("rate", "1", "x1 rate key")) yield break;
-        float strandSecs = s.hangar.boatStrandSeconds;
-        s.hangar.boatStrandSeconds = 5f; // stand-in: a short clock
+        float strandSecs = s.hangar.stats.boatStrandSeconds;
+        s.hangar.stats.boatStrandSeconds = 5f; // stand-in: a short clock
         s.nav.x = homeX; s.nav.y = homeY;
         launchBoats("disable");
         s.nav.x = farX; s.nav.y = farY;
@@ -1269,10 +1271,10 @@ public static class PlaytestRunner
               lostCraft + " boats lost, " + s.hangar.marines + " marines aboard, last cue \"" + board.LastSound + "\"");
         Check("No boats left to launch", s.hangar.SquadReady(s.hangar.CurrentSquad) == 0 && s.hangar.LaunchBlock() == "NO CRAFT READY", s.hangar.LaunchBlock() ?? "");
         foreach (var c in boatCraft) if (c.state == "LOST") c.state = "READY"; // put back: boats and marines resupplied
-        s.hangar.marines = marinesBefore; s.hangar.boatStrandSeconds = strandSecs;
+        s.hangar.marines = marinesBefore; s.hangar.stats.boatStrandSeconds = strandSecs;
         s.nav.x = homeX; s.nav.y = homeY;
         System.Array.Copy(armourWas, dummyShip.damage.SideArmour, armourWas.Length); // its armour as it was
-        s.hangar.defenderShare = defenders;
+        s.hangar.stats.defenderShare = defenders;
         brain.Think(dummyShip, s); // one thought, brain still off: with its engine room wrecked it makes no way
         Check("Disabled, its brain cannot drive it", dummyShip.nav.throttle == 0, "throttle " + dummyShip.nav.throttle + "%");
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
@@ -1310,11 +1312,11 @@ public static class PlaytestRunner
         yield return 0.6f;
         Check("Classified and in sight: GARUDA shows on the plot as its own ship model, in place of its dot", s.classified.Contains("t07") && s.sensors.InSight(t07) && plotPanel.ContactShipShown && subjName.text == "GARUDA · CRUISER",
               "\"" + subjName.text + "\", " + t07.rangeKm.ToString("N0") + " km, picture " + plotPanel.ContactShipShown);
-        float sightWas = s.sensors.visualRangeKm;
-        s.sensors.visualRangeKm = t07.rangeKm - 1000f; // stand-in for drawing off out of sight
+        float sightWas = s.sensors.stats.visualRangeKm;
+        s.sensors.stats.visualRangeKm = t07.rangeKm - 1000f; // stand-in for drawing off out of sight
         yield return 0.6f;
         Check("Out of sight it is a dot again, where the sweep last touched it", !plotPanel.ContactShipShown && t07.seen, "picture " + plotPanel.ContactShipShown);
-        s.sensors.visualRangeKm = sightWas;
+        s.sensors.stats.visualRangeKm = sightWas;
         yield return 0.6f;
         //     The sweep runs from a small circle round our ship, not from the ship itself.
         var sweepInner = (float)typeof(HandoffSweepGraphic).GetField("innerPx", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
@@ -1378,14 +1380,14 @@ public static class PlaytestRunner
         Check("The room rings are white: undamaged", lit(ring("hab"), white) && lit(ring("hgr"), white), "");
         //     Stand-in for enemy fire: starboard hit once, the aft open; habitation hurt, hangar nearly gone.
         var armour = s.damage.SideArmour;
-        armour[1] = s.damage.sideArmourMax[1] / 2f; armour[2] = 0f;
+        armour[1] = s.damage.stats.sideArmourMax[1] / 2f; armour[2] = 0f;
         s.damage.Comp("hab").integ = 2; s.damage.Comp("hgr").integ = 1;
         yield return 0.6f;
         Check("A hit side turns amber, an open side red", sideLit(1, amber) && sideLit(2, red) && sideLit(0, white) && sideLit(3, white), "STBD half, AFT open");
         Check("A hurt room's ring turns amber, a nearly-gone one red", lit(ring("hab"), amber) && lit(ring("hgr"), red) && lit(ring("mag"), white), "HAB 2, HGR 1");
         Shot("30_engineering_diagram");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
-        armour[1] = s.damage.sideArmourMax[1]; armour[2] = s.damage.sideArmourMax[2];
+        armour[1] = s.damage.stats.sideArmourMax[1]; armour[2] = s.damage.stats.sideArmourMax[2];
         s.damage.Comp("hab").integ = 5; s.damage.Comp("hgr").integ = 5;
         yield return 0.6f;
         Check("Repaired, they go white again", sideLit(1, white) && sideLit(2, white) && lit(ring("hab"), white) && lit(ring("hgr"), white), "");
@@ -1395,26 +1397,26 @@ public static class PlaytestRunner
         //     spread are set to certain so each result is exact; the real odds are in the Tuning window.
         var armour0 = (float[])s.damage.SideArmour.Clone();
         var rooms0 = System.Array.ConvertAll(s.damage.compartments, c => new[] { c.integ, c.crew });
-        float spreadF = s.damage.fireSpreadPerSecond, spreadV = s.damage.vacuumSpreadPerSecond, spreadR = s.damage.radSpreadPerSecond;
-        s.damage.fireSpreadPerSecond = s.damage.vacuumSpreadPerSecond = s.damage.radSpreadPerSecond = 0f;
+        float spreadF = s.damage.stats.fireSpreadPerSecond, spreadV = s.damage.stats.vacuumSpreadPerSecond, spreadR = s.damage.stats.radSpreadPerSecond;
+        s.damage.stats.fireSpreadPerSecond = s.damage.stats.vacuumSpreadPerSecond = s.damage.stats.radSpreadPerSecond = 0f;
         var recallRocker = System.Array.Find((EngineeringPanel.Repair[])typeof(EngineeringPanel).GetField("repairs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(eng), r => r.id == "recall");
         Check("DUMMY 1 is now RECALL, with the repair rockers' art", recallRocker != null && recallRocker.fitted && recallRocker.rocker.sprite.name.StartsWith("rocker_22x30") && recallRocker.label.text == "RECALL",
               recallRocker != null ? recallRocker.rocker.sprite.name + ", \"" + recallRocker.label.text + "\"" : "missing");
         //     An HE hit through our open bow sets the magazine on fire.
-        s.damage.SideArmour[0] = 0f; s.damage.fireChanceHE = 1f;
+        s.damage.SideArmour[0] = 0f; s.damage.stats.fireChanceHE = 1f;
         string heHit = s.damage.TakeWarhead("PROW", "HE");
         Check("HE through the open bow: the magazine catches fire", heHit.EndsWith(" · FIRE") && s.damage.Comp("mag").fire && s.damage.Comp("mag").cond == "FIRE", "\"" + heHit + "\"");
         //     The fire spreads to the magazine's neighbours, and only those.
-        s.damage.fireSpreadPerSecond = 1f;
+        s.damage.stats.fireSpreadPerSecond = 1f;
         float tickF = board.MissionSeconds;
         yield return (Func<bool>)(() => board.MissionSeconds > tickF); // exactly one tick of spread
-        s.damage.fireSpreadPerSecond = 0f;
+        s.damage.stats.fireSpreadPerSecond = 0f;
         Check("It spreads to the rooms next to it (bridge, reactor, hangar), not the others", s.damage.Comp("bri").fire && s.damage.Comp("rct").fire && s.damage.Comp("hgr").fire && !s.damage.Comp("eng").fire && !s.damage.Comp("hab").fire,
               "BRI " + s.damage.Comp("bri").fire + ", RCT " + s.damage.Comp("rct").fire + ", HGR " + s.damage.Comp("hgr").fire + ", ENG " + s.damage.Comp("eng").fire + ", HAB " + s.damage.Comp("hab").fire);
         //     A fire burns its room down.
         if (!Click("rate", "10", "x10 rate key")) yield break;
         int magBurn = s.damage.Comp("mag").integ; float burnFrom = board.MissionSeconds;
-        yield return (Func<bool>)(() => board.MissionSeconds - burnFrom >= s.damage.fireDamageSeconds + 1);
+        yield return (Func<bool>)(() => board.MissionSeconds - burnFrom >= s.damage.stats.fireDamageSeconds + 1);
         if (!Click("rate", "1", "x1 rate key")) yield break;
         Check("A fire takes integrity off its room over time", s.damage.Comp("mag").integ < magBurn, "MAG " + magBurn + " → " + s.damage.Comp("mag").integ);
         //     REPAIR sends the team to the magazine: it puts the fire out.
@@ -1431,18 +1433,18 @@ public static class PlaytestRunner
         //     The reactor and hangar fires: out by stand-in, to keep the reactor whole for what follows.
         s.damage.Comp("rct").fire = false; s.damage.Comp("hgr").fire = false;
         //     A slug through our open starboard side breaches the hangar: half its crew die, and vacuum spreads.
-        s.damage.SideArmour[1] = 0f; s.damage.breachChanceSlug = 1f;
+        s.damage.SideArmour[1] = 0f; s.damage.stats.breachChanceSlug = 1f;
         int hgrCrew = s.damage.Comp("hgr").crew;
         string slugHit = s.damage.TakeSlug("STBD");
-        Check("A slug through the open starboard side breaches the hangar: half its crew die", slugHit.EndsWith(" · BREACH") && s.damage.Comp("hgr").vented && !s.damage.Comp("hgr").doorsShut && s.damage.Comp("hgr").crew == hgrCrew - Mathf.CeilToInt(hgrCrew * s.damage.breachCrewLoss),
+        Check("A slug through the open starboard side breaches the hangar: half its crew die", slugHit.EndsWith(" · BREACH") && s.damage.Comp("hgr").vented && !s.damage.Comp("hgr").doorsShut && s.damage.Comp("hgr").crew == hgrCrew - Mathf.CeilToInt(hgrCrew * s.damage.stats.breachCrewLoss),
               "\"" + slugHit + "\", crew " + hgrCrew + " → " + s.damage.Comp("hgr").crew);
         if (!Click("eng.pick", "hgr", "HGR cell")) yield break;
         Check("REPAIR waits until the doors are shut", s.damage.EngBlock("party") == "SEAL THE DOORS FIRST", s.damage.EngBlock("party") ?? "open");
         if (!Click("eng.run", "seal", "SEAL rocker (HGR)")) yield break;
-        s.damage.vacuumSpreadPerSecond = 1f;
+        s.damage.stats.vacuumSpreadPerSecond = 1f;
         float tickV = board.MissionSeconds;
         yield return (Func<bool>)(() => board.MissionSeconds > tickV);
-        s.damage.vacuumSpreadPerSecond = 0f;
+        s.damage.stats.vacuumSpreadPerSecond = 0f;
         Check("SEAL shuts its doors: the vacuum does not spread", s.damage.Comp("hgr").doorsShut && !s.damage.Comp("mag").vented && !s.damage.Comp("hab").vented && !s.damage.Comp("eng").vented, "");
         if (!Click("eng.run", "party", "REPAIR rocker (HGR)")) yield break;
         yield return (Func<bool>)(() => !s.damage.PartyOut);
@@ -1455,20 +1457,20 @@ public static class PlaytestRunner
         yield return 2f;
         Check("RECALL brings the team back: no repair lands", !s.damage.PartyOut && s.damage.Comp("eng").integ == 3, "ENG " + s.damage.Comp("eng").integ);
         //     Two slugs into our open port side: the reactor leaks radiation.
-        s.damage.SideArmour[3] = 0f; s.damage.breachChanceSlug = 0f; s.damage.radChanceReactor = 1f;
+        s.damage.SideArmour[3] = 0f; s.damage.stats.breachChanceSlug = 0f; s.damage.stats.radChanceReactor = 1f;
         s.damage.Comp("rct").integ = 5; // the fires above burned it a little; two slugs now leave it at 1
         string radHit = s.damage.TakeSlug("PORT") + " /" + s.damage.TakeSlug("PORT");
-        s.damage.radSpreadPerSecond = 1f;
+        s.damage.stats.radSpreadPerSecond = 1f;
         float tickR = board.MissionSeconds;
         yield return (Func<bool>)(() => board.MissionSeconds > tickR);
-        s.damage.radSpreadPerSecond = 0f;
+        s.damage.stats.radSpreadPerSecond = 0f;
         Check("The reactor leaks radiation into the rooms next to it", radHit.Contains("RADIATION") && s.damage.Comp("rct").rad && s.damage.Comp("mag").rad && s.damage.Comp("bri").rad && !s.damage.Comp("hgr").rad,
               "\"" + radHit + "\", RCT " + s.damage.Comp("rct").integ);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         int magCrew = s.damage.Comp("mag").crew; float radFrom = board.MissionSeconds;
-        yield return (Func<bool>)(() => board.MissionSeconds - radFrom >= s.damage.radCrewLossSeconds + 1);
+        yield return (Func<bool>)(() => board.MissionSeconds - radFrom >= s.damage.stats.radCrewLossSeconds + 1);
         Check("Radiation kills crew while they stay", s.damage.Comp("mag").crew < magCrew, "MAG crew " + magCrew + " → " + s.damage.Comp("mag").crew);
-        s.damage.Comp("rct").integ = s.damage.reactorContainedAt; // stand-in for two repairs
+        s.damage.Comp("rct").integ = s.damage.stats.reactorContainedAt; // stand-in for two repairs
         yield return (Func<bool>)(() => !s.damage.Comp("rct").rad && !s.damage.Comp("mag").rad);
         Check("Reactor repaired: the radiation fades", !s.damage.Comp("rct").rad && !s.damage.Comp("mag").rad && !s.damage.Comp("bri").rad, "");
         if (!Click("rate", "1", "x1 rate key")) yield break;
@@ -1479,8 +1481,9 @@ public static class PlaytestRunner
             var room = s.damage.compartments[c];
             room.integ = rooms0[c][0]; room.crew = rooms0[c][1]; room.fire = room.rad = room.vented = room.doorsShut = false; room.cond = null;
         }
-        s.damage.fireSpreadPerSecond = spreadF; s.damage.vacuumSpreadPerSecond = spreadV; s.damage.radSpreadPerSecond = spreadR;
-        s.damage.fireChanceHE = condChances[0]; s.damage.fireChancePEN = condChances[1]; s.damage.breachChanceSlug = condChances[2]; s.damage.radChanceReactor = condChances[3];
+        s.damage.stats.fireSpreadPerSecond = spreadF; s.damage.stats.vacuumSpreadPerSecond = spreadV; s.damage.stats.radSpreadPerSecond = spreadR;
+        s.damage.stats.fireChanceHE = condChances[0]; s.damage.stats.fireChancePEN = condChances[1]; s.damage.stats.breachChanceSlug = condChances[2]; s.damage.stats.radChanceReactor = condChances[3];
+        if (t07Ship != null) { t07Ship.damage.stats.fireChanceHE = condChances[0]; t07Ship.damage.stats.fireChancePEN = condChances[1]; t07Ship.damage.stats.breachChanceSlug = condChances[2]; t07Ship.damage.stats.radChanceReactor = condChances[3]; }
         if (!Click("drawer", "engineering", "ENGR key (close)")) yield break;
         yield return 1f;
     }
@@ -1580,7 +1583,7 @@ public static class PlaytestRunner
 
     static bool AllFull(HandoffBoardState s)
     {
-        foreach (var b in s.power.buses) if (b.fill < s.power.busMax) return false;
+        foreach (var b in s.power.buses) if (b.fill < s.power.stats.busMax) return false;
         return true;
     }
 

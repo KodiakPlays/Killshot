@@ -37,31 +37,8 @@ public class TacticalTuningEditor : Editor
 
 public static class TacticalTuningOps
 {
-    [MenuItem("Starwolf/Tuning/Apply to Scene")]
-    private static void ApplyMenu()
-    {
-        var t = Find();
-        if (t != null) Apply(t);
-    }
-
-    [MenuItem("Starwolf/Tuning/Capture from Scene")]
-    private static void CaptureMenu()
-    {
-        var t = Find();
-        if (t != null) Capture(t);
-    }
-
-    private static TacticalTuning Find()
-    {
-        var guids = AssetDatabase.FindAssets("t:TacticalTuning");
-        if (guids.Length == 0)
-        {
-            Debug.LogError("[Tuning] No TacticalTuning asset found. " +
-                           "Create one with Assets > Create > Starwolf > Tactical Tuning.");
-            return null;
-        }
-        return AssetDatabase.LoadAssetAtPath<TacticalTuning>(AssetDatabase.GUIDToAssetPath(guids[0]));
-    }
+    // The Starwolf/Tuning/Apply and /Capture menu items went (decision 31): they hid the Starwolf/Tuning window.
+    // The buttons on the asset's inspector still work.
 
     // Set one [SerializeField] private field by name.
     private static void Set(Object target, string field, float v)

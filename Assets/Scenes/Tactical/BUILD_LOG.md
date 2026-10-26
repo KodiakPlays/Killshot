@@ -129,6 +129,7 @@ Do not run ahead. Do one step, show it, wait.
 | 77 | The debris scatter tool: a Debris Field in a level (shape, pieces, count, size, gap, spread; Scatter and Reshuffle) | **Done** — layout check ok; tried in `Level_01` (not saved); playtest not needed (nothing runs at play) |
 | 78 | The active scan cone on the plot: two bright edges and a faint fill, from the small circle round our ship out to the scan's range | **Done** — checked by screenshot; playtest not needed (visual only) |
 | 79 | Ammunition is a real count; boarding goes on while the target moves; the boats' 15,000 km range | **Done** — playtest 191/191 |
+| 80 | The Tuning window's tabs (Ship, Enemy, Board) and a stats file per ship | **Done** — playtest 191/191 |
 
 Steps 6 to 28 and Steps 34 to 79 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -600,6 +601,12 @@ These are settled. Do not reopen them.
     go no further than **15,000 km** from our ship. Outbound past that, they turn home. Coming
     home out of range, a clock runs with a warning; you must close in to collect them. If the
     clock runs out, the boats and their marines are lost. Details in Step 79.
+45. **Each ship's numbers are in its own stats file** (owner, 2026-10-27). `Assets/Ships/Asura`
+    (ours) and `Assets/Ships/Garuda`. **Starwolf → Tuning** has three tabs: **Ship** (our file),
+    **Enemy** (the Garuda's file) and **Board** (the plot, sounds and clock). A ship's file is
+    grouped by ship part: navigation, power, sensors, weapons, hangar, damage, orders. Change a
+    number in play and the game takes it at once, and the file keeps it. The Garuda uses its own
+    damage numbers; it no longer copies ours. Details in Step 80.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -3566,6 +3573,55 @@ LOAD refusing at zero. A ship moving with marines aboard; SECURE and DESTROY on 
 back for the fight after); the boats giving up past 15,000 km; stranded and coming home; stranded
 too long and lost.
 
+### Step 80 — The Tuning window's tabs, and a stats file per ship
+
+**What it is.** **Starwolf → Tuning** opens a window with three tabs:
+
+- **Ship:** our ship (Asura-class destroyer), its file `Assets/Ships/Asura`. Its numbers are grouped
+  by ship part: Navigation, Power, Sensors, Weapons, Hangar, Damage, Orders. Each group opens and
+  closes.
+- **Enemy:** the Garuda (Garuda-class cruiser), `Assets/Ships/Garuda`, with the same groups.
+- **Board:** everything else marked for tuning: the plot, sounds, the clock, the battle space.
+
+**Owner direction (2026-10-25/27).** One stats file per ship (decision 31), and the window as
+sketched: tabs for Ship, Enemy and Board, numbers grouped by ship part. Decision 45.
+
+**How it works.**
+
+- Each ship part has a `Stats` section with its numbers (`NavSystem.Stats` and so on).
+  `ShipStats` (`Systems/ShipStats.cs`) holds one of each, plus the ship's class. The files are in
+  `Assets/Ships`.
+- A new `Ship` component (`Systems/Ship.cs`) on `OwnShip` and `Garuda · Cruiser` points at its file.
+  Every part reads its numbers through it (`nav.stats.topSpeedKms` and so on).
+- While the game runs, each ship plays by a copy of its file, so nothing a run does changes the file.
+  An edit in the Tuning window goes to the file and to the copy: it shows at once and is kept.
+- The weapon mounts (reach, arcs, ammunition at the start) are in the Weapons group. The running
+  game counts its copy's ammunition down.
+- Three values change as the ship plays: the salvo, the PDC loaders, the marines aboard. The file
+  holds where they start.
+- Signal per unit is one number per bus in the Power group (it was on each bus).
+- Every `[Tune]` number on the ship parts moved, including Step 79's PDC rounds per go, boat range
+  and stranded clock.
+
+**Calls made without the owner (can be changed):** the Garuda uses its own damage numbers instead of
+copying ours each tick (`CopyDamageTuning` is gone). Both files start with the same numbers.
+
+**Fixed on the way.**
+
+- `Starwolf/Tuning` never opened: it clashed with the old `Starwolf/Tuning/Apply` and `/Capture`
+  menu items (a menu entry can't be a window and a sub-menu at once). Those two are gone, as
+  decision 31 said; the buttons on that asset's inspector still work.
+- The Level window threw errors when used with the game running. It now says "Stop the game to open
+  or edit a level."
+- The playtest switches off the Garuda's fire, breach and radiation chances too, as it does ours
+  (before, the Garuda copied ours).
+
+**Checked.** Quick checks in play mode: each ship reads its own file through a copy; a file edit
+reaches the running game; the files kept their numbers after a run. The window opened, with all three
+tabs, through a start and stop of the game, with no errors. Playtest 191/191 (run
+2026-10-27_004921). The run before it failed from check 114: the Garuda's own fire chances were on
+and an HE hit burned it out, which the playtest change above fixes.
+
 ---
 
 ## 7 · How to keep this log
@@ -4274,9 +4330,13 @@ Step 67 made the tool and the enemy spawn box. Plan each of these with the owner
    Reshuffle.~~ **Done in Step 77** (Debris Field).
 4. Debris on the board: shown once found. Whether it blocks shots or hides us is a later talk. *(See
    "Ruins and the level, next" below.)*
-5. The Tuning window's tabs: Ship, Enemy, Board (decision 31).
+5. ~~The Tuning window's tabs: Ship, Enemy, Board.~~ **Done in Step 80.**
 6. The mission scripter, its own menu item. Proposed, not agreed: a chain of steps, each with
    "when this happens, do that" rules.
+7. **A map and a preview in the Level window** (owner, 2026-10-27, approved from a sketch; next after
+   the Tuning tabs). The window shows the whole level from above: debris as dots, the husk, the spawn
+   boxes, the battle space's edge. Pick a debris field and its settings (shape, count, gap, size,
+   spread, Scatter, Reshuffle) appear right there, and the map updates as they change, before Scatter.
 
 ### Ruins and the level, next (from Step 73, 2026-10-26)
 

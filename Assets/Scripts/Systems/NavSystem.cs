@@ -30,31 +30,39 @@ public class NavSystem : MonoBehaviour
     [Tooltip("Approach hold ranges, km.")]
     public int[] approachRanges = { 2000, 4000, 8000, 12000, 18000, 24000 };
 
-    [Header("Turning")]
-    [Tooltip("Ordered heading step for the A and D keys, degrees.")]
-    [Tune("Navigation")] public int headingKeyStep = 3;
-    [Tooltip("Degrees the bow swings per game second at full engine-room integrity (the design: 4 per tick at x1; Step 63: x5).")]
-    [Tune("Navigation")] public float turnRate = 20f;
-
-    // Step 41 (owner 2026-10-18): actual chases commanded at capped rates; the hull turns, the velocity
-    // follows, and the sideways part bleeds off (the ship slides). The prototype's numbers (MAX_SPEED 240,
-    // ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988, SPACE_DRAG .9992 per 1/60 s) were slowed to a 2.5 km/s
-    // top speed. Step 63 (owner 2026-10-24, measured with docs/scale-sim): speeds and turns x5, acceleration
-    // x25 and the keep rates to the 5th power. A fight then takes about 7 minutes at x1 instead of 35.
-    [Header("Movement (Step 41; 5x in Step 63)")]
-    [Tooltip("Speed at 100% throttle, km/s (Step 63: 5x the design's 2.5).")]
-    [Tune("Navigation")] public double topSpeedKms = 12.5;
-    [Tooltip("Speeding up, km/s per mission second (Step 63: 25x, so full speed comes 5x sooner).")]
-    [Tune("Navigation")] public double accelKms2 = 0.2175;
-    [Tooltip("Slowing down, km/s per mission second (Step 63: 25x).")]
-    [Tune("Navigation")] public double brakeKms2 = 0.4075;
-    [Tooltip("Share of sideways speed kept each mission second: after a turn the ship slides, then lines up (Step 63: 0.9925^5).")]
-    [Tune("Navigation")] public double driftKeepPerS = 0.96307;
-    [Tooltip("Share of all speed kept each mission second (Step 63: 0.9995^5).")]
-    [Tune("Navigation")] public double dragKeepPerS = 0.997502;
-
     /// <summary>The ship this belongs to. Navigation reads its ENG bus and its engine room.</summary>
     [System.NonSerialized] public HandoffBoardState ship;
+
+    /// <summary>This ship's numbers for movement: its section of the ship's stats file (Assets/Ships,
+    /// Starwolf → Tuning).</summary>
+    [System.Serializable]
+    public class Stats
+    {
+        [Header("Turning")]
+        [Tooltip("Ordered heading step for the A and D keys, degrees.")]
+        public int headingKeyStep = 3;
+        [Tooltip("Degrees the bow swings per game second at full engine-room integrity (the design: 4 per tick at x1; Step 63: x5).")]
+        public float turnRate = 20f;
+        // Step 41 (owner 2026-10-18): actual chases commanded at capped rates; the hull turns, the velocity
+        // follows, and the sideways part bleeds off (the ship slides). The prototype's numbers (MAX_SPEED 240,
+        // ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988, SPACE_DRAG .9992 per 1/60 s) were slowed to a 2.5 km/s
+        // top speed. Step 63 (owner 2026-10-24, measured with docs/scale-sim): speeds and turns x5, acceleration
+        // x25 and the keep rates to the 5th power. A fight then takes about 7 minutes at x1 instead of 35.
+        [Header("Movement (Step 41; 5x in Step 63)")]
+        [Tooltip("Speed at 100% throttle, km/s (Step 63: 5x the design's 2.5).")]
+        public double topSpeedKms = 12.5;
+        [Tooltip("Speeding up, km/s per mission second (Step 63: 25x, so full speed comes 5x sooner).")]
+        public double accelKms2 = 0.2175;
+        [Tooltip("Slowing down, km/s per mission second (Step 63: 25x).")]
+        public double brakeKms2 = 0.4075;
+        [Tooltip("Share of sideways speed kept each mission second: after a turn the ship slides, then lines up (Step 63: 0.9925^5).")]
+        public double driftKeepPerS = 0.96307;
+        [Tooltip("Share of all speed kept each mission second (Step 63: 0.9995^5).")]
+        public double dragKeepPerS = 0.997502;
+    }
+    /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
+    public Stats stats => shipStats ? shipStats.Stats.navigation : (shipStats = GetComponent<Ship>()).Stats.navigation;
+    [System.NonSerialized] Ship shipStats;
     // the bow turns whole degrees; fractions of a degree bank here so x0.25 turns at the right speed too
     [System.NonSerialized] private double turnBank;
     // the board's clock, for drawing between ticks (Step 75)
@@ -86,7 +94,7 @@ public class NavSystem : MonoBehaviour
 
     double EngineRoom => ship.damage.CompHealth("eng") / 5.0;
     /// <summary>Degrees the bow swings per game second now (the design's per-tick swing at x1).</summary>
-    double TurnPerS => System.Math.Max(1, HandoffBoardState.JsRound(turnRate * EngineRoom));
+    double TurnPerS => System.Math.Max(1, HandoffBoardState.JsRound(stats.turnRate * EngineRoom));
     /// <summary>thrCap: ENG units x 20 x the engine room's integrity.</summary>
     public int ThrottleCap => HandoffBoardState.JsRound((double)ship.power.BusUnits("eng") * 20 * EngineRoom);
     /// <summary>gLoadNum: 1 G plus 1 G at full throttle, plus the approach mode's extra.</summary>
@@ -101,7 +109,7 @@ public class NavSystem : MonoBehaviour
     public void SetApproachMode(string k) => approachMode = k;
     public void StepApproachRange(int d) => approachRange = System.Math.Max(0, System.Math.Min(approachRanges.Length - 1, approachRange + d));
     /// <summary>onKey: A and D step the ordered heading and clear the attitude hold.</summary>
-    public void StepOrderedHeading(int dir) { orderedHeading = ((orderedHeading + dir * headingKeyStep) % 360 + 360) % 360; attitude = ""; }
+    public void StepOrderedHeading(int dir) { orderedHeading = ((orderedHeading + dir * stats.headingKeyStep) % 360 + 360) % 360; attitude = ""; }
 
     /// <summary>Start the ship here, facing this way, throttle at zero (where a level puts it).</summary>
     public void PlaceAt(double atX, double atY, int headingDeg)
@@ -143,11 +151,11 @@ public class NavSystem : MonoBehaviour
         double h = heading * System.Math.PI / 180;
         double nx = System.Math.Sin(h), ny = System.Math.Cos(h); // the nose
         double fwd = vx * nx + vy * ny, side = vx * ny - vy * nx; // side: to starboard
-        double keep = System.Math.Pow(dragKeepPerS, dt);
+        double keep = System.Math.Pow(stats.dragKeepPerS, dt);
         fwd *= keep;
-        side *= keep * System.Math.Pow(driftKeepPerS, dt);
-        double target = throttle / 100.0 * topSpeedKms; // the throttle is already held to what ENG power allows (Steer)
-        double step = (fwd < target ? accelKms2 : brakeKms2) * dt;
+        side *= keep * System.Math.Pow(stats.driftKeepPerS, dt);
+        double target = throttle / 100.0 * stats.topSpeedKms; // the throttle is already held to what ENG power allows (Steer)
+        double step = (fwd < target ? stats.accelKms2 : stats.brakeKms2) * dt;
         fwd = System.Math.Abs(target - fwd) <= step ? target : fwd + System.Math.Sign(target - fwd) * step;
         vx = fwd * nx + side * ny;
         vy = fwd * ny - side * nx;

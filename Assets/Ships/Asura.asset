@@ -1,0 +1,150 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f42d8e8ba6864b329322a3b6cddd525, type: 3}
+  m_Name: Asura
+  m_EditorClassIdentifier: Assembly-CSharp::ShipStats
+  shipClass: Asura-class destroyer
+  navigation:
+    headingKeyStep: 3
+    turnRate: 20
+    topSpeedKms: 12.5
+    accelKms2: 0.2175
+    brakeKms2: 0.4075
+    driftKeepPerS: 0.96307
+    dragKeepPerS: 0.997502
+  power:
+    reactorUnits: 10
+    busMax: 5
+    busSignalPerUnit:
+    - 10
+    - 10
+    - 10
+    - 10
+  sensors:
+    senRangeBaseKm: 12000
+    senRangePerStepKm: 3600
+    visualRangeKm: 10000
+    uvRangeFactor: 0.55
+    coneArcMin: 15
+    coneArcMax: 90
+    coneArcStep: 10
+    signalRise: 9
+    signalFall: 6
+    activeScanSignal: 35
+    signalTrackedAt: 45
+    bearingTrailSeconds: 120
+  weapons:
+    mounts:
+    - id: RGA
+      label: RAILGUN TURRET A
+      shortName: RG-A
+      arc: 42
+      halfArc: 80
+      rangeKm: 25000
+      ammo: 22
+    - id: RGB
+      label: RAILGUN TURRET B
+      shortName: RG-B
+      arc: 250
+      halfArc: 80
+      rangeKm: 25000
+      ammo: 22
+    - id: PDA
+      label: PDC GROUP A
+      shortName: PDC-A
+      arc: 42
+      halfArc: 35
+      rangeKm: 10000
+      ammo: 2400
+    - id: PDB
+      label: PDC GROUP B
+      shortName: PDC-B
+      arc: 200
+      halfArc: 35
+      rangeKm: 10000
+      ammo: 2400
+    - id: VLS
+      label: MISSILE VLS
+      shortName: VLS
+      arc: 0
+      halfArc: 180
+      rangeKm: 35000
+      ammo: 8
+    manualStartRangeKm: 10000
+    salvo: 2
+    loaders: 1
+    wepFeedPerUnit: 5
+    wepBleed: 3
+    slugSpeedKms: 250
+    missileSpeedKms: 100
+    missileTurnDegPerS: 6.5
+    missileSpreadDeg: 3
+    pdcRoundsPerGo: 100
+    hitRadii:
+    - klass: FRIGATE
+      km: 95
+    - klass: DESTROYER
+      km: 135
+    - klass: CRUISER
+      km: 210
+    - klass: CARRIER
+      km: 600
+    fireSignalSpike: 25
+    spdStep: 0.25
+    pdcKillChance: 0.7
+    ownHitRadiusKm: 210
+  hangar:
+    fighterSpeedKms: 40
+    fighterAttackKm: 200
+    fighterRunSeconds: 30
+    fighterArmourDamage: 10
+    fighterCompartmentDamage: 1
+    boatSpeedKms: 30
+    marines: 18
+    marinesPerBoat: 6
+    dockKm: 50
+    boardMaxSpeedKms: 0.5
+    boardSeconds: 60
+    defenderShare: 0.25
+    marineLossPerDefender: 0.5
+    boatRangeKm: 15000
+    boatStrandSeconds: 120
+  damage:
+    partySeconds: 6
+    sideArmourMax:
+    - 100
+    - 100
+    - 50
+    - 100
+    slugArmourDamage: 50
+    slugCompartmentDamage: 2
+    fireChanceHE: 0.6
+    fireChancePEN: 0.4
+    breachChanceSlug: 0.5
+    radChanceReactor: 0.5
+    fireDamageSeconds: 30
+    fireSpreadPerSecond: 0.01
+    vacuumSpreadPerSecond: 0.01
+    radSpreadPerSecond: 0.01
+    breachCrewLoss: 0.5
+    radCrewLossSeconds: 20
+    reactorContainedAt: 3
+    radFadeSeconds: 90
+    heArmourDamage: 100
+    empSeconds: 60
+  orders:
+    flickBackSeconds: 0.4
+    auxPerUnit: 3.2
+    orderCostParty: 30
+    orderCostSeal: 25
+    orderCostVent: 15
+    orderFailSeconds: 0.42

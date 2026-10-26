@@ -12,35 +12,40 @@ public class OrdersSystem : MonoBehaviour
     /// <summary>The ship this belongs to. Orders read its AUX bus and send repairs to its damage control.</summary>
     [System.NonSerialized] public HandoffBoardState ship;
 
+    /// <summary>This ship's numbers for orders station: its section of the ship's stats file (Assets/Ships,
+    /// Starwolf → Tuning).</summary>
+    [System.Serializable]
+    public class Stats
+    {
+        [Tooltip("A thrown repair or order rocker flicks back after this long (flickBack).")]
+        public float flickBackSeconds = 0.4f;
+        [Tooltip("Pool gained per AUX unit per game second.")]
+        public double auxPerUnit = 3.2;
+        public int orderCostParty = 30, orderCostSeal = 25, orderCostVent = 15;
+        [Tooltip("The refused order (orderFail) shows this long.")]
+        public float orderFailSeconds = 0.42f;
+    }
+    /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
+    public Stats stats => shipStats ? shipStats.Stats.orders : (shipStats = GetComponent<Ship>()).Stats.orders;
+    [System.NonSerialized] Ship shipStats;
+
     [Header("Alert condition, and the rockers that flick back")]
     [Tooltip("ALERTS index: 0 = CONDITION 3, 1 = CONDITION 2, 2 = CONDITION 1 (set on the orders station).")]
     [Range(0, 2)] public int alert;
-    [Tooltip("A thrown repair or order rocker flicks back after this long (flickBack).")]
-    [Tune("Engineering & orders")]
-    public float flickBackSeconds = 0.4f;
     public System.Collections.Generic.List<string> dcThrown = new System.Collections.Generic.List<string>();
     [Header("Orders station — AUX order pool (ENG_ORDERS)")]
     [Tooltip("AUX order pool, 0..100 (auxCharge).")]
     public double auxCharge;
-    [Tooltip("Pool gained per AUX unit per game second.")]
-    [Tune("Power & signal")]
-    public double auxPerUnit = 3.2;
-    [Tune("Engineering & orders")]
-    public int orderCostParty = 30, orderCostSeal = 25, orderCostVent = 15;
-    [Tooltip("The refused order (orderFail) shows this long.")]
-    [Tune("Engineering & orders")]
-    public float orderFailSeconds = 0.42f;
     public string orderFail;
     /// <summary>Orders refused so far (Step 40: the board sounds a refusal).</summary>
     [System.NonSerialized] public int orderRefusals;
     [System.NonSerialized] float orderFailUntil;
     [System.NonSerialized] readonly System.Collections.Generic.Dictionary<string, float> flickUntil = new System.Collections.Generic.Dictionary<string, float>();
 
-
     public void FlickBack(string id, float now)
     {
         if (!dcThrown.Contains(id)) dcThrown.Add(id);
-        flickUntil[id] = now + flickBackSeconds;
+        flickUntil[id] = now + stats.flickBackSeconds;
     }
 
     /// <summary>Let thrown rockers fall back; true if any did.</summary>
@@ -62,7 +67,7 @@ public class OrdersSystem : MonoBehaviour
     public void DoAlert() { alert = (alert + 1) % 3; }
 
     /// <summary>ENG_ORDERS cost for a fitted order, or -1 (FIRE, BLKHD, SCRUB are not fitted).</summary>
-    public int OrderCost(string id) => id == "party" ? orderCostParty : id == "seal" ? orderCostSeal : id == "vent" ? orderCostVent : -1;
+    public int OrderCost(string id) => id == "party" ? stats.orderCostParty : id == "seal" ? stats.orderCostSeal : id == "vent" ? stats.orderCostVent : -1;
 
     /// <summary>orderBlock: the orders station's refusals. Step 59: the same rules as engineering's rockers
     /// (the design's two sets disagreed on crew; DAMAGE_README.md has one set of rules).</summary>
@@ -74,7 +79,7 @@ public class OrdersSystem : MonoBehaviour
     {
         int cost = OrderCost(id);
         if (cost < 0) return;
-        if (auxCharge < cost || OrderBlock(id) != null) { orderFail = id; orderFailUntil = now + orderFailSeconds; orderRefusals++; }
+        if (auxCharge < cost || OrderBlock(id) != null) { orderFail = id; orderFailUntil = now + stats.orderFailSeconds; orderRefusals++; }
         else { auxCharge = System.Math.Max(0, auxCharge - cost); ship.damage.ApplyOrder(id); }
         FlickBack(id, now);
     }
@@ -82,7 +87,7 @@ public class OrdersSystem : MonoBehaviour
     /// <summary>The tick: AUX charges by units x 3.2 per game second to 100 (owner 2026-10-24: every rate in game time).</summary>
     public void TickAux(double dt)
     {
-        double rate = ship.power.BusUnits("aux") * auxPerUnit * dt;
+        double rate = ship.power.BusUnits("aux") * stats.auxPerUnit * dt;
         if (rate > 0 && auxCharge < 100) auxCharge = System.Math.Min(100, auxCharge + rate);
     }
 

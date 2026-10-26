@@ -22,6 +22,12 @@ public class LevelWindow : EditorWindow
 
     void OnGUI()
     {
+        // a level can't be opened or changed while the game runs
+        if (EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            EditorGUILayout.HelpBox("Stop the game to open or edit a level.", MessageType.Info);
+            return;
+        }
         EditorGUILayout.LabelField("Levels", EditorStyles.boldLabel);
         foreach (var path in Levels())
         {

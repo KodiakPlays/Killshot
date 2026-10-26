@@ -59,6 +59,6 @@ public class EnemyBrain : MonoBehaviour
         if ((Waypoint - at).magnitude <= arriveKm) leg = (leg + 1) % route.Length;
         ship.nav.orderedHeading = TacticalWorld.Bearing(Waypoint - at);
         // a damaged engine room holds it back, as our lever is; wrecked, it drifts (DISABLE, BOARDING_README)
-        ship.nav.throttle = Mathf.Clamp(Mathf.RoundToInt(cruiseKms / (float)ship.nav.topSpeedKms * 100f), 0, ship.nav.ThrottleCap);
+        ship.nav.throttle = Mathf.Clamp(Mathf.RoundToInt(cruiseKms / (float)ship.nav.stats.topSpeedKms * 100f), 0, ship.nav.ThrottleCap);
     }
 }

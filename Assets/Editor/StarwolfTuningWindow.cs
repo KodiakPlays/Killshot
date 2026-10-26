@@ -7,23 +7,30 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 
 /// <summary>
-/// Starwolf → Tuning: every value marked [Tune("Section")] on the open scene's components, in one
-/// window, grouped by section (owner, 2026-10-17). Edits go straight to the real values. Changes
-/// made in play mode are normally lost when play stops; tick "Keep play-mode changes" to copy them
-/// back afterwards.
+/// Starwolf → Tuning (owner, 2026-10-27): three tabs.
+/// - Ship: our ship's stats file, section by section (navigation, power, sensors, weapons, hangar, damage, orders).
+/// - Enemy: the same for each enemy ship in the open scene.
+/// - Board: every value marked [Tune("Section")] on the open scene's other components (the plot, sounds, the
+///   clock), grouped by section, as before (owner, 2026-10-17).
+/// A stats file edit is kept, in play mode too, and the running game takes it at once. A Board edit made in
+/// play mode is lost when play stops, unless "Keep play-mode changes" is ticked.
 /// </summary>
 public class StarwolfTuningWindow : EditorWindow
 {
     [MenuItem("Starwolf/Tuning")]
     static void Open() => GetWindow<StarwolfTuningWindow>("Starwolf Tuning");
 
+    static readonly string[] Tabs = { "Ship", "Enemy", "Board" };
+    int tab;
+
     class Entry { public SerializedObject so; public string path; public string section; public string owner; public string label; }
 
     Vector2 scroll;
     readonly Dictionary<string, bool> folds = new Dictionary<string, bool>();
     List<Entry> entries;
+    List<Ship> ships;
     // IMGUI draws each frame twice (Layout, then Repaint) and both passes must draw the same controls,
-    // so what to draw is decided on Layout only: the list is rebuilt there, and play mode is read there
+    // so what to draw is decided on Layout only: the lists are rebuilt there, and play mode is read there
     bool stale = true, playing;
     static bool keepPlayChanges;
     // play-mode snapshot: object id → (property path → value)
@@ -39,17 +46,72 @@ public class StarwolfTuningWindow : EditorWindow
         if (Event.current.type == EventType.Layout)
         {
             playing = EditorApplication.isPlaying;
-            if (stale || entries == null) { entries = Collect(); stale = false; }
+            if (stale || entries == null || ships == null)
+            {
+                entries = Collect();
+                ships = UnityEngine.Object.FindObjectsByType<Ship>(FindObjectsInactive.Include, FindObjectsSortMode.None).Where(s => s).OrderBy(s => s.name).ToList();
+                stale = false;
+            }
         }
-        if (entries == null) return;
+        if (entries == null || ships == null) return;
+        tab = GUILayout.Toolbar(tab, Tabs);
+        EditorGUILayout.Space(4);
+        scroll = EditorGUILayout.BeginScrollView(scroll);
+        if (tab == 2) DrawBoard();
+        else
+        {
+            // ours is the ship that is not a contact; the enemies are the contacts
+            var list = ships.Where(s => s && (s.GetComponent<WorldContact>() == null) == (tab == 0)).ToList(); // a ship from the last play is gone
+            if (list.Count == 0) EditorGUILayout.HelpBox(tab == 0 ? "No ship of ours in the open scene. Open 02.1_Grid." : "No enemy ship in the open scene. Open 02.1_Grid.", MessageType.Info);
+            foreach (var ship in list) DrawShip(ship);
+        }
+        EditorGUILayout.EndScrollView();
+    }
+
+    // One ship's stats file: its class and file at the top, then each section (Navigation, Power, ...) folding open.
+    void DrawShip(Ship ship)
+    {
+        if (ship == null) { stale = true; return; }
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            EditorGUILayout.LabelField(ship.statsFile ? ship.statsFile.shipClass : ship.name, EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+            var file = (ShipStats)EditorGUILayout.ObjectField(ship.statsFile, typeof(ShipStats), false, GUILayout.Width(200));
+            if (EditorGUI.EndChangeCheck() && !playing)
+            {
+                Undo.RecordObject(ship, "Change stats file");
+                ship.statsFile = file;
+                EditorSceneManager.MarkSceneDirty(ship.gameObject.scene);
+            }
+        }
+        if (!ship.statsFile) { EditorGUILayout.HelpBox(ship.name + " has no stats file. Pick one in Assets/Ships.", MessageType.Warning); return; }
+        var so = new SerializedObject(ship.statsFile);
+        so.Update();
+        var it = so.GetIterator();
+        it.NextVisible(true); // m_Script
+        EditorGUI.BeginChangeCheck();
+        while (it.NextVisible(false))
+        {
+            if (it.name == "shipClass") { EditorGUILayout.PropertyField(it, new GUIContent("Ship class")); continue; }
+            EditorGUILayout.PropertyField(it, true); // a section, with its own fold-out
+        }
+        if (EditorGUI.EndChangeCheck())
+        {
+            so.ApplyModifiedProperties();
+            AssetDatabase.SaveAssetIfDirty(ship.statsFile);
+            if (playing) ship.PullFromFile();
+        }
+        EditorGUILayout.Space(10);
+    }
+
+    void DrawBoard()
+    {
         if (playing)
         {
             EditorGUILayout.HelpBox("Play mode: changes here are lost when play stops, unless you tick the box below.", MessageType.Warning);
             keepPlayChanges = EditorGUILayout.ToggleLeft("Keep play-mode changes when play stops", keepPlayChanges);
         }
         if (entries.Count == 0) { EditorGUILayout.HelpBox("Nothing tunable in the open scene. Open 02.1_Grid.", MessageType.Info); return; }
-
-        scroll = EditorGUILayout.BeginScrollView(scroll);
         foreach (var group in entries.GroupBy(e => e.section).OrderBy(g => g.Key))
         {
             bool open;
@@ -70,12 +132,11 @@ public class StarwolfTuningWindow : EditorWindow
             }
             EditorGUI.indentLevel--;
         }
-        EditorGUILayout.EndScrollView();
     }
 
     static string Label(Entry e)
     {
-        // "buses.Array.data[2].signalPerUnit" (PowerSystem) → "Signal Per Unit — SEN"
+        // "lamps.Array.data[2].glow" → "Glow — SEN" (the element's label, key or name)
         string name = ObjectNames.NicifyVariableName(e.path.Substring(e.path.LastIndexOf('.') + 1));
         int a = e.path.IndexOf(".Array.data[");
         if (a < 0) return name;
@@ -133,7 +194,7 @@ public class StarwolfTuningWindow : EditorWindow
 
     static bool IsNested(Type t) => t != null && t.IsClass && t != typeof(string) && !typeof(UnityEngine.Object).IsAssignableFrom(t) && t.IsSerializable; // [Serializable] is not a real attribute at runtime
 
-    // ---- keep play-mode changes ---------------------------------------------------------------
+    // ---- keep play-mode changes (Board tab) ------------------------------------------------------
 
     void OnPlayMode(PlayModeStateChange change)
     {
@@ -168,6 +229,7 @@ public class StarwolfTuningWindow : EditorWindow
             keepPlayChanges = false;
             Debug.Log("[Tuning] play-mode changes kept. Save the scene to keep them for good.");
         }
+        ships = null; // the ships of the run that just ended are gone
         stale = true;
         Repaint();
     }

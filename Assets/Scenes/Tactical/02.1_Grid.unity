@@ -6826,6 +6826,7 @@ GameObject:
   - component: {fileID: 765287336}
   - component: {fileID: 765287337}
   - component: {fileID: 765287338}
+  - component: {fileID: 765287339}
   m_Layer: 0
   m_Name: "Garuda \xB7 Cruiser"
   m_TagString: Untagged
@@ -6905,13 +6906,6 @@ MonoBehaviour:
   approachMode: DIRECT
   approachRange: 2
   approachRanges: d0070000a00f0000401f0000e02e000050460000c05d0000
-  headingKeyStep: 3
-  turnRate: 20
-  topSpeedKms: 12.5
-  accelKms2: 0.2175
-  brakeKms2: 0.4075
-  driftKeepPerS: 0.96307
-  dragKeepPerS: 0.997502
 --- !u!114 &765287332
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6924,33 +6918,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 315a87cb26a1d4d16bd5b6470f2a87ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PowerSystem
-  reactorUnits: 10
-  busMax: 5
   buses:
   - key: eng
     label: ENG
     fill: 0
     mode: 1
     dir: 1
-    signalPerUnit: 10
   - key: wep
     label: WEP
     fill: 0
     mode: 1
     dir: 1
-    signalPerUnit: 10
   - key: sen
     label: SEN
     fill: 0
     mode: 1
     dir: 1
-    signalPerUnit: 10
   - key: aux
     label: AUX
     fill: 0
     mode: 1
     dir: 1
-    signalPerUnit: 10
   shed: 0
 --- !u!114 &765287333
 MonoBehaviour:
@@ -6967,10 +6955,6 @@ MonoBehaviour:
   dradis: 1
   active: 0
   senBoost: 1
-  senRangeBaseKm: 12000
-  senRangePerStepKm: 3600
-  visualRangeKm: 10000
-  uvRangeFactor: 0.55
   spectra:
   - THERM
   - RAD
@@ -6979,17 +6963,9 @@ MonoBehaviour:
   spectrum: THERM
   coneBrg: 62
   coneArc: 40
-  coneArcMin: 15
-  coneArcMax: 90
-  coneArcStep: 10
   signal: 0
-  signalRise: 9
-  signalFall: 6
-  activeScanSignal: 35
-  signalTrackedAt: 45
   identified:
   - bc1
-  bearingTrailSeconds: 120
 --- !u!114 &765287334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7024,43 +7000,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ec965ef54abf43fb8d6283da82d382e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponSystem
-  manualStartRangeKm: 10000
-  mounts:
-  - id: RGA
-    label: RAILGUN TURRET A
-    shortName: RG-A
-    arc: 42
-    halfArc: 80
-    rangeKm: 25000
-    ammo: 22
-  - id: RGB
-    label: RAILGUN TURRET B
-    shortName: RG-B
-    arc: 250
-    halfArc: 80
-    rangeKm: 25000
-    ammo: 22
-  - id: PDA
-    label: PDC GROUP A
-    shortName: PDC-A
-    arc: 42
-    halfArc: 35
-    rangeKm: 10000
-    ammo: 2400
-  - id: PDB
-    label: PDC GROUP B
-    shortName: PDC-B
-    arc: 200
-    halfArc: 35
-    rangeKm: 10000
-    ammo: 2400
-  - id: VLS
-    label: MISSILE VLS
-    shortName: VLS
-    arc: 0
-    halfArc: 180
-    rangeKm: 35000
-    ammo: 8
   systems:
   - id: RG
     label: RAILGUN
@@ -7124,33 +7063,11 @@ MonoBehaviour:
     wy: 0
     t: 0
   warhead: 0
-  salvo: 2
-  loaders: 1
   quads: 01010000
   pdcAuto: 0000
   fired: 0
   wepCharge: 0
-  wepFeedPerUnit: 5
-  wepBleed: 3
   fireLever: 0
-  slugSpeedKms: 250
-  missileSpeedKms: 100
-  missileTurnDegPerS: 6.5
-  missileSpreadDeg: 3
-  pdcRoundsPerGo: 100
-  hitRadii:
-  - klass: FRIGATE
-    km: 95
-  - klass: DESTROYER
-    km: 135
-  - klass: CRUISER
-    km: 210
-  - klass: CARRIER
-    km: 600
-  fireSignalSpike: 25
-  spdStep: 0.25
-  pdcKillChance: 0.7
-  ownHitRadiusKm: 210
 --- !u!114 &765287336
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7272,21 +7189,6 @@ MonoBehaviour:
   launchConeDeg: 60
   launchLever: 0
   leverFireAt: 0.9
-  fighterSpeedKms: 40
-  fighterAttackKm: 200
-  fighterRunSeconds: 30
-  fighterArmourDamage: 10
-  fighterCompartmentDamage: 1
-  boatSpeedKms: 30
-  marines: 18
-  marinesPerBoat: 6
-  dockKm: 50
-  boardMaxSpeedKms: 0.5
-  boardSeconds: 60
-  defenderShare: 0.25
-  marineLossPerDefender: 0.5
-  boatRangeKm: 15000
-  boatStrandSeconds: 120
 --- !u!114 &765287337
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7361,30 +7263,8 @@ MonoBehaviour:
     rad: 0
     doorsShut: 0
   engSel: rct
-  partySeconds: 6
   partyComp: 
   partyT: -1
-  sideArmourMax:
-  - 100
-  - 100
-  - 50
-  - 100
-  slugArmourDamage: 50
-  slugCompartmentDamage: 2
-  fireChanceHE: 0.6
-  fireChancePEN: 0.4
-  breachChanceSlug: 0.5
-  radChanceReactor: 0.5
-  fireDamageSeconds: 30
-  fireSpreadPerSecond: 0.01
-  vacuumSpreadPerSecond: 0.01
-  radSpreadPerSecond: 0.01
-  breachCrewLoss: 0.5
-  radCrewLossSeconds: 20
-  reactorContainedAt: 3
-  radFadeSeconds: 90
-  heArmourDamage: 100
-  empSeconds: 60
 --- !u!114 &765287338
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7398,15 +7278,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OrdersSystem
   alert: 0
-  flickBackSeconds: 0.4
   dcThrown: []
   auxCharge: 0
-  auxPerUnit: 3.2
-  orderCostParty: 30
-  orderCostSeal: 25
-  orderCostVent: 15
-  orderFailSeconds: 0.42
   orderFail: 
+--- !u!114 &765287339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765287326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dbfbcc980c6846d1b2162a26c9f3a1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Ship
+  statsFile: {fileID: 11400000, guid: 37594b585f09844fe8d12a3618b4691d, type: 2}
 --- !u!1 &768912739
 GameObject:
   m_ObjectHideFlags: 0
@@ -8382,6 +8269,7 @@ GameObject:
   - component: {fileID: 891763128}
   - component: {fileID: 891763129}
   - component: {fileID: 891763130}
+  - component: {fileID: 891763131}
   m_Layer: 0
   m_Name: OwnShip
   m_TagString: Untagged
@@ -8426,13 +8314,6 @@ MonoBehaviour:
   approachMode: DIRECT
   approachRange: 2
   approachRanges: d0070000a00f0000401f0000e02e000050460000c05d0000
-  headingKeyStep: 3
-  turnRate: 20
-  topSpeedKms: 12.5
-  accelKms2: 0.2175
-  brakeKms2: 0.4075
-  driftKeepPerS: 0.96307
-  dragKeepPerS: 0.997502
 --- !u!114 &891763124
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8445,33 +8326,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 315a87cb26a1d4d16bd5b6470f2a87ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PowerSystem
-  reactorUnits: 10
-  busMax: 5
   buses:
   - key: eng
     label: ENG
     fill: 0
     mode: 1
     dir: 1
-    signalPerUnit: 10
   - key: wep
     label: WEP
     fill: 0
     mode: 1
     dir: 1
-    signalPerUnit: 10
   - key: sen
     label: SEN
     fill: 0
     mode: 1
     dir: 1
-    signalPerUnit: 10
   - key: aux
     label: AUX
     fill: 0
     mode: 1
     dir: 1
-    signalPerUnit: 10
   shed: 0
 --- !u!114 &891763125
 MonoBehaviour:
@@ -8488,10 +8363,6 @@ MonoBehaviour:
   dradis: 1
   active: 0
   senBoost: 1
-  senRangeBaseKm: 12000
-  senRangePerStepKm: 3600
-  visualRangeKm: 10000
-  uvRangeFactor: 0.55
   spectra:
   - THERM
   - RAD
@@ -8500,17 +8371,9 @@ MonoBehaviour:
   spectrum: THERM
   coneBrg: 62
   coneArc: 40
-  coneArcMin: 15
-  coneArcMax: 90
-  coneArcStep: 10
   signal: 0
-  signalRise: 9
-  signalFall: 6
-  activeScanSignal: 35
-  signalTrackedAt: 45
   identified:
   - bc1
-  bearingTrailSeconds: 120
 --- !u!114 &891763126
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8545,43 +8408,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ec965ef54abf43fb8d6283da82d382e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponSystem
-  manualStartRangeKm: 10000
-  mounts:
-  - id: RGA
-    label: RAILGUN TURRET A
-    shortName: RG-A
-    arc: 42
-    halfArc: 80
-    rangeKm: 25000
-    ammo: 22
-  - id: RGB
-    label: RAILGUN TURRET B
-    shortName: RG-B
-    arc: 250
-    halfArc: 80
-    rangeKm: 25000
-    ammo: 22
-  - id: PDA
-    label: PDC GROUP A
-    shortName: PDC-A
-    arc: 42
-    halfArc: 35
-    rangeKm: 10000
-    ammo: 2400
-  - id: PDB
-    label: PDC GROUP B
-    shortName: PDC-B
-    arc: 200
-    halfArc: 35
-    rangeKm: 10000
-    ammo: 2400
-  - id: VLS
-    label: MISSILE VLS
-    shortName: VLS
-    arc: 0
-    halfArc: 180
-    rangeKm: 35000
-    ammo: 8
   systems:
   - id: RG
     label: RAILGUN
@@ -8645,33 +8471,11 @@ MonoBehaviour:
     wy: 0
     t: 0
   warhead: 0
-  salvo: 2
-  loaders: 1
   quads: 01010000
   pdcAuto: 0000
   fired: 0
   wepCharge: 0
-  wepFeedPerUnit: 5
-  wepBleed: 3
   fireLever: 0
-  slugSpeedKms: 250
-  missileSpeedKms: 100
-  missileTurnDegPerS: 6.5
-  missileSpreadDeg: 3
-  pdcRoundsPerGo: 100
-  hitRadii:
-  - klass: FRIGATE
-    km: 95
-  - klass: DESTROYER
-    km: 135
-  - klass: CRUISER
-    km: 210
-  - klass: CARRIER
-    km: 600
-  fireSignalSpike: 25
-  spdStep: 0.25
-  pdcKillChance: 0.7
-  ownHitRadiusKm: 210
 --- !u!114 &891763128
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8793,21 +8597,6 @@ MonoBehaviour:
   launchConeDeg: 60
   launchLever: 0
   leverFireAt: 0.9
-  fighterSpeedKms: 40
-  fighterAttackKm: 200
-  fighterRunSeconds: 30
-  fighterArmourDamage: 10
-  fighterCompartmentDamage: 1
-  boatSpeedKms: 30
-  marines: 18
-  marinesPerBoat: 6
-  dockKm: 50
-  boardMaxSpeedKms: 0.5
-  boardSeconds: 60
-  defenderShare: 0.25
-  marineLossPerDefender: 0.5
-  boatRangeKm: 15000
-  boatStrandSeconds: 120
 --- !u!114 &891763129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8882,30 +8671,8 @@ MonoBehaviour:
     rad: 0
     doorsShut: 0
   engSel: rct
-  partySeconds: 6
   partyComp: 
   partyT: -1
-  sideArmourMax:
-  - 100
-  - 100
-  - 50
-  - 100
-  slugArmourDamage: 50
-  slugCompartmentDamage: 2
-  fireChanceHE: 0.6
-  fireChancePEN: 0.4
-  breachChanceSlug: 0.5
-  radChanceReactor: 0.5
-  fireDamageSeconds: 30
-  fireSpreadPerSecond: 0.01
-  vacuumSpreadPerSecond: 0.01
-  radSpreadPerSecond: 0.01
-  breachCrewLoss: 0.5
-  radCrewLossSeconds: 20
-  reactorContainedAt: 3
-  radFadeSeconds: 90
-  heArmourDamage: 100
-  empSeconds: 60
 --- !u!114 &891763130
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8919,15 +8686,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OrdersSystem
   alert: 0
-  flickBackSeconds: 0.4
   dcThrown: []
   auxCharge: 0
-  auxPerUnit: 3.2
-  orderCostParty: 30
-  orderCostSeal: 25
-  orderCostVent: 15
-  orderFailSeconds: 0.42
   orderFail: 
+--- !u!114 &891763131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891763121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dbfbcc980c6846d1b2162a26c9f3a1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Ship
+  statsFile: {fileID: 11400000, guid: 70c81e81e94ce4a5bad261b6a65d517e, type: 2}
 --- !u!114 &924229980 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8633724096417682163, guid: 521430794318b4beabe3bf3f1f3a523c, type: 3}

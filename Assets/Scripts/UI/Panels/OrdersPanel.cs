@@ -102,7 +102,7 @@ public class OrdersPanel : HandoffPanel
             auxPct.text = HandoffBoardState.JsRound(s.orders.auxCharge) + "%";
             Paint(auxPct, s.orders.auxCharge >= 30 ? nominal : aux > 0 ? caution : alarm);
         }
-        if (auxRate) auxRate.text = aux > 0 ? "+" + HandoffBoardState.JsToFixed(aux * s.orders.auxPerUnit, 1) + "/S" : "NO FEED";
+        if (auxRate) auxRate.text = aux > 0 ? "+" + HandoffBoardState.JsToFixed(aux * s.orders.stats.auxPerUnit, 1) + "/S" : "NO FEED";
         int lit = HandoffBoardState.JsRound(s.orders.auxCharge / 100.0 * 10);
         for (int k = 0; k < auxCells.Length; k++) Show(auxCells[k], k + 1 <= lit);
 

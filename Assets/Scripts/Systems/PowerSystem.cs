@@ -19,17 +19,8 @@ public class PowerSystem : MonoBehaviour
         public BusMode mode = BusMode.Standby;
         [Tooltip("Direction the selector steps next: +1 toward DRAW, -1 toward VENT (busDir).")]
         public int dir = 1;
-        [Tooltip("Signal each unit on this bus adds, on the 0–100 scale (Step 35, owner 2026-10-17). "
-               + "Default 10: a full reactor of 10 units reads 100 (prototype getSig).")]
-        [Tune("Power & signal")]
-        public float signalPerUnit = 10f;
     }
 
-    [Header("Reactor and buses — REACTOR_UNITS, BUS_MAX, BUSES")]
-    [Tune("Power & signal")]
-    public int reactorUnits = 10;
-    [Tune("Power & signal")]
-    public int busMax = 5;
     public Bus[] buses =
     {
         new Bus { key = "eng", label = "ENG" },
@@ -43,12 +34,28 @@ public class PowerSystem : MonoBehaviour
     /// <summary>The ship this belongs to. Power reads its reactor room, and whether an EMP or its death
     /// has put the power out.</summary>
     [System.NonSerialized] public HandoffBoardState ship;
+
+    /// <summary>This ship's numbers for reactor and buses: its section of the ship's stats file (Assets/Ships,
+    /// Starwolf → Tuning).</summary>
+    [System.Serializable]
+    public class Stats
+    {
+        [Header("Reactor and buses — REACTOR_UNITS, BUS_MAX, BUSES")]
+        public int reactorUnits = 10;
+        public int busMax = 5;
+        [Tooltip("Signal each unit adds, per bus (ENG, WEP, SEN, AUX), on the 0–100 scale (Step 35, owner 2026-10-17). "
+               + "Default 10: a full reactor of 10 units reads 100 (prototype getSig).")]
+        public float[] busSignalPerUnit = { 10f, 10f, 10f, 10f };
+    }
+    /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
+    public Stats stats => shipStats ? shipStats.Stats.power : (shipStats = GetComponent<Ship>()).Stats.power;
+    [System.NonSerialized] Ship shipStats;
     // Owner 2026-10-24: every rate runs in game time. A bus fills or drains one whole unit per game second;
     // fractions bank here so x0.25 is exact too.
     [System.NonSerialized] private double bank;
 
     /// <summary>reactorCap: reactor damage caps the units, floored at 2.</summary>
-    public int ReactorCap => Mathf.Max(2, HandoffBoardState.JsRound(ship.damage.CompHealth("rct") / 5f * reactorUnits));
+    public int ReactorCap => Mathf.Max(2, HandoffBoardState.JsRound(ship.damage.CompHealth("rct") / 5f * stats.reactorUnits));
 
     public int TotalFill
     {
@@ -59,7 +66,7 @@ public class PowerSystem : MonoBehaviour
     public int Available => ReactorCap - TotalFill;
 
     /// <summary>A bus in DRAW that will gain a unit on the next tick (the board's p1–p5).</summary>
-    public bool Climbing(Bus b) => b.mode == BusMode.Draw && b.fill < busMax && TotalFill < ReactorCap;
+    public bool Climbing(Bus b) => b.mode == BusMode.Draw && b.fill < stats.busMax && TotalFill < ReactorCap;
 
     public int BusUnits(string key) { foreach (var b in buses) if (b.key == key) return b.fill; return 0; }
 
@@ -90,7 +97,7 @@ public class PowerSystem : MonoBehaviour
     {
         var eng = buses[0];
         eng.mode = BusMode.Draw;
-        eng.fill = busMax;
+        eng.fill = stats.busMax;
     }
 
     /// <summary>One board tick of dt game seconds: the buses fill and drain, held to the reactor's output.</summary>
@@ -108,7 +115,7 @@ public class PowerSystem : MonoBehaviour
         int total = TotalFill, cap = ReactorCap;
         // drain first, so a bus dropping out of DRAW frees its units the same tick
         foreach (var b in buses) if (b.mode == BusMode.Vent && b.fill > 0) { b.fill--; total--; }
-        foreach (var b in buses) if (b.mode == BusMode.Draw && b.fill < busMax && total < cap) { b.fill++; total++; }
+        foreach (var b in buses) if (b.mode == BusMode.Draw && b.fill < stats.busMax && total < cap) { b.fill++; total++; }
         HoldToCap(total);
     }
 

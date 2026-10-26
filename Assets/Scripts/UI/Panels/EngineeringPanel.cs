@@ -138,7 +138,7 @@ public class EngineeringPanel : HandoffPanel
 
         // degradedLine
         var parts = new System.Collections.Generic.List<string>();
-        if (s.power.ReactorCap < s.power.reactorUnits) parts.Add("RCT ▸ CORE " + s.power.ReactorCap + " OF " + s.power.reactorUnits);
+        if (s.power.ReactorCap < s.power.stats.reactorUnits) parts.Add("RCT ▸ CORE " + s.power.ReactorCap + " OF " + s.power.stats.reactorUnits);
         if (!s.damage.HgrOk) parts.Add("HGR ▸ FLIGHT OPS DOWN");
         if (!s.damage.MagOk) parts.Add("MAG ▸ NO ORDNANCE");
         if (s.damage.CompHealth("eng") < 5) parts.Add("ENG ▸ THRUST " + HandoffBoardState.JsRound(s.damage.EngFactor * 100f) + "%");
@@ -152,7 +152,7 @@ public class EngineeringPanel : HandoffPanel
         if (partyLine)
         {
             var pc = s.damage.PartyOut ? s.damage.Comp(s.damage.partyComp) : null;
-            partyLine.text = Html(s.damage.PartyOut ? "DC PARTY ▸ " + (pc != null ? pc.name : s.damage.partyComp) + "   " + Mathf.FloorToInt(s.damage.partyT) + " OF " + Mathf.RoundToInt(s.damage.partySeconds) : "DC PARTY ▸ STANDBY"); // game seconds (Step 57)
+            partyLine.text = Html(s.damage.PartyOut ? "DC PARTY ▸ " + (pc != null ? pc.name : s.damage.partyComp) + "   " + Mathf.FloorToInt(s.damage.partyT) + " OF " + Mathf.RoundToInt(s.damage.stats.partySeconds) : "DC PARTY ▸ STANDBY"); // game seconds (Step 57)
             Paint(partyLine, s.damage.PartyOut ? ownForce : wellStencil);
         }
 
@@ -215,7 +215,7 @@ public class EngineeringPanel : HandoffPanel
             var pic = hullSides[i];
             if (!pic) continue;
             pic.rectTransform.sizeDelta = new Vector2(side, side);
-            Paint(pic, armour[i] >= s.damage.sideArmourMax[i] ? shipInk : armour[i] > 0f ? caution : alarm);
+            Paint(pic, armour[i] >= s.damage.stats.sideArmourMax[i] ? shipInk : armour[i] > 0f ? caution : alarm);
         }
     }
 }

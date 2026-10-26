@@ -161,7 +161,7 @@ public class SensorsPanel : HandoffPanel
     private void Update()
     {
         if (Controls == null || !sigLamp) return;
-        bool tracked = State.sensors.signal >= State.sensors.signalTrackedAt;
+        bool tracked = State.sensors.signal >= State.sensors.stats.signalTrackedAt;
         bool lit = !tracked || (Time.unscaledTime % blinkSeconds) / blinkSeconds < blinkLitFraction;
         Blink(sigLamp, sigGlow, lit);
         Blink(boxLamp, boxGlow, lit);
@@ -178,7 +178,7 @@ public class SensorsPanel : HandoffPanel
     {
         var s = State;
         int pct = HandoffBoardState.JsRound(s.sensors.signal);
-        Color sigInk = s.sensors.signal >= s.sensors.signalTrackedAt ? alarm : s.sensors.signal > 0 ? caution : label;
+        Color sigInk = s.sensors.signal >= s.sensors.stats.signalTrackedAt ? alarm : s.sensors.signal > 0 ? caution : label;
         if (pctText) { pctText.text = pct + "%"; Paint(pctText, sigInk); }
         int litCells = HandoffBoardState.JsRound(s.sensors.signal / 100f * 10f);
         for (int k = 0; cells != null && k < cells.Length; k++)
@@ -186,14 +186,14 @@ public class SensorsPanel : HandoffPanel
             int n = k + 1;
             Paint(cells[k], n <= litCells ? (n >= 8 ? alarm : n >= 5 ? caution : Color.white) : cellUnlit);
         }
-        Color lampInk = s.sensors.signal >= s.sensors.signalTrackedAt ? alarm : s.sensors.signal > 0 ? caution : lampOffPanel;
+        Color lampInk = s.sensors.signal >= s.sensors.stats.signalTrackedAt ? alarm : s.sensors.signal > 0 ? caution : lampOffPanel;
         Paint(lamp, lampInk);
         Paint(glow, lampInk);
         Show(glow, s.sensors.signal > 0);
         if (note)
         {
             int n = s.sensors.Trackers();
-            note.text = s.sensors.signal >= s.sensors.signalTrackedAt
+            note.text = s.sensors.signal >= s.sensors.stats.signalTrackedAt
                 ? n + " HOSTILE " + (n == 1 ? "SET HAS" : "SETS HAVE") + " YOUR RANGE"
                 : s.sensors.signal <= 0 ? "RUNNING SILENT"
                 : s.sensors.signal > s.sensors.SignalTarget ? "EMISSIONS DECAYING — NOT YET RESOLVED"

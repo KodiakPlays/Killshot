@@ -151,7 +151,7 @@ public class FireControlPanel : HandoffPanel
     {
         var s = State;
         var y = s.weapons.Sys;
-        var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.mounts[1];
+        var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.stats.mounts[1];
         var tgt = s.TrackOf(s.weapons.target);
         bool scopeDown = Controls.Motion && Controls.Motion.ScopeDown;
 
@@ -215,7 +215,7 @@ public class FireControlPanel : HandoffPanel
         if (solSpd) { solSpd.text = sol.set ? sol.spd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "—"; Paint(solSpd, valInk); }
         rngKnob.Set(sol.set ? (sol.rangeKm / 100f * 12f) % 360f : 0f);
         brgKnob.Set(sol.set ? sol.brg * 6f : 0f);
-        spdKnob.Set(sol.set ? (HandoffBoardState.JsRound(sol.spd / s.weapons.spdStep) * 12) % 360 : 0f);
+        spdKnob.Set(sol.set ? (HandoffBoardState.JsRound(sol.spd / s.weapons.stats.spdStep) * 12) % 360 : 0f);
 
         // 03 capacitor
         float cost = s.weapons.ShotCost;

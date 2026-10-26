@@ -92,7 +92,7 @@ public class HandoffPeriscopePanel : HandoffPanel
     public override void Refresh()
     {
         var s = State;
-        var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.mounts[1];
+        var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.stats.mounts[1];
         var tgt = s.TrackOf(s.weapons.target);
         bool down = ScopeDown;
 
@@ -178,7 +178,7 @@ public class HandoffPeriscopePanel : HandoffPanel
         {
             float a = ship.damage.SideArmour[i];
             var room = ship.damage.Comp(DamageSystem.RoomBehind(i));
-            parts[i] = a > 0f ? FaceNames[i] + " " + HandoffBoardState.JsRound(a / ship.damage.sideArmourMax[i] * 100f)
+            parts[i] = a > 0f ? FaceNames[i] + " " + HandoffBoardState.JsRound(a / ship.damage.stats.sideArmourMax[i] * 100f)
                               : FaceNames[i] + " ▸ " + (room != null ? room.tag + " " + room.integ : "OPEN");
         }
         return string.Join(" · ", parts);
