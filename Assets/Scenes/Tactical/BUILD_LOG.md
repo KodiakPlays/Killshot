@@ -3995,6 +3995,19 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
     reads it as `hangar.leverFireAt`.
   - `HandoffHangarPanel` became `UI/Panels/HangarPanel` (its link kept, so the prefab still holds it).
   - No behaviour change. Playtest 171/171 (run 2026-10-26_232330).
+- **Engineering drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Engineering.prefab`.
+  - `Drawers/State · engineering` became `Drawers/Engineering`, and `HandoffEngineeringPanel`
+    moved onto it.
+  - Parts grouped: `Frame`, `Header`, `Compartments` (`Ship picture`, and one group per room:
+    `MAG`, `BRI`, `HAB`, `HGR`, `RCT`, `ENG`), `Status`, `Acting on` (`Selector`), `Repairs`
+    (`Housings`, `REBOOT`, `REPAIR`, `SEAL`, `VENT`, `RECALL`, `SPARE`). The old row highlight
+    stays, switched off, as `Compartments/Old row highlight (off)`. Screenshots before and after
+    match pixel for pixel.
+  - Art list: 17 entries. The six repair rockers stay out: each has its own up, locked and thrown
+    sprites on the panel.
+  - Art moved: the casting and the REBOOT rocker sprites to `Art/Engineering`; the 22 × 30 rockers,
+    the blank rocker and `rocker_housing_r3` to `Art/Switches`; `plate_dark` to `Art/Plates`.
+  - Playtest 171/171 (run 2026-10-26_232931).
 
 **Next:** the engineering panel as a prefab (UI Restructure), then the damage system (Tooling), then
 orders, then the periscope. Owner 2026-10-26: "split, take turns". One
