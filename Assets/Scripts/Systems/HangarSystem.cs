@@ -80,6 +80,9 @@ public class HangarSystem : MonoBehaviour
         public bool aboard;
         public float boardT;
         public string holding, outcome;
+        [Tooltip("Owner 2026-10-27: boats coming home out of range of our ship, and for how many game seconds so far.")]
+        public bool stranded;
+        public float strandT;
     }
     [System.NonSerialized] private System.Collections.Generic.List<Flight> flights;
     public System.Collections.Generic.List<Flight> Flights => flights ?? (flights = new System.Collections.Generic.List<Flight>());
@@ -114,13 +117,22 @@ public class HangarSystem : MonoBehaviour
     [Tune("Hangar & fighters")] [Range(0f, 1f)] public float defenderShare = 0.25f;
     [Tooltip("Marines lost per defender, when they win.")]
     [Tune("Hangar & fighters")] public float marineLossPerDefender = 0.5f;
+    [Tooltip("Assault boats go no further than this from our ship, km (owner 2026-10-27). Outbound past it, they turn home; "
+           + "coming home past it, their clock runs.")]
+    [Tune("Hangar & fighters")] public double boatRangeKm = 15000;
+    [Tooltip("Game seconds the boats last out of range on the way home; then they and their marines are lost (owner 2026-10-27). "
+           + "The clock stops while we are in range, but does not go back.")]
+    [Tune("Hangar & fighters")] public float boatStrandSeconds = 120f;
     [System.NonSerialized] public int boardings;
+    /// <summary>Goes up when boats are stranded and when they are lost: each sounds the alert tone.</summary>
+    [System.NonSerialized] public int boatWarnings;
 
     /// <summary>What the squadron is doing, for the hangar's status line.</summary>
     public string FlightStatus(string squadKey)
     {
         var f = Flights.Find(k => k.squad == squadKey);
         if (f == null) return null;
+        if (f.stranded) return (f.outcome != null ? f.outcome + " · " : "") + "STRANDED · CLOSE IN · " + Mathf.CeilToInt(boatStrandSeconds - f.strandT) + " S";
         if (f.returning) return (f.outcome != null ? f.outcome + " · " : "") + "RETURNING · " + HandoffBoardState.JsRound(System.Math.Max(0, System.Math.Sqrt((f.x - ship.nav.x) * (f.x - ship.nav.x) + (f.y - ship.nav.y) * (f.y - ship.nav.y)) - LandKm)).ToString("N0") + " KM"; // to the circle, where they land
         if (f.order == "escort") return "ESCORTING";
         var t = ship.TrackOf(f.targetKey);
@@ -145,17 +157,36 @@ public class HangarSystem : MonoBehaviour
             bool boats = f.squad == "ih"; // the assault boats carry marines (Step 60)
             var t = f.returning || f.order == "escort" ? null : ship.TrackOf(f.targetKey);
             if (!f.returning && f.order != "escort" && (t == null || !t.hasWorld || t.wreck || t.captured)) { f.returning = true; f.attacking = false; f.aboard = false; t = null; }
+            // owner 2026-10-27: boats chase only while the target is in their range of our ship; marines aboard fight on
+            if (boats && t != null && !f.aboard && System.Math.Sqrt((t.worldX - ship.nav.x) * (t.worldX - ship.nav.x) + (t.worldY - ship.nav.y) * (t.worldY - ship.nav.y)) > boatRangeKm)
+            { f.returning = true; f.holding = null; f.outcome = "OUT OF RANGE"; t = null; }
             double gx = t != null ? t.worldX : ship.nav.x, gy = t != null ? t.worldY : ship.nav.y;
             // an escort holds where it took off, outside the small circle round our ship (owner 2026-10-26), not on the hull
             double reach = f.returning ? LandKm : f.order == "escort" ? System.Math.Max(300, launchClearKm) : boats ? dockKm : fighterAttackKm;
             double dx = gx - f.x, dy = gy - f.y, d = System.Math.Sqrt(dx * dx + dy * dy);
-            if (d > reach)
+            // coming home with our ship out of their range, the boats' clock runs; at its end they and their marines are lost
+            bool lost = false;
+            if (boats && f.returning)
+            {
+                if (d > boatRangeKm && !f.stranded) boatWarnings++;
+                f.stranded = d > boatRangeKm;
+                if (f.stranded) f.strandT += (float)dt;
+                lost = f.strandT >= boatStrandSeconds;
+                if (lost)
+                {
+                    int n = f.craft;
+                    foreach (var c in System.Array.Find(squads, q => q.key == f.squad).craft) if (n > 0 && c.state == "READY") { c.state = "LOST"; n--; }
+                    f.marines = 0;
+                    boatWarnings++;
+                }
+            }
+            if (d > reach && !lost)
             {
                 double step = System.Math.Min((boats ? boatSpeedKms : fighterSpeedKms) * dt, d - reach * 0.9);
                 f.x += dx / d * step; f.y += dy / d * step;
                 f.hdg = (System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360;
                 f.holding = null;
-                continue;
+                if (!f.aboard) continue; // owner 2026-10-27: aboard, the boats ride with the ship and the fight goes on
             }
             if (f.returning)
             {

@@ -4,7 +4,8 @@
 stopped. They fight aboard for a minute. If they win, they carry out the order set on the hangar's
 order knob: **DESTROY** blows it up, **DISABLE** wrecks its engines and magazine, **SECURE**
 captures it. Then they fly home. No design source defined these orders; the owner did on
-2026-10-24.
+2026-10-24. Since 2026-10-27, a boarded ship keeps moving and fighting, and the boats go no further
+than 15,000 km from our ship. Leave them out of range too long and they are lost.
 
 **Sources.**
 
@@ -28,11 +29,25 @@ captures it. Then they fly home. No design source defined these orders; the owne
    Targets are named as everywhere else: "BOGEY T07" until an active scan identifies it, then
    "TRACK 07".
 4. **Board.** The boats dock and the marines fight for 60 game seconds: "BOARDING TRACK 07 · 42 S".
+   Once they are aboard, the ship may get under way again (its EMP wears off). It keeps moving and
+   firing until the fight is over. The boats ride with it, and the fight goes on (owner 2026-10-27).
 5. **The odds:** marines ÷ (marines + defenders). A quarter of the enemy's crew defend.
    - **Win:** the defenders die; we lose half a marine per defender; the order is carried out.
    - **Lose:** all our marines aboard die; they kill half their number of the enemy's crew.
 6. **Home.** The boats fly back to our ship and land. The surviving marines rejoin the pool. With no
    marines left, the launch refuses: "NO MARINES ABOARD".
+
+## Range (owner, 2026-10-27)
+
+The boats go no further than **15,000 km** from our ship.
+
+- **Outbound:** they chase the target while it is inside that range. If it gets further away, they
+  give up and turn home: "OUT OF RANGE · RETURNING · 3,000 KM".
+- **Coming home:** if our ship is more than 15,000 km from them, they are stranded. The alert tone
+  sounds and a clock runs: "STRANDED · CLOSE IN · 87 S". Close in to collect them. The clock stops
+  while they are in range, but it does not go back.
+- **Lost:** when the clock runs out, the boats and the marines in them are gone. The alert sounds
+  again. The boats show as LOST, in red, and cannot launch.
 
 **RECALL** at any time turns the boats home. Marines already aboard withdraw with no result.
 
@@ -57,13 +72,13 @@ All are in **Starwolf → Tuning**, under "Hangar & fighters".
 | Fight aboard | 60 s |
 | Share of enemy crew defending | 25% |
 | Marines lost per defender, on a win | 0.5 |
+| Boat range from our ship | 15,000 km |
+| Clock out of range, coming home | 120 s |
 
 ## Still open
 
 - Salvage from a secured prize, and what a prize is for.
-- Fuel and range: craft fly back to wherever our ship is, so nothing runs dry yet. The design gives
-  each craft a fuel figure.
+- Fuel: the boats have a range and a clock, not fuel. The design gives each craft a fuel figure.
+  Fighters have no range yet.
 - Enemy boats boarding us.
 - The prize's own glyph on the plot.
-- A target that gets under way again during the fight (its EMP wears off) drags the boats along;
-  the hangar line stays on BOARDING until it stops.

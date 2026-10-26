@@ -16,7 +16,12 @@ public class WeaponSystem : MonoBehaviour
     [System.NonSerialized] public HandoffBoardState ship;
 
     [System.Serializable]
-    public class Mount { public string id, label, shortName, loaded, ammo; public int arc, halfArc; public float rangeKm; }
+    public class Mount
+    {
+        public string id, label, shortName; public int arc, halfArc; public float rangeKm;
+        [Tooltip("What it has left: slugs, PDC rounds or missile cells. Owner 2026-10-27: a real count; it only goes down.")]
+        public int ammo;
+    }
 
     [System.Serializable]
     public class Group { public string id, label; public string[] mounts; public float shot; }
@@ -41,13 +46,14 @@ public class WeaponSystem : MonoBehaviour
     // Owner 2026-10-26: each weapon has its own reach. Railguns 25,000 km (a slug takes about 100 s; at that range even a
     // good aim can just miss a cruiser), missiles 35,000 km (slower, but they home), PDCs 10,000 km. Was 30,000 for railguns
     // and missiles (the DRADIS at full gain) and 4,000 for PDCs. You can dumb-fire that far; a lock still needs a scan.
+    // Owner 2026-10-27: every mount starts full (the design had RG-B at 19 and PDC-B at 2180).
     public Mount[] mounts =
     {
-        new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET A", shortName = "RG-A", loaded = "2 / 2", ammo = "22" },
-        new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET B", shortName = "RG-B", loaded = "1 / 2", ammo = "19" },
-        new Mount { id = "PDA", arc = 42, halfArc = 35, rangeKm = 10000, label = "PDC GROUP A", shortName = "PDC-A", loaded = "BELT", ammo = "2400" },
-        new Mount { id = "PDB", arc = 200, halfArc = 35, rangeKm = 10000, label = "PDC GROUP B", shortName = "PDC-B", loaded = "BELT", ammo = "2180" },
-        new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 35000, label = "MISSILE VLS", shortName = "VLS", loaded = "8 / 8", ammo = "8" },
+        new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET A", shortName = "RG-A", ammo = 22 },
+        new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET B", shortName = "RG-B", ammo = 22 },
+        new Mount { id = "PDA", arc = 42, halfArc = 35, rangeKm = 10000, label = "PDC GROUP A", shortName = "PDC-A", ammo = 2400 },
+        new Mount { id = "PDB", arc = 200, halfArc = 35, rangeKm = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
+        new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 35000, label = "MISSILE VLS", shortName = "VLS", ammo = 8 },
     };
     public Group[] systems =
     {
@@ -107,8 +113,12 @@ public class WeaponSystem : MonoBehaviour
     [Tune("Periscope & fire control")] public double missileTurnDegPerS = 6.5;
     [Tooltip("A salvo leaves the launcher fanned this many degrees apart.")]
     [Tune("Periscope & fire control")] public double missileSpreadDeg = 3;
-    [Tooltip("VLS cells left (the design's 8 / 8).")]
-    public int vlsCells = 8;
+    /// <summary>VLS cells left: the launcher's count.</summary>
+    public int vlsCells { get { return MountOf("VLS").ammo; } set { MountOf("VLS").ammo = value; } }
+    [Tooltip("Rounds one PDC group spends on each go at an enemy missile (owner 2026-10-27).")]
+    [Tune("Periscope & fire control")] public int pdcRoundsPerGo = 100;
+    /// <summary>The selected mount can't fire again: no slug or cell left, or too few rounds for a PDC go.</summary>
+    public bool Empty { get { var m = MountOf(mount); return m == null || m.ammo < (sys == "PD" ? pdcRoundsPerGo : 1); } }
     [Tooltip("A slug hits a ship it passes within this distance of, by class (the prototype's radii, km). Others: 150.")]
     [Tune("Periscope & fire control")] public HitRadius[] hitRadii =
     {
@@ -241,13 +251,13 @@ public class WeaponSystem : MonoBehaviour
         if (i == 3 && PdcGroup >= 0) pdcAuto[PdcGroup] = true; // Step 55: ARM puts the PDC group on AUTO
     }
 
-    /// <summary>A rung's gate: LOAD needs the WEP bus and a solution, ANGLE the turret to bear (Step 48),
+    /// <summary>A rung's gate: LOAD needs the WEP bus, ammunition and a solution, ANGLE the turret to bear (Step 48),
     /// BEARING the scope on axis, ARM the charge. Step 55: a PDC group needs no solution or bearing, only its
     /// autoloaders: on AUTO it fires by itself at what enters its arc.</summary>
     public bool RungGated(int i)
     {
         bool pd = sys == "PD";
-        return (i == 0 && (!WepReady || (pd ? !loaders : !Sol.set)))
+        return (i == 0 && (!WepReady || Empty || (pd ? !loaders : !Sol.set)))
             || (i == 1 && !pd && !InArc) || (i == 2 && !pd && !OnBearing) || (i == 3 && wepCharge < ShotCost);
     }
 
@@ -258,7 +268,7 @@ public class WeaponSystem : MonoBehaviour
     {
         if (sys == "PD") return; // Step 55: PDCs on AUTO fire by themselves; the lever does nothing
         if (!AllSet) return; // moveSlew fires on every new pull while allSet() holds; the panel's per-pull latch stops repeats (Step 33g verification)
-        if (wepCharge < ShotCost) return;
+        if (wepCharge < ShotCost || Empty) return;
         if (sys == "MS" && !MissileReady) return;
         fired = true;
         wepCharge = Mathf.Max(0f, wepCharge - ShotCost);
@@ -269,6 +279,7 @@ public class WeaponSystem : MonoBehaviour
         {
             double b = LeadBearing() * System.Math.PI / 180;
             Rounds.Add(new Round { x = ship.nav.x, y = ship.nav.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm, speed = slugSpeedKms });
+            m.ammo--;
             shotReport = null;
             ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + fireSignalSpike);
         }
@@ -287,6 +298,7 @@ public class WeaponSystem : MonoBehaviour
             shotReport = null;
             ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + fireSignalSpike);
         }
+        if (Empty) ClearSwitches(); // the last one gone: nothing left to load
     }
 
     /// <summary>Step 53 (GDD p.45): missiles need a locked target — identified by an active scan — and a cell left.</summary>
@@ -470,6 +482,7 @@ public class WeaponSystem : MonoBehaviour
     }
 
     // A PDC group on AUTO, loaded and powered, gets one chance at each enemy missile inside its arc and range.
+    // Each go spends pdcRoundsPerGo; a group too low for another go drops off AUTO (owner 2026-10-27).
     bool PdcStops(Round r)
     {
         if (!loaders || !WepReady) return false;
@@ -482,6 +495,8 @@ public class WeaponSystem : MonoBehaviour
             if (!pdcAuto[g] || m == null || (r.pdcTried & (1 << g)) != 0) continue;
             if (dx * dx + dy * dy > (double)m.rangeKm * m.rangeKm || HandoffBoardState.AngDiff(rel, m.arc) > m.halfArc) continue;
             r.pdcTried |= 1 << g;
+            m.ammo -= pdcRoundsPerGo;
+            if (m.ammo < pdcRoundsPerGo) { pdcAuto[g] = false; if (g == PdcGroup) ClearSwitches(); }
             bool down = ship.NextDie() < pdcKillChance;
             pdcReport = m.shortName + (down ? " · MISSILE DOWN" : " · MISSED");
             if (down) { pdcKills++; return true; }

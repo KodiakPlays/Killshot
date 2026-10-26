@@ -202,7 +202,7 @@ public class HangarPanel : HandoffPanel
             for (int c = 0; c < sq.craft.Length; c++)
             {
                 var cr = sq.craft[c];
-                Color ink = sqOut ? ownForce : cr.state == "DOWN" ? alarm : cr.state == "REARM" ? caution : nominal;
+                Color ink = sqOut ? ownForce : cr.state == "DOWN" || cr.state == "LOST" ? alarm : cr.state == "REARM" ? caution : nominal;
                 if (c < row.tags.Length) Paint(row.tags[c], ink);
                 if (c < row.fuel.Length && c < row.cells.Length) FuelBar(row.fuel[c], row.cells[c], cr.fuel / 100f, ink);
             }

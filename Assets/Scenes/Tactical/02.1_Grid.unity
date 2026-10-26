@@ -7029,43 +7029,38 @@ MonoBehaviour:
   - id: RGA
     label: RAILGUN TURRET A
     shortName: RG-A
-    loaded: 2 / 2
-    ammo: 22
     arc: 42
     halfArc: 80
     rangeKm: 25000
+    ammo: 22
   - id: RGB
     label: RAILGUN TURRET B
     shortName: RG-B
-    loaded: 1 / 2
-    ammo: 19
     arc: 250
     halfArc: 80
     rangeKm: 25000
+    ammo: 22
   - id: PDA
     label: PDC GROUP A
     shortName: PDC-A
-    loaded: BELT
-    ammo: 2400
     arc: 42
     halfArc: 35
     rangeKm: 10000
+    ammo: 2400
   - id: PDB
     label: PDC GROUP B
     shortName: PDC-B
-    loaded: BELT
-    ammo: 2180
     arc: 200
     halfArc: 35
     rangeKm: 10000
+    ammo: 2400
   - id: VLS
     label: MISSILE VLS
     shortName: VLS
-    loaded: 8 / 8
-    ammo: 8
     arc: 0
     halfArc: 180
     rangeKm: 35000
+    ammo: 8
   systems:
   - id: RG
     label: RAILGUN
@@ -7142,7 +7137,7 @@ MonoBehaviour:
   missileSpeedKms: 100
   missileTurnDegPerS: 6.5
   missileSpreadDeg: 3
-  vlsCells: 8
+  pdcRoundsPerGo: 100
   hitRadii:
   - klass: FRIGATE
     km: 95
@@ -7290,6 +7285,8 @@ MonoBehaviour:
   boardSeconds: 60
   defenderShare: 0.25
   marineLossPerDefender: 0.5
+  boatRangeKm: 15000
+  boatStrandSeconds: 120
 --- !u!114 &765287337
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8553,43 +8550,38 @@ MonoBehaviour:
   - id: RGA
     label: RAILGUN TURRET A
     shortName: RG-A
-    loaded: 2 / 2
-    ammo: 22
     arc: 42
     halfArc: 80
     rangeKm: 25000
+    ammo: 22
   - id: RGB
     label: RAILGUN TURRET B
     shortName: RG-B
-    loaded: 1 / 2
-    ammo: 19
     arc: 250
     halfArc: 80
     rangeKm: 25000
+    ammo: 22
   - id: PDA
     label: PDC GROUP A
     shortName: PDC-A
-    loaded: BELT
-    ammo: 2400
     arc: 42
     halfArc: 35
     rangeKm: 10000
+    ammo: 2400
   - id: PDB
     label: PDC GROUP B
     shortName: PDC-B
-    loaded: BELT
-    ammo: 2180
     arc: 200
     halfArc: 35
     rangeKm: 10000
+    ammo: 2400
   - id: VLS
     label: MISSILE VLS
     shortName: VLS
-    loaded: 8 / 8
-    ammo: 8
     arc: 0
     halfArc: 180
     rangeKm: 35000
+    ammo: 8
   systems:
   - id: RG
     label: RAILGUN
@@ -8666,7 +8658,7 @@ MonoBehaviour:
   missileSpeedKms: 100
   missileTurnDegPerS: 6.5
   missileSpreadDeg: 3
-  vlsCells: 8
+  pdcRoundsPerGo: 100
   hitRadii:
   - klass: FRIGATE
     km: 95
@@ -8814,6 +8806,8 @@ MonoBehaviour:
   boardSeconds: 60
   defenderShare: 0.25
   marineLossPerDefender: 0.5
+  boatRangeKm: 15000
+  boatStrandSeconds: 120
 --- !u!114 &891763129
 MonoBehaviour:
   m_ObjectHideFlags: 0

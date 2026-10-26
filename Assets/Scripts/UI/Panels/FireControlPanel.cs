@@ -194,10 +194,10 @@ public class FireControlPanel : HandoffPanel
         if (mountRange) mountRange.text = m.rangeKm.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
         if (sysState)
         {
-            sysState.text = s.weapons.sys == "RG" ? "RAIL " + m.loaded + " · SLUGS " + m.ammo
+            sysState.text = s.weapons.sys == "RG" ? "SLUGS " + m.ammo // owner 2026-10-27: no "RAIL 2 / 2"
                 : s.weapons.sys == "PD" ? m.ammo + " RDS · LOADERS " + (s.weapons.loaders ? "ENGAGED" : "OFF")
                 : s.weapons.warheads[s.weapons.warhead] + " · SALVO " + s.weapons.salvo + " OF " + s.weapons.vlsCells; // cells left
-            Paint(sysState, s.weapons.sys == "PD" && !s.weapons.loaders ? caution : data);
+            Paint(sysState, (s.weapons.sys == "PD" && !s.weapons.loaders) || s.weapons.Empty ? caution : data);
         }
 
         // 02 firing solution

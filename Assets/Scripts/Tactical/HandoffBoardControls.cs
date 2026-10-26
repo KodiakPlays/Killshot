@@ -210,7 +210,7 @@ public class HandoffBoardControls : MonoBehaviour
     private float nextTick;
     private HandoffPanel[] panels = new HandoffPanel[0];
     private HandoffRockers rockers;
-    private int shotsHeard, resultsHeard, killsHeard, hitsTakenHeard;
+    private int shotsHeard, resultsHeard, killsHeard, hitsTakenHeard, boatWarningsHeard;
     private bool edgeWarned, trackedWarned;
 
     private void Awake()
@@ -261,6 +261,7 @@ public class HandoffBoardControls : MonoBehaviour
             else Play(state.weapons.lastShotHit ? hitSound : missSound, state.weapons.lastShotHit ? "hit" : "miss");
         }
         if (state.weapons.hitsTaken != hitsTakenHeard) { hitsTakenHeard = state.weapons.hitsTaken; Play(alertSound, "alert"); } // Step 55: an enemy missile hit us
+        if (state.hangar.boatWarnings != boatWarningsHeard) { boatWarningsHeard = state.hangar.boatWarnings; Play(alertSound, "alert"); } // owner 2026-10-27: boats stranded, or lost
         HandoffEased.TickAll(); // control transitions (Step 33j)
         // setInterval drops ticks it missed during a stall; do the same rather than bursting
         if (Time.unscaledTime - nextTick > tickSeconds) nextTick = Time.unscaledTime;

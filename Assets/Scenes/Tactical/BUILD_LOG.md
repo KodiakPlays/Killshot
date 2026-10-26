@@ -12,7 +12,7 @@ Last updated: 2026-10-26. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 77 are done, plus a final QA pass.**
+**Steps 1 to 79 are done, plus a final QA pass.**
 
 **Paused by the owner (2026-10-26).** The board refactor is part way: navigation, power, sensors and
 comms are moved into systems, and four drawers are prefabs. Where it stopped and what comes next:
@@ -128,8 +128,9 @@ Do not run ahead. Do one step, show it, wait.
 | 76 | Axis numbers are distances from our ship; the axis titles and the frame stencils TCB-1 and ACC 07 are gone | **Done** — playtest 171/171 |
 | 77 | The debris scatter tool: a Debris Field in a level (shape, pieces, count, size, gap, spread; Scatter and Reshuffle) | **Done** — layout check ok; tried in `Level_01` (not saved); playtest not needed (nothing runs at play) |
 | 78 | The active scan cone on the plot: two bright edges and a faint fill, from the small circle round our ship out to the scan's range | **Done** — checked by screenshot; playtest not needed (visual only) |
+| 79 | Ammunition is a real count; boarding goes on while the target moves; the boats' 15,000 km range | **Done** — playtest 191/191 |
 
-Steps 6 to 28 and Steps 34 to 78 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 79 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -589,6 +590,16 @@ These are settled. Do not reopen them.
     slower but home, so they reach further. Was 30,000 km for railguns and missiles (the DRADIS at
     full gain) and 4,000 km for PDCs. The numbers are the `Mounts` list on each ship's
     `WeaponSystem`. The plot's weapon ring follows the selected mount.
+43. **Ammunition is a real count** (owner, 2026-10-27). It only goes down; there is no reload.
+    Each railgun shot takes one slug from its turret. Each PDC go at a missile takes 100 rounds
+    from its group. Each missile takes one cell. Every mount starts full: railguns 22 and 22, PDCs
+    2400 and 2400, missiles 8. The fire control line reads "SLUGS 22", with no "RAIL 2 / 2". With
+    nothing left, LOAD refuses. Details in Step 79.
+44. **Boarding goes on while the target moves** (owner, 2026-10-27). Once the marines are aboard,
+    the ship keeps moving and fighting until they win or lose; the boats ride with it. The boats
+    go no further than **15,000 km** from our ship. Outbound past that, they turn home. Coming
+    home out of range, a clock runs with a warning; you must close in to collect them. If the
+    clock runs out, the boats and their marines are lost. Details in Step 79.
 
 ### The layout of the tactical grid — agreed, this is the direction
 
@@ -802,7 +813,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 78, in detail
+## 6 · Steps 6 to 28, and 34 to 79, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3523,6 +3534,38 @@ With DRADIS off and ACTIVE on, no cone shows: the sweep identifies, and it only 
 circle out to the DRADIS circle. Inside the cone the plot reads 21–30 (of 255), just outside 6–8.
 Playtest not run (visual only).
 
+### Step 79 — Ammunition is a real count; boarding goes on while the target moves
+
+**Owner direction (2026-10-27).** The owner asked for checks on missiles, PDCs, ammunition and
+boarding. Railgun and PDC ammunition was fixed text that never went down. Decisions 43 and 44.
+
+**What was built.**
+
+- `WeaponSystem`: each mount's `ammo` is now a whole number that only goes down. A railgun shot
+  takes one slug from its turret. Each PDC go at an enemy missile takes `pdcRoundsPerGo` (100)
+  from its group. `vlsCells` now reads the launcher's `ammo`. Every mount starts full: 22, 22,
+  2400, 2400, 8. `loaded` ("2 / 2", "BELT") is gone.
+- With nothing left, LOAD refuses, and the lever does nothing. The last shot drops the ladder. A
+  PDC group too low for another go drops off AUTO.
+- Fire control's line reads "SLUGS 21", "2200 RDS · LOADERS ENGAGED" or "HE · SALVO 2 OF 6". It
+  turns caution amber when the mount is empty.
+- `HangarSystem`: once the marines are aboard, the boats ride with the target and the fight runs
+  on while it moves. The boats go no further than `boatRangeKm` (15,000 km) from our ship.
+  Outbound past it, they turn home: "OUT OF RANGE · RETURNING". Coming home with our ship out of
+  range, they are stranded: the alert tone, and "STRANDED · CLOSE IN · 87 S". After
+  `boatStrandSeconds` (120) they and their marines are lost. The boats show LOST, in red.
+- The three new numbers are in the Tuning window. `02.1_Grid` saved with both ships full.
+  `BOARDING_README.md` updated.
+
+**Calls made without the owner (can be changed):** the stranded clock stops while the boats are
+in range, but does not go back. It sounds the alert once when it starts and once on the loss.
+Fighters have no range yet. A PDC group with fewer than 100 rounds left cannot fire at all.
+
+**Checked.** Playtest 191/191 (19 new checks). Slugs, PDC-A and PDC-B rounds, missile cells, and
+LOAD refusing at zero. A ship moving with marines aboard; SECURE and DESTROY on the Garuda (each put
+back for the fight after); the boats giving up past 15,000 km; stranded and coming home; stranded
+too long and lost.
+
 ---
 
 ## 7 · How to keep this log
@@ -3803,12 +3846,25 @@ Found by the doc check after Step 66. Fix each with the owner.
    `HandoffBoardState.Heard()` checks only the DRADIS switch.
 2. **A ship lost at the battle space's edge stays "SHIP LOST".** `deserted` is never cleared. It
    matters once there is a restart.
-3. **Boats can be dragged along mid-boarding.** If the target gets under way during the 60 s fight
-   (its EMP wears off), the boats follow it and the hangar line stays on BOARDING.
+3. ~~**Boats can be dragged along mid-boarding.**~~ Fixed in Step 79. The owner: once aboard, the
+   ship fights on while it moves and the boats ride with it (decision 44).
 4. **Enter can do nothing on the briefing.** If the INITIALISING screen's controller switches
    itself off (a missing shader), `finished` never fires. Not seen in a run.
 5. **The playtest has no battle-space checks:** the warning, countdown, x1 drop, zoom limit, pan
    limit, axis numbers and the `C` key.
+
+### Checks to run (owner, 2026-10-27). Done in Step 79
+
+Weapons and boarding, tried for real. All six are now in the playtest (191/191). The owner has not
+tried them by hand yet.
+
+1. **Missile firing.** One salvo of two, then EMP and PENETRATOR, homing on a moving Garuda.
+2. **PDCs.** PDC-A on AUTO downs a salvo; PDC-B on its last go downs one and runs dry.
+3. **PDC ammunition.** A real count: 100 rounds a go. Dry, LOAD refuses.
+4. **Missile ammunition.** The drawer shows the cells left. At zero, LOAD refuses.
+5. **Railgun ammunition.** A real count: one slug a shot. At zero, LOAD refuses.
+6. **Boarding.** DISABLE, SECURE and DESTROY; the fight going on while the target moves; the
+   15,000 km range; stranded and lost.
 
 ### Board refactor (owner, 2026-10-25). In progress (paused and restarted by the owner, 2026-10-26)
 

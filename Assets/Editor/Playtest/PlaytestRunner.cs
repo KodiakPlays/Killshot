@@ -757,11 +757,19 @@ public static class PlaytestRunner
                                            lever.transform.TransformPoint(((RectTransform)lever.transform).rect.center)));
         s.sensors.signal = 50f; // stand-in: room for the spike to show (we are at 100% with this much power drawn)
         float sig0 = s.sensors.signal;
+        var rgb = s.weapons.MountOf("RGB");
+        int slugs0 = rgb.ammo;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever", "fc.lever")) yield break;
         Check("The lever fires one slug and releases ARM", s.weapons.Rounds.Count == 1 && !s.weapons.sw[3], s.weapons.Rounds.Count + " in flight");
         Check("Firing spikes our signal", Mathf.Approximately(s.sensors.signal, sig0 + s.weapons.fireSignalSpike), sig0.ToString("0") + " → " + s.sensors.signal.ToString("0"));
         yield return 0.4f;
         Check("The fire cue sounds", board.Sounds > 0 && (board.LastSound == "railgun" || board.LastSound == "hit"), "last cue \"" + board.LastSound + "\"");
+        //     Owner 2026-10-27: the slugs are a real count; the drawer shows it.
+        var fcPanel = board.GetComponentInChildren<FireControlPanel>(true);
+        var sysStateField = typeof(FireControlPanel).GetField("sysState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Func<string> sysText = () => { var t = sysStateField.GetValue(fcPanel) as TMPro.TMP_Text; return t ? t.text : ""; };
+        Check("The shot takes one slug from turret B, and the drawer shows it", slugs0 == 22 && rgb.ammo == slugs0 - 1 && sysText() == "SLUGS " + (slugs0 - 1),
+              slugs0 + " → " + rgb.ammo + ", \"" + sysText() + "\"");
         //     Paused, the slug stops.
         if (!Click("pause", null, "PAUSE key")) yield break;
         double rx = s.weapons.Rounds.Count > 0 ? s.weapons.Rounds[0].travelled : -1;
@@ -794,6 +802,20 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
         Check("2° off, it misses", s.weapons.shotReport == "MISS", "\"" + s.weapons.shotReport + "\"");
+        //     Out of slugs (owner 2026-10-27). Stand-in: turret B down to its last one.
+        int slugsWas = rgb.ammo;
+        rgb.ammo = 1;
+        yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (last slug)")) yield break; yield return 0.2f; }
+        if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire the last slug", "fc.lever")) yield break;
+        yield return 0.6f;
+        Check("The last slug fired: the ladder drops, and the drawer reads SLUGS 0", rgb.ammo == 0 && !System.Array.Exists(s.weapons.sw, b => b) && sysText() == "SLUGS 0",
+              rgb.ammo + " left, ladder " + string.Join(",", System.Array.ConvertAll(s.weapons.sw, b => b ? "1" : "0")) + ", \"" + sysText() + "\"");
+        if (!Click("fc.flip", "0", "LOAD (no slugs)")) yield break;
+        Check("No slugs: LOAD refuses", !s.weapons.sw[0] && board.LastSound == "refused", "last cue \"" + board.LastSound + "\"");
+        yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
+        yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
+        rgb.ammo = slugsWas;
         if (!Click("rate", "1", "x1 rate key")) yield break;
 
         // 21b. Leading a moving target (Step 52). TRACK 07 gets under way on its patrol again.
@@ -911,8 +933,16 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.weapons.shotResults > landed2);
         Check("PENETRATOR: straight through to a compartment", s.weapons.shotReport != null && s.weapons.shotReport.Contains(" · PEN · "), "\"" + s.weapons.shotReport + "\"");
         Check("Four cells used", s.weapons.vlsCells == cells0 - 4, s.weapons.vlsCells + " left");
+        Check("The drawer shows the cells left", sysText().EndsWith(" OF " + (cells0 - 4)), "\"" + sysText() + "\"");
         Shot("28b_missiles");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        //     No cells left (owner 2026-10-27). Stand-in: the launcher emptied.
+        s.weapons.vlsCells = 0;
+        if (s.weapons.sw[0] && !Click("fc.flip", "0", "LOAD (drop it)")) yield break;
+        yield return 0.6f;
+        if (!Click("fc.flip", "0", "LOAD (no cells)")) yield break;
+        Check("No cells: LOAD refuses, and the drawer shows 0", !s.weapons.sw[0] && board.LastSound == "refused" && sysText().EndsWith(" OF 0"), "last cue \"" + board.LastSound + "\", \"" + sysText() + "\"");
+        s.weapons.vlsCells = cells0 - 4;
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Back to the railgun; hold TRACK 07 still for the fight.
         if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break;
@@ -1030,6 +1060,8 @@ public static class PlaytestRunner
         s.weapons.pdcKillChance = 1f; // stand-in: a sure PDC, so the result is certain (the real chance is in the Tuning window)
         brain.firesBack = true;
         int enemyCells = dummyShip.weapons.vlsCells, kills0 = s.weapons.pdcKills, taken0 = s.weapons.hitsTaken;
+        var pdcA = s.weapons.MountOf("PDA"); var pdcB = s.weapons.MountOf("PDB");
+        int pdcA0 = pdcA.ammo, pdcB0 = pdcB.ammo;
         dummyShip.damage.TakeSlug("PROW");
         yield return (Func<bool>)(() => s.weapons.Incoming.Count > 0);
         float salvo1At = board.MissionSeconds;
@@ -1042,6 +1074,9 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0); // 15 s each; the flight is about 13 s at x10
         Check("PDC-A shoots both down; nothing hits us", s.weapons.pdcKills == kills0 + 2 && s.weapons.hitsTaken == taken0 && s.weapons.pdcReport == "PDC-A · MISSILE DOWN",
               (s.weapons.pdcKills - kills0) + " down, " + (s.weapons.hitsTaken - taken0) + " hits on us, \"" + s.weapons.pdcReport + "\"");
+        Check("Each go took " + s.weapons.pdcRoundsPerGo + " rounds from PDC-A, and the drawer shows it; PDC-B untouched",
+              pdcA0 == 2400 && pdcA.ammo == pdcA0 - 2 * s.weapons.pdcRoundsPerGo && pdcB.ammo == pdcB0 && sysText().StartsWith(pdcA.ammo + " RDS"),
+              "PDC-A " + pdcA0 + " → " + pdcA.ammo + ", PDC-B " + pdcB0 + " → " + pdcB.ammo + ", \"" + sysText() + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Changing weapons leaves PDC-A on AUTO; back on PDC-A its ladder shows armed.
         for (int k = 0; k < 3 && s.weapons.sys != "RG"; k++) { if (!Click("fc.system", null, "weapon selector (to RAILGUN)")) yield break; yield return 0.2f; }
@@ -1064,6 +1099,27 @@ public static class PlaytestRunner
         Check("With no PDC on AUTO, both hit us, with the alert tone", s.weapons.hitsTaken == taken0 + 2 && s.weapons.incomingReport != null && s.weapons.incomingReport.StartsWith("MISSILE HIT · ") && board.LastSound == "alert",
               (s.weapons.hitsTaken - taken0) + " hits, last \"" + s.weapons.incomingReport + "\", last cue \"" + board.LastSound + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     PDC-B (owner 2026-10-27), on its last go. Stand-in for the helm: turned so GARUDA bears 200° (PDC-B's arc).
+        s.nav.heading = s.nav.orderedHeading = ((t07.bearing - 200) % 360 + 360) % 360; // it has been patrolling since 21e
+        if (!Click("fc.mount", null, "PDC selector (PDC-B)")) yield break;
+        int pdbWas = pdcB.ammo;
+        pdcB.ammo = s.weapons.pdcRoundsPerGo; // stand-in: one go left
+        yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (PDC-B)")) yield break; yield return 0.15f; }
+        Check("PDC-B arms and goes on AUTO", s.weapons.mount == "PDB" && s.weapons.pdcAuto[1] && !s.weapons.pdcAuto[0], s.weapons.mount + ", AUTO " + s.weapons.pdcAuto[0] + "/" + s.weapons.pdcAuto[1]);
+        int killsB = s.weapons.pdcKills, takenB = s.weapons.hitsTaken;
+        s.weapons.LaunchAt(t07.worldX, t07.worldY, 2, 0, 35000); // stand-in for GARUDA's salvo (its own firing is checked above)
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0);
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0);
+        yield return 0.4f;
+        Check("PDC-B downs one on its last go, runs dry and drops off AUTO; the other hits us",
+              s.weapons.pdcKills == killsB + 1 && s.weapons.hitsTaken == takenB + 1 && pdcB.ammo == 0 && !s.weapons.pdcAuto[1] && !s.weapons.sw[0] && s.weapons.pdcReport == "PDC-B · MISSILE DOWN",
+              (s.weapons.pdcKills - killsB) + " down, " + (s.weapons.hitsTaken - takenB) + " hits, " + pdcB.ammo + " rounds, AUTO " + s.weapons.pdcAuto[1] + ", \"" + s.weapons.pdcReport + "\"");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        if (!Click("fc.flip", "0", "LOAD (PDC-B dry)")) yield break;
+        Check("Dry, PDC-B's LOAD refuses", !s.weapons.sw[0] && board.LastSound == "refused", "last cue \"" + board.LastSound + "\"");
+        pdcB.ammo = pdbWas;
         //     Our ship can die too (Step 58): its port side open, three slugs into the reactor (stand-in for enemy fire).
         s.damage.SideArmour[3] = 0f;
         for (int k = 0; k < 3; k++) s.damage.TakeSlug("PORT");
@@ -1120,6 +1176,20 @@ public static class PlaytestRunner
         dummyShip.damage.SideArmour[1] = 0f; // stand-in for a slug opening its starboard side
         yield return (Func<bool>)(() => boats.aboard);
         Check("A face open, the ship stopped: they board", boats.aboard && interlockText().StartsWith("BOARDING GARUDA · "), "\"" + interlockText() + "\"");
+        //     Owner 2026-10-27: under way again with marines aboard, it fights on and the boats ride with it.
+        //     Stand-in for its engines: top speed along its heading, its brain on (the world moves it only then).
+        double bh = t07.worldHdg * System.Math.PI / 180;
+        t07Ship.nav.vx = System.Math.Sin(bh) * t07Ship.nav.topSpeedKms; t07Ship.nav.vy = System.Math.Cos(bh) * t07Ship.nav.topSpeedKms;
+        brain.enabled = true;
+        float boardT0 = boats.boardT, boardAt = board.MissionSeconds;
+        yield return (Func<bool>)(() => board.MissionSeconds - boardAt >= 15f); // two ticks at x10
+        // the ship moves after the boats in a tick, so they trail it by up to one tick of its way
+        double boatGap = System.Math.Sqrt((boats.x - t07.worldX) * (boats.x - t07.worldX) + (boats.y - t07.worldY) * (boats.y - t07.worldY));
+        Check("Under way, the marines fight on and the boats ride with it", boats.aboard && t07Ship.nav.SpeedKms > s.hangar.boardMaxSpeedKms
+              && boats.boardT - boardT0 >= board.MissionSeconds - boardAt - 0.01f && boatGap <= s.hangar.dockKm + t07Ship.nav.topSpeedKms * board.Rate
+              && interlockText().StartsWith("BOARDING GARUDA · "),
+              "its speed " + t07Ship.nav.SpeedKms.ToString("0.0") + " km/s, fight clock +" + (boats.boardT - boardT0).ToString("0") + " s in " + (board.MissionSeconds - boardAt).ToString("0") + " s, boats "
+              + boatGap.ToString("0") + " km off, \"" + interlockText() + "\"");
         yield return (Func<bool>)(() => !boats.aboard);
         Check("The marines win and disable it: engines and magazine wrecked, the ship still alive", boats.outcome == "GARUDA DISABLED" && dummyShip.damage.Comp("eng").integ == 0 && dummyShip.damage.Comp("mag").integ == 0 && !dummyShip.destroyed && !t07.wreck,
               "\"" + boats.outcome + "\", ENG " + dummyShip.damage.Comp("eng").integ + ", MAG " + dummyShip.damage.Comp("mag").integ);
@@ -1127,7 +1197,80 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.hangar.Flights.Count == 0);
         yield return (Func<bool>)(() => s.hangar.Flights.Count == 0);
         Check("They land: the marines are back aboard", s.hangar.Flights.Count == 0 && s.hangar.marines == marinesBefore && !s.hangar.Launched(s.hangar.CurrentSquad), s.hangar.marines + " marines aboard");
+        //     SECURE and DESTROY, in the run (owner 2026-10-27). Each is put back after, for the fight below.
+        //     Stand-in for the stage rockers and launch lever (checked above).
+        Action<string> launchBoats = order => { s.hangar.order = order; foreach (var g in s.hangar.stages) { g.on = true; g.progress = 100f; } s.hangar.LaunchSquad(); };
+        yield return (Func<bool>)(() => t07Ship.nav.SpeedKms <= s.hangar.boardMaxSpeedKms); // its engines wrecked, it slows to a stop
+        brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0;
+        launchBoats("secure");
+        boats = s.hangar.Flights.Find(f => f.squad == "ih");
+        if (boats == null) { Check("The boats launch on SECURE", false, s.hangar.LaunchBlock() ?? ""); yield break; }
+        yield return (Func<bool>)(() => boats.outcome != null);
+        yield return (Func<bool>)(() => boats.outcome != null);
+        Check("SECURE: the marines take it, and it is no longer hostile", boats.outcome == "GARUDA SECURED" && dummyShip.captured && t07.captured && !t07.hostile,
+              "\"" + boats.outcome + "\", captured " + dummyShip.captured + ", hostile " + t07.hostile);
+        yield return (Func<bool>)(() => s.hangar.Flights.Count == 0);
+        yield return (Func<bool>)(() => s.hangar.Flights.Count == 0);
+        dummyShip.captured = t07.captured = false; t07.hostile = true;
+        int rctWas = dummyShip.damage.Comp("rct").integ, killsWas = s.kills;
+        launchBoats("destroy");
+        boats = s.hangar.Flights.Find(f => f.squad == "ih");
+        if (boats == null) { Check("The boats launch on DESTROY", false, s.hangar.LaunchBlock() ?? ""); yield break; }
+        yield return (Func<bool>)(() => boats.outcome != null);
+        yield return (Func<bool>)(() => boats.outcome != null);
+        Check("DESTROY: the marines blow its reactor, and it is a wreck", boats.outcome == "GARUDA SCUTTLED" && dummyShip.destroyed && t07.wreck && s.kills == killsWas + 1,
+              "\"" + boats.outcome + "\", destroyed " + dummyShip.destroyed + ", wreck " + t07.wreck);
+        dummyShip.destroyed = false; t07.wreck = false; t07.hostile = true; dummyShip.damage.Comp("rct").integ = rctWas;
+        yield return (Func<bool>)(() => s.hangar.Flights.Count == 0);
+        yield return (Func<bool>)(() => s.hangar.Flights.Count == 0);
+        Check("Both runs home, every marine back", s.hangar.Flights.Count == 0 && s.hangar.marines == marinesBefore, s.hangar.marines + " marines aboard");
         if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     Range (owner 2026-10-27): the boats chase only inside 15,000 km of our ship; coming home out of range,
+        //     a clock runs, with the alert tone; at its end the boats and their marines are lost.
+        //     Stand-in for the helm: our ship jumps 18,000 km from GARUDA, toward the middle of the battle space.
+        double homeX = s.nav.x, homeY = s.nav.y, mx = -t07.worldX, my = -t07.worldY, ml = System.Math.Sqrt(mx * mx + my * my);
+        if (ml < 1) { mx = 1; my = 0; ml = 1; }
+        double farX = t07.worldX + mx / ml * 18000, farY = t07.worldY + my / ml * 18000;
+        int warned0 = s.hangar.boatWarnings;
+        launchBoats("disable");
+        boats = s.hangar.Flights.Find(f => f.squad == "ih");
+        if (boats == null) { Check("The boats launch on DISABLE", false, s.hangar.LaunchBlock() ?? ""); yield break; }
+        s.nav.x = farX; s.nav.y = farY;
+        yield return (Func<bool>)(() => s.hangar.boatWarnings > warned0);
+        yield return 0.2f;
+        Check("GARUDA past 15,000 km: the boats give up the chase", boats.returning && boats.outcome == "OUT OF RANGE", "\"" + boats.outcome + "\"");
+        Check("Our ship past 15,000 km of them: stranded, the clock runs, with the alert tone",
+              boats.stranded && boats.strandT > 0 && interlockText().StartsWith("OUT OF RANGE · STRANDED · CLOSE IN · ") && s.hangar.boatWarnings == warned0 + 1 && board.LastSound == "alert",
+              "\"" + interlockText() + "\", last cue \"" + board.LastSound + "\"");
+        //     Stand-in for closing in: our ship 10,000 km from them, inside their range.
+        double bx = farX - boats.x, by = farY - boats.y, bl = System.Math.Sqrt(bx * bx + by * by);
+        s.nav.x = boats.x + bx / bl * 10000; s.nav.y = boats.y + by / bl * 10000;
+        yield return 1f;
+        float strandAt = boats.strandT;
+        yield return 1f;
+        Check("Back in range, the clock stops and they come home", !boats.stranded && boats.strandT == strandAt && interlockText().StartsWith("OUT OF RANGE · RETURNING · "),
+              "clock " + boats.strandT.ToString("0.0") + " s, \"" + interlockText() + "\"");
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        yield return (Func<bool>)(() => s.hangar.Flights.Count == 0);
+        yield return (Func<bool>)(() => s.hangar.Flights.Count == 0); // 15 s each; 10,000 km is about 14 s at x10
+        Check("They land: every marine back", s.hangar.Flights.Count == 0 && s.hangar.marines == marinesBefore, s.hangar.marines + " marines aboard");
+        if (!Click("rate", "1", "x1 rate key")) yield break;
+        float strandSecs = s.hangar.boatStrandSeconds;
+        s.hangar.boatStrandSeconds = 5f; // stand-in: a short clock
+        s.nav.x = homeX; s.nav.y = homeY;
+        launchBoats("disable");
+        s.nav.x = farX; s.nav.y = farY;
+        yield return (Func<bool>)(() => s.hangar.Flights.Count == 0);
+        yield return 0.2f;
+        var boatCraft = s.hangar.squads[s.hangar.squad].craft;
+        int lostCraft = System.Array.FindAll(boatCraft, c => c.state == "LOST").Length;
+        Check("Left too long, the boats and their marines are lost, with the alert tone",
+              s.hangar.Flights.Count == 0 && lostCraft == 3 && s.hangar.marines == marinesBefore - 18 && s.hangar.boatWarnings == warned0 + 3 && board.LastSound == "alert",
+              lostCraft + " boats lost, " + s.hangar.marines + " marines aboard, last cue \"" + board.LastSound + "\"");
+        Check("No boats left to launch", s.hangar.SquadReady(s.hangar.CurrentSquad) == 0 && s.hangar.LaunchBlock() == "NO CRAFT READY", s.hangar.LaunchBlock() ?? "");
+        foreach (var c in boatCraft) if (c.state == "LOST") c.state = "READY"; // put back: boats and marines resupplied
+        s.hangar.marines = marinesBefore; s.hangar.boatStrandSeconds = strandSecs;
+        s.nav.x = homeX; s.nav.y = homeY;
         System.Array.Copy(armourWas, dummyShip.damage.SideArmour, armourWas.Length); // its armour as it was
         s.hangar.defenderShare = defenders;
         brain.Think(dummyShip, s); // one thought, brain still off: with its engine room wrecked it makes no way
