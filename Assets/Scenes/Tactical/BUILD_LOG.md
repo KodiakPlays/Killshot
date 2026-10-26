@@ -578,11 +578,17 @@ These are settled. Do not reopen them.
       it.
     - A destroyed ship stays on the plot. In visual range its model turns grey and drifts. Outside
       visual range, a dim dot drifts.
-    - DRADIS at full gain and the weapons reach 30,000 km.
+    - DRADIS at full gain reaches 30,000 km. (The weapons' reach is now decision 42.)
     - These are starting numbers, to be tuned. Details in Step 75.
 41. **Axis numbers measure from our ship** (owner, 2026-10-26). The numbers on the top and left
     edges of the plot read 0 level with our ship, then 5,000, 10,000 and on, in km. They move with
     the ship and spread out as you zoom in. There are no axis titles. Details in Step 76.
+42. **Each weapon has its own reach** (owner, 2026-10-27). Railguns **25,000 km**, missiles
+    **35,000 km**, PDCs **10,000 km**, on our ship and the Garuda alike. A slug takes about 100 s
+    to reach 25,000 km, and at that range even a good aim can just miss a cruiser. Missiles are
+    slower but home, so they reach further. Was 30,000 km for railguns and missiles (the DRADIS at
+    full gain) and 4,000 km for PDCs. The numbers are the `Mounts` list on each ship's
+    `WeaponSystem`. The plot's weapon ring follows the selected mount.
 
 ### The layout of the tactical grid — agreed, this is the direction
 

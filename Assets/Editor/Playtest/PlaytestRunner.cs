@@ -662,7 +662,7 @@ public static class PlaytestRunner
         Check("No weapon ring with Fire Control shut", plotPanel.WeaponRingKm == 0f, "");
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
-        Check("Fire Control open: the railgun's reach shows round our ship, as far as the DRADIS at full gain", plotPanel.WeaponRingKm == s.sensors.senRangeBaseKm + 5 * s.sensors.senRangePerStepKm, plotPanel.WeaponRingKm.ToString("N0") + " km");
+        Check("Fire Control open: the railgun's reach shows round our ship, as far as the mount reaches (owner 2026-10-26: 25,000 km)", plotPanel.WeaponRingKm == s.weapons.MountOf(s.weapons.mount).rangeKm && plotPanel.WeaponRingKm == 25000f, plotPanel.WeaponRingKm.ToString("N0") + " km");
         board.SetZoom(0.25);
         yield return 0.4f;
         Shot("25_weapon_ring");

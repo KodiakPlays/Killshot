@@ -10801,7 +10801,7 @@ MonoBehaviour:
     ammo: 22
     arc: 42
     halfArc: 80
-    rangeKm: 30000
+    rangeKm: 25000
   - id: RGB
     label: RAILGUN TURRET B
     shortName: RG-B
@@ -10809,7 +10809,7 @@ MonoBehaviour:
     ammo: 19
     arc: 250
     halfArc: 80
-    rangeKm: 30000
+    rangeKm: 25000
   - id: PDA
     label: PDC GROUP A
     shortName: PDC-A
@@ -10817,7 +10817,7 @@ MonoBehaviour:
     ammo: 2400
     arc: 42
     halfArc: 35
-    rangeKm: 4000
+    rangeKm: 10000
   - id: PDB
     label: PDC GROUP B
     shortName: PDC-B
@@ -10825,7 +10825,7 @@ MonoBehaviour:
     ammo: 2180
     arc: 200
     halfArc: 35
-    rangeKm: 4000
+    rangeKm: 10000
   - id: VLS
     label: MISSILE VLS
     shortName: VLS
@@ -10833,7 +10833,7 @@ MonoBehaviour:
     ammo: 8
     arc: 0
     halfArc: 180
-    rangeKm: 30000
+    rangeKm: 35000
   systems:
   - id: RG
     label: RAILGUN
@@ -13036,7 +13036,7 @@ MonoBehaviour:
     ammo: 22
     arc: 42
     halfArc: 80
-    rangeKm: 30000
+    rangeKm: 25000
   - id: RGB
     label: RAILGUN TURRET B
     shortName: RG-B
@@ -13044,7 +13044,7 @@ MonoBehaviour:
     ammo: 19
     arc: 250
     halfArc: 80
-    rangeKm: 30000
+    rangeKm: 25000
   - id: PDA
     label: PDC GROUP A
     shortName: PDC-A
@@ -13052,7 +13052,7 @@ MonoBehaviour:
     ammo: 2400
     arc: 42
     halfArc: 35
-    rangeKm: 4000
+    rangeKm: 10000
   - id: PDB
     label: PDC GROUP B
     shortName: PDC-B
@@ -13060,7 +13060,7 @@ MonoBehaviour:
     ammo: 2180
     arc: 200
     halfArc: 35
-    rangeKm: 4000
+    rangeKm: 10000
   - id: VLS
     label: MISSILE VLS
     shortName: VLS
@@ -13068,7 +13068,7 @@ MonoBehaviour:
     ammo: 8
     arc: 0
     halfArc: 180
-    rangeKm: 30000
+    rangeKm: 35000
   systems:
   - id: RG
     label: RAILGUN

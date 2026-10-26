@@ -38,15 +38,16 @@ public class WeaponSystem : MonoBehaviour
     [Tune("Periscope & fire control")] public float manualStartRangeKm = 10000f;
 
     [Header("Fire control — MOUNTS, SYSTEMS, WARHEADS, SWITCHES and the board's initial state")]
-    // Owner 2026-10-24: railgun and missile reach = the DRADIS at full gain (12,000 + 5 × 3,600 km since 2026-10-26), not
-    // tied to the gain set now (the design had 30,000 and 40,000). You can dumb-fire that far; a lock still needs a scan.
+    // Owner 2026-10-26: each weapon has its own reach. Railguns 25,000 km (a slug takes about 100 s; at that range even a
+    // good aim can just miss a cruiser), missiles 35,000 km (slower, but they home), PDCs 10,000 km. Was 30,000 for railguns
+    // and missiles (the DRADIS at full gain) and 4,000 for PDCs. You can dumb-fire that far; a lock still needs a scan.
     public Mount[] mounts =
     {
-        new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 30000, label = "RAILGUN TURRET A", shortName = "RG-A", loaded = "2 / 2", ammo = "22" },
-        new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 30000, label = "RAILGUN TURRET B", shortName = "RG-B", loaded = "1 / 2", ammo = "19" },
-        new Mount { id = "PDA", arc = 42, halfArc = 35, rangeKm = 4000, label = "PDC GROUP A", shortName = "PDC-A", loaded = "BELT", ammo = "2400" },
-        new Mount { id = "PDB", arc = 200, halfArc = 35, rangeKm = 4000, label = "PDC GROUP B", shortName = "PDC-B", loaded = "BELT", ammo = "2180" },
-        new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 30000, label = "MISSILE VLS", shortName = "VLS", loaded = "8 / 8", ammo = "8" },
+        new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET A", shortName = "RG-A", loaded = "2 / 2", ammo = "22" },
+        new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET B", shortName = "RG-B", loaded = "1 / 2", ammo = "19" },
+        new Mount { id = "PDA", arc = 42, halfArc = 35, rangeKm = 10000, label = "PDC GROUP A", shortName = "PDC-A", loaded = "BELT", ammo = "2400" },
+        new Mount { id = "PDB", arc = 200, halfArc = 35, rangeKm = 10000, label = "PDC GROUP B", shortName = "PDC-B", loaded = "BELT", ammo = "2180" },
+        new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 35000, label = "MISSILE VLS", shortName = "VLS", loaded = "8 / 8", ammo = "8" },
     };
     public Group[] systems =
     {
