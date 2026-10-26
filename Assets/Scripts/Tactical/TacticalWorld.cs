@@ -70,9 +70,7 @@ public class TacticalWorld : MonoBehaviour
     {
         var ship = c.Ship;
         ship.nav.PlaceAt(c.transform.position.x, c.transform.position.y, HandoffBoardState.JsRound(((-c.transform.eulerAngles.z) % 360 + 360) % 360) % 360);
-        var eng = ship.buses[0];
-        eng.mode = HandoffBoardState.BusMode.Draw;
-        eng.fill = ship.busMax;
+        ship.power.PowerEngines();
     }
 
     /// <summary>A level's spawn point (EnemySpawn): this contact's ship starts there instead, facing
@@ -114,7 +112,7 @@ public class TacticalWorld : MonoBehaviour
             var ship = c.Ship;
             ship.missionNow = board.State.missionNow;
             // EMP (Step 53): power is out until it wears off; then its engines come back
-            if (ship.empUntil > 0f && ship.missionNow >= ship.empUntil) { ship.empUntil = 0f; ship.buses[0].fill = ship.busMax; }
+            if (ship.empUntil > 0f && ship.missionNow >= ship.empUntil) { ship.empUntil = 0f; ship.power.PowerEngines(); }
             ship.CopyDamageTuning(board.State);
             ship.TickConditions(board.Rate); // Step 59: its fires, vacuum and radiation, held still or not
             if (!brain || !brain.enabled) continue;

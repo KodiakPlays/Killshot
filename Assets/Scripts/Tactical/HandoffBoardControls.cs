@@ -88,6 +88,8 @@ public class HandoffBoardControls : MonoBehaviour
     [Tooltip("Our ship's navigation (the NavSystem on OwnShip): its position, heading, throttle and movement.")]
     [UnityEngine.Serialization.FormerlySerializedAs("helm")]
     [SerializeField] private NavSystem nav;
+    [Tooltip("Our ship's power (the PowerSystem on OwnShip): its reactor, buses and load shed.")]
+    [SerializeField] private PowerSystem power;
     [SerializeField] private HandoffBoardMotion motion;
     [SerializeField] private HandoffPlotGrid grid;
     [SerializeField] private Canvas canvas;
@@ -168,8 +170,9 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private Color tintInkOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), tintInkOff = new Color32(0x77, 0x82, 0x8A, 0xFF);
     [SerializeField] private Color tintLampOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), tintLampOff = new Color32(0x1B, 0x20, 0x24, 0xFF);
 
-    // Other objects can read State in their own Awake, before ours runs, so it hands our ship its NavSystem first.
-    public HandoffBoardState State { get { if (state.nav == null) state.UseNav(nav); return state; } }
+    // Other objects can read State in their own Awake, before ours runs, so it hands our ship its systems first.
+    public HandoffBoardState State { get { if (state.nav == null) UseSystems(); return state; } }
+    void UseSystems() { state.UseNav(nav); state.UsePower(power); }
     /// <summary>Raised once per board tick, after the board's own rules and before the panels
     /// redraw. The tactical world steps here, inside the board's single timer (Step 34).</summary>
     public event System.Action Ticked;
@@ -201,7 +204,8 @@ public class HandoffBoardControls : MonoBehaviour
     private void Awake()
     {
         if (!nav) Debug.LogError("[HandoffBoardControls] our ship's NavSystem is not set");
-        state.UseNav(nav);
+        if (!power) Debug.LogError("[HandoffBoardControls] our ship's PowerSystem is not set");
+        UseSystems();
     }
 
     private void Start()
@@ -252,7 +256,7 @@ public class HandoffBoardControls : MonoBehaviour
             {
                 missionSeconds += rate; ShowClock();
                 state.missionNow = missionSeconds; // the solution's clock (Step 52)
-                state.TickPower(rate);
+                state.power.Tick(rate);
                 state.TickAux(rate);
                 state.nav.Tick(rate); // the ship steers and moves; it reads the engine room before a repair lands this tick, as tickPower does
                 // Step 65: the battle space. Crossing out drops time to x1, so a fast rate can't kill you in a blink

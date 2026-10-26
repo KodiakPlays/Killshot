@@ -660,7 +660,7 @@ public static class HandoffBoardBuilder
     static void WirePower(RectTransform root)
     {
         const string P = "State · power";
-        var p = root.gameObject.AddComponent<HandoffPowerPanel>();
+        var p = root.gameObject.AddComponent<PowerPanel>();
         var so = new SerializedObject(p);
         so.FindProperty("loadLabel").objectReferenceValue = Tmp(root, P, "text#101 ");
         so.FindProperty("reactorLabel").objectReferenceValue = Tmp(root, P, "text#103 ");

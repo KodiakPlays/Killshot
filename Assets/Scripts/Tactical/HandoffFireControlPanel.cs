@@ -228,15 +228,15 @@ public class HandoffFireControlPanel : HandoffPanel
             int at = Mathf.Clamp(mk, 1, 10) - 1;
             capMark.anchoredPosition = new Vector2(Right(capCells[at]) + capMarkX0, capMark.anchoredPosition.y);
         }
-        Color capInk = s.wepCharge >= cost ? nominal : s.BusUnits("wep") > 0 ? caution : alarm;
+        Color capInk = s.wepCharge >= cost ? nominal : s.power.BusUnits("wep") > 0 ? caution : alarm;
         if (capPct) capPct.text = HandoffBoardState.JsRound(s.wepCharge) + "%"; // measured ink.data, not capInk
         if (capLabel) capLabel.text = cost + "% PER SHOT";
-        Color capLampInk = s.wepCharge >= cost ? nominal : s.BusUnits("wep") > 0 ? caution : lampOffPanel;
-        Paint(capLamp, capLampInk); Paint(capGlow, capLampInk); Show(capGlow, s.wepCharge >= cost || s.BusUnits("wep") > 0);
+        Color capLampInk = s.wepCharge >= cost ? nominal : s.power.BusUnits("wep") > 0 ? caution : lampOffPanel;
+        Paint(capLamp, capLampInk); Paint(capGlow, capLampInk); Show(capGlow, s.wepCharge >= cost || s.power.BusUnits("wep") > 0);
         if (capNote)
         {
-            capNote.text = s.BusUnits("wep") < 1 ? "WEP BUS DEAD — CAPACITOR BLEEDING OFF"
-                : s.wepCharge >= cost ? "CHARGED — GATE WILL ARM" : "CHARGING AT +" + (s.BusUnits("wep") * 5) + "/S — GATE LOCKED";
+            capNote.text = s.power.BusUnits("wep") < 1 ? "WEP BUS DEAD — CAPACITOR BLEEDING OFF"
+                : s.wepCharge >= cost ? "CHARGED — GATE WILL ARM" : "CHARGING AT +" + (s.power.BusUnits("wep") * 5) + "/S — GATE LOCKED";
             Paint(capNote, capInk);
         }
 

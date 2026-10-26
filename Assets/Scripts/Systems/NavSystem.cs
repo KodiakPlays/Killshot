@@ -88,7 +88,7 @@ public class NavSystem : MonoBehaviour
     /// <summary>Degrees the bow swings per game second now (the design's per-tick swing at x1).</summary>
     double TurnPerS => System.Math.Max(1, HandoffBoardState.JsRound(turnRate * EngineRoom));
     /// <summary>thrCap: ENG units x 20 x the engine room's integrity.</summary>
-    public int ThrottleCap => HandoffBoardState.JsRound((double)ship.BusUnits("eng") * 20 * EngineRoom);
+    public int ThrottleCap => HandoffBoardState.JsRound((double)ship.power.BusUnits("eng") * 20 * EngineRoom);
     /// <summary>gLoadNum: 1 G plus 1 G at full throttle, plus the approach mode's extra.</summary>
     public double GLoad => 1 + throttle / 100.0 + (approachMode == "FLANK" ? 0.5 : approachMode == "EVASIVE" ? 1.2 : 0);
     /// <summary>stabNum: 45 points lost per G over 1, 0..100.</summary>
@@ -124,7 +124,7 @@ public class NavSystem : MonoBehaviour
     // row 32); the bow swings toward the ordered heading.
     void Steer(double dt)
     {
-        int engCap = ship.BusUnits("eng") * 20;
+        int engCap = ship.power.BusUnits("eng") * 20;
         if (throttle > engCap) throttle = 0; // owner 2026-10-25: power lost, the throttle goes back to zero (the design held it at the cap); you set it again
         if (heading == orderedHeading) { turnBank = 0; return; }
         // banked so the bow turns whole degrees

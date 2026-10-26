@@ -255,7 +255,7 @@ public static class PlaytestRunner
         Check("Loads undamaged (all rooms green and sealed)", undamaged, "");
         Check("The dummy enemy is the only contact", s.tracks.Length == 1 && s.tracks[0].key == "t07",
               s.tracks.Length > 0 ? s.tracks[0].name + " at " + s.tracks[0].bearing.ToString("000") + "°, " + s.tracks[0].rangeKm.ToString("N0") + " km" : "none");
-        Check("Power starts cold (every bus empty, on STANDBY)", BusesAre(s, HandoffBoardState.BusMode.Standby, 0), Buses(s));
+        Check("Power starts cold (every bus empty, on STANDBY)", BusesAre(s, PowerSystem.BusMode.Standby, 0), Buses(s));
 
         // 5. Paused at load; signal silent
         Check("The board starts paused", board.Paused, "");
@@ -266,7 +266,7 @@ public static class PlaytestRunner
         if (!Click("drawer", "power", "PWR key")) yield break;
         Check("A drawer key sounds the tab click (Step 40)", board.Sounds == snd + 1 && board.LastSound == "tab", (board.Sounds - snd) + " cue(s), last \"" + board.LastSound + "\"");
         yield return 0.8f;
-        var drawer = board.GetComponentInChildren<HandoffPowerPanel>(true).gameObject;
+        var drawer = board.GetComponentInChildren<PowerPanel>(true).gameObject;
         Check("The Power drawer opens", drawer != null && drawer.activeInHierarchy, "");
         Shot("04_power_open");
         yield return 0.2f;
@@ -279,12 +279,12 @@ public static class PlaytestRunner
         for (int i = 0; i < 4; i++)
         {
             if (!Click("power.bus", i.ToString(), names[i] + " selector")) yield break;
-            Check(names[i] + " bus set to DRAW", s.buses[i].mode == HandoffBoardState.BusMode.Draw, s.buses[i].mode.ToString());
+            Check(names[i] + " bus set to DRAW", s.power.buses[i].mode == PowerSystem.BusMode.Draw, s.power.buses[i].mode.ToString());
             yield return 0.3f;
         }
         Check("Each selector sounds the switch click", board.Sounds == snd + 4 && board.LastSound == "switch", (board.Sounds - snd) + " cue(s), last \"" + board.LastSound + "\"");
         yield return 1.5f;
-        Check("While paused, the buses do not fill", s.TotalFill == 0, "total fill " + s.TotalFill + " after 1.5 s paused");
+        Check("While paused, the buses do not fill", s.power.TotalFill == 0, "total fill " + s.power.TotalFill + " after 1.5 s paused");
         Shot("05_all_draw");
         yield return 0.2f;
 
@@ -294,9 +294,9 @@ public static class PlaytestRunner
         Check("RUN starts time", !board.Paused, "");
 
         // 9. Let the reactor fill the buses
-        yield return (Func<bool>)(() => s.TotalFill >= s.ReactorCap || AllFull(s));
+        yield return (Func<bool>)(() => s.power.TotalFill >= s.power.ReactorCap || AllFull(s));
         yield return 1f;
-        Check("The reactor fills the buses up to its output", s.TotalFill == Mathf.Min(s.ReactorCap, s.busMax * 4), "total " + s.TotalFill + " of " + s.ReactorCap + " — " + Buses(s));
+        Check("The reactor fills the buses up to its output", s.power.TotalFill == Mathf.Min(s.power.ReactorCap, s.power.busMax * 4), "total " + s.power.TotalFill + " of " + s.power.ReactorCap + " — " + Buses(s));
         Shot("06_powered");
         yield return 0.2f;
 
@@ -344,7 +344,7 @@ public static class PlaytestRunner
         if (!Click("drawer", "sensors", "SENS key")) yield break;
         yield return 0.8f;
         float target = s.SignalTarget;
-        Check("Power sets the signal target", Mathf.Approximately(target, Mathf.Min(100f, s.TotalFill * 10f)), "target " + target.ToString("0.0") + " from " + s.TotalFill + " units");
+        Check("Power sets the signal target", Mathf.Approximately(target, Mathf.Min(100f, s.power.TotalFill * 10f)), "target " + target.ToString("0.0") + " from " + s.power.TotalFill + " units");
         Shot("07_signal_climbing");
         yield return 0.2f;
         yield return (Func<bool>)(() => s.signal >= target);
@@ -360,14 +360,14 @@ public static class PlaytestRunner
         var shed = Hit("power.shed", null).GetComponent<Image>();
         var shed0 = shed.sprite;
         if (!Click("power.shed", null, "EMERGENCY LOAD SHED")) yield break;
-        Check("LOAD SHED vents every bus", BusesAreMode(s, HandoffBoardState.BusMode.Vent), Buses(s));
+        Check("LOAD SHED vents every bus", BusesAreMode(s, PowerSystem.BusMode.Vent), Buses(s));
         bool slid = false;
         float until = Time.realtimeSinceStartup + 0.6f;
         yield return (Func<bool>)(() => (slid |= rockers.Moving("power.shed", null)) || Time.realtimeSinceStartup > until);
         yield return (Func<bool>)(() => !rockers.Moving("power.shed", null));
         Check("The LOAD SHED pad slides down (Step 40)", slid && shed.sprite != shed0 && shed.sprite.name.EndsWith("_thrown") && !shed.transform.Find("Pad cover").GetComponent<Image>().enabled,
               shed0.name + " → " + shed.sprite.name + (slid ? ", slide seen, now at rest" : ", no slide seen"));
-        yield return (Func<bool>)(() => s.TotalFill == 0);
+        yield return (Func<bool>)(() => s.power.TotalFill == 0);
         if (!Click("drawer", "sensors", "SENS key")) yield break;
         yield return (Func<bool>)(() => s.signal <= 0f);
         Check("With no power out, the signal falls to silent", s.signal <= 0f && SigNote(board) == "RUNNING SILENT", s.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
@@ -488,7 +488,7 @@ public static class PlaytestRunner
         yield return 0.8f;
         if (!Click("power.shed", null, "LOAD SHED (release)")) yield break;
         if (!Click("power.bus", "0", "ENG selector")) yield break;
-        Check("ENG back on DRAW after the shed", !s.shed && s.buses[0].mode == HandoffBoardState.BusMode.Draw, Buses(s));
+        Check("ENG back on DRAW after the shed", !s.power.shed && s.power.buses[0].mode == PowerSystem.BusMode.Draw, Buses(s));
         yield return (Func<bool>)(() => s.nav.ThrottleCap >= 60);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         if (!Click("helm", null, "HELM header")) yield break;
@@ -897,7 +897,7 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.shotResults > landed1);
         yield return (Func<bool>)(() => s.shotResults > landed1);
         double spdHit = t07Ship.nav.SpeedKms;
-        Check("EMP: its power goes down", s.shotReport != null && s.shotReport.EndsWith(" · EMP · POWER DOWN") && dummyShip.buses[0].fill == 0, "\"" + s.shotReport + "\"");
+        Check("EMP: its power goes down", s.shotReport != null && s.shotReport.EndsWith(" · EMP · POWER DOWN") && dummyShip.power.buses[0].fill == 0, "\"" + s.shotReport + "\"");
         yield return 2f;
         Check("Without power it slows", t07Ship.nav.SpeedKms < spdHit, spdHit.ToString("0.00") + " → " + t07Ship.nav.SpeedKms.ToString("0.00") + " km/s");
         //     PENETRATOR: straight to a compartment behind the side.
@@ -946,15 +946,15 @@ public static class PlaytestRunner
         //     Power for the catapult: ENG and WEP hold all ten units, so ENG gives its back (we are stopped) and AUX draws.
         if (!Click("drawer", "power", "PWR key")) yield break;
         yield return 0.8f;
-        for (int k = 0; k < 3 && s.buses[0].mode != HandoffBoardState.BusMode.Vent; k++) if (!Click("power.bus", "0", "ENG selector (toward VENT)")) yield break;
-        for (int k = 0; k < 3 && s.buses[3].mode != HandoffBoardState.BusMode.Draw; k++) if (!Click("power.bus", "3", "AUX selector (toward DRAW)")) yield break;
-        yield return (Func<bool>)(() => s.BusUnits("aux") >= 1);
+        for (int k = 0; k < 3 && s.power.buses[0].mode != PowerSystem.BusMode.Vent; k++) if (!Click("power.bus", "0", "ENG selector (toward VENT)")) yield break;
+        for (int k = 0; k < 3 && s.power.buses[3].mode != PowerSystem.BusMode.Draw; k++) if (!Click("power.bus", "3", "AUX selector (toward DRAW)")) yield break;
+        yield return (Func<bool>)(() => s.power.BusUnits("aux") >= 1);
         if (!Click("drawer", "hangar", "HGR key")) yield break;
         yield return 0.8f;
         Check("The interceptors are selected, on DESTROY", s.CurrentSquad.key == "gw" && s.order == "destroy" && s.SquadReady(s.CurrentSquad) == 4, s.CurrentSquad.key + " " + s.order + ", " + s.SquadReady(s.CurrentSquad) + " ready");
         s.SetLbrg(s.nav.heading.ToString()); // stand-in for typing the launch bearing: dead ahead
         if (!s.doorsOpen && !Click("hangar.doors", null, "bay door master")) yield break;
-        Check("The catapult can charge (AUX powered)", s.StageBlock("cat") == null, (s.StageBlock("cat") ?? "") + " AUX " + s.BusUnits("aux") + " units, ENG " + s.buses[0].mode);
+        Check("The catapult can charge (AUX powered)", s.StageBlock("cat") == null, (s.StageBlock("cat") ?? "") + " AUX " + s.power.BusUnits("aux") + " units, ENG " + s.power.buses[0].mode);
         for (int i = 0; i < s.stages.Length; i++)
         {
             if (!Click("hangar.stage", i.ToString(), s.stages[i].label + " stage")) yield break;
@@ -1062,8 +1062,8 @@ public static class PlaytestRunner
         s.SideArmour[3] = 0f;
         for (int k = 0; k < 3; k++) s.TakeSlug("PORT");
         yield return 1f;
-        Check("Our reactor at 0: our ship is destroyed and goes dark", s.destroyed && s.Comp("rct").integ == 0 && s.TotalFill == 0,
-              "RCT " + s.Comp("rct").integ + ", power drawn " + s.TotalFill);
+        Check("Our reactor at 0: our ship is destroyed and goes dark", s.destroyed && s.Comp("rct").integ == 0 && s.power.TotalFill == 0,
+              "RCT " + s.Comp("rct").integ + ", power drawn " + s.power.TotalFill);
         s.destroyed = false;
         //     Clean up for the steps below: TRACK 07 held still and quiet, our ship repaired (stand-in for damage control).
         brain.firesBack = false; brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0;
@@ -1409,15 +1409,15 @@ public static class PlaytestRunner
 
     // ---- helpers ----------------------------------------------------------------------------
 
-    static bool BusesAre(HandoffBoardState s, HandoffBoardState.BusMode mode, int fill)
+    static bool BusesAre(HandoffBoardState s, PowerSystem.BusMode mode, int fill)
     {
-        foreach (var b in s.buses) if (b.mode != mode || b.fill != fill) return false;
+        foreach (var b in s.power.buses) if (b.mode != mode || b.fill != fill) return false;
         return true;
     }
 
-    static bool BusesAreMode(HandoffBoardState s, HandoffBoardState.BusMode mode)
+    static bool BusesAreMode(HandoffBoardState s, PowerSystem.BusMode mode)
     {
-        foreach (var b in s.buses) if (b.mode != mode) return false;
+        foreach (var b in s.power.buses) if (b.mode != mode) return false;
         return true;
     }
 
@@ -1431,14 +1431,14 @@ public static class PlaytestRunner
 
     static bool AllFull(HandoffBoardState s)
     {
-        foreach (var b in s.buses) if (b.fill < s.busMax) return false;
+        foreach (var b in s.power.buses) if (b.fill < s.power.busMax) return false;
         return true;
     }
 
     static string Buses(HandoffBoardState s)
     {
         var parts = new List<string>();
-        foreach (var b in s.buses) parts.Add(b.key.ToUpperInvariant() + " " + b.mode.ToString().ToUpperInvariant() + " " + b.fill);
+        foreach (var b in s.power.buses) parts.Add(b.key.ToUpperInvariant() + " " + b.mode.ToString().ToUpperInvariant() + " " + b.fill);
         return string.Join(", ", parts);
     }
 

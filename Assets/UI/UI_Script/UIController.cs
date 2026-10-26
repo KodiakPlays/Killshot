@@ -189,7 +189,7 @@ public class UIController : MonoBehaviour
 
     [Header("Power Manager Sync")]
     [SerializeField] private PowerManager powerManager;
-    private PowerSystem[] _pmSystems; // maps UI button index → PowerSystem (engines, arms, bay, support, sig)
+    private PowerChannel[] _pmSystems; // maps UI button index → PowerChannel (engines, arms, bay, support, sig)
 
     void Start()
     {
@@ -205,7 +205,7 @@ public class UIController : MonoBehaviour
         if (powerManager == null)
             powerManager = FindFirstObjectByType<PowerManager>();
         if (powerManager != null)
-            _pmSystems = new PowerSystem[] { powerManager.engines, powerManager.arms, powerManager.bay, powerManager.support, powerManager.sig };
+            _pmSystems = new PowerChannel[] { powerManager.engines, powerManager.arms, powerManager.bay, powerManager.support, powerManager.sig };
 
         StartPower();
         WorldGridStart();
@@ -688,7 +688,7 @@ public class UIController : MonoBehaviour
         int sysCount = Mathf.Min(_pmSystems.Length, uiPowerMetClass.Count - 1);
         for (int i = 0; i < sysCount; i++)
         {
-            PowerSystem ps = _pmSystems[i];
+            PowerChannel ps = _pmSystems[i];
             UIPowerClass ui = uiPowerMetClass[i];
 
             // Always push the true PM values into the shader — no condition check

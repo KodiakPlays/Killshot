@@ -138,7 +138,7 @@ public class HandoffEngineeringPanel : HandoffPanel
 
         // degradedLine
         var parts = new System.Collections.Generic.List<string>();
-        if (s.ReactorCap < s.reactorUnits) parts.Add("RCT ▸ CORE " + s.ReactorCap + " OF " + s.reactorUnits);
+        if (s.power.ReactorCap < s.power.reactorUnits) parts.Add("RCT ▸ CORE " + s.power.ReactorCap + " OF " + s.power.reactorUnits);
         if (!s.HgrOk) parts.Add("HGR ▸ FLIGHT OPS DOWN");
         if (!s.MagOk) parts.Add("MAG ▸ NO ORDNANCE");
         if (s.CompHealth("eng") < 5) parts.Add("ENG ▸ THRUST " + HandoffBoardState.JsRound(s.EngFactor * 100f) + "%");

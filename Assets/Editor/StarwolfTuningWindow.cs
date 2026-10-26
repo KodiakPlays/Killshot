@@ -75,7 +75,7 @@ public class StarwolfTuningWindow : EditorWindow
 
     static string Label(Entry e)
     {
-        // "state.buses.Array.data[2].signalPerUnit" → "Signal Per Unit — SEN"
+        // "buses.Array.data[2].signalPerUnit" (PowerSystem) → "Signal Per Unit — SEN"
         string name = ObjectNames.NicifyVariableName(e.path.Substring(e.path.LastIndexOf('.') + 1));
         int a = e.path.IndexOf(".Array.data[");
         if (a < 0) return name;

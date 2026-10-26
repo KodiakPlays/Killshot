@@ -3,12 +3,12 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Step 33b. The Power drawer: reactor core, emergency load shed and the four bus columns.
-/// Every label, colour and rule is from board-logic.js renderVals (loadLabel, loadColor,
-/// reactorLabel, r1–r10, coreCells, coreHealthLabel, shedNote, shedLamp, buses[]) and
-/// UIStateSpec §11 "Power: buses, standby and venting".
+/// Step 33b. The Power drawer: reactor core, emergency load shed and the four bus columns. It only shows
+/// our ship's PowerSystem and passes the clicks to it (owner 2026-10-26). Every label and colour is from
+/// board-logic.js renderVals (loadLabel, loadColor, reactorLabel, r1–r10, coreCells, coreHealthLabel,
+/// shedNote, shedLamp, buses[]) and UIStateSpec §11 "Power: buses, standby and venting".
 /// </summary>
-public class HandoffPowerPanel : HandoffPanel
+public class PowerPanel : HandoffPanel
 {
     [System.Serializable]
     public class BusColumn
@@ -55,8 +55,8 @@ public class HandoffPowerPanel : HandoffPanel
     {
         switch (action)
         {
-            case "power.shed": State.ToggleShed(); return true;
-            case "power.bus": State.CycleBus(int.Parse(arg)); return true;
+            case "power.shed": State.power.ToggleShed(); return true;
+            case "power.bus": State.power.CycleBus(int.Parse(arg)); return true;
         }
         return false;
     }
@@ -64,7 +64,8 @@ public class HandoffPowerPanel : HandoffPanel
     public override void Refresh()
     {
         var s = State;
-        int cap = s.ReactorCap, total = s.TotalFill, left = cap - total;
+        var p = s.power;
+        int cap = p.ReactorCap, total = p.TotalFill, left = cap - total;
 
         if (loadLabel) { loadLabel.text = total + " / " + cap + " UNITS"; Paint(loadLabel, left <= 0 ? alarm : left <= 2 ? caution : nominal); }
         if (reactorLabel) reactorLabel.text = left + " OF " + cap + " UNITS AVAILABLE";
@@ -80,22 +81,22 @@ public class HandoffPowerPanel : HandoffPanel
         }
         if (coreHealthLabel) { coreHealthLabel.text = health + " / 5"; Paint(coreHealthLabel, healthInk); }
 
-        if (shedRocker) shedRocker.sprite = s.shed ? rockerThrown : rockerUp;
-        Paint(shedLamp, s.shed ? alarm : lampOffPanel);
-        Show(shedGlow, s.shed);
-        if (shedNote) { shedNote.text = s.shed ? "ALL BUSES VENTING — SELECTORS HELD" : "SHED READY"; Paint(shedNote, s.shed ? alarm : label); }
+        if (shedRocker) shedRocker.sprite = p.shed ? rockerThrown : rockerUp;
+        Paint(shedLamp, p.shed ? alarm : lampOffPanel);
+        Show(shedGlow, p.shed);
+        if (shedNote) { shedNote.text = p.shed ? "ALL BUSES VENTING — SELECTORS HELD" : "SHED READY"; Paint(shedNote, p.shed ? alarm : label); }
 
-        for (int j = 0; j < columns.Length && j < s.buses.Length; j++)
+        for (int j = 0; j < columns.Length && j < p.buses.Length; j++)
         {
-            var b = s.buses[j];
+            var b = p.buses[j];
             var col = columns[j];
             for (int k = 0; k < col.cells.Length; k++) Paint(col.cells[k], b.fill >= k + 1 ? busCellLit : busCellEmpty);
             if (col.units) col.units.text = b.fill.ToString();
-            Color ink = b.mode == HandoffBoardState.BusMode.Vent ? alarm : b.mode == HandoffBoardState.BusMode.Draw ? nominal : caution;
-            if (col.mode) { col.mode.text = b.mode == HandoffBoardState.BusMode.Standby ? "STBY" : b.mode == HandoffBoardState.BusMode.Draw ? "DRAW" : "VENT"; Paint(col.mode, ink); }
+            Color ink = b.mode == PowerSystem.BusMode.Vent ? alarm : b.mode == PowerSystem.BusMode.Draw ? nominal : caution;
+            if (col.mode) { col.mode.text = b.mode == PowerSystem.BusMode.Standby ? "STBY" : b.mode == PowerSystem.BusMode.Draw ? "DRAW" : "VENT"; Paint(col.mode, ink); }
             Paint(col.lamp, ink);
             Paint(col.lampGlow, ink);
-            col.selector.Set(b.mode == HandoffBoardState.BusMode.Vent ? -45f : b.mode == HandoffBoardState.BusMode.Draw ? 45f : 0f);
+            col.selector.Set(b.mode == PowerSystem.BusMode.Vent ? -45f : b.mode == PowerSystem.BusMode.Draw ? 45f : 0f);
         }
     }
 }

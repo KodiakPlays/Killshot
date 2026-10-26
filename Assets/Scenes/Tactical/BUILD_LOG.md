@@ -3817,10 +3817,24 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - The playtest now films the Game view at its own 16:9 size instead of a fixed 1920 × 1080
     (owner 2026-10-26; written by another session, committed here).
   - Playtest 171/171 (run 2026-10-26_021347).
+- **Power (2026-10-26).** The reactor and the four buses are in `Systems/PowerSystem.cs`: each bus's
+  units, selector and signal per unit, the load shed, the reactor cap, and filling and draining once
+  per tick. It replaced the buses, `CycleBus`, `ToggleShed` and `TickPower` in `HandoffBoardState`.
+  - `OwnShip` and `Garuda · Cruiser` each carry a PowerSystem, with the same numbers the board had
+    (10 units, 5 a bus). `HandoffBoardControls.power` points at ours, and every ship state reaches
+    its own through `.power`. The enemy's engines start powered (`PowerEngines`), as before.
+  - `HandoffPowerPanel` became `UI/Panels/PowerPanel` (its link kept, so the prefab still holds it).
+    It only shows the PowerSystem and passes the shed and selector clicks to it.
+  - **Name clash.** Soham's old `PowerManager.cs` already had a class called `PowerSystem` (one power
+    bar). Owner 2026-10-26: his became `PowerChannel`. Only the name changed, in his three files;
+    nothing was deleted.
+  - Kept though nothing uses them: `Climbing` and `Available` (the design's p1–p5). The audit decides.
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_075922).
 
-**Next:** the other panels as prefabs, the same way as the helm. Then power, sensors, comms, weapons,
-hangar, damage and orders as systems, the way navigation was done. The step list
-below is the reference for what each part needs.
+**Next:** the sensors panel as a prefab (UI Restructure), then the sensors system (Tooling), and so
+on in order: comms, weapons, hangar, damage and orders. Owner 2026-10-26: "split, take turns". One
+session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
+time. The step list below is the reference for what each part needs.
 
 **Why.** The board is hard to follow:
 - One 1,915-line class (`HandoffBoardState`) holds every rule.

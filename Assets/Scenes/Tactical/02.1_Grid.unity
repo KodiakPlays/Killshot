@@ -46961,6 +46961,7 @@ GameObject:
   - component: {fileID: 765287328}
   - component: {fileID: 765287329}
   - component: {fileID: 765287331}
+  - component: {fileID: 765287332}
   m_Layer: 0
   m_Name: "Garuda \xB7 Cruiser"
   m_TagString: Untagged
@@ -47047,6 +47048,46 @@ MonoBehaviour:
   brakeKms2: 0.4075
   driftKeepPerS: 0.96307
   dragKeepPerS: 0.997502
+--- !u!114 &765287332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765287326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 315a87cb26a1d4d16bd5b6470f2a87ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PowerSystem
+  reactorUnits: 10
+  busMax: 5
+  buses:
+  - key: eng
+    label: ENG
+    fill: 0
+    mode: 1
+    dir: 1
+    signalPerUnit: 10
+  - key: wep
+    label: WEP
+    fill: 0
+    mode: 1
+    dir: 1
+    signalPerUnit: 10
+  - key: sen
+    label: SEN
+    fill: 0
+    mode: 1
+    dir: 1
+    signalPerUnit: 10
+  - key: aux
+    label: AUX
+    fill: 0
+    mode: 1
+    dir: 1
+    signalPerUnit: 10
+  shed: 0
 --- !u!1 &765774873
 GameObject:
   m_ObjectHideFlags: 0
@@ -53998,6 +54039,7 @@ GameObject:
   m_Component:
   - component: {fileID: 891763122}
   - component: {fileID: 891763123}
+  - component: {fileID: 891763124}
   m_Layer: 0
   m_Name: OwnShip
   m_TagString: Untagged
@@ -54049,6 +54091,46 @@ MonoBehaviour:
   brakeKms2: 0.4075
   driftKeepPerS: 0.96307
   dragKeepPerS: 0.997502
+--- !u!114 &891763124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891763121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 315a87cb26a1d4d16bd5b6470f2a87ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PowerSystem
+  reactorUnits: 10
+  busMax: 5
+  buses:
+  - key: eng
+    label: ENG
+    fill: 0
+    mode: 1
+    dir: 1
+    signalPerUnit: 10
+  - key: wep
+    label: WEP
+    fill: 0
+    mode: 1
+    dir: 1
+    signalPerUnit: 10
+  - key: sen
+    label: SEN
+    fill: 0
+    mode: 1
+    dir: 1
+    signalPerUnit: 10
+  - key: aux
+    label: AUX
+    fill: 0
+    mode: 1
+    dir: 1
+    signalPerUnit: 10
+  shed: 0
 --- !u!1 &896206256
 GameObject:
   m_ObjectHideFlags: 0
@@ -105416,34 +105498,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandoffBoardControls
   state:
-    reactorUnits: 10
-    busMax: 5
-    buses:
-    - key: eng
-      label: ENG
-      fill: 0
-      mode: 1
-      dir: 1
-      signalPerUnit: 10
-    - key: wep
-      label: WEP
-      fill: 0
-      mode: 1
-      dir: 1
-      signalPerUnit: 10
-    - key: sen
-      label: SEN
-      fill: 0
-      mode: 1
-      dir: 1
-      signalPerUnit: 10
-    - key: aux
-      label: AUX
-      fill: 0
-      mode: 1
-      dir: 1
-      signalPerUnit: 10
-    shed: 0
     compartments:
     - key: mag
       tag: MAG
@@ -105904,6 +105958,7 @@ MonoBehaviour:
     marineLossPerDefender: 0.5
     bearingTrailSeconds: 120
   nav: {fileID: 891763123}
+  power: {fileID: 891763124}
   motion: {fileID: 1765047285}
   grid: {fileID: 261411404}
   canvas: {fileID: 519620959}

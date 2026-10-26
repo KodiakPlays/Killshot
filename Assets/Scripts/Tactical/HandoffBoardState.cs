@@ -9,22 +9,6 @@ using UnityEngine;
 [System.Serializable]
 public class HandoffBoardState
 {
-    public enum BusMode { Vent, Standby, Draw } // BUS_MODES order
-
-    [System.Serializable]
-    public class Bus
-    {
-        public string key, label;
-        public int fill;
-        public BusMode mode = BusMode.Standby;
-        [Tooltip("Direction the selector steps next: +1 toward DRAW, -1 toward VENT (busDir).")]
-        public int dir = 1;
-        [Tooltip("Signal each unit on this bus adds, on the 0–100 scale (Step 35, owner 2026-10-17). "
-               + "Default 10: a full reactor of 10 units reads 100 (prototype getSig).")]
-        [Tune("Power & signal")]
-        public float signalPerUnit = 10f;
-    }
-
     [System.Serializable]
     public class Compartment
     {
@@ -43,19 +27,6 @@ public class HandoffBoardState
         [System.NonSerialized] public double fireT, radT, fadeT;
     }
 
-    [Header("Power — REACTOR_UNITS, BUS_MAX, BUSES")]
-    [Tune("Power & signal")]
-    public int reactorUnits = 10;
-    [Tune("Power & signal")]
-    public int busMax = 5;
-    public Bus[] buses =
-    {
-        new Bus { key = "eng", label = "ENG" },
-        new Bus { key = "wep", label = "WEP" },
-        new Bus { key = "sen", label = "SEN" },
-        new Bus { key = "aux", label = "AUX" },
-    };
-    public bool shed;
 
     [Header("Compartments — COMPARTMENTS. Load state: all green, no damage, all sealed (owner, 2026-10-04)")]
     [Tooltip("The design loads damaged (MAG vented, HAB RAD, HGR FIRE) only to show its behaviours; the game starts undamaged.")]
@@ -375,6 +346,10 @@ public class HandoffBoardState
     [System.NonSerialized] public NavSystem nav;
     /// <summary>Give this ship its navigation. It reads this ship's ENG bus and engine room.</summary>
     public void UseNav(NavSystem n) { nav = n; if (n) n.ship = this; }
+    /// <summary>This ship's power: its reactor, buses and load shed (owner 2026-10-26).</summary>
+    [System.NonSerialized] public PowerSystem power;
+    /// <summary>Give this ship its power. It reads this ship's reactor room, EMP and death.</summary>
+    public void UsePower(PowerSystem p) { power = p; if (p) p.ship = this; }
     // The ship's position and heading, read by the rules below. Only its NavSystem changes them.
     double ownX => nav.x;
     double ownY => nav.y;
@@ -389,21 +364,8 @@ public class HandoffBoardState
         return 0;
     }
 
-    /// <summary>reactorCap: reactor damage caps the units, floored at 2.</summary>
-    public int ReactorCap => Mathf.Max(2, JsRound(CompHealth("rct") / 5f * reactorUnits));
-
-    public int TotalFill
-    {
-        get { int t = 0; foreach (var b in buses) t += b.fill; return t; }
-    }
-
-    /// <summary>Units the core can still give.</summary>
-    public int Available => ReactorCap - TotalFill;
-
-    /// <summary>A bus in DRAW that will gain a unit on the next tick (the board's p1–p5).</summary>
-    public bool Climbing(Bus b) => b.mode == BusMode.Draw && b.fill < busMax && TotalFill < ReactorCap;
-
-    public int BusUnits(string key) { foreach (var b in buses) if (b.key == key) return b.fill; return 0; }
+    // A bus's units, read by the rules below. Only this ship's PowerSystem changes them.
+    int BusUnits(string key) => power.BusUnits(key);
 
     public float SenRangeKm => senRangeBaseKm + senBoost * senRangePerStepKm;
     public float PassiveRangeKm => spectrum == "UV" ? SenRangeKm * uvRangeFactor : SenRangeKm;
@@ -1219,7 +1181,7 @@ public class HandoffBoardState
         if (destroyed) return "";
         if (warheadName == "EMP")
         {
-            foreach (var b in buses) b.fill = 0;
+            power.BlackOut();
             empUntil = missionNow + empSeconds;
             return " · EMP · POWER DOWN";
         }
@@ -1692,53 +1654,11 @@ public class HandoffBoardState
             if (t.key == key && ConeCovers(t) && Heard(t) && !identified.Contains(key)) identified.Add(key);
     }
 
-    /// <summary>cycleBus: VENT ↔ STANDBY ↔ DRAW, reversing at each end; refused while shed.</summary>
-    public bool CycleBus(int i)
-    {
-        if (shed || i < 0 || i >= buses.Length) return false;
-        var b = buses[i];
-        int m = (int)b.mode, d = b.dir == -1 ? -1 : 1;
-        if (m + d > 2 || m + d < 0) d = -d;
-        b.mode = (BusMode)(m + d);
-        b.dir = d;
-        return true;
-    }
-
-    /// <summary>toggleShed: every bus to VENT when thrown, back to STANDBY when released.</summary>
-    public void ToggleShed()
-    {
-        foreach (var b in buses) b.mode = shed ? BusMode.Standby : BusMode.Vent;
-        shed = !shed;
-    }
-
-    // ---- the tick (tickPower, every 420 ms) — power part ---------------------------------
+    // ---- the tick (tickPower, every 420 ms). The buses fill in PowerSystem.Tick (owner 2026-10-26). --
 
     // Owner 2026-10-24: every rate runs in game time. The design's per-tick amounts were per game second
     // at x1 (a tick is `rate` game seconds), so they are now multiplied by the tick's game seconds; x1 is
-    // unchanged. Whole-unit steps (a bus filling, the bow swinging) bank fractions so x0.25 is exact too.
-    [System.NonSerialized] private double powerBank;
-
-    public void TickPower(double dt)
-    {
-        // EMP: power stays down (Step 53). Destroyed (Step 58): the ship goes dark for good.
-        if (missionNow < empUntil || destroyed) { foreach (var b in buses) b.fill = 0; return; }
-        powerBank += dt;
-        for (; powerBank >= 1 - 1e-9; powerBank -= 1) StepPower(); // a bus fills or drains one unit per game second
-        // the reactor cap holds at once, whatever the rate
-        int total = TotalFill, cap = ReactorCap;
-        for (int i = buses.Length - 1; i >= 0 && total > cap; i--)
-            while (buses[i].fill > 0 && total > cap) { buses[i].fill--; total--; }
-    }
-
-    void StepPower()
-    {
-        int total = TotalFill, cap = ReactorCap;
-        // drain first, so a bus dropping out of DRAW frees its units the same tick
-        foreach (var b in buses) if (b.mode == BusMode.Vent && b.fill > 0) { b.fill--; total--; }
-        foreach (var b in buses) if (b.mode == BusMode.Draw && b.fill < busMax && total < cap) { b.fill++; total++; }
-        for (int i = buses.Length - 1; i >= 0 && total > cap; i--)
-            while (buses[i].fill > 0 && total > cap) { buses[i].fill--; total--; }
-    }
+    // unchanged.
 
     // ---- the tick — weapons capacitor: +5 per WEP unit per game second up to 100, bleeds 3 with no WEP --
 
@@ -1869,7 +1789,7 @@ public class HandoffBoardState
         get
         {
             float t = active ? activeScanSignal : 0f;
-            foreach (var b in buses) t += b.fill * b.signalPerUnit;
+            foreach (var b in power.buses) t += b.fill * b.signalPerUnit;
             return Mathf.Clamp(t, 0f, 100f);
         }
     }

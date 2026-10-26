@@ -10,7 +10,7 @@ public enum PowerState
 }
 
 [System.Serializable]
-public class PowerSystem
+public class PowerChannel
 {
     public string name;
     public PowerState currentState = PowerState.Standby;
@@ -26,11 +26,11 @@ public class PowerSystem
 public class PowerManager : MonoBehaviour
 {
     [Header("Power Systems")]
-    public PowerSystem engines = new PowerSystem { name = "Engines" };
-    public PowerSystem arms    = new PowerSystem { name = "Arms" };
-    public PowerSystem bay     = new PowerSystem { name = "Bay" };
-    public PowerSystem support = new PowerSystem { name = "Support" };
-    public PowerSystem sig     = new PowerSystem { name = "Sig" };
+    public PowerChannel engines = new PowerChannel { name = "Engines" };
+    public PowerChannel arms    = new PowerChannel { name = "Arms" };
+    public PowerChannel bay     = new PowerChannel { name = "Bay" };
+    public PowerChannel support = new PowerChannel { name = "Support" };
+    public PowerChannel sig     = new PowerChannel { name = "Sig" };
 
     [Header("Power Settings")]
     [SerializeField] private float powerFillRate = 0.5f; // bars/sec base rate, divided evenly across active systems
@@ -38,9 +38,9 @@ public class PowerManager : MonoBehaviour
     [SerializeField] private int reactorMaxPower = 15;
     [SerializeField] private float currentReactorPower = 15f;
 
-    private PowerSystem[] allSystems;
-    private List<PowerSystem> activeSystems = new List<PowerSystem>();
-    private Dictionary<PowerSystem, float> powerAccumulator = new Dictionary<PowerSystem, float>();
+    private PowerChannel[] allSystems;
+    private List<PowerChannel> activeSystems = new List<PowerChannel>();
+    private Dictionary<PowerChannel, float> powerAccumulator = new Dictionary<PowerChannel, float>();
     private bool reactorOnline = true; // false during railgun post-fire reboot; blocks drawing
     private InternalSubsystems internalSubsystems;
 
@@ -144,7 +144,7 @@ public class PowerManager : MonoBehaviour
     }
 
     // Spec state cycle (fixed): Standby → Draw → Standby → Vent → Standby
-    public void ToggleSystemState(PowerSystem system)
+    public void ToggleSystemState(PowerChannel system)
     {
         switch (system.currentState)
         {
@@ -189,7 +189,7 @@ public class PowerManager : MonoBehaviour
     /// Simple Draw ↔ Standby toggle used by the charge/discharge UI buttons.
     /// Never triggers Vent — that is reserved for VentBtn / VentAllSystems.
     /// </summary>
-    public void ToggleDrawState(PowerSystem system)
+    public void ToggleDrawState(PowerChannel system)
     {
         if (system.currentState == PowerState.Draw)
         {
@@ -207,7 +207,7 @@ public class PowerManager : MonoBehaviour
         // Vent state: ignore — let the vent complete naturally
     }
 
-    private void VentPower(PowerSystem system)
+    private void VentPower(PowerChannel system)
     {
         if (system.currentPower > 0)
         {
@@ -230,7 +230,7 @@ public class PowerManager : MonoBehaviour
 
     // --- Bonus Calculations (spec: bonuses apply per PWR above the minimum of 1) ----
 
-    private int BonusBars(PowerSystem system) => Mathf.Max(0, system.currentPower - 1);
+    private int BonusBars(PowerChannel system) => Mathf.Max(0, system.currentPower - 1);
 
     // Engines: +10% acceleration per bonus bar; -5% stability decay per bonus bar; MAX PWR = Supercruise
     public float GetEngineAccelerationMultiplier() { return 1f + BonusBars(engines) * 0.10f; }
@@ -254,13 +254,13 @@ public class PowerManager : MonoBehaviour
     public float GetSystemEfficiency(string systemName)
     {
         //Debug.Log($"[PowerManager] GetSystemEfficiency called for {systemName}");
-        PowerSystem system = GetSystemByName(systemName);
+        PowerChannel system = GetSystemByName(systemName);
         return system != null ? (float)system.currentPower / system.maxPower : 0f;
     }
 
     // --- Manual +/- Power Allocation (UI panel buttons) ----------------------
 
-    public void AddPower(PowerSystem system)
+    public void AddPower(PowerChannel system)
     {
         if (reactorOnline && currentReactorPower >= 0.5f && system.currentPower < system.maxPower)
         {
@@ -269,7 +269,7 @@ public class PowerManager : MonoBehaviour
         }
     }
 
-    public void RemovePower(PowerSystem system)
+    public void RemovePower(PowerChannel system)
     {
         if (system.currentPower > 0)
         {
@@ -425,7 +425,7 @@ public class PowerManager : MonoBehaviour
 
     public void DrainSystemPower(string systemName)
     {
-        PowerSystem system = GetSystemByName(systemName);
+        PowerChannel system = GetSystemByName(systemName);
         if (system != null && system.currentPower > 0)
         {
             system.currentPower--;
@@ -433,7 +433,7 @@ public class PowerManager : MonoBehaviour
         }
     }
 
-    private PowerSystem GetSystemByName(string name)
+    private PowerChannel GetSystemByName(string name)
     {
         switch (name.ToLower())
         {
