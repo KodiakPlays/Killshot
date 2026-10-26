@@ -127,8 +127,9 @@ Do not run ahead. Do one step, show it, wait.
 | 75 | Ships glide between ticks; DRADIS shows a contact where the sweep last touched it; in sight (10,000 km) its model shows; wrecks stay, grey; engineering's hull redrawn; weapons and DRADIS reach 30,000 km | **Done** — playtest 170/170 |
 | 76 | Axis numbers are distances from our ship; the axis titles and the frame stencils TCB-1 and ACC 07 are gone | **Done** — playtest 171/171 |
 | 77 | The debris scatter tool: a Debris Field in a level (shape, pieces, count, size, gap, spread; Scatter and Reshuffle) | **Done** — layout check ok; tried in `Level_01` (not saved); playtest not needed (nothing runs at play) |
+| 78 | The active scan cone on the plot: two bright edges and a faint fill, from the small circle round our ship out to the scan's range | **Done** — checked by screenshot; playtest not needed (visual only) |
 
-Steps 6 to 28 and Steps 34 to 76 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 78 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 ---
@@ -795,7 +796,7 @@ The new layout throws that split away:
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 76, in detail
+## 6 · Steps 6 to 28, and 34 to 78, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3490,6 +3491,31 @@ is inside the shape, no two are closer than the gap, and the same seed gives the
 `Level_01` (closed without saving): a Circle of 120 pieces, then a Ring with Clumps (106 of 200 fit at
 a 400 km gap), and Scatter again gave the same layout. Playtest not run: nothing in the field runs at
 play, and `Level_01` is unchanged.
+
+### Step 78 — The active scan cone on the plot
+
+**Owner direction (2026-10-26).** The active scan had no cone on the plot; it showed only on the
+sensors drawer's dial. Now the plot shows it: a wedge from our ship out to the DRADIS range, two
+bright edge lines and a faint fill. Like the sweep, it starts at the small circle round our ship.
+
+**What was built.**
+
+- `HandoffMarksGraphic`: two new shape kinds. "sector" is a filled slice of a ring (`Shape.inner`
+  is its inner radius in px, `Shape.half` its half-width in degrees). "line" is a plain line.
+- `HandoffPlotPanel.DrawSensorRing()` adds the cone to the sensor circle's shapes while DRADIS and
+  ACTIVE are both on. It turns with the cone dial and widens with NARROW / WIDEN. It takes the
+  circle's colour (amber on the amber grid).
+- Tuning window, Sensors: `coneEdgeAlpha` (0.6) and `coneFillAlpha` (0.07).
+- No scene, prefab or new script.
+
+**Calls made without the owner (can be changed):** the cone reaches the scan's range
+(`SenRangeKm`, what `ConeCovers` uses), not the hearing circle. They are the same except on UV,
+where the circle shrinks to 55% and the cone goes past it. Its reach eases like the circle's (0.5 s).
+With DRADIS off and ACTIVE on, no cone shows: the sweep identifies, and it only runs with DRADIS.
+
+**Checked.** Screenshot in play mode, cone at 048 ± 40: the edges run at 008 and 088 from the small
+circle out to the DRADIS circle. Inside the cone the plot reads 21–30 (of 255), just outside 6–8.
+Playtest not run (visual only).
 
 ---
 

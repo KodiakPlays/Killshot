@@ -14,6 +14,7 @@ public class HandoffMarksGraphic : MaskableGraphic
         public string kind;
         public Vector2 a, b;   // board px, y down
         public float alpha;
+        public float inner, half; // "sector" only: inner radius px, half-width degrees
         public Color ink;         // a colour of its own, pre-encoded; left clear, it takes the graphic's colour
     }
 
@@ -52,6 +53,9 @@ public class HandoffMarksGraphic : MaskableGraphic
             // Step 46: a track's projected course (dashed line) and a weapon's reach (dashed ring, no radius)
             else if (s.kind == "dash") DashedLine(s.a, s.b, c);
             else if (s.kind == "dashring") Ring(s.a, (s.b - s.a).magnitude, c);
+            // owner 2026-10-26: the active scan cone — a faint slice of ring round a, and its two edge lines
+            else if (s.kind == "sector") Sector(s.a, s.b, s.inner, s.half, c);
+            else if (s.kind == "line") Line(s.a, s.b, c);
             else { Line(s.a, s.b, c); Ring(s.a, (s.b - s.a).magnitude, c); }
         }
     }
@@ -90,6 +94,25 @@ public class HandoffMarksGraphic : MaskableGraphic
             vh.AddVert(p + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r, c, Vector2.zero);
         }
         for (int k = 1; k <= seg; k++) vh.AddTriangle(i0, i0 + k, i0 + k + 1);
+    }
+
+    // filled from `inner` out to the rim point's distance, `half` degrees either side of centre → rim
+    void Sector(Vector2 centre, Vector2 rim, float inner, float half, Color c)
+    {
+        Vector2 p = L(centre), q = L(rim) - p;
+        float r = q.magnitude;
+        if (r <= inner || half <= 0f) return;
+        float mid = Mathf.Atan2(q.y, q.x), w = half * Mathf.Deg2Rad;
+        int seg = Mathf.Clamp(Mathf.CeilToInt(2f * w * r / 3f), 2, 720); // smooth at any size
+        for (int k = 0; k < seg; k++)
+        {
+            float t0 = mid - w + 2f * w * k / seg, t1 = mid - w + 2f * w * (k + 1) / seg;
+            Vector2 d0 = new Vector2(Mathf.Cos(t0), Mathf.Sin(t0)), d1 = new Vector2(Mathf.Cos(t1), Mathf.Sin(t1));
+            int i = vh.currentVertCount;
+            vh.AddVert(p + d0 * r, c, Vector2.zero); vh.AddVert(p + d1 * r, c, Vector2.zero);
+            vh.AddVert(p + d1 * inner, c, Vector2.zero); vh.AddVert(p + d0 * inner, c, Vector2.zero);
+            vh.AddTriangle(i, i + 1, i + 2); vh.AddTriangle(i, i + 2, i + 3);
+        }
     }
 
     void Ring(Vector2 centre, float r, Color c, bool dashed = true)

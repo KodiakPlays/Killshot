@@ -49,6 +49,11 @@ public class HandoffPlotPanel : HandoffPanel
     [SerializeField] private float senEdgeAlpha = 0.26f, senGlowAlpha = 0.04f, senEdgeAlphaAmber = 0.3f, senGlowAlphaAmber = 0.05f;
     private float sensorKm;
     private System.Action<float> setSensorKm;
+    [Tooltip("Owner 2026-10-26: the active scan cone, while DRADIS and ACTIVE are on: bright edges and a faint fill, from the small circle round our ship out to the scan's range.")]
+    [Tune("Sensors")] [SerializeField] private float coneEdgeAlpha = 0.6f, coneFillAlpha = 0.07f;
+    private float coneKm;
+    private HandoffEased coneMotion; // eases like the sensor circle
+    private System.Action<float> setConeKm;
 
     [Header("Radar sweep (Step 43): turns inside the sensor circle while DRADIS is on")]
     [SerializeField] private HandoffSweepGraphic sweep;
@@ -468,6 +473,9 @@ public class HandoffPlotPanel : HandoffPanel
         {
             if (setSensorKm == null) setSensorKm = km => { sensorKm = km; DrawSensorRing(); };
             sensorRingMotion.Set(s.sensors.PassiveRangeKm, setSensorKm);
+            // the cone reaches the scan's range, which in UV is past the hearing circle (ConeCovers)
+            if (coneMotion == null) { coneMotion = new HandoffEased(sensorRingMotion.seconds, sensorRingMotion.ease); setConeKm = km => { coneKm = km; DrawSensorRing(); }; }
+            coneMotion.Set(s.sensors.SenRangeKm, setConeKm);
             DrawSensorRing();
         }
 
@@ -596,6 +604,18 @@ public class HandoffPlotPanel : HandoffPanel
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "circle", a = c, b = e, alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
             // owner 2026-10-24: a small circle just outside our ship; the sweep runs from it to the rim
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "circle", a = c, b = c + new Vector2(InnerRingPx, 0f), alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
+            // owner 2026-10-26: the active scan cone starts at that small circle too
+            if (s.sensors.active && coneKm > 0f)
+            {
+                float r = (float)(coneKm / KmPerPx * Controls.ZoomExact), inner = InnerRingPx;
+                System.Func<float, Vector2> at = deg => new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)); // board y is down
+                shapes.Add(new HandoffMarksGraphic.Shape { kind = "sector", a = c, b = c + at(s.sensors.coneBrg) * r, inner = inner, half = s.sensors.coneArc, alpha = coneFillAlpha });
+                foreach (int side in new[] { -1, 1 })
+                {
+                    var edge = at(s.sensors.coneBrg + side * s.sensors.coneArc);
+                    shapes.Add(new HandoffMarksGraphic.Shape { kind = "line", a = c + edge * inner, b = c + edge * r, alpha = coneEdgeAlpha });
+                }
+            }
         }
         sensorRing.Set(shapes);
 
