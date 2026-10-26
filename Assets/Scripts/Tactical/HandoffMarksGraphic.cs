@@ -14,6 +14,7 @@ public class HandoffMarksGraphic : MaskableGraphic
         public string kind;
         public Vector2 a, b;   // board px, y down
         public float alpha;
+        public Color ink;         // a colour of its own, pre-encoded; left clear, it takes the graphic's colour
     }
 
     [Tooltip("Point dot, ruler end dots (px).")]
@@ -40,7 +41,7 @@ public class HandoffMarksGraphic : MaskableGraphic
         vh = v;
         foreach (var s in shapes)
         {
-            var c = color; c.a *= s.alpha;
+            var c = s.ink.a > 0f ? s.ink : color; c.a *= s.alpha;
             if (s.kind == "point") Dot(s.a, pointDot / 2f, c);
             else if (s.kind == "ruler") { Line(s.a, s.b, c); Dot(s.a, endDot / 2f, c); Dot(s.b, endDot / 2f, c); }
             // Step 42: the sensor circle — a solid ring, and the faint fill inside it

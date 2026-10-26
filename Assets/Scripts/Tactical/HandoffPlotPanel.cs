@@ -373,12 +373,14 @@ public class HandoffPlotPanel : HandoffPanel
         }
         for (int i = all.Count; i < labels.Count; i++) labels[i].gameObject.SetActive(false);
         for (int i = all.Count; i < hits.Count; i++) hits[i].gameObject.SetActive(false);
-        // our slugs in flight (Step 48): a dot with a short trail fading behind it, no label
+        // our slugs in flight (Step 48): a dot with a short trail fading behind it, no label;
+        // white like our ship, not the marks' blue (owner 2026-10-26)
+        var slugInk = ownShipColor.gamma;
         foreach (var r in s.Rounds)
         {
             Vector2 at = Screen(r.x, r.y), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
-            shapes.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
-            shapes.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f });
+            shapes.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = slugInk });
+            shapes.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f, ink = slugInk });
         }
         // a prize our marines hold (Step 60): an own-force dot where it lies, no label (placeholder until its glyph)
         foreach (var t in s.tracks)

@@ -1732,7 +1732,7 @@ Per §19.2.a, everything here draws on the plot too.
 | Turret selected | That turret's arc as a wedge from your hull |
 | Solution computed | Aim point marker, and the error cone spreading from your ship |
 | A second turret set to a different bearing | A second aim point, so the fan is something you see rather than dial in |
-| Shot fired | The slug in flight, at true speed |
+| Shot fired | The slug in flight, at true speed: a white dot with a short trail, white like our ship and our fighters (owner 2026-10-26) |
 
 > **Rule 20.2.a** The **error cone is drawn on the plot**, not just reported as a number. How unsure
 > the computer is should be something you see over the battlespace, not read in a box.
