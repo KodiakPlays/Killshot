@@ -1240,7 +1240,7 @@ public static class HandoffBoardBuilder
     {
         const string F = "State · fire control";
         var group = (RectTransform)root.Find(F);
-        var p = root.gameObject.AddComponent<HandoffFireControlPanel>();
+        var p = root.gameObject.AddComponent<FireControlPanel>();
         var so = new SerializedObject(p);
 
         so.FindProperty("mountShort").objectReferenceValue = Tmp(root, F, "text#362 ");

@@ -94,6 +94,8 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private SensorSystem sensors;
     [Tooltip("Our ship's comms (the CommsSystem on OwnShip): its radio, the carrier lock and the cipher dials.")]
     [SerializeField] private CommsSystem comms;
+    [Tooltip("Our ship's weapons (the WeaponSystem on OwnShip): fire control, rounds in flight and point defence.")]
+    [SerializeField] private WeaponSystem weapons;
     [SerializeField] private HandoffBoardMotion motion;
     [SerializeField] private HandoffPlotGrid grid;
     [SerializeField] private Canvas canvas;
@@ -176,7 +178,7 @@ public class HandoffBoardControls : MonoBehaviour
 
     // Other objects can read State in their own Awake, before ours runs, so it hands our ship its systems first.
     public HandoffBoardState State { get { if (state.nav == null) UseSystems(); return state; } }
-    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); state.UseComms(comms); }
+    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); state.UseComms(comms); state.UseWeapons(weapons); }
     /// <summary>Raised once per board tick, after the board's own rules and before the panels
     /// redraw. The tactical world steps here, inside the board's single timer (Step 34).</summary>
     public event System.Action Ticked;
@@ -211,6 +213,7 @@ public class HandoffBoardControls : MonoBehaviour
         if (!power) Debug.LogError("[HandoffBoardControls] our ship's PowerSystem is not set");
         if (!sensors) Debug.LogError("[HandoffBoardControls] our ship's SensorSystem is not set");
         if (!comms) Debug.LogError("[HandoffBoardControls] our ship's CommsSystem is not set");
+        if (!weapons) Debug.LogError("[HandoffBoardControls] our ship's WeaponSystem is not set");
         UseSystems();
     }
 
@@ -241,14 +244,14 @@ public class HandoffBoardControls : MonoBehaviour
         // thrown repair and order rockers fall back after 400 ms (flickBack)
         if (state.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
         // a shot fired (from the lever) and a shot landing (in the tick) each get their cue
-        if (state.shotsFired != shotsHeard) { shotsHeard = state.shotsFired; Play(railgunSound, "railgun"); }
-        if (state.shotResults != resultsHeard)
+        if (state.weapons.shotsFired != shotsHeard) { shotsHeard = state.weapons.shotsFired; Play(railgunSound, "railgun"); }
+        if (state.weapons.shotResults != resultsHeard)
         {
-            resultsHeard = state.shotResults;
+            resultsHeard = state.weapons.shotResults;
             if (state.kills != killsHeard) { killsHeard = state.kills; Play(killSound, "kill"); }
-            else Play(state.lastShotHit ? hitSound : missSound, state.lastShotHit ? "hit" : "miss");
+            else Play(state.weapons.lastShotHit ? hitSound : missSound, state.weapons.lastShotHit ? "hit" : "miss");
         }
-        if (state.hitsTaken != hitsTakenHeard) { hitsTakenHeard = state.hitsTaken; Play(alertSound, "alert"); } // Step 55: an enemy missile hit us
+        if (state.weapons.hitsTaken != hitsTakenHeard) { hitsTakenHeard = state.weapons.hitsTaken; Play(alertSound, "alert"); } // Step 55: an enemy missile hit us
         HandoffEased.TickAll(); // control transitions (Step 33j)
         // setInterval drops ticks it missed during a stall; do the same rather than bursting
         if (Time.unscaledTime - nextTick > tickSeconds) nextTick = Time.unscaledTime;
@@ -271,13 +274,13 @@ public class HandoffBoardControls : MonoBehaviour
                 if (nearEdge && !edgeWarned) Play(alertSound, "alert");
                 edgeWarned = nearEdge;
                 ShowAlarm();
-                state.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
+                state.weapons.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
                 state.TickFlights(rate); // Step 54: fighters fly, attack, come home
-                state.TickIncoming(rate); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
+                state.weapons.TickIncoming(rate); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
                 state.TickParty(rate);
                 state.TickConditions(rate); // Step 59: fire, vacuum and radiation burn, kill and spread
                 state.TickLaunch(rate);
-                state.TickWeapons(rate);
+                state.weapons.TickCharge(rate);
                 state.sensors.Tick(rate);
                 // Step 68 (owner 2026-10-25): the alert tone once as our signal crosses the tracked line
                 bool tracked = state.sensors.signal >= state.sensors.signalTrackedAt;

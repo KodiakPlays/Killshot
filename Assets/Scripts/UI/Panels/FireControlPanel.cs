@@ -15,7 +15,7 @@ using TMPro;
 /// The PDC (quadrants, LOADERS) and missile (warhead, SALVO) controls were never measured — the
 /// drawer was measured on RAILGUN — so they are not drawn (HANDOFF_GAPS); their state still shows.
 /// </summary>
-public class HandoffFireControlPanel : HandoffPanel
+public class FireControlPanel : HandoffPanel
 {
     [System.Serializable]
     public class Position { public Image lamp, glow; public TMP_Text label; }
@@ -87,10 +87,10 @@ public class HandoffFireControlPanel : HandoffPanel
         switch (action)
         {
             case "fc.sight": if (Controls.Motion) Controls.Motion.ToggleScope(); return true;
-            case "fc.system": s.CycleSystem(); return true;
-            case "fc.mount": if (s.sys == "MS") s.CycleWarhead(); else s.CycleMount(); return true; // Step 53: with one launcher, the knob picks the warhead
-            case "fc.track": s.ComputeSol(); return true;
-            case "fc.flip": s.Flip(int.Parse(arg)); return true;
+            case "fc.system": s.weapons.CycleSystem(); return true;
+            case "fc.mount": if (s.weapons.sys == "MS") s.weapons.CycleWarhead(); else s.weapons.CycleMount(); return true; // Step 53: with one launcher, the knob picks the warhead
+            case "fc.track": s.weapons.ComputeSol(); return true;
+            case "fc.flip": s.weapons.Flip(int.Parse(arg)); return true;
         }
         return false;
     }
@@ -99,7 +99,7 @@ public class HandoffFireControlPanel : HandoffPanel
     {
         if (action == "fc.track") { PressTrack(true); return true; }
         if (action == "fc.knob") { knobX0 = board.x; return true; }
-        if (action == "fc.lever") { leverHeld = true; shotThisPull = false; leverX0 = board.x; leverV0 = State.fireLever; return true; }
+        if (action == "fc.lever") { leverHeld = true; shotThisPull = false; leverX0 = board.x; leverV0 = State.weapons.fireLever; return true; }
         return false;
     }
 
@@ -111,13 +111,13 @@ public class HandoffFireControlPanel : HandoffPanel
         {
             float pitch = arg == "brg" ? brgPitch : arg == "spd" ? spdPitch : rngPitch;
             int n = (int)((board.x - knobX0) / pitch); // Math.trunc
-            if (n != 0) { knobX0 += n * pitch; s.NudgeSol(arg, n); }
+            if (n != 0) { knobX0 += n * pitch; s.weapons.NudgeSol(arg, n); }
             return true;
         }
         if (action == "fc.lever" && leverHeld)
         {
-            s.fireLever = Mathf.Clamp01(leverV0 + (board.x - leverX0) / leverTravelPx);
-            if (s.fireLever > s.leverFireAt && s.AllSet && !shotThisPull) { shotThisPull = true; s.Fire(); }
+            s.weapons.fireLever = Mathf.Clamp01(leverV0 + (board.x - leverX0) / leverTravelPx);
+            if (s.weapons.fireLever > s.leverFireAt && s.weapons.AllSet && !shotThisPull) { shotThisPull = true; s.weapons.Fire(); }
             return true;
         }
         return false;
@@ -128,7 +128,7 @@ public class HandoffFireControlPanel : HandoffPanel
         if (action == "fc.track") { PressTrack(false); return true; }
         if (action != "fc.lever") return false;
         leverHeld = false;
-        State.fireLever = 0f; // springs back
+        State.weapons.fireLever = 0f; // springs back
         return true;
     }
 
@@ -150,33 +150,33 @@ public class HandoffFireControlPanel : HandoffPanel
     public override void Refresh()
     {
         var s = State;
-        var y = s.Sys;
-        var m = s.MountOf(s.mount) ?? s.mounts[1];
-        var tgt = s.TrackOf(s.target);
+        var y = s.weapons.Sys;
+        var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.mounts[1];
+        var tgt = s.TrackOf(s.weapons.target);
         bool scopeDown = Controls.Motion && Controls.Motion.ScopeDown;
 
         if (mountShort) mountShort.text = m.shortName;
         Paint(sightLamp, scopeDown ? nominal : lampOffPanel); Paint(sightGlow, nominal); Show(sightGlow, scopeDown);
         if (scopeBearing) scopeBearing.text = HandoffBoardState.JsRound(s.scopeBrg).ToString("000");
-        var off = s.OffBearing();
+        var off = s.weapons.OffBearing();
         if (bearingEcho)
         {
-            bearingEcho.text = s.OnBearing ? "ON BEARING" : "OFF " + HandoffBoardState.OffLabel(off);
-            Paint(bearingEcho, s.OnBearing ? nominal : caution);
+            bearingEcho.text = s.weapons.OnBearing ? "ON BEARING" : "OFF " + HandoffBoardState.OffLabel(off);
+            Paint(bearingEcho, s.weapons.OnBearing ? nominal : caution);
         }
 
         // 01 weapon system: sysAngle [60, 90, 120]; mountAngle 90 for one mount, else [60, 120]
-        systemSelector.Set(new[] { 60f, 90f, 120f }[s.SysIndex]);
-        for (int i = 0; i < systemPositions.Length && i < s.systems.Length; i++)
+        systemSelector.Set(new[] { 60f, 90f, 120f }[s.weapons.SysIndex]);
+        for (int i = 0; i < systemPositions.Length && i < s.weapons.systems.Length; i++)
         {
-            var sy = s.systems[i];
-            bool on = sy.id == s.sys;
-            bool armed = System.Array.IndexOf(sy.mounts, s.mount) >= 0 && s.sw[3];
+            var sy = s.weapons.systems[i];
+            bool on = sy.id == s.weapons.sys;
+            bool armed = System.Array.IndexOf(sy.mounts, s.weapons.mount) >= 0 && s.weapons.sw[3];
             Color lamp = armed ? alarm : on ? data : lampOffSelector;
             Paint(systemPositions[i].lamp, lamp); Paint(systemPositions[i].glow, lamp); Show(systemPositions[i].glow, armed || on);
             Paint(systemPositions[i].label, on ? data : stencil);
         }
-        int mi = System.Array.IndexOf(y.mounts, s.mount);
+        int mi = System.Array.IndexOf(y.mounts, s.weapons.mount);
         mountSelector.Set(y.mounts.Length == 1 ? 90f : new[] { 60f, 120f }[Mathf.Max(0, mi)]);
         for (int i = 0; i < mountPositions.Length; i++)
         {
@@ -184,8 +184,8 @@ public class HandoffFireControlPanel : HandoffPanel
             bool used = i < y.mounts.Length;
             Show(pos.lamp, used); Show(pos.label, used);
             if (!used) { Show(pos.glow, false); continue; }
-            var mm = s.MountOf(y.mounts[i]);
-            bool on = y.mounts[i] == s.mount;
+            var mm = s.weapons.MountOf(y.mounts[i]);
+            bool on = y.mounts[i] == s.weapons.mount;
             if (pos.label) { pos.label.text = mm != null ? mm.shortName : y.mounts[i]; Paint(pos.label, on ? data : stencil); }
             Paint(pos.lamp, on ? data : lampOffSelector); Paint(pos.glow, data); Show(pos.glow, on);
         }
@@ -194,15 +194,15 @@ public class HandoffFireControlPanel : HandoffPanel
         if (mountRange) mountRange.text = m.rangeKm.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
         if (sysState)
         {
-            sysState.text = s.sys == "RG" ? "RAIL " + m.loaded + " · SLUGS " + m.ammo
-                : s.sys == "PD" ? m.ammo + " RDS · LOADERS " + (s.loaders ? "ENGAGED" : "OFF")
-                : s.warheads[s.warhead] + " · SALVO " + s.salvo + " OF " + s.vlsCells; // cells left
-            Paint(sysState, s.sys == "PD" && !s.loaders ? caution : data);
+            sysState.text = s.weapons.sys == "RG" ? "RAIL " + m.loaded + " · SLUGS " + m.ammo
+                : s.weapons.sys == "PD" ? m.ammo + " RDS · LOADERS " + (s.weapons.loaders ? "ENGAGED" : "OFF")
+                : s.weapons.warheads[s.weapons.warhead] + " · SALVO " + s.weapons.salvo + " OF " + s.weapons.vlsCells; // cells left
+            Paint(sysState, s.weapons.sys == "PD" && !s.weapons.loaders ? caution : data);
         }
 
         // 02 firing solution
-        var sol = s.Sol;
-        string tid = s.TrackIdFor();
+        var sol = s.weapons.Sol;
+        string tid = s.weapons.TrackIdFor();
         Color solInk = sol.set ? nominal : tid != null ? caution : lampOffSelector;
         Paint(solLamp, solInk); Paint(solGlow, solInk); Show(solGlow, sol.set || tid != null);
         bool manual = sol.set && sol.manual; // Step 47: dialled by hand from the plot
@@ -215,11 +215,11 @@ public class HandoffFireControlPanel : HandoffPanel
         if (solSpd) { solSpd.text = sol.set ? sol.spd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "—"; Paint(solSpd, valInk); }
         rngKnob.Set(sol.set ? (sol.rangeKm / 100f * 12f) % 360f : 0f);
         brgKnob.Set(sol.set ? sol.brg * 6f : 0f);
-        spdKnob.Set(sol.set ? (HandoffBoardState.JsRound(sol.spd / s.spdStep) * 12) % 360 : 0f);
+        spdKnob.Set(sol.set ? (HandoffBoardState.JsRound(sol.spd / s.weapons.spdStep) * 12) % 360 : 0f);
 
         // 03 capacitor
-        float cost = s.ShotCost;
-        int lit = HandoffBoardState.JsRound(s.wepCharge / 100f * 10f), mk = HandoffBoardState.JsRound(cost / 100f * 10f);
+        float cost = s.weapons.ShotCost;
+        int lit = HandoffBoardState.JsRound(s.weapons.wepCharge / 100f * 10f), mk = HandoffBoardState.JsRound(cost / 100f * 10f);
         for (int k = 0; k < capCells.Length; k++) Paint(capCells[k], k + 1 <= lit ? cellLit : cellUnlit);
         if (capMark && capCells.Length >= 10)
         {
@@ -228,25 +228,25 @@ public class HandoffFireControlPanel : HandoffPanel
             int at = Mathf.Clamp(mk, 1, 10) - 1;
             capMark.anchoredPosition = new Vector2(Right(capCells[at]) + capMarkX0, capMark.anchoredPosition.y);
         }
-        Color capInk = s.wepCharge >= cost ? nominal : s.power.BusUnits("wep") > 0 ? caution : alarm;
-        if (capPct) capPct.text = HandoffBoardState.JsRound(s.wepCharge) + "%"; // measured ink.data, not capInk
+        Color capInk = s.weapons.wepCharge >= cost ? nominal : s.power.BusUnits("wep") > 0 ? caution : alarm;
+        if (capPct) capPct.text = HandoffBoardState.JsRound(s.weapons.wepCharge) + "%"; // measured ink.data, not capInk
         if (capLabel) capLabel.text = cost + "% PER SHOT";
-        Color capLampInk = s.wepCharge >= cost ? nominal : s.power.BusUnits("wep") > 0 ? caution : lampOffPanel;
-        Paint(capLamp, capLampInk); Paint(capGlow, capLampInk); Show(capGlow, s.wepCharge >= cost || s.power.BusUnits("wep") > 0);
+        Color capLampInk = s.weapons.wepCharge >= cost ? nominal : s.power.BusUnits("wep") > 0 ? caution : lampOffPanel;
+        Paint(capLamp, capLampInk); Paint(capGlow, capLampInk); Show(capGlow, s.weapons.wepCharge >= cost || s.power.BusUnits("wep") > 0);
         if (capNote)
         {
             capNote.text = s.power.BusUnits("wep") < 1 ? "WEP BUS DEAD — CAPACITOR BLEEDING OFF"
-                : s.wepCharge >= cost ? "CHARGED — GATE WILL ARM" : "CHARGING AT +" + (s.power.BusUnits("wep") * 5) + "/S — GATE LOCKED";
+                : s.weapons.wepCharge >= cost ? "CHARGED — GATE WILL ARM" : "CHARGING AT +" + (s.power.BusUnits("wep") * 5) + "/S — GATE LOCKED";
             Paint(capNote, capInk);
         }
 
         // 04 arming: interlocks
-        for (int i = 0; i < ladder.Length && i < s.sw.Length; i++)
+        for (int i = 0; i < ladder.Length && i < s.weapons.sw.Length; i++)
         {
             var r = ladder[i];
-            bool on = s.sw[i];
-            bool prevOk = i == 0 || s.sw[i - 1];
-            bool gated = s.RungGated(i);
+            bool on = s.weapons.sw[i];
+            bool prevOk = i == 0 || s.weapons.sw[i - 1];
+            bool gated = s.weapons.RungGated(i);
             bool open = prevOk && !gated;
             if (r.rocker) r.rocker.sprite = on ? rockerThrown : open ? rockerUp : rockerLocked;
             Color lamp = on ? cautionHot : open ? stencilDim : lampOffPanel;
@@ -256,9 +256,9 @@ public class HandoffFireControlPanel : HandoffPanel
                 r.hint.text = on ? "SET" : open ? new[] { "ROUND IN RAIL", "ELEV SET", "ON AXIS", "GATE LIVE" }[i]
                     : i == 0 && !s.WeaponsReleased ? "NOT RELEASED"
                     : i == 0 && !s.MagOk ? "MAGAZINE HIT"
-                    : i == 0 && !s.WepReady ? "NO WEP BUS"
-                    : i == 3 && prevOk && s.wepCharge < cost ? "CHARGING"
-                    : i == 1 && prevOk && !s.InArc ? "OUT OF ARC" : "LOCKED"; // Step 48: turn to bring the turret to bear
+                    : i == 0 && !s.weapons.WepReady ? "NO WEP BUS"
+                    : i == 3 && prevOk && s.weapons.wepCharge < cost ? "CHARGING"
+                    : i == 1 && prevOk && !s.weapons.InArc ? "OUT OF ARC" : "LOCKED"; // Step 48: turn to bring the turret to bear
                 Paint(r.hint, on ? caution : open ? label : wellStencil);
             }
         }
@@ -268,11 +268,11 @@ public class HandoffFireControlPanel : HandoffPanel
         {
             float slotLeft = leverSlot.anchoredPosition.x - leverSlot.sizeDelta.x / 2f + slotMargin;
             float slotW = leverSlot.sizeDelta.x - 2f * slotMargin;
-            float capLeft = slotLeft + slotW * (capLeftPct + s.fireLever * capTravelPct) / 100f;
+            float capLeft = slotLeft + slotW * (capLeftPct + s.weapons.fireLever * capTravelPct) / 100f;
             leverCap.anchoredPosition = new Vector2(capLeft - capMargin + leverCap.sizeDelta.x / 2f, leverCap.anchoredPosition.y);
             if (leverFill)
             {
-                leverFill.sizeDelta = new Vector2(slotW * s.fireLever, leverFill.sizeDelta.y);
+                leverFill.sizeDelta = new Vector2(slotW * s.weapons.fireLever, leverFill.sizeDelta.y);
                 leverFill.anchoredPosition = new Vector2(slotLeft + leverFill.sizeDelta.x / 2f, leverFill.anchoredPosition.y);
             }
         }
@@ -281,19 +281,19 @@ public class HandoffFireControlPanel : HandoffPanel
         if (readyLabel)
         {
             string t;
-            if (s.sys == "PD" && s.sw[3]) t = m.shortName + " AUTO" + (s.pdcReport != null ? " · LAST: " + s.pdcReport : " — WATCHING ITS ARC"); // Step 55
-            else if (s.fired) t = s.Rounds.Count > 0 || s.shotReport == null ? "ROUNDS AWAY" : s.shotReport; // Step 48: then HIT · … or MISS
-            else if (s.AllSet) t = "SOLUTION LOCKED — MOUNT READY";
+            if (s.weapons.sys == "PD" && s.weapons.sw[3]) t = m.shortName + " AUTO" + (s.weapons.pdcReport != null ? " · LAST: " + s.weapons.pdcReport : " — WATCHING ITS ARC"); // Step 55
+            else if (s.weapons.fired) t = s.weapons.Rounds.Count > 0 || s.weapons.shotReport == null ? "ROUNDS AWAY" : s.weapons.shotReport; // Step 48: then HIT · … or MISS
+            else if (s.weapons.AllSet) t = "SOLUTION LOCKED — MOUNT READY";
             else if (tgt == null && !manual) t = "NO TARGET DESIGNATED";
             else if (tid == null && !manual) t = "NO TRACKING ID — NOT IDENTIFIED";
             else if (!s.BriOk) t = "BRIDGE DAMAGED — PLOT COMPUTER OFFLINE";
             else if (!sol.set) t = "NO FIRING SOLUTION";
             else if (!s.WeaponsReleased) t = "WEAPONS NOT RELEASED — CONDITION 2 REQUIRED";
             else if (!s.MagOk) t = "MAGAZINE DAMAGED — NO ROUNDS STRUCK UP";
-            else if (s.sys == "PD" && !s.loaders) t = "PDC AUTOLOADERS OFF";
+            else if (s.weapons.sys == "PD" && !s.weapons.loaders) t = "PDC AUTOLOADERS OFF";
             else t = "ARMING SEQUENCE INCOMPLETE";
             readyLabel.text = t;
-            Paint(readyLabel, s.fired ? alarm : s.AllSet ? data : label);
+            Paint(readyLabel, s.weapons.fired ? alarm : s.weapons.AllSet ? data : label);
         }
     }
 

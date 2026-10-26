@@ -21626,6 +21626,7 @@ GameObject:
   - component: {fileID: 765287332}
   - component: {fileID: 765287333}
   - component: {fileID: 765287334}
+  - component: {fileID: 765287335}
   m_Layer: 0
   m_Name: "Garuda \xB7 Cruiser"
   m_TagString: Untagged
@@ -21812,6 +21813,150 @@ MonoBehaviour:
   lockWindow: 0.3
   cipherKey: 160000000e0000000b00000005000000
   message: HOSTILE FLEET INBOUND VECTOR TWO SEVEN NINE HOLD STATION AWAIT RELIEF
+--- !u!114 &765287335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765287326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ec965ef54abf43fb8d6283da82d382e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponSystem
+  manualStartRangeKm: 10000
+  mounts:
+  - id: RGA
+    label: RAILGUN TURRET A
+    shortName: RG-A
+    loaded: 2 / 2
+    ammo: 22
+    arc: 42
+    halfArc: 80
+    rangeKm: 30000
+  - id: RGB
+    label: RAILGUN TURRET B
+    shortName: RG-B
+    loaded: 1 / 2
+    ammo: 19
+    arc: 250
+    halfArc: 80
+    rangeKm: 30000
+  - id: PDA
+    label: PDC GROUP A
+    shortName: PDC-A
+    loaded: BELT
+    ammo: 2400
+    arc: 42
+    halfArc: 35
+    rangeKm: 4000
+  - id: PDB
+    label: PDC GROUP B
+    shortName: PDC-B
+    loaded: BELT
+    ammo: 2180
+    arc: 200
+    halfArc: 35
+    rangeKm: 4000
+  - id: VLS
+    label: MISSILE VLS
+    shortName: VLS
+    loaded: 8 / 8
+    ammo: 8
+    arc: 0
+    halfArc: 180
+    rangeKm: 30000
+  systems:
+  - id: RG
+    label: RAILGUN
+    mounts:
+    - RGA
+    - RGB
+    shot: 70
+  - id: PD
+    label: PDC
+    mounts:
+    - PDA
+    - PDB
+    shot: 25
+  - id: MS
+    label: MISSILE
+    mounts:
+    - VLS
+    shot: 40
+  warheads:
+  - HE
+  - EMP
+  - PENETRATOR
+  switches:
+  - load
+  - angle
+  - bearing
+  - arm
+  sys: RG
+  mount: RGA
+  target: t07
+  sw: 00000000
+  sol:
+  - set: 0
+    rangeKm: 0
+    brg: 0
+    spd: 0
+    manual: 0
+    hasCourse: 0
+    course: 0
+    wx: 0
+    wy: 0
+    t: 0
+  - set: 0
+    rangeKm: 0
+    brg: 0
+    spd: 0
+    manual: 0
+    hasCourse: 0
+    course: 0
+    wx: 0
+    wy: 0
+    t: 0
+  - set: 0
+    rangeKm: 0
+    brg: 0
+    spd: 0
+    manual: 0
+    hasCourse: 0
+    course: 0
+    wx: 0
+    wy: 0
+    t: 0
+  warhead: 0
+  salvo: 2
+  loaders: 1
+  quads: 01010000
+  pdcAuto: 0000
+  fired: 0
+  wepCharge: 0
+  wepFeedPerUnit: 5
+  wepBleed: 3
+  fireLever: 0
+  slugSpeedKms: 250
+  missileSpeedKms: 100
+  missileTurnDegPerS: 6.5
+  missileSpreadDeg: 3
+  vlsCells: 8
+  hitRadii:
+  - klass: FRIGATE
+    km: 95
+  - klass: DESTROYER
+    km: 135
+  - klass: CRUISER
+    km: 210
+  - klass: CARRIER
+    km: 600
+  fireSignalSpike: 25
+  spdStep: 0.25
+  pdcKillChance: 0.7
+  ownHitRadiusKm: 210
 --- !u!1 &765774873
 GameObject:
   m_ObjectHideFlags: 0
@@ -25753,6 +25898,7 @@ GameObject:
   - component: {fileID: 891763124}
   - component: {fileID: 891763125}
   - component: {fileID: 891763126}
+  - component: {fileID: 891763127}
   m_Layer: 0
   m_Name: OwnShip
   m_TagString: Untagged
@@ -25904,6 +26050,150 @@ MonoBehaviour:
   lockWindow: 0.3
   cipherKey: 160000000e0000000b00000005000000
   message: HOSTILE FLEET INBOUND VECTOR TWO SEVEN NINE HOLD STATION AWAIT RELIEF
+--- !u!114 &891763127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891763121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ec965ef54abf43fb8d6283da82d382e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponSystem
+  manualStartRangeKm: 10000
+  mounts:
+  - id: RGA
+    label: RAILGUN TURRET A
+    shortName: RG-A
+    loaded: 2 / 2
+    ammo: 22
+    arc: 42
+    halfArc: 80
+    rangeKm: 30000
+  - id: RGB
+    label: RAILGUN TURRET B
+    shortName: RG-B
+    loaded: 1 / 2
+    ammo: 19
+    arc: 250
+    halfArc: 80
+    rangeKm: 30000
+  - id: PDA
+    label: PDC GROUP A
+    shortName: PDC-A
+    loaded: BELT
+    ammo: 2400
+    arc: 42
+    halfArc: 35
+    rangeKm: 4000
+  - id: PDB
+    label: PDC GROUP B
+    shortName: PDC-B
+    loaded: BELT
+    ammo: 2180
+    arc: 200
+    halfArc: 35
+    rangeKm: 4000
+  - id: VLS
+    label: MISSILE VLS
+    shortName: VLS
+    loaded: 8 / 8
+    ammo: 8
+    arc: 0
+    halfArc: 180
+    rangeKm: 30000
+  systems:
+  - id: RG
+    label: RAILGUN
+    mounts:
+    - RGA
+    - RGB
+    shot: 70
+  - id: PD
+    label: PDC
+    mounts:
+    - PDA
+    - PDB
+    shot: 25
+  - id: MS
+    label: MISSILE
+    mounts:
+    - VLS
+    shot: 40
+  warheads:
+  - HE
+  - EMP
+  - PENETRATOR
+  switches:
+  - load
+  - angle
+  - bearing
+  - arm
+  sys: RG
+  mount: RGA
+  target: t07
+  sw: 00000000
+  sol:
+  - set: 0
+    rangeKm: 0
+    brg: 0
+    spd: 0
+    manual: 0
+    hasCourse: 0
+    course: 0
+    wx: 0
+    wy: 0
+    t: 0
+  - set: 0
+    rangeKm: 0
+    brg: 0
+    spd: 0
+    manual: 0
+    hasCourse: 0
+    course: 0
+    wx: 0
+    wy: 0
+    t: 0
+  - set: 0
+    rangeKm: 0
+    brg: 0
+    spd: 0
+    manual: 0
+    hasCourse: 0
+    course: 0
+    wx: 0
+    wy: 0
+    t: 0
+  warhead: 0
+  salvo: 2
+  loaders: 1
+  quads: 01010000
+  pdcAuto: 0000
+  fired: 0
+  wepCharge: 0
+  wepFeedPerUnit: 5
+  wepBleed: 3
+  fireLever: 0
+  slugSpeedKms: 250
+  missileSpeedKms: 100
+  missileTurnDegPerS: 6.5
+  missileSpreadDeg: 3
+  vlsCells: 8
+  hitRadii:
+  - klass: FRIGATE
+    km: 95
+  - klass: DESTROYER
+    km: 135
+  - klass: CRUISER
+    km: 210
+  - klass: CARRIER
+    km: 600
+  fireSignalSpike: 25
+  spdStep: 0.25
+  pdcKillChance: 0.7
+  ownHitRadiusKm: 210
 --- !u!1 &896206256
 GameObject:
   m_ObjectHideFlags: 0
@@ -50573,120 +50863,6 @@ MonoBehaviour:
     launchConeDeg: 60
     launchLever: 0
     leverFireAt: 0.9
-    manualStartRangeKm: 10000
-    mounts:
-    - id: RGA
-      label: RAILGUN TURRET A
-      shortName: RG-A
-      loaded: 2 / 2
-      ammo: 22
-      arc: 42
-      halfArc: 80
-      rangeKm: 30000
-    - id: RGB
-      label: RAILGUN TURRET B
-      shortName: RG-B
-      loaded: 1 / 2
-      ammo: 19
-      arc: 250
-      halfArc: 80
-      rangeKm: 30000
-    - id: PDA
-      label: PDC GROUP A
-      shortName: PDC-A
-      loaded: BELT
-      ammo: 2400
-      arc: 42
-      halfArc: 35
-      rangeKm: 4000
-    - id: PDB
-      label: PDC GROUP B
-      shortName: PDC-B
-      loaded: BELT
-      ammo: 2180
-      arc: 200
-      halfArc: 35
-      rangeKm: 4000
-    - id: VLS
-      label: MISSILE VLS
-      shortName: VLS
-      loaded: 8 / 8
-      ammo: 8
-      arc: 0
-      halfArc: 180
-      rangeKm: 30000
-    systems:
-    - id: RG
-      label: RAILGUN
-      mounts:
-      - RGA
-      - RGB
-      shot: 70
-    - id: PD
-      label: PDC
-      mounts:
-      - PDA
-      - PDB
-      shot: 25
-    - id: MS
-      label: MISSILE
-      mounts:
-      - VLS
-      shot: 40
-    warheads:
-    - HE
-    - EMP
-    - PENETRATOR
-    switches:
-    - load
-    - angle
-    - bearing
-    - arm
-    sys: RG
-    mount: RGA
-    target: t07
-    sw: 00000000
-    sol:
-    - set: 0
-      rangeKm: 0
-      brg: 0
-      spd: 0
-      manual: 0
-      hasCourse: 0
-      course: 0
-      wx: 0
-      wy: 0
-      t: 0
-    - set: 0
-      rangeKm: 0
-      brg: 0
-      spd: 0
-      manual: 0
-      hasCourse: 0
-      course: 0
-      wx: 0
-      wy: 0
-      t: 0
-    - set: 0
-      rangeKm: 0
-      brg: 0
-      spd: 0
-      manual: 0
-      hasCourse: 0
-      course: 0
-      wx: 0
-      wy: 0
-      t: 0
-    warhead: 0
-    salvo: 2
-    loaders: 1
-    quads: 01010000
-    pdcAuto: 0000
-    fired: 0
-    wepCharge: 0
-    wepFeedPerUnit: 5
-    wepBleed: 3
-    fireLever: 0
     scopeBrg: 62
     scopeZoom: 1.4
     slewDegPerPx: 0.34
@@ -50702,22 +50878,6 @@ MonoBehaviour:
     marks: []
     markSeq: 0
     markMinLen: 4
-    spdStep: 0.25
-    slugSpeedKms: 250
-    missileSpeedKms: 100
-    missileTurnDegPerS: 6.5
-    missileSpreadDeg: 3
-    vlsCells: 8
-    hitRadii:
-    - klass: FRIGATE
-      km: 95
-    - klass: DESTROYER
-      km: 135
-    - klass: CRUISER
-      km: 210
-    - klass: CARRIER
-      km: 600
-    fireSignalSpike: 25
     sideArmourMax:
     - 100
     - 100
@@ -50739,8 +50899,6 @@ MonoBehaviour:
     radFadeSeconds: 90
     heArmourDamage: 100
     empSeconds: 60
-    pdcKillChance: 0.7
-    ownHitRadiusKm: 210
     fighterSpeedKms: 40
     fighterAttackKm: 200
     fighterRunSeconds: 30
@@ -50758,6 +50916,7 @@ MonoBehaviour:
   power: {fileID: 891763124}
   sensors: {fileID: 891763125}
   comms: {fileID: 891763126}
+  weapons: {fileID: 891763127}
   motion: {fileID: 1765047285}
   grid: {fileID: 261411404}
   canvas: {fileID: 519620959}
@@ -51417,6 +51576,8 @@ MonoBehaviour:
   senGlowAlpha: 0.04
   senEdgeAlphaAmber: 0.3
   senGlowAlphaAmber: 0.05
+  coneEdgeAlpha: 0.6
+  coneFillAlpha: 0.07
   sweep: {fileID: 1502487030}
   sweepSecondsBase: 5.4
   sweepSecondsPerGain: 0.5

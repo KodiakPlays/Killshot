@@ -166,71 +166,9 @@ public class HandoffBoardState
     [Range(0f, 1f)] public float launchLever;
     public float leverFireAt = 0.9f;
 
-    [System.Serializable]
-    public class Mount { public string id, label, shortName, loaded, ammo; public int arc, halfArc; public float rangeKm; }
-
-    [System.Serializable]
-    public class WeaponSystem { public string id, label; public string[] mounts; public float shot; }
-
-    [System.Serializable]
-    public class Solution
-    {
-        public bool set; public float rangeKm; public int brg; public float spd;
-        [Tooltip("Step 47: dialled by hand from the plot, not by TRACK. It aims at a point in space, not a locked contact.")]
-        public bool manual;
-        [Tooltip("Step 52: the target's course is known (from a plotted track, or TRACK's lock), so the shot is led.")]
-        public bool hasCourse;
-        public float course;
-        [Tooltip("Where the target was (world km) and when (mission seconds) as the solution was set; the fire computer reckons it forward.")]
-        public double wx, wy;
-        public float t;
-    }
-    [Tooltip("A knob turned with no solution starts one here, on the periscope's bearing at speed 0 (owner 2026-10-23).")]
-    [Tune("Periscope & fire control")] public float manualStartRangeKm = 10000f;
     /// <summary>The mission clock as of the last tick (HandoffBoardControls writes it).</summary>
     [System.NonSerialized] public float missionNow;
 
-    [Header("Fire control — MOUNTS, SYSTEMS, WARHEADS, SWITCHES and the board's initial state")]
-    // Owner 2026-10-24: railgun and missile reach = the DRADIS at full gain (12,000 + 5 × 3,600 km since 2026-10-26), not
-    // tied to the gain set now (the design had 30,000 and 40,000). You can dumb-fire that far; a lock still needs a scan.
-    public Mount[] mounts =
-    {
-        new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 30000, label = "RAILGUN TURRET A", shortName = "RG-A", loaded = "2 / 2", ammo = "22" },
-        new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 30000, label = "RAILGUN TURRET B", shortName = "RG-B", loaded = "1 / 2", ammo = "19" },
-        new Mount { id = "PDA", arc = 42, halfArc = 35, rangeKm = 4000, label = "PDC GROUP A", shortName = "PDC-A", loaded = "BELT", ammo = "2400" },
-        new Mount { id = "PDB", arc = 200, halfArc = 35, rangeKm = 4000, label = "PDC GROUP B", shortName = "PDC-B", loaded = "BELT", ammo = "2180" },
-        new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 30000, label = "MISSILE VLS", shortName = "VLS", loaded = "8 / 8", ammo = "8" },
-    };
-    public WeaponSystem[] systems =
-    {
-        new WeaponSystem { id = "RG", label = "RAILGUN", mounts = new[] { "RGA", "RGB" }, shot = 70 },
-        new WeaponSystem { id = "PD", label = "PDC", mounts = new[] { "PDA", "PDB" }, shot = 25 },
-        new WeaponSystem { id = "MS", label = "MISSILE", mounts = new[] { "VLS" }, shot = 40 },
-    };
-    public string[] warheads = { "HE", "EMP", "PENETRATOR" };
-    public string[] switches = { "load", "angle", "bearing", "arm" };
-    public string sys = "RG";
-    public string mount = "RGA";
-    public string target = "t07";
-    [Tooltip("The arming ladder: LOAD, ANGLE, BEARING, ARM (sw).")]
-    public bool[] sw = new bool[4];
-    [Tooltip("A firing solution per system, in SYSTEMS order (sol).")]
-    public Solution[] sol = { new Solution(), new Solution(), new Solution() };
-    public int warhead;
-    [Tooltip("Missiles launched together (owner 2026-10-23: set here until the design's salvo stepper has art).")]
-    [Tune("Periscope & fire control")] [Range(1, 8)] public int salvo = 2;
-    [Tooltip("PDC autoloaders. Step 55: engaged at load (the design starts them off) and set here until the design's LOADERS pushbutton has art (HANDOFF_GAPS row 73); without them PDCs cannot arm.")]
-    [Tune("Periscope & fire control")] public bool loaders = true;
-    [Tooltip("PDC quadrants FWD, STBD, AFT, PORT (quads).")]
-    public bool[] quads = { true, true, false, false };
-    [Tooltip("Step 55: PDC groups on AUTO (PDC-A, PDC-B). Arming the ladder with a group selected puts it on AUTO; it then shoots by itself at enemy missiles in its arc.")]
-    public bool[] pdcAuto = new bool[2];
-    public bool fired;
-    [Range(0f, 100f)] public float wepCharge;
-    [Tune("Power & signal")]
-    public float wepFeedPerUnit = 5f, wepBleed = 3f;
-    [Tooltip("The fire lever, 0..1; fires once past leverFireAt with the ladder set.")]
-    [Range(0f, 1f)] public float fireLever;
     [Header("Periscope (Step 33h-3)")]
     [Tooltip("Periscope bearing, degrees 0..360 (scopeBrg); the board reads an unset bearing as 62.")]
     public double scopeBrg = 62;
@@ -266,6 +204,10 @@ public class HandoffBoardState
     /// <summary>This ship's comms: its radio, the carrier lock and the cipher dials (owner 2026-10-26).</summary>
     [System.NonSerialized] public CommsSystem comms;
     public void UseComms(CommsSystem c) { comms = c; }
+    /// <summary>This ship's weapons: fire control, rounds in flight and point defence (owner 2026-10-26).</summary>
+    [System.NonSerialized] public WeaponSystem weapons;
+    /// <summary>Give this ship its weapons. They read this ship's contacts, WEP bus, periscope and position.</summary>
+    public void UseWeapons(WeaponSystem w) { weapons = w; if (w) w.ship = this; }
     // The ship's position and heading, read by the rules below. Only its NavSystem changes them.
     double ownX => nav.x;
     double ownY => nav.y;
@@ -447,7 +389,7 @@ public class HandoffBoardState
         if (d == null || MarkLen(d) < minLenKm - 1e-6) return; // tolerance: the km conversion can land a hair under an exact 4 px (Step 36 verification)
         d.id = ++markSeq;
         marks.Add(d);
-        if (Sol.set && Sol.manual) ApplyTrack(Sol); // Step 52: a new track feeds the hand-dialled solution
+        if (weapons.Sol.set && weapons.Sol.manual) weapons.ApplyTrack(weapons.Sol); // Step 52: a new track feeds the hand-dialled solution
     }
     /// <summary>A mark's start in world km: a ring starts at our ship, wherever it is now.</summary>
     public double MarkX(Mark m) => m.kind == "ring" ? ownX : m.x;
@@ -487,22 +429,6 @@ public class HandoffBoardState
         return true;
     }
 
-    /// <summary>validSet: hostile contacts inside the current mount's range and arc.</summary>
-    public bool ValidTarget(string key)
-    {
-        var m = MountOf(mount);
-        var t = TrackOf(key);
-        return m != null && t != null && t.hostile && t.rangeKm <= m.rangeKm && AngDiff(t.bearing, m.arc) <= m.halfArc;
-    }
-    /// <summary>pickTarget: a valid contact becomes the target; the ladder, lever and fired reset.</summary>
-    public void PickTarget(string key)
-    {
-        if (!ValidTarget(key)) return;
-        target = key;
-        fired = false;
-        for (int i = 0; i < sw.Length; i++) sw[i] = false;
-        fireLever = 0f;
-    }
     /// <summary>lookAt: lower the scope (by the caller) and put it on the contact's bearing.</summary>
     public bool LookAt(string key) { var t = TrackOf(key); if (t == null) return false; scopeBrg = t.bearing; slewDx = 0; return true; }
 
@@ -571,9 +497,6 @@ public class HandoffBoardState
 
     // ---- fire control ----------------------------------------------------------------------
 
-    public WeaponSystem Sys { get { foreach (var y in systems) if (y.id == sys) return y; return systems[0]; } }
-    public int SysIndex { get { for (int i = 0; i < systems.Length; i++) if (systems[i].id == sys) return i; return 0; } }
-    public Mount MountOf(string id) { foreach (var m in mounts) if (m.id == id) return m; return null; }
     public Track TrackOf(string key) { foreach (var t in tracks) if (t.key == key) return t; return null; }
     /// <summary>Keep only the tracks a world contact drives (Step 34, TacticalWorld).</summary>
     public void KeepTracks(System.Collections.Generic.ICollection<string> keys)
@@ -582,34 +505,13 @@ public class HandoffBoardState
         identified.RemoveAll(k => !keys.Contains(k));
         classified.RemoveAll(k => !keys.Contains(k));
     }
-    public Solution Sol => sol[SysIndex];
-    public float ShotCost => Sys != null ? Sys.shot : 50f;
-    public bool WepReady => BusUnits("wep") >= 2 && MagOk && WeaponsReleased;
-    public string TrackIdFor()
-    {
-        var t = TrackOf(target);
-        if (t == null || !identified.Contains(t.key)) return null;
-        return "TK-" + t.bearing.ToString("000") + "-" + t.key.ToUpperInvariant();
-    }
-    /// <summary>offBearing: target bearing minus periscope bearing, wrapped to ±180.</summary>
-    public double? OffBearing() { var t = TrackOf(target); if (t == null) return null; return ((t.bearing - scopeBrg + 540) % 360) - 180; }
-    public bool OnBearing
-    {
-        get
-        {
-            // a hand-dialled solution aims at a point: BEARING wants the periscope on the dialled bearing
-            if (Sol.set && Sol.manual) return AngDiffD(hdg + Sol.brg, scopeBrg) <= onBearingDeg;
-            var o = OffBearing(); return o.HasValue && System.Math.Abs(o.Value) <= onBearingDeg;
-        }
-    }
-
     // ---- periscope -----------------------------------------------------------------------
 
-    static double AngDiffD(double a, double b) => System.Math.Abs(((a - b) % 360 + 540) % 360 - 180);
+    public static double AngDiffD(double a, double b) => System.Math.Abs(((a - b) % 360 + 540) % 360 - 180);
     /// <summary>scopeOn: the scope is down and within 4° of the contact.</summary>
     public bool ScopeOn(Track t, bool scopeDown) => scopeDown && AngDiffD(t.bearing, scopeBrg) <= 4;
     /// <summary>scopeOffDeg: degrees from the target to the sight; 999 with no target.</summary>
-    public double ScopeOffDeg { get { var t = TrackOf(target); return t == null ? 999 : AngDiffD(t.bearing, scopeBrg); } }
+    public double ScopeOffDeg { get { var t = TrackOf(weapons.target); return t == null ? 999 : AngDiffD(t.bearing, scopeBrg); } }
     public bool ScopeOnAxis => ScopeOffDeg <= 4;
     /// <summary>scopeSubject: the first heard contact in the sight.</summary>
     public Track ScopeSubject(bool scopeDown) { foreach (var t in tracks) if (Heard(t) && ScopeOn(t, scopeDown)) return t; return null; }
@@ -622,248 +524,19 @@ public class HandoffBoardState
         if (System.Math.Abs(dx) < slewDeadPx) return;
         scopeBrg = ((brg0 + dx * slewDegPerPx) % 360 + 360) % 360;
         slewDx = dx;
-        sw[2] = false; sw[3] = false;
-        fireLever = 0f;
-        fired = false;
+        weapons.sw[2] = false; weapons.sw[3] = false;
+        weapons.fireLever = 0f;
+        weapons.fired = false;
     }
     public void EndSlew() { slewing = false; slewDx = 0; }
     /// <summary>slewTo: jump to the target's bearing; the switches are left as they are.</summary>
     public void SlewTo()
     {
-        if (Sol.set && Sol.manual) { scopeBrg = ((hdg + Sol.brg) % 360 + 360) % 360; slewing = false; slewDx = 0; return; } // onto the dialled bearing
-        var t = TrackOf(target); if (t == null) return; scopeBrg = t.bearing; slewing = false; slewDx = 0;
+        if (weapons.Sol.set && weapons.Sol.manual) { scopeBrg = ((hdg + weapons.Sol.brg) % 360 + 360) % 360; slewing = false; slewDx = 0; return; } // onto the dialled bearing
+        var t = TrackOf(weapons.target); if (t == null) return; scopeBrg = t.bearing; slewing = false; slewDx = 0;
     }
     /// <summary>magDown: zoom = start + dx / 40, 1..8, rounded to 0.1.</summary>
     public void SetZoom(double z0, double dx) => scopeZoom = JsRound(System.Math.Max(1, System.Math.Min(8, z0 + dx / magPxPerX)) * 10) / 10.0;
-    public bool AllSet
-    {
-        get
-        {
-            if (!Sol.set || (!Sol.manual && TrackOf(target) == null)) return false; // a hand-dialled shot needs no locked contact
-            if (sys == "PD" && !loaders) return false;
-            foreach (var b in sw) if (!b) return false;
-            return true;
-        }
-    }
-
-    // Step 55: a PDC group on AUTO keeps its ladder armed whenever it is the one selected
-    void ClearSwitches() { bool auto = PdcGroup >= 0 && pdcAuto[PdcGroup]; for (int i = 0; i < sw.Length; i++) sw[i] = auto; }
-    /// <summary>The selected PDC group (0 = PDC-A, 1 = PDC-B), or -1 when PDC is not selected.</summary>
-    int PdcGroup => sys == "PD" ? System.Array.IndexOf(Sys.mounts, mount) : -1;
-
-    /// <summary>pickSystem via cycleSystem: next system; keep the mount if it belongs, else its first.</summary>
-    public void CycleSystem()
-    {
-        var next = systems[(SysIndex + 1) % systems.Length];
-        sys = next.id;
-        if (System.Array.IndexOf(next.mounts, mount) < 0) mount = next.mounts[0];
-        ClearSwitches(); fired = false;
-    }
-
-    public void CycleMount()
-    {
-        var y = Sys;
-        if (y.mounts.Length < 2) return;
-        int i = System.Array.IndexOf(y.mounts, mount);
-        mount = y.mounts[(i + 1) % y.mounts.Length];
-        ClearSwitches(); fired = false;
-    }
-
-    public void CycleWarhead() { warhead = (warhead + 1) % warheads.Length; ClearSwitches(); }
-    public void StepSalvo(int d) { salvo = Mathf.Max(1, Mathf.Min(8, salvo + d)); }
-    public void ToggleLoaders() { loaders = !loaders; if (!loaders) pdcAuto[0] = pdcAuto[1] = false; ClearSwitches(); }
-    public void ToggleQuad(int i) { quads[i] = !quads[i]; }
-
-    /// <summary>computeSol: needs an identified target and the bridge; stores range, relative
-    /// bearing and speed for the current system and clears the ladder.</summary>
-    public void ComputeSol()
-    {
-        var t = TrackOf(target);
-        if (t == null || !identified.Contains(t.key) || !BriOk) return;
-        int rel = ((t.bearing - hdg + 540) % 360) - 180;
-        // Step 52: an active lock knows its true course and speed, and where it is now, so TRACK's shot is led
-        sol[SysIndex] = new Solution { set = true, rangeKm = t.rangeKm, brg = rel, spd = t.speed,
-            hasCourse = t.speed > 0.01f, course = (float)t.course, wx = t.worldX, wy = t.worldY, t = missionNow };
-        ClearSwitches(); fired = false;
-    }
-
-    [Tooltip("The SPD knob's step, km/s (the design's 0.05, x5 with the speeds in Step 63).")]
-    [Tune("Periscope & fire control")] public float spdStep = 0.25f;
-
-    /// <summary>nudgeSol: RNG ±100 km, BRG ±1° (±180), SPD ±spdStep (2 dp; the design had 0.05, x5 in Step 63); clears the ladder.</summary>
-    public void NudgeSol(string field, int d)
-    {
-        var cur = Sol;
-        if (!cur.set)
-        {
-            // Step 47 (owner 2026-10-23): a knob starts a hand-dialled solution, from the plot
-            cur.set = true; cur.manual = true;
-            cur.rangeKm = manualStartRangeKm;
-            cur.brg = (JsRound(scopeBrg) - hdg + 540) % 360 - 180; // relative, as TRACK stores it
-            cur.spd = 0f;
-            ApplyTrack(cur);
-        }
-        if (field == "rng") cur.rangeKm = Mathf.Max(0f, cur.rangeKm + d * 100f);
-        if (field == "brg") cur.brg = Mathf.Max(-180, Mathf.Min(180, cur.brg + d));
-        if (field == "spd") cur.spd = Mathf.Max(0f, (float)System.Math.Round(cur.spd + d * spdStep, 2, System.MidpointRounding.AwayFromZero));
-        if (cur.manual) Fix(cur); // the dialled point is where the target is now
-        ClearSwitches();
-    }
-
-    /// <summary>flip: releasing a switch releases it and every one after (and the lever);
-    /// throwing needs the one before, and LOAD/BEARING/ARM their gates.</summary>
-    public void Flip(int i)
-    {
-        if (sw[i])
-        {
-            for (int j = i; j < sw.Length; j++) sw[j] = false;
-            fired = false; fireLever = 0f;
-            if (PdcGroup >= 0) pdcAuto[PdcGroup] = false; // Step 55: dropping the ladder takes the group off AUTO
-            return;
-        }
-        if (i > 0 && !sw[i - 1]) return;
-        if (RungGated(i)) return;
-        sw[i] = true; fired = false;
-        if (i == 3 && PdcGroup >= 0) pdcAuto[PdcGroup] = true; // Step 55: ARM puts the PDC group on AUTO
-    }
-
-    /// <summary>A rung's gate: LOAD needs the WEP bus and a solution, ANGLE the turret to bear (Step 48),
-    /// BEARING the scope on axis, ARM the charge. Step 55: a PDC group needs no solution or bearing, only its
-    /// autoloaders: on AUTO it fires by itself at what enters its arc.</summary>
-    public bool RungGated(int i)
-    {
-        bool pd = sys == "PD";
-        return (i == 0 && (!WepReady || (pd ? !loaders : !Sol.set)))
-            || (i == 1 && !pd && !InArc) || (i == 2 && !pd && !OnBearing) || (i == 3 && wepCharge < ShotCost);
-    }
-
-    /// <summary>The lever passing 0.9 with the ladder set: rounds away, charge spent (drawWep).
-    /// Step 48: refused below the shot's cost; firing releases ARM, one shot per arming (spec 8.4.b);
-    /// a railgun shot is a slug that flies (TickRounds); firing spikes our signal (GDD p.42).</summary>
-    public void Fire()
-    {
-        if (sys == "PD") return; // Step 55: PDCs on AUTO fire by themselves; the lever does nothing
-        if (!AllSet) return; // moveSlew fires on every new pull while allSet() holds; the panel's per-pull latch stops repeats (Step 33g verification)
-        if (wepCharge < ShotCost) return;
-        if (sys == "MS" && !MissileReady) return;
-        fired = true;
-        wepCharge = Mathf.Max(0f, wepCharge - ShotCost);
-        sw[3] = false;
-        shotsFired++;
-        var m = MountOf(mount);
-        if (sys == "RG" && m != null)
-        {
-            double b = LeadBearing() * System.Math.PI / 180;
-            Rounds.Add(new Round { x = ownX, y = ownY, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm, speed = slugSpeedKms });
-            shotReport = null;
-            sensors.signal = Mathf.Min(100f, sensors.signal + fireSignalSpike);
-        }
-        if (sys == "MS" && m != null)
-        {
-            // a salvo, spread a little either side of the target's bearing; each missile then homes on it
-            var tgt = TrackOf(target);
-            int n = Mathf.Min(salvo, vlsCells);
-            for (int i = 0; i < n; i++)
-            {
-                double b = (tgt.bearing + (i - (n - 1) / 2.0) * missileSpreadDeg) * System.Math.PI / 180;
-                Rounds.Add(new Round { x = ownX, y = ownY, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm,
-                                       speed = missileSpeedKms, missile = true, targetKey = tgt.key, warhead = warhead });
-            }
-            vlsCells -= n;
-            shotReport = null;
-            sensors.signal = Mathf.Min(100f, sensors.signal + fireSignalSpike);
-        }
-    }
-
-    /// <summary>Step 53 (GDD p.45): missiles need a locked target — identified by an active scan — and a cell left.</summary>
-    public bool MissileReady { get { var t = TrackOf(target); return t != null && !t.wreck && identified.Contains(t.key) && vlsCells > 0; } }
-
-    // ---- leading a moving target (Step 52, owner 2026-10-23) ---------------------------------
-
-    /// <summary>The latest plotted track (a RULER from one POINT to another) gives the solution its course,
-    /// and its speed into SPD.</summary>
-    public void ApplyTrack(Solution cur)
-    {
-        Mark latest = null;
-        Mark f, g; double crs, spd;
-        foreach (var m in marks) if (m.kind == "ruler" && (latest == null || m.id > latest.id) && TrackLeg(m, out f, out g, out crs, out spd)) latest = m;
-        if (latest == null) return;
-        TrackLeg(latest, out f, out g, out crs, out spd);
-        cur.hasCourse = true;
-        cur.course = (float)crs;
-        cur.spd = (float)System.Math.Round(spd, 2, System.MidpointRounding.AwayFromZero);
-    }
-
-    // the dialled range and bearing as a world point, now
-    void Fix(Solution cur)
-    {
-        double b = (hdg + cur.brg) * System.Math.PI / 180;
-        cur.wx = ownX + System.Math.Sin(b) * cur.rangeKm;
-        cur.wy = ownY + System.Math.Cos(b) * cur.rangeKm;
-        cur.t = missionNow;
-    }
-
-    /// <summary>Where to point the slug. With a course, reckon the target forward from where the solution
-    /// put it to now, then aim where it will be when the slug arrives. Otherwise straight down the dialled
-    /// bearing, as before.</summary>
-    public double LeadBearing()
-    {
-        var cur = Sol;
-        double straight = hdg + cur.brg;
-        if (!cur.hasCourse || cur.spd <= 0.001f) return straight;
-        double c = cur.course * System.Math.PI / 180, vx = cur.spd * System.Math.Sin(c), vy = cur.spd * System.Math.Cos(c);
-        double age = System.Math.Max(0, missionNow - cur.t);
-        double tx = cur.wx + vx * age - ownX, ty = cur.wy + vy * age - ownY;
-        double a = vx * vx + vy * vy - slugSpeedKms * slugSpeedKms, bq = 2 * (tx * vx + ty * vy), cq = tx * tx + ty * ty;
-        double disc = bq * bq - 4 * a * cq;
-        if (a >= 0 || disc < 0) return straight; // can't catch it
-        double tHit = (-bq - System.Math.Sqrt(disc)) / (2 * a);
-        if (tHit <= 0) return straight;
-        return (System.Math.Atan2(tx + vx * tHit, ty + vy * tHit) * 180 / System.Math.PI + 360) % 360;
-    }
-
-    // ---- rounds in flight (Step 48, owner 2026-10-23) ------------------------------------------
-
-    [System.Serializable]
-    public class Round
-    {
-        public double x, y, dx, dy, travelled, maxKm;
-        public double speed = 50;
-        [Tooltip("Step 53: a missile homes on its target and carries a warhead (an index into warheads).")]
-        public bool missile;
-        public string targetKey;
-        public int warhead;
-        [Tooltip("Step 55: PDC groups that have had their one chance at this missile (bit 0 = PDC-A, bit 1 = PDC-B).")]
-        public int pdcTried;
-    }
-    [System.Serializable]
-    public class HitRadius { public string klass; public float km; }
-
-    [System.NonSerialized] private System.Collections.Generic.List<Round> rounds;
-    public System.Collections.Generic.List<Round> Rounds => rounds ?? (rounds = new System.Collections.Generic.List<Round>());
-    [Tooltip("Railgun slug speed, km/s (Step 63: 5x the 50 that matched the prototype's slowed ship). About 100 s to 24,300 km.")]
-    [Tune("Periscope & fire control")] public double slugSpeedKms = 250;
-    [Tooltip("Missile speed, km/s (owner 2026-10-23: slower than a slug, but it homes; Step 63: x5). About 2 minutes to 12,000 km.")]
-    [Tune("Periscope & fire control")] public double missileSpeedKms = 100;
-    [Tooltip("How fast a missile can turn toward its target, degrees per mission second (Step 63: x5).")]
-    [Tune("Periscope & fire control")] public double missileTurnDegPerS = 6.5;
-    [Tooltip("A salvo leaves the launcher fanned this many degrees apart.")]
-    [Tune("Periscope & fire control")] public double missileSpreadDeg = 3;
-    [Tooltip("VLS cells left (the design's 8 / 8).")]
-    public int vlsCells = 8;
-    [Tooltip("A slug hits a ship it passes within this distance of, by class (the prototype's radii, km). Others: 150.")]
-    [Tune("Periscope & fire control")] public HitRadius[] hitRadii =
-    {
-        new HitRadius { klass = "FRIGATE", km = 95 }, new HitRadius { klass = "DESTROYER", km = 135 },
-        new HitRadius { klass = "CRUISER", km = 210 }, new HitRadius { klass = "CARRIER", km = 600 },
-    };
-    [Tooltip("Firing the railgun spikes our signal by this much (GDD p.42); it falls back at the usual rate.")]
-    [Tune("Power & signal")] public float fireSignalSpike = 25f;
-    /// <summary>The last shot's outcome: "HIT · GARUDA · STBD", "MISS", or null while none has landed.</summary>
-    [System.NonSerialized] public string shotReport;
-    [System.NonSerialized] public bool lastShotHit;
-    [System.NonSerialized] public int shotsFired, shotResults;
-
     /// <summary>The damage model of the ship behind a track (TacticalWorld supplies it), or null.</summary>
     [System.NonSerialized] public System.Func<string, HandoffBoardState> ShipOf;
     [System.NonSerialized] public int kills;
@@ -983,8 +656,14 @@ public class HandoffBoardState
     bool Roll(double p)
     {
         if (p <= 0) return false;
+        return NextDie() < p;
+    }
+
+    /// <summary>The next roll of this ship's dice, 0..1. Damage and the PDCs share one sequence, seeded 49.</summary>
+    public double NextDie()
+    {
         if (dice == null) dice = new System.Random(49);
-        return dice.NextDouble() < p;
+        return dice.NextDouble();
     }
 
     // A room loses its air: the fire goes out, that share of its crew die, and a team working there is lost.
@@ -1090,163 +769,11 @@ public class HandoffBoardState
         return " · " + w + Behind(i, slugCompartmentDamage, w);
     }
 
-    public float HitRadiusKm(string klass)
-    {
-        foreach (var h in hitRadii) if (h.klass == klass) return h.km;
-        return 150f;
-    }
-
-    /// <summary>Hull-fixed arcs (spec 8.7.a): the solution's bearing from our bow must lie in the mount's arc.</summary>
-    public bool InArc
-    {
-        get
-        {
-            var m = MountOf(mount);
-            if (m == null || !Sol.set) return false;
-            return AngDiff((Sol.brg % 360 + 360) % 360, m.arc) <= m.halfArc;
-        }
-    }
-
-    /// <summary>Fly every round dt mission seconds. Its whole path this tick is tested, so a fast slug
-    /// cannot skip past a ship: the first ship it passes within that ship's hit radius is hit. Step 63: the
-    /// test follows the ship's own motion through the tick too (at 5x speeds and x10 a ship moves further
-    /// in a tick than its hit radius).</summary>
-    public void TickRounds(double dt)
-    {
-        var list = Rounds;
-        for (int i = list.Count - 1; i >= 0; i--)
-        {
-            var r = list[i];
-            if (r.missile) Steer(r, dt);
-            double step = System.Math.Min(r.speed * dt, r.maxKm - r.travelled);
-            double flight = r.speed > 0 ? step / r.speed : 0; // seconds of this tick the round is flying
-            Track struck = null;
-            double first = double.MaxValue;
-            foreach (var t in tracks)
-            {
-                if (t.own || !t.hasWorld || t.wreck) continue;
-                // the ship relative to the round, and how that changes: its velocity less the round's
-                double c = t.course * System.Math.PI / 180;
-                double wx = t.speed * System.Math.Sin(c) - r.dx * r.speed, wy = t.speed * System.Math.Cos(c) - r.dy * r.speed;
-                double px = t.worldX - r.x, py = t.worldY - r.y, ww = wx * wx + wy * wy;
-                double s = ww > 0 ? System.Math.Max(0, System.Math.Min(flight, -(px * wx + py * wy) / ww)) : 0; // closest moment
-                double cx = px + wx * s, cy = py + wy * s, rad = HitRadiusKm(t.klass);
-                if (cx * cx + cy * cy <= rad * rad && s < first) { struck = t; first = s; }
-            }
-            if (struck != null)
-            {
-                // Step 49: the struck ship takes the hit on its own model (its side, then what is behind it)
-                string side = SideStruck(struck, r);
-                var ship = ShipOf != null ? ShipOf(struck.key) : null;
-                string damage = ship == null ? "" : r.missile ? ship.TakeWarhead(side, warheads[r.warhead]) : ship.TakeSlug(side);
-                if (ship != null && ship.destroyed) Kill(struck);
-                else { shotReport = "HIT · " + NameOf(struck) + (Scanned(struck) ? " · " + side + damage : ""); lastShotHit = true; shotResults++; } // Step 61: detail once scanned
-                list.RemoveAt(i);
-                continue;
-            }
-            r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
-            if (r.travelled >= r.maxKm - 1e-6) { shotReport = "MISS"; lastShotHit = false; shotResults++; list.RemoveAt(i); }
-        }
-    }
-
-    // A missile turns toward its target, no faster than missileTurnDegPerS. With no target left it flies on.
-    void Steer(Round r, double dt)
-    {
-        var t = TrackOf(r.targetKey);
-        if (t == null || !t.hasWorld || t.wreck) return;
-        SteerAt(r, t.worldX, t.worldY, dt);
-    }
-
-    void SteerAt(Round r, double x, double y, double dt)
-    {
-        double want = System.Math.Atan2(x - r.x, y - r.y) * 180 / System.Math.PI;
-        double now = System.Math.Atan2(r.dx, r.dy) * 180 / System.Math.PI;
-        double turn = ((want - now) % 360 + 540) % 360 - 180, most = missileTurnDegPerS * dt;
-        double head = (now + System.Math.Max(-most, System.Math.Min(most, turn))) * System.Math.PI / 180;
-        r.dx = System.Math.Sin(head); r.dy = System.Math.Cos(head);
-    }
-
-    // The side facing the shot (reference sim sideFacing): where it came from, against the ship's bow.
-    static string SideStruck(Track t, Round r) => SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, t.worldHdg);
-
     // The side of a ship whose bow points bowDeg that faces a bearing fromDeg (both clockwise from north).
-    static string SideAt(double fromDeg, double bowDeg)
+    public static string SideAt(double fromDeg, double bowDeg)
     {
         double rel = ((fromDeg - bowDeg) % 360 + 360) % 360;
         return rel < 45 || rel >= 315 ? "PROW" : rel < 135 ? "STBD" : rel < 225 ? "AFT" : "PORT";
-    }
-
-    // ---- enemy missiles and our point defence (Step 55, owner 2026-10-24) -----------------------
-
-    [System.NonSerialized] private System.Collections.Generic.List<Round> incoming;
-    /// <summary>Enemy missiles flying at our ship.</summary>
-    public System.Collections.Generic.List<Round> Incoming => incoming ?? (incoming = new System.Collections.Generic.List<Round>());
-    [Tooltip("The chance a PDC group on AUTO shoots down an enemy missile that enters its arc (owner: a chance per missile).")]
-    [Tune("Periscope & fire control")] [Range(0f, 1f)] public float pdcKillChance = 0.7f;
-    [Tooltip("An enemy missile hits our ship if it passes within this distance, km (cruiser-sized, like the Garuda).")]
-    [Tune("Damage")] public float ownHitRadiusKm = 210f;
-    /// <summary>The PDCs' last result ("PDC-A · MISSILE DOWN"), and the last enemy missile to hit us.</summary>
-    [System.NonSerialized] public string pdcReport, incomingReport;
-    [System.NonSerialized] public int pdcKills, hitsTaken;
-
-    /// <summary>An enemy at (x, y) launches n missiles at us, fanned, each homing on our ship.</summary>
-    public void LaunchAt(double x, double y, int n, int warheadIndex, double maxKm)
-    {
-        double brg = System.Math.Atan2(ownX - x, ownY - y) * 180 / System.Math.PI;
-        for (int i = 0; i < n; i++)
-        {
-            double b = (brg + (i - (n - 1) / 2.0) * missileSpreadDeg) * System.Math.PI / 180;
-            Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = maxKm,
-                                     speed = missileSpeedKms, missile = true, warhead = warheadIndex });
-        }
-    }
-
-    /// <summary>Each tick: our PDCs take their chances, then every enemy missile homes on us; one that
-    /// passes within ownHitRadiusKm strikes the side facing it.</summary>
-    public void TickIncoming(double dt)
-    {
-        var list = Incoming;
-        for (int i = list.Count - 1; i >= 0; i--)
-        {
-            var r = list[i];
-            if (PdcStops(r)) { list.RemoveAt(i); continue; }
-            SteerAt(r, ownX, ownY, dt);
-            double step = System.Math.Min(r.speed * dt, r.maxKm - r.travelled);
-            double px = ownX - r.x, py = ownY - r.y;
-            double u = System.Math.Max(0, System.Math.Min(step, px * r.dx + py * r.dy)); // closest point along the path
-            double cx = px - r.dx * u, cy = py - r.dy * u;
-            if (cx * cx + cy * cy <= ownHitRadiusKm * ownHitRadiusKm)
-            {
-                string side = SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, hdg);
-                incomingReport = "MISSILE HIT · " + side + TakeWarhead(side, warheads[r.warhead]);
-                hitsTaken++;
-                list.RemoveAt(i);
-                continue;
-            }
-            r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
-            if (r.travelled >= r.maxKm - 1e-6) list.RemoveAt(i);
-        }
-    }
-
-    // A PDC group on AUTO, loaded and powered, gets one chance at each enemy missile inside its arc and range.
-    bool PdcStops(Round r)
-    {
-        if (!loaders || !WepReady) return false;
-        double dx = r.x - ownX, dy = r.y - ownY;
-        int rel = JsRound(((System.Math.Atan2(dx, dy) * 180 / System.Math.PI - hdg) % 360 + 360) % 360) % 360;
-        var groups = System.Array.Find(systems, y => y.id == "PD").mounts;
-        for (int g = 0; g < groups.Length && g < pdcAuto.Length; g++)
-        {
-            var m = MountOf(groups[g]);
-            if (!pdcAuto[g] || m == null || (r.pdcTried & (1 << g)) != 0) continue;
-            if (dx * dx + dy * dy > (double)m.rangeKm * m.rangeKm || AngDiff(rel, m.arc) > m.halfArc) continue;
-            r.pdcTried |= 1 << g;
-            if (dice == null) dice = new System.Random(49);
-            bool down = dice.NextDouble() < pdcKillChance;
-            pdcReport = m.shortName + (down ? " · MISSILE DOWN" : " · MISSED");
-            if (down) { pdcKills++; return true; }
-        }
-        return false;
     }
 
     public void ToggleDoors() { doorsOpen = !doorsOpen; }
@@ -1300,7 +827,7 @@ public class HandoffBoardState
         // Step 54: the squadron's ready craft take off from our ship, for fire control's target;
         // owner 2026-10-26: on the launch bearing, just outside the small circle round our ship, never on the hull
         double lb = lbrg * System.Math.PI / 180.0;
-        var f = new Flight { squad = q.key, order = order, targetKey = target, craft = SquadReady(q),
+        var f = new Flight { squad = q.key, order = order, targetKey = weapons.target, craft = SquadReady(q),
                              x = ownX + System.Math.Sin(lb) * launchClearKm, y = ownY + System.Math.Cos(lb) * launchClearKm, hdg = lbrg };
         if (q.key == "ih") { f.marines = Mathf.Min(marines, f.craft * marinesPerBoat); marines -= f.marines; } // Step 60: the boats take marines
         Flights.Add(f);
@@ -1494,11 +1021,11 @@ public class HandoffBoardState
     public string NameOf(Track t) => Scanned(t) ? t.name : "BOGEY " + t.key.ToUpperInvariant();
     public bool Scanned(Track t) => t != null && identified.Contains(t.key);
 
-    void Kill(Track t)
+    public void Kill(Track t)
     {
         t.wreck = true; t.hostile = false;
-        shotReport = NameOf(t) + " DESTROYED";
-        kills++; shotResults++; lastShotHit = true;
+        weapons.shotReport = NameOf(t) + " DESTROYED";
+        kills++; weapons.shotResults++; weapons.lastShotHit = true;
     }
 
     // ---- the tick (tickPower, every 420 ms). The buses fill in PowerSystem.Tick (owner 2026-10-26). --
@@ -1506,14 +1033,6 @@ public class HandoffBoardState
     // Owner 2026-10-24: every rate runs in game time. The design's per-tick amounts were per game second
     // at x1 (a tick is `rate` game seconds), so they are now multiplied by the tick's game seconds; x1 is
     // unchanged.
-
-    // ---- the tick — weapons capacitor: +5 per WEP unit per game second up to 100, bleeds 3 with no WEP --
-
-    public void TickWeapons(double dt)
-    {
-        float feed = BusUnits("wep") * wepFeedPerUnit * (float)dt;
-        wepCharge = feed > 0f ? Mathf.Min(100f, wepCharge + feed) : Mathf.Max(0f, wepCharge - wepBleed * (float)dt);
-    }
 
     // ---- the tick — launch telemetry: a thrown stage runs out over several game seconds --------
 

@@ -381,7 +381,7 @@ public class HandoffPlotPanel : HandoffPanel
         // our slugs in flight (Step 48): a dot with a short trail fading behind it, no label;
         // white like our ship, not the marks' blue (owner 2026-10-26)
         var slugInk = ownShipColor.gamma;
-        foreach (var r in s.Rounds)
+        foreach (var r in s.weapons.Rounds)
         {
             Vector2 at = Screen(r.x, r.y), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
             shapes.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = slugInk });
@@ -444,18 +444,18 @@ public class HandoffPlotPanel : HandoffPanel
         if (weaponRing)
         {
             var reachShapes = new List<HandoffMarksGraphic.Shape>();
-            var mount = s.MountOf(s.mount);
+            var mount = s.weapons.MountOf(s.weapons.mount);
             if (Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && mount != null && mount.rangeKm > 0f)
             {
                 Vector2 c = OwnAt;
                 reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeKm / KmPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
             }
             // Step 55: each PDC group on AUTO shows its arc, a dashed sector off our hull (the design's PDC arc, accent.caution at .45)
-            var pdGroups = System.Array.Find(s.systems, y => y.id == "PD").mounts;
-            for (int g = 0; g < pdGroups.Length && g < s.pdcAuto.Length; g++)
+            var pdGroups = System.Array.Find(s.weapons.systems, y => y.id == "PD").mounts;
+            for (int g = 0; g < pdGroups.Length && g < s.weapons.pdcAuto.Length; g++)
             {
-                var pm = s.MountOf(pdGroups[g]);
-                if (!s.pdcAuto[g] || pm == null) continue;
+                var pm = s.weapons.MountOf(pdGroups[g]);
+                if (!s.weapons.pdcAuto[g] || pm == null) continue;
                 Vector2 c = OwnAt;
                 float r = (float)(pm.rangeKm / KmPerPx * Controls.ZoomExact);
                 System.Func<float, Vector2> at = deg => c + new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)) * r; // board y is down
@@ -530,7 +530,7 @@ public class HandoffPlotPanel : HandoffPanel
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
         if (contactShipImage && pictured == null) contactShipImage.enabled = false;
         // enemy missiles coming at us (Step 55): a red dot with a short trail, like our own rounds, no label
-        foreach (var r in s.Incoming)
+        foreach (var r in s.weapons.Incoming)
         {
             Vector2 at = Screen(r.x, r.y), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
             dots.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
@@ -637,7 +637,7 @@ public class HandoffPlotPanel : HandoffPanel
     {
         get
         {
-            var m = State != null ? State.MountOf(State.mount) : null;
+            var m = State != null ? State.weapons.MountOf(State.weapons.mount) : null;
             return Controls && Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && m != null ? m.rangeKm : 0f;
         }
     }

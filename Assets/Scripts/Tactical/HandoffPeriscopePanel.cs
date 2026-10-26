@@ -92,15 +92,15 @@ public class HandoffPeriscopePanel : HandoffPanel
     public override void Refresh()
     {
         var s = State;
-        var m = s.MountOf(s.mount) ?? s.mounts[1];
-        var tgt = s.TrackOf(s.target);
+        var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.mounts[1];
+        var tgt = s.TrackOf(s.weapons.target);
         bool down = ScopeDown;
 
         if (mountShort) mountShort.text = m.shortName;
         if (aperture) aperture.sprite = s.slewing ? apertureSlewing : apertureIdle;
         if (sight) sight.zoom = (float)s.scopeZoom;
 
-        var off = s.OffBearing();
+        var off = s.weapons.OffBearing();
         if (offAxis)
         {
             offAxis.text = HandoffBoardState.OffLabel(off);

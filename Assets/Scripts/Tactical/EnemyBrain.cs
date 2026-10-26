@@ -44,12 +44,12 @@ public class EnemyBrain : MonoBehaviour
         bool hit = health >= 0f && now < health;
         health = now;
         double dx = us.nav.x - ship.nav.x, dy = us.nav.y - ship.nav.y;
-        var vls = ship.MountOf("VLS");
-        if (firesBack && hit && ship.MagOk && ship.missionNow >= nextSalvo && ship.vlsCells > 0 && vls != null && dx * dx + dy * dy <= (double)vls.rangeKm * vls.rangeKm)
+        var vls = ship.weapons.MountOf("VLS");
+        if (firesBack && hit && ship.MagOk && ship.missionNow >= nextSalvo && ship.weapons.vlsCells > 0 && vls != null && dx * dx + dy * dy <= (double)vls.rangeKm * vls.rangeKm)
         {
-            int n = Mathf.Min(fireBackSalvo, ship.vlsCells);
-            us.LaunchAt(ship.nav.x, ship.nav.y, n, 0, vls.rangeKm); // HE
-            ship.vlsCells -= n;
+            int n = Mathf.Min(fireBackSalvo, ship.weapons.vlsCells);
+            us.weapons.LaunchAt(ship.nav.x, ship.nav.y, n, 0, vls.rangeKm); // HE
+            ship.weapons.vlsCells -= n;
             nextSalvo = ship.missionNow + fireBackSeconds;
         }
 

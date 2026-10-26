@@ -335,9 +335,9 @@ public static class PlaytestRunner
         // 10. What the power now drives (board rules)
         Check("ENG power raises the throttle limit", s.nav.ThrottleCap > 0, "throttle cap " + s.nav.ThrottleCap + "%");
         Check("SEN power raises the sensor gain limit", s.sensors.GainCap > 1, "gain limit " + s.sensors.GainCap + " (range is " + s.sensors.SenRangeKm.ToString("N0") + " km until the gain is turned up — sensors feature)");
-        float wep0 = s.wepCharge; double aux0 = s.auxCharge;
+        float wep0 = s.weapons.wepCharge; double aux0 = s.auxCharge;
         yield return 2f;
-        Check("WEP power charges the capacitor", s.wepCharge > wep0 || s.wepCharge >= 100f, wep0.ToString("0") + " → " + s.wepCharge.ToString("0") + "%");
+        Check("WEP power charges the capacitor", s.weapons.wepCharge > wep0 || s.weapons.wepCharge >= 100f, wep0.ToString("0") + " → " + s.weapons.wepCharge.ToString("0") + "%");
         Check("AUX power charges the order pool", s.auxCharge > aux0 || s.auxCharge >= 100, aux0.ToString("0") + " → " + s.auxCharge.ToString("0") + "%");
 
         // 11. Power makes us loud (Step 35): signal climbs to its target on the OWN EMISSIONS meter
@@ -448,8 +448,8 @@ public static class PlaytestRunner
         bool nudged = false;
         until = Time.realtimeSinceStartup + 0.6f;
         yield return (Func<bool>)(() => (nudged |= rockers.Moving("fc.flip", "0")) || Time.realtimeSinceStartup > until);
-        Check("A locked rocker refuses: the pad nudges and the refused cue sounds", !s.sw[0] && nudged && board.LastSound == "refused" && board.Sounds == snd + 1,
-              "thrown " + s.sw[0] + ", nudge " + (nudged ? "seen" : "not seen") + ", last cue \"" + board.LastSound + "\"");
+        Check("A locked rocker refuses: the pad nudges and the refused cue sounds", !s.weapons.sw[0] && nudged && board.LastSound == "refused" && board.Sounds == snd + 1,
+              "thrown " + s.weapons.sw[0] + ", nudge " + (nudged ? "seen" : "not seen") + ", last cue \"" + board.LastSound + "\"");
         yield return (Func<bool>)(() => !rockers.Moving("fc.flip", "0"));
         Check("After the nudge the rocker is back at rest, still locked", rung.sprite.name.EndsWith("_locked") && !rung.transform.Find("Pad cover").GetComponent<Image>().enabled, rung.sprite.name);
         Shot("13_refused");
@@ -677,9 +677,9 @@ public static class PlaytestRunner
         // 20. A firing solution dialled by hand (Step 47). TRACK 07 is heard, not identified.
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
-        Check("No firing solution yet", !s.Sol.set, "");
+        Check("No firing solution yet", !s.weapons.Sol.set, "");
         if (!Click("fc.track", null, "TRACK (contact not identified)")) yield break;
-        Check("TRACK refuses a contact that is only heard", !s.Sol.set, "");
+        Check("TRACK refuses a contact that is only heard", !s.weapons.Sol.set, "");
         int expBrg = (HandoffBoardState.JsRound(s.scopeBrg) - s.nav.heading + 540) % 360 - 180;
         var rngKnob = Hit("fc.knob", "rng");
         Vector2 knobAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(rngKnob.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
@@ -687,18 +687,18 @@ public static class PlaytestRunner
         if (!PlotDrag(board, knobAt, knobAt + new Vector2(80, 0), "turn the RNG knob (10 steps)", "fc.knob")) yield break;
         yield return 0.3f;
         Check("The RNG knob starts a hand-dialled solution on the periscope's bearing",
-              s.Sol.set && s.Sol.manual && s.Sol.brg == expBrg && s.Sol.spd == 0f && Mathf.Abs(s.Sol.rangeKm - (s.manualStartRangeKm + 1000f)) < 0.01f,
-              "RNG " + s.Sol.rangeKm.ToString("N0") + " km, REL BRG " + s.Sol.brg + "°, SPD " + s.Sol.spd.ToString("0.00"));
-        var fc = board.GetComponentInChildren<HandoffFireControlPanel>(true);
-        var tidField = typeof(HandoffFireControlPanel).GetField("trackId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+              s.weapons.Sol.set && s.weapons.Sol.manual && s.weapons.Sol.brg == expBrg && s.weapons.Sol.spd == 0f && Mathf.Abs(s.weapons.Sol.rangeKm - (s.weapons.manualStartRangeKm + 1000f)) < 0.01f,
+              "RNG " + s.weapons.Sol.rangeKm.ToString("N0") + " km, REL BRG " + s.weapons.Sol.brg + "°, SPD " + s.weapons.Sol.spd.ToString("0.00"));
+        var fc = board.GetComponentInChildren<FireControlPanel>(true);
+        var tidField = typeof(FireControlPanel).GetField("trackId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var tidText = tidField != null ? tidField.GetValue(fc) as TMPro.TMP_Text : null;
         Check("The readout says MANUAL", tidText && tidText.text == "MANUAL", tidText ? "\"" + tidText.text + "\"" : "no readout");
         //     BEARING follows the dialled bearing (a point in space), not a locked contact.
-        double dialled = ((s.nav.heading + s.Sol.brg) % 360 + 360) % 360;
+        double dialled = ((s.nav.heading + s.weapons.Sol.brg) % 360 + 360) % 360;
         s.scopeBrg = (dialled + 10) % 360;
-        bool offOk = !s.OnBearing;
+        bool offOk = !s.weapons.OnBearing;
         s.SlewTo();
-        Check("BEARING wants the periscope on the dialled bearing; SLEW TO puts it there", offOk && s.OnBearing && System.Math.Abs(s.scopeBrg - dialled) < 0.01,
+        Check("BEARING wants the periscope on the dialled bearing; SLEW TO puts it there", offOk && s.weapons.OnBearing && System.Math.Abs(s.scopeBrg - dialled) < 0.01,
               "dialled " + dialled.ToString("000") + "°, periscope " + s.scopeBrg.ToString("000") + "°");
         Shot("26_manual_solution");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
@@ -727,12 +727,12 @@ public static class PlaytestRunner
         if (!Click("power.bus", "2", "SEN selector (STANDBY)")) yield break;
         if (!Click("power.bus", "2", "SEN selector (VENT)")) yield break;
         if (!Click("power.bus", "1", "WEP selector (DRAW)")) yield break;
-        yield return (Func<bool>)(() => s.WepReady && s.wepCharge >= s.ShotCost);
-        Check("WEP charged for a shot", s.WepReady && s.wepCharge >= s.ShotCost, s.wepCharge.ToString("0") + "% of " + s.ShotCost + "%");
+        yield return (Func<bool>)(() => s.weapons.WepReady && s.weapons.wepCharge >= s.weapons.ShotCost);
+        Check("WEP charged for a shot", s.weapons.WepReady && s.weapons.wepCharge >= s.weapons.ShotCost, s.weapons.wepCharge.ToString("0") + "% of " + s.weapons.ShotCost + "%");
         //     A fresh hand-dialled solution on the periscope's bearing (one RNG step starts it).
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
-        s.sol[s.SysIndex] = new HandoffBoardState.Solution(); // stand-in: clear the old solution (the board has no clear)
+        s.weapons.sol[s.weapons.SysIndex] = new WeaponSystem.Solution(); // stand-in: clear the old solution (the board has no clear)
         if (!PlotDrag(board, knobAt, knobAt + new Vector2(8, 0), "turn the RNG knob (1 step)", "fc.knob")) yield break;
         yield return 0.3f;
         //     Whole-degree aim: dial the degree nearest the target (half a degree is ~213 km out here).
@@ -740,16 +740,16 @@ public static class PlaytestRunner
         Vector2 brgAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(brgKnob.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
                                          brgKnob.transform.TransformPoint(((RectTransform)brgKnob.transform).rect.center)));
         int best = 0;
-        for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.nav.heading + s.Sol.brg + d) < MissKm(s, t07, s.nav.heading + s.Sol.brg + best)) best = d;
+        for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.nav.heading + s.weapons.Sol.brg + d) < MissKm(s, t07, s.nav.heading + s.weapons.Sol.brg + best)) best = d;
         if (best != 0 && !PlotDrag(board, brgAt, brgAt + new Vector2(6 * best, 0), "turn the BRG knob to the nearest degree", "fc.knob")) yield break;
         s.SlewTo(); // stand-in for the periscope's SLEW TO key: onto the dialled bearing
-        double predicted = MissKm(s, t07, s.nav.heading + s.Sol.brg);
-        bool expectHit = predicted <= s.HitRadiusKm(t07.klass);
-        Check("Turret A can't bear on it: ANGLE is out of arc", s.mount == "RGA" && !s.InArc, "REL BRG " + s.Sol.brg + "°, heading " + s.nav.heading + "°");
+        double predicted = MissKm(s, t07, s.nav.heading + s.weapons.Sol.brg);
+        bool expectHit = predicted <= s.weapons.HitRadiusKm(t07.klass);
+        Check("Turret A can't bear on it: ANGLE is out of arc", s.weapons.mount == "RGA" && !s.weapons.InArc, "REL BRG " + s.weapons.Sol.brg + "°, heading " + s.nav.heading + "°");
         if (!Click("fc.mount", null, "turret selector (RG-B)")) yield break;
-        Check("Turret B bears", s.mount == "RGB" && s.InArc, "");
+        Check("Turret B bears", s.weapons.mount == "RGB" && s.weapons.InArc, "");
         for (int i = 0; i < 4; i++) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1))) yield break; yield return 0.2f; }
-        Check("The ladder is set: LOAD, ANGLE, BEARING, ARM", s.AllSet, string.Join(",", System.Array.ConvertAll(s.sw, b => b ? "1" : "0")));
+        Check("The ladder is set: LOAD, ANGLE, BEARING, ARM", s.weapons.AllSet, string.Join(",", System.Array.ConvertAll(s.weapons.sw, b => b ? "1" : "0")));
         //     Fire at x10.
         if (!Click("rate", "10", "x10 rate key")) yield break;
         var lever = Hit("fc.lever", null);
@@ -758,15 +758,15 @@ public static class PlaytestRunner
         s.sensors.signal = 50f; // stand-in: room for the spike to show (we are at 100% with this much power drawn)
         float sig0 = s.sensors.signal;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever", "fc.lever")) yield break;
-        Check("The lever fires one slug and releases ARM", s.Rounds.Count == 1 && !s.sw[3], s.Rounds.Count + " in flight");
-        Check("Firing spikes our signal", Mathf.Approximately(s.sensors.signal, sig0 + s.fireSignalSpike), sig0.ToString("0") + " → " + s.sensors.signal.ToString("0"));
+        Check("The lever fires one slug and releases ARM", s.weapons.Rounds.Count == 1 && !s.weapons.sw[3], s.weapons.Rounds.Count + " in flight");
+        Check("Firing spikes our signal", Mathf.Approximately(s.sensors.signal, sig0 + s.weapons.fireSignalSpike), sig0.ToString("0") + " → " + s.sensors.signal.ToString("0"));
         yield return 0.4f;
         Check("The fire cue sounds", board.Sounds > 0 && (board.LastSound == "railgun" || board.LastSound == "hit"), "last cue \"" + board.LastSound + "\"");
         //     Paused, the slug stops.
         if (!Click("pause", null, "PAUSE key")) yield break;
-        double rx = s.Rounds.Count > 0 ? s.Rounds[0].travelled : -1;
+        double rx = s.weapons.Rounds.Count > 0 ? s.weapons.Rounds[0].travelled : -1;
         yield return 0.6f;
-        Check("Paused, the slug holds still", s.Rounds.Count == 1 && s.Rounds[0].travelled == rx, (rx >= 0 ? rx.ToString("N0") + " km flown" : "none"));
+        Check("Paused, the slug holds still", s.weapons.Rounds.Count == 1 && s.weapons.Rounds[0].travelled == rx, (rx >= 0 ? rx.ToString("N0") + " km flown" : "none"));
         if (!Click("pause", null, "RUN key")) yield break;
         if (board.Motion && board.Motion.ScopeDown) board.Motion.SetScopeDown(false); // the periscope covers the plot's middle
         board.SetZoom(0.4);
@@ -774,13 +774,13 @@ public static class PlaytestRunner
         Shot("27_slug_in_flight");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         board.SetZoom(1.0);
-        yield return (Func<bool>)(() => s.Rounds.Count == 0);
-        yield return (Func<bool>)(() => s.Rounds.Count == 0); // 15 s each; the flight is about 20 s at x10
-        bool marginal = System.Math.Abs(predicted - s.HitRadiusKm(t07.klass)) < 0.05 * s.HitRadiusKm(t07.klass); // either way is right this close
-        if (marginal) expectHit = s.shotReport == "HIT · BOGEY T07";
+        yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
+        yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0); // 15 s each; the flight is about 20 s at x10
+        bool marginal = System.Math.Abs(predicted - s.weapons.HitRadiusKm(t07.klass)) < 0.05 * s.weapons.HitRadiusKm(t07.klass); // either way is right this close
+        if (marginal) expectHit = s.weapons.shotReport == "HIT · BOGEY T07";
         Check("The slug lands as the aim says: " + (expectHit ? "a HIT, no detail on a ship we have not scanned" : "a MISS") + (marginal ? " (a marginal aim)" : ""),
-              expectHit ? s.shotReport == "HIT · BOGEY T07" : s.shotReport == "MISS",
-              "\"" + s.shotReport + "\"; the aim passes " + predicted.ToString("N0") + " km from it (hit radius " + s.HitRadiusKm(t07.klass) + " km)");
+              expectHit ? s.weapons.shotReport == "HIT · BOGEY T07" : s.weapons.shotReport == "MISS",
+              "\"" + s.weapons.shotReport + "\"; the aim passes " + predicted.ToString("N0") + " km from it (hit radius " + s.weapons.HitRadiusKm(t07.klass) + " km)");
         yield return 0.3f;
         Check("Fire control reports it, with its cue", board.LastSound == (expectHit ? "hit" : "miss"), "last cue \"" + board.LastSound + "\"");
         Shot("28_hit");
@@ -788,12 +788,12 @@ public static class PlaytestRunner
         //     A second shot 2° off: a miss.
         if (!PlotDrag(board, brgAt, brgAt + new Vector2(12, 0), "turn the BRG knob (+2°)", "fc.knob")) yield break;
         s.SlewTo(); // stand-in for the periscope's SLEW TO key: onto the new dialled bearing
-        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
+        yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
         for (int i = 0; i < 4; i++) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (again)")) yield break; yield return 0.2f; }
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever (again)", "fc.lever")) yield break;
-        yield return (Func<bool>)(() => s.Rounds.Count == 0);
-        yield return (Func<bool>)(() => s.Rounds.Count == 0);
-        Check("2° off, it misses", s.shotReport == "MISS", "\"" + s.shotReport + "\"");
+        yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
+        yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
+        Check("2° off, it misses", s.weapons.shotReport == "MISS", "\"" + s.weapons.shotReport + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
 
         // 21b. Leading a moving target (Step 52). TRACK 07 gets under way on its patrol again.
@@ -814,11 +814,11 @@ public static class PlaytestRunner
         s.marks.Add(trackA);
         //     The solution: the periscope on it, the RNG knob starts one, dialled to its range (stand-in for reading the plot).
         s.LookAt("t07");
-        s.sol[s.SysIndex] = new HandoffBoardState.Solution();
+        s.weapons.sol[s.weapons.SysIndex] = new WeaponSystem.Solution();
         if (!PlotDrag(board, knobAt, knobAt + new Vector2(8, 0), "turn the RNG knob (1 step)", "fc.knob")) yield break;
-        s.Sol.rangeKm = (float)System.Math.Sqrt((t07Ship.nav.x - s.nav.x) * (t07Ship.nav.x - s.nav.x) + (t07Ship.nav.y - s.nav.y) * (t07Ship.nav.y - s.nav.y));
-        s.NudgeSol("rng", 0);
-        Check("Without a track the solution has no course", s.Sol.set && s.Sol.manual && !s.Sol.hasCourse, "");
+        s.weapons.Sol.rangeKm = (float)System.Math.Sqrt((t07Ship.nav.x - s.nav.x) * (t07Ship.nav.x - s.nav.x) + (t07Ship.nav.y - s.nav.y) * (t07Ship.nav.y - s.nav.y));
+        s.weapons.NudgeSol("rng", 0);
+        Check("Without a track the solution has no course", s.weapons.Sol.set && s.weapons.Sol.manual && !s.weapons.Sol.hasCourse, "");
         if (!Click("rate", "10", "x10 rate key")) yield break;
         yield return (Func<bool>)(() => board.MissionSeconds - trackA.t >= 120f);
         if (!Click("rate", "1", "x1 rate key")) yield break;
@@ -831,36 +831,36 @@ public static class PlaytestRunner
         float legCrs = (float)((System.Math.Atan2(trackB.x - trackA.x, trackB.y - trackA.y) * 180 / System.Math.PI + 360) % 360);
         float legSpd = (float)(System.Math.Sqrt((trackB.x - trackA.x) * (trackB.x - trackA.x) + (trackB.y - trackA.y) * (trackB.y - trackA.y)) / (trackB.t - trackA.t));
         Check("A POINT-to-POINT track feeds the solution its course and speed",
-              s.Sol.hasCourse && Mathf.Abs(Mathf.DeltaAngle(s.Sol.course, legCrs)) < 0.01f && Mathf.Abs(s.Sol.spd - legSpd) < 0.006f,
-              "CRS " + s.Sol.course.ToString("000") + "°, SPD " + s.Sol.spd.ToString("0.00") + " (its true course now " + t07Ship.nav.CourseDeg.ToString("000") + "°, speed " + t07Ship.nav.SpeedKms.ToString("0.00") + ")");
+              s.weapons.Sol.hasCourse && Mathf.Abs(Mathf.DeltaAngle(s.weapons.Sol.course, legCrs)) < 0.01f && Mathf.Abs(s.weapons.Sol.spd - legSpd) < 0.006f,
+              "CRS " + s.weapons.Sol.course.ToString("000") + "°, SPD " + s.weapons.Sol.spd.ToString("0.00") + " (its true course now " + t07Ship.nav.CourseDeg.ToString("000") + "°, speed " + t07Ship.nav.SpeedKms.ToString("0.00") + ")");
         //     Arm and fire, led. The same shot unled would miss.
-        if (s.mount != "RGB" && !Click("fc.mount", null, "turret selector (RG-B)")) yield break;
-        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
-        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (led shot)")) yield break; yield return 0.15f; }
+        if (s.weapons.mount != "RGB" && !Click("fc.mount", null, "turret selector (RG-B)")) yield break;
+        yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (led shot)")) yield break; yield return 0.15f; }
         double tvx = t07Ship.nav.vx, tvy = t07Ship.nav.vy;
-        double unled = PassKm(s.nav.x, s.nav.y, s.nav.heading + s.Sol.brg, s.slugSpeedKms, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
-        double led = PassKm(s.nav.x, s.nav.y, s.LeadBearing(), s.slugSpeedKms, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
+        double unled = PassKm(s.nav.x, s.nav.y, s.nav.heading + s.weapons.Sol.brg, s.weapons.slugSpeedKms, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
+        double led = PassKm(s.nav.x, s.nav.y, s.weapons.LeadBearing(), s.weapons.slugSpeedKms, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
         if (!Click("rate", "10", "x10 rate key")) yield break;
-        int landedLed = s.shotResults;
+        int landedLed = s.weapons.shotResults;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (led)", "fc.lever")) yield break;
-        yield return (Func<bool>)(() => s.shotResults > landedLed);
-        Check("Led from the track, it hits the moving GARUDA (unscanned: a bare HIT)", s.lastShotHit && s.shotReport == "HIT · BOGEY T07",
-              "\"" + s.shotReport + "\"; aimed straight it would pass " + unled.ToString("N0") + " km off, led " + led.ToString("N0") + " km (hit radius " + s.HitRadiusKm(t07.klass) + ")");
-        Check("Unled, the same shot would have missed", unled > s.HitRadiusKm(t07.klass), unled.ToString("N0") + " km");
+        yield return (Func<bool>)(() => s.weapons.shotResults > landedLed);
+        Check("Led from the track, it hits the moving GARUDA (unscanned: a bare HIT)", s.weapons.lastShotHit && s.weapons.shotReport == "HIT · BOGEY T07",
+              "\"" + s.weapons.shotReport + "\"; aimed straight it would pass " + unled.ToString("N0") + " km off, led " + led.ToString("N0") + " km (hit radius " + s.weapons.HitRadiusKm(t07.klass) + ")");
+        Check("Unled, the same shot would have missed", unled > s.weapons.HitRadiusKm(t07.klass), unled.ToString("N0") + " km");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     An active-scan lock: TRACK knows its true course and speed and leads exactly.
         s.sensors.identified.Add("t07"); // stand-in for an active scan identifying it
         yield return 0.6f;
         if (!Click("fc.track", null, "TRACK (locked)")) yield break;
-        Check("TRACK's solution carries the target's course", s.Sol.set && !s.Sol.manual && s.Sol.hasCourse, "CRS " + s.Sol.course.ToString("000") + "°, SPD " + s.Sol.spd.ToString("0.00"));
+        Check("TRACK's solution carries the target's course", s.weapons.Sol.set && !s.weapons.Sol.manual && s.weapons.Sol.hasCourse, "CRS " + s.weapons.Sol.course.ToString("000") + "°, SPD " + s.weapons.Sol.spd.ToString("0.00"));
         s.LookAt("t07");
-        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
-        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (TRACK shot)")) yield break; yield return 0.15f; }
+        yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (TRACK shot)")) yield break; yield return 0.15f; }
         if (!Click("rate", "10", "x10 rate key")) yield break;
-        int landedTrack = s.shotResults;
+        int landedTrack = s.weapons.shotResults;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (TRACK)", "fc.lever")) yield break;
-        yield return (Func<bool>)(() => s.shotResults > landedTrack);
-        Check("TRACK's led shot hits", s.shotReport != null && s.shotReport.StartsWith("HIT · GARUDA"), "\"" + s.shotReport + "\"");
+        yield return (Func<bool>)(() => s.weapons.shotResults > landedTrack);
+        Check("TRACK's led shot hits", s.weapons.shotReport != null && s.weapons.shotReport.StartsWith("HIT · GARUDA"), "\"" + s.weapons.shotReport + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Hold it still again for the fight below; clear the plot.
         brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0; s.marks.Clear(); s.sensors.identified.Remove("t07");
@@ -868,49 +868,49 @@ public static class PlaytestRunner
         // 21c. Missiles (Step 53): a lock, the launcher, three warheads, homing on the moving TRACK 07.
         brain.enabled = true;
         s.sensors.identified.Add("t07"); // stand-in for an active-scan lock
-        for (int k = 0; k < 3 && s.sys != "MS"; k++) { if (!Click("fc.system", null, "weapon selector")) yield break; yield return 0.2f; }
-        s.salvo = 2; // stand-in for the Tuning window (its default is 2)
-        Check("MISSILE selected: the launcher, HE", s.sys == "MS" && s.mount == "VLS" && s.warheads[s.warhead] == "HE", s.sys + " " + s.mount + " " + s.warheads[s.warhead]);
+        for (int k = 0; k < 3 && s.weapons.sys != "MS"; k++) { if (!Click("fc.system", null, "weapon selector")) yield break; yield return 0.2f; }
+        s.weapons.salvo = 2; // stand-in for the Tuning window (its default is 2)
+        Check("MISSILE selected: the launcher, HE", s.weapons.sys == "MS" && s.weapons.mount == "VLS" && s.weapons.warheads[s.weapons.warhead] == "HE", s.weapons.sys + " " + s.weapons.mount + " " + s.weapons.warheads[s.weapons.warhead]);
         if (!Click("fc.track", null, "TRACK (locked)")) yield break;
         s.LookAt("t07");
-        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
-        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (missiles)")) yield break; yield return 0.15f; }
+        yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (missiles)")) yield break; yield return 0.15f; }
         Func<HandoffBoardState, float> hull = sh => { float h = 0; foreach (var a in sh.SideArmour) h += a; foreach (var c in sh.compartments) h += c.integ; return h; };
-        int cells0 = s.vlsCells, landed0 = s.shotResults;
+        int cells0 = s.weapons.vlsCells, landed0 = s.weapons.shotResults;
         float hull0 = hull(dummyShip);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "launch (HE salvo of 2)", "fc.lever")) yield break;
-        Check("A salvo of two leaves the launcher", s.Rounds.FindAll(r => r.missile).Count == 2 && s.vlsCells == cells0 - 2, s.vlsCells + " cells left");
-        yield return (Func<bool>)(() => s.shotResults >= landed0 + 2);
-        yield return (Func<bool>)(() => s.shotResults >= landed0 + 2);
-        Check("Both home in on the moving GARUDA and the HE does damage", s.lastShotHit && s.shotReport.Contains(" · HE") && hull(dummyShip) < hull0,
-              "\"" + s.shotReport + "\", armour + integrity " + hull0 + " → " + hull(dummyShip));
+        Check("A salvo of two leaves the launcher", s.weapons.Rounds.FindAll(r => r.missile).Count == 2 && s.weapons.vlsCells == cells0 - 2, s.weapons.vlsCells + " cells left");
+        yield return (Func<bool>)(() => s.weapons.shotResults >= landed0 + 2);
+        yield return (Func<bool>)(() => s.weapons.shotResults >= landed0 + 2);
+        Check("Both home in on the moving GARUDA and the HE does damage", s.weapons.lastShotHit && s.weapons.shotReport.Contains(" · HE") && hull(dummyShip) < hull0,
+              "\"" + s.weapons.shotReport + "\", armour + integrity " + hull0 + " → " + hull(dummyShip));
         //     EMP: no hull damage, its power goes down and it slows.
         if (!Click("fc.mount", null, "warhead selector (EMP)")) yield break;
-        Check("The turret knob picks the warhead", s.warheads[s.warhead] == "EMP", s.warheads[s.warhead]);
-        s.salvo = 1;
+        Check("The turret knob picks the warhead", s.weapons.warheads[s.weapons.warhead] == "EMP", s.weapons.warheads[s.weapons.warhead]);
+        s.weapons.salvo = 1;
         s.LookAt("t07");
-        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
-        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (EMP)")) yield break; yield return 0.15f; }
-        int landed1 = s.shotResults;
+        yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (EMP)")) yield break; yield return 0.15f; }
+        int landed1 = s.weapons.shotResults;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "launch (EMP)", "fc.lever")) yield break;
-        yield return (Func<bool>)(() => s.shotResults > landed1);
-        yield return (Func<bool>)(() => s.shotResults > landed1);
+        yield return (Func<bool>)(() => s.weapons.shotResults > landed1);
+        yield return (Func<bool>)(() => s.weapons.shotResults > landed1);
         double spdHit = t07Ship.nav.SpeedKms;
-        Check("EMP: its power goes down", s.shotReport != null && s.shotReport.EndsWith(" · EMP · POWER DOWN") && dummyShip.power.buses[0].fill == 0, "\"" + s.shotReport + "\"");
+        Check("EMP: its power goes down", s.weapons.shotReport != null && s.weapons.shotReport.EndsWith(" · EMP · POWER DOWN") && dummyShip.power.buses[0].fill == 0, "\"" + s.weapons.shotReport + "\"");
         yield return 2f;
         Check("Without power it slows", t07Ship.nav.SpeedKms < spdHit, spdHit.ToString("0.00") + " → " + t07Ship.nav.SpeedKms.ToString("0.00") + " km/s");
         //     PENETRATOR: straight to a compartment behind the side.
         if (!Click("fc.mount", null, "warhead selector (PENETRATOR)")) yield break;
         s.LookAt("t07");
-        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
-        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (PEN)")) yield break; yield return 0.15f; }
-        int landed2 = s.shotResults;
+        yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (PEN)")) yield break; yield return 0.15f; }
+        int landed2 = s.weapons.shotResults;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "launch (PENETRATOR)", "fc.lever")) yield break;
-        yield return (Func<bool>)(() => s.shotResults > landed2);
-        yield return (Func<bool>)(() => s.shotResults > landed2);
-        Check("PENETRATOR: straight through to a compartment", s.shotReport != null && s.shotReport.Contains(" · PEN · "), "\"" + s.shotReport + "\"");
-        Check("Four cells used", s.vlsCells == cells0 - 4, s.vlsCells + " left");
+        yield return (Func<bool>)(() => s.weapons.shotResults > landed2);
+        yield return (Func<bool>)(() => s.weapons.shotResults > landed2);
+        Check("PENETRATOR: straight through to a compartment", s.weapons.shotReport != null && s.weapons.shotReport.Contains(" · PEN · "), "\"" + s.weapons.shotReport + "\"");
+        Check("Four cells used", s.weapons.vlsCells == cells0 - 4, s.weapons.vlsCells + " left");
         Shot("28b_missiles");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (!Click("rate", "1", "x1 rate key")) yield break;
@@ -926,7 +926,7 @@ public static class PlaytestRunner
         s.nav.x = t07.worldX + System.Math.Sin(sbd) * 2000; s.nav.y = t07.worldY + System.Math.Cos(sbd) * 2000;
         s.nav.vx = s.nav.vy = 0; s.nav.throttle = 0;
         s.nav.heading = s.nav.orderedHeading = ((int)System.Math.Round(t07.worldHdg) + 180) % 360;
-        s.target = "t07";
+        s.weapons.target = "t07";
         //     Step 69 (owner 2026-10-25): with ACTIVE on, every pass of the sweep over TRACK 07 beeps, scanned or not.
         //     Stand-in for the ACTIVE key and the cone dial.
         yield return 0.5f; // a tick, so TRACK 07's bearing and range are measured from here
@@ -1014,49 +1014,49 @@ public static class PlaytestRunner
         vxField.SetValue(plotPanel, (s.nav.x + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.nav.y + t07.worldY) / 2); // stand-in for panning the plot
         brain.enabled = true; // it thinks again (it holds its fire for a tick, so old damage doesn't count)
         yield return 1f;
-        for (int k = 0; k < 3 && s.sys != "PD"; k++) { if (!Click("fc.system", null, "weapon selector")) yield break; yield return 0.2f; }
-        Check("PDC selected: group A, autoloaders engaged", s.sys == "PD" && s.mount == "PDA" && s.loaders, s.sys + " " + s.mount + ", loaders " + s.loaders);
-        bool noSol = !s.Sol.set;
-        yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
-        for (int i = 0; i < 4; i++) if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (PDC-A)")) yield break; yield return 0.15f; }
-        Check("The ladder arms with no solution: PDC-A is on AUTO", noSol && System.Array.TrueForAll(s.sw, b => b) && s.pdcAuto[0] && !s.pdcAuto[1], string.Join(",", System.Array.ConvertAll(s.sw, b => b ? "1" : "0")));
+        for (int k = 0; k < 3 && s.weapons.sys != "PD"; k++) { if (!Click("fc.system", null, "weapon selector")) yield break; yield return 0.2f; }
+        Check("PDC selected: group A, autoloaders engaged", s.weapons.sys == "PD" && s.weapons.mount == "PDA" && s.weapons.loaders, s.weapons.sys + " " + s.weapons.mount + ", loaders " + s.weapons.loaders);
+        bool noSol = !s.weapons.Sol.set;
+        yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
+        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (PDC-A)")) yield break; yield return 0.15f; }
+        Check("The ladder arms with no solution: PDC-A is on AUTO", noSol && System.Array.TrueForAll(s.weapons.sw, b => b) && s.weapons.pdcAuto[0] && !s.weapons.pdcAuto[1], string.Join(",", System.Array.ConvertAll(s.weapons.sw, b => b ? "1" : "0")));
         //     We hit it (stand-in for a railgun hit, tested above): it fires back.
-        s.pdcKillChance = 1f; // stand-in: a sure PDC, so the result is certain (the real chance is in the Tuning window)
+        s.weapons.pdcKillChance = 1f; // stand-in: a sure PDC, so the result is certain (the real chance is in the Tuning window)
         brain.firesBack = true;
-        int enemyCells = dummyShip.vlsCells, kills0 = s.pdcKills, taken0 = s.hitsTaken;
+        int enemyCells = dummyShip.weapons.vlsCells, kills0 = s.weapons.pdcKills, taken0 = s.weapons.hitsTaken;
         dummyShip.TakeSlug("PROW");
-        yield return (Func<bool>)(() => s.Incoming.Count > 0);
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count > 0);
         float salvo1At = board.MissionSeconds;
-        Check("Hit, GARUDA fires a salvo of two back at us", s.Incoming.Count == 2 && dummyShip.vlsCells == enemyCells - 2, s.Incoming.Count + " incoming, its cells " + enemyCells + " → " + dummyShip.vlsCells);
+        Check("Hit, GARUDA fires a salvo of two back at us", s.weapons.Incoming.Count == 2 && dummyShip.weapons.vlsCells == enemyCells - 2, s.weapons.Incoming.Count + " incoming, its cells " + enemyCells + " → " + dummyShip.weapons.vlsCells);
         if (!Click("rate", "10", "x10 rate key")) yield break;
-        yield return (Func<bool>)(() => s.Incoming.Count == 0 || System.Math.Sqrt((s.Incoming[0].x - s.nav.x) * (s.Incoming[0].x - s.nav.x) + (s.Incoming[0].y - s.nav.y) * (s.Incoming[0].y - s.nav.y)) < 4600);
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0 || System.Math.Sqrt((s.weapons.Incoming[0].x - s.nav.x) * (s.weapons.Incoming[0].x - s.nav.x) + (s.weapons.Incoming[0].y - s.nav.y) * (s.weapons.Incoming[0].y - s.nav.y)) < 4600);
         Shot("28e_incoming_pdc_arc");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
-        yield return (Func<bool>)(() => s.Incoming.Count == 0);
-        yield return (Func<bool>)(() => s.Incoming.Count == 0); // 15 s each; the flight is about 13 s at x10
-        Check("PDC-A shoots both down; nothing hits us", s.pdcKills == kills0 + 2 && s.hitsTaken == taken0 && s.pdcReport == "PDC-A · MISSILE DOWN",
-              (s.pdcKills - kills0) + " down, " + (s.hitsTaken - taken0) + " hits on us, \"" + s.pdcReport + "\"");
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0);
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0); // 15 s each; the flight is about 13 s at x10
+        Check("PDC-A shoots both down; nothing hits us", s.weapons.pdcKills == kills0 + 2 && s.weapons.hitsTaken == taken0 && s.weapons.pdcReport == "PDC-A · MISSILE DOWN",
+              (s.weapons.pdcKills - kills0) + " down, " + (s.weapons.hitsTaken - taken0) + " hits on us, \"" + s.weapons.pdcReport + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Changing weapons leaves PDC-A on AUTO; back on PDC-A its ladder shows armed.
-        for (int k = 0; k < 3 && s.sys != "RG"; k++) { if (!Click("fc.system", null, "weapon selector (to RAILGUN)")) yield break; yield return 0.2f; }
-        Check("On the railgun, PDC-A stays on AUTO", s.sys == "RG" && s.pdcAuto[0], s.sys);
-        for (int k = 0; k < 3 && s.sys != "PD"; k++) { if (!Click("fc.system", null, "weapon selector (back to PDC)")) yield break; yield return 0.2f; }
-        Check("Back on PDC-A, its ladder is still armed", s.sys == "PD" && s.mount == "PDA" && System.Array.TrueForAll(s.sw, b => b), "");
+        for (int k = 0; k < 3 && s.weapons.sys != "RG"; k++) { if (!Click("fc.system", null, "weapon selector (to RAILGUN)")) yield break; yield return 0.2f; }
+        Check("On the railgun, PDC-A stays on AUTO", s.weapons.sys == "RG" && s.weapons.pdcAuto[0], s.weapons.sys);
+        for (int k = 0; k < 3 && s.weapons.sys != "PD"; k++) { if (!Click("fc.system", null, "weapon selector (back to PDC)")) yield break; yield return 0.2f; }
+        Check("Back on PDC-A, its ladder is still armed", s.weapons.sys == "PD" && s.weapons.mount == "PDA" && System.Array.TrueForAll(s.weapons.sw, b => b), "");
         //     Dropping ARM takes it off AUTO: the next salvo gets through.
         if (!Click("fc.flip", "3", "ARM rocker (drop)")) yield break;
-        Check("Dropping ARM takes PDC-A off AUTO", !s.sw[3] && !s.pdcAuto[0], "");
+        Check("Dropping ARM takes PDC-A off AUTO", !s.weapons.sw[3] && !s.weapons.pdcAuto[0], "");
         var ourArmour = (float[])s.SideArmour.Clone();
         var ourInteg = System.Array.ConvertAll(s.compartments, c => c.integ);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         yield return (Func<bool>)(() => board.MissionSeconds - salvo1At > 125f); // its 120 s between salvos
         dummyShip.TakeSlug("PROW"); // stand-in for another railgun hit
-        yield return (Func<bool>)(() => s.Incoming.Count > 0);
-        yield return (Func<bool>)(() => s.Incoming.Count > 0); // its 120 s between salvos
-        yield return (Func<bool>)(() => s.Incoming.Count == 0);
-        yield return (Func<bool>)(() => s.Incoming.Count == 0);
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count > 0);
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count > 0); // its 120 s between salvos
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0);
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0);
         yield return 0.4f;
-        Check("With no PDC on AUTO, both hit us, with the alert tone", s.hitsTaken == taken0 + 2 && s.incomingReport != null && s.incomingReport.StartsWith("MISSILE HIT · ") && board.LastSound == "alert",
-              (s.hitsTaken - taken0) + " hits, last \"" + s.incomingReport + "\", last cue \"" + board.LastSound + "\"");
+        Check("With no PDC on AUTO, both hit us, with the alert tone", s.weapons.hitsTaken == taken0 + 2 && s.weapons.incomingReport != null && s.weapons.incomingReport.StartsWith("MISSILE HIT · ") && board.LastSound == "alert",
+              (s.weapons.hitsTaken - taken0) + " hits, last \"" + s.weapons.incomingReport + "\", last cue \"" + board.LastSound + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     Our ship can die too (Step 58): its port side open, three slugs into the reactor (stand-in for enemy fire).
         s.SideArmour[3] = 0f;
@@ -1067,10 +1067,10 @@ public static class PlaytestRunner
         s.destroyed = false;
         //     Clean up for the steps below: TRACK 07 held still and quiet, our ship repaired (stand-in for damage control).
         brain.firesBack = false; brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0;
-        s.pdcKillChance = 0.7f;
+        s.weapons.pdcKillChance = 0.7f;
         System.Array.Copy(ourArmour, s.SideArmour, ourArmour.Length);
         for (int c = 0; c < s.compartments.Length; c++) s.compartments[c].integ = ourInteg[c];
-        for (int k = 0; k < 3 && s.sys != "RG"; k++) { if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break; yield return 0.2f; }
+        for (int k = 0; k < 3 && s.weapons.sys != "RG"; k++) { if (!Click("fc.system", null, "weapon selector (RAILGUN)")) yield break; yield return 0.2f; }
 
         // 21f. Boarding (Step 60, BOARDING_README.md): the assault boats, on DISABLE, carry marines to TRACK 07,
         //     hold off while no face is open, board, wreck its engines and magazine, and come home. DISABLE keeps it
@@ -1080,7 +1080,7 @@ public static class PlaytestRunner
         s.nav.x = t07.worldX + System.Math.Sin(sb2) * 1500; s.nav.y = t07.worldY + System.Math.Cos(sb2) * 1500;
         s.nav.vx = s.nav.vy = 0; s.nav.throttle = 0;
         s.nav.heading = s.nav.orderedHeading = ((int)System.Math.Round(t07.worldHdg) + 270) % 360;
-        s.target = "t07";
+        s.weapons.target = "t07";
         vxField.SetValue(plotPanel, (s.nav.x + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.nav.y + t07.worldY) / 2);
         if (!Click("drawer", "hangar", "HGR key")) yield break;
         yield return 0.8f;
@@ -1140,10 +1140,10 @@ public static class PlaytestRunner
         s.nav.heading = s.nav.orderedHeading = ((int)System.Math.Round(t07.worldHdg) + 180) % 360;
         yield return 1f;
         s.LookAt("t07");
-        s.sol[s.SysIndex] = new HandoffBoardState.Solution(); // stand-in: clear the old solution
+        s.weapons.sol[s.weapons.SysIndex] = new WeaponSystem.Solution(); // stand-in: clear the old solution
         if (!PlotDrag(board, knobAt, knobAt + new Vector2(8, 0), "turn the RNG knob (1 step)", "fc.knob")) yield break;
         best = 0;
-        for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.nav.heading + s.Sol.brg + d) < MissKm(s, t07, s.nav.heading + s.Sol.brg + best)) best = d;
+        for (int d = -1; d <= 1; d++) if (MissKm(s, t07, s.nav.heading + s.weapons.Sol.brg + d) < MissKm(s, t07, s.nav.heading + s.weapons.Sol.brg + best)) best = d;
         if (best != 0 && !PlotDrag(board, brgAt, brgAt + new Vector2(6 * best, 0), "turn the BRG knob to the nearest degree", "fc.knob")) yield break;
         s.SlewTo();
         //     The targeting computer (the periscope) shows a scanned ship's hull in its SUBJECT box (Step 61).
@@ -1175,18 +1175,18 @@ public static class PlaytestRunner
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (board.Motion) board.Motion.SetScopeDown(false);
         yield return 0.6f;
-        if (s.mount != "RGB" && !Click("fc.mount", null, "turret selector (RG-B)")) yield break;
+        if (s.weapons.mount != "RGB" && !Click("fc.mount", null, "turret selector (RG-B)")) yield break;
         if (!Click("rate", "10", "x10 rate key")) yield break;
         var reports = new List<string>();
         for (int shot = 0; shot < 10 && !t07.wreck; shot++)
         {
-            yield return (Func<bool>)(() => s.wepCharge >= s.ShotCost);
+            yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
             for (int i = 0; i < 4; i++)
-                if (!s.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (shot " + (shot + 1) + ")")) yield break; yield return 0.15f; }
-            int landed = s.shotResults;
+                if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (shot " + (shot + 1) + ")")) yield break; yield return 0.15f; }
+            int landed = s.weapons.shotResults;
             if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (shot " + (shot + 1) + ")", "fc.lever")) yield break;
-            yield return (Func<bool>)(() => s.shotResults > landed);
-            reports.Add(s.shotReport);
+            yield return (Func<bool>)(() => s.weapons.shotResults > landed);
+            reports.Add(s.weapons.shotReport);
         }
         string log = string.Join(" | ", reports);
         int opened = reports.FindIndex(r => r == "HIT · GARUDA · PORT OPEN");

@@ -3801,12 +3801,12 @@ Found by the doc check after Step 66. Fix each with the owner.
 5. **The playtest has no battle-space checks:** the warning, countdown, x1 drop, zoom limit, pan
    limit, axis numbers and the `C` key.
 
-### Board refactor (owner, 2026-10-25). In progress — paused by the owner, 2026-10-26
+### Board refactor (owner, 2026-10-25). In progress (paused and restarted by the owner, 2026-10-26)
 
-**Where it stopped (2026-10-26).** Navigation, power, sensors and comms are moved into systems. The
-helm, power, sensors and comms drawers are prefabs. Everything is committed. Next, when the owner
-restarts it: the fire control (weapons) prefab, then the weapons system. The remaining prefabs (fire
-control, hangar, engineering, orders, then periscope) are planned.
+**Where it stands (2026-10-26).** Navigation, power, sensors, comms and weapons are moved into
+systems. The helm, power, sensors, comms, fire control and hangar drawers are prefabs. Next: the
+hangar system (Tooling), then the engineering prefab (UI Restructure) and the damage system, then
+orders, then the periscope.
 
 Replaces the 2026-10-24 "clean-up once the game is working" list.
 
@@ -3962,9 +3962,29 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - Art moved: 4 files to `Art/Fire Control`; `glass_r3_c` and `screen_r4` to `Art/Screens`,
     `knob_knurl` to `Art/Knobs`, `rocker_housing` to `Art/Switches`, `button_push` to a new
     `Art/Buttons`.
+- **Weapons (2026-10-26).** Fire control and everything it fires are in `Systems/WeaponSystem.cs`: the
+  weapon groups (railgun, PDC, missile), mounts, warheads, the arming ladder, the firing solutions,
+  picking a target, salvo, PDC loaders and AUTO, the capacitor and the fire lever; leading a moving
+  target; slugs and missiles in flight; enemy missiles coming in and our PDCs' chance at them.
+  - `OwnShip` and `Garuda · Cruiser` each carry a WeaponSystem, with the board's numbers.
+    `HandoffBoardControls.weapons` points at ours, and every ship state reaches its own through
+    `.weapons`. The Garuda's fire-back reads its own launcher and fires at our ship, as before.
+  - Stays on the ship state: the contact list, damage (`TakeSlug`, `TakeWarhead`), kills, the
+    periscope and the plot marks. The weapons read them.
+  - The PDCs still roll the ship's shared dice (`NextDie`), so every PDC and damage roll falls as
+    before.
+  - The weapon group type is `WeaponSystem.Group` (was `HandoffBoardState.WeaponSystem`). The
+    capacitor's tick is `TickCharge` (was `TickWeapons`).
+  - `HandoffFireControlPanel` became `UI/Panels/FireControlPanel` (its link kept, so the prefab still
+    holds it).
+  - **Owner 2026-10-26: the board's weapons stay as they are, not rebuilt on Soham's `WeaponBase`.**
+    His railgun fires an instant beam through Unity physics in real time. The board's slug flies in
+    game time and has to be led. Hitting debris can be added to the board's own code. `CLAUDE.md`
+    now says where the board's weapons are.
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_231109).
 
-**Next:** the fire control (weapons) panel as a prefab (UI Restructure), then the weapons system
-(Tooling), and so on in order: hangar, damage and orders. Owner 2026-10-26: "split, take turns". One
+**Next:** the hangar system (Tooling), then the engineering panel as a prefab (UI Restructure) and the
+damage system, then orders, then the periscope. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.
 

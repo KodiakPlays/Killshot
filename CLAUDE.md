@@ -106,7 +106,7 @@ These describe the existing codebase. Match them; do not introduce a competing s
 - **No asmdefs.** Runtime code compiles into `Assembly-CSharp`; code under `Assets/Editor/` into `Assembly-CSharp-Editor`. Adding an `.asmdef` silently severs existing references — treat it as a deliberate architectural decision, not a tidy-up.
 - **Prefer `[SerializeField] private`** over public fields for inspector-exposed state.
 - **Damage flows through `IDamageable`** (`Assets/Scripts/Interfaces/IDamageable.cs`). Anything damageable implements it; damage dealers depend on the interface, never on concrete types.
-- **New weapons extend `WeaponBase`** and are driven by `WeaponManager`. `Weapons.cs` is the superseded monolith — don't extend it.
+- **The tactical board's weapons are in `Assets/Scripts/Systems/WeaponSystem.cs`** (owner, 2026-10-26): fire control, slugs, missiles and PDCs, worked out in km and game time. Add weapons there. Soham's `WeaponBase` / `WeaponManager` (shots as physics objects in real time) are kept but the board doesn't use them. `Weapons.cs` is the superseded monolith — don't extend it.
 - **Editor-only code lives in `Assets/Editor/`.** Never `using UnityEditor;` from a runtime script outside `#if UNITY_EDITOR`.
 - Use the existing `[ReadOnly]` attribute for inspector-visible but non-editable fields; the drawer already exists.
 
