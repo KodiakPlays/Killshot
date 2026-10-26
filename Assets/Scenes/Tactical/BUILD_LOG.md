@@ -784,7 +784,14 @@ The new layout throws that split away:
     moves on along its ship's velocity. Where a ship is, and which way it faces, is
     `NavSystem.x`, `y` and `heading`. A rule must read those, or the track's `worldX` and `worldY`
     (`TacticalWorld.Sync` copies them from `NavSystem`). Never read a ship's transform for a rule.
-40. Nothing else. The Unity console is clean: no errors, no warnings.
+40. **The playtest can switch off Unity's background shader loading (found 2026-10-26).** The
+    playtest films each run with Unity's Recorder. While filming, the Recorder switches off
+    **Asynchronous Shader Compilation** (Edit → Project Settings → Editor), and switches it back on
+    when filming ends. If a run is cut short, it stays off, and Unity saves "off" into
+    `ProjectSettings/EditorSettings.asset`. The project's setting is **on**. If `git status` shows
+    that file changed, switch it back on in Unity. Changing the file while Unity is open doesn't
+    stick.
+41. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
@@ -4036,8 +4043,9 @@ Left unfinished when the Step 73 chat closed. Plan each with the owner before bu
    asteroid 3, structure 4, ruins 3, starbase 5); hide us from sensors (line of sight); hurt us
    when we hit them (the prototype pushes the ship out and damages it above an impact speed). Our
    ship's collision size is not decided. **Owner, 2026-10-26:** a debris field is there to fly
-   through and around; otherwise you hit the pieces. Today the ship passes straight through them.
-   Asked whether to build hitting debris before the next system: not answered yet.
+   through and around; otherwise you hit the pieces. **Hitting a piece damages the ship. The ship is
+   not pushed back out** (owner, 2026-10-26; this replaces the prototype's push). Today the ship
+   passes straight through them. When to build it: after the refactor, unless the owner says sooner.
 3. **The names (decision 39), not applied yet.** The `t07` track's name `TRACK 07` → `GARUDA`
    (`HandoffBoardState`, class stays CRUISER, key stays `t07`); playtest checks that expect
    `HIT · TRACK 07` and `ATTACKING TRACK 07`, and check names that say TRACK 07; in `02.1_Grid`,
