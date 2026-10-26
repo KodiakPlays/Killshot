@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// and two cut-outs, the old pad and the new, slide over it with the new one fading in. At rest all
 /// three are off and the board shows the sprite exactly as before. Panels only swap sprites; this
 /// follows them. A locked rocker that is clicked dips and springs back (owner, 2026-10-18; not in the
-/// design). The builder fills the families and the rockers (HandoffBoardBuilder.WireRockers).
+/// design). The families and the rockers are set in the scene (the board builder that once filled them is gone).
 /// </summary>
 public class HandoffRockers : MonoBehaviour
 {
