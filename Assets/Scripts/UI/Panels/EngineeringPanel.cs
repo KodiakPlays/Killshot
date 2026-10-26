@@ -184,7 +184,7 @@ public class EngineeringPanel : HandoffPanel
         var open = new System.Collections.Generic.List<string>();
         foreach (var r in repairs)
         {
-            bool thrown = s.dcThrown.Contains("eng_" + r.id);
+            bool thrown = s.orders.dcThrown.Contains("eng_" + r.id);
             string block = r.fitted ? s.damage.EngBlock(r.id) : "NOT FITTED";
             bool isOpen = r.fitted && block == null;
             if (r.fitted) { if (isOpen) open.Add(Label(r.id)); else if (firstBlock == null) firstBlock = block; }

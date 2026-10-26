@@ -55,30 +55,6 @@ public class HandoffBoardState
     /// (4.5 → 4), which differs from the board at exact halves (Step 33c verification).</summary>
     public static int JsRound(float x) => Mathf.FloorToInt(x + 0.5f);
 
-    [Header("Engineering and damage control — the board's initial state")]
-    [Tooltip("ALERTS index: 0 = CONDITION 3, 1 = CONDITION 2, 2 = CONDITION 1 (set on the orders station).")]
-    [Range(0, 2)] public int alert;
-    [Tooltip("A thrown repair or order rocker flicks back after this long (flickBack).")]
-    [Tune("Engineering & orders")]
-    public float flickBackSeconds = 0.4f;
-    public System.Collections.Generic.List<string> dcThrown = new System.Collections.Generic.List<string>();
-    [Header("Orders station — AUX order pool (ENG_ORDERS)")]
-    [Tooltip("AUX order pool, 0..100 (auxCharge).")]
-    public double auxCharge;
-    [Tooltip("Pool gained per AUX unit per game second.")]
-    [Tune("Power & signal")]
-    public double auxPerUnit = 3.2;
-    [Tune("Engineering & orders")]
-    public int orderCostParty = 30, orderCostSeal = 25, orderCostVent = 15;
-    [Tooltip("The refused order (orderFail) shows this long.")]
-    [Tune("Engineering & orders")]
-    public float orderFailSeconds = 0.42f;
-    public string orderFail;
-    /// <summary>Orders refused so far (Step 40: the board sounds a refusal).</summary>
-    [System.NonSerialized] public int orderRefusals;
-    [System.NonSerialized] float orderFailUntil;
-    [System.NonSerialized] readonly System.Collections.Generic.Dictionary<string, float> flickUntil = new System.Collections.Generic.Dictionary<string, float>();
-
     /// <summary>The mission clock as of the last tick (HandoffBoardControls writes it).</summary>
     [System.NonSerialized] public float missionNow;
 
@@ -129,6 +105,10 @@ public class HandoffBoardState
     [System.NonSerialized] public DamageSystem damage;
     /// <summary>Give this ship its damage model. It reads and sets this ship's status, EMP clock and dice.</summary>
     public void UseDamage(DamageSystem d) { damage = d; if (d) d.ship = this; }
+    /// <summary>This ship's orders station: alert condition, AUX order pool and flicking rockers (owner 2026-10-26).</summary>
+    [System.NonSerialized] public OrdersSystem orders;
+    /// <summary>Give this ship its orders station. It reads this ship's AUX bus and damage control.</summary>
+    public void UseOrders(OrdersSystem o) { orders = o; if (o) o.ship = this; }
     // The ship's position and heading, read by the rules below. Only its NavSystem changes them.
     double ownX => nav.x;
     double ownY => nav.y;
@@ -147,26 +127,6 @@ public class HandoffBoardState
     System.Collections.Generic.List<string> identified => sensors.identified;
 
     // ---- handlers ------------------------------------------------------------------------
-
-    public void FlickBack(string id, float now)
-    {
-        if (!dcThrown.Contains(id)) dcThrown.Add(id);
-        flickUntil[id] = now + flickBackSeconds;
-    }
-
-    /// <summary>Let thrown rockers fall back; true if any did.</summary>
-    public bool ExpireFlicks(float now)
-    {
-        bool changed = false;
-        if (!string.IsNullOrEmpty(orderFail) && now >= orderFailUntil) { orderFail = null; changed = true; }
-        for (int i = dcThrown.Count - 1; i >= 0; i--)
-        {
-            float until;
-            if (!flickUntil.TryGetValue(dcThrown[i], out until) || now >= until) { flickUntil.Remove(dcThrown[i]); dcThrown.RemoveAt(i); changed = true; }
-        }
-        return changed;
-    }
-
 
     // ---- plot tools (Step 33i) ---------------------------------------------------------------
 
@@ -288,38 +248,6 @@ public class HandoffBoardState
     /// <summary>lookAt: lower the scope (by the caller) and put it on the contact's bearing.</summary>
     public bool LookAt(string key) { var t = TrackOf(key); if (t == null) return false; scopeBrg = t.bearing; slewDx = 0; return true; }
 
-    // ---- orders station (Step 33h-2) -------------------------------------------------------
-
-    /// <summary>doAlert: CONDITION 3 → 2 → 1 → 3.</summary>
-    public void DoAlert() { alert = (alert + 1) % 3; }
-
-    /// <summary>ENG_ORDERS cost for a fitted order, or -1 (FIRE, BLKHD, SCRUB are not fitted).</summary>
-    public int OrderCost(string id) => id == "party" ? orderCostParty : id == "seal" ? orderCostSeal : id == "vent" ? orderCostVent : -1;
-
-    /// <summary>orderBlock: the orders station's refusals. Step 59: the same rules as engineering's rockers
-    /// (the design's two sets disagreed on crew; DAMAGE_README.md has one set of rules).</summary>
-    public string OrderBlock(string id) => id == "party" || id == "seal" || id == "vent" ? damage.EngBlock(id) : null;
-
-    /// <summary>runOrder: refused (too little AUX, or orderBlock) → the failure shows for 420 ms;
-    /// otherwise spend the charge and apply. The rocker flicks back either way.</summary>
-    public void RunOrder(string id, float now)
-    {
-        int cost = OrderCost(id);
-        if (cost < 0) return;
-        if (auxCharge < cost || OrderBlock(id) != null) { orderFail = id; orderFailUntil = now + orderFailSeconds; orderRefusals++; }
-        else { auxCharge = System.Math.Max(0, auxCharge - cost); damage.ApplyOrder(id); }
-        FlickBack(id, now);
-    }
-
-    /// <summary>The tick: AUX charges by units x 3.2 per game second to 100 (owner 2026-10-24: every rate in game time).</summary>
-    public void TickAux(double dt)
-    {
-        double rate = BusUnits("aux") * auxPerUnit * dt;
-        if (rate > 0 && auxCharge < 100) auxCharge = System.Math.Min(100, auxCharge + rate);
-    }
-
-    public bool FlightOpsReleased => alert >= 1;
-    public bool WeaponsReleased => alert >= 1;
     // ---- fire control ----------------------------------------------------------------------
 
     public Track TrackOf(string key) { foreach (var t in tracks) if (t.key == key) return t; return null; }

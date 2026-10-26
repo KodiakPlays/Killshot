@@ -254,7 +254,7 @@ public class FireControlPanel : HandoffPanel
             if (r.hint)
             {
                 r.hint.text = on ? "SET" : open ? new[] { "ROUND IN RAIL", "ELEV SET", "ON AXIS", "GATE LIVE" }[i]
-                    : i == 0 && !s.WeaponsReleased ? "NOT RELEASED"
+                    : i == 0 && !s.orders.WeaponsReleased ? "NOT RELEASED"
                     : i == 0 && !s.damage.MagOk ? "MAGAZINE HIT"
                     : i == 0 && !s.weapons.WepReady ? "NO WEP BUS"
                     : i == 3 && prevOk && s.weapons.wepCharge < cost ? "CHARGING"
@@ -288,7 +288,7 @@ public class FireControlPanel : HandoffPanel
             else if (tid == null && !manual) t = "NO TRACKING ID — NOT IDENTIFIED";
             else if (!s.damage.BriOk) t = "BRIDGE DAMAGED — PLOT COMPUTER OFFLINE";
             else if (!sol.set) t = "NO FIRING SOLUTION";
-            else if (!s.WeaponsReleased) t = "WEAPONS NOT RELEASED — CONDITION 2 REQUIRED";
+            else if (!s.orders.WeaponsReleased) t = "WEAPONS NOT RELEASED — CONDITION 2 REQUIRED";
             else if (!s.damage.MagOk) t = "MAGAZINE DAMAGED — NO ROUNDS STRUCK UP";
             else if (s.weapons.sys == "PD" && !s.weapons.loaders) t = "PDC AUTOLOADERS OFF";
             else t = "ARMING SEQUENCE INCOMPLETE";

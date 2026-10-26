@@ -3803,10 +3803,10 @@ Found by the doc check after Step 66. Fix each with the owner.
 
 ### Board refactor (owner, 2026-10-25). In progress (paused and restarted by the owner, 2026-10-26)
 
-**Where it stands (2026-10-26).** Navigation, power, sensors, comms, weapons, hangar and damage are
-moved into systems. The helm, power, sensors, comms, fire control, hangar and engineering drawers are
-prefabs. Next: the orders prefab (UI Restructure), then the orders system (Tooling), then the
-periscope.
+**Where it stands (2026-10-26).** Navigation, power, sensors, comms, weapons, hangar, damage and
+orders are moved into systems. The helm, power, sensors, comms, fire control, hangar, engineering and
+orders panels are prefabs. Next: the periscope prefab (UI Restructure), then the plot, the frame
+pieces, the shared colour palette and the fonts.
 
 Replaces the 2026-10-24 "clean-up once the game is working" list.
 
@@ -4044,8 +4044,21 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   panel had links like these.
   - Playtest 172/172 (run 2026-10-26_234914). The two runs before it (23:43 and 23:46) don't count:
     the board was in use during them.
+- **Orders (2026-10-26).** The orders station is in `Systems/OrdersSystem.cs`: the alert condition, the
+  AUX order pool, what each order costs and why one is refused, and the repair and order rockers that
+  flick back after a throw.
+  - `OwnShip` and `Garuda · Cruiser` each carry an OrdersSystem, with the board's numbers.
+    `HandoffBoardControls.orders` points at ours, and every ship state reaches its own through
+    `.orders`. The weapons, hangar and damage systems read its alert (`WeaponsReleased`,
+    `FlightOpsReleased`, the repair rate). Its repairs are damage control's (`damage.EngBlock`,
+    `damage.ApplyOrder`).
+  - `HandoffOrdersPanel` became `UI/Panels/OrdersPanel` (its link kept, so the prefab still holds it).
+  - No behaviour change. Playtest 172/172 (run 2026-10-26_235522).
+  - **The ship state now holds only what is the ship's own or shared:** the contact list, whether it is
+    destroyed or captured, the EMP clock, the dice, kills, the periscope, the plot marks and the
+    battle space. Every ship part is a system.
 
-**Next:** the orders system (Tooling), then the periscope as a prefab (UI Restructure), then the plot,
+**Next:** the periscope as a prefab (UI Restructure), then the plot,
 the frame pieces, the shared colour palette and the fonts. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.

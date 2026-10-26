@@ -9,7 +9,7 @@ using TMPro;
 /// alertInk, alertRelease(Ink), compName, auxPct, auxInk, auxRate, auxCells, orderSwitches,
 /// orderNote(Ink)) and UIStateSpec §11 "Orders".
 /// </summary>
-public class HandoffOrdersPanel : HandoffPanel
+public class OrdersPanel : HandoffPanel
 {
     [System.Serializable]
     public class AlertSet
@@ -62,8 +62,8 @@ public class HandoffOrdersPanel : HandoffPanel
     {
         switch (action)
         {
-            case "orders.alert": State.DoAlert(); return true;
-            case "orders.run": State.RunOrder(arg, Time.unscaledTime); return true;
+            case "orders.alert": State.orders.DoAlert(); return true;
+            case "orders.run": State.orders.RunOrder(arg, Time.unscaledTime); return true;
         }
         return false;
     }
@@ -72,20 +72,20 @@ public class HandoffOrdersPanel : HandoffPanel
     {
         var s = State;
         string[] alerts = { "CONDITION 3", "CONDITION 2", "CONDITION 1" };
-        Color alertInk = s.alert == 2 ? alarm : s.alert == 1 ? caution : nominal;
-        bool released = s.WeaponsReleased;
+        Color alertInk = s.orders.alert == 2 ? alarm : s.orders.alert == 1 ? caution : nominal;
+        bool released = s.orders.WeaponsReleased;
         foreach (var a in new[] { stowed, open })
         {
             if (a == null) continue;
-            a.pointer.Set(60f + s.alert * 30f); // alertAngle
+            a.pointer.Set(60f + s.orders.alert * 30f); // alertAngle
             for (int i = 0; i < a.lamps.Length; i++)
             {
-                bool on = i == s.alert;
+                bool on = i == s.orders.alert;
                 Paint(a.lamps[i], on ? data : lampOffSelector);
                 if (i < a.glows.Length) Show(a.glows[i], on);
                 if (i < a.labels.Length) Paint(a.labels[i], on ? data : stencil);
             }
-            if (a.condition) { a.condition.text = alerts[s.alert]; Paint(a.condition, alertInk); }
+            if (a.condition) { a.condition.text = alerts[s.orders.alert]; Paint(a.condition, alertInk); }
             if (a.release)
             {
                 a.release.text = released ? "WEAPONS AND FLIGHT OPS RELEASED" : "WEAPONS AND FLIGHT OPS NOT RELEASED";
@@ -99,19 +99,19 @@ public class HandoffOrdersPanel : HandoffPanel
         int aux = s.power.BusUnits("aux");
         if (auxPct)
         {
-            auxPct.text = HandoffBoardState.JsRound(s.auxCharge) + "%";
-            Paint(auxPct, s.auxCharge >= 30 ? nominal : aux > 0 ? caution : alarm);
+            auxPct.text = HandoffBoardState.JsRound(s.orders.auxCharge) + "%";
+            Paint(auxPct, s.orders.auxCharge >= 30 ? nominal : aux > 0 ? caution : alarm);
         }
-        if (auxRate) auxRate.text = aux > 0 ? "+" + HandoffBoardState.JsToFixed(aux * s.auxPerUnit, 1) + "/S" : "NO FEED";
-        int lit = HandoffBoardState.JsRound(s.auxCharge / 100.0 * 10);
+        if (auxRate) auxRate.text = aux > 0 ? "+" + HandoffBoardState.JsToFixed(aux * s.orders.auxPerUnit, 1) + "/S" : "NO FEED";
+        int lit = HandoffBoardState.JsRound(s.orders.auxCharge / 100.0 * 10);
         for (int k = 0; k < auxCells.Length; k++) Show(auxCells[k], k + 1 <= lit);
 
         // order rockers
         foreach (var o in orders)
         {
-            bool thrown = !o.blank && s.dcThrown.Contains(o.id);
-            bool failed = !o.blank && s.orderFail == o.id;
-            bool isOpen = !o.blank && s.auxCharge >= s.OrderCost(o.id) && s.OrderBlock(o.id) == null;
+            bool thrown = !o.blank && s.orders.dcThrown.Contains(o.id);
+            bool failed = !o.blank && s.orders.orderFail == o.id;
+            bool isOpen = !o.blank && s.orders.auxCharge >= s.orders.OrderCost(o.id) && s.orders.OrderBlock(o.id) == null;
             if (o.rocker && !o.blank) o.rocker.sprite = thrown ? rockerThrown : isOpen ? rockerUp : rockerLocked;
             Color lamp = failed ? alarm : thrown ? phosphor : isOpen ? stencilDim : lampOffPanel;
             Paint(o.lamp, lamp);
@@ -124,12 +124,12 @@ public class HandoffOrdersPanel : HandoffPanel
         {
             string note;
             if (aux < 1) note = "AUX BUS DEAD — NO ORDER WILL INITIATE";
-            else if (!string.IsNullOrEmpty(s.orderFail))
-                note = s.auxCharge < s.OrderCost(s.orderFail) ? "INSUFFICIENT AUX — " + s.OrderCost(s.orderFail) + "% REQUIRED"
-                     : (s.OrderBlock(s.orderFail) ?? "ORDER REFUSED").ToUpperInvariant();
+            else if (!string.IsNullOrEmpty(s.orders.orderFail))
+                note = s.orders.auxCharge < s.orders.OrderCost(s.orders.orderFail) ? "INSUFFICIENT AUX — " + s.orders.OrderCost(s.orders.orderFail) + "% REQUIRED"
+                     : (s.orders.OrderBlock(s.orders.orderFail) ?? "ORDER REFUSED").ToUpperInvariant();
             else note = "ALLOCATE AUX UNITS TO CHARGE FASTER";
             orderNote.text = note;
-            Paint(orderNote, aux < 1 || !string.IsNullOrEmpty(s.orderFail) ? caution : noteInk);
+            Paint(orderNote, aux < 1 || !string.IsNullOrEmpty(s.orders.orderFail) ? caution : noteInk);
         }
     }
 }

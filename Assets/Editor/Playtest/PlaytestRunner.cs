@@ -335,10 +335,10 @@ public static class PlaytestRunner
         // 10. What the power now drives (board rules)
         Check("ENG power raises the throttle limit", s.nav.ThrottleCap > 0, "throttle cap " + s.nav.ThrottleCap + "%");
         Check("SEN power raises the sensor gain limit", s.sensors.GainCap > 1, "gain limit " + s.sensors.GainCap + " (range is " + s.sensors.SenRangeKm.ToString("N0") + " km until the gain is turned up — sensors feature)");
-        float wep0 = s.weapons.wepCharge; double aux0 = s.auxCharge;
+        float wep0 = s.weapons.wepCharge; double aux0 = s.orders.auxCharge;
         yield return 2f;
         Check("WEP power charges the capacitor", s.weapons.wepCharge > wep0 || s.weapons.wepCharge >= 100f, wep0.ToString("0") + " → " + s.weapons.wepCharge.ToString("0") + "%");
-        Check("AUX power charges the order pool", s.auxCharge > aux0 || s.auxCharge >= 100, aux0.ToString("0") + " → " + s.auxCharge.ToString("0") + "%");
+        Check("AUX power charges the order pool", s.orders.auxCharge > aux0 || s.orders.auxCharge >= 100, aux0.ToString("0") + " → " + s.orders.auxCharge.ToString("0") + "%");
 
         // 11. Power makes us loud (Step 35): signal climbs to its target on the OWN EMISSIONS meter
         if (!Click("drawer", "sensors", "SENS key")) yield break;
@@ -718,7 +718,7 @@ public static class PlaytestRunner
         if (!Click("orders", null, "ORDERS header")) yield break;
         yield return 0.6f;
         if (!Click("orders.alert", null, "CONDITION dial")) yield break;
-        Check("CONDITION 2: weapons released", s.WeaponsReleased, "alert " + s.alert);
+        Check("CONDITION 2: weapons released", s.orders.WeaponsReleased, "alert " + s.orders.alert);
         if (!Click("orders", null, "ORDERS header (close)")) yield break;
         yield return 0.6f;
         //     Power for the guns: SEN gives its units back, WEP draws and charges.

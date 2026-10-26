@@ -229,7 +229,7 @@ public class HangarSystem : MonoBehaviour
 
     public string StageBlock(string id)
     {
-        if (id == "crew" && !ship.FlightOpsReleased) return "FLIGHT OPS NOT RELEASED \u2014 HELD AT DC-1 ALERT CONDITION 3";
+        if (id == "crew" && !ship.orders.FlightOpsReleased) return "FLIGHT OPS NOT RELEASED \u2014 HELD AT DC-1 ALERT CONDITION 3";
         if (id == "fuel" && !ship.damage.HgrOk) return "HANGAR BAY DAMAGED \u2014 FUEL LINES DOWN";
         if (id == "ord" && !ship.damage.MagOk) return "MAGAZINE HIT \u2014 NO ORDNANCE";
         if (id == "doors" && !doorsOpen) return "BAY DOOR MASTER SHUT";
@@ -242,7 +242,7 @@ public class HangarSystem : MonoBehaviour
         var q = CurrentSquad;
         if (q == null) return "NO SQUADRON SELECTED";
         if (Launched(q)) return null;
-        if (!ship.FlightOpsReleased) return "FLIGHT OPS NOT RELEASED \u2014 HELD AT DC-1 ALERT CONDITION 3";
+        if (!ship.orders.FlightOpsReleased) return "FLIGHT OPS NOT RELEASED \u2014 HELD AT DC-1 ALERT CONDITION 3";
         if (!ship.damage.HgrOk) return "HANGAR BAY DAMAGED \u2014 CANNOT SPOT CRAFT";
         if (SquadReady(q) == 0) return "NO CRAFT READY";
         if (q.key == "ih" && marines < 1) return "NO MARINES ABOARD"; // Step 60

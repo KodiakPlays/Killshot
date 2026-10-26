@@ -128,7 +128,7 @@ public class WeaponSystem : MonoBehaviour
 
     public Solution Sol => sol[SysIndex];
     public float ShotCost => Sys != null ? Sys.shot : 50f;
-    public bool WepReady => ship.power.BusUnits("wep") >= 2 && ship.damage.MagOk && ship.WeaponsReleased;
+    public bool WepReady => ship.power.BusUnits("wep") >= 2 && ship.damage.MagOk && ship.orders.WeaponsReleased;
     public string TrackIdFor()
     {
         var t = ship.TrackOf(target);

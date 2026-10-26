@@ -100,6 +100,8 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private HangarSystem hangar;
     [Tooltip("Our ship's damage model (the DamageSystem on OwnShip): compartments, hull, conditions, crew and damage control.")]
     [SerializeField] private DamageSystem damage;
+    [Tooltip("Our ship's orders station (the OrdersSystem on OwnShip): alert condition, AUX order pool and flicking rockers.")]
+    [SerializeField] private OrdersSystem orders;
     [SerializeField] private HandoffBoardMotion motion;
     [SerializeField] private HandoffPlotGrid grid;
     [SerializeField] private Canvas canvas;
@@ -182,7 +184,7 @@ public class HandoffBoardControls : MonoBehaviour
 
     // Other objects can read State in their own Awake, before ours runs, so it hands our ship its systems first.
     public HandoffBoardState State { get { if (state.nav == null) UseSystems(); return state; } }
-    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); state.UseComms(comms); state.UseWeapons(weapons); state.UseHangar(hangar); state.UseDamage(damage); }
+    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); state.UseComms(comms); state.UseWeapons(weapons); state.UseHangar(hangar); state.UseDamage(damage); state.UseOrders(orders); }
     /// <summary>Raised once per board tick, after the board's own rules and before the panels
     /// redraw. The tactical world steps here, inside the board's single timer (Step 34).</summary>
     public event System.Action Ticked;
@@ -220,6 +222,7 @@ public class HandoffBoardControls : MonoBehaviour
         if (!weapons) Debug.LogError("[HandoffBoardControls] our ship's WeaponSystem is not set");
         if (!hangar) Debug.LogError("[HandoffBoardControls] our ship's HangarSystem is not set");
         if (!damage) Debug.LogError("[HandoffBoardControls] our ship's DamageSystem is not set");
+        if (!orders) Debug.LogError("[HandoffBoardControls] our ship's OrdersSystem is not set");
         UseSystems();
     }
 
@@ -248,7 +251,7 @@ public class HandoffBoardControls : MonoBehaviour
     {
         // The board's single timer (tickPower). Only the mission clock is board-local so far.
         // thrown repair and order rockers fall back after 400 ms (flickBack)
-        if (state.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
+        if (state.orders.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
         // a shot fired (from the lever) and a shot landing (in the tick) each get their cue
         if (state.weapons.shotsFired != shotsHeard) { shotsHeard = state.weapons.shotsFired; Play(railgunSound, "railgun"); }
         if (state.weapons.shotResults != resultsHeard)
@@ -272,7 +275,7 @@ public class HandoffBoardControls : MonoBehaviour
                 missionSeconds += rate; ShowClock();
                 state.missionNow = missionSeconds; // the solution's clock (Step 52)
                 state.power.Tick(rate);
-                state.TickAux(rate);
+                state.orders.TickAux(rate);
                 state.nav.Tick(rate); // the ship steers and moves; it reads the engine room before a repair lands this tick, as tickPower does
                 // Step 65: the battle space. Crossing out drops time to x1, so a fast rate can't kill you in a blink
                 if (state.TickArena(rate)) { rate = 1f; ShowTime(); Play(alertSound, "alert"); }
@@ -305,7 +308,7 @@ public class HandoffBoardControls : MonoBehaviour
     public void Click(string action, string arg)
     {
         bool refused = rockers && rockers.Refuse(action, arg); // reads the rocker as clicked, before the click changes it
-        int orderRefusals = state.orderRefusals;
+        int orderRefusals = state.orders.orderRefusals;
         bool owned = true;
         switch (action)
         {
@@ -325,7 +328,7 @@ public class HandoffBoardControls : MonoBehaviour
                 break;
         }
         // a refused order throws and flicks back as the design has it; it still sounds refused (owner)
-        if (refused || state.orderRefusals != orderRefusals) Play(refusedSound, "refused");
+        if (refused || state.orders.orderRefusals != orderRefusals) Play(refusedSound, "refused");
         else if (System.Array.IndexOf(TabActions, action) >= 0) Play(tabSound, "tab");
         else if (owned) Play(switchSound, "switch");
     }

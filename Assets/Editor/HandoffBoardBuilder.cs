@@ -1436,7 +1436,7 @@ public static class HandoffBoardBuilder
     static void WireOrders(RectTransform root)
     {
         const string O = "State · orders", C = "Orders";
-        var p = root.gameObject.AddComponent<HandoffOrdersPanel>();
+        var p = root.gameObject.AddComponent<OrdersPanel>();
         var so = new SerializedObject(p);
 
         // the alert selector, stowed (knob #91, pointer #384, lamps #27–29, texts #84–89) and open

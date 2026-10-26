@@ -10593,6 +10593,7 @@ GameObject:
   - component: {fileID: 765287335}
   - component: {fileID: 765287336}
   - component: {fileID: 765287337}
+  - component: {fileID: 765287338}
   m_Layer: 0
   m_Name: "Garuda \xB7 Cruiser"
   m_TagString: Untagged
@@ -11155,6 +11156,28 @@ MonoBehaviour:
   radFadeSeconds: 90
   heArmourDamage: 100
   empSeconds: 60
+--- !u!114 &765287338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765287326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 252e0b7af016b417581286ab08796550, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OrdersSystem
+  alert: 0
+  flickBackSeconds: 0.4
+  dcThrown: []
+  auxCharge: 0
+  auxPerUnit: 3.2
+  orderCostParty: 30
+  orderCostSeal: 25
+  orderCostVent: 15
+  orderFailSeconds: 0.42
+  orderFail: 
 --- !u!1 &768912739
 GameObject:
   m_ObjectHideFlags: 0
@@ -12840,6 +12863,7 @@ GameObject:
   - component: {fileID: 891763127}
   - component: {fileID: 891763128}
   - component: {fileID: 891763129}
+  - component: {fileID: 891763130}
   m_Layer: 0
   m_Name: OwnShip
   m_TagString: Untagged
@@ -13367,6 +13391,28 @@ MonoBehaviour:
   radFadeSeconds: 90
   heArmourDamage: 100
   empSeconds: 60
+--- !u!114 &891763130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891763121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 252e0b7af016b417581286ab08796550, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OrdersSystem
+  alert: 0
+  flickBackSeconds: 0.4
+  dcThrown: []
+  auxCharge: 0
+  auxPerUnit: 3.2
+  orderCostParty: 30
+  orderCostSeal: 25
+  orderCostVent: 15
+  orderFailSeconds: 0.42
+  orderFail: 
 --- !u!1 &896206256
 GameObject:
   m_ObjectHideFlags: 0
@@ -26043,16 +26089,6 @@ MonoBehaviour:
       - EM
     classified:
     - bc1
-    alert: 0
-    flickBackSeconds: 0.4
-    dcThrown: []
-    auxCharge: 0
-    auxPerUnit: 3.2
-    orderCostParty: 30
-    orderCostSeal: 25
-    orderCostVent: 15
-    orderFailSeconds: 0.42
-    orderFail: 
     scopeBrg: 62
     scopeZoom: 1.4
     slewDegPerPx: 0.34
@@ -26075,6 +26111,7 @@ MonoBehaviour:
   weapons: {fileID: 891763127}
   hangar: {fileID: 891763128}
   damage: {fileID: 891763129}
+  orders: {fileID: 891763130}
   motion: {fileID: 1765047285}
   grid: {fileID: 261411404}
   canvas: {fileID: 519620959}

@@ -71,7 +71,7 @@ public class DamageSystem : MonoBehaviour
     public bool BriOk => CompHealth("bri") >= 3;   // the plot computer lives on the bridge
     public float EngFactor => CompHealth("eng") / 5f;
     /// <summary>repairRate: Condition 1 doubles repair.</summary>
-    public int RepairRate => ship.alert == 2 ? 2 : 1;
+    public int RepairRate => ship.orders.alert == 2 ? 2 : 1;
 
     /// <summary>engBlock: why an engineering repair is refused, or null. Step 59 (DAMAGE_README.md): the team
     /// comes from elsewhere, so it needs no crew in the room; it fights a fire, restores the air once the doors
@@ -101,7 +101,7 @@ public class DamageSystem : MonoBehaviour
     {
         if (EngBlock(id) != null) return false;
         ApplyOrder(id);
-        ship.FlickBack("eng_" + id, now);
+        ship.orders.FlickBack("eng_" + id, now);
         return true;
     }
 
