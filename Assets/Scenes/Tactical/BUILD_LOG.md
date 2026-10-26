@@ -3832,34 +3832,36 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - No behaviour change. The playtest passed 166/166 after the move (run 2026-10-26_002152), and
     again after the rename to NavSystem (run 2026-10-26_002808).
 - **The enemy is GARUDA (2026-10-26).** Track t07 is named GARUDA, a Garuda-class cruiser, in code and
-  in the scene. The contact is `Garuda · Cruiser`, its model is the StarWolf cruiser mesh, and
+  in the scene. The contact is `Garuda · Cruiser`. Its model is the StarWolf cruiser mesh.
   Level_01's spawn is `Enemy Spawn · Garuda`. Playtest 171/171 (run 2026-10-26_013236).
-- **Helm panel prefab (2026-10-26).** `Assets/UI/Board/Panels/Helm.prefab`, built from the scene, not
-  the builder. How to use it: `Assets/UI/Board/README.md`.
-  - The helm is one object, `Helm`, under `HandoffBoard`. It holds `Closed` and `Open` (were `Helm`
-    and `State · helm`). `HelmPanel` moved onto it. The board now finds panels on child objects too.
-  - Every part is named after its control, and each control's parts sit under one parent, for
-    example `Open/01 Flight/Throttle/Cap`. Draw order is unchanged: screenshots before and after
-    match pixel for pixel, closed and open.
+- **Helm panel prefab (2026-10-26).** `Assets/UI/Board/Panels/Helm.prefab`, made from the helm in the
+  scene. The builder was not used. How to use it: `Assets/UI/Board/README.md`.
+  - The helm is one object, `Helm`, under `HandoffBoard`. Its children are `Closed` and `Open`
+    (were `Helm` and `State · helm`). `HelmPanel` moved onto it. The board now finds panels on
+    child objects too.
+  - Every part is named after its control. Each control's parts are under one parent, for
+    example `Open/01 Flight/Throttle/Cap`. The draw order is the same as before. Screenshots
+    before and after match pixel for pixel, closed and open.
   - The helm's art is a list on `HelmPanel` (**Art**, 20 entries). Swap a sprite there and every
-    image under it changes. The list lives on `HandoffPanel`, so every panel gets one.
-  - Art files moved, keeping their links: the helm's own to `Assets/UI/Board/Art/Helm`, art other
-    panels use too to the folder for its kind (`Art/Lamps`, `Art/Bolts` …), and four shapes to
-    `Art/Shapes`. Only the @2x files the board uses moved. The 1x copies stay in the export.
+    image under it changes. The list is in `HandoffPanel`, and every panel has one.
+  - Art files moved, and their links still work. Art only the helm uses went to
+    `Assets/UI/Board/Art/Helm`. Art other panels use too went to the folder for its kind
+    (`Art/Lamps`, `Art/Bolts` …). Four shapes went to `Art/Shapes`. Only the @2x files the board
+    uses moved. The 1x copies are still in the export.
   - Playtest 171/171 (run 2026-10-26_014759).
   - Not done yet: the palette asset. The helm's colours are still fields on `HelmPanel`.
 - **Power drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Power.prefab`, the same way as the
-  helm. Owner 2026-10-26: panels go in system order, so each system's rules can follow its panel.
+  helm. Owner 2026-10-26: panels go in system order, and each system's rules move after its panel.
   - `Drawers/State · power` became `Drawers/Power`, and `HandoffPowerPanel` moved onto it. The
-    playtest finds the drawer by its script now, not by name.
+    playtest now finds the drawer by its script.
   - Parts named and grouped: `Frame`, `Header`, `Reactor`, `Load shed`, `Buses/ENG` … `Buses/AUX`
     (each with `Cells` and `Selector`). Screenshots before and after match pixel for pixel.
-  - Art list: 20 entries. The load-shed rocker isn't in it, because the code swaps its sprite; its
-    two sprites are the panel's **Rocker Up** and **Rocker Thrown** fields.
+  - Art list: 20 entries. The load-shed rocker is not in it. The code swaps its sprite. Its two
+    sprites are the panel's **Rocker Up** and **Rocker Thrown** fields.
   - Art moved: 7 power-only files to `Art/Power` (the casting among them), and 8 that other panels
     use too to the folder for their kind.
-  - The playtest now films the Game view at its own 16:9 size instead of a fixed 1920 × 1080
-    (owner 2026-10-26; written by another session, committed here).
+  - The playtest now films the Game view at the view's 16:9 size. It used to film at a fixed
+    1920 × 1080 (owner 2026-10-26; written by another session, committed here).
   - Playtest 171/171 (run 2026-10-26_021347).
 - **Power (2026-10-26).** The reactor and the four buses are in `Systems/PowerSystem.cs`: each bus's
   units, selector and signal per unit, the load shed, the reactor cap, and filling and draining once
@@ -3876,20 +3878,20 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - No behaviour change. Playtest 171/171 (run 2026-10-26_075922).
 - **Sensors drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Sensors.prefab`, the same way.
   - `Drawers/State · sensors` became `Drawers/Sensors`, and `HandoffSensorsPanel` moved onto it.
-    The playtest finds every panel with `GetComponentInChildren` now, so it works before and after
+    The playtest now finds every panel with `GetComponentInChildren`. It works before and after
     each panel moves.
   - Parts grouped: `Frame`, `Header`, `Masters/DRADIS` and `Masters/ACTIVE SCAN`, `E-SIG`,
     `01 Sensor array` (`Gain`, `Bands/THERM` …), `02 Active scan` (`Cone dial`, `Narrow`, `Widen`),
     `03 Contact board` (`Row 1` … `Row 3`). Screenshots before and after match pixel for pixel.
-  - Art list: 19 entries. The two master rockers' sprites stay as the **Rocker Up** and **Rocker
-    Thrown** fields, since the code swaps them.
+  - Art list: 19 entries. The code swaps the two master rockers' sprites. Those sprites are still
+    the **Rocker Up** and **Rocker Thrown** fields.
   - **Links outside the drawer.** The panel also fills the signal box in the frame's top-right and
-    the plot's SENSOR RANGE label. A prefab can't hold links to objects outside it, so those 17
-    fields are empty in the prefab file and set on the board's copy. Open the board scene to see them.
+    the plot's SENSOR RANGE label. A prefab can't link to objects outside it. Those 17 fields are
+    empty in the prefab file. They are set on the board's copy. Open the board scene to see them.
   - Art moved: 7 sensors-only files to `Art/Sensors`, `well_r3` (the signal box uses it too) to
     `Art/Wells`, `round_2` to `Art/Shapes`.
-  - **No folder called "Shared"** (owner 2026-10-26: name it after what it holds). Art more than one
-    panel uses now sits in a folder for its kind: `Art/Lamps`, `Bolts`, `Knobs`, `Switches`,
+  - **No folder called "Shared"** (owner 2026-10-26: name a folder after what is in it). Art more
+    than one panel uses is now in a folder for its kind: `Art/Lamps`, `Bolts`, `Knobs`, `Switches`,
     `Latches`, `Screens`, `Plates`, `Wells` and `Shapes`.
   - Playtest 171/171 (run 2026-10-26_080658).
 - **Sensors (2026-10-26).** DRADIS and the active scan are in `Systems/SensorSystem.cs`: gain, band,
@@ -3908,9 +3910,9 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - `Drawers/State · comms` became `Drawers/Comms`, and `HandoffCommsPanel` moved onto it.
   - Parts grouped: `Frame`, `Header`, `01 Receiver` (`Band selector`, `Scope` with its 56 bars,
     `Tuned`, `Lock`), `02 Decrypt` (`Message` with its 59 letters, `Key dial 1` … `4`). The bars
-    stay in their own order inside `Scope`, because some draw over the tuning knob. Screenshots
-    before and after match pixel for pixel.
-  - Art list: 20 entries. The lock rocker's sprites stay as their own fields.
+    are in their original order inside `Scope`. Some of them draw over the tuning knob.
+    Screenshots before and after match pixel for pixel.
+  - Art list: 20 entries. The lock rocker's sprites are still separate fields on the panel.
   - Two band-lamp glows are empty, as before: the design gives only the first band lamp a glow.
   - Art moved: 6 comms-only files to `Art/Comms`, `rocker_30x38_locked` to `Art/Switches`.
   - Playtest 171/171 (run 2026-10-26_082511).
@@ -3932,36 +3934,37 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - Parts grouped: `Frame`, `Header` (with `Sight`), `Scope bearing`, `01 Weapon system` (`System
     selector`, `Mount selector`), `02 Firing solution` (`Track button`, `Range knob`, `Bearing knob`,
     `Speed knob`), `03 Capacitor` (`Cells`), `04 Arming sequence` (`Housings`, `LOAD`, `ANGLE`,
-    `BEARING`, `ARM`), `Fire lever`. The RAILGUN, PDC and MISSILE labels sit outside the selector's
-    group, so they stay drawn over the mount knob they touch. Screenshots before and after match
+    `BEARING`, `ARM`), `Fire lever`. The RAILGUN, PDC and MISSILE labels are outside the selector's
+    group. They still draw over the mount knob they touch. Screenshots before and after match
     pixel for pixel.
-  - From this panel on, a group stretches to fill its parent instead of having the board's fixed
-    size. For a drawer that is the same thing; the periscope needs it, because its height animates.
-  - Art list: 19 entries. The four arming rockers' sprites stay as their own fields.
+  - From this panel on, a group stretches to fill its parent. Before, a group had the board's
+    fixed size. For a drawer the result is the same. The periscope needs groups that stretch: its
+    height changes as it moves.
+  - Art list: 19 entries. The four arming rockers' sprites are still separate fields on the panel.
   - Four lamp glows are empty, as before: the design gives those lamps none.
   - The playtest found the TRACK lamp by its old name (`lamp#82`) and crashed. It now looks for
     `Lamp` beside the button, in the `Track button` group.
+  - Art moved: 4 files to `Art/Fire Control`; `glass_r3_c` and `screen_r4` to `Art/Screens`,
+    `knob_knurl` to `Art/Knobs`, `rocker_housing` to `Art/Switches`, `button_push` to a new
+    `Art/Buttons`.
   - Playtest 171/171 (run 2026-10-26_223837).
 - **Hangar drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Hangar.prefab`. Done before the
-  weapons system, because the owner paused Tooling.
+  weapons system. The owner had paused Tooling.
   - `Drawers/State · hangar` became `Drawers/Hangar`, and `HandoffHangarPanel` moved onto it.
   - Parts grouped: `Frame`, `Header`, `01 Bay status` (`Doors selector`, `Doors`, `Pressure`,
     `Catapult`, `Cat charge`), `02 Squadrons` (`Squadron 1`, `Squadron 2`), `03 Launch order`
     (`Ship selector`, `Bearing`, `Command selector`), `04 Launch sequence` (`Housings`, `CREW` …
     `CATAPULT`, `Telemetry`), `Launch lever`, `Recall`. Screenshots before and after match pixel
     for pixel.
-  - The selection bezel moves between the two squadron rows in play. The squadron groups sit after
-    it, so it still draws under both rows, as before.
+  - The selection bezel moves between the two squadron rows in play. The squadron groups come after
+    it in the list. It still draws under both rows, as before.
   - Art list: 19 entries. The six stage rockers and the RECALL button (with its pressed overlay)
-    stay out, because the code swaps their sprites.
+    are not in it. The code swaps their sprites.
   - Squadron 2's selection lamp has no glow, as before.
   - Art moved: 6 files to `Art/Hangar`, the 24 × 32 rockers to `Art/Switches`, `glass_r3` to
     `Art/Screens`, `round_5` to `Art/Shapes`.
   - Playtest 171/171 (run 2026-10-26_225037). The two runs before it (22:44:33 and 22:45:40)
     don't count: another session recompiled and entered play mode during them.
-  - Art moved: 4 files to `Art/Fire Control`; `glass_r3_c` and `screen_r4` to `Art/Screens`,
-    `knob_knurl` to `Art/Knobs`, `rocker_housing` to `Art/Switches`, `button_push` to a new
-    `Art/Buttons`.
 - **Weapons (2026-10-26).** Fire control and everything it fires are in `Systems/WeaponSystem.cs`: the
   weapon groups (railgun, PDC, missile), mounts, warheads, the arming ladder, the firing solutions,
   picking a target, salvo, PDC loaders and AUTO, the capacitor and the fire lever; leading a moving
@@ -4003,8 +4006,8 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
     (`Housings`, `REBOOT`, `REPAIR`, `SEAL`, `VENT`, `RECALL`, `SPARE`). The old row highlight
     stays, switched off, as `Compartments/Old row highlight (off)`. Screenshots before and after
     match pixel for pixel.
-  - Art list: 17 entries. The six repair rockers stay out: each has its own up, locked and thrown
-    sprites on the panel.
+  - Art list: 17 entries. The six repair rockers are not in it. Each one has an up, a locked and a
+    thrown sprite on the panel.
   - Art moved: the casting and the REBOOT rocker sprites to `Art/Engineering`; the 22 × 30 rockers,
     the blank rocker and `rocker_housing_r3` to `Art/Switches`; `plate_dark` to `Art/Plates`.
   - Playtest 171/171 (run 2026-10-26_232931).
@@ -4024,6 +4027,23 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
     holds it).
   - No behaviour change. Playtest 171/171 (run 2026-10-26_233713, after the owner cleared a Unity save
     box that held it).
+- **Orders station prefab (2026-10-26).** `Assets/UI/Board/Panels/Orders.prefab`, the same way as the
+  helm.
+  - The orders station is one object, `Orders`, under `HandoffBoard`. It has `Closed` and `Open`
+    (they were `Orders` and `State · orders`). `HandoffOrdersPanel` moved onto it.
+  - Parts are grouped: `Bolts`, `Header`, `Alert` (with `Selector`), and in `Open` also `AUX pool`
+    (with `Cells`) and `Order switches` (`Housings`, `PARTY`, `SEAL`, `VENT`, `FIRE`, `BLKHD`,
+    `SCRUB`). Screenshots before and after match pixel for pixel, closed and open.
+  - Art list: 17 entries. The three live order rockers stay out. Their sprites are the panel's
+    **Rocker Up**, **Rocker Locked** and **Rocker Thrown** fields.
+  - Art moved: the two body plates and `latch_track_orders` to `Art/Orders`.
+- **Fix: the hangar's launch bearing box (2026-10-26).** Moving the hangar script onto `Hangar`
+  broke the box's two links to it, so typing a bearing did nothing. The docs agent and the checker
+  agent both found this. The links point at `HangarPanel` again, in the prefab and on the board's
+  copy. The playtest has a new check: it types a bearing into the box and reads it back. No other
+  panel had links like these.
+  - Playtest 172/172 (run 2026-10-26_234914). The two runs before it (23:43 and 23:46) don't count:
+    the board was in use during them.
 
 **Next:** the orders panel as a prefab (UI Restructure), then the orders system (Tooling), then the
 periscope. Owner 2026-10-26: "split, take turns". One

@@ -942,6 +942,12 @@ public static class PlaytestRunner
         var ilField = typeof(HangarPanel).GetField("interlock", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var hangarPanel = board.GetComponentInChildren<HangarPanel>(true);
         Func<string> interlockText = () => { var t = ilField.GetValue(hangarPanel) as TMPro.TMP_Text; return t ? t.text : ""; };
+        //     The launch bearing box: typing in it sets the bearing (its links to the panel broke once, unseen)
+        var lbBox = hangarPanel.GetComponentInChildren<TMPro.TMP_InputField>(true);
+        int lb0 = s.hangar.lbrg;
+        lbBox.text = lb0 == 123 ? "124" : "123"; // as a player types it
+        Check("Typing a launch bearing sets it", s.hangar.lbrg == (lb0 == 123 ? 124 : 123), "box \"" + lbBox.text + "\", bearing " + s.hangar.lbrg.ToString("000"));
+        lbBox.text = lb0.ToString("000");
         if (board.Motion && board.Motion.ScopeDown) board.Motion.SetScopeDown(false); // the periscope covers the plot's middle
         //     Power for the catapult: ENG and WEP hold all ten units, so ENG gives its back (we are stopped) and AUX draws.
         if (!Click("drawer", "power", "PWR key")) yield break;
