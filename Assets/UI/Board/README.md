@@ -4,19 +4,20 @@ Each panel of the tactical board is a prefab in `Panels/`. Its art sits in `Art/
 panel's look, open its prefab and swap sprites in the **Art** list on its script. You don't need
 to touch code.
 
-Done so far: the helm and the power, sensors and comms drawers. The other panels are still built into the scene
+Done so far: the helm and the power, sensors, comms and fire control drawers. The other panels are still built into the scene
 (`Assets/Scenes/Tactical/02.1_Grid.unity`, under `Board/HandoffBoard`), and their art is still in
 `Assets/UI2/Claude Design handoff/export/sprites/@2x/`. They move here one at a time.
 
 ## Folders
 
 ```
-Panels/          one prefab per panel (Helm, Power, Sensors, Comms)
-Art/Helm/        art only the helm uses; the same for Art/Power, Art/Sensors and Art/Comms
+Panels/          one prefab per panel (Helm, Power, Sensors, Comms, Fire Control)
+Art/Helm/        art only the helm uses; the same for each panel (Art/Power, Art/Fire Control …)
+Art/Buttons/     push buttons
 Art/Lamps/       indicator lamps and their glow
 Art/Bolts/       round and slotted bolts
 Art/Knobs/       rotary knobs, their pointers and tick marks
-Art/Switches/    rocker switches, up and thrown
+Art/Switches/    rocker switches (up, locked, thrown) and their housings
 Art/Latches/     drawer latches, latch tracks and sliders
 Art/Screens/     screen glass with its bezel
 Art/Plates/      label plates
@@ -61,8 +62,8 @@ Each control's parts sit under one parent, named after the control. For example:
 Order matters: a part lower in the list draws on top. Keep each part's position in the list when
 you edit.
 
-Each group covers the whole board (1920 × 1080, top-left corner) so that the parts keep their
-positions. Don't resize or move a group. Move the parts inside it.
+Each group is the same size as the panel it sits in (for a drawer, the whole board), so the parts
+keep their positions. Don't resize or move a group. Move the parts inside it.
 
 ## Fields that are empty in the prefab
 

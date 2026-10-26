@@ -3900,6 +3900,25 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - **Trap.** Twice, starting the playtest froze Unity on a "save changes?" box while Unity was
     behind another window, even though the scene had just been saved. With Unity in front, it
     started at once. Bring Unity to the front before running the playtest from another program.
+- **Fire control drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Fire Control.prefab`.
+  - `Drawers/State · fire control` became `Drawers/Fire Control`, and `HandoffFireControlPanel`
+    moved onto it.
+  - Parts grouped: `Frame`, `Header` (with `Sight`), `Scope bearing`, `01 Weapon system` (`System
+    selector`, `Mount selector`), `02 Firing solution` (`Track button`, `Range knob`, `Bearing knob`,
+    `Speed knob`), `03 Capacitor` (`Cells`), `04 Arming sequence` (`Housings`, `LOAD`, `ANGLE`,
+    `BEARING`, `ARM`), `Fire lever`. The RAILGUN, PDC and MISSILE labels sit outside the selector's
+    group, so they stay drawn over the mount knob they touch. Screenshots before and after match
+    pixel for pixel.
+  - From this panel on, a group stretches to fill its parent instead of having the board's fixed
+    size. For a drawer that is the same thing; the periscope needs it, because its height animates.
+  - Art list: 19 entries. The four arming rockers' sprites stay as their own fields.
+  - Four lamp glows are empty, as before: the design gives those lamps none.
+  - The playtest found the TRACK lamp by its old name (`lamp#82`) and crashed. It now looks for
+    `Lamp` beside the button, in the `Track button` group.
+  - Playtest 171/171 (run 2026-10-26_223837).
+  - Art moved: 4 files to `Art/Fire Control`; `glass_r3_c` and `screen_r4` to `Art/Screens`,
+    `knob_knurl` to `Art/Knobs`, `rocker_housing` to `Art/Switches`, `button_push` to a new
+    `Art/Buttons`.
 
 **Next:** the fire control (weapons) panel as a prefab (UI Restructure), then the weapons system
 (Tooling), and so on in order: hangar, damage and orders. Owner 2026-10-26: "split, take turns". One

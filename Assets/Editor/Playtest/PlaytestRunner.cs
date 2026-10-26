@@ -456,7 +456,7 @@ public static class PlaytestRunner
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
 
         var track = (RectTransform)Hit("fc.track", null).transform;
-        var trackLamp = (RectTransform)track.parent.Find(FirstChildName(track.parent, "lamp#82 "));
+        var trackLamp = (RectTransform)track.parent.Find("Lamp"); // the TRACK button's group: Button, Plate, Label, Lamp
         float keyY = track.anchoredPosition.y, lampY = trackLamp.anchoredPosition.y;
         if (!Click("fc.track", null, "TRACK (held)", up: false)) yield break;
         Check("TRACK and its lamp drop 1 px while held", Mathf.Approximately(track.anchoredPosition.y, keyY - 1f) && Mathf.Approximately(trackLamp.anchoredPosition.y, lampY - 1f),
