@@ -3916,6 +3916,23 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - The playtest found the TRACK lamp by its old name (`lamp#82`) and crashed. It now looks for
     `Lamp` beside the button, in the `Track button` group.
   - Playtest 171/171 (run 2026-10-26_223837).
+- **Hangar drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Hangar.prefab`. Done before the
+  weapons system, because the owner paused Tooling.
+  - `Drawers/State · hangar` became `Drawers/Hangar`, and `HandoffHangarPanel` moved onto it.
+  - Parts grouped: `Frame`, `Header`, `01 Bay status` (`Doors selector`, `Doors`, `Pressure`,
+    `Catapult`, `Cat charge`), `02 Squadrons` (`Squadron 1`, `Squadron 2`), `03 Launch order`
+    (`Ship selector`, `Bearing`, `Command selector`), `04 Launch sequence` (`Housings`, `CREW` …
+    `CATAPULT`, `Telemetry`), `Launch lever`, `Recall`. Screenshots before and after match pixel
+    for pixel.
+  - The selection bezel moves between the two squadron rows in play. The squadron groups sit after
+    it, so it still draws under both rows, as before.
+  - Art list: 19 entries. The six stage rockers and the RECALL button (with its pressed overlay)
+    stay out, because the code swaps their sprites.
+  - Squadron 2's selection lamp has no glow, as before.
+  - Art moved: 6 files to `Art/Hangar`, the 24 × 32 rockers to `Art/Switches`, `glass_r3` to
+    `Art/Screens`, `round_5` to `Art/Shapes`.
+  - Playtest 171/171 (run 2026-10-26_225037). The two runs before it (22:44:33 and 22:45:40)
+    don't count: another session recompiled and entered play mode during them.
   - Art moved: 4 files to `Art/Fire Control`; `glass_r3_c` and `screen_r4` to `Art/Screens`,
     `knob_knurl` to `Art/Knobs`, `rocker_housing` to `Art/Switches`, `button_push` to a new
     `Art/Buttons`.
