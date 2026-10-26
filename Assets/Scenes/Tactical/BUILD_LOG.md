@@ -4205,8 +4205,32 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
 - **Owner 2026-10-27: no full playtest per change.** Each change gets a quick look in play mode.
   The periscope and the plot were checked that way, then tested together in one full run:
   172/172 (run 2026-10-27_001637).
+- **Frame pieces as prefabs (2026-10-27).** `Frame`, `ToolRail`, `SystemsRail`, `TimeControl`,
+  `Console`, `AlarmStrip` and `SignalBox` are prefabs in `Assets/UI/Board/Panels`. They keep their
+  object names: the board script and the playtest find some of them by name.
+  - They have no panel script. Owner 2026-10-27: each gets a small new script, `UI/ArtList.cs`,
+    that has only the Art list. The list code is shared with the panels (`HandoffPanel.ApplyArt`).
+    The pause key and the four rate keys are not in it: the board script swaps their sprites.
+  - Parts are named after what they are. `Frame`, `TimeControl` and `Console` have groups
+    (`Conduits`, `Corner bolts`, `Stencils`; `Clock`, `Pause`, `Rate keys`; `Power`, `Scale`,
+    `Tint`). The rails have no groups. Each key overlaps the next by 3 px, and its plate and lamp
+    draw later. A group per key would put a plate under the next key. `SignalBox` keeps its
+    readable names, and its ten cells are in `Cells`.
+  - The playtest finds the alarm strip's words as `AlarmStrip/Words` now.
+  - Art moved: each piece's own art to `Art/Frame`, `Art/ToolRail`, `Art/SystemsRail`,
+    `Art/TimeControl`, `Art/Console` and `Art/AlarmStrip`. Art both rails use went to `Art/Rails`
+    (the rail frame), `Art/Buttons`, `Art/Lamps` and `Art/Plates`.
+  - The whole board matches pixel for pixel before and after. A look in play mode: the clock, rate
+    keys, tool rail and periscope all respond. Playtest 191/191 (run 2026-10-27_010011).
+- **Fix: the periscope's convergence bar.** The docs agent found that the script's convergence bar
+  was the part named `Subject/Rule short`. It is now `Convergence/Bar`, with its track
+  `Convergence/Track`. The group that was called `Convergence` is now `Slew readout`: the bearing,
+  the SLEW label and its marker.
+- **New art needs one import setting.** The board's sprites have **sRGB (Color Texture)** off. The
+  board blends in gamma space. The old import tool set this. Tooling deleted that tool with the
+  builder (owner 2026-10-27). Set it off by hand on any new board art.
 
-**Next:** the frame pieces, the shared colour palette and the fonts. Owner 2026-10-26: "split, take turns". One
+**Next:** the shared colour palette and the fonts. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.
 

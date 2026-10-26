@@ -570,7 +570,7 @@ public static class PlaytestRunner
         yield return 0.5f;
 
         // 17. Hearing (Step 44): power SEN, raise the gain, and TRACK 07 comes into hearing range.
-        var alarmWords = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/" + FirstChildName(GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip"), "text#14 ")).GetComponent<TMPro.TMP_Text>();
+        var alarmWords = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
         Check("Nothing heard yet: the alarm strip is quiet", s.sensors.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, s.sensors.newContacts + " new");
         if (!Click("drawer", "power", "PWR key")) yield break;
         yield return 0.8f;

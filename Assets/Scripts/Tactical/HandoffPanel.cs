@@ -50,7 +50,10 @@ public abstract class HandoffPanel : MonoBehaviour
 
 #if UNITY_EDITOR
     // a sprite swapped in the art list goes onto its images
-    private void OnValidate()
+    private void OnValidate() => ApplyArt(art);
+
+    /// <summary>Puts each entry's sprite on its images. The ArtList script uses it too.</summary>
+    public static void ApplyArt(ArtSlot[] art)
     {
         if (art == null) return;
         foreach (var a in art)
