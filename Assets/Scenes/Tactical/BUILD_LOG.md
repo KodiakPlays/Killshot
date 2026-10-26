@@ -3776,6 +3776,9 @@ From `UI_INTEGRATION_LOG.md`, section 10. In order:
      "TCB-1 / REV D" and "ACC 07" are already gone (Step 76).
    - Tune visual range (10,000 km), DRADIS reach (30,000 km at full gain) and weapon reach
      (30,000 km). They are starting numbers.
+   - **Draw a visual range circle on the plot** (owner, 2026-10-26). A ring round our ship at
+     visual range (`visualRangeKm`). Inside it, ships show as their own models. The owner decides
+     how it looks.
    - Bring `docs/scale-sim/scalesim.py` up to date. It still uses the old ranges: weapons
      47,000 km, DRADIS 12,000 + 7,000 per gain step.
    - `TACTICAL_BOARD_SPEC.md` §8, §9 and §11 still give the HTML prototype's numbers (3 s radar

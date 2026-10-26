@@ -57,6 +57,7 @@ without the minus.
 `Board/HandoffBoard`.
 - The helm is `HandoffBoard/Helm`. It has two states. `Closed` is the header strip shown when
   the helm is folded down. `Open` is the whole helm.
+- The orders station is `HandoffBoard/Orders`. Like the helm, it has `Closed` and `Open`.
 - The drawers are under `HandoffBoard/Drawers`. A drawer slides out from behind the metal frame.
   It is switched off until it opens.
 
@@ -83,8 +84,9 @@ Hierarchy, stand-in parts have names that start with `STAND-IN`.
 - **Edit the prefab file.** A change made to the copy on the board stays on that copy only.
 - **Don't move or resize groups.** Every group is the size of the board. Move the parts inside it.
 - **Keep each part in its place in the list.** A part lower in the list draws on top.
-- **Keep `Block · body` as the first part.** It is an invisible image at the top of each drawer
-  and of the helm's `Open`. It stops clicks going through the panel to the plot.
+- **Keep `Block · body` as the first part.** It is an invisible image at the top of each drawer,
+  the helm's `Open`, and the orders station's `Closed` and `Open`. It stops clicks going
+  through the panel to the plot.
 - **Change a listed image's sprite through the Art list only.** If you set it on the image by
   hand, the Art list puts the listed sprite back the next time anything on the script changes.
 - **Don't rename parts or art files.** The playtest finds some of them by name.
@@ -152,6 +154,33 @@ Ask a technical artist first:
   others sideways has no effect.
 - **Colours set by the code:** lamps, the attitude keys, the range keys, the mode rows, the
   stability cells, and the turn and G load text.
+
+### Orders
+
+`Panels/Orders.prefab`. Script: **Orders Panel**, on `Orders`. The orders station sets
+the alert condition and gives damage control orders. Each order needs AUX charge.
+
+In it:
+- `Closed`: the shut station, with its header and the alert selector
+- `Open`: the whole station
+  - `Header`: the title plate, latch track and title
+  - `Alert`: the alert `Selector` (C3, C2, C1), its screen, and the condition and release lines
+  - `AUX pool`: ten charge cells, the room the orders act on, the charge and the feed rate
+  - `Order switches`: `Housings` and six switches, `PARTY`, `SEAL`, `VENT`, `FIRE`, `BLKHD` and
+    `SCRUB`. `FIRE`, `BLKHD` and `SCRUB` are blank plates.
+  - `Body plate` and `Bolts`: the station's body
+- `Header click area`, in `Closed` and `Open`: clicking it opens and shuts the station
+
+Art: `Art/Orders`, plus the folders for each kind. The Art list has 17 entries.
+
+Ask a technical artist first:
+- **Order rockers.** The code swaps the sprites of `PARTY`, `SEAL` and `VENT`: **Rocker Up**,
+  **Rocker Locked** and **Rocker Thrown**. The blank plates don't change.
+- **Alert selectors.** The code turns the pointer in `Closed` and in `Open`: **Stowed** →
+  **Pointer** and **Open** → **Pointer**.
+- **AUX cells.** The code shows as many cells as the charge fills (**Aux Cells**).
+- **Colours set by the code:** the C3, C2 and C1 lamps and labels, the condition and release
+  lines, the charge readout, the order lamps and the note.
 
 ### Power
 
@@ -302,6 +331,7 @@ Ask a technical artist first:
 - **Bars.** The code sizes each bar inside its well: the catapult charge (**Cat Fill**,
   **Cat Well**), the six stage bars (**Stages** → **Fill**, **Well**) and each craft's fuel
   (**Squad Rows** → **Fuel**, **Cells**).
+- **Bearing box.** Its two events call **Hangar Panel**. Keep those links.
 - **Launch lever.** It works like the fire lever: **Lever Slot**, **Lever Cap**, **Lever Fill**,
   **Cap Left Pct**, **Cap Travel Pct**, **Lever Travel Px**, **Slot Margin** and **Cap Margin**.
 - **Colours set by the code:** lamps, labels, the craft tags, bars and readouts.
