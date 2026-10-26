@@ -4,15 +4,15 @@ Each panel of the tactical board is a prefab in `Panels/`. Its art sits in `Art/
 panel's look, open its prefab and swap sprites in the **Art** list on its script. You don't need
 to touch code.
 
-Done so far: the helm and the power and sensors drawers. The other panels are still built into the scene
+Done so far: the helm and the power, sensors and comms drawers. The other panels are still built into the scene
 (`Assets/Scenes/Tactical/02.1_Grid.unity`, under `Board/HandoffBoard`), and their art is still in
 `Assets/UI2/Claude Design handoff/export/sprites/@2x/`. They move here one at a time.
 
 ## Folders
 
 ```
-Panels/          one prefab per panel (Helm, Power, Sensors)
-Art/Helm/        art only the helm uses; the same for Art/Power and Art/Sensors
+Panels/          one prefab per panel (Helm, Power, Sensors, Comms)
+Art/Helm/        art only the helm uses; the same for Art/Power, Art/Sensors and Art/Comms
 Art/Lamps/       indicator lamps and their glow
 Art/Bolts/       round and slotted bolts
 Art/Knobs/       rotary knobs, their pointers and tick marks

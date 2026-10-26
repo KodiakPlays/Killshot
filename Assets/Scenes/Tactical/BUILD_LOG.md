@@ -3860,6 +3860,16 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - `HandoffSensorsPanel` became `UI/Panels/SensorsPanel` (its link kept, so the prefab and the 17
     links on the board's copy still hold).
   - No behaviour change. Playtest 171/171 (run 2026-10-26_081854).
+- **Comms drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Comms.prefab`, the same way.
+  - `Drawers/State · comms` became `Drawers/Comms`, and `HandoffCommsPanel` moved onto it.
+  - Parts grouped: `Frame`, `Header`, `01 Receiver` (`Band selector`, `Scope` with its 56 bars,
+    `Tuned`, `Lock`), `02 Decrypt` (`Message` with its 59 letters, `Key dial 1` … `4`). The bars
+    stay in their own order inside `Scope`, because some draw over the tuning knob. Screenshots
+    before and after match pixel for pixel.
+  - Art list: 20 entries. The lock rocker's sprites stay as their own fields.
+  - Two band-lamp glows are empty, as before: the design gives only the first band lamp a glow.
+  - Art moved: 6 comms-only files to `Art/Comms`, `rocker_30x38_locked` to `Art/Switches`.
+  - Playtest 171/171 (run 2026-10-26_082511).
 
 **Next:** the comms panel as a prefab (UI Restructure), then the comms system (Tooling), and so on
 in order: weapons, hangar, damage and orders. Owner 2026-10-26: "split, take turns". One
