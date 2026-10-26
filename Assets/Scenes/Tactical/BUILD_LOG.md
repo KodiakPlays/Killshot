@@ -4244,7 +4244,72 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
     (**Our ship**).
   - A panel with no palette file set uses the design's own colours.
 
-**Next:** the fonts. Owner 2026-10-26: "split, take turns". One
+### UI restructure — to do, ready to pick up (owner, 2026-10-27)
+
+The owner approved every step below. Do them in this order. Each step: check the board looks the
+same (render the board before and after and compare pixels), look at it in play mode, then one
+full playtest at the end of the batch (owner 2026-10-27: no full playtest per change). Ask the
+other sessions before taking Unity, and before editing scripts they may be editing.
+
+1. **Fonts.** Move the board's fonts into `Assets/UI/Fonts`, one folder per family, with their
+   source files and licences. The font assets add letters as text needs them, so they need their
+   source `.ttf` next to them. Use the Editor (AssetDatabase.MoveAsset) so the links stay.
+   - `Assets/UI/Fonts/BarlowCondensed/`: the three `BarlowCondensed-* SDF.asset` from
+     `Assets/UI2/Generated/Fonts`, and the three `.ttf` and `OFL-BarlowCondensed.txt` from
+     `Assets/UI2/Claude Design handoff/export/fonts`.
+   - `Assets/UI/Fonts/ShareTechMono/`: `ShareTechMono-Regular SDF.asset` and
+     `ShareTechMono-Regular SDF Small.mat` from `UI2/Generated/Fonts`, and the `.ttf` and
+     `OFL-ShareTechMono.txt` from the export's `fonts`.
+   - `Assets/UI/Fonts/NotoSansSymbols2/` already has the `.ttf` and `OFL.txt`. Add
+     `NotoSansSymbols2 SDF.asset` from `UI2/Generated/Fonts`.
+   - Add a **Fonts** list beside the Art list. On `HandoffPanel` (and on `ArtList`): a
+     `FontSlot` class (name, `TMP_FontAsset font`, `Material material`, `TMP_Text[] texts`), a
+     `fonts` field, and `ApplyFonts` called from `OnValidate`. It puts the font and material on
+     each text. A material made for another font is ignored, and the font's own material is used.
+     Fill each panel's and frame piece's list by grouping its texts by font and material.
+2. **Materials.** Move `BoardGammaToLinear.mat` and `BoardLinearImage.mat` from
+   `Assets/UI2/Generated` to `Assets/UI/Board/Materials` (the board's gamma presenter uses them).
+3. **Two frame stencils.** Delete `Frame/Stencils/CL II EQUIP` and `Frame/Stencils/CONSOLE
+   HARNESS` in `Panels/Frame.prefab` (owner 2026-10-26: no use for them).
+4. **The plot's design mock-up.** In `Panels/Plot.prefab`, delete the parts of
+   `Design mock-up (off)` that nothing uses (owner 2026-10-27: "if it's not in use… kick it").
+   - Keep `Passive label template` (the plot copies it) and `SENSOR RANGE label (off)` and
+     `SENSOR RANGE value (off)` (the sensors drawer links to them).
+   - `HandoffBoardMotion` (on the board root) lists some mock-up parts in its `drifts` and
+     `pulses`. Remove those entries first, or the lists point at nothing.
+5. **The old design export.** Move its reference files to `Assets/UI/Board/Design`: `README.md`,
+   `asset-map.csv`, `tokens.json`, `layout/layout.json`, `layout/board-1920x1080.png` (the
+   switched-off `ReferenceOverlay` on the board uses it), `reference/UIStateSpec.md`,
+   `reference/board-logic.js` and `textures/plot-grid.json`. Then delete
+   `Assets/UI2/Claude Design handoff/` (111 small 1x art copies and 4 unused sprites are left in
+   it) and the empty `Assets/UI2/Generated` folders (owner 2026-10-27: approved). Check first that
+   nothing in a scene or prefab points into it.
+6. **Drop "Handoff" from every script name** (owner 2026-10-27: approved, names chosen). Move each
+   file with its `.meta` (git mv keeps the link), then replace the names, whole words only, in
+   every `.cs` file. 37 files change. Do it when no other session is editing scripts.
+   - `HandoffBoardControls` → `BoardManager` (`Scripts/Game/`)
+   - `HandoffBoardState` → `ShipState` (`Scripts/Systems/`)
+   - `HandoffHit` → `ClickSpot`, `HandoffPanel` → `Panel` (`Scripts/UI/`)
+   - `HandoffPlotPanel` → `PlotPanel`, `HandoffPeriscopePanel` → `PeriscopePanel`
+     (`Scripts/UI/Panels/`)
+   - `HandoffBoardMotion` → `BoardMotion`, `HandoffRockers` → `Rockers`, `HandoffPlotGrid` →
+     `PlotGrid`, `HandoffMarksGraphic` → `MarksGraphic`, `HandoffSweepGraphic` → `SweepGraphic`,
+     `HandoffScopeSight` → `ScopeSight`, `HandoffWedge` → `Wedge`, `HandoffPolygon` → `Polygon`,
+     `HandoffEased` → `Eased` (`Scripts/UI/`)
+   - The board's root object `HandoffBoard` becomes `Tactical Board`. Two strings name it: the
+     playtest (`Board/HandoffBoard/SignalBox`, `HandoffBoard/AlarmStrip/Words`) and
+     `GammaBoardPresenter` (`HandoffBoard (gamma)`).
+   - None of the new names is taken. Nothing uses `UnityEngine.UIElements`.
+7. **Docs.** Wait until the Tooling session says its doc agents are done. Then one pass over the
+   docs for the new script names, the new font and design paths, the palette and the fonts lists.
+   The UI guide is `Assets/UI/Board/README.md`; write it in the owner's plain English
+   (`memory/shagun-wants-plain-english.md`).
+8. **Check.** Run a checker agent over the whole restructure: the playtest reports, prefab links,
+   no missing scripts, no file left pointing into `UI2`.
+
+After this: the whole-project folder cleanup, as its own job.
+
+**Next:** the UI restructure to-do above. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.
 
