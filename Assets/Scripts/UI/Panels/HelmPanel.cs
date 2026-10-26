@@ -75,18 +75,16 @@ public class HelmPanel : HandoffPanel
     [Tune("Helm")]
     [SerializeField] private float repeatDelay = 0.5f, repeatInterval = 0.033f;
 
-    [Header("Colours (design sRGB)")]
-    [SerializeField] private Color nominal = new Color32(0x8F, 0xC3, 0x3A, 0xFF);
-    [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
-    [SerializeField] private Color alarm = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
-    [SerializeField] private Color data = new Color32(0xE8, 0xED, 0xF0, 0xFF);
-    [SerializeField] private Color label = new Color32(0xC9, 0xD2, 0xD8, 0xFF);
-    [SerializeField] private Color stencil = new Color32(0x77, 0x82, 0x8A, 0xFF);
-    [SerializeField] private Color stencilDim = new Color32(0x5E, 0x68, 0x70, 0xFF);
-    [SerializeField] private Color inactive = new Color32(0x6E, 0x7B, 0x85, 0xFF);
-    [SerializeField] private Color lampOffPanel = new Color32(0x22, 0x26, 0x2A, 0xFF);
-    [Tooltip("Unlit stability cell — no template value (HANDOFF_GAPS).")]
-    [SerializeField] private Color stabCellOff = new Color32(0x22, 0x26, 0x2A, 0xFF);
+    Color nominal => Palette.nominal;
+    Color caution => Palette.caution;
+    Color alarm => Palette.alarm;
+    Color data => Palette.data;
+    Color label => Palette.label;
+    Color stencil => Palette.stencil;
+    Color stencilDim => Palette.stencilDim;
+    Color inactive => Palette.inactive;
+    Color lampOffPanel => Palette.lampOffPanel;
+    Color stabCellOff => Palette.lampOffPanel;
 
     private int thrPressCap;
     private int heldDir;

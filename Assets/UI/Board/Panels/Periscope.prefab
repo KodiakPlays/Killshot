@@ -5470,6 +5470,7 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 5ecb6ec05a1cc4aa49a4867f727742da, type: 3}
     images:
     - {fileID: 7626423691018222541}
+  palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   mountShort: {fileID: 3530159816268059543}
   aperture: {fileID: 2911259057633267030}
   apertureIdle: {fileID: 21300000, guid: facc156c80d4749a397820a9961162cf, type: 3}
@@ -5517,11 +5518,7 @@ MonoBehaviour:
   classLamp: {fileID: 8558941235845512200}
   slewGlow: {fileID: 4048547237496842716}
   classGlow: {fileID: 8895304890364492266}
-  nominal: {r: 0.56078434, g: 0.7647059, b: 0.22745098, a: 1}
-  caution: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 1}
-  data: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 1}
   railLegend: {r: 0.54901963, g: 0.5921569, b: 0.62352943, a: 1}
-  lampOffPanel: {r: 0.13333334, g: 0.14901961, b: 0.16470589, a: 1}
 --- !u!1 &7323216722794252123
 GameObject:
   m_ObjectHideFlags: 0

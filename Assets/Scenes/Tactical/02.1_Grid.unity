@@ -3931,6 +3931,7 @@ MonoBehaviour:
   motion: {fileID: 1765047285}
   grid: {fileID: 261411404}
   canvas: {fileID: 519620959}
+  palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   tools:
   - CURSOR
   - POINT
@@ -3951,8 +3952,6 @@ MonoBehaviour:
   - {fileID: 955886876}
   selectedFrame: {fileID: 733194666}
   selectedBar: {fileID: 547274101}
-  toolLampOn: {r: 0.7137255, g: 0.9411765, b: 0.2901961, a: 1}
-  toolLampOff: {r: 0.101960786, g: 0.12156863, b: 0.13725491, a: 1}
   systemDrawers:
   - fire control
   - sensors
@@ -3978,10 +3977,6 @@ MonoBehaviour:
   pauseLabel: {fileID: 1679938404}
   pauseLamp: {fileID: 1765595142}
   pauseGlow: {fileID: 1408421100}
-  pauseInkOn: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 1}
-  pauseInkOff: {r: 0.5411765, g: 0.58431375, b: 0.6156863, a: 1}
-  pauseLampOn: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 1}
-  pauseLampOff: {r: 0.36862746, g: 0.40784314, b: 0.4392157, a: 1}
   rates:
   - 0.25
   - 1
@@ -3999,8 +3994,6 @@ MonoBehaviour:
   - {fileID: 656855534}
   rateKeyOn: {fileID: 21300000, guid: 8c51926a3e28843a997d9a76865523ba, type: 3}
   rateKeyOff: {fileID: 21300000, guid: 392239a1b2e4946349733e49f66a4af9, type: 3}
-  rateInkOn: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 1}
-  rateInkOff: {r: 0.5411765, g: 0.58431375, b: 0.6156863, a: 1}
   alarmParts:
   - {fileID: 1035436434}
   - {fileID: 846780307}
@@ -4088,10 +4081,6 @@ MonoBehaviour:
   tintLampAmber: {fileID: 979918471}
   tintLabelWhite: {fileID: 320870370}
   tintLabelAmber: {fileID: 1451855253}
-  tintInkOn: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 1}
-  tintInkOff: {r: 0.46666667, g: 0.50980395, b: 0.5411765, a: 1}
-  tintLampOn: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 1}
-  tintLampOff: {r: 0.105882354, g: 0.1254902, b: 0.14117648, a: 1}
 --- !u!224 &1765047282
 RectTransform:
   m_ObjectHideFlags: 0

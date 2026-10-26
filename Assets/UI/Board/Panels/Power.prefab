@@ -3271,6 +3271,7 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 860863308ca4a4310bb898d1b6ecd011, type: 3}
     images:
     - {fileID: 1442899471526760117}
+  palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   loadLabel: {fileID: 6979248500509763609}
   reactorLabel: {fileID: 1873581997616593891}
   reactorCells:
@@ -3392,14 +3393,6 @@ MonoBehaviour:
           y1: 1.5
           x2: 0.5
           y2: 1
-  nominal: {r: 0.56078434, g: 0.7647059, b: 0.22745098, a: 1}
-  caution: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 1}
-  alarm: {r: 0.8784314, g: 0.29411766, b: 0.23529412, a: 1}
-  label: {r: 0.7882353, g: 0.8235294, b: 0.84705883, a: 1}
-  lampOffPanel: {r: 0.13333334, g: 0.14901961, b: 0.16470589, a: 1}
-  coreUnlit: {r: 0.16470589, g: 0.18431373, b: 0.20392157, a: 1}
-  busCellLit: {r: 1, g: 1, b: 1, a: 1}
-  busCellEmpty: {r: 0.05490196, g: 0.07450981, b: 0.08627451, a: 1}
 --- !u!1 &1667724268461582238
 GameObject:
   m_ObjectHideFlags: 0

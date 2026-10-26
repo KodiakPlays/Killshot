@@ -60,21 +60,19 @@ public class FireControlPanel : HandoffPanel
     [SerializeField] private RectTransform leverSlot, leverCap, leverFill;
     [SerializeField] private float capLeftPct = 2f, capTravelPct = 72f, leverTravelPx = 210f, slotMargin = 4f, capMargin = 12f;
 
-    [Header("Colours (design sRGB)")]
-    [SerializeField] private Color nominal = new Color32(0x8F, 0xC3, 0x3A, 0xFF);
-    [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
-    [SerializeField] private Color alarm = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
-    [SerializeField] private Color data = new Color32(0xE8, 0xED, 0xF0, 0xFF);
-    [SerializeField] private Color label = new Color32(0xC9, 0xD2, 0xD8, 0xFF);
-    [SerializeField] private Color stencil = new Color32(0x77, 0x82, 0x8A, 0xFF);
-    [SerializeField] private Color wellStencil = new Color32(0x5B, 0x66, 0x6F, 0xFF);
-    [SerializeField] private Color stencilDim = new Color32(0x5E, 0x68, 0x70, 0xFF);
-    [SerializeField] private Color lampOffPanel = new Color32(0x22, 0x26, 0x2A, 0xFF);
-    [SerializeField] private Color lampOffSelector = new Color32(0x1B, 0x20, 0x24, 0xFF);
-    [SerializeField] private Color cautionHot = new Color32(0xFF, 0xC4, 0x4D, 0xFF);
-    [Tooltip("tokens.json 'white': lit data-bar cells (no measured lit capacitor cell — HANDOFF_GAPS).")]
-    [SerializeField] private Color cellLit = Color.white;
-    [SerializeField] private Color cellUnlit = new Color32(0x0E, 0x13, 0x16, 0xFF);
+    Color nominal => Palette.nominal;
+    Color caution => Palette.caution;
+    Color alarm => Palette.alarm;
+    Color data => Palette.data;
+    Color label => Palette.label;
+    Color stencil => Palette.stencil;
+    Color wellStencil => Palette.wellStencil;
+    Color stencilDim => Palette.stencilDim;
+    Color lampOffPanel => Palette.lampOffPanel;
+    Color lampOffSelector => Palette.lampOffSelector;
+    Color cautionHot => Palette.cautionHot;
+    Color cellLit => Palette.cellLit;
+    Color cellUnlit => Palette.cellUnlit;
 
     private float knobX0, leverX0, leverV0;
     private bool leverHeld, shotThisPull, trackHeld;

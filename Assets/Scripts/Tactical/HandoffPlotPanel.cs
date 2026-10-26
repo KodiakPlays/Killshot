@@ -35,9 +35,7 @@ public class HandoffPlotPanel : HandoffPanel
            + "and never above the maximum (owner 2026-10-17).")]
     [Tune("Plot & our ship")]
     [SerializeField] private float ownShipMinPx = 30f, ownShipMaxPx = 120f;
-    [Tune("Plot & our ship")]
-    [Tooltip("Our ship's line colour on the plot (owner 2026-10-18: white; the design's ink.data #E8EDF0).")]
-    [SerializeField] private Color ownShipColor = new Color(0xE8 / 255f, 0xED / 255f, 0xF0 / 255f, 1f);
+    Color ownShipColor => Palette.ownShip;
     private ShipView shipView;
 
     [Header("Sensor circle (Step 42): what DRADIS can hear, around our ship")]
@@ -87,8 +85,7 @@ public class HandoffPlotPanel : HandoffPanel
     [Tooltip("Owner 2026-10-26 (Step 75): a contact in sight (visualRangeKm) shows as its own 3D model seen from above, in "
            + "place of its dot (a ShipView camera on the contact's model): red identified, amber unknown, grey a wreck.")]
     [SerializeField] private RawImage contactShipImage;
-    [Tooltip("A wreck in sight (Step 75): the design's ink.secondary.")]
-    [SerializeField] private Color wreckInk = new Color32(0x8A, 0x95, 0x9D, 0xFF);
+    Color wreckInk => Palette.secondary;
     private ShipView[] shipViews;
     /// <summary>A contact's ship picture is on the plot (the playtest reads it).</summary>
     public bool ContactShipShown => contactShipImage && contactShipImage.enabled;
@@ -168,11 +165,10 @@ public class HandoffPlotPanel : HandoffPanel
     /// <summary>Fighters drawn now (the playtest reads it).</summary>
     public int FightersShown { get; private set; }
 
-    [Header("Colours (design sRGB)")]
-    [SerializeField] private Color ownForce = new Color32(0x4A, 0x9F, 0xD8, 0xFF);
-    [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
-    [SerializeField] private Color alarm = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
-    [SerializeField] private Color data = new Color32(0xE8, 0xED, 0xF0, 0xFF);
+    Color ownForce => Palette.ownForce;
+    Color caution => Palette.caution;
+    Color alarm => Palette.alarm;
+    Color data => Palette.data;
     [Tooltip("sweepEdge on the amber grid: rgb(255,150,130).")]
     [SerializeField] private Color sweepInkAmber = new Color32(0xFF, 0x96, 0x82, 0xFF);
 

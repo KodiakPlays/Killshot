@@ -8843,6 +8843,7 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 860863308ca4a4310bb898d1b6ecd011, type: 3}
     images:
     - {fileID: 7275598628623109278}
+  palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   dradis:
     rocker: {fileID: 2297623517716248452}
     lamp: {fileID: 1976755413035835547}
@@ -8969,16 +8970,6 @@ MonoBehaviour:
     klass: {fileID: 6434375511225373431}
     dot: {fileID: 4624295256204374559}
     dotGlow: {fileID: 3462402619034352143}
-  nominal: {r: 0.56078434, g: 0.7647059, b: 0.22745098, a: 1}
-  caution: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 1}
-  alarm: {r: 0.8784314, g: 0.29411766, b: 0.23529412, a: 1}
-  label: {r: 0.7882353, g: 0.8235294, b: 0.84705883, a: 1}
-  stencil: {r: 0.46666667, g: 0.50980395, b: 0.5411765, a: 1}
-  stencilDim: {r: 0.36862746, g: 0.40784314, b: 0.4392157, a: 1}
-  phosphor: {r: 0.7137255, g: 0.9411765, b: 0.2901961, a: 1}
-  phosphorOff: {r: 0.105882354, g: 0.15686275, b: 0.0627451, a: 1}
-  lampOffPanel: {r: 0.13333334, g: 0.14901961, b: 0.16470589, a: 1}
-  cellUnlit: {r: 0.05490196, g: 0.07450981, b: 0.08627451, a: 1}
   bandRowOn: {r: 0.56078434, g: 0.7647059, b: 0.22745098, a: 0.15}
   contactRowLit: {r: 0.56078434, g: 0.7647059, b: 0.22745098, a: 0.07}
   blinkSeconds: 1.1

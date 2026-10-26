@@ -20,6 +20,11 @@ public abstract class HandoffPanel : MonoBehaviour
     [Tooltip("This panel's art. Swap a sprite here and every image listed under it changes.")]
     [SerializeField] private ArtSlot[] art;
 
+    [Tooltip("The board's colours: Assets/UI/Board/Palette.asset. Every panel uses the same file.")]
+    [SerializeField] private BoardPalette palette;
+    /// <summary>The board's colours. Without a palette file, the design's own colours.</summary>
+    protected BoardPalette Palette => BoardPalette.Or(palette);
+
     protected HandoffBoardControls Controls { get; private set; }
     protected HandoffBoardState State => Controls.State;
 

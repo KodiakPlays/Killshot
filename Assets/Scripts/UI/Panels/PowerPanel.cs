@@ -39,17 +39,14 @@ public class PowerPanel : HandoffPanel
     [Header("Bus columns — ENG, WEP, SEN, AUX")]
     [SerializeField] private BusColumn[] columns;
 
-    [Header("Colours (design sRGB)")]
-    [SerializeField] private Color nominal = new Color32(0x8F, 0xC3, 0x3A, 0xFF);
-    [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
-    [SerializeField] private Color alarm = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
-    [SerializeField] private Color label = new Color32(0xC9, 0xD2, 0xD8, 0xFF);
-    [SerializeField] private Color lampOffPanel = new Color32(0x22, 0x26, 0x2A, 0xFF);
-    [SerializeField] private Color coreUnlit = new Color32(0x2A, 0x2F, 0x34, 0xFF);
-    [Tooltip("tokens.json 'white': lit data-bar cells. The package has no measured lit bus cell (see HANDOFF_GAPS).")]
-    [SerializeField] private Color busCellLit = Color.white;
-    [Tooltip("The empty cell as measured in layout.json (sprite.latch.01).")]
-    [SerializeField] private Color busCellEmpty = new Color32(0x0E, 0x13, 0x16, 0xFF);
+    Color nominal => Palette.nominal;
+    Color caution => Palette.caution;
+    Color alarm => Palette.alarm;
+    Color label => Palette.label;
+    Color lampOffPanel => Palette.lampOffPanel;
+    Color coreUnlit => Palette.coreUnlit;
+    Color busCellLit => Palette.cellLit;
+    Color busCellEmpty => Palette.cellUnlit;
 
     public override bool Click(string action, string arg)
     {

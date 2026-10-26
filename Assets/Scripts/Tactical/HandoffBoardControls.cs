@@ -105,6 +105,8 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private HandoffBoardMotion motion;
     [SerializeField] private HandoffPlotGrid grid;
     [SerializeField] private Canvas canvas;
+    [Tooltip("The board's colours: Assets/UI/Board/Palette.asset. The panels use the same file.")]
+    [SerializeField] private BoardPalette palette;
 
     [Header("Tool rail — TOOLS, UIStateSpec §8.4")]
     [SerializeField] private string[] tools = { "CURSOR", "POINT", "RULER", "COMPASS", "ERASE" };
@@ -112,8 +114,8 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private Image[] toolLamps;
     [SerializeField] private RectTransform selectedFrame;
     [SerializeField] private RectTransform selectedBar;
-    [SerializeField] private Color toolLampOn = new Color32(0xB6, 0xF0, 0x4A, 0xFF);
-    [SerializeField] private Color toolLampOff = new Color32(0x1A, 0x1F, 0x23, 0xFF);
+    Color toolLampOn => BoardPalette.Or(palette).phosphor;
+    Color toolLampOff => BoardPalette.Or(palette).ringUnlit;
 
     [Header("Systems rail — one key per drawer, lamp lit while it is out")]
     [SerializeField] private string[] systemDrawers = { "fire control", "sensors", "power", "hangar", "engineering", "comms" };
@@ -131,13 +133,16 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private Sprite pauseKeyRun, pauseKeyPaused;
     [SerializeField] private TMP_Text pauseLabel;
     [SerializeField] private Image pauseLamp, pauseGlow;
-    [SerializeField] private Color pauseInkOn = new Color32(0xE0, 0xA0, 0x20, 0xFF), pauseInkOff = new Color32(0x8A, 0x95, 0x9D, 0xFF);
-    [SerializeField] private Color pauseLampOn = new Color32(0xE0, 0xA0, 0x20, 0xFF), pauseLampOff = new Color32(0x5E, 0x68, 0x70, 0xFF);
+    Color pauseInkOn => BoardPalette.Or(palette).caution;
+    Color pauseInkOff => BoardPalette.Or(palette).secondary;
+    Color pauseLampOn => BoardPalette.Or(palette).caution;
+    Color pauseLampOff => BoardPalette.Or(palette).stencilDim;
     [SerializeField] private float[] rates = { 0.25f, 1f, 5f, 10f };
     [SerializeField] private Image[] rateKeys;
     [SerializeField] private TMP_Text[] rateLabels;
     [SerializeField] private Sprite rateKeyOn, rateKeyOff;
-    [SerializeField] private Color rateInkOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), rateInkOff = new Color32(0x8A, 0x95, 0x9D, 0xFF);
+    Color rateInkOn => BoardPalette.Or(palette).data;
+    Color rateInkOff => BoardPalette.Or(palette).secondary;
 
     [Header("Alarm strip — new contacts since the last acknowledgement (Step 44)")]
     [SerializeField] private GameObject[] alarmParts;
@@ -179,8 +184,10 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private Dial tintDial;
     [SerializeField] private Image tintLampWhite, tintLampAmber;
     [SerializeField] private TMP_Text tintLabelWhite, tintLabelAmber;
-    [SerializeField] private Color tintInkOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), tintInkOff = new Color32(0x77, 0x82, 0x8A, 0xFF);
-    [SerializeField] private Color tintLampOn = new Color32(0xE8, 0xED, 0xF0, 0xFF), tintLampOff = new Color32(0x1B, 0x20, 0x24, 0xFF);
+    Color tintInkOn => BoardPalette.Or(palette).data;
+    Color tintInkOff => BoardPalette.Or(palette).stencil;
+    Color tintLampOn => BoardPalette.Or(palette).data;
+    Color tintLampOff => BoardPalette.Or(palette).lampOffSelector;
 
     // Other objects can read State in their own Awake, before ours runs, so it hands our ship its systems first.
     public HandoffBoardState State { get { if (state.nav == null) UseSystems(); return state; } }

@@ -73,18 +73,16 @@ public class SensorsPanel : HandoffPanel
     [SerializeField] private TMP_Text bogeyCount;
     [SerializeField] private ContactRow[] rows;
 
-    [Header("Colours (design sRGB)")]
-    [SerializeField] private Color nominal = new Color32(0x8F, 0xC3, 0x3A, 0xFF);
-    [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
-    [SerializeField] private Color alarm = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
-    [SerializeField] private Color label = new Color32(0xC9, 0xD2, 0xD8, 0xFF);
-    [SerializeField] private Color stencil = new Color32(0x77, 0x82, 0x8A, 0xFF);
-    [SerializeField] private Color stencilDim = new Color32(0x5E, 0x68, 0x70, 0xFF);
-    [SerializeField] private Color phosphor = new Color32(0xB6, 0xF0, 0x4A, 0xFF);
-    [SerializeField] private Color phosphorOff = new Color32(0x1B, 0x28, 0x10, 0xFF);
-    [SerializeField] private Color lampOffPanel = new Color32(0x22, 0x26, 0x2A, 0xFF);
-    [Tooltip("Unlit E-SIG cell, as measured (sprite.latch.01).")]
-    [SerializeField] private Color cellUnlit = new Color32(0x0E, 0x13, 0x16, 0xFF);
+    Color nominal => Palette.nominal;
+    Color caution => Palette.caution;
+    Color alarm => Palette.alarm;
+    Color label => Palette.label;
+    Color stencil => Palette.stencil;
+    Color stencilDim => Palette.stencilDim;
+    Color phosphor => Palette.phosphor;
+    Color phosphorOff => Palette.phosphorOff;
+    Color lampOffPanel => Palette.lampOffPanel;
+    Color cellUnlit => Palette.cellUnlit;
     [SerializeField] private Color bandRowOn = new Color(143 / 255f, 195 / 255f, 58 / 255f, 0.15f);
     [SerializeField] private Color contactRowLit = new Color(143 / 255f, 195 / 255f, 58 / 255f, 0.07f);
     [Tooltip("bd-blink on the emissions lamp while tracked: period and dim alpha (§9.2 line 675).")]

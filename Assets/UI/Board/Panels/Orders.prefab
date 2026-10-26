@@ -3626,6 +3626,7 @@ MonoBehaviour:
     - {fileID: 4200200901112086202}
     - {fileID: 6131396097531418542}
     - {fileID: 6650088517226235791}
+  palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   stowed:
     pointer:
       pointer: {fileID: 8301714640162582023}
@@ -3735,17 +3736,6 @@ MonoBehaviour:
   rockerUp: {fileID: 21300000, guid: 605c950367b4d49d8835fb33d4760f39, type: 3}
   rockerLocked: {fileID: 21300000, guid: cddf6085f685c49ceb72e81285188a19, type: 3}
   rockerThrown: {fileID: 21300000, guid: 0174769e6afec47b3a6add00e8f6c516, type: 3}
-  nominal: {r: 0.56078434, g: 0.7647059, b: 0.22745098, a: 1}
-  caution: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 1}
-  alarm: {r: 0.8784314, g: 0.29411766, b: 0.23529412, a: 1}
-  data: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 1}
-  label: {r: 0.7882353, g: 0.8235294, b: 0.84705883, a: 1}
-  stencil: {r: 0.46666667, g: 0.50980395, b: 0.5411765, a: 1}
-  stencilDim: {r: 0.36862746, g: 0.40784314, b: 0.4392157, a: 1}
-  phosphor: {r: 0.7137255, g: 0.9411765, b: 0.2901961, a: 1}
-  noteInk: {r: 0.5764706, g: 0.61960787, b: 0.6509804, a: 1}
-  lampOffSelector: {r: 0.105882354, g: 0.1254902, b: 0.14117648, a: 1}
-  lampOffPanel: {r: 0.13333334, g: 0.14901961, b: 0.16470589, a: 1}
 --- !u!1 &3119553128406269766
 GameObject:
   m_ObjectHideFlags: 0

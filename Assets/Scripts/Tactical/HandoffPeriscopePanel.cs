@@ -39,12 +39,11 @@ public class HandoffPeriscopePanel : HandoffPanel
     [SerializeField] private Image slewLamp, classLamp;
     [SerializeField] private Graphic slewGlow, classGlow;
 
-    [Header("Colours (design sRGB)")]
-    [SerializeField] private Color nominal = new Color32(0x8F, 0xC3, 0x3A, 0xFF);
-    [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
-    [SerializeField] private Color data = new Color32(0xE8, 0xED, 0xF0, 0xFF);
+    Color nominal => Palette.nominal;
+    Color caution => Palette.caution;
+    Color data => Palette.data;
     [SerializeField] private Color railLegend = new Color32(0x8C, 0x97, 0x9F, 0xFF);
-    [SerializeField] private Color lampOffPanel = new Color32(0x22, 0x26, 0x2A, 0xFF);
+    Color lampOffPanel => Palette.lampOffPanel;
 
     private double slewBrg0, slewX0, magZ0, magX0;
     private float[] bracketX;

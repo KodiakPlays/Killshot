@@ -6013,6 +6013,7 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 8d75e854ba9dd4e639ee84805a998178, type: 3}
     images:
     - {fileID: 1101328494384087217}
+  palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   capture: {fileID: 6456487586159712752}
   marks: {fileID: 6964172141166405100}
   labelTemplate: {fileID: 8280778689010012937}
@@ -6022,7 +6023,6 @@ MonoBehaviour:
   ownShipPxAtFullZoom: 76
   ownShipMinPx: 30
   ownShipMaxPx: 120
-  ownShipColor: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 1}
   sensorRing: {fileID: 2144010668163942632}
   sensorRingMotion:
     seconds: 0.5
@@ -6048,7 +6048,6 @@ MonoBehaviour:
   contactMarks: {fileID: 5058668370962062356}
   contactLabelTemplate: {fileID: 3845959635087170199}
   contactShipImage: {fileID: 594920036611219167}
-  wreckInk: {r: 0.5411765, g: 0.58431375, b: 0.6156863, a: 1}
   contactLabelOffset: {x: 10, y: 0}
   passiveVisibility: 1
   plotCentre: {x: 960, y: 545}
@@ -6074,10 +6073,6 @@ MonoBehaviour:
   fighterTemplate: {fileID: 7922429107365735552}
   fighterPx: 16
   fighterGapPx: 10
-  ownForce: {r: 0.2901961, g: 0.62352943, b: 0.84705883, a: 1}
-  caution: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 1}
-  alarm: {r: 0.8784314, g: 0.29411766, b: 0.23529412, a: 1}
-  data: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 1}
   sweepInkAmber: {r: 1, g: 0.5882353, b: 0.50980395, a: 1}
 --- !u!1 &8297638115275552424
 GameObject:

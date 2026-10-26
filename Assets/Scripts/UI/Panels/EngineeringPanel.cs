@@ -57,21 +57,20 @@ public class EngineeringPanel : HandoffPanel
     [Tune("Engineering & orders")] [SerializeField] private float diagramShipPx = 190f;
     [Tooltip("The ship's length as a share of each picture (they were saved at 0.8, like the plot's ship view).")]
     [SerializeField] private float pictureFill = 0.8f;
-    [Tooltip("Our ship's line colour while a side's armour is full (the plot's: ink.data).")]
-    [SerializeField] private Color shipInk = new Color32(0xE8, 0xED, 0xF0, 0xFF);
+    Color shipInk => Palette.data;
 
-    [SerializeField] private Color nominal = new Color32(0x8F, 0xC3, 0x3A, 0xFF);
-    [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
-    [SerializeField] private Color alarm = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
-    [SerializeField] private Color data = new Color32(0xE8, 0xED, 0xF0, 0xFF);
-    [SerializeField] private Color secondary = new Color32(0x8A, 0x95, 0x9D, 0xFF);
-    [SerializeField] private Color label = new Color32(0xC9, 0xD2, 0xD8, 0xFF);
-    [SerializeField] private Color stencil = new Color32(0x77, 0x82, 0x8A, 0xFF);
-    [SerializeField] private Color wellStencil = new Color32(0x5B, 0x66, 0x6F, 0xFF);
-    [SerializeField] private Color ownForce = new Color32(0x4A, 0x9F, 0xD8, 0xFF);
-    [SerializeField] private Color stencilDim = new Color32(0x5E, 0x68, 0x70, 0xFF);
-    [SerializeField] private Color lampOffPanel = new Color32(0x22, 0x26, 0x2A, 0xFF);
-    [SerializeField] private Color ringUnlit = new Color32(0x1A, 0x1F, 0x23, 0xFF);
+    Color nominal => Palette.nominal;
+    Color caution => Palette.caution;
+    Color alarm => Palette.alarm;
+    Color data => Palette.data;
+    Color secondary => Palette.secondary;
+    Color label => Palette.label;
+    Color stencil => Palette.stencil;
+    Color wellStencil => Palette.wellStencil;
+    Color ownForce => Palette.ownForce;
+    Color stencilDim => Palette.stencilDim;
+    Color lampOffPanel => Palette.lampOffPanel;
+    Color ringUnlit => Palette.ringUnlit;
 
     public override bool Click(string action, string arg)
     {

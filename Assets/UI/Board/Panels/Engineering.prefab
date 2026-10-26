@@ -5356,6 +5356,7 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 860863308ca4a4310bb898d1b6ecd011, type: 3}
     images:
     - {fileID: 6748421865834607746}
+  palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   rows:
   - key: mag
     cell: {fileID: 8160635177075838135}
@@ -5524,19 +5525,6 @@ MonoBehaviour:
   - {fileID: 1440990419383447034}
   diagramShipPx: 190
   pictureFill: 0.8
-  shipInk: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 1}
-  nominal: {r: 0.56078434, g: 0.7647059, b: 0.22745098, a: 1}
-  caution: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 1}
-  alarm: {r: 0.8784314, g: 0.29411766, b: 0.23529412, a: 1}
-  data: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 1}
-  secondary: {r: 0.5411765, g: 0.58431375, b: 0.6156863, a: 1}
-  label: {r: 0.7882353, g: 0.8235294, b: 0.84705883, a: 1}
-  stencil: {r: 0.46666667, g: 0.50980395, b: 0.5411765, a: 1}
-  wellStencil: {r: 0.35686275, g: 0.4, b: 0.43529412, a: 1}
-  ownForce: {r: 0.2901961, g: 0.62352943, b: 0.84705883, a: 1}
-  stencilDim: {r: 0.36862746, g: 0.40784314, b: 0.4392157, a: 1}
-  lampOffPanel: {r: 0.13333334, g: 0.14901961, b: 0.16470589, a: 1}
-  ringUnlit: {r: 0.101960786, g: 0.12156863, b: 0.13725491, a: 1}
 --- !u!1 &2520779047934244040
 GameObject:
   m_ObjectHideFlags: 0

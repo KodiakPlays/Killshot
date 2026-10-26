@@ -4229,8 +4229,22 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
 - **New art needs one import setting.** The board's sprites have **sRGB (Color Texture)** off. The
   board blends in gamma space. The old import tool set this. Tooling deleted that tool with the
   builder (owner 2026-10-27). Set it off by hand on any new board art.
+- **The shared colour palette (2026-10-27).** The board's colours are in one file:
+  `Assets/UI/Board/Palette.asset` (script `UI/BoardPalette.cs`). It has 23 colours, each with a
+  note on what it is for: green for working, amber for caution, red for alarm, the text greys, the
+  unlit lamps and cells, and white for our ship, fighters and slugs.
+  - Every panel and the board script read their colours from it. Change a colour in the file, and
+    every panel that uses it changes. A test in play mode turned the green to magenta: the power
+    readout, the core lamps, the helm's STEADY and lamp and the orders condition all changed at once.
+  - Before the change, all 106 colour values on the board matched the palette. Nothing was lost.
+  - Playtest 191/191 (run 2026-10-27_010831).
+  - Five colours belong to one panel each and stay on it: the plot's axis numbers and amber sweep,
+    the sensors' band and contact row tints, and the periscope's rail legend.
+  - Our ship's colour on the plot was in the Tuning window's Board tab. It is in the palette now
+    (**Our ship**).
+  - A panel with no palette file set uses the design's own colours.
 
-**Next:** the shared colour palette and the fonts. Owner 2026-10-26: "split, take turns". One
+**Next:** the fonts. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.
 

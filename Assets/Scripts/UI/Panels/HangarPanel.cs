@@ -69,17 +69,16 @@ public class HangarPanel : HandoffPanel
     [Tune("Motion")] [SerializeField] private HandoffEased recallPress = new HandoffEased(0.1f, CssEase.Ease);
     [SerializeField] private Image recallOverlay;
 
-    [Header("Colours (design sRGB)")]
-    [SerializeField] private Color nominal = new Color32(0x8F, 0xC3, 0x3A, 0xFF);
-    [SerializeField] private Color caution = new Color32(0xE0, 0xA0, 0x20, 0xFF);
-    [SerializeField] private Color alarm = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
-    [SerializeField] private Color ownForce = new Color32(0x4A, 0x9F, 0xD8, 0xFF);
-    [SerializeField] private Color data = new Color32(0xE8, 0xED, 0xF0, 0xFF);
-    [SerializeField] private Color label = new Color32(0xC9, 0xD2, 0xD8, 0xFF);
-    [SerializeField] private Color stencil = new Color32(0x77, 0x82, 0x8A, 0xFF);
-    [SerializeField] private Color wellStencil = new Color32(0x5B, 0x66, 0x6F, 0xFF);
-    [SerializeField] private Color lampOffPanel = new Color32(0x22, 0x26, 0x2A, 0xFF);
-    [SerializeField] private Color lampOffSelector = new Color32(0x1B, 0x20, 0x24, 0xFF);
+    Color nominal => Palette.nominal;
+    Color caution => Palette.caution;
+    Color alarm => Palette.alarm;
+    Color ownForce => Palette.ownForce;
+    Color data => Palette.data;
+    Color label => Palette.label;
+    Color stencil => Palette.stencil;
+    Color wellStencil => Palette.wellStencil;
+    Color lampOffPanel => Palette.lampOffPanel;
+    Color lampOffSelector => Palette.lampOffSelector;
 
     private float leverX0, leverV0;
     private bool leverHeld, launchedThisPull, recallHeld;
