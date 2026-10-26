@@ -71,7 +71,7 @@ public class PowerPanel : HandoffPanel
         if (reactorLabel) reactorLabel.text = left + " OF " + cap + " UNITS AVAILABLE";
         for (int i = 0; i < reactorCells.Length; i++) Show(reactorCells[i], left >= i + 1);
 
-        int health = s.CompHealth("rct");
+        int health = s.damage.CompHealth("rct");
         Color healthInk = health >= 4 ? nominal : health >= 2 ? caution : alarm;
         for (int i = 0; i < coreCells.Length; i++)
         {

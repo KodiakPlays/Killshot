@@ -128,7 +128,7 @@ public class WeaponSystem : MonoBehaviour
 
     public Solution Sol => sol[SysIndex];
     public float ShotCost => Sys != null ? Sys.shot : 50f;
-    public bool WepReady => ship.power.BusUnits("wep") >= 2 && ship.MagOk && ship.WeaponsReleased;
+    public bool WepReady => ship.power.BusUnits("wep") >= 2 && ship.damage.MagOk && ship.WeaponsReleased;
     public string TrackIdFor()
     {
         var t = ship.TrackOf(target);
@@ -192,7 +192,7 @@ public class WeaponSystem : MonoBehaviour
     public void ComputeSol()
     {
         var t = ship.TrackOf(target);
-        if (t == null || !ship.sensors.identified.Contains(t.key) || !ship.BriOk) return;
+        if (t == null || !ship.sensors.identified.Contains(t.key) || !ship.damage.BriOk) return;
         int rel = ((t.bearing - ship.nav.heading + 540) % 360) - 180;
         // Step 52: an active lock knows its true course and speed, and where it is now, so TRACK's shot is led
         sol[SysIndex] = new Solution { set = true, rangeKm = t.rangeKm, brg = rel, spd = t.speed,
@@ -384,7 +384,7 @@ public class WeaponSystem : MonoBehaviour
                 // Step 49: the struck ship takes the hit on its own model (its side, then what is behind it)
                 string side = SideStruck(struck, r);
                 var victim = ship.ShipOf != null ? ship.ShipOf(struck.key) : null;
-                string damage = victim == null ? "" : r.missile ? victim.TakeWarhead(side, warheads[r.warhead]) : victim.TakeSlug(side);
+                string damage = victim == null ? "" : r.missile ? victim.damage.TakeWarhead(side, warheads[r.warhead]) : victim.damage.TakeSlug(side);
                 if (victim != null && victim.destroyed) ship.Kill(struck);
                 else { shotReport = "HIT · " + ship.NameOf(struck) + (ship.Scanned(struck) ? " · " + side + damage : ""); lastShotHit = true; shotResults++; } // Step 61: detail once scanned
                 list.RemoveAt(i);
@@ -458,7 +458,7 @@ public class WeaponSystem : MonoBehaviour
             if (cx * cx + cy * cy <= ownHitRadiusKm * ownHitRadiusKm)
             {
                 string side = HandoffBoardState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, ship.nav.heading);
-                incomingReport = "MISSILE HIT · " + side + ship.TakeWarhead(side, warheads[r.warhead]);
+                incomingReport = "MISSILE HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead]);
                 hitsTaken++;
                 list.RemoveAt(i);
                 continue;

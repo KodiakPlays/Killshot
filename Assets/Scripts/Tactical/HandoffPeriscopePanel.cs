@@ -176,9 +176,9 @@ public class HandoffPeriscopePanel : HandoffPanel
         var parts = new string[4];
         for (int i = 0; i < 4; i++)
         {
-            float a = ship.SideArmour[i];
-            var room = ship.Comp(HandoffBoardState.RoomBehind(i));
-            parts[i] = a > 0f ? FaceNames[i] + " " + HandoffBoardState.JsRound(a / ship.sideArmourMax[i] * 100f)
+            float a = ship.damage.SideArmour[i];
+            var room = ship.damage.Comp(DamageSystem.RoomBehind(i));
+            parts[i] = a > 0f ? FaceNames[i] + " " + HandoffBoardState.JsRound(a / ship.damage.sideArmourMax[i] * 100f)
                               : FaceNames[i] + " ▸ " + (room != null ? room.tag + " " + room.integ : "OPEN");
         }
         return string.Join(" · ", parts);

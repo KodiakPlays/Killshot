@@ -924,7 +924,7 @@ public static class HandoffBoardBuilder
     {
         const string E = "State · engineering";
         var group = (RectTransform)root.Find(E);
-        var p = root.gameObject.AddComponent<HandoffEngineeringPanel>();
+        var p = root.gameObject.AddComponent<EngineeringPanel>();
         var so = new SerializedObject(p);
         string[] keys = { "mag", "bri", "hab", "hgr", "rct", "eng" };
         int[] rings = { 237, 239, 241, 243, 246, 248 };

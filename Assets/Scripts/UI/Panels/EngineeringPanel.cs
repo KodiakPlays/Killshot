@@ -9,7 +9,7 @@ using TMPro;
 /// tick; renderVals compartments, hazardLine/Ink, degradedLine/Ink, partyLine/Ink, compName,
 /// compAngle, compLamp, engNote/Ink, engSwitches) and UIStateSpec §11 "Engineering".
 /// </summary>
-public class HandoffEngineeringPanel : HandoffPanel
+public class EngineeringPanel : HandoffPanel
 {
     [System.Serializable]
     public class Row
@@ -78,9 +78,9 @@ public class HandoffEngineeringPanel : HandoffPanel
         var s = State;
         switch (action)
         {
-            case "eng.cycle": s.CycleComp(); return true;
-            case "eng.pick": s.PickComp(arg); return true;
-            case "eng.run": s.EngRun(arg, Time.unscaledTime); return true;
+            case "eng.cycle": s.damage.CycleComp(); return true;
+            case "eng.pick": s.damage.PickComp(arg); return true;
+            case "eng.run": s.damage.EngRun(arg, Time.unscaledTime); return true;
         }
         return false;
     }
@@ -99,13 +99,13 @@ public class HandoffEngineeringPanel : HandoffPanel
         // compartment screen and schematic
         foreach (var r in rows)
         {
-            var c = s.Comp(r.key);
+            var c = s.damage.Comp(r.key);
             if (c == null) continue;
-            bool on = r.key == s.engSel;
+            bool on = r.key == s.damage.engSel;
             Fill(r.cell, data, on ? 0.16f : 0.05f);
             Fill(r.rowBg, data, on ? 0.07f : 0f);
             // Step 74: lit segments white whole (4–5), amber hurt (2–3), red nearly gone (0–1)
-            int health = s.CompHealth(r.key);
+            int health = s.damage.CompHealth(r.key);
             Color ringLit = health >= 4 ? data : health >= 2 ? caution : alarm;
             for (int i = 0; i < r.ring.Length; i++)
             {
@@ -124,7 +124,7 @@ public class HandoffEngineeringPanel : HandoffPanel
         // hazardLine
         int hazards = 0, complement = 0;
         bool losing = false;
-        foreach (var c in s.compartments)
+        foreach (var c in s.damage.compartments)
         {
             if (!string.IsNullOrEmpty(c.cond) || c.vented) hazards++;
             if (!string.IsNullOrEmpty(c.cond)) losing = true;
@@ -139,9 +139,9 @@ public class HandoffEngineeringPanel : HandoffPanel
         // degradedLine
         var parts = new System.Collections.Generic.List<string>();
         if (s.power.ReactorCap < s.power.reactorUnits) parts.Add("RCT ▸ CORE " + s.power.ReactorCap + " OF " + s.power.reactorUnits);
-        if (!s.HgrOk) parts.Add("HGR ▸ FLIGHT OPS DOWN");
-        if (!s.MagOk) parts.Add("MAG ▸ NO ORDNANCE");
-        if (s.CompHealth("eng") < 5) parts.Add("ENG ▸ THRUST " + HandoffBoardState.JsRound(s.EngFactor * 100f) + "%");
+        if (!s.damage.HgrOk) parts.Add("HGR ▸ FLIGHT OPS DOWN");
+        if (!s.damage.MagOk) parts.Add("MAG ▸ NO ORDNANCE");
+        if (s.damage.CompHealth("eng") < 5) parts.Add("ENG ▸ THRUST " + HandoffBoardState.JsRound(s.damage.EngFactor * 100f) + "%");
         if (degradedLine)
         {
             degradedLine.text = Html(parts.Count > 0 ? string.Join("   ", parts.ToArray()) : "ALL SYSTEMS NOMINAL");
@@ -151,9 +151,9 @@ public class HandoffEngineeringPanel : HandoffPanel
         // partyLine
         if (partyLine)
         {
-            var pc = s.PartyOut ? s.Comp(s.partyComp) : null;
-            partyLine.text = Html(s.PartyOut ? "DC PARTY ▸ " + (pc != null ? pc.name : s.partyComp) + "   " + Mathf.FloorToInt(s.partyT) + " OF " + Mathf.RoundToInt(s.partySeconds) : "DC PARTY ▸ STANDBY"); // game seconds (Step 57)
-            Paint(partyLine, s.PartyOut ? ownForce : wellStencil);
+            var pc = s.damage.PartyOut ? s.damage.Comp(s.damage.partyComp) : null;
+            partyLine.text = Html(s.damage.PartyOut ? "DC PARTY ▸ " + (pc != null ? pc.name : s.damage.partyComp) + "   " + Mathf.FloorToInt(s.damage.partyT) + " OF " + Mathf.RoundToInt(s.damage.partySeconds) : "DC PARTY ▸ STANDBY"); // game seconds (Step 57)
+            Paint(partyLine, s.damage.PartyOut ? ownForce : wellStencil);
         }
 
         // status row: party line at its real width on the right; degraded line gets what is left
@@ -171,11 +171,11 @@ public class HandoffEngineeringPanel : HandoffPanel
         }
 
         // ACTING ON: compAngle = 40 + index x 100 / (count - 1)
-        int idx = s.CompIndex(s.engSel), n = s.compartments.Length;
+        int idx = s.damage.CompIndex(s.damage.engSel), n = s.damage.compartments.Length;
         actingOn.Set(40f + idx * (100f / Mathf.Max(1, n - 1)));
-        var sel = s.Comp(s.engSel);
+        var sel = s.damage.Comp(s.damage.engSel);
         if (compName && sel != null) compName.text = sel.name;
-        int h = s.CompHealth(s.engSel);
+        int h = s.damage.CompHealth(s.damage.engSel);
         Color hInk = h >= 4 ? nominal : h >= 2 ? caution : alarm;
         Paint(compLamp, hInk); Paint(compGlow, hInk);
 
@@ -185,7 +185,7 @@ public class HandoffEngineeringPanel : HandoffPanel
         foreach (var r in repairs)
         {
             bool thrown = s.dcThrown.Contains("eng_" + r.id);
-            string block = r.fitted ? s.EngBlock(r.id) : "NOT FITTED";
+            string block = r.fitted ? s.damage.EngBlock(r.id) : "NOT FITTED";
             bool isOpen = r.fitted && block == null;
             if (r.fitted) { if (isOpen) open.Add(Label(r.id)); else if (firstBlock == null) firstBlock = block; }
             if (r.rocker && r.fitted) r.rocker.sprite = thrown ? r.thrown : isOpen ? r.up : r.locked;
@@ -208,14 +208,14 @@ public class HandoffEngineeringPanel : HandoffPanel
     void ShowDiagram(HandoffBoardState s)
     {
         if (hullSides == null) return;
-        var armour = s.SideArmour;
+        var armour = s.damage.SideArmour;
         float side = diagramShipPx / pictureFill;
         for (int i = 0; i < hullSides.Length && i < armour.Length; i++)
         {
             var pic = hullSides[i];
             if (!pic) continue;
             pic.rectTransform.sizeDelta = new Vector2(side, side);
-            Paint(pic, armour[i] >= s.sideArmourMax[i] ? shipInk : armour[i] > 0f ? caution : alarm);
+            Paint(pic, armour[i] >= s.damage.sideArmourMax[i] ? shipInk : armour[i] > 0f ? caution : alarm);
         }
     }
 }

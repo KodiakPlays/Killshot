@@ -84,7 +84,7 @@ public class NavSystem : MonoBehaviour
     /// <summary>Ordered heading minus heading, -180..179.</summary>
     public int TurnLeft => ((orderedHeading - heading + 540) % 360) - 180;
 
-    double EngineRoom => ship.CompHealth("eng") / 5.0;
+    double EngineRoom => ship.damage.CompHealth("eng") / 5.0;
     /// <summary>Degrees the bow swings per game second now (the design's per-tick swing at x1).</summary>
     double TurnPerS => System.Math.Max(1, HandoffBoardState.JsRound(turnRate * EngineRoom));
     /// <summary>thrCap: ENG units x 20 x the engine room's integrity.</summary>

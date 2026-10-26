@@ -98,6 +98,8 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private WeaponSystem weapons;
     [Tooltip("Our ship's hangar (the HangarSystem on OwnShip): squadrons, launches, fighters and assault boats.")]
     [SerializeField] private HangarSystem hangar;
+    [Tooltip("Our ship's damage model (the DamageSystem on OwnShip): compartments, hull, conditions, crew and damage control.")]
+    [SerializeField] private DamageSystem damage;
     [SerializeField] private HandoffBoardMotion motion;
     [SerializeField] private HandoffPlotGrid grid;
     [SerializeField] private Canvas canvas;
@@ -180,7 +182,7 @@ public class HandoffBoardControls : MonoBehaviour
 
     // Other objects can read State in their own Awake, before ours runs, so it hands our ship its systems first.
     public HandoffBoardState State { get { if (state.nav == null) UseSystems(); return state; } }
-    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); state.UseComms(comms); state.UseWeapons(weapons); state.UseHangar(hangar); }
+    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); state.UseComms(comms); state.UseWeapons(weapons); state.UseHangar(hangar); state.UseDamage(damage); }
     /// <summary>Raised once per board tick, after the board's own rules and before the panels
     /// redraw. The tactical world steps here, inside the board's single timer (Step 34).</summary>
     public event System.Action Ticked;
@@ -217,6 +219,7 @@ public class HandoffBoardControls : MonoBehaviour
         if (!comms) Debug.LogError("[HandoffBoardControls] our ship's CommsSystem is not set");
         if (!weapons) Debug.LogError("[HandoffBoardControls] our ship's WeaponSystem is not set");
         if (!hangar) Debug.LogError("[HandoffBoardControls] our ship's HangarSystem is not set");
+        if (!damage) Debug.LogError("[HandoffBoardControls] our ship's DamageSystem is not set");
         UseSystems();
     }
 
@@ -280,8 +283,8 @@ public class HandoffBoardControls : MonoBehaviour
                 state.weapons.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
                 state.hangar.TickFlights(rate); // Step 54: fighters fly, attack, come home
                 state.weapons.TickIncoming(rate); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
-                state.TickParty(rate);
-                state.TickConditions(rate); // Step 59: fire, vacuum and radiation burn, kill and spread
+                state.damage.TickParty(rate);
+                state.damage.TickConditions(rate); // Step 59: fire, vacuum and radiation burn, kill and spread
                 state.hangar.TickLaunch(rate);
                 state.weapons.TickCharge(rate);
                 state.sensors.Tick(rate);

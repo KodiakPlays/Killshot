@@ -180,7 +180,7 @@ public class HangarSystem : MonoBehaviour
             if (enemy == null) continue;
             string side = SideFrom(t, f.x, f.y), result = "";
             for (int c = 0; c < f.craft && !enemy.destroyed; c++)
-                result = enemy.TakeFighterRun(side, f.order == "disable", fighterArmourDamage, fighterCompartmentDamage);
+                result = enemy.damage.TakeFighterRun(side, f.order == "disable", fighterArmourDamage, fighterCompartmentDamage);
             flightRuns++;
             flightReport = result;
             if (enemy.destroyed && !t.wreck) ship.Kill(t);
@@ -194,24 +194,24 @@ public class HangarSystem : MonoBehaviour
         if (!f.aboard)
         {
             bool open = false;
-            foreach (var a in enemy.SideArmour) if (a <= 0f) open = true;
+            foreach (var a in enemy.damage.SideArmour) if (a <= 0f) open = true;
             f.holding = !open ? "NO OPEN SIDE" : t.speed > boardMaxSpeedKms ? "TARGET UNDER WAY" : null;
             if (f.holding != null) return;
             f.aboard = true; f.boardT = 0;
         }
         f.boardT += (float)dt;
         if (f.boardT < boardSeconds) return;
-        int defenders = Mathf.CeilToInt(enemy.TotalCrew * defenderShare);
+        int defenders = Mathf.CeilToInt(enemy.damage.TotalCrew * defenderShare);
         bool won = f.marines > 0 && (defenders == 0 || ship.Roll(f.marines / (double)(f.marines + defenders)));
         if (won)
         {
-            enemy.KillCrew(defenders);
+            enemy.damage.KillCrew(defenders);
             f.marines = Mathf.Max(0, f.marines - Mathf.RoundToInt(defenders * marineLossPerDefender));
-            if (f.order == "destroy") { enemy.Comp("rct").integ = 0; enemy.destroyed = true; ship.Kill(t); f.outcome = ship.NameOf(t) + " SCUTTLED"; }
-            else if (f.order == "disable") { enemy.Comp("eng").integ = 0; enemy.Comp("mag").integ = 0; f.outcome = ship.NameOf(t) + " DISABLED"; }
+            if (f.order == "destroy") { enemy.damage.Comp("rct").integ = 0; enemy.destroyed = true; ship.Kill(t); f.outcome = ship.NameOf(t) + " SCUTTLED"; }
+            else if (f.order == "disable") { enemy.damage.Comp("eng").integ = 0; enemy.damage.Comp("mag").integ = 0; f.outcome = ship.NameOf(t) + " DISABLED"; }
             else { enemy.captured = true; t.captured = true; t.hostile = false; f.outcome = ship.NameOf(t) + " SECURED"; }
         }
-        else { enemy.KillCrew(f.marines / 2); f.marines = 0; f.outcome = "BOARDING REPELLED"; }
+        else { enemy.damage.KillCrew(f.marines / 2); f.marines = 0; f.outcome = "BOARDING REPELLED"; }
         flightReport = f.outcome;
         boardings++;
         f.aboard = false;
@@ -230,8 +230,8 @@ public class HangarSystem : MonoBehaviour
     public string StageBlock(string id)
     {
         if (id == "crew" && !ship.FlightOpsReleased) return "FLIGHT OPS NOT RELEASED \u2014 HELD AT DC-1 ALERT CONDITION 3";
-        if (id == "fuel" && !ship.HgrOk) return "HANGAR BAY DAMAGED \u2014 FUEL LINES DOWN";
-        if (id == "ord" && !ship.MagOk) return "MAGAZINE HIT \u2014 NO ORDNANCE";
+        if (id == "fuel" && !ship.damage.HgrOk) return "HANGAR BAY DAMAGED \u2014 FUEL LINES DOWN";
+        if (id == "ord" && !ship.damage.MagOk) return "MAGAZINE HIT \u2014 NO ORDNANCE";
         if (id == "doors" && !doorsOpen) return "BAY DOOR MASTER SHUT";
         if (id == "cat" && ship.power.BusUnits("aux") < 1) return "NO AUX UNITS \u2014 CATAPULT WILL NOT CHARGE";
         return null;
@@ -243,7 +243,7 @@ public class HangarSystem : MonoBehaviour
         if (q == null) return "NO SQUADRON SELECTED";
         if (Launched(q)) return null;
         if (!ship.FlightOpsReleased) return "FLIGHT OPS NOT RELEASED \u2014 HELD AT DC-1 ALERT CONDITION 3";
-        if (!ship.HgrOk) return "HANGAR BAY DAMAGED \u2014 CANNOT SPOT CRAFT";
+        if (!ship.damage.HgrOk) return "HANGAR BAY DAMAGED \u2014 CANNOT SPOT CRAFT";
         if (SquadReady(q) == 0) return "NO CRAFT READY";
         if (q.key == "ih" && marines < 1) return "NO MARINES ABOARD"; // Step 60
         if (LaunchDev > launchConeDeg) return "BEARING OUTSIDE LAUNCH CONE";

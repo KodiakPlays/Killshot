@@ -3803,9 +3803,9 @@ Found by the doc check after Step 66. Fix each with the owner.
 
 ### Board refactor (owner, 2026-10-25). In progress (paused and restarted by the owner, 2026-10-26)
 
-**Where it stands (2026-10-26).** Navigation, power, sensors, comms, weapons and hangar are moved
-into systems. The helm, power, sensors, comms, fire control and hangar drawers are prefabs. Next: the
-engineering prefab (UI Restructure), then the damage system (Tooling), then orders, then the
+**Where it stands (2026-10-26).** Navigation, power, sensors, comms, weapons, hangar and damage are
+moved into systems. The helm, power, sensors, comms, fire control, hangar and engineering drawers are
+prefabs. Next: the orders prefab (UI Restructure), then the orders system (Tooling), then the
 periscope.
 
 Replaces the 2026-10-24 "clean-up once the game is working" list.
@@ -4008,9 +4008,25 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - Art moved: the casting and the REBOOT rocker sprites to `Art/Engineering`; the 22 × 30 rockers,
     the blank rocker and `rocker_housing_r3` to `Art/Switches`; `plate_dark` to `Art/Plates`.
   - Playtest 171/171 (run 2026-10-26_232931).
+- **Damage (2026-10-26).** Damage is in `Systems/DamageSystem.cs`: the six compartments (integrity,
+  crew, air, fire and radiation), the armour on each side, what a slug, a warhead or a fighter run does,
+  fire, vacuum and radiation spreading, the crew, and damage control (the selected compartment, the
+  repair orders and the team out).
+  - `OwnShip` and `Garuda · Cruiser` each carry a DamageSystem, with the board's numbers.
+    `HandoffBoardControls.damage` points at ours, and every ship state reaches its own through
+    `.damage`. The Garuda still takes our damage numbers each tick (`CopyDamageTuning`, now from our
+    DamageSystem to its own).
+  - Stays on the ship state: whether it is `destroyed` or `captured`, its EMP clock (`empUntil`, which
+    power reads), and its dice (`Roll`, `NextDie`), so every roll falls as before. The orders station,
+    the alert condition and the rockers that flick back stay too, for the orders step; the orders
+    station's repairs call `damage.EngBlock` and `damage.ApplyOrder`.
+  - `HandoffEngineeringPanel` became `UI/Panels/EngineeringPanel` (its link kept, so the prefab still
+    holds it).
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_233713, after the owner cleared a Unity save
+    box that held it).
 
-**Next:** the engineering panel as a prefab (UI Restructure), then the damage system (Tooling), then
-orders, then the periscope. Owner 2026-10-26: "split, take turns". One
+**Next:** the orders panel as a prefab (UI Restructure), then the orders system (Tooling), then the
+periscope. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.
 

@@ -14651,6 +14651,7 @@ GameObject:
   - component: {fileID: 765287334}
   - component: {fileID: 765287335}
   - component: {fileID: 765287336}
+  - component: {fileID: 765287337}
   m_Layer: 0
   m_Name: "Garuda \xB7 Cruiser"
   m_TagString: Untagged
@@ -15115,6 +15116,104 @@ MonoBehaviour:
   boardSeconds: 60
   defenderShare: 0.25
   marineLossPerDefender: 0.5
+--- !u!114 &765287337
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765287326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 954f199f3ef674d42a16233b1a8ed177, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageSystem
+  compartments:
+  - key: mag
+    tag: MAG
+    name: MAGAZINE
+    integ: 5
+    crew: 4
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: bri
+    tag: BRI
+    name: BRIDGE
+    integ: 5
+    crew: 9
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: hab
+    tag: HAB
+    name: HABITATION
+    integ: 5
+    crew: 18
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: hgr
+    tag: HGR
+    name: HANGAR BAY
+    integ: 5
+    crew: 7
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: rct
+    tag: RCT
+    name: REACTOR
+    integ: 5
+    crew: 6
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: eng
+    tag: ENG
+    name: ENGINE ROOM
+    integ: 5
+    crew: 8
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  engSel: rct
+  partySeconds: 6
+  partyComp: 
+  partyT: -1
+  sideArmourMax:
+  - 100
+  - 100
+  - 50
+  - 100
+  slugArmourDamage: 50
+  slugCompartmentDamage: 2
+  fireChanceHE: 0.6
+  fireChancePEN: 0.4
+  breachChanceSlug: 0.5
+  radChanceReactor: 0.5
+  fireDamageSeconds: 30
+  fireSpreadPerSecond: 0.01
+  vacuumSpreadPerSecond: 0.01
+  radSpreadPerSecond: 0.01
+  breachCrewLoss: 0.5
+  radCrewLossSeconds: 20
+  reactorContainedAt: 3
+  radFadeSeconds: 90
+  heArmourDamage: 100
+  empSeconds: 60
 --- !u!1 &768103246
 GameObject:
   m_ObjectHideFlags: 0
@@ -17805,6 +17904,7 @@ GameObject:
   - component: {fileID: 891763126}
   - component: {fileID: 891763127}
   - component: {fileID: 891763128}
+  - component: {fileID: 891763129}
   m_Layer: 0
   m_Name: OwnShip
   m_TagString: Untagged
@@ -18234,6 +18334,104 @@ MonoBehaviour:
   boardSeconds: 60
   defenderShare: 0.25
   marineLossPerDefender: 0.5
+--- !u!114 &891763129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891763121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 954f199f3ef674d42a16233b1a8ed177, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageSystem
+  compartments:
+  - key: mag
+    tag: MAG
+    name: MAGAZINE
+    integ: 5
+    crew: 4
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: bri
+    tag: BRI
+    name: BRIDGE
+    integ: 5
+    crew: 9
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: hab
+    tag: HAB
+    name: HABITATION
+    integ: 5
+    crew: 18
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: hgr
+    tag: HGR
+    name: HANGAR BAY
+    integ: 5
+    crew: 7
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: rct
+    tag: RCT
+    name: REACTOR
+    integ: 5
+    crew: 6
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: eng
+    tag: ENG
+    name: ENGINE ROOM
+    integ: 5
+    crew: 8
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  engSel: rct
+  partySeconds: 6
+  partyComp: 
+  partyT: -1
+  sideArmourMax:
+  - 100
+  - 100
+  - 50
+  - 100
+  slugArmourDamage: 50
+  slugCompartmentDamage: 2
+  fireChanceHE: 0.6
+  fireChancePEN: 0.4
+  breachChanceSlug: 0.5
+  radChanceReactor: 0.5
+  fireDamageSeconds: 30
+  fireSpreadPerSecond: 0.01
+  vacuumSpreadPerSecond: 0.01
+  radSpreadPerSecond: 0.01
+  breachCrewLoss: 0.5
+  radCrewLossSeconds: 20
+  reactorContainedAt: 3
+  radFadeSeconds: 90
+  heArmourDamage: 100
+  empSeconds: 60
 --- !u!1 &896206256
 GameObject:
   m_ObjectHideFlags: 0
@@ -35908,67 +36106,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandoffBoardControls
   state:
-    compartments:
-    - key: mag
-      tag: MAG
-      name: MAGAZINE
-      integ: 5
-      crew: 4
-      vented: 0
-      cond: 
-      fire: 0
-      rad: 0
-      doorsShut: 0
-    - key: bri
-      tag: BRI
-      name: BRIDGE
-      integ: 5
-      crew: 9
-      vented: 0
-      cond: 
-      fire: 0
-      rad: 0
-      doorsShut: 0
-    - key: hab
-      tag: HAB
-      name: HABITATION
-      integ: 5
-      crew: 18
-      vented: 0
-      cond: 
-      fire: 0
-      rad: 0
-      doorsShut: 0
-    - key: hgr
-      tag: HGR
-      name: HANGAR BAY
-      integ: 5
-      crew: 7
-      vented: 0
-      cond: 
-      fire: 0
-      rad: 0
-      doorsShut: 0
-    - key: rct
-      tag: RCT
-      name: REACTOR
-      integ: 5
-      crew: 6
-      vented: 0
-      cond: 
-      fire: 0
-      rad: 0
-      doorsShut: 0
-    - key: eng
-      tag: ENG
-      name: ENGINE ROOM
-      integ: 5
-      crew: 8
-      vented: 0
-      cond: 
-      fire: 0
-      rad: 0
-      doorsShut: 0
     tracks:
     - key: t07
       name: GARUDA
@@ -36027,11 +36164,7 @@ MonoBehaviour:
       - EM
     classified:
     - bc1
-    engSel: rct
     alert: 0
-    partySeconds: 6
-    partyComp: 
-    partyT: -1
     flickBackSeconds: 0.4
     dcThrown: []
     auxCharge: 0
@@ -36056,33 +36189,13 @@ MonoBehaviour:
     marks: []
     markSeq: 0
     markMinLen: 4
-    sideArmourMax:
-    - 100
-    - 100
-    - 50
-    - 100
-    slugArmourDamage: 50
-    slugCompartmentDamage: 2
-    fireChanceHE: 0.6
-    fireChancePEN: 0.4
-    breachChanceSlug: 0.5
-    radChanceReactor: 0.5
-    fireDamageSeconds: 30
-    fireSpreadPerSecond: 0.01
-    vacuumSpreadPerSecond: 0.01
-    radSpreadPerSecond: 0.01
-    breachCrewLoss: 0.5
-    radCrewLossSeconds: 20
-    reactorContainedAt: 3
-    radFadeSeconds: 90
-    heArmourDamage: 100
-    empSeconds: 60
   nav: {fileID: 891763123}
   power: {fileID: 891763124}
   sensors: {fileID: 891763125}
   comms: {fileID: 891763126}
   weapons: {fileID: 891763127}
   hangar: {fileID: 891763128}
+  damage: {fileID: 891763129}
   motion: {fileID: 1765047285}
   grid: {fileID: 261411404}
   canvas: {fileID: 519620959}

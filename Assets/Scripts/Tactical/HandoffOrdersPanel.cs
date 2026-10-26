@@ -94,7 +94,7 @@ public class HandoffOrdersPanel : HandoffPanel
         }
 
         // AUX order pool
-        var sel = s.Comp(s.engSel);
+        var sel = s.damage.Comp(s.damage.engSel);
         if (actingOn && sel != null) actingOn.text = sel.name;
         int aux = s.power.BusUnits("aux");
         if (auxPct)

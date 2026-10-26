@@ -39,13 +39,13 @@ public class EnemyBrain : MonoBehaviour
     {
         // hit since the last tick: its armour or a compartment went down
         float now = 0f;
-        foreach (var a in ship.SideArmour) now += a;
-        foreach (var c in ship.compartments) now += c.integ;
+        foreach (var a in ship.damage.SideArmour) now += a;
+        foreach (var c in ship.damage.compartments) now += c.integ;
         bool hit = health >= 0f && now < health;
         health = now;
         double dx = us.nav.x - ship.nav.x, dy = us.nav.y - ship.nav.y;
         var vls = ship.weapons.MountOf("VLS");
-        if (firesBack && hit && ship.MagOk && ship.missionNow >= nextSalvo && ship.weapons.vlsCells > 0 && vls != null && dx * dx + dy * dy <= (double)vls.rangeKm * vls.rangeKm)
+        if (firesBack && hit && ship.damage.MagOk && ship.missionNow >= nextSalvo && ship.weapons.vlsCells > 0 && vls != null && dx * dx + dy * dy <= (double)vls.rangeKm * vls.rangeKm)
         {
             int n = Mathf.Min(fireBackSalvo, ship.weapons.vlsCells);
             us.weapons.LaunchAt(ship.nav.x, ship.nav.y, n, 0, vls.rangeKm); // HE

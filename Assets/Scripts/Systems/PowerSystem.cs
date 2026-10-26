@@ -48,7 +48,7 @@ public class PowerSystem : MonoBehaviour
     [System.NonSerialized] private double bank;
 
     /// <summary>reactorCap: reactor damage caps the units, floored at 2.</summary>
-    public int ReactorCap => Mathf.Max(2, HandoffBoardState.JsRound(ship.CompHealth("rct") / 5f * reactorUnits));
+    public int ReactorCap => Mathf.Max(2, HandoffBoardState.JsRound(ship.damage.CompHealth("rct") / 5f * reactorUnits));
 
     public int TotalFill
     {
