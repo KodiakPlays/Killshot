@@ -12,9 +12,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Tactical/01_Briefing.unity
     guid: 326d3f3159fcb4965bebcf61495595c6
   - enabled: 1
-    path: Assets/Scenes/Tactical/02_Grid.unity
-    guid: 7590f86ac5cb446509ffb65be8bb2360
-  - enabled: 1
     path: Assets/Scenes/Tactical/02.1_Grid.unity
     guid: db225074494dd4259bc8aab05e48399e
   - enabled: 1
