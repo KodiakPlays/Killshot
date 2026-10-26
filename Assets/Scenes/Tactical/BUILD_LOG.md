@@ -4034,19 +4034,19 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - Parts are grouped: `Bolts`, `Header`, `Alert` (with `Selector`), and in `Open` also `AUX pool`
     (with `Cells`) and `Order switches` (`Housings`, `PARTY`, `SEAL`, `VENT`, `FIRE`, `BLKHD`,
     `SCRUB`). Screenshots before and after match pixel for pixel, closed and open.
-  - Art list: 17 entries. The three live order rockers stay out. Their sprites are the panel's
-    **Rocker Up**, **Rocker Locked** and **Rocker Thrown** fields.
+  - Art list: 17 entries. The three working order rockers are not in it. Their sprites are the
+    panel's **Rocker Up**, **Rocker Locked** and **Rocker Thrown** fields.
   - Art moved: the two body plates and `latch_track_orders` to `Art/Orders`.
 - **Fix: the hangar's launch bearing box (2026-10-26).** Moving the hangar script onto `Hangar`
-  broke the box's two links to it, so typing a bearing did nothing. The docs agent and the checker
+  broke the box's two links to it. Typing a bearing did nothing. The docs agent and the checker
   agent both found this. The links point at `HangarPanel` again, in the prefab and on the board's
   copy. The playtest has a new check: it types a bearing into the box and reads it back. No other
   panel had links like these.
   - Playtest 172/172 (run 2026-10-26_234914). The two runs before it (23:43 and 23:46) don't count:
     the board was in use during them.
 
-**Next:** the orders panel as a prefab (UI Restructure), then the orders system (Tooling), then the
-periscope. Owner 2026-10-26: "split, take turns". One
+**Next:** the orders system (Tooling), then the periscope as a prefab (UI Restructure), then the plot,
+the frame pieces, the shared colour palette and the fonts. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.
 
