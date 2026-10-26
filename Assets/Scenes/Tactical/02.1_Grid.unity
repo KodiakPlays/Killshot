@@ -33731,6 +33731,7 @@ GameObject:
   - component: {fileID: 765287331}
   - component: {fileID: 765287332}
   - component: {fileID: 765287333}
+  - component: {fileID: 765287334}
   m_Layer: 0
   m_Name: "Garuda \xB7 Cruiser"
   m_TagString: Untagged
@@ -33895,6 +33896,28 @@ MonoBehaviour:
   identified:
   - bc1
   bearingTrailSeconds: 120
+--- !u!114 &765287334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 765287326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85cef530539a44ed6853f0eac83fb5d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CommsSystem
+  chan: 1
+  freq: 34
+  locked: 0
+  dials: 00000000000000000000000000000000
+  activeDial: -1
+  signalChan: 2
+  signalFreq: 72.2
+  lockWindow: 0.3
+  cipherKey: 160000000e0000000b00000005000000
+  message: HOSTILE FLEET INBOUND VECTOR TWO SEVEN NINE HOLD STATION AWAIT RELIEF
 --- !u!1 &765774873
 GameObject:
   m_ObjectHideFlags: 0
@@ -38714,6 +38737,7 @@ GameObject:
   - component: {fileID: 891763123}
   - component: {fileID: 891763124}
   - component: {fileID: 891763125}
+  - component: {fileID: 891763126}
   m_Layer: 0
   m_Name: OwnShip
   m_TagString: Untagged
@@ -38843,6 +38867,28 @@ MonoBehaviour:
   identified:
   - bc1
   bearingTrailSeconds: 120
+--- !u!114 &891763126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 891763121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85cef530539a44ed6853f0eac83fb5d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CommsSystem
+  chan: 1
+  freq: 34
+  locked: 0
+  dials: 00000000000000000000000000000000
+  activeDial: -1
+  signalChan: 2
+  signalFreq: 72.2
+  lockWindow: 0.3
+  cipherKey: 160000000e0000000b00000005000000
+  message: HOSTILE FLEET INBOUND VECTOR TWO SEVEN NINE HOLD STATION AWAIT RELIEF
 --- !u!1 &896206256
 GameObject:
   m_ObjectHideFlags: 0
@@ -77344,16 +77390,6 @@ MonoBehaviour:
       - EM
     classified:
     - bc1
-    chan: 1
-    freq: 34
-    locked: 0
-    dials: 00000000000000000000000000000000
-    activeDial: -1
-    signalChan: 2
-    signalFreq: 72.2
-    lockWindow: 0.3
-    cipherKey: 160000000e0000000b00000005000000
-    message: HOSTILE FLEET INBOUND VECTOR TWO SEVEN NINE HOLD STATION AWAIT RELIEF
     engSel: rct
     alert: 0
     partySeconds: 6
@@ -77661,6 +77697,7 @@ MonoBehaviour:
   nav: {fileID: 891763123}
   power: {fileID: 891763124}
   sensors: {fileID: 891763125}
+  comms: {fileID: 891763126}
   motion: {fileID: 1765047285}
   grid: {fileID: 261411404}
   canvas: {fileID: 519620959}

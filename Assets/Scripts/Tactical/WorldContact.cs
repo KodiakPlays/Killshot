@@ -3,9 +3,10 @@ using UnityEngine;
 /// <summary>
 /// Step 34. A contact in the tactical world: where it is (this transform, in km) and which board
 /// track it drives (HandoffBoardState.tracks, by key). TacticalWorld reads it once per board tick.
-/// Its NavSystem, on the same object, moves it; its PowerSystem powers it; its SensorSystem hears and scans.
+/// Its NavSystem, on the same object, moves it; its PowerSystem powers it; its SensorSystem hears and scans; its CommsSystem listens.
 /// </summary>
 [RequireComponent(typeof(NavSystem), typeof(PowerSystem), typeof(SensorSystem))]
+[RequireComponent(typeof(CommsSystem))]
 public class WorldContact : MonoBehaviour
 {
     [Tooltip("The board track this contact drives, e.g. t07 (GARUDA).")]
@@ -17,7 +18,7 @@ public class WorldContact : MonoBehaviour
     {
         get
         {
-            if (ship == null) { ship = new HandoffBoardState(); ship.UseNav(GetComponent<NavSystem>()); ship.UsePower(GetComponent<PowerSystem>()); ship.UseSensors(GetComponent<SensorSystem>()); }
+            if (ship == null) { ship = new HandoffBoardState(); ship.UseNav(GetComponent<NavSystem>()); ship.UsePower(GetComponent<PowerSystem>()); ship.UseSensors(GetComponent<SensorSystem>()); ship.UseComms(GetComponent<CommsSystem>()); }
             return ship;
         }
     }

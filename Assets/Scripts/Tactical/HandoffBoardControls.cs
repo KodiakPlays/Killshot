@@ -92,6 +92,8 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private PowerSystem power;
     [Tooltip("Our ship's sensors (the SensorSystem on OwnShip): DRADIS, active scan, its signal, what it has identified.")]
     [SerializeField] private SensorSystem sensors;
+    [Tooltip("Our ship's comms (the CommsSystem on OwnShip): its radio, the carrier lock and the cipher dials.")]
+    [SerializeField] private CommsSystem comms;
     [SerializeField] private HandoffBoardMotion motion;
     [SerializeField] private HandoffPlotGrid grid;
     [SerializeField] private Canvas canvas;
@@ -174,7 +176,7 @@ public class HandoffBoardControls : MonoBehaviour
 
     // Other objects can read State in their own Awake, before ours runs, so it hands our ship its systems first.
     public HandoffBoardState State { get { if (state.nav == null) UseSystems(); return state; } }
-    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); }
+    void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); state.UseComms(comms); }
     /// <summary>Raised once per board tick, after the board's own rules and before the panels
     /// redraw. The tactical world steps here, inside the board's single timer (Step 34).</summary>
     public event System.Action Ticked;
@@ -208,6 +210,7 @@ public class HandoffBoardControls : MonoBehaviour
         if (!nav) Debug.LogError("[HandoffBoardControls] our ship's NavSystem is not set");
         if (!power) Debug.LogError("[HandoffBoardControls] our ship's PowerSystem is not set");
         if (!sensors) Debug.LogError("[HandoffBoardControls] our ship's SensorSystem is not set");
+        if (!comms) Debug.LogError("[HandoffBoardControls] our ship's CommsSystem is not set");
         UseSystems();
     }
 

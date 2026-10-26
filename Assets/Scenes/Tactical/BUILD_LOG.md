@@ -12,7 +12,13 @@ Last updated: 2026-10-26. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 
 ## 1 · Where we are
 
-**Steps 1 to 75 are done, plus a final QA pass.**
+**Steps 1 to 77 are done, plus a final QA pass.**
+
+**Paused by the owner (2026-10-26).** The board refactor is part way: navigation, power, sensors and
+comms are moved into systems, and four drawers are prefabs. Where it stopped and what comes next:
+section 8, "Board refactor". The order of all the remaining work is in the owner-approved plan:
+settle, finish the refactor (new features paused), then the Tuning and Level tools, then the
+mission scripter, then features.
 
 The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME leads to
 the briefing; Enter shows INITIALISING... and then the board in `02.1_Grid`.
@@ -3762,7 +3768,12 @@ Found by the doc check after Step 66. Fix each with the owner.
 5. **The playtest has no battle-space checks:** the warning, countdown, x1 drop, zoom limit, pan
    limit, axis numbers and the `C` key.
 
-### Board refactor (owner, 2026-10-25). In progress
+### Board refactor (owner, 2026-10-25). In progress — paused by the owner, 2026-10-26
+
+**Where it stopped (2026-10-26).** Navigation, power, sensors and comms are moved into systems. The
+helm, power, sensors and comms drawers are prefabs. Everything is committed. Next, when the owner
+restarts it: the fire control (weapons) prefab, then the weapons system. The remaining prefabs (fire
+control, hangar, engineering, orders, then periscope) are planned.
 
 Replaces the 2026-10-24 "clean-up once the game is working" list.
 
@@ -3870,9 +3881,21 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - Two band-lamp glows are empty, as before: the design gives only the first band lamp a glow.
   - Art moved: 6 comms-only files to `Art/Comms`, `rocker_30x38_locked` to `Art/Switches`.
   - Playtest 171/171 (run 2026-10-26_082511).
+- **Comms (2026-10-26).** The radio is in `Systems/CommsSystem.cs`: band, frequency, the carrier lock,
+  the four cipher dials, the message and its cipher. It replaced those fields and rules in
+  `HandoffBoardState`.
+  - `OwnShip` and `Garuda · Cruiser` each carry a CommsSystem, with the board's numbers.
+    `HandoffBoardControls.comms` points at ours, and every ship state reaches its own through `.comms`.
+  - `HandoffCommsPanel` became `UI/Panels/CommsPanel` (its link kept, so the prefab still holds it).
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_084735). The run before it failed 3 checks
+    (our ship moving on the plot, and the POINT and RULER staying put) and passed on the re-run. It
+    had waited about 11 minutes on a Unity save box first.
+  - **Trap.** Twice, starting the playtest froze Unity on a "save changes?" box while Unity was
+    behind another window, even though the scene had just been saved. With Unity in front, it
+    started at once. Bring Unity to the front before running the playtest from another program.
 
-**Next:** the comms panel as a prefab (UI Restructure), then the comms system (Tooling), and so on
-in order: weapons, hangar, damage and orders. Owner 2026-10-26: "split, take turns". One
+**Next:** the fire control (weapons) panel as a prefab (UI Restructure), then the weapons system
+(Tooling), and so on in order: hangar, damage and orders. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.
 
@@ -4012,7 +4035,9 @@ Left unfinished when the Step 73 chat closed. Plan each with the owner before bu
 2. **What ruins do, one step each.** Block shots (the prototype's penetration against toughness:
    asteroid 3, structure 4, ruins 3, starbase 5); hide us from sensors (line of sight); hurt us
    when we hit them (the prototype pushes the ship out and damages it above an impact speed). Our
-   ship's collision size is not decided.
+   ship's collision size is not decided. **Owner, 2026-10-26:** a debris field is there to fly
+   through and around; otherwise you hit the pieces. Today the ship passes straight through them.
+   Asked whether to build hitting debris before the next system: not answered yet.
 3. **The names (decision 39), not applied yet.** The `t07` track's name `TRACK 07` → `GARUDA`
    (`HandoffBoardState`, class stays CRUISER, key stays `t07`); playtest checks that expect
    `HIT · TRACK 07` and `ATTACKING TRACK 07`, and check names that say TRACK 07; in `02.1_Grid`,

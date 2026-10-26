@@ -859,7 +859,7 @@ public static class HandoffBoardBuilder
     static void WireComms(RectTransform root)
     {
         const string C = "State · comms";
-        var p = root.gameObject.AddComponent<HandoffCommsPanel>();
+        var p = root.gameObject.AddComponent<CommsPanel>();
         var so = new SerializedObject(p);
         so.FindProperty("commsState").objectReferenceValue = Tmp(root, C, "text#178 ");
 
