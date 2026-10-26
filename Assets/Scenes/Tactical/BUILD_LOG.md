@@ -4066,9 +4066,35 @@ The board builder is no longer used. Its menu item is gone, and the scene is wha
   - **The ship state now holds only what is the ship's own or shared:** the contact list, whether it is
     destroyed or captured, the EMP clock, the dice, kills, the periscope, the plot marks and the
     battle space. Every ship part is a system.
+- **Periscope prefab (2026-10-27).** `Assets/UI/Board/Panels/Periscope.prefab`.
+  - `Periscope` is a clip window. It grows from 44 px (housed) to 656 px (lowered). The periscope
+    script `HandoffPeriscopePanel` is now on it.
+  - Parts are grouped: `Carriage`, `Bolts`, `Sight` (with `Brackets`), `Readout`, `Mag knob`,
+    `Convergence`, `Slew button`, `Subject` and `Classify button`. The mount plate, caption, screen
+    and text stay at the top level. In a group they would draw under the aperture, which overlaps
+    them.
+  - The groups stretch with the clip, so the parts stay put as it grows.
+  - The prefab is saved lowered, so the whole periscope shows when you open it. The copy on the
+    board is housed. Screenshots before and after match pixel for pixel, housed and lowered.
+  - Art list: 15 entries. The aperture is not in it. The code swaps its idle and slewing sprites.
+  - Art moved: 8 periscope-only files to `Art/Periscope`.
+  - `State · periscope` (the LOWERED label) stays on the board. The board's motion script shows it.
+- **Plot prefab (2026-10-27).** `Assets/UI/Board/Panels/Plot.prefab`. `HandoffPlotPanel` is now on
+  `Plot`.
+  - The plot's parts already had plain names (`Ground`, `Grid`, `Marks (drawn)` …). They keep them.
+  - `Mockup` is now `Design mock-up (off)`. Its 46 parts are the design's sample picture, all
+    switched off. Three are still used: `Passive label template` (the plot copies it for passive
+    bearing labels), and the SENSOR RANGE label and value (the sensors drawer links to them).
+    The board's motion script also animates some of them. Nothing was deleted.
+  - Art list: 5 entries (ground, glow, fighter wedge, scanlines, vignette). Art moved: the glow,
+    scanlines and vignette to `Art/Plot`, `round_6` to `Art/Shapes`. The fighter wedge stays in
+    `Assets/Art/Hulls`.
+  - The whole board matches pixel for pixel before and after.
+- **Owner 2026-10-27: no full playtest per change.** Each change gets a quick look in play mode.
+  The periscope and the plot were checked that way, then tested together in one full run:
+  172/172 (run 2026-10-27_001637).
 
-**Next:** the periscope as a prefab (UI Restructure), then the plot,
-the frame pieces, the shared colour palette and the fonts. Owner 2026-10-26: "split, take turns". One
+**Next:** the frame pieces, the shared colour palette and the fonts. Owner 2026-10-26: "split, take turns". One
 session makes each panel a prefab, the other moves that system's rules, one of them in Unity at a
 time. The step list below is the reference for what each part needs.
 
