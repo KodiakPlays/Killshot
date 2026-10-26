@@ -41,8 +41,8 @@ public class WeaponSystem : MonoBehaviour
         [Tooltip("PDC autoloaders. Step 55: engaged at load (the design starts them off) and set here until the design's LOADERS pushbutton has art (HANDOFF_GAPS row 73); without them PDCs cannot arm.")]
         public bool loaders = true;
         public float wepFeedPerUnit = 5f, wepBleed = 3f;
-        [Tooltip("Railgun slug speed, km/s (Step 63: 5x the 50 that matched the prototype's slowed ship). About 100 s to 24,300 km.")]
-        public double slugSpeedKms = 250;
+        [Tooltip("Railgun slug speed, km/s (owner 2026-10-27: the fastest thing on the board, about 10 s across its 25,000 km range).")]
+        public double slugSpeedKms = 2500;
         [Tooltip("Missile speed, km/s (owner 2026-10-23: slower than a slug, but it homes; Step 63: x5). About 2 minutes to 12,000 km.")]
         public double missileSpeedKms = 100;
         [Tooltip("How fast a missile can turn toward its target, degrees per mission second (Step 63: x5).")]

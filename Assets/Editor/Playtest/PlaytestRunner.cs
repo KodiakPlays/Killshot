@@ -752,8 +752,8 @@ public static class PlaytestRunner
         Check("Turret B bears", s.weapons.mount == "RGB" && s.weapons.InArc, "");
         for (int i = 0; i < 4; i++) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1))) yield break; yield return 0.2f; }
         Check("The ladder is set: LOAD, ANGLE, BEARING, ARM", s.weapons.AllSet, string.Join(",", System.Array.ConvertAll(s.weapons.sw, b => b ? "1" : "0")));
-        //     Fire at x10.
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        //     Fire at x1 (Step 81: at x10 the slug lands within one tick).
+        if (!Click("rate", "1", "x1 rate key")) yield break;
         var lever = Hit("fc.lever", null);
         Vector2 leverAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(lever.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
                                            lever.transform.TransformPoint(((RectTransform)lever.transform).rect.center)));
@@ -780,12 +780,12 @@ public static class PlaytestRunner
         if (!Click("pause", null, "RUN key")) yield break;
         if (board.Motion && board.Motion.ScopeDown) board.Motion.SetScopeDown(false); // the periscope covers the plot's middle
         board.SetZoom(0.4);
-        yield return 3f;
+        yield return 0.8f;
         Shot("27_slug_in_flight");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         board.SetZoom(1.0);
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
-        yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0); // 15 s each; the flight is about 20 s at x10
+        yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0); // 15 s each; the flight is about 2 s at x1
         bool marginal = System.Math.Abs(predicted - s.weapons.HitRadiusKm(t07.klass)) < 0.05 * s.weapons.HitRadiusKm(t07.klass); // either way is right this close
         if (marginal) expectHit = s.weapons.shotReport == "HIT · BOGEY T07";
         Check("The slug lands as the aim says: " + (expectHit ? "a HIT, no detail on a ship we have not scanned" : "a MISS") + (marginal ? " (a marginal aim)" : ""),

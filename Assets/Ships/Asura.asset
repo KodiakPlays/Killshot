@@ -84,7 +84,7 @@ MonoBehaviour:
     loaders: 1
     wepFeedPerUnit: 5
     wepBleed: 3
-    slugSpeedKms: 250
+    slugSpeedKms: 2500
     missileSpeedKms: 100
     missileTurnDegPerS: 6.5
     missileSpreadDeg: 3
