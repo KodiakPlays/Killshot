@@ -668,7 +668,8 @@ they pass close enough to. The numbers are in each ship's stats file, under weap
 
 ### 8.1 Damage
 
-What each hit does today (open with the owner):
+What each hit does. The numbers are the firing ship's: in its Weapons group, or its Hangar group for
+fighters (owner, 2026-10-27; BUILD_LOG decision 49).
 
 | Weapon | Against armour | Through an open side |
 |---|---|---|
@@ -678,8 +679,8 @@ What each hit does today (open with the owner):
 | EMP missile | No damage | No damage. The ship's power goes out for 60 game seconds |
 | Fighter run | Takes 10 armour per fighter | Takes 1 integrity per fighter off the room behind |
 
-Any hit on the reactor room, except a fighter's, has a 50% chance to leak radiation. What damage
-does to a ship is in §13.
+Any hit on the reactor room, except a fighter's, has a 50% chance to leak radiation. That chance
+is in the Damage group of the ship being hit. What damage does to a ship is in §13.
 
 > **Rule 8.1.a** Two slugs open the prow, starboard or port side. One slug opens the aft. One HE
 > missile opens any side.
@@ -722,9 +723,8 @@ The armour is PROW 100, STBD 100, AFT 50, PORT 100 (§13.2). The aft is the weak
 A slug flies at **2,500 km/s**, out to 25,000 km. It takes about 10 s to reach full range (owner,
 2026-10-27).
 
-- Today the code counts a slug within 210 km of a cruiser as a hit; the owner has decided a slug
-  must hit the ship itself (not built yet; BUILD_LOG decision 47). The code's other radii: frigate
-  95 km, destroyer 135 km, carrier 600 km, anything else 150 km.
+- A slug hits a ship it passes within **100 km** of. The distance is the same for every ship, and
+  for missiles (owner, 2026-10-27; BUILD_LOG decision 47).
 - A slug that reaches 25,000 km without a hit counts as a miss.
 - Each shot spends 70 charge from the weapons capacitor and adds 25 to our signal.
 - A hand-dialled bearing is in whole degrees. At 25,000 km one degree is about 436 km sideways, so
@@ -760,8 +760,7 @@ its target at up to 6.5° per game second. Each flies at most 35,000 km.
 - Each missile uses one cell. The salvo size is set in the stats file. The salvo knob is not drawn
   yet.
 - A salvo spends 40 charge and adds 25 to our signal.
-- Today a missile hits within the same radius the code uses for a slug (§8.4). An enemy missile
-  hits our ship within 210 km.
+- A missile hits within the same 100 km (§8.4), ours and the enemy's.
 
 ### 8.6 PDC
 
@@ -1362,28 +1361,22 @@ faithfully.
 
 ## 17 · Open items
 
-**Open with the owner**
-
-1. **Damage by weapon** (§8.1). How much damage each weapon does is open.
-
 **Not built yet**
 
-2. **A slug must hit the ship itself** (§8.4, owner, 2026-10-27). Today the code counts a slug
-   within 210 km of a cruiser as a hit.
-3. **The win condition** (§15). There is no mission, no win and no escape.
-4. **The combat autopilot** (§4.6). TAIL is not defined. TARGET LOST is only proposed.
-5. **Being seen** (§5). The signal is built. Nothing in the enemy hears it.
-6. **The enemy's mind.** The Garuda patrols a loop at 5.5 km/s. When hit, it fires two HE missiles
+1. **The win condition** (§15). There is no mission, no win and no escape.
+2. **The combat autopilot** (§4.6). TAIL is not defined. TARGET LOST is only proposed.
+3. **Being seen** (§5). The signal is built. Nothing in the enemy hears it.
+4. **The enemy's mind.** The Garuda patrols a loop at 5.5 km/s. When hit, it fires two HE missiles
    back if we are within 35,000 km, at most once every 120 game seconds. Hearing and hunting are not
    built. Its settings are on its `EnemyBrain` in the board scene.
-7. **Picking a target** (§20). Fire control's target is always the Garuda, the one enemy.
-8. **Undrawn controls** (§8). The PDC quadrant keys, LOADERS, the warhead selector and the salvo
+5. **Picking a target** (§20). Fire control's target is always the Garuda, the one enemy.
+6. **Undrawn controls** (§8). The PDC quadrant keys, LOADERS, the warhead selector and the salvo
    knob are not drawn on Fire Control.
-9. **Stability** (§4.4). It is shown, but nothing uses it.
-10. **Terrain** (§4.5, §8.2). Ships and shots pass through ruins and debris.
-11. **What comms gives you** (§10). A read message changes nothing.
-12. **Reflex numbers** (§7): `E_floor`, `reflexSpeedMax`, `staleTrackTimeout`.
-13. **The dry trigger pull** (§5.4.a). Whether it should raise the alert.
+7. **Stability** (§4.4). It is shown, but nothing uses it.
+8. **Terrain** (§4.5, §8.2). Ships and shots pass through ruins and debris.
+9. **What comms gives you** (§10). A read message changes nothing.
+10. **Reflex numbers** (§7): `E_floor`, `reflexSpeedMax`, `staleTrackTimeout`.
+11. **The dry trigger pull** (§5.4.a). Whether it should raise the alert.
 
 ## 18 · Plotting tools and the firing solution
 
@@ -1545,8 +1538,8 @@ The slug flies at 2,500 km/s (owner, 2026-10-27). The Garuda cruises at 5.5 km/s
 A missile at 100 km/s takes 100 s to cover 10,000 km.
 
 > **Rule 18.6.a** The slug is the fastest thing on the board (owner, 2026-10-27). You scanned the
-> target and did the maths, so you know where it is. Today, with the code's 210 km radius, a slug
-> aimed straight at the Garuda hits. The Garuda moves at most 125 km in the 10 s flight (§8.4).
+> target and did the maths, so you know where it is. A slug hits within 100 km (§8.4). In the 10 s
+> flight the Garuda moves up to 125 km, so a slug aimed straight at it can miss.
 
 ### 18.7 What the tools do not do
 

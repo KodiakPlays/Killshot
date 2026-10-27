@@ -15,7 +15,7 @@ import math, random
 TICK_REAL = 0.42
 BASE = dict(top=12.5, acc=0.2175, brk=0.4075, drift=0.96307, drag=0.997502, turn=20.0,
             cruise=5.5, slug=2500.0, missile=100.0, mturn=6.5)
-HIT_R, OUR_HIT_R = 210.0, 210.0
+HIT_R, OUR_HIT_R = 100.0, 100.0     # decision 47: any ship, any shot
 WEAPON_RANGE = 25000.0              # railgun reach (decision 42)
 DRADIS = 12000.0 + 2 * 3600.0      # gain 2 (senRangeBaseKm + gain x senRangePerStepKm)
 ENEMY_HOME = (18058.42, 16259.874)

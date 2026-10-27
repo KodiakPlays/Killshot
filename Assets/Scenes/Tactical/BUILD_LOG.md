@@ -135,8 +135,9 @@ Do not run ahead. Do one step, show it, wait.
 | 85 | Win, loss and restart: the mission script, the end screen, RESTART MISSION and MAIN MENU; SHIP LOST clears | **Done** — playtest 201/201 |
 | 86 | The playtest checks the battle space's edge: zoom limit, axis numbers, pan limit, `C`, the warning, the x1 drop, the countdown | **Done** — playtest 209/209 |
 | 87 | The Mac app | **In progress** — built and starts; the owner's play-through is next (section 8, Step 87) |
+| 88 | A shot hits within 100 km of any ship; a hit's damage comes from the weapon that fired it | **Done** — playtest 209/209 |
 
-Steps 6 to 28 and Steps 34 to 86 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 88 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -601,14 +602,22 @@ These are settled. Do not reopen them.
     about 10 s to its 25,000 km reach. The owner's words: you know where the target is, because you
     scanned it and did the maths. Was 250 km/s (about 100 s). The number is `slugSpeedKms` in the
     Weapons group of each ship's stats file. Details in Step 81.
-47. **A slug hits only if it hits the ship** (owner, 2026-10-27). There is no hit radius. You lead
-    the target, fill in the targeting computer, get the lock and fire, to put the slug on the ship
-    itself. The code still counts a slug within 210 km of a cruiser as a hit. With that radius and
-    a 10 s flight, a slug aimed straight at the Garuda hits, since it moves at most 125 km in that
-    time. Not built yet: see "To do next", item 4.
+47. **A shot hits a ship it passes within 100 km of, any ship** (owner, 2026-10-27). First the owner
+    said a slug must hit the ship itself: you lead the target, fill in the targeting computer, get
+    the lock and fire. Real ships are 100 to 500 m long, though, and the BRG knob turns in whole
+    degrees (about 190 km at 11,000 km). The owner chose 100 km for play, with the knobs as they
+    are. It replaces the hit radius by class (frigate 95 km up to carrier 600 km) and the 210 km for
+    shots at our ship. Slugs and missiles alike. Built in Step 88.
 48. **No power on SEN, no hearing** (owner, 2026-10-25; built in Step 82). DRADIS hears only with
     at least 1 unit on the SEN bus. With none, the plot shows no circle and no sweep. The DRADIS
     switch stays where the player set it.
+49. **A hit's damage comes from the weapon that fired it** (owner, 2026-10-27; built in Step 88).
+    These numbers are the firing ship's, in its Weapons group: slug armour damage (50), slug or
+    warhead damage to the room behind (2), HE armour damage (100), EMP time (60 s), the fire chances
+    (HE 60%, penetrator 40%) and the slug's breach chance (50%). Fighter damage was already the
+    shooter's (Hangar). These stay with the ship being hit, in its Damage group: armour per side,
+    the reactor's radiation chance, how fire, vacuum and radiation spread, crew losses and repairs.
+    Tune how hard our weapons hit on the Ship tab, and the Garuda's on the Enemy tab.
 
 ---
 
@@ -740,7 +749,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 86, in detail
+## 6 · Steps 6 to 28, and 34 to 88, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3589,7 +3598,7 @@ x10 one tick is 10 game seconds, and the slug lands inside it, before the pause 
   stopped, with no report.
 - The next run (2026-10-27_084153) passed 191/191. The fixes are confirmed.
 
-**Owner, after Step 81:** no hit radius; a slug must hit the ship itself (decision 47; to do).
+**Owner, after Step 81:** a shot hits within 100 km of any ship (decision 47).
 
 ### Step 82 — DRADIS needs SEN power
 
@@ -3706,6 +3715,42 @@ Garuda's fire off:
 - x10 again: at 0 our ship is lost, and the end screen says SHIP LOST, LEFT THE BATTLE SPACE. This
   replaces Step 85's 3-second stand-in clock.
 
+### Step 88 — A shot hits within 100 km of any ship; a hit's damage comes from the weapon that fired it
+
+**What it is.**
+
+- A slug or a missile hits a ship it passes within **100 km** of. This is the same for every ship,
+  ours and the Garuda (decision 47). Before, it was 95 to 600 km by class (the Garuda 210 km), and
+  210 km for missiles hitting us.
+- How hard a hit lands is now set by the ship that fired it (decision 49). On **Starwolf → Tuning**,
+  the Ship tab's Weapons group sets how hard our slugs and missiles hit. The Enemy tab's sets the
+  Garuda's.
+
+**Owner direction (2026-10-27).** First: no hit radius, a slug must hit the ship itself. Told that
+the BRG knob turns in whole degrees (about 190 km at 11,000 km), the owner chose 100 km, with the
+knobs as they are. The damage split as proposed: "Yes, move them."
+
+**How it works.**
+
+- Each ship file's Weapons group has `hitRadiusKm` (100) and the moved numbers: `slugArmourDamage`,
+  `slugCompartmentDamage`, `heArmourDamage`, `empSeconds`, `fireChanceHE`, `fireChancePEN`,
+  `breachChanceSlug`. The Damage group keeps armour, the radiation chance, spread, crew losses and
+  repairs.
+- `DamageSystem.TakeSlug` and `TakeWarhead` take the firing ship's numbers, as `TakeFighterRun`
+  already did.
+- An enemy missile carries the Garuda's numbers (`Round.by`, set by `LaunchAt`). Its speed and fan
+  are the Garuda's too; before, they were ours (the same values).
+- `docs/scale-sim` uses 100 km.
+
+**Calls made without the owner (can be changed):** the hit distance is in the firing ship's file, as
+the damage is. Both files say 100.
+
+**Checked.** Compiled with no errors. Both ship files re-saved through the Editor. Playtest 209/209
+(run 2026-10-27_104545, run by the Worker session while this session's Unity link was down): the
+first slug hits with its aim 30 km off, the led shot 6 km off; HE, EMP and PEN hits land; the
+Garuda's missiles hit us; the step-22 kill and MISSION COMPLETE still pass. The scale study: a fight
+still takes about 11 minutes at x1, 5 slugs for 5 hits.
+
 ---
 
 ## 7 · How to keep this log
@@ -3755,12 +3800,8 @@ restructure list. Ask the other session before taking Unity.
 
 **Weapons**
 
-4. **A slug hits only if it hits the ship** (decision 47). Remove the 210 km hit radius
-   (`WeaponSystem.HitRadiusKm`). Use the ship's real size. Ships are 100 to 500 m long. Ask the
-   owner the Asura's and the Garuda's lengths, and whether missiles and fighters work the same
-   way. Then fix the playtest's hit checks.
-5. **Damage by weapon.** The owner wants a hit's damage to come from the weapon that fired it.
-   A split by weapon was proposed. The owner has not confirmed it yet: ask.
+4. ~~**A shot hits within 100 km of any ship**~~ **Done in Step 88** (decision 47).
+5. ~~**Damage by weapon**~~ **Done in Step 88** (decision 49).
 
 **Tooling (the current stage of the work order)**
 

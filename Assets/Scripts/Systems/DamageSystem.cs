@@ -24,16 +24,8 @@ public class DamageSystem : MonoBehaviour
         public float partySeconds = 6f;
         [Tooltip("Armour per side: PROW, STBD, AFT, PORT. At 0 the side is open (owner: prow and flanks take 2 slugs, the aft 1).")]
         public float[] sideArmourMax = { 100f, 100f, 50f, 100f };
-        [Tooltip("Armour one railgun slug takes off the side it hits.")]
-        public float slugArmourDamage = 50f;
-        [Tooltip("Integrity one slug through an open side takes off one compartment behind it (owner: 2 of 5).")]
-        public int slugCompartmentDamage = 2;
         [Header("Conditions (Step 59, DAMAGE_README.md): every rate per game second")]
-        [Tooltip("Chance a hit through open armour starts a fire: an HE warhead, a penetrator.")]
-        [Range(0f, 1f)] public float fireChanceHE = 0.6f, fireChancePEN = 0.4f;
-        [Tooltip("Chance a railgun slug through open armour breaches the room (it loses its air).")]
-        [Range(0f, 1f)] public float breachChanceSlug = 0.5f;
-        [Tooltip("Chance a hit on the reactor room (not a fighter's) leaks radiation.")]
+        [Tooltip("Chance a hit on the reactor room (not a fighter's) leaks radiation. The fire and breach chances are the shooter's (Weapons).")]
         [Range(0f, 1f)] public float radChanceReactor = 0.5f;
         [Tooltip("A fire takes 1 integrity off its room this often, game seconds.")]
         public float fireDamageSeconds = 30f;
@@ -46,10 +38,6 @@ public class DamageSystem : MonoBehaviour
         [Tooltip("The reactor stops leaking once repaired to this integrity (or vented); then each room's radiation fades after radFadeSeconds.")]
         public int reactorContainedAt = 3;
         public float radFadeSeconds = 90f;
-        [Tooltip("Armour an HE warhead takes off the side it hits (owner: it opens a side fast).")]
-        public float heArmourDamage = 100f;
-        [Tooltip("An EMP knocks a ship's power out for this many mission seconds.")]
-        public float empSeconds = 60f;
     }
     /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
     public Stats stats => shipStats ? shipStats.Stats.damage : (shipStats = GetComponent<Ship>()).Stats.damage;
@@ -169,18 +157,18 @@ public class DamageSystem : MonoBehaviour
     public float[] SideArmour => sideArmour ?? (sideArmour = (float[])stats.sideArmourMax.Clone());
 
     /// <summary>A slug strikes this ship's side. Armour first; once the side is open, the room behind it
-    /// loses integrity. Returns the report's tail (" OPEN", " · RCT −2").</summary>
-    public string TakeSlug(string side)
+    /// loses integrity. by: the firing ship's numbers. Returns the report's tail (" OPEN", " · RCT −2").</summary>
+    public string TakeSlug(string side, WeaponSystem.Stats by)
     {
         int i = System.Array.IndexOf(Sides, side);
         if (i < 0 || ship.destroyed) return "";
         var armour = SideArmour;
         if (armour[i] > 0f)
         {
-            armour[i] = Mathf.Max(0f, armour[i] - stats.slugArmourDamage);
+            armour[i] = Mathf.Max(0f, armour[i] - by.slugArmourDamage);
             return armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%";
         }
-        return Behind(i);
+        return Behind(i, by.slugCompartmentDamage, "slug", by);
     }
 
     /// <summary>One fighter's attack run on this ship (Step 54). DESTROY: the side facing it, then the room
@@ -196,18 +184,17 @@ public class DamageSystem : MonoBehaviour
             armour[i] = Mathf.Max(0f, armour[i] - armourDamage);
             return " " + Sides[i] + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%");
         }
-        return " " + Sides[i] + Behind(i, compartmentDamage, "fighter");
+        return " " + Sides[i] + Behind(i, compartmentDamage, "fighter", null);
     }
 
     // The room behind side i loses the damage given. A wrecked room takes no more, but the hit can still start
     // a condition there (Step 59). The ship is destroyed when its reactor's structure reaches 0 (any ship, ours
-    // too: owner 2026-10-24).
-    string Behind(int i) => Behind(i, stats.slugCompartmentDamage, "slug");
-    string Behind(int i, int damage, string weapon)
+    // too: owner 2026-10-24). by: the firing ship's numbers (none for a fighter).
+    string Behind(int i, int damage, string weapon, WeaponSystem.Stats by)
     {
         var hit = Comp(BehindSide[i]);
         if (hit == null) return "";
-        string started = Strike(hit, weapon);
+        string started = Strike(hit, weapon, by);
         if (hit.integ <= 0) return " · " + hit.tag + " WRECKED" + started;
         hit.integ = Mathf.Max(0, hit.integ - damage);
         if (Comp("rct").integ <= 0) ship.destroyed = true;
@@ -227,13 +214,14 @@ public class DamageSystem : MonoBehaviour
         { "rct", new[] { "mag", "bri", "hab", "eng" } }, { "hgr", new[] { "mag", "bri", "hab", "eng" } },
     };
 
-    // What a hit through open armour starts: the weapon and the room decide (owner).
-    string Strike(Compartment c, string weapon)
+    // What a hit through open armour starts: the weapon and the room decide (owner). The fire and breach
+    // chances are the shooter's; radiation is the room's.
+    string Strike(Compartment c, string weapon, WeaponSystem.Stats by)
     {
         string started = "";
-        float fireChance = weapon == "HE" ? stats.fireChanceHE : weapon == "PEN" ? stats.fireChancePEN : 0f;
+        float fireChance = by == null ? 0f : weapon == "HE" ? by.fireChanceHE : weapon == "PEN" ? by.fireChancePEN : 0f;
         if (!c.vented && !c.fire && ship.Roll(fireChance)) { c.fire = true; c.fireT = 0; started += " · FIRE"; }
-        if (weapon == "slug" && !c.vented && ship.Roll(stats.breachChanceSlug)) { Breach(c, stats.breachCrewLoss); started += " · BREACH"; }
+        if (weapon == "slug" && !c.vented && ship.Roll(by.breachChanceSlug)) { Breach(c, stats.breachCrewLoss); started += " · BREACH"; }
         if (c.key == "rct" && weapon != "fighter" && !c.rad && ship.Roll(stats.radChanceReactor)) { c.rad = true; c.fadeT = 0; started += " · RADIATION"; }
         SyncCond();
         return started;
@@ -287,14 +275,14 @@ public class DamageSystem : MonoBehaviour
 
     /// <summary>A missile's warhead strikes this ship (Step 53, owner 2026-10-23). HE hits the armour hard,
     /// then what is behind it; PENETRATOR goes straight to a compartment behind the side; EMP does no
-    /// hull damage but knocks the power out.</summary>
-    public string TakeWarhead(string side, string warheadName)
+    /// hull damage but knocks the power out. by: the firing ship's numbers.</summary>
+    public string TakeWarhead(string side, string warheadName, WeaponSystem.Stats by)
     {
         if (ship.destroyed) return "";
         if (warheadName == "EMP")
         {
             ship.power.BlackOut();
-            ship.empUntil = ship.missionNow + stats.empSeconds;
+            ship.empUntil = ship.missionNow + by.empSeconds;
             return " · EMP · POWER DOWN";
         }
         int i = System.Array.IndexOf(Sides, side);
@@ -302,11 +290,11 @@ public class DamageSystem : MonoBehaviour
         var armour = SideArmour;
         if (warheadName == "HE" && armour[i] > 0f)
         {
-            armour[i] = Mathf.Max(0f, armour[i] - stats.heArmourDamage);
+            armour[i] = Mathf.Max(0f, armour[i] - by.heArmourDamage);
             return " · HE" + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%");
         }
         string w = warheadName == "PENETRATOR" ? "PEN" : warheadName;
-        return " · " + w + Behind(i, stats.slugCompartmentDamage, w);
+        return " · " + w + Behind(i, by.slugCompartmentDamage, w, by);
     }
 
     // The side of a ship whose bow points bowDeg that faces a bearing fromDeg (both clockwise from north).

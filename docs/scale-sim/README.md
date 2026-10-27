@@ -15,7 +15,7 @@ weapons or the enemy, and compare the tables.
 - **Damage:** the side map: the reactor is behind the port face (`DAMAGE_README.md`). A slug
   takes 50 armour, then 2 off the reactor.
 - **Firing:** a slug at 2,500 km/s (BUILD_LOG decision 46), the slug's path hit test against a
-  210 km hit radius, and the TRACK button's exact lead.
+  100 km hit radius (decision 47), and the TRACK button's exact lead.
 - **Defence:** PDC-A's 70% chance per missile, assumed to cover half the approaches.
 - **The person:** about 4 real seconds to arm each shot (rockers and lever).
 

@@ -48,7 +48,7 @@ public class EnemyBrain : MonoBehaviour
         if (firesBack && hit && ship.damage.MagOk && ship.missionNow >= nextSalvo && ship.weapons.vlsCells > 0 && vls != null && dx * dx + dy * dy <= (double)vls.rangeKm * vls.rangeKm)
         {
             int n = Mathf.Min(fireBackSalvo, ship.weapons.vlsCells);
-            us.weapons.LaunchAt(ship.nav.x, ship.nav.y, n, 0, vls.rangeKm); // HE
+            us.weapons.LaunchAt(ship.weapons.stats, ship.nav.x, ship.nav.y, n, 0, vls.rangeKm); // HE
             ship.weapons.vlsCells -= n;
             nextSalvo = ship.missionNow + fireBackSeconds;
         }

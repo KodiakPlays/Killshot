@@ -89,19 +89,17 @@ MonoBehaviour:
     missileTurnDegPerS: 6.5
     missileSpreadDeg: 3
     pdcRoundsPerGo: 100
-    hitRadii:
-    - klass: FRIGATE
-      km: 95
-    - klass: DESTROYER
-      km: 135
-    - klass: CRUISER
-      km: 210
-    - klass: CARRIER
-      km: 600
+    hitRadiusKm: 100
+    slugArmourDamage: 50
+    slugCompartmentDamage: 2
+    heArmourDamage: 100
+    empSeconds: 60
+    fireChanceHE: 0.6
+    fireChancePEN: 0.4
+    breachChanceSlug: 0.5
     fireSignalSpike: 25
     spdStep: 0.25
     pdcKillChance: 0.7
-    ownHitRadiusKm: 210
   hangar:
     fighterSpeedKms: 40
     fighterAttackKm: 200
@@ -125,11 +123,6 @@ MonoBehaviour:
     - 100
     - 50
     - 100
-    slugArmourDamage: 50
-    slugCompartmentDamage: 2
-    fireChanceHE: 0.6
-    fireChancePEN: 0.4
-    breachChanceSlug: 0.5
     radChanceReactor: 0.5
     fireDamageSeconds: 30
     fireSpreadPerSecond: 0.01
@@ -139,8 +132,6 @@ MonoBehaviour:
     radCrewLossSeconds: 20
     reactorContainedAt: 3
     radFadeSeconds: 90
-    heArmourDamage: 100
-    empSeconds: 60
   orders:
     flickBackSeconds: 0.4
     auxPerUnit: 3.2

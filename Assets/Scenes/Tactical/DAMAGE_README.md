@@ -80,12 +80,19 @@ The orders station's PARTY, SEAL and VENT do the same, paid from the AUX pool.
 
 ## Numbers
 
-All are in each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`), in the Damage section. Edit them in **Starwolf → Tuning**, on the Ship or Enemy tab. These are the starting values.
+All are in each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`). Edit them in **Starwolf → Tuning**, on the Ship or Enemy tab. These are the starting values.
+
+The fire and breach chances are the firing ship's, in its Weapons section (BUILD_LOG decision 49):
 
 | | |
 |---|---|
 | Fire chance: HE hit / penetrator hit | 60% / 40% |
 | Breach chance per slug hit | 50% |
+
+The rest are the damaged ship's, in its Damage section:
+
+| | |
+|---|---|
 | Radiation chance per reactor hit | 50% |
 | Fire: integrity loss | 1 every 30 s |
 | Spread chance, per neighbour per second | fire 1%, vacuum 1%, radiation 1% |

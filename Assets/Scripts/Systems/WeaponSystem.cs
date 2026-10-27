@@ -51,20 +51,26 @@ public class WeaponSystem : MonoBehaviour
         public double missileSpreadDeg = 3;
         [Tooltip("Rounds one PDC group spends on each go at an enemy missile (owner 2026-10-27).")]
         public int pdcRoundsPerGo = 100;
-        [Tooltip("A slug hits a ship it passes within this distance of, by class (the prototype's radii, km). Others: 150.")]
-        public HitRadius[] hitRadii =
-        {
-            new HitRadius { klass = "FRIGATE", km = 95 }, new HitRadius { klass = "DESTROYER", km = 135 },
-            new HitRadius { klass = "CRUISER", km = 210 }, new HitRadius { klass = "CARRIER", km = 600 },
-        };
+        [Tooltip("A shot from this ship, slug or missile, hits a ship it passes within this distance of, km (owner 2026-10-27: 100 km, any ship).")]
+        public float hitRadiusKm = 100f;
+        [Tooltip("Armour one of this ship's slugs takes off the side it hits.")]
+        public float slugArmourDamage = 50f;
+        [Tooltip("Integrity one of this ship's slugs, or a warhead through an open side, takes off the room behind it (owner: 2 of 5).")]
+        public int slugCompartmentDamage = 2;
+        [Tooltip("Armour one of this ship's HE warheads takes off the side it hits (owner: it opens a side fast).")]
+        public float heArmourDamage = 100f;
+        [Tooltip("One of this ship's EMP warheads knocks the target's power out for this many mission seconds.")]
+        public float empSeconds = 60f;
+        [Tooltip("Chance this ship's hit through open armour starts a fire: an HE warhead, a penetrator.")]
+        [Range(0f, 1f)] public float fireChanceHE = 0.6f, fireChancePEN = 0.4f;
+        [Tooltip("Chance this ship's slug through open armour breaches the room (it loses its air).")]
+        [Range(0f, 1f)] public float breachChanceSlug = 0.5f;
         [Tooltip("Firing the railgun spikes our signal by this much (GDD p.42); it falls back at the usual rate.")]
         public float fireSignalSpike = 25f;
         [Tooltip("The SPD knob's step, km/s (the design's 0.05, x5 with the speeds in Step 63).")]
         public float spdStep = 0.25f;
         [Tooltip("The chance a PDC group on AUTO shoots down an enemy missile that enters its arc (owner: a chance per missile).")]
         [Range(0f, 1f)] public float pdcKillChance = 0.7f;
-        [Tooltip("An enemy missile hits our ship if it passes within this distance, km (cruiser-sized, like the Garuda).")]
-        public float ownHitRadiusKm = 210f;
     }
     /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
     public Stats stats => shipStats ? shipStats.Stats.weapons : (shipStats = GetComponent<Ship>()).Stats.weapons;
@@ -138,9 +144,8 @@ public class WeaponSystem : MonoBehaviour
         public int warhead;
         [Tooltip("Step 55: PDC groups that have had their one chance at this missile (bit 0 = PDC-A, bit 1 = PDC-B).")]
         public int pdcTried;
+        [System.NonSerialized] public Stats by; // the firing ship's numbers: how close is a hit, and what the hit does
     }
-    [System.Serializable]
-    public class HitRadius { public string klass; public float km; }
 
     [System.NonSerialized] private System.Collections.Generic.List<Round> rounds;
     public System.Collections.Generic.List<Round> Rounds => rounds ?? (rounds = new System.Collections.Generic.List<Round>());
@@ -364,12 +369,6 @@ public class WeaponSystem : MonoBehaviour
         return (System.Math.Atan2(tx + vx * tHit, ty + vy * tHit) * 180 / System.Math.PI + 360) % 360;
     }
 
-    public float HitRadiusKm(string klass)
-    {
-        foreach (var h in stats.hitRadii) if (h.klass == klass) return h.km;
-        return 150f;
-    }
-
     /// <summary>Hull-fixed arcs (spec 8.7.a): the solution's bearing from our bow must lie in the mount's arc.</summary>
     public bool InArc
     {
@@ -404,7 +403,7 @@ public class WeaponSystem : MonoBehaviour
                 double wx = t.speed * System.Math.Sin(c) - r.dx * r.speed, wy = t.speed * System.Math.Cos(c) - r.dy * r.speed;
                 double px = t.worldX - r.x, py = t.worldY - r.y, ww = wx * wx + wy * wy;
                 double s = ww > 0 ? System.Math.Max(0, System.Math.Min(flight, -(px * wx + py * wy) / ww)) : 0; // closest moment
-                double cx = px + wx * s, cy = py + wy * s, rad = HitRadiusKm(t.klass);
+                double cx = px + wx * s, cy = py + wy * s, rad = stats.hitRadiusKm;
                 if (cx * cx + cy * cy <= rad * rad && s < first) { struck = t; first = s; }
             }
             if (struck != null)
@@ -412,7 +411,7 @@ public class WeaponSystem : MonoBehaviour
                 // Step 49: the struck ship takes the hit on its own model (its side, then what is behind it)
                 string side = SideStruck(struck, r);
                 var victim = ship.ShipOf != null ? ship.ShipOf(struck.key) : null;
-                string damage = victim == null ? "" : r.missile ? victim.damage.TakeWarhead(side, warheads[r.warhead]) : victim.damage.TakeSlug(side);
+                string damage = victim == null ? "" : r.missile ? victim.damage.TakeWarhead(side, warheads[r.warhead], stats) : victim.damage.TakeSlug(side, stats);
                 if (victim != null && victim.destroyed) ship.Kill(struck);
                 else { shotReport = "HIT · " + ship.NameOf(struck) + (ship.Scanned(struck) ? " · " + side + damage : ""); lastShotHit = true; shotResults++; } // Step 61: detail once scanned
                 list.RemoveAt(i);
@@ -452,20 +451,21 @@ public class WeaponSystem : MonoBehaviour
     [System.NonSerialized] public string pdcReport, incomingReport;
     [System.NonSerialized] public int pdcKills, hitsTaken;
 
-    /// <summary>An enemy at (x, y) launches n missiles at us, fanned, each homing on our ship.</summary>
-    public void LaunchAt(double x, double y, int n, int warheadIndex, double maxKm)
+    /// <summary>An enemy at (x, y) launches n missiles at us, fanned, each homing on our ship. by: the
+    /// enemy's numbers, which its missiles fly and hit by.</summary>
+    public void LaunchAt(Stats by, double x, double y, int n, int warheadIndex, double maxKm)
     {
         double brg = System.Math.Atan2(ship.nav.x - x, ship.nav.y - y) * 180 / System.Math.PI;
         for (int i = 0; i < n; i++)
         {
-            double b = (brg + (i - (n - 1) / 2.0) * stats.missileSpreadDeg) * System.Math.PI / 180;
+            double b = (brg + (i - (n - 1) / 2.0) * by.missileSpreadDeg) * System.Math.PI / 180;
             Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = maxKm,
-                                     speed = stats.missileSpeedKms, missile = true, warhead = warheadIndex });
+                                     speed = by.missileSpeedKms, missile = true, warhead = warheadIndex, by = by });
         }
     }
 
     /// <summary>Each tick: our PDCs take their chances, then every enemy missile homes on us; one that
-    /// passes within stats.ownHitRadiusKm strikes the side facing it.</summary>
+    /// passes within its firing ship's hitRadiusKm strikes the side facing it.</summary>
     public void TickIncoming(double dt)
     {
         var list = Incoming;
@@ -478,10 +478,10 @@ public class WeaponSystem : MonoBehaviour
             double px = ship.nav.x - r.x, py = ship.nav.y - r.y;
             double u = System.Math.Max(0, System.Math.Min(step, px * r.dx + py * r.dy)); // closest point along the path
             double cx = px - r.dx * u, cy = py - r.dy * u;
-            if (cx * cx + cy * cy <= stats.ownHitRadiusKm * stats.ownHitRadiusKm)
+            if (cx * cx + cy * cy <= r.by.hitRadiusKm * r.by.hitRadiusKm)
             {
                 string side = HandoffBoardState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, ship.nav.heading);
-                incomingReport = "MISSILE HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead]);
+                incomingReport = "MISSILE HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead], r.by);
                 hitsTaken++;
                 list.RemoveAt(i);
                 continue;
