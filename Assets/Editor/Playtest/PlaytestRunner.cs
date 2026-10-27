@@ -242,7 +242,7 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "02.1_Grid");
         Check("Enter on the briefing opens the board", SceneManager.GetActiveScene().name == "02.1_Grid", "called ScreenFlow.Advance, as Enter does");
         yield return 1.5f;
-        var board = UnityEngine.Object.FindAnyObjectByType<HandoffBoardControls>();
+        var board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
         Check("The board is running", board != null, "");
         if (board == null) yield break;
         var s = board.State;
@@ -256,7 +256,7 @@ public static class PlaytestRunner
         // 3b. Step 73: the level starts the player's ship at its Player Spawn (Level_01: centre bottom, facing north). The
         //     checks below were written for the board's own spots, so both ships go back there before time starts.
         var playerSpawn = UnityEngine.Object.FindAnyObjectByType<PlayerSpawn>();
-        int startHdg = playerSpawn ? HandoffBoardState.JsRound(((-playerSpawn.transform.eulerAngles.z) % 360 + 360) % 360) % 360 : -1;
+        int startHdg = playerSpawn ? ShipState.JsRound(((-playerSpawn.transform.eulerAngles.z) % 360 + 360) % 360) % 360 : -1;
         Check("The player's ship starts at the level's Player Spawn, facing its way",
               playerSpawn && System.Math.Abs(s.nav.x - playerSpawn.transform.position.x) < 0.5 && System.Math.Abs(s.nav.y - playerSpawn.transform.position.y) < 0.5 && s.nav.heading == startHdg,
               playerSpawn ? "at " + s.nav.x.ToString("N0") + ", " + s.nav.y.ToString("N0") + " km, heading " + s.nav.heading.ToString("000") + "°" : "no Player Spawn in the level");
@@ -279,7 +279,7 @@ public static class PlaytestRunner
 
         // 5b. Step 82 (owner): no power on the SEN bus, DRADIS hears nothing. Stand-in for the gain fader: gain 2
         //     reaches TRACK 07 (19,200 km), but the bus is empty.
-        var plot0 = board.GetComponentInChildren<HandoffPlotPanel>(true);
+        var plot0 = board.GetComponentInChildren<PlotPanel>(true);
         int gainWas = s.sensors.senBoost;
         s.sensors.senBoost = 2;
         plot0.Refresh();
@@ -386,7 +386,7 @@ public static class PlaytestRunner
         // 12. LOAD SHED: every bus vents, the signal falls back to silent
         if (!Click("drawer", "power", "PWR key")) yield break;
         yield return 0.8f;
-        var rockers = board.GetComponent<HandoffRockers>();
+        var rockers = board.GetComponent<Rockers>();
         var shed = Hit("power.shed", null).GetComponent<Image>();
         var shed0 = shed.sprite;
         if (!Click("power.shed", null, "EMERGENCY LOAD SHED")) yield break;
@@ -527,13 +527,13 @@ public static class PlaytestRunner
         if (!Click("helm.thr", null, "throttle (press mid-well)")) yield break;
         Check("The throttle takes a setting", s.nav.throttle > 0, "throttle " + s.nav.throttle + "%, target " + (s.nav.throttle / 100.0 * s.nav.stats.topSpeedKms).ToString("0.00") + " km/s");
         double x0 = s.nav.x, y0 = s.nav.y;
-        Vector2 img0 = shipImg.anchoredPosition, grid0 = board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx;
+        Vector2 img0 = shipImg.anchoredPosition, grid0 = board.GetComponentInChildren<PlotGrid>().OffsetPx;
         yield return 4f;
         double moved = System.Math.Sqrt((s.nav.x - x0) * (s.nav.x - x0) + (s.nav.y - y0) * (s.nav.y - y0));
         Check("The ship gathers speed", s.nav.SpeedKms > 0.01, s.nav.SpeedKms.ToString("0.000") + " km/s after 4 s at x10");
         Check("It moves along its heading", moved > 0 && System.Math.Abs(((s.nav.CourseDeg - s.nav.heading + 540) % 360) - 180) < 2,
               moved.ToString("0.0") + " km, course " + s.nav.CourseDeg.ToString("000") + "°, heading " + s.nav.heading.ToString("000") + "°");
-        Check("Our ship's image moves; the grid stays put", shipImg.anchoredPosition != img0 && board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx == grid0, "");
+        Check("Our ship's image moves; the grid stays put", shipImg.anchoredPosition != img0 && board.GetComponentInChildren<PlotGrid>().OffsetPx == grid0, "");
         Shot("16_under_way");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
 
@@ -556,11 +556,11 @@ public static class PlaytestRunner
         if (!Click("helm", null, "HELM header (close)")) yield break;
         yield return 0.6f;
         if (!Click("tool", "CURSOR", "CURSOR tool")) yield break;
-        var plotPanel = board.GetComponentInChildren<HandoffPlotPanel>(true);
-        Vector2 v0 = plotPanel.View, gridA = board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx;
+        var plotPanel = board.GetComponentInChildren<PlotPanel>(true);
+        Vector2 v0 = plotPanel.View, gridA = board.GetComponentInChildren<PlotGrid>().OffsetPx;
         if (!PlotDrag(board, new Vector2(700, 300), new Vector2(800, 300), "drag the grid 100 px right", "plot.pan")) yield break;
         float dragKm = (float)(100 / (60.9 / 1000.0 * board.ZoomExact));
-        Check("Dragging the grid pans the plot", Mathf.Abs(plotPanel.View.x - (v0.x - dragKm)) < 1f && Mathf.Abs(board.GetComponentInChildren<HandoffPlotGrid>().OffsetPx.x - gridA.x - 100f) < 0.5f,
+        Check("Dragging the grid pans the plot", Mathf.Abs(plotPanel.View.x - (v0.x - dragKm)) < 1f && Mathf.Abs(board.GetComponentInChildren<PlotGrid>().OffsetPx.x - gridA.x - 100f) < 0.5f,
               "view moved " + (plotPanel.View.x - v0.x).ToString("0") + " km (expected " + (-dragKm).ToString("0") + ")");
         Shot("18_panned");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
@@ -599,7 +599,7 @@ public static class PlaytestRunner
         yield return 0.5f;
 
         // 17. Hearing (Step 44): power SEN, raise the gain, and TRACK 07 comes into hearing range.
-        var alarmWords = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
+        var alarmWords = GameObject.Find("Board").transform.Find("Tactical Board/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
         Check("Nothing heard yet: the alarm strip is quiet", s.sensors.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, s.sensors.newContacts + " new");
         if (!Click("drawer", "power", "PWR key")) yield break;
         yield return 0.8f;
@@ -613,7 +613,7 @@ public static class PlaytestRunner
         yield return 0.1f;
         var pl = GameObject.Find("Passive label 0");
         string plText = pl ? pl.GetComponent<TMPro.TMP_Text>().text : "none";
-        Check("When the sweep touches it, a bearing line and label point at it", pl && plText == "BRG " + (HandoffBoardState.JsRound(t07.seenBrg) % 360).ToString("000") && Mathf.Abs(Mathf.DeltaAngle((float)t07.seenBrg, t07.bearing)) <= 1f,
+        Check("When the sweep touches it, a bearing line and label point at it", pl && plText == "BRG " + (ShipState.JsRound(t07.seenBrg) % 360).ToString("000") && Mathf.Abs(Mathf.DeltaAngle((float)t07.seenBrg, t07.bearing)) <= 1f,
               "\"" + plText + "\", bearing now " + t07.bearing.ToString("000"));
         Check("The alarm strip raises: 1 NEW CONTACT, with the alert tone", s.sensors.newContacts == 1 && alarmWords.gameObject.activeInHierarchy && alarmWords.text == "NEW CONTACT SINCE COMMIT",
               "\"" + alarmWords.text + "\", last cue \"" + board.LastSound + "\"");
@@ -630,11 +630,11 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => { if (shipRaw.color.a < 0.9f) dim = true; return Time.realtimeSinceStartup > blinkUntil; });
         Check("Tracked, our ship does not blink", !dim, "signal " + s.sensors.signal.ToString("0") + "%");
         //     Step 68: the signal box in the frame's top-right shows it too, with the Sensors drawer shut.
-        var sigBox = GameObject.Find("Board/HandoffBoard/SignalBox").transform;
+        var sigBox = GameObject.Find("Board/Tactical Board/SignalBox").transform;
         var boxPct = sigBox.Find("Signal · percent").GetComponent<TMPro.TMP_Text>();
         var boxNote = sigBox.Find("Signal · note").GetComponent<TMPro.TMP_Text>();
-        yield return (Func<bool>)(() => boxPct.text == HandoffBoardState.JsRound(s.sensors.signal) + "%");
-        Check("Tracked, the top-right signal box reads the signal and the trackers", boxPct.text == HandoffBoardState.JsRound(s.sensors.signal) + "%" && boxNote.text.EndsWith("YOUR RANGE"),
+        yield return (Func<bool>)(() => boxPct.text == ShipState.JsRound(s.sensors.signal) + "%");
+        Check("Tracked, the top-right signal box reads the signal and the trackers", boxPct.text == ShipState.JsRound(s.sensors.signal) + "%" && boxNote.text.EndsWith("YOUR RANGE"),
               "\"" + boxPct.text + "\", \"" + boxNote.text + "\"");
 
         // 18. The bearing trail (Step 45): each sweep leaves TRACK 07's bearing where we were. As we
@@ -710,7 +710,7 @@ public static class PlaytestRunner
         Check("No firing solution yet", !s.weapons.Sol.set, "");
         if (!Click("fc.track", null, "TRACK (contact not identified)")) yield break;
         Check("TRACK refuses a contact that is only heard", !s.weapons.Sol.set, "");
-        int expBrg = (HandoffBoardState.JsRound(s.scopeBrg) - s.nav.heading + 540) % 360 - 180;
+        int expBrg = (ShipState.JsRound(s.scopeBrg) - s.nav.heading + 540) % 360 - 180;
         var rngKnob = Hit("fc.knob", "rng");
         Vector2 knobAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(rngKnob.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
                                          rngKnob.transform.TransformPoint(((RectTransform)rngKnob.transform).rect.center)));
@@ -859,11 +859,11 @@ public static class PlaytestRunner
         double beam = (t07Ship.nav.CourseDeg + 90) * System.Math.PI / 180;
         s.nav.x = t07Ship.nav.x + System.Math.Sin(beam) * 12000; s.nav.y = t07Ship.nav.y + System.Math.Cos(beam) * 12000;
         s.nav.vx = s.nav.vy = 0; s.nav.throttle = 0;
-        s.nav.heading = s.nav.orderedHeading = HandoffBoardState.JsRound(t07Ship.nav.CourseDeg) % 360;
+        s.nav.heading = s.nav.orderedHeading = ShipState.JsRound(t07Ship.nav.CourseDeg) % 360;
         yield return 1f;
         //     Its track: two POINTs on it two minutes apart (stand-in for accurate plotting; the plot itself was tested above).
         s.marks.Clear();
-        var trackA = new HandoffBoardState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.nav.x, y = t07Ship.nav.y, t = board.MissionSeconds };
+        var trackA = new ShipState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.nav.x, y = t07Ship.nav.y, t = board.MissionSeconds };
         s.marks.Add(trackA);
         //     The solution: the periscope on it, the RNG knob starts one, dialled to its range (stand-in for reading the plot).
         s.LookAt("t07");
@@ -875,7 +875,7 @@ public static class PlaytestRunner
         if (!Click("rate", "10", "x10 rate key")) yield break;
         yield return (Func<bool>)(() => board.MissionSeconds - trackA.t >= 120f);
         if (!Click("rate", "1", "x1 rate key")) yield break;
-        var trackB = new HandoffBoardState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.nav.x, y = t07Ship.nav.y, t = board.MissionSeconds };
+        var trackB = new ShipState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.nav.x, y = t07Ship.nav.y, t = board.MissionSeconds };
         s.marks.Add(trackB);
         s.MarkDown("RULER", trackA.x, trackA.y, board.MissionSeconds); s.draft.ptA = trackA.id;
         s.MarkMove(trackB.x, trackB.y); s.draft.ptB = trackB.id;
@@ -928,7 +928,7 @@ public static class PlaytestRunner
         s.LookAt("t07");
         yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
         for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (missiles)")) yield break; yield return 0.15f; }
-        Func<HandoffBoardState, float> hull = sh => { float h = 0; foreach (var a in sh.damage.SideArmour) h += a; foreach (var c in sh.damage.compartments) h += c.integ; return h; };
+        Func<ShipState, float> hull = sh => { float h = 0; foreach (var a in sh.damage.SideArmour) h += a; foreach (var c in sh.damage.compartments) h += c.integ; return h; };
         int cells0 = s.weapons.vlsCells, landed0 = s.weapons.shotResults;
         float hull0 = hull(dummyShip);
         if (!Click("rate", "10", "x10 rate key")) yield break;
@@ -997,8 +997,8 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => board.Tags > tags0 + 1);
         Check("ACTIVE on: each sweep pass over GARUDA beeps", board.Tags >= tags0 + 2, (board.Tags - tags0) + " beeps");
         s.sensors.active = false;
-        var vxField = typeof(HandoffPlotPanel).GetField("viewX", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var vyField = typeof(HandoffPlotPanel).GetField("viewY", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var vxField = typeof(PlotPanel).GetField("viewX", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var vyField = typeof(PlotPanel).GetField("viewY", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         vxField.SetValue(plotPanel, (s.nav.x + t07.worldX) / 2); vyField.SetValue(plotPanel, (s.nav.y + t07.worldY) / 2); // stand-in for panning the plot
         var ilField = typeof(HangarPanel).GetField("interlock", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var hangarPanel = board.GetComponentInChildren<HangarPanel>(true);
@@ -1054,7 +1054,7 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.hangar.flightRuns >= 1);
         float prowAfter = Mathf.Max(0f, prow0 - 4 * s.hangar.stats.fighterArmourDamage);
         Check("In range, one attack run: 10 armour per fighter off the side facing them, its bow", s.hangar.flightRuns == 1 && prow0 > 4 * s.hangar.stats.fighterArmourDamage
-              && s.hangar.flightReport == " PROW ARMOUR " + HandoffBoardState.JsRound(prowAfter / dummyShip.damage.stats.sideArmourMax[0] * 100f) + "%"
+              && s.hangar.flightReport == " PROW ARMOUR " + ShipState.JsRound(prowAfter / dummyShip.damage.stats.sideArmourMax[0] * 100f) + "%"
               && Mathf.Approximately(dummyShip.damage.SideArmour[0], prowAfter),
               "\"" + s.hangar.flightReport + "\"; PROW armour " + prow0 + " → " + dummyShip.damage.SideArmour[0]);
         Check("The hangar reports the attack", interlockText().StartsWith("ATTACKING GARUDA"), "\"" + interlockText() + "\"");
@@ -1331,10 +1331,10 @@ public static class PlaytestRunner
         //     The targeting computer (the periscope) shows a scanned ship's hull in its SUBJECT box (Step 61).
         if (board.Motion) board.Motion.SetScopeDown(true);
         yield return 1.2f;
-        var scope = board.GetComponentInChildren<HandoffPeriscopePanel>(true);
-        var subjName = typeof(HandoffPeriscopePanel).GetField("subjectName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as TMPro.TMP_Text;
-        var subjHull = typeof(HandoffPeriscopePanel).GetField("subjectClass", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as TMPro.TMP_Text;
-        string hullNow = HandoffPeriscopePanel.HullLine(dummyShip);
+        var scope = board.GetComponentInChildren<PeriscopePanel>(true);
+        var subjName = typeof(PeriscopePanel).GetField("subjectName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as TMPro.TMP_Text;
+        var subjHull = typeof(PeriscopePanel).GetField("subjectClass", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as TMPro.TMP_Text;
+        string hullNow = PeriscopePanel.HullLine(dummyShip);
         Check("Scanned, the targeting computer shows its hull: each face, and the room behind an open one", subjName && subjHull && subjName.text.StartsWith("GARUDA") && subjHull.text == hullNow && hullNow.StartsWith("BOW ") && hullNow.Contains(" \u25B8 "),
               subjName && subjHull ? "\"" + subjName.text + "\" / \"" + subjHull.text + "\"" : "no readout");
         //     CLASS in the targeting computer names its class (owner 2026-10-24). Step 75 (owner 2026-10-26): the plot shows
@@ -1350,8 +1350,8 @@ public static class PlaytestRunner
         s.sensors.stats.visualRangeKm = sightWas;
         yield return 0.6f;
         //     The sweep runs from a small circle round our ship, not from the ship itself.
-        var sweepInner = (float)typeof(HandoffSweepGraphic).GetField("innerPx", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                                .GetValue(plotPanel.GetComponentInChildren<HandoffSweepGraphic>(true));
+        var sweepInner = (float)typeof(SweepGraphic).GetField("innerPx", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                                .GetValue(plotPanel.GetComponentInChildren<SweepGraphic>(true));
         Check("The sweep starts at a small circle just outside our ship", sweepInner > 15f, sweepInner.ToString("0") + " px");
         Shot("28g_targeting_computer");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
@@ -1400,7 +1400,7 @@ public static class PlaytestRunner
         var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
         var sides = typeof(EngineeringPanel).GetField("hullSides", flags).GetValue(eng) as UnityEngine.UI.RawImage[];
         var engRows = typeof(EngineeringPanel).GetField("rows", flags).GetValue(eng) as EngineeringPanel.Row[];
-        System.Func<string, HandoffWedge> ring = k => { foreach (var r in engRows) if (r.key == k) return r.ring[0]; return null; };
+        System.Func<string, Wedge> ring = k => { foreach (var r in engRows) if (r.key == k) return r.ring[0]; return null; };
         Color white = new Color32(0xE8, 0xED, 0xF0, 0xFF), amber = new Color32(0xE0, 0xA0, 0x20, 0xFF), red = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
         // the pictures are pre-encoded for the board (Paint); the ring segments encode themselves
         System.Func<UnityEngine.UI.Graphic, Color, bool> lit = (g, c) => g && Mathf.Abs(g.color.r - c.r) < 0.01f && Mathf.Abs(g.color.g - c.g) < 0.01f && Mathf.Abs(g.color.b - c.b) < 0.01f;
@@ -1536,9 +1536,9 @@ public static class PlaytestRunner
         //     RESTART MISSION, clicked for real: the board scene loads again, with its level.
         var oldBoard = board;
         if (!Click("end.restart", null, "RESTART MISSION")) yield break;
-        yield return (Func<bool>)(() => !oldBoard && UnityEngine.Object.FindAnyObjectByType<HandoffBoardControls>());
+        yield return (Func<bool>)(() => !oldBoard && UnityEngine.Object.FindAnyObjectByType<BoardManager>());
         yield return 1.5f; // the level loads on top a frame later
-        board = UnityEngine.Object.FindAnyObjectByType<HandoffBoardControls>();
+        board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
         s = board.State;
         quest = UnityEngine.Object.FindAnyObjectByType<QuestSystem>();
         endPanel = board.GetComponentInChildren<EndScreenPanel>(true);
@@ -1551,9 +1551,9 @@ public static class PlaytestRunner
 
         // 25b. The battle space's edge (Step 86), on the fresh board: our ship at the centre, GARUDA's fire off.
         s.nav.PlaceAt(0, 0, 0); s.nav.vx = s.nav.vy = 0;
-        var plotP = board.GetComponentInChildren<HandoffPlotPanel>(true);
-        var plotGrid = board.GetComponentInChildren<HandoffPlotGrid>(true);
-        var axisNums = typeof(HandoffPlotPanel).GetField("axisLabels", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(plotP) as List<TMPro.TextMeshProUGUI>;
+        var plotP = board.GetComponentInChildren<PlotPanel>(true);
+        var plotGrid = board.GetComponentInChildren<PlotGrid>(true);
+        var axisNums = typeof(PlotPanel).GetField("axisLabels", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(plotP) as List<TMPro.TextMeshProUGUI>;
         plotP.CentreOnOurShip();
         yield return 0.6f;
         float cellPx;
@@ -1582,8 +1582,8 @@ public static class PlaytestRunner
         yield return 0.6f;
         Check("C brings the view back to our ship", System.Math.Abs(plotP.View.x - s.nav.x) < 1 && System.Math.Abs(plotP.View.y - s.nav.y) < 1,
               "view " + plotP.View.x.ToString("N0") + ", " + plotP.View.y.ToString("N0") + " km");
-        var edgeWords = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
-        var edgeCount = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/Count").GetComponent<TMPro.TMP_Text>();
+        var edgeWords = GameObject.Find("Board").transform.Find("Tactical Board/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
+        var edgeCount = GameObject.Find("Board").transform.Find("Tactical Board/AlarmStrip/Count").GetComponent<TMPro.TMP_Text>();
         s.nav.PlaceAt(s.ArenaHalfW - 1250, 0, 90); s.nav.vx = s.nav.vy = 0;
         if (!Click("pause", null, "PAUSE/RUN key")) yield break;
         float edgeAt = board.MissionSeconds;
@@ -1613,9 +1613,9 @@ public static class PlaytestRunner
         //     RESTART again: SHIP LOST is gone (it outlasted nothing before, because nothing restarted).
         oldBoard = board;
         if (!Click("end.restart", null, "RESTART MISSION")) yield break;
-        yield return (Func<bool>)(() => !oldBoard && UnityEngine.Object.FindAnyObjectByType<HandoffBoardControls>());
+        yield return (Func<bool>)(() => !oldBoard && UnityEngine.Object.FindAnyObjectByType<BoardManager>());
         yield return 1.5f;
-        board = UnityEngine.Object.FindAnyObjectByType<HandoffBoardControls>();
+        board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
         s = board.State;
         quest = UnityEngine.Object.FindAnyObjectByType<QuestSystem>();
         endPanel = board.GetComponentInChildren<EndScreenPanel>(true);
@@ -1624,7 +1624,7 @@ public static class PlaytestRunner
         if (!Click("pause", null, "PAUSE/RUN key")) yield break;
         float restartAt = board.MissionSeconds;
         yield return (Func<bool>)(() => board.MissionSeconds > restartAt);
-        var stripWords = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
+        var stripWords = GameObject.Find("Board").transform.Find("Tactical Board/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
         Check("After RESTART, SHIP LOST is gone: not lost, no countdown, and the alarm strip does not say it, after a tick",
               !s.deserted && !s.destroyed && s.outsideFor < 0f && !(stripWords.gameObject.activeInHierarchy && stripWords.text.StartsWith("SHIP LOST")),
               "deserted " + s.deserted + ", destroyed " + s.destroyed + ", outside " + s.outsideFor + ", strip \"" + (stripWords.gameObject.activeInHierarchy ? stripWords.text : "") + "\"");
@@ -1657,7 +1657,7 @@ public static class PlaytestRunner
     }
 
     // How far a straight shot from our ship on this bearing passes from a contact, km (huge if it's behind us).
-    static double MissKm(HandoffBoardState s, HandoffBoardState.Track t, double aimDeg)
+    static double MissKm(ShipState s, ShipState.Track t, double aimDeg)
     {
         double a = aimDeg * System.Math.PI / 180, px = t.worldX - s.nav.x, py = t.worldY - s.nav.y;
         double along = px * System.Math.Sin(a) + py * System.Math.Cos(a);
@@ -1679,7 +1679,7 @@ public static class PlaytestRunner
 
     /// <summary>Press at board px a, release at board px b, on the plot, through the EventSystem.
     /// The plot's capture surface must be on top there.</summary>
-    static bool PlotDrag(HandoffBoardControls board, Vector2 a, Vector2 b, string label, string expect = "plot")
+    static bool PlotDrag(BoardManager board, Vector2 a, Vector2 b, string label, string expect = "plot")
     {
         var es = EventSystem.current;
         Vector2 sa = BoardToScreen(board, a), sb = BoardToScreen(board, b);
@@ -1687,7 +1687,7 @@ public static class PlaytestRunner
         var hits = new List<RaycastResult>();
         es.RaycastAll(ped, hits);
         var top = hits.Count > 0 ? ExecuteEvents.GetEventHandler<IPointerDownHandler>(hits[0].gameObject) : null;
-        var hh = top ? top.GetComponent<HandoffHit>() : null;
+        var hh = top ? top.GetComponent<ClickSpot>() : null;
         if (hh == null || hh.action != expect)
         {
             Check(label, false, "blocked: topmost at board " + a + " is " + (hits.Count > 0 ? hits[0].gameObject.name : "nothing"));
@@ -1695,13 +1695,13 @@ public static class PlaytestRunner
         }
         ped.pointerCurrentRaycast = ped.pointerPressRaycast = hits[0];
         ExecuteEvents.Execute(top, ped, ExecuteEvents.pointerDownHandler);
-        ped.position = sb; // released without a drag event: HandoffHit sends the release point as the last drag
+        ped.position = sb; // released without a drag event: ClickSpot sends the release point as the last drag
         ExecuteEvents.Execute(top, ped, ExecuteEvents.pointerUpHandler);
         ExecuteEvents.Execute(top, ped, ExecuteEvents.pointerClickHandler);
         return true;
     }
 
-    static Vector2 BoardToScreen(HandoffBoardControls board, Vector2 bp)
+    static Vector2 BoardToScreen(BoardManager board, Vector2 bp)
     {
         var rt = (RectTransform)board.transform;
         var local = new Vector3(bp.x - rt.rect.width / 2f, rt.rect.height / 2f - bp.y, 0f);
@@ -1709,10 +1709,10 @@ public static class PlaytestRunner
         return RectTransformUtility.WorldToScreenPoint(cam, rt.TransformPoint(local));
     }
 
-    static TMPro.TMP_Text MarkLabelText(HandoffBoardControls board, int i)
+    static TMPro.TMP_Text MarkLabelText(BoardManager board, int i)
     {
-        var f = typeof(HandoffPlotPanel).GetField("labels", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var list = f.GetValue(board.GetComponentInChildren<HandoffPlotPanel>(true)) as List<TMPro.TMP_Text>;
+        var f = typeof(PlotPanel).GetField("labels", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var list = f.GetValue(board.GetComponentInChildren<PlotPanel>(true)) as List<TMPro.TMP_Text>;
         return list != null && i < list.Count ? list[i] : null;
     }
     // Step 86: the axis shows 0 (level with our ship), and every number is a whole number of big squares.
@@ -1732,24 +1732,24 @@ public static class PlaytestRunner
         var t = typeof(EndScreenPanel).GetField(field, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(p) as TMPro.TMP_Text;
         return t ? t.text : "?";
     }
-    static string MarkLabel(HandoffBoardControls board, int i) { var t = MarkLabelText(board, i); return t ? t.text : "?"; }
-    static Vector2 MarkLabelPos(HandoffBoardControls board, int i) { var t = MarkLabelText(board, i); return t ? t.rectTransform.anchoredPosition : Vector2.zero; }
+    static string MarkLabel(BoardManager board, int i) { var t = MarkLabelText(board, i); return t ? t.text : "?"; }
+    static Vector2 MarkLabelPos(BoardManager board, int i) { var t = MarkLabelText(board, i); return t ? t.rectTransform.anchoredPosition : Vector2.zero; }
 
     // ---- helpers ----------------------------------------------------------------------------
 
-    static bool BusesAre(HandoffBoardState s, PowerSystem.BusMode mode, int fill)
+    static bool BusesAre(ShipState s, PowerSystem.BusMode mode, int fill)
     {
         foreach (var b in s.power.buses) if (b.mode != mode || b.fill != fill) return false;
         return true;
     }
 
-    static bool BusesAreMode(HandoffBoardState s, PowerSystem.BusMode mode)
+    static bool BusesAreMode(ShipState s, PowerSystem.BusMode mode)
     {
         foreach (var b in s.power.buses) if (b.mode != mode) return false;
         return true;
     }
 
-    static string SigNote(HandoffBoardControls board)
+    static string SigNote(BoardManager board)
     {
         var panel = board.GetComponentInChildren<SensorsPanel>(true);
         var f = typeof(SensorsPanel).GetField("sigNote", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -1757,22 +1757,22 @@ public static class PlaytestRunner
         return t ? t.text : "?";
     }
 
-    static bool AllFull(HandoffBoardState s)
+    static bool AllFull(ShipState s)
     {
         foreach (var b in s.power.buses) if (b.fill < s.power.stats.busMax) return false;
         return true;
     }
 
-    static string Buses(HandoffBoardState s)
+    static string Buses(ShipState s)
     {
         var parts = new List<string>();
         foreach (var b in s.power.buses) parts.Add(b.key.ToUpperInvariant() + " " + b.mode.ToString().ToUpperInvariant() + " " + b.fill);
         return string.Join(", ", parts);
     }
 
-    static HandoffHit Hit(string action, string arg)
+    static ClickSpot Hit(string action, string arg)
     {
-        foreach (var h in UnityEngine.Object.FindObjectsByType<HandoffHit>(FindObjectsSortMode.None))
+        foreach (var h in UnityEngine.Object.FindObjectsByType<ClickSpot>(FindObjectsSortMode.None))
             if (h.action == action && (h.arg ?? "") == (arg ?? "") && h.isActiveAndEnabled) return h;
         return null;
     }
@@ -1791,7 +1791,7 @@ public static class PlaytestRunner
         // A control can have several click targets (a rail key and its drawer's latch, which may still be
         // sliding away). Use the first one that is actually on top at its own centre.
         string why = "control not found";
-        foreach (var h in UnityEngine.Object.FindObjectsByType<HandoffHit>(FindObjectsSortMode.None))
+        foreach (var h in UnityEngine.Object.FindObjectsByType<ClickSpot>(FindObjectsSortMode.None))
         {
             if (h.action != action || (h.arg ?? "") != (arg ?? "") || !h.isActiveAndEnabled) continue; // Unity saves a null arg as ""
             var rt = (RectTransform)h.transform;

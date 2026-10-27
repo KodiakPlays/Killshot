@@ -33,7 +33,7 @@ public enum MissionFailReason
 
 public class QuestSystem : MonoBehaviour
 {
-    [SerializeField] private HandoffBoardControls board;
+    [SerializeField] private BoardManager board;
     [Tooltip("The ship to destroy, by its track key (t07 is the Garuda).")]
     [SerializeField] private string targetKey = "t07";
 
@@ -46,7 +46,7 @@ public class QuestSystem : MonoBehaviour
     /// <summary>Real time when it ended. The end screen waits a moment after it.</summary>
     public float EndedAt { get; private set; }
 
-    private void Awake() { if (!board) board = FindAnyObjectByType<HandoffBoardControls>(); }
+    private void Awake() { if (!board) board = FindAnyObjectByType<BoardManager>(); }
     private void OnEnable() { if (board) board.Ticked += Tick; }
     private void OnDisable() { if (board) board.Ticked -= Tick; }
 

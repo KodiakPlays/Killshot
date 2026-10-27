@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class TacticalWorld : MonoBehaviour
 {
-    [SerializeField] private HandoffBoardControls board;
+    [SerializeField] private BoardManager board;
     [Tooltip("Drop board tracks that no world contact drives (owner 2026-10-17: the mock-up contacts go).")]
     [SerializeField] private bool dropTracksWithoutContact = true;
     [Tooltip("The level loaded on top of the board at play: a scene in Assets/Scenes/Levels, by name. If a level is already open in the editor, that one plays instead.")]
@@ -26,8 +26,8 @@ public class TacticalWorld : MonoBehaviour
 
     private void Awake()
     {
-        if (!board) board = FindAnyObjectByType<HandoffBoardControls>();
-        if (!board) { Debug.LogError("[TacticalWorld] no HandoffBoardControls in the scene"); enabled = false; return; }
+        if (!board) board = FindAnyObjectByType<BoardManager>();
+        if (!board) { Debug.LogError("[TacticalWorld] no BoardManager in the scene"); enabled = false; return; }
         contacts = GetComponentsInChildren<WorldContact>();
         brains = System.Array.ConvertAll(contacts, c => c.GetComponent<EnemyBrain>());
         foreach (var c in contacts) StartShip(c);
@@ -68,7 +68,7 @@ public class TacticalWorld : MonoBehaviour
     static void StartShip(WorldContact c)
     {
         var ship = c.Ship;
-        ship.nav.PlaceAt(c.transform.position.x, c.transform.position.y, HandoffBoardState.JsRound(((-c.transform.eulerAngles.z) % 360 + 360) % 360) % 360);
+        ship.nav.PlaceAt(c.transform.position.x, c.transform.position.y, ShipState.JsRound(((-c.transform.eulerAngles.z) % 360 + 360) % 360) % 360);
         ship.power.PowerEngines();
     }
 
@@ -91,8 +91,8 @@ public class TacticalWorld : MonoBehaviour
     {
         var us = board.State.nav;
         if (!us) return;
-        us.PlaceAt(at.x, at.y, HandoffBoardState.JsRound(((-zDeg) % 360 + 360) % 360) % 360);
-        var plot = FindAnyObjectByType<HandoffPlotPanel>();
+        us.PlaceAt(at.x, at.y, ShipState.JsRound(((-zDeg) % 360 + 360) % 360) % 360);
+        var plot = FindAnyObjectByType<PlotPanel>();
         if (plot) plot.CentreOnOurShip();
         Sync();
     }
@@ -142,7 +142,7 @@ public class TacticalWorld : MonoBehaviour
             t.course = c.Ship.nav.CourseDeg;       // and which way it is really going (Step 52)
             var d = new Vector2((float)(t.worldX - s.nav.x), (float)(t.worldY - s.nav.y));
             t.bearing = Bearing(d);
-            t.rangeKm = HandoffBoardState.JsRound(d.magnitude); // the board's tracks hold whole km
+            t.rangeKm = ShipState.JsRound(d.magnitude); // the board's tracks hold whole km
         }
     }
 
@@ -151,6 +151,6 @@ public class TacticalWorld : MonoBehaviour
     {
         double deg = System.Math.Atan2(d.x, d.y) * 180.0 / System.Math.PI;
         deg = (deg % 360 + 360) % 360;
-        return HandoffBoardState.JsRound(deg) % 360;
+        return ShipState.JsRound(deg) % 360;
     }
 }

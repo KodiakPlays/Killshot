@@ -9,12 +9,12 @@ using TMPro;
 /// freqLabel, freqBearing, tuneAngle, spectrumBars, sigLamp, lockCap/lockLamp, tuneNote, commsState,
 /// plainChars, solvedLabel, keyDials) and UIStateSpec §8.2 and §11 "Comms: tune, lock, decrypt".
 /// </summary>
-public class CommsPanel : HandoffPanel
+public class CommsPanel : Panel
 {
     [System.Serializable]
     public class KeyDial
     {
-        public HandoffBoardControls.Dial pointer;
+        public BoardManager.Dial pointer;
         public TMP_Text letter;
         public Image box;
     }
@@ -23,15 +23,15 @@ public class CommsPanel : HandoffPanel
     [SerializeField] private TMP_Text commsState;
 
     [Header("Band selector")]
-    [SerializeField] private HandoffBoardControls.Dial bandPointer;
+    [SerializeField] private BoardManager.Dial bandPointer;
     [SerializeField] private Image[] bandLamps, bandGlows;
     [SerializeField] private TMP_Text[] bandLabels;
 
     [Header("Tuning")]
     [SerializeField] private TMP_Text freqLabel;
-    [SerializeField] private HandoffBoardControls.Dial tuneIndicator;
+    [SerializeField] private BoardManager.Dial tuneIndicator;
     [Tooltip("Marker on the scope ring at the tuned frequency (freqBearing).")]
-    [SerializeField] private HandoffBoardControls.Dial ringMarker;
+    [SerializeField] private BoardManager.Dial ringMarker;
     [Tooltip("Tuning knob / scope centre, board px.")]
     [SerializeField] private Vector2 scopeCentre = new Vector2(1590f, 422.5f);
 

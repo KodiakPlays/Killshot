@@ -6,14 +6,14 @@ using UnityEngine;
 /// AUTO groups, the capacitor and the fire lever. It fires slugs and missiles, flies them, and its PDCs
 /// take their chances at enemy missiles coming in. Our ship and every enemy carry one (the enemy is our
 /// ship with other stats). Owner 2026-10-26: weapons live in one place, here. The contact list, damage and
-/// kills stay on the ship state (HandoffBoardState); this reads them. Rules from board-logic.js (MOUNTS,
+/// kills stay on the ship state (ShipState); this reads them. Rules from board-logic.js (MOUNTS,
 /// SYSTEMS, WARHEADS, SWITCHES, computeSol, nudgeSol, flip, allSet, drawWep) and Steps 47–55.
 /// </summary>
 public class WeaponSystem : MonoBehaviour
 {
     /// <summary>The ship this belongs to. Weapons read its contacts, its WEP bus, the periscope, where it is,
     /// and its damage model.</summary>
-    [System.NonSerialized] public HandoffBoardState ship;
+    [System.NonSerialized] public ShipState ship;
 
     /// <summary>This ship's numbers for weapons: its section of the ship's stats file (Assets/Ships,
     /// Starwolf → Tuning).</summary>
@@ -178,7 +178,7 @@ public class WeaponSystem : MonoBehaviour
         get
         {
             // a hand-dialled solution aims at a point: BEARING wants the periscope on the dialled bearing
-            if (Sol.set && Sol.manual) return HandoffBoardState.AngDiffD(ship.nav.heading + Sol.brg, ship.scopeBrg) <= ship.onBearingDeg;
+            if (Sol.set && Sol.manual) return ShipState.AngDiffD(ship.nav.heading + Sol.brg, ship.scopeBrg) <= ship.onBearingDeg;
             var o = OffBearing(); return o.HasValue && System.Math.Abs(o.Value) <= ship.onBearingDeg;
         }
     }
@@ -244,7 +244,7 @@ public class WeaponSystem : MonoBehaviour
             // Step 47 (owner 2026-10-23): a knob starts a hand-dialled solution, from the plot
             cur.set = true; cur.manual = true;
             cur.rangeKm = stats.manualStartRangeKm;
-            cur.brg = (HandoffBoardState.JsRound(ship.scopeBrg) - ship.nav.heading + 540) % 360 - 180; // relative, as TRACK stores it
+            cur.brg = (ShipState.JsRound(ship.scopeBrg) - ship.nav.heading + 540) % 360 - 180; // relative, as TRACK stores it
             cur.spd = 0f;
             ApplyTrack(cur);
         }
@@ -331,8 +331,8 @@ public class WeaponSystem : MonoBehaviour
     /// and its speed into SPD.</summary>
     public void ApplyTrack(Solution cur)
     {
-        HandoffBoardState.Mark latest = null;
-        HandoffBoardState.Mark f, g; double crs, spd;
+        ShipState.Mark latest = null;
+        ShipState.Mark f, g; double crs, spd;
         foreach (var m in ship.marks) if (m.kind == "ruler" && (latest == null || m.id > latest.id) && ship.TrackLeg(m, out f, out g, out crs, out spd)) latest = m;
         if (latest == null) return;
         ship.TrackLeg(latest, out f, out g, out crs, out spd);
@@ -376,7 +376,7 @@ public class WeaponSystem : MonoBehaviour
         {
             var m = MountOf(mount);
             if (m == null || !Sol.set) return false;
-            return HandoffBoardState.AngDiff((Sol.brg % 360 + 360) % 360, m.arc) <= m.halfArc;
+            return ShipState.AngDiff((Sol.brg % 360 + 360) % 360, m.arc) <= m.halfArc;
         }
     }
 
@@ -393,7 +393,7 @@ public class WeaponSystem : MonoBehaviour
             if (r.missile) Steer(r, dt);
             double step = System.Math.Min(r.speed * dt, r.maxKm - r.travelled);
             double flight = r.speed > 0 ? step / r.speed : 0; // seconds of this tick the round is flying
-            HandoffBoardState.Track struck = null;
+            ShipState.Track struck = null;
             double first = double.MaxValue;
             foreach (var t in ship.tracks)
             {
@@ -440,7 +440,7 @@ public class WeaponSystem : MonoBehaviour
     }
 
     // The side facing the shot (reference sim sideFacing): where it came from, against the ship's bow.
-    static string SideStruck(HandoffBoardState.Track t, Round r) => HandoffBoardState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, t.worldHdg);
+    static string SideStruck(ShipState.Track t, Round r) => ShipState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, t.worldHdg);
 
     // ---- enemy missiles and our point defence (Step 55, owner 2026-10-24) -----------------------
 
@@ -480,7 +480,7 @@ public class WeaponSystem : MonoBehaviour
             double cx = px - r.dx * u, cy = py - r.dy * u;
             if (cx * cx + cy * cy <= r.by.hitRadiusKm * r.by.hitRadiusKm)
             {
-                string side = HandoffBoardState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, ship.nav.heading);
+                string side = ShipState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, ship.nav.heading);
                 incomingReport = "MISSILE HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead], r.by);
                 hitsTaken++;
                 list.RemoveAt(i);
@@ -497,13 +497,13 @@ public class WeaponSystem : MonoBehaviour
     {
         if (!loaders || !WepReady) return false;
         double dx = r.x - ship.nav.x, dy = r.y - ship.nav.y;
-        int rel = HandoffBoardState.JsRound(((System.Math.Atan2(dx, dy) * 180 / System.Math.PI - ship.nav.heading) % 360 + 360) % 360) % 360;
+        int rel = ShipState.JsRound(((System.Math.Atan2(dx, dy) * 180 / System.Math.PI - ship.nav.heading) % 360 + 360) % 360) % 360;
         var groups = System.Array.Find(systems, y => y.id == "PD").mounts;
         for (int g = 0; g < groups.Length && g < pdcAuto.Length; g++)
         {
             var m = MountOf(groups[g]);
             if (!pdcAuto[g] || m == null || (r.pdcTried & (1 << g)) != 0) continue;
-            if (dx * dx + dy * dy > (double)m.rangeKm * m.rangeKm || HandoffBoardState.AngDiff(rel, m.arc) > m.halfArc) continue;
+            if (dx * dx + dy * dy > (double)m.rangeKm * m.rangeKm || ShipState.AngDiff(rel, m.arc) > m.halfArc) continue;
             r.pdcTried |= 1 << g;
             m.ammo -= stats.pdcRoundsPerGo;
             if (m.ammo < stats.pdcRoundsPerGo) { pdcAuto[g] = false; if (g == PdcGroup) ClearSwitches(); }
@@ -527,7 +527,7 @@ public class WeaponSystem : MonoBehaviour
     {
         var m = MountOf(mount);
         var t = ship.TrackOf(key);
-        return m != null && t != null && t.hostile && t.rangeKm <= m.rangeKm && HandoffBoardState.AngDiff(t.bearing, m.arc) <= m.halfArc;
+        return m != null && t != null && t.hostile && t.rangeKm <= m.rangeKm && ShipState.AngDiff(t.bearing, m.arc) <= m.halfArc;
     }
     /// <summary>pickTarget: a valid contact becomes the target; the ladder, lever and fired reset.</summary>
     public void PickTarget(string key)

@@ -5,9 +5,9 @@ using UnityEngine.UI;
 /// Step 43. The radar sweep: a bright leading edge with a faint tail fading behind it, turning
 /// round our ship while DRADIS is on (UIStateSpec §9.2 rd-sweep; colours sweepEdge and sweepTail
 /// from board-logic.js renderVals). Drawn once with the edge pointing north and filling its rect;
-/// HandoffPlotPanel sizes the rect to the sensor circle and turns it.
+/// PlotPanel sizes the rect to the sensor circle and turns it.
 /// </summary>
-public class HandoffSweepGraphic : MaskableGraphic
+public class SweepGraphic : MaskableGraphic
 {
     [Tooltip("How far the fading tail reaches behind the edge, degrees. The design gives no figure.")]
     [Tune("Sensors")] [SerializeField] private float tailDegrees = 60f;

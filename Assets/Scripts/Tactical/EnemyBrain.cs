@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Step 51 (owner 2026-10-23). The first enemy brain (FTUE_PLAN §4.5): it only writes orders — an
-/// ordered heading and a throttle — into its ship's own HandoffBoardState. The ship turns and moves with
+/// ordered heading and a throttle — into its ship's own ShipState. The ship turns and moves with
 /// the same maths as ours (its NavSystem; TacticalWorld ticks it each board tick). For now it
 /// patrols a loop of waypoints at a cruising speed. Step 55: when we hit it, it fires a missile salvo
 /// back at us. Hearing and hunting come in later steps.
@@ -35,7 +35,7 @@ public class EnemyBrain : MonoBehaviour
 
     /// <summary>Write this tick's orders: fire back if we hit it, and head for the current waypoint at
     /// cruising speed.</summary>
-    public void Think(HandoffBoardState ship, HandoffBoardState us)
+    public void Think(ShipState ship, ShipState us)
     {
         // hit since the last tick: its armour or a compartment went down
         float now = 0f;

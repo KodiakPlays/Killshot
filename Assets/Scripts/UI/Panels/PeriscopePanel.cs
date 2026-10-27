@@ -11,17 +11,17 @@ using TMPro;
 /// scopeBrgLabel, offBearingLabel, offAxisInk, scopeZoomLabel, magAngle, tgtX, tgtVisible, scopeConv)
 /// and UIStateSpec §11 "Periscope".
 /// </summary>
-public class HandoffPeriscopePanel : HandoffPanel
+public class PeriscopePanel : Panel
 {
     [SerializeField] private TMP_Text mountShort;
     [SerializeField] private Image aperture;
     [Tooltip("periscope_aperture swap: idle, and the amber rim while slewing.")]
     [SerializeField] private Sprite apertureIdle, apertureSlewing;
-    [SerializeField] private HandoffScopeSight sight;
+    [SerializeField] private ScopeSight sight;
 
     [Header("Readouts")]
     [SerializeField] private TMP_Text offAxis, zoomLabel, bearing, slewLabel, subjectName, subjectClass;
-    [SerializeField] private HandoffBoardControls.Dial magPointer;
+    [SerializeField] private BoardManager.Dial magPointer;
 
     [Header("Target brackets — move with tgtX = centre + clamp(off x 5.2, ±150) px")]
     [SerializeField] private RectTransform[] brackets;
@@ -102,12 +102,12 @@ public class HandoffPeriscopePanel : HandoffPanel
         var off = s.weapons.OffBearing();
         if (offAxis)
         {
-            offAxis.text = HandoffBoardState.OffLabel(off);
+            offAxis.text = ShipState.OffLabel(off);
             Paint(offAxis, s.ScopeOnAxis ? nominal : s.ScopeOffDeg <= 12 ? caution : data);
         }
-        if (zoomLabel) zoomLabel.text = HandoffBoardState.JsToFixed(s.scopeZoom, 1) + "×";
+        if (zoomLabel) zoomLabel.text = ShipState.JsToFixed(s.scopeZoom, 1) + "×";
         magPointer.Set((float)((s.scopeZoom - 1) / 7 * 280 - 140));
-        if (bearing) bearing.text = HandoffBoardState.JsRound(s.scopeBrg).ToString("000");
+        if (bearing) bearing.text = ShipState.JsRound(s.scopeBrg).ToString("000");
         if (slewLabel)
         {
             // ▶ and ◀ come from the Noto Sans Symbols 2 fallback (HANDOFF_GAPS row 30, done)
@@ -135,7 +135,7 @@ public class HandoffPeriscopePanel : HandoffPanel
         // convergence: 100 - range / mount range, 6..96 %, 0 with no target
         if (convBar)
         {
-            float pct = tgt != null ? Mathf.Max(6, Mathf.Min(96, HandoffBoardState.JsRound(100 - (tgt.rangeKm / (double)m.rangeKm) * 100))) : 0;
+            float pct = tgt != null ? Mathf.Max(6, Mathf.Min(96, ShipState.JsRound(100 - (tgt.rangeKm / (double)m.rangeKm) * 100))) : 0;
             float w = convWidth * pct / 100f;
             convBar.sizeDelta = new Vector2(w, convBar.sizeDelta.y);
             convBar.anchoredPosition = new Vector2(convLeft - parentLeft + w / 2f, convBar.anchoredPosition.y);
@@ -168,7 +168,7 @@ public class HandoffPeriscopePanel : HandoffPanel
 
     /// <summary>"BOW 100 · STBD ▸ HGR 3 · AFT 50 · PORT 50": armour per face in %, and through an open face (▸, as the
     /// engineering lines use it) the room behind it and its integrity (DAMAGE_README.md). A wreck or a prize says so.</summary>
-    public static string HullLine(HandoffBoardState ship)
+    public static string HullLine(ShipState ship)
     {
         if (ship.destroyed) return "WRECK";
         if (ship.captured) return "PRIZE — HELD BY OUR MARINES";
@@ -177,7 +177,7 @@ public class HandoffPeriscopePanel : HandoffPanel
         {
             float a = ship.damage.SideArmour[i];
             var room = ship.damage.Comp(DamageSystem.RoomBehind(i));
-            parts[i] = a > 0f ? FaceNames[i] + " " + HandoffBoardState.JsRound(a / ship.damage.stats.sideArmourMax[i] * 100f)
+            parts[i] = a > 0f ? FaceNames[i] + " " + ShipState.JsRound(a / ship.damage.stats.sideArmourMax[i] * 100f)
                               : FaceNames[i] + " ▸ " + (room != null ? room.tag + " " + room.integ : "OPEN");
         }
         return string.Join(" · ", parts);

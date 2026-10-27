@@ -11,7 +11,7 @@ using TMPro;
 /// squads, squadAngle, orderAngle, devLabel/Ink, interlock/Ink, launchLamp, llLeft, llTrack,
 /// llHint/Ink, recallLamp) and UIStateSpec §8.2 and §11 "Hangar: launching a squadron".
 /// </summary>
-public class HangarPanel : HandoffPanel
+public class HangarPanel : Panel
 {
     [System.Serializable]
     public class SquadRow
@@ -39,7 +39,7 @@ public class HangarPanel : HandoffPanel
            + "(Step 33f verification — '7 READY / 1 AIRBORNE' ran out of it).")]
     [SerializeField] private RectTransform headerScreen;
     [SerializeField] private float headerLeft = 1522.5f, headerMinWidth = 106.5f, headerPad = 9f, headerMargin = 4f;
-    [SerializeField] private HandoffBoardControls.Dial doorSelector;
+    [SerializeField] private BoardManager.Dial doorSelector;
     [SerializeField] private Image doorLamp, doorGlow, doorInkLamp, pressInkLamp, catInkLamp;
     [SerializeField] private TMP_Text doorLabel, pressLabel, catLabel, catPct;
     [SerializeField] private RectTransform catWell, catFill;
@@ -51,7 +51,7 @@ public class HangarPanel : HandoffPanel
     [SerializeField] private float squadPitch = 87f;
 
     [Header("Launch order")]
-    [SerializeField] private HandoffBoardControls.Dial shipSelector, commandSelector;
+    [SerializeField] private BoardManager.Dial shipSelector, commandSelector;
     [SerializeField] private TMP_Text squadName, orderName, devLabel;
     [SerializeField] private TMP_InputField bearing;
 
@@ -66,7 +66,7 @@ public class HangarPanel : HandoffPanel
     [SerializeField] private Image recall, recallLamp;
     [SerializeField] private Sprite recallUp, recallPressed;
     [Tooltip("RECALL's press eases over .1 s (UIStateSpec §9.1, template line 1294): the pressed art fades in over the up art.")]
-    [Tune("Motion")] [SerializeField] private HandoffEased recallPress = new HandoffEased(0.1f, CssEase.Ease);
+    [Tune("Motion")] [SerializeField] private Eased recallPress = new Eased(0.1f, CssEase.Ease);
     [SerializeField] private Image recallOverlay;
 
     Color nominal => Palette.nominal;
@@ -184,8 +184,8 @@ public class HangarPanel : HandoffPanel
         Color catInk = cat >= 100f ? ownForce : cat > 0f ? caution : stencil;
         if (catLabel) catLabel.text = cat >= 100f ? "CHARGED" : cat > 0f ? "CHARGING" : "HOLD";
         Paint(catInkLamp, catInk);
-        if (catPct) catPct.text = HandoffBoardState.JsRound(cat) + "%";
-        Bar(catFill, catWell, HandoffBoardState.JsRound(cat) / 100f, catInk, catBarMotion); // Math.round(lprog.cat) + "%"
+        if (catPct) catPct.text = ShipState.JsRound(cat) + "%";
+        Bar(catFill, catWell, ShipState.JsRound(cat) / 100f, catInk, catBarMotion); // Math.round(lprog.cat) + "%"
 
         // squadrons
         for (int r = 0; r < squadRows.Length && r < s.hangar.squads.Length; r++)
@@ -243,7 +243,7 @@ public class HangarPanel : HandoffPanel
             if (out_) t = s.hangar.FlightStatus(q.key) ?? "SQUADRON AIRBORNE — RECALL TO RECOVER"; // Step 54: what it is doing
             else
             {
-                foreach (var g in s.hangar.stages) if (g.on && g.progress < 100f) { t = g.label + " — " + HandoffBoardState.JsRound(g.progress) + "%"; break; }
+                foreach (var g in s.hangar.stages) if (g.on && g.progress < 100f) { t = g.label + " — " + ShipState.JsRound(g.progress) + "%"; break; }
                 if (t == null) foreach (var g in s.hangar.stages) if (g.progress < 100f) { t = s.hangar.StageBlock(g.id) ?? g.label + " NOT SET"; break; }
                 if (t == null) t = block ?? "ALL SYSTEMS GO";
             }
@@ -284,21 +284,21 @@ public class HangarPanel : HandoffPanel
     }
 
     [Header("Bar transitions (UIStateSpec §9.1): CATAPULT .4s ease (line 1142), stages .4s linear")]
-    [SerializeField] private HandoffEased catBarMotion = new HandoffEased(0.4f, CssEase.Ease);
+    [SerializeField] private Eased catBarMotion = new Eased(0.4f, CssEase.Ease);
     [SerializeField] private float stageBarSeconds = 0.4f;
-    private readonly System.Collections.Generic.Dictionary<RectTransform, HandoffEased> stageMotion = new System.Collections.Generic.Dictionary<RectTransform, HandoffEased>();
+    private readonly System.Collections.Generic.Dictionary<RectTransform, Eased> stageMotion = new System.Collections.Generic.Dictionary<RectTransform, Eased>();
 
-    HandoffEased StageMotion(RectTransform fill)
+    Eased StageMotion(RectTransform fill)
     {
-        HandoffEased m;
+        Eased m;
         if (!fill) return null;
-        if (!stageMotion.TryGetValue(fill, out m)) stageMotion[fill] = m = new HandoffEased(stageBarSeconds, CssEase.Linear);
+        if (!stageMotion.TryGetValue(fill, out m)) stageMotion[fill] = m = new Eased(stageBarSeconds, CssEase.Linear);
         m.seconds = stageBarSeconds; // follows the inspector during play
         return m;
     }
 
     // A loading bar inside its well: left-anchored, width = fraction of the well, eased between ticks.
-    static void Bar(RectTransform fill, RectTransform well, float f, Color design, HandoffEased motion)
+    static void Bar(RectTransform fill, RectTransform well, float f, Color design, Eased motion)
     {
         if (!fill || !well) return;
         var img = fill.GetComponent<Image>();

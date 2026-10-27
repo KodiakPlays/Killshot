@@ -5,14 +5,14 @@ using UnityEngine;
 /// the launch stages, the bay doors, the launch bearing and lever, the squadrons in flight, the fighters'
 /// attack runs, and the assault boats with the marines they carry. Our ship and every enemy carry one (the
 /// enemy is our ship with other stats). Owner 2026-10-26: the hangar lives in one place, here. Contacts,
-/// damage, crew and kills stay on the ship state (HandoffBoardState); this reads them. Rules from
+/// damage, crew and kills stay on the ship state (ShipState); this reads them. Rules from
 /// board-logic.js (SQUADS, LAUNCH_STAGES, stageBlock, launchBlock, pressStage, launch) and Steps 54 and 60.
 /// </summary>
 public class HangarSystem : MonoBehaviour
 {
     /// <summary>The ship this belongs to. The hangar reads its contacts, AUX bus, alert state, compartments,
     /// where it is, fire control's target, and the damage model of the ships it attacks.</summary>
-    [System.NonSerialized] public HandoffBoardState ship;
+    [System.NonSerialized] public ShipState ship;
 
     /// <summary>This ship's numbers for fighters and boats: its section of the ship's stats file (Assets/Ships,
     /// Starwolf → Tuning).</summary>
@@ -143,7 +143,7 @@ public class HangarSystem : MonoBehaviour
         var f = Flights.Find(k => k.squad == squadKey);
         if (f == null) return null;
         if (f.stranded) return (f.outcome != null ? f.outcome + " · " : "") + "STRANDED · CLOSE IN · " + Mathf.CeilToInt(stats.boatStrandSeconds - f.strandT) + " S";
-        if (f.returning) return (f.outcome != null ? f.outcome + " · " : "") + "RETURNING · " + HandoffBoardState.JsRound(System.Math.Max(0, System.Math.Sqrt((f.x - ship.nav.x) * (f.x - ship.nav.x) + (f.y - ship.nav.y) * (f.y - ship.nav.y)) - LandKm)).ToString("N0") + " KM"; // to the circle, where they land
+        if (f.returning) return (f.outcome != null ? f.outcome + " · " : "") + "RETURNING · " + ShipState.JsRound(System.Math.Max(0, System.Math.Sqrt((f.x - ship.nav.x) * (f.x - ship.nav.x) + (f.y - ship.nav.y) * (f.y - ship.nav.y)) - LandKm)).ToString("N0") + " KM"; // to the circle, where they land
         if (f.order == "escort") return "ESCORTING";
         var t = ship.TrackOf(f.targetKey);
         string name = t != null ? ship.NameOf(t) : "TARGET";
@@ -151,7 +151,7 @@ public class HangarSystem : MonoBehaviour
         if (f.holding != null) return "HOLDING OFF " + name + " · " + f.holding;
         if (f.attacking) return (f.order == "disable" ? "DISABLING " : "ATTACKING ") + name + (ship.Scanned(t) && flightReport != null ? " ·" + flightReport : ""); // Step 61: detail once scanned
         double d = t != null && t.hasWorld ? System.Math.Sqrt((t.worldX - f.x) * (t.worldX - f.x) + (t.worldY - f.y) * (t.worldY - f.y)) : 0;
-        return "OUTBOUND TO " + name + " · " + HandoffBoardState.JsRound(d).ToString("N0") + " KM";
+        return "OUTBOUND TO " + name + " · " + ShipState.JsRound(d).ToString("N0") + " KM";
     }
     [System.NonSerialized] public string flightReport;
     [System.NonSerialized] public int flightRuns;
@@ -230,7 +230,7 @@ public class HangarSystem : MonoBehaviour
 
     // Step 60 (owner 2026-10-24, BOARDING_README.md): the boats hold off until a face is open and the ship is nearly
     // stopped, then dock; the marines fight for stats.boardSeconds; then they carry out the order, or are repelled.
-    void TickBoarding(Flight f, HandoffBoardState.Track t, HandoffBoardState enemy, double dt)
+    void TickBoarding(Flight f, ShipState.Track t, ShipState enemy, double dt)
     {
         if (!f.aboard)
         {
@@ -357,7 +357,7 @@ public class HangarSystem : MonoBehaviour
         ClearStages();
     }
 
-    static string SideFrom(HandoffBoardState.Track t, double x, double y) => HandoffBoardState.SideAt(System.Math.Atan2(x - t.worldX, y - t.worldY) * 180 / System.Math.PI, t.worldHdg);
+    static string SideFrom(ShipState.Track t, double x, double y) => ShipState.SideAt(System.Math.Atan2(x - t.worldX, y - t.worldY) * 180 / System.Math.PI, t.worldHdg);
 
     /// <summary>Step 61 (owner 2026-10-24): a contact is named as the sensors board names it — "BOGEY T07" until an
     /// active scan identifies it, then "GARUDA" — and what our hits do to it is reported only once it is scanned.</summary>

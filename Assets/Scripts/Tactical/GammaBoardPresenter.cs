@@ -42,7 +42,7 @@ public class GammaBoardPresenter : MonoBehaviour
         if (target != null) { boardCamera.targetTexture = null; target.Release(); DestroyImmediate(target); }
         target = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear)
         {
-            name = "HandoffBoard (gamma)",
+            name = "Tactical Board (gamma)",
             hideFlags = HideFlags.DontSave,
             antiAliasing = Mathf.Max(1, msaaSamples),
         };

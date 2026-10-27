@@ -9,7 +9,7 @@ using TMPro;
 /// tick; renderVals compartments, hazardLine/Ink, degradedLine/Ink, partyLine/Ink, compName,
 /// compAngle, compLamp, engNote/Ink, engSwitches) and UIStateSpec §11 "Engineering".
 /// </summary>
-public class EngineeringPanel : HandoffPanel
+public class EngineeringPanel : Panel
 {
     [System.Serializable]
     public class Row
@@ -18,7 +18,7 @@ public class EngineeringPanel : HandoffPanel
         public Image cell;
         public Image rowBg;
         [Tooltip("Five integrity segments, the first from 9 o'clock, clockwise.")]
-        public HandoffWedge[] ring;
+        public Wedge[] ring;
         public TMP_Text tag, atmo, cond, crew;
     }
 
@@ -39,7 +39,7 @@ public class EngineeringPanel : HandoffPanel
            + "the degraded line takes the room left of the party line's real width, less the gap, "
            + "and ends in an ellipsis if it does not fit (HANDOFF_GAPS — no template for this row).")]
     [SerializeField] private float rowLeft = 1474f, rowRight = 1782f, rowGap = 10f, degradedMax = 204f;
-    [SerializeField] private HandoffBoardControls.Dial actingOn;
+    [SerializeField] private BoardManager.Dial actingOn;
     [SerializeField] private TMP_Text compName, engNote;
     [SerializeField] private Image compLamp, compGlow;
     [SerializeField] private Repair[] repairs;
@@ -140,7 +140,7 @@ public class EngineeringPanel : HandoffPanel
         if (s.power.ReactorCap < s.power.stats.reactorUnits) parts.Add("RCT ▸ CORE " + s.power.ReactorCap + " OF " + s.power.stats.reactorUnits);
         if (!s.damage.HgrOk) parts.Add("HGR ▸ FLIGHT OPS DOWN");
         if (!s.damage.MagOk) parts.Add("MAG ▸ NO ORDNANCE");
-        if (s.damage.CompHealth("eng") < 5) parts.Add("ENG ▸ THRUST " + HandoffBoardState.JsRound(s.damage.EngFactor * 100f) + "%");
+        if (s.damage.CompHealth("eng") < 5) parts.Add("ENG ▸ THRUST " + ShipState.JsRound(s.damage.EngFactor * 100f) + "%");
         if (degradedLine)
         {
             degradedLine.text = Html(parts.Count > 0 ? string.Join("   ", parts.ToArray()) : "ALL SYSTEMS NOMINAL");
@@ -204,7 +204,7 @@ public class EngineeringPanel : HandoffPanel
 
     // Step 74: our ship, bow up, each side coloured by its armour: white full, amber hit, red open.
     // The rooms behind are the rings beside it.
-    void ShowDiagram(HandoffBoardState s)
+    void ShowDiagram(ShipState s)
     {
         if (hullSides == null) return;
         var armour = s.damage.SideArmour;

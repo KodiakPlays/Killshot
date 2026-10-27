@@ -3,19 +3,19 @@ using UnityEngine.EventSystems;
 
 /// <summary>
 /// A clickable, draggable or scrollable spot on the handoff board. It only names what was touched
-/// (action and arg) and where; HandoffBoardControls decides what that does. Added by the board
+/// (action and arg) and where; BoardManager decides what that does. Added by the board
 /// builder to the image that is the control's hardware, which is then the only raycast target there.
 /// </summary>
-public class HandoffHit : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IDragHandler, IScrollHandler
+public class ClickSpot : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IDragHandler, IScrollHandler
 {
     public string action;
     public string arg;
 
-    private HandoffBoardControls owner;
+    private BoardManager owner;
 
-    private HandoffBoardControls Owner
+    private BoardManager Owner
     {
-        get { if (owner == null) owner = GetComponentInParent<HandoffBoardControls>(true); return owner; }
+        get { if (owner == null) owner = GetComponentInParent<BoardManager>(true); return owner; }
     }
 
     public void OnPointerClick(PointerEventData e) { if (!e.dragging) Owner.Click(action, arg); }

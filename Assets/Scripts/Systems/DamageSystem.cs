@@ -6,14 +6,14 @@ using UnityEngine;
 /// fire, vacuum and radiation spreading, the crew, and damage control (the selected compartment, the repair
 /// orders and the team out). Our ship and every enemy carry one (the enemy is our ship with other stats).
 /// Owner 2026-10-26: damage lives in one place, here. Whether the ship is destroyed or captured, its EMP clock
-/// and its dice stay on the ship state (HandoffBoardState). Rules from board-logic.js (COMPARTMENTS, engBlock,
+/// and its dice stay on the ship state (ShipState). Rules from board-logic.js (COMPARTMENTS, engBlock,
 /// engRun, applyOrder, the party tick), DAMAGE_README.md and Steps 49, 53, 58 and 59.
 /// </summary>
 public class DamageSystem : MonoBehaviour
 {
     /// <summary>The ship this belongs to. Damage reads and sets whether it is destroyed, its EMP clock, its
     /// alert condition and its dice, and empties its power on an EMP.</summary>
-    [System.NonSerialized] public HandoffBoardState ship;
+    [System.NonSerialized] public ShipState ship;
 
     /// <summary>This ship's numbers for damage and damage control: its section of the ship's stats file (Assets/Ships,
     /// Starwolf → Tuning).</summary>
@@ -166,7 +166,7 @@ public class DamageSystem : MonoBehaviour
         if (armour[i] > 0f)
         {
             armour[i] = Mathf.Max(0f, armour[i] - by.slugArmourDamage);
-            return armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%";
+            return armour[i] <= 0f ? " OPEN" : " ARMOUR " + ShipState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%";
         }
         return Behind(i, by.slugCompartmentDamage, "slug", by);
     }
@@ -182,7 +182,7 @@ public class DamageSystem : MonoBehaviour
         if (armour[i] > 0f)
         {
             armour[i] = Mathf.Max(0f, armour[i] - armourDamage);
-            return " " + Sides[i] + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%");
+            return " " + Sides[i] + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + ShipState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%");
         }
         return " " + Sides[i] + Behind(i, compartmentDamage, "fighter", null);
     }
@@ -291,7 +291,7 @@ public class DamageSystem : MonoBehaviour
         if (warheadName == "HE" && armour[i] > 0f)
         {
             armour[i] = Mathf.Max(0f, armour[i] - by.heArmourDamage);
-            return " · HE" + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + HandoffBoardState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%");
+            return " · HE" + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + ShipState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%");
         }
         string w = warheadName == "PENETRATOR" ? "PEN" : warheadName;
         return " · " + w + Behind(i, by.slugCompartmentDamage, w, by);

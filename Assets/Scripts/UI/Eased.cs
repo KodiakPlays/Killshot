@@ -4,10 +4,10 @@ using UnityEngine;
 /// <summary>
 /// Step 33j. One CSS transition on one number: a new target starts from the value on screen and
 /// eases there over <see cref="seconds"/> (UIStateSpec §9.1). Zero seconds means no transition —
-/// the design leaves that property instant. HandoffBoardControls ticks every live one each frame.
+/// the design leaves that property instant. BoardManager ticks every live one each frame.
 /// </summary>
 [System.Serializable]
-public class HandoffEased
+public class Eased
 {
     [Tooltip("Transition duration; 0 = instant (no CSS transition on this property).")]
     public float seconds;
@@ -17,10 +17,10 @@ public class HandoffEased
     [System.NonSerialized] private bool has;
     [System.NonSerialized] private System.Action<float> apply;
 
-    static readonly List<HandoffEased> live = new List<HandoffEased>();
+    static readonly List<Eased> live = new List<Eased>();
 
-    public HandoffEased() { }
-    public HandoffEased(float seconds, CssEase ease) { this.seconds = seconds; this.ease = ease; }
+    public Eased() { }
+    public Eased(float seconds, CssEase ease) { this.seconds = seconds; this.ease = ease; }
 
     /// <summary>Move toward target; apply receives each value shown.</summary>
     public void Set(float target, System.Action<float> apply)

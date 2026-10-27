@@ -9,12 +9,12 @@ using TMPro;
 /// alertInk, alertRelease(Ink), compName, auxPct, auxInk, auxRate, auxCells, orderSwitches,
 /// orderNote(Ink)) and UIStateSpec §11 "Orders".
 /// </summary>
-public class OrdersPanel : HandoffPanel
+public class OrdersPanel : Panel
 {
     [System.Serializable]
     public class AlertSet
     {
-        public HandoffBoardControls.Dial pointer;
+        public BoardManager.Dial pointer;
         [Tooltip("C3, C2, C1.")]
         public Image[] lamps;
         public Graphic[] glows;
@@ -98,11 +98,11 @@ public class OrdersPanel : HandoffPanel
         int aux = s.power.BusUnits("aux");
         if (auxPct)
         {
-            auxPct.text = HandoffBoardState.JsRound(s.orders.auxCharge) + "%";
+            auxPct.text = ShipState.JsRound(s.orders.auxCharge) + "%";
             Paint(auxPct, s.orders.auxCharge >= 30 ? nominal : aux > 0 ? caution : alarm);
         }
-        if (auxRate) auxRate.text = aux > 0 ? "+" + HandoffBoardState.JsToFixed(aux * s.orders.stats.auxPerUnit, 1) + "/S" : "NO FEED";
-        int lit = HandoffBoardState.JsRound(s.orders.auxCharge / 100.0 * 10);
+        if (auxRate) auxRate.text = aux > 0 ? "+" + ShipState.JsToFixed(aux * s.orders.stats.auxPerUnit, 1) + "/S" : "NO FEED";
+        int lit = ShipState.JsRound(s.orders.auxCharge / 100.0 * 10);
         for (int k = 0; k < auxCells.Length; k++) Show(auxCells[k], k + 1 <= lit);
 
         // order rockers

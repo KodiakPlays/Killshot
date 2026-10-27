@@ -3,11 +3,11 @@ using UnityEngine;
 /// <summary>
 /// The handoff board's own state and rules, ported from reference/board-logic.js — what the
 /// board's controls do before any game system is wired in. Plain data: one instance lives on
-/// HandoffBoardControls and every panel reads it. Grows one drawer at a time (Step 33b on).
+/// BoardManager and every panel reads it. Grows one drawer at a time (Step 33b on).
 /// Every starting value and constant is from the board's initial state and data tables.
 /// </summary>
 [System.Serializable]
-public class HandoffBoardState
+public class ShipState
 {
     [System.Serializable]
     public class Track
@@ -55,7 +55,7 @@ public class HandoffBoardState
     /// (4.5 → 4), which differs from the board at exact halves (Step 33c verification).</summary>
     public static int JsRound(float x) => Mathf.FloorToInt(x + 0.5f);
 
-    /// <summary>The mission clock as of the last tick (HandoffBoardControls writes it).</summary>
+    /// <summary>The mission clock as of the last tick (BoardManager writes it).</summary>
     [System.NonSerialized] public float missionNow;
 
     [Header("Periscope (Step 33h-3)")]
@@ -148,7 +148,7 @@ public class HandoffBoardState
     // ---- the battle space (Step 65, owner 2026-10-25) --------------------------------------------
     // A rectangle centred on the world origin, 100,000 x 100,000 km to start (20 x 20 big squares of 5,000 km at x1).
     // Near the edge a warning; past it, a countdown to get back inside, or the ship is lost (the GDD's desertion rule;
-    // Assets/Scripts/WorldBoundary.cs in the old build). Crossing drops the time rate to x1 (HandoffBoardControls).
+    // Assets/Scripts/WorldBoundary.cs in the old build). Crossing drops the time rate to x1 (BoardManager).
     [Header("Battle space (Step 65)")]
     [Tooltip("East to west, km, centred on the world origin. Zooming out stops when it fills the plot's width. A multiple of 50,000 keeps the edge on a grid line at every zoom.")]
     [Tune("Arena")] public double arenaWidthKm = 100000;
@@ -291,7 +291,7 @@ public class HandoffBoardState
     /// <summary>magDown: zoom = start + dx / 40, 1..8, rounded to 0.1.</summary>
     public void SetZoom(double z0, double dx) => scopeZoom = JsRound(System.Math.Max(1, System.Math.Min(8, z0 + dx / magPxPerX)) * 10) / 10.0;
     /// <summary>The damage model of the ship behind a track (TacticalWorld supplies it), or null.</summary>
-    [System.NonSerialized] public System.Func<string, HandoffBoardState> ShipOf;
+    [System.NonSerialized] public System.Func<string, ShipState> ShipOf;
     [System.NonSerialized] public int kills;
 
     /// <summary>Destroyed: its reactor is at zero (the kill condition, FTUE §4.4), or it stayed

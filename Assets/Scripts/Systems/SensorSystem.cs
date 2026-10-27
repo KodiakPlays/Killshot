@@ -6,7 +6,7 @@ using UnityEngine;
 /// signal (how loud it is), which contacts are identified, and the bearing trail. It decides what is heard,
 /// what the cone covers and what is in sight. Our ship and every enemy carry one (the enemy is our ship with
 /// other stats). Owner 2026-10-26: sensors live in one place, here. The contact list stays on the ship
-/// state (HandoffBoardState.tracks); this reads it. Rules from board-logic.js (heard, coneCovers, spectra
+/// state (ShipState.tracks); this reads it. Rules from board-logic.js (heard, coneCovers, spectra
 /// count, trackers, startGain, moveCone, resolveLit, identify, getSig) and Steps 35, 42–45 and 75.
 /// </summary>
 public class SensorSystem : MonoBehaviour
@@ -33,7 +33,7 @@ public class SensorSystem : MonoBehaviour
     public List<string> identified = new List<string> { "bc1" };
 
     /// <summary>The ship this belongs to. Sensors read its contacts, its SEN bus and where it is.</summary>
-    [System.NonSerialized] public HandoffBoardState ship;
+    [System.NonSerialized] public ShipState ship;
 
     /// <summary>This ship's numbers for DRADIS, scan and signal: its section of the ship's stats file (Assets/Ships,
     /// Starwolf → Tuning).</summary>
@@ -71,10 +71,10 @@ public class SensorSystem : MonoBehaviour
     public bool Listening => dradis && ship.power.BusUnits("sen") >= 1;
 
     /// <summary>heard: DRADIS listening, the contact emits in the chosen band, and it is in range.</summary>
-    public bool Heard(HandoffBoardState.Track t) => !t.own && !t.wreck && Listening && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeKm <= PassiveRangeKm;
+    public bool Heard(ShipState.Track t) => !t.own && !t.wreck && Listening && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeKm <= PassiveRangeKm;
 
     /// <summary>coneCovers: active scan on, inside the cone, inside sensor range.</summary>
-    public bool ConeCovers(HandoffBoardState.Track t) => active && HandoffBoardState.AngDiff(t.bearing, coneBrg) <= coneArc && t.rangeKm <= SenRangeKm;
+    public bool ConeCovers(ShipState.Track t) => active && ShipState.AngDiff(t.bearing, coneBrg) <= coneArc && t.rangeKm <= SenRangeKm;
 
     /// <summary>Contacts in band and range for a spectrum key (spectra[].count).</summary>
     public int CountIn(string band)
@@ -146,18 +146,18 @@ public class SensorSystem : MonoBehaviour
     public List<BearingFix> BearingFixes => bearingFixes ?? (bearingFixes = new List<BearingFix>());
 
     /// <summary>True bearing from this ship to a contact, degrees, unrounded.</summary>
-    public double ExactBearing(HandoffBoardState.Track t)
+    public double ExactBearing(ShipState.Track t)
     {
         if (!t.hasWorld) return t.bearing;
         return (System.Math.Atan2(t.worldX - ship.nav.x, t.worldY - ship.nav.y) * 180 / System.Math.PI + 360) % 360;
     }
 
-    public void LayBearing(HandoffBoardState.Track t, float now) { BearingFixes.Add(new BearingFix { key = t.key, x = ship.nav.x, y = ship.nav.y, brg = ExactBearing(t), t = now }); }
+    public void LayBearing(ShipState.Track t, float now) { BearingFixes.Add(new BearingFix { key = t.key, x = ship.nav.x, y = ship.nav.y, brg = ExactBearing(t), t = now }); }
 
     /// <summary>Step 75 (owner 2026-10-26): the sweep touches a contact. Out of sight, the plot shows it here until the next pass.</summary>
-    public void See(HandoffBoardState.Track t) { t.seen = true; t.seenX = t.worldX; t.seenY = t.worldY; t.seenBrg = ExactBearing(t); t.seenRangeKm = t.rangeKm; }
+    public void See(ShipState.Track t) { t.seen = true; t.seenX = t.worldX; t.seenY = t.worldY; t.seenBrg = ExactBearing(t); t.seenRangeKm = t.rangeKm; }
     /// <summary>Step 75: close enough to see with the eye.</summary>
-    public bool InSight(HandoffBoardState.Track t) => t.hasWorld && t.rangeKm <= stats.visualRangeKm;
+    public bool InSight(ShipState.Track t) => t.hasWorld && t.rangeKm <= stats.visualRangeKm;
 
     public void PruneBearings(float now) { BearingFixes.RemoveAll(f => now - f.t >= stats.bearingTrailSeconds); }
 

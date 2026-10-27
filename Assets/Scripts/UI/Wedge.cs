@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// from board-logic.js (coneKnobFrom, coneArc, coneInk). Angles are CSS: 0 up, clockwise.
 /// </summary>
 [RequireComponent(typeof(CanvasRenderer))]
-public class HandoffWedge : MaskableGraphic
+public class Wedge : MaskableGraphic
 {
     [SerializeField] private float fromDeg;
     [SerializeField] private float sweepDeg = 80f;

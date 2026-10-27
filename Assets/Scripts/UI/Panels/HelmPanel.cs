@@ -12,7 +12,7 @@ using TMPro;
 /// apLamp, gLoad, gInk, stabPct, stabCells) and UIStateSpec §11 "Helm". It shows the ship's
 /// NavSystem and passes the throttle, the keys and the clicks to it; the movement rules are there.
 /// </summary>
-public class HelmPanel : HandoffPanel
+public class HelmPanel : Panel
 {
     [System.Serializable]
     public class Header
@@ -55,7 +55,7 @@ public class HelmPanel : HandoffPanel
     [SerializeField] private float capBase = 7f, capSpan = 47f, trackBase = 15f, trackSpan = 57f, capHeight = 17f;
     [SerializeField] private RectTransform hdgRing;
     [Tooltip("The heading ring turns .12s linear (UIStateSpec §9.1 line 1925).")]
-    [SerializeField] private HandoffEased ringMotion = new HandoffEased(0.12f, CssEase.Linear);
+    [SerializeField] private Eased ringMotion = new Eased(0.12f, CssEase.Linear);
     [SerializeField] private TMP_Text dialHdg, dialTurn;
 
     [Header("02 ATTITUDE HOLD")]
@@ -144,7 +144,7 @@ public class HelmPanel : HandoffPanel
         Color turnInk = s.heading == s.orderedHeading ? nominal : caution;
         string hdg = s.heading.ToString("000");
         double g = s.GLoad;
-        string gText = HandoffBoardState.JsToFixed(g, 1) + " G";
+        string gText = ShipState.JsToFixed(g, 1) + " G";
         Color gInk = g >= 3.4 ? alarm : g >= 2.2 ? caution : data;
         string apState = string.IsNullOrEmpty(s.attitude) ? "MANUAL" : "AUTO — " + s.approachMode;
         Color apLamp = string.IsNullOrEmpty(s.attitude) ? stencilDim : nominal;
@@ -201,9 +201,9 @@ public class HelmPanel : HandoffPanel
 
         // 04 STABILITY
         double stab = s.Stability;
-        int lit = HandoffBoardState.JsRound(stab / 100.0 * 9);
+        int lit = ShipState.JsRound(stab / 100.0 * 9);
         for (int i = 0; i < stabCells.Length; i++) Paint(stabCells[i], 9 - i <= lit ? data : stabCellOff);
-        if (stabPct) stabPct.text = HandoffBoardState.JsRound(stab) + "%";
+        if (stabPct) stabPct.text = ShipState.JsRound(stab) + "%";
         if (gLoad) { gLoad.text = gText; Paint(gLoad, gInk); }
     }
 

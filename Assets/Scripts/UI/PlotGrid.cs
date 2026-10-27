@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// than wide; that can't hold a square edge.
 /// </summary>
 [RequireComponent(typeof(CanvasRenderer))]
-public class HandoffPlotGrid : MaskableGraphic
+public class PlotGrid : MaskableGraphic
 {
     public enum Tint { White, Amber }
 
@@ -39,7 +39,7 @@ public class HandoffPlotGrid : MaskableGraphic
     /// stays fixed in the world when the plot view is panned.</summary>
     public Vector2 OffsetPx { get { return offsetPx; } set { if (value != offsetPx) { offsetPx = value; SetVerticesDirty(); } } }
     private Vector2 offsetPx;
-    /// <summary>Half the battle space's width (x) and height (y), km (the plot panel sets it from HandoffBoardState).</summary>
+    /// <summary>Half the battle space's width (x) and height (y), km (the plot panel sets it from ShipState).</summary>
     public Vector2 ArenaHalfKm { get { return arenaHalfKm; } set { if (value != arenaHalfKm) { arenaHalfKm = value; SetVerticesDirty(); } } }
     private Vector2 arenaHalfKm = new Vector2(50000f, 50000f);
 

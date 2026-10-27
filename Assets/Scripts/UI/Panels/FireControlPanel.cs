@@ -15,7 +15,7 @@ using TMPro;
 /// The PDC (quadrants, LOADERS) and missile (warhead, SALVO) controls were never measured — the
 /// drawer was measured on RAILGUN — so they are not drawn (HANDOFF_GAPS); their state still shows.
 /// </summary>
-public class FireControlPanel : HandoffPanel
+public class FireControlPanel : Panel
 {
     [System.Serializable]
     public class Position { public Image lamp, glow; public TMP_Text label; }
@@ -29,7 +29,7 @@ public class FireControlPanel : HandoffPanel
     [SerializeField] private TMP_Text scopeBearing, bearingEcho;
 
     [Header("01 Weapon system")]
-    [SerializeField] private HandoffBoardControls.Dial systemSelector, mountSelector;
+    [SerializeField] private BoardManager.Dial systemSelector, mountSelector;
     [SerializeField] private Position[] systemPositions, mountPositions;
     [SerializeField] private TMP_Text mountLabel, mountArc, mountRange, sysState;
 
@@ -41,7 +41,7 @@ public class FireControlPanel : HandoffPanel
     [SerializeField] private TMP_Text trackId, trackSrc, solRange, solBrg, solSpd;
     [Tooltip("The '°' run after the REL BRG value: the value now carries its own '°'.")]
     [SerializeField] private TMP_Text solBrgDegree;
-    [SerializeField] private HandoffBoardControls.Dial rngKnob, brgKnob, spdKnob;
+    [SerializeField] private BoardManager.Dial rngKnob, brgKnob, spdKnob;
     [Tooltip("stepKnob pitch, px per step: RNG 8, BRG 6, SPD 8 (§8.2).")]
     [SerializeField] private float rngPitch = 8f, brgPitch = 6f, spdPitch = 8f;
 
@@ -155,11 +155,11 @@ public class FireControlPanel : HandoffPanel
 
         if (mountShort) mountShort.text = m.shortName;
         Paint(sightLamp, scopeDown ? nominal : lampOffPanel); Paint(sightGlow, nominal); Show(sightGlow, scopeDown);
-        if (scopeBearing) scopeBearing.text = HandoffBoardState.JsRound(s.scopeBrg).ToString("000");
+        if (scopeBearing) scopeBearing.text = ShipState.JsRound(s.scopeBrg).ToString("000");
         var off = s.weapons.OffBearing();
         if (bearingEcho)
         {
-            bearingEcho.text = s.weapons.OnBearing ? "ON BEARING" : "OFF " + HandoffBoardState.OffLabel(off);
+            bearingEcho.text = s.weapons.OnBearing ? "ON BEARING" : "OFF " + ShipState.OffLabel(off);
             Paint(bearingEcho, s.weapons.OnBearing ? nominal : caution);
         }
 
@@ -213,11 +213,11 @@ public class FireControlPanel : HandoffPanel
         if (solSpd) { solSpd.text = sol.set ? sol.spd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "—"; Paint(solSpd, valInk); }
         rngKnob.Set(sol.set ? (sol.rangeKm / 100f * 12f) % 360f : 0f);
         brgKnob.Set(sol.set ? sol.brg * 6f : 0f);
-        spdKnob.Set(sol.set ? (HandoffBoardState.JsRound(sol.spd / s.weapons.stats.spdStep) * 12) % 360 : 0f);
+        spdKnob.Set(sol.set ? (ShipState.JsRound(sol.spd / s.weapons.stats.spdStep) * 12) % 360 : 0f);
 
         // 03 capacitor
         float cost = s.weapons.ShotCost;
-        int lit = HandoffBoardState.JsRound(s.weapons.wepCharge / 100f * 10f), mk = HandoffBoardState.JsRound(cost / 100f * 10f);
+        int lit = ShipState.JsRound(s.weapons.wepCharge / 100f * 10f), mk = ShipState.JsRound(cost / 100f * 10f);
         for (int k = 0; k < capCells.Length; k++) Paint(capCells[k], k + 1 <= lit ? cellLit : cellUnlit);
         if (capMark && capCells.Length >= 10)
         {
@@ -227,7 +227,7 @@ public class FireControlPanel : HandoffPanel
             capMark.anchoredPosition = new Vector2(Right(capCells[at]) + capMarkX0, capMark.anchoredPosition.y);
         }
         Color capInk = s.weapons.wepCharge >= cost ? nominal : s.power.BusUnits("wep") > 0 ? caution : alarm;
-        if (capPct) capPct.text = HandoffBoardState.JsRound(s.weapons.wepCharge) + "%"; // measured ink.data, not capInk
+        if (capPct) capPct.text = ShipState.JsRound(s.weapons.wepCharge) + "%"; // measured ink.data, not capInk
         if (capLabel) capLabel.text = cost + "% PER SHOT";
         Color capLampInk = s.weapons.wepCharge >= cost ? nominal : s.power.BusUnits("wep") > 0 ? caution : lampOffPanel;
         Paint(capLamp, capLampInk); Paint(capGlow, capLampInk); Show(capGlow, s.weapons.wepCharge >= cost || s.power.BusUnits("wep") > 0);

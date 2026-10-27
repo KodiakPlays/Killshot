@@ -33,7 +33,7 @@ public class PowerSystem : MonoBehaviour
 
     /// <summary>The ship this belongs to. Power reads its reactor room, and whether an EMP or its death
     /// has put the power out.</summary>
-    [System.NonSerialized] public HandoffBoardState ship;
+    [System.NonSerialized] public ShipState ship;
 
     /// <summary>This ship's numbers for reactor and buses: its section of the ship's stats file (Assets/Ships,
     /// Starwolf → Tuning).</summary>
@@ -55,7 +55,7 @@ public class PowerSystem : MonoBehaviour
     [System.NonSerialized] private double bank;
 
     /// <summary>reactorCap: reactor damage caps the units, floored at 2.</summary>
-    public int ReactorCap => Mathf.Max(2, HandoffBoardState.JsRound(ship.damage.CompHealth("rct") / 5f * stats.reactorUnits));
+    public int ReactorCap => Mathf.Max(2, ShipState.JsRound(ship.damage.CompHealth("rct") / 5f * stats.reactorUnits));
 
     public int TotalFill
     {

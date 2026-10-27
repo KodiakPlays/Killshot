@@ -8,7 +8,7 @@ using TMPro;
 /// board-logic.js renderVals (loadLabel, loadColor, reactorLabel, r1–r10, coreCells, coreHealthLabel,
 /// shedNote, shedLamp, buses[]) and UIStateSpec §11 "Power: buses, standby and venting".
 /// </summary>
-public class PowerPanel : HandoffPanel
+public class PowerPanel : Panel
 {
     [System.Serializable]
     public class BusColumn
@@ -18,7 +18,7 @@ public class PowerPanel : HandoffPanel
         public TMP_Text units;
         public TMP_Text mode;
         public Image lamp, lampGlow;
-        public HandoffBoardControls.Dial selector;
+        public BoardManager.Dial selector;
     }
 
     [Header("Header and core")]

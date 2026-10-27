@@ -10,7 +10,7 @@ using TMPro;
 /// (renderVals); colours are the design's sRGB values and are pre-encoded when applied, because
 /// the board blends in gamma space (GammaBoardPresenter). Later this state is fed by the game.
 /// </summary>
-public class HandoffBoardControls : MonoBehaviour
+public class BoardManager : MonoBehaviour
 {
     [System.Serializable]
     public class Dial
@@ -23,7 +23,7 @@ public class HandoffBoardControls : MonoBehaviour
         public float homeAngle;
 
         [Tooltip("The pointer's CSS transition (UIStateSpec §9.1); 0 s = none, it jumps.")]
-        public HandoffEased motion = new HandoffEased();
+        public Eased motion = new Eased();
         [System.NonSerialized] private System.Action<float> apply;
 
         // CSS rotate() is clockwise on screen; in Unity's y-up space that is a negative z turn.
@@ -31,7 +31,7 @@ public class HandoffBoardControls : MonoBehaviour
         public void Set(float cssDeg)
         {
             if (!pointer) return;
-            if (motion == null) motion = new HandoffEased();
+            if (motion == null) motion = new Eased();
             if (apply == null) apply = Apply;
             motion.Set(cssDeg, apply);
         }
@@ -84,7 +84,7 @@ public class HandoffBoardControls : MonoBehaviour
     }
 
     [Tooltip("The board's own state and rules (board-logic.js). Panels read it.")]
-    [SerializeField] private HandoffBoardState state = new HandoffBoardState();
+    [SerializeField] private ShipState state = new ShipState();
     [Tooltip("Our ship's navigation (the NavSystem on OwnShip): its position, heading, throttle and movement.")]
     [UnityEngine.Serialization.FormerlySerializedAs("helm")]
     [SerializeField] private NavSystem nav;
@@ -102,8 +102,8 @@ public class HandoffBoardControls : MonoBehaviour
     [SerializeField] private DamageSystem damage;
     [Tooltip("Our ship's orders station (the OrdersSystem on OwnShip): alert condition, AUX order pool and flicking rockers.")]
     [SerializeField] private OrdersSystem orders;
-    [SerializeField] private HandoffBoardMotion motion;
-    [SerializeField] private HandoffPlotGrid grid;
+    [SerializeField] private BoardMotion motion;
+    [SerializeField] private PlotGrid grid;
     [SerializeField] private Canvas canvas;
     [Tooltip("The board's colours: Assets/UI/Board/Palette.asset. The panels use the same file.")]
     [SerializeField] private BoardPalette palette;
@@ -190,12 +190,12 @@ public class HandoffBoardControls : MonoBehaviour
     Color tintLampOff => BoardPalette.Or(palette).lampOffSelector;
 
     // Other objects can read State in their own Awake, before ours runs, so it hands our ship its systems first.
-    public HandoffBoardState State { get { if (state.nav == null) UseSystems(); return state; } }
+    public ShipState State { get { if (state.nav == null) UseSystems(); return state; } }
     void UseSystems() { state.UseNav(nav); state.UsePower(power); state.UseSensors(sensors); state.UseComms(comms); state.UseWeapons(weapons); state.UseHangar(hangar); state.UseDamage(damage); state.UseOrders(orders); }
     /// <summary>Raised once per board tick, after the board's own rules and before the panels
     /// redraw. The tactical world steps here, inside the board's single timer (Step 34).</summary>
     public event System.Action Ticked;
-    public HandoffBoardMotion Motion => motion;
+    public BoardMotion Motion => motion;
     public string Tool { get; private set; }
     public bool Paused { get { return paused; } }
     public float Rate { get { return rate; } }
@@ -211,25 +211,25 @@ public class HandoffBoardControls : MonoBehaviour
     public int Sounds { get; private set; }
     public string LastSound { get; private set; }
     /// <summary>The board's second grid tint ("RED" in the design, amber here).</summary>
-    public bool GridAmber { get { return grid && grid.GridTint == HandoffPlotGrid.Tint.Amber; } }
+    public bool GridAmber { get { return grid && grid.GridTint == PlotGrid.Tint.Amber; } }
 
     private Vector2 barHome, frameHome;
     private float nextTick;
-    private HandoffPanel[] panels = new HandoffPanel[0];
-    private HandoffRockers rockers;
+    private Panel[] panels = new Panel[0];
+    private Rockers rockers;
     private int shotsHeard, resultsHeard, killsHeard, hitsTakenHeard, boatWarningsHeard;
     private bool edgeWarned, trackedWarned;
 
     private void Awake()
     {
-        if (!nav) Debug.LogError("[HandoffBoardControls] our ship's NavSystem is not set");
-        if (!power) Debug.LogError("[HandoffBoardControls] our ship's PowerSystem is not set");
-        if (!sensors) Debug.LogError("[HandoffBoardControls] our ship's SensorSystem is not set");
-        if (!comms) Debug.LogError("[HandoffBoardControls] our ship's CommsSystem is not set");
-        if (!weapons) Debug.LogError("[HandoffBoardControls] our ship's WeaponSystem is not set");
-        if (!hangar) Debug.LogError("[HandoffBoardControls] our ship's HangarSystem is not set");
-        if (!damage) Debug.LogError("[HandoffBoardControls] our ship's DamageSystem is not set");
-        if (!orders) Debug.LogError("[HandoffBoardControls] our ship's OrdersSystem is not set");
+        if (!nav) Debug.LogError("[BoardManager] our ship's NavSystem is not set");
+        if (!power) Debug.LogError("[BoardManager] our ship's PowerSystem is not set");
+        if (!sensors) Debug.LogError("[BoardManager] our ship's SensorSystem is not set");
+        if (!comms) Debug.LogError("[BoardManager] our ship's CommsSystem is not set");
+        if (!weapons) Debug.LogError("[BoardManager] our ship's WeaponSystem is not set");
+        if (!hangar) Debug.LogError("[BoardManager] our ship's HangarSystem is not set");
+        if (!damage) Debug.LogError("[BoardManager] our ship's DamageSystem is not set");
+        if (!orders) Debug.LogError("[BoardManager] our ship's OrdersSystem is not set");
         UseSystems();
     }
 
@@ -238,8 +238,8 @@ public class HandoffBoardControls : MonoBehaviour
         frameHome = selectedFrame ? selectedFrame.anchoredPosition : Vector2.zero;
         barHome = selectedBar ? selectedBar.anchoredPosition : Vector2.zero;
         if (motion) motion.Changed += ShowSystems;
-        panels = GetComponentsInChildren<HandoffPanel>(true); // a panel can sit on its own station object (a prefab)
-        rockers = GetComponent<HandoffRockers>();
+        panels = GetComponentsInChildren<Panel>(true); // a panel can sit on its own station object (a prefab)
+        rockers = GetComponent<Rockers>();
         foreach (var p in panels) p.Bind(this);
         RefreshPanels();
         PickTool(tools[0]);
@@ -252,7 +252,7 @@ public class HandoffBoardControls : MonoBehaviour
         nextTick = Time.unscaledTime + tickSeconds;
     }
 
-    private void OnDestroy() { if (motion) motion.Changed -= ShowSystems; HandoffEased.ClearAll(); }
+    private void OnDestroy() { if (motion) motion.Changed -= ShowSystems; Eased.ClearAll(); }
 
     private void Update()
     {
@@ -269,7 +269,7 @@ public class HandoffBoardControls : MonoBehaviour
         }
         if (state.weapons.hitsTaken != hitsTakenHeard) { hitsTakenHeard = state.weapons.hitsTaken; Play(alertSound, "alert"); } // Step 55: an enemy missile hit us
         if (state.hangar.boatWarnings != boatWarningsHeard) { boatWarningsHeard = state.hangar.boatWarnings; Play(alertSound, "alert"); } // owner 2026-10-27: boats stranded, or lost
-        HandoffEased.TickAll(); // control transitions (Step 33j)
+        Eased.TickAll(); // control transitions (Step 33j)
         // setInterval drops ticks it missed during a stall; do the same rather than bursting
         if (Time.unscaledTime - nextTick > tickSeconds) nextTick = Time.unscaledTime;
         while (Time.unscaledTime >= nextTick)
@@ -311,7 +311,7 @@ public class HandoffBoardControls : MonoBehaviour
         }
     }
 
-    // ---- input from HandoffHit -----------------------------------------------------------
+    // ---- input from ClickSpot -----------------------------------------------------------
 
     public void Click(string action, string arg)
     {
@@ -328,7 +328,7 @@ public class HandoffBoardControls : MonoBehaviour
             case "pause": paused = !paused; ShowTime(); break;
             case "rate": rate = float.Parse(arg, System.Globalization.CultureInfo.InvariantCulture); paused = false; ShowTime(); break;
             case "ack": state.sensors.AckContacts(); ShowAlarm(); break;
-            case "tint": grid.GridTint = grid.GridTint == HandoffPlotGrid.Tint.White ? HandoffPlotGrid.Tint.Amber : HandoffPlotGrid.Tint.White; ShowTint(); RefreshPanels(); break;
+            case "tint": grid.GridTint = grid.GridTint == PlotGrid.Tint.White ? PlotGrid.Tint.Amber : PlotGrid.Tint.White; ShowTint(); RefreshPanels(); break;
             default:
                 owned = false;
                 foreach (var p in panels) if (p.Click(action, arg)) { owned = true; break; }
@@ -496,7 +496,7 @@ public class HandoffBoardControls : MonoBehaviour
 
     void ShowTint()
     {
-        bool white = !grid || grid.GridTint == HandoffPlotGrid.Tint.White;
+        bool white = !grid || grid.GridTint == PlotGrid.Tint.White;
         tintDial.Set(white ? 60f : 120f); // tintAngle
         Tint(tintLampWhite, white ? tintLampOn : tintLampOff);
         Tint(tintLampAmber, white ? tintLampOff : tintLampOn);

@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 /// MISSION COMPLETE or SHIP LOST, why, the target, our ship and the time taken. RESTART MISSION plays this
 /// level again; MAIN MENU goes back to the intro and the menu. It shows the QuestSystem.
 /// </summary>
-public class EndScreenPanel : HandoffPanel
+public class EndScreenPanel : Panel
 {
     [Tooltip("The screen itself. Hidden while the mission runs.")]
     [SerializeField] private GameObject screen;

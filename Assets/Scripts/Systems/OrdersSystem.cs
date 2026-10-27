@@ -10,7 +10,7 @@ using UnityEngine;
 public class OrdersSystem : MonoBehaviour
 {
     /// <summary>The ship this belongs to. Orders read its AUX bus and send repairs to its damage control.</summary>
-    [System.NonSerialized] public HandoffBoardState ship;
+    [System.NonSerialized] public ShipState ship;
 
     /// <summary>This ship's numbers for orders station: its section of the ship's stats file (Assets/Ships,
     /// Starwolf → Tuning).</summary>

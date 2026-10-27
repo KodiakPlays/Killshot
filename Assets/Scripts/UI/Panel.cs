@@ -3,11 +3,11 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Base for one drawer or station of the handoff board. HandoffBoardControls passes on the input
+/// Base for one drawer or station of the handoff board. BoardManager passes on the input
 /// it does not handle itself and asks every panel to redraw after each change and each tick.
-/// A panel only reads and changes HandoffBoardState; it never touches game systems.
+/// A panel only reads and changes ShipState; it never touches game systems.
 /// </summary>
-public abstract class HandoffPanel : MonoBehaviour
+public abstract class Panel : MonoBehaviour
 {
     /// <summary>One piece of the panel's art: a sprite and every image that shows it.</summary>
     [System.Serializable]
@@ -39,10 +39,10 @@ public abstract class HandoffPanel : MonoBehaviour
     /// <summary>The board's colours. Without a palette file, the design's own colours.</summary>
     protected BoardPalette Palette => BoardPalette.Or(palette);
 
-    protected HandoffBoardControls Controls { get; private set; }
-    protected HandoffBoardState State => Controls.State;
+    protected BoardManager Controls { get; private set; }
+    protected ShipState State => Controls.State;
 
-    public void Bind(HandoffBoardControls controls) { Controls = controls; }
+    public void Bind(BoardManager controls) { Controls = controls; }
 
     /// <summary>Handle a click; return true if this panel owns the action.</summary>
     public virtual bool Click(string action, string arg) => false;

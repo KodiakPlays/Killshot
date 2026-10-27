@@ -9,7 +9,7 @@ using TMPro;
 /// gainCapTop, gainTrack, boostCost, senRangeLabel, cone*, emit*, bogeyCount, bogeys) and
 /// UIStateSpec §8.2 (startGain, startCone) and §11 "Sensors: listen, then look, then ping".
 /// </summary>
-public class SensorsPanel : HandoffPanel
+public class SensorsPanel : Panel
 {
     [System.Serializable]
     public class Master { public Image rocker; public Image lamp, glow; }
@@ -51,7 +51,7 @@ public class SensorsPanel : HandoffPanel
     private float[] envelopeLabelHomeY;
 
     [Tooltip("The gain cap's top eases .12s (UIStateSpec §9.1 line 699); the lit track does not.")]
-    [SerializeField] private HandoffEased gainCapMotion = new HandoffEased(0.12f, CssEase.Ease);
+    [SerializeField] private Eased gainCapMotion = new Eased(0.12f, CssEase.Ease);
     [Tooltip("Fader well element top and height, board px (layout sprite#152).")]
     [SerializeField] private float wellTop = 375.5f, wellHeight = 136f;
     [Tooltip("gainCapTop = 9 + (5 - gain) x 23.6, from the well top (UIStateSpec §9.1 line 699).")]
@@ -63,8 +63,8 @@ public class SensorsPanel : HandoffPanel
     [SerializeField] private BandRow[] bands;
 
     [Header("Active scan")]
-    [SerializeField] private HandoffBoardControls.Dial needle;
-    [SerializeField] private HandoffWedge cone;
+    [SerializeField] private BoardManager.Dial needle;
+    [SerializeField] private Wedge cone;
     [Tooltip("Cone dial centre, board px (gauge_housing centre).")]
     [SerializeField] private Vector2 dialCentre = new Vector2(1505f, 609f);
     [SerializeField] private TMP_Text coneBearing, coneArcLabel, emitLabel;
@@ -134,7 +134,7 @@ public class SensorsPanel : HandoffPanel
     void Gain(float y)
     {
         float t = 1f - (y - (wellTop + wellStop)) / (wellHeight - 2f * wellStop);
-        State.sensors.SetGain(HandoffBoardState.JsRound(1f + t * 4f));
+        State.sensors.SetGain(ShipState.JsRound(1f + t * 4f));
     }
 
     // moveCone: bearing of the pointer from the dial centre, 0 up, clockwise.
@@ -145,10 +145,10 @@ public class SensorsPanel : HandoffPanel
         State.sensors.SetCone((int)System.Math.Floor((a + 360.0) % 360.0 + 0.5));
     }
 
-    System.Collections.Generic.List<HandoffBoardState.Track> Bogeys()
+    System.Collections.Generic.List<ShipState.Track> Bogeys()
     {
         var s = State;
-        var list = new System.Collections.Generic.List<HandoffBoardState.Track>();
+        var list = new System.Collections.Generic.List<ShipState.Track>();
         foreach (var t in s.tracks)
             if (!t.own && (s.sensors.Heard(t) || s.sensors.identified.Contains(t.key) || s.classified.Contains(t.key))) list.Add(t);
         return list;
@@ -175,10 +175,10 @@ public class SensorsPanel : HandoffPanel
     void ShowSignal(TMP_Text pctText, TMP_Text note, Image[] cells, Image lamp, Image glow)
     {
         var s = State;
-        int pct = HandoffBoardState.JsRound(s.sensors.signal);
+        int pct = ShipState.JsRound(s.sensors.signal);
         Color sigInk = s.sensors.signal >= s.sensors.stats.signalTrackedAt ? alarm : s.sensors.signal > 0 ? caution : label;
         if (pctText) { pctText.text = pct + "%"; Paint(pctText, sigInk); }
-        int litCells = HandoffBoardState.JsRound(s.sensors.signal / 100f * 10f);
+        int litCells = ShipState.JsRound(s.sensors.signal / 100f * 10f);
         for (int k = 0; cells != null && k < cells.Length; k++)
         {
             int n = k + 1;
@@ -274,7 +274,7 @@ public class SensorsPanel : HandoffPanel
             bool lit = s.sensors.ConeCovers(t) && audible;
             row.name.text = pinged ? t.name : "BOGEY " + t.key.ToUpperInvariant();
             row.brg.text = t.bearing.ToString("000");
-            row.rng.text = pinged ? HandoffBoardState.JsRound(t.rangeKm / 1000f) + "k" : "—";
+            row.rng.text = pinged ? ShipState.JsRound(t.rangeKm / 1000f) + "k" : "—";
             row.klass.text = seen ? t.klass : lit ? "RESOLVING" : "—";
             Paint(row.klass, seen ? (t.hostile ? alarm : nominal) : lit ? caution : stencil);
             Color dot = pinged ? (t.hostile ? alarm : nominal) : audible ? caution : stencilDim;

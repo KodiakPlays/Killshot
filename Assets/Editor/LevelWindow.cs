@@ -187,7 +187,7 @@ public class LevelWindow : EditorWindow
     // the battle space's half width and height, km, from the board (Step 65); 50,000 if no board is open
     static Vector2 ArenaHalfKm()
     {
-        var board = FindAnyObjectByType<HandoffBoardControls>();
+        var board = FindAnyObjectByType<BoardManager>();
         if (!board) return new Vector2(50000, 50000);
         var so = new SerializedObject(board);
         var w = so.FindProperty("state.arenaWidthKm");

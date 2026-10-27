@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// aperture, and the horizon and elevation ladder. Canvas px, y down, as the board draws it.
 /// Sits under a circle mask (the aperture is a 340 px circle).
 /// </summary>
-public class HandoffScopeSight : MaskableGraphic
+public class ScopeSight : MaskableGraphic
 {
     [Tooltip("scopeZoom, set by the periscope panel.")]
     public float zoom = 1.4f;

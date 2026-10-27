@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// follows them. A locked rocker that is clicked dips and springs back (owner, 2026-10-18; not in the
 /// design). The families and the rockers are set in the scene (the board builder that once filled them is gone).
 /// </summary>
-public class HandoffRockers : MonoBehaviour
+public class Rockers : MonoBehaviour
 {
     [System.Serializable]
     public class Family

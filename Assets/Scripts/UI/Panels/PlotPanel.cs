@@ -11,7 +11,7 @@ using TMPro;
 /// pressErase, lookAt, pickTarget, validSet; renderVals marksView, plotCapture, passives) and
 /// UIStateSpec §8.4.
 /// </summary>
-public class HandoffPlotPanel : HandoffPanel
+public class PlotPanel : Panel
 {
     [System.Serializable]
     public class Passive
@@ -21,7 +21,7 @@ public class HandoffPlotPanel : HandoffPanel
     }
 
     [SerializeField] private Graphic capture;
-    [SerializeField] private HandoffMarksGraphic marks;
+    [SerializeField] private MarksGraphic marks;
     [SerializeField] private TMP_Text labelTemplate;
     [SerializeField] private RectTransform hitLayer;
     [SerializeField] private Passive[] passives;
@@ -40,9 +40,9 @@ public class HandoffPlotPanel : HandoffPanel
 
     [Header("Sensor circle (Step 42): what DRADIS can hear, around our ship")]
     [Tooltip("Owner 2026-10-18: while DRADIS is on, a circle around our ship at the sensor (hearing) range.")]
-    [SerializeField] private HandoffMarksGraphic sensorRing;
+    [SerializeField] private MarksGraphic sensorRing;
     [Tooltip("The circle eases to a new range (UIStateSpec §9.1, lines 204 and 210: .5 s).")]
-    [Tune("Sensors")] [SerializeField] private HandoffEased sensorRingMotion = new HandoffEased(0.5f, CssEase.Ease);
+    [Tune("Sensors")] [SerializeField] private Eased sensorRingMotion = new Eased(0.5f, CssEase.Ease);
     [Tooltip("senEdge / senGlow: the ring and the fill inside it; white grid ink.data .26 / .04, amber grid alarm .3 / .05.")]
     [SerializeField] private float senEdgeAlpha = 0.26f, senGlowAlpha = 0.04f, senEdgeAlphaAmber = 0.3f, senGlowAlphaAmber = 0.05f;
     private float sensorKm;
@@ -50,11 +50,11 @@ public class HandoffPlotPanel : HandoffPanel
     [Tooltip("Owner 2026-10-26: the active scan cone, while DRADIS and ACTIVE are on: bright edges and a faint fill, from the small circle round our ship out to the scan's range.")]
     [Tune("Sensors")] [SerializeField] private float coneEdgeAlpha = 0.6f, coneFillAlpha = 0.07f;
     private float coneKm;
-    private HandoffEased coneMotion; // eases like the sensor circle
+    private Eased coneMotion; // eases like the sensor circle
     private System.Action<float> setConeKm;
 
     [Header("Radar sweep (Step 43): turns inside the sensor circle while DRADIS is on")]
-    [SerializeField] private HandoffSweepGraphic sweep;
+    [SerializeField] private SweepGraphic sweep;
     [Tooltip("One turn takes base − perGain × gain seconds (sweepDur: 5.4 − senBoost × .5). It holds still while the board is paused (owner rule).")]
     [Tune("Sensors")] [SerializeField] private float sweepSecondsBase = 5.4f, sweepSecondsPerGain = 0.5f;
     private float sweepDeg;
@@ -69,7 +69,7 @@ public class HandoffPlotPanel : HandoffPanel
     public float SensorRingKm => State != null && State.sensors.Listening ? sensorKm : 0f;
 
     [Header("Passive bearings (Step 44): contacts DRADIS hears but has not identified")]
-    [SerializeField] private HandoffMarksGraphic passiveLines;
+    [SerializeField] private MarksGraphic passiveLines;
     [Tooltip("A hidden plot label carrying a plot.look hit (the export's text #39), cloned per heard contact.")]
     [SerializeField] private TMP_Text passiveLabelTemplate;
     [Tooltip("The bearing line runs out to the sensor circle; its label sits this far out, or at the circle if nearer.")]
@@ -80,7 +80,7 @@ public class HandoffPlotPanel : HandoffPanel
 
     [Header("Contacts on the plot (Step 34): identified hostiles at their true range and bearing")]
     [Tooltip("Stand-in art until Claude Design's contact glyphs arrive (CLAUDE_DESIGN_NEEDS 1.2).")]
-    [SerializeField] private HandoffMarksGraphic contactMarks;
+    [SerializeField] private MarksGraphic contactMarks;
     [SerializeField] private TMP_Text contactLabelTemplate;
     [Tooltip("Owner 2026-10-26 (Step 75): a contact in sight (visualRangeKm) shows as its own 3D model seen from above, in "
            + "place of its dot (a ShipView camera on the contact's model): red identified, amber unknown, grey a wreck.")]
@@ -104,7 +104,7 @@ public class HandoffPlotPanel : HandoffPanel
     // world around a view centre, which starts on our ship. Drag the empty grid, or hold the arrow
     // keys, to pan.
     [Header("Panning the plot (Step 41)")]
-    [SerializeField] private HandoffPlotGrid grid;
+    [SerializeField] private PlotGrid grid;
     [Tooltip("Arrow keys pan the plot this fast, screen px per second.")]
     [Tune("Plot & our ship")] [SerializeField] private float panKeysPxPerS = 600f;
     private double viewX, viewY, panX0, panY0;
@@ -150,7 +150,7 @@ public class HandoffPlotPanel : HandoffPanel
     [Tooltip("A slug in flight trails this many screen px behind it (Step 48).")]
     [Tune("Periscope & fire control")] [SerializeField] private float slugTrailPx = 24f;
     [Tooltip("The selected weapon's reach, a dashed ring round our ship while Fire Control is open.")]
-    [SerializeField] private HandoffMarksGraphic weaponRing;
+    [SerializeField] private MarksGraphic weaponRing;
     [Tooltip("A PDC arc's curved edge is drawn in steps this many degrees long (Step 55).")]
     [SerializeField] private float pdcArcStepDeg = 2f;
 
@@ -173,15 +173,15 @@ public class HandoffPlotPanel : HandoffPanel
     [SerializeField] private Color sweepInkAmber = new Color32(0xFF, 0x96, 0x82, 0xFF);
 
     private readonly List<TMP_Text> labels = new List<TMP_Text>();
-    private readonly List<HandoffHit> hits = new List<HandoffHit>();
+    private readonly List<ClickSpot> hits = new List<ClickSpot>();
 
     bool Capturing => Controls.Tool == "POINT" || Controls.Tool == "RULER" || Controls.Tool == "COMPASS";
 
     // plotPt: pointer to plot-layer px at 1x, rounded
     // the board measures a whole drag at the zoom of the press (_plot.k)
     private double pressZoom = 1;
-    int LayerX(float bx) => HandoffBoardState.JsRound((bx - plotCentre.x) / pressZoom);
-    int LayerY(float by) => HandoffBoardState.JsRound((by - plotCentre.y) / pressZoom);
+    int LayerX(float bx) => ShipState.JsRound((bx - plotCentre.x) / pressZoom);
+    int LayerY(float by) => ShipState.JsRound((by - plotCentre.y) / pressZoom);
 
     // Step 36: marks live in world km (x east, y north) so they stay put when our ship moves.
     // The pointer is still rounded to whole layer px first, as the board's plotPt does.
@@ -299,7 +299,7 @@ public class HandoffPlotPanel : HandoffPanel
     {
         var s = State;
         if (!viewSet) { viewX = s.nav.x; viewY = s.nav.y; viewSet = true; }
-        if (!grid) grid = FindAnyObjectByType<HandoffPlotGrid>();
+        if (!grid) grid = FindAnyObjectByType<PlotGrid>();
         if (grid)
         {
             // Step 65: the view stays inside the battle space, so the plot never shows black past its edge,
@@ -319,16 +319,16 @@ public class HandoffPlotPanel : HandoffPanel
         if (capture) capture.raycastTarget = Capturing;
         bool erasing = Controls.Tool == "ERASE";
 
-        var all = new List<HandoffBoardState.Mark>(s.marks);
+        var all = new List<ShipState.Mark>(s.marks);
         if (s.draft != null) all.Add(s.draft);
-        var shapes = new List<HandoffMarksGraphic.Shape>();
+        var shapes = new List<MarksGraphic.Shape>();
         for (int i = 0; i < all.Count; i++)
         {
             var m = all[i];
             bool isDraft = m == s.draft;
             float alpha = isDraft ? draftAlpha : 1f;
             Vector2 a = Screen(s.MarkX(m), s.MarkY(m)), b = Screen(m.x2, m.y2);
-            shapes.Add(new HandoffMarksGraphic.Shape { kind = m.kind, a = a, b = b, alpha = alpha });
+            shapes.Add(new MarksGraphic.Shape { kind = m.kind, a = a, b = b, alpha = alpha });
 
             var label = Label(i);
             label.alpha = alpha;
@@ -337,27 +337,27 @@ public class HandoffPlotPanel : HandoffPanel
             else
             {
                 double dx = m.x2 - s.MarkX(m), dy = m.y2 - s.MarkY(m); // km, y north
-                label.text = "RNG " + HandoffBoardState.JsRound(s.MarkLen(m)).ToString("#,0", System.Globalization.CultureInfo.InvariantCulture)
+                label.text = "RNG " + ShipState.JsRound(s.MarkLen(m)).ToString("#,0", System.Globalization.CultureInfo.InvariantCulture)
                            + " km · BRG " + Brg(dx, dy) + "°";
                 if (m.kind == "ruler")
                 {
                     label.alignment = TextAlignmentOptions.Center;
-                    HandoffBoardState.Mark fromPt, toPt;
+                    ShipState.Mark fromPt, toPt;
                     double crs, spd;
                     if (s.TrackLeg(m, out fromPt, out toPt, out crs, out spd))
                     {
                         // a target's track: its course and speed, and where it will be projectSeconds on
-                        label.text = "CRS " + (HandoffBoardState.JsRound(crs) % 360).ToString("000") + "° · "
+                        label.text = "CRS " + (ShipState.JsRound(crs) % 360).ToString("000") + "° · "
                                    + spd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " km/s";
                         double ahead = spd * projectSeconds, rc = crs * System.Math.PI / 180.0;
-                        shapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = Screen(toPt.x, toPt.y),
+                        shapes.Add(new MarksGraphic.Shape { kind = "dash", a = Screen(toPt.x, toPt.y),
                             b = Screen(toPt.x + System.Math.Sin(rc) * ahead, toPt.y + System.Math.Cos(rc) * ahead), alpha = alpha });
                     }
                     else if (s.nav.SpeedKms >= 0.01) label.text += " · " + Duration(s.MarkLen(m) / s.nav.SpeedKms); // time to cover it at our speed
                     // the board rounds the label's spot to whole layer px from the plot centre. km→px
                     // leaves float dust (250.49999999999997 for 250.5), so trim it before rounding
-                    double mx = HandoffBoardState.JsRound(System.Math.Round((m.x + dx / 2.0 - viewX) / KmPerPx, 6));
-                    double my = HandoffBoardState.JsRound(System.Math.Round(-(m.y + dy / 2.0 - viewY) / KmPerPx, 6));
+                    double mx = ShipState.JsRound(System.Math.Round((m.x + dx / 2.0 - viewX) / KmPerPx, 6));
+                    double my = ShipState.JsRound(System.Math.Round(-(m.y + dy / 2.0 - viewY) / KmPerPx, 6));
                     at = plotCentre + new Vector2((float)mx, (float)my) * (float)Controls.ZoomExact + rulerLabelOffset;
                 }
                 else { label.alignment = TextAlignmentOptions.Left; at = b + ringLabelOffset; }
@@ -380,12 +380,12 @@ public class HandoffPlotPanel : HandoffPanel
         foreach (var r in s.weapons.Rounds)
         {
             Vector2 at = Screen(r.x, r.y), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
-            shapes.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = slugInk });
-            shapes.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f, ink = slugInk });
+            shapes.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = slugInk });
+            shapes.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f, ink = slugInk });
         }
         // a prize our marines hold (Step 60): an own-force dot where it lies, no label (placeholder until its glyph)
         foreach (var t in s.tracks)
-            if (t.captured && t.hasWorld) { var at = Screen(t.worldX, t.worldY); shapes.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f }); }
+            if (t.captured && t.hasWorld) { var at = Screen(t.worldX, t.worldY); shapes.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f }); }
         if (marks) marks.Set(shapes);
 
         // our ship where it is (Step 41: it moves across the plot): the 3D model's top-down view, sized by zoom and clamped
@@ -439,12 +439,12 @@ public class HandoffPlotPanel : HandoffPanel
         // the selected weapon's reach while Fire Control is open (Step 46)
         if (weaponRing)
         {
-            var reachShapes = new List<HandoffMarksGraphic.Shape>();
+            var reachShapes = new List<MarksGraphic.Shape>();
             var mount = s.weapons.MountOf(s.weapons.mount);
             if (Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && mount != null && mount.rangeKm > 0f)
             {
                 Vector2 c = OwnAt;
-                reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeKm / KmPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
+                reachShapes.Add(new MarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeKm / KmPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
             }
             // Step 55: each PDC group on AUTO shows its arc, a dashed sector off our hull (the design's PDC arc, accent.caution at .45)
             var pdGroups = System.Array.Find(s.weapons.systems, y => y.id == "PD").mounts;
@@ -456,10 +456,10 @@ public class HandoffPlotPanel : HandoffPanel
                 float r = (float)(pm.rangeKm / KmPerPx * Controls.ZoomExact);
                 System.Func<float, Vector2> at = deg => c + new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)) * r; // board y is down
                 float hdg = (float)s.nav.DrawnHeading, from = hdg + pm.arc - pm.halfArc, to = hdg + pm.arc + pm.halfArc;
-                reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = c, b = at(from), alpha = 0.45f });
-                reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = c, b = at(to), alpha = 0.45f });
+                reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = c, b = at(from), alpha = 0.45f });
+                reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = c, b = at(to), alpha = 0.45f });
                 for (float d = from; d < to; d += pdcArcStepDeg)
-                    reachShapes.Add(new HandoffMarksGraphic.Shape { kind = "dash", a = at(d), b = at(Mathf.Min(to, d + pdcArcStepDeg)), alpha = 0.45f });
+                    reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = at(d), b = at(Mathf.Min(to, d + pdcArcStepDeg)), alpha = 0.45f });
             }
             Paint(weaponRing, caution);
             weaponRing.Set(reachShapes);
@@ -470,7 +470,7 @@ public class HandoffPlotPanel : HandoffPanel
             if (setSensorKm == null) setSensorKm = km => { sensorKm = km; DrawSensorRing(); };
             sensorRingMotion.Set(s.sensors.PassiveRangeKm, setSensorKm);
             // the cone reaches the scan's range, which in UV is past the hearing circle (ConeCovers)
-            if (coneMotion == null) { coneMotion = new HandoffEased(sensorRingMotion.seconds, sensorRingMotion.ease); setConeKm = km => { coneKm = km; DrawSensorRing(); }; }
+            if (coneMotion == null) { coneMotion = new Eased(sensorRingMotion.seconds, sensorRingMotion.ease); setConeKm = km => { coneKm = km; DrawSensorRing(); }; }
             coneMotion.Set(s.sensors.SenRangeKm, setConeKm);
             DrawSensorRing();
         }
@@ -479,7 +479,7 @@ public class HandoffPlotPanel : HandoffPanel
         // once identified; amber and nameless if not (you see its shape, not who it is, and can't target it); grey
         // once a wreck, drifting on. Out of sight an identified hostile is a dot where the sweep last touched it
         // (res_* in the board: a mark only once identified). km to plot px at 1x: 60.9 px per 1000 km, then the zoom.
-        var dots = new List<HandoffMarksGraphic.Shape>();
+        var dots = new List<MarksGraphic.Shape>();
         int n = 0;
         string pictured = null; // the one contact picture's track
         foreach (var t in s.tracks)
@@ -515,12 +515,12 @@ public class HandoffPlotPanel : HandoffPanel
                 labelPush = px * view.ShipFill / 2f;
             }
             else if (t.wreck || !known) continue; // no picture: a wreck keeps its dim dot (below); an unknown shows nothing
-            else dots.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
+            else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
             if (t.wreck) continue; // a wreck carries no label (Step 49)
             var cl = ContactLabel(n++);
             Paint(cl, ink);
             float rng = inSight ? t.rangeKm : t.seenRangeKm;
-            cl.text = (known ? t.name : "BOGEY " + t.key.ToUpperInvariant()) + "\nRNG " + HandoffBoardState.JsRound(rng).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
+            cl.text = (known ? t.name : "BOGEY " + t.key.ToUpperInvariant()) + "\nRNG " + ShipState.JsRound(rng).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
             Place(cl.rectTransform, at + contactLabelOffset + new Vector2(labelPush, 0f), 0f);
         }
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
@@ -529,15 +529,15 @@ public class HandoffPlotPanel : HandoffPanel
         foreach (var r in s.weapons.Incoming)
         {
             Vector2 at = Screen(r.x, r.y), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
-            dots.Add(new HandoffMarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
-            dots.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f });
+            dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
+            dots.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f });
         }
         if (contactMarks) contactMarks.Set(dots);
 
         // passive bearings: a line fading out from our ship toward each contact DRADIS hears but has not
         // identified (bearing only, no range), with its bearing; amber while the scope is on it (passives)
         bool down = Controls.Motion && Controls.Motion.ScopeDown;
-        var bearings = new List<HandoffMarksGraphic.Shape>();
+        var bearings = new List<MarksGraphic.Shape>();
         int np = 0;
         Vector2 ownAt = OwnAt;
         float reach = (float)(s.sensors.PassiveRangeKm / KmPerPx * Controls.ZoomExact);
@@ -548,7 +548,7 @@ public class HandoffPlotPanel : HandoffPanel
             float life = 1f - (Controls.MissionSeconds - f.t) / Mathf.Max(1f, s.sensors.stats.bearingTrailSeconds);
             double rad = f.brg * System.Math.PI / 180.0;
             Vector2 from = Screen(f.x, f.y), dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad));
-            bearings.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = from, b = from + dir * reach, alpha = trailAlpha * life });
+            bearings.Add(new MarksGraphic.Shape { kind = "fade", a = from, b = from + dir * reach, alpha = trailAlpha * life });
         }
         foreach (var t in s.tracks)
         {
@@ -556,13 +556,13 @@ public class HandoffPlotPanel : HandoffPanel
             double rad = t.seenBrg * System.Math.PI / 180.0; // where the sweep last heard it; the label shows it in whole degrees
             var dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad)); // board y is down
             bool on = s.ScopeOn(t, down);
-            bearings.Add(new HandoffMarksGraphic.Shape { kind = "fade", a = ownAt, b = ownAt + dir * reach, alpha = on ? 1f : 0.6f });
+            bearings.Add(new MarksGraphic.Shape { kind = "fade", a = ownAt, b = ownAt + dir * reach, alpha = on ? 1f : 0.6f });
             var pl = PassiveLabel(np++);
-            pl.text = "BRG " + (HandoffBoardState.JsRound(t.seenBrg) % 360).ToString("000");
+            pl.text = "BRG " + (ShipState.JsRound(t.seenBrg) % 360).ToString("000");
             pl.alpha = on ? 1f : 0.6f;
             Paint(pl, on ? caution : Controls.GridAmber ? alarm : data);
             Place(pl.rectTransform, ownAt + dir * Mathf.Min(reach, passiveLabelPx), dir.x < 0f ? 1f : 0f);
-            var look = pl.GetComponent<HandoffHit>();
+            var look = pl.GetComponent<ClickSpot>();
             if (look) look.arg = t.key;
         }
         for (int i = np; i < passiveLabels.Count; i++) passiveLabels[i].gameObject.SetActive(false);
@@ -571,7 +571,7 @@ public class HandoffPlotPanel : HandoffPanel
             if (t.wreck && t.hasWorld && t.key != pictured)
             {
                 var w = t.nav ? Screen(t.nav.DrawnX, t.nav.DrawnY) : Screen(t.worldX, t.worldY);
-                bearings.Add(new HandoffMarksGraphic.Shape { kind = "point", a = w, b = w, alpha = 0.45f });
+                bearings.Add(new MarksGraphic.Shape { kind = "point", a = w, b = w, alpha = 0.45f });
             }
         if (passiveLines) { Paint(passiveLines, Controls.GridAmber ? alarm : data); passiveLines.Set(bearings); }
 
@@ -590,26 +590,26 @@ public class HandoffPlotPanel : HandoffPanel
     void DrawSensorRing()
     {
         var s = State;
-        var shapes = new List<HandoffMarksGraphic.Shape>();
+        var shapes = new List<MarksGraphic.Shape>();
         if (s.sensors.Listening && sensorKm > 0f)
         {
             bool amber = Controls.GridAmber;
             Paint(sensorRing, amber ? alarm : data);
             Vector2 c = OwnAt, e = c + new Vector2((float)(sensorKm / KmPerPx * Controls.ZoomExact), 0f);
-            shapes.Add(new HandoffMarksGraphic.Shape { kind = "disc", a = c, b = e, alpha = amber ? senGlowAlphaAmber : senGlowAlpha });
-            shapes.Add(new HandoffMarksGraphic.Shape { kind = "circle", a = c, b = e, alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
+            shapes.Add(new MarksGraphic.Shape { kind = "disc", a = c, b = e, alpha = amber ? senGlowAlphaAmber : senGlowAlpha });
+            shapes.Add(new MarksGraphic.Shape { kind = "circle", a = c, b = e, alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
             // owner 2026-10-24: a small circle just outside our ship; the sweep runs from it to the rim
-            shapes.Add(new HandoffMarksGraphic.Shape { kind = "circle", a = c, b = c + new Vector2(InnerRingPx, 0f), alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
+            shapes.Add(new MarksGraphic.Shape { kind = "circle", a = c, b = c + new Vector2(InnerRingPx, 0f), alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
             // owner 2026-10-26: the active scan cone starts at that small circle too
             if (s.sensors.active && coneKm > 0f)
             {
                 float r = (float)(coneKm / KmPerPx * Controls.ZoomExact), inner = InnerRingPx;
                 System.Func<float, Vector2> at = deg => new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)); // board y is down
-                shapes.Add(new HandoffMarksGraphic.Shape { kind = "sector", a = c, b = c + at(s.sensors.coneBrg) * r, inner = inner, half = s.sensors.coneArc, alpha = coneFillAlpha });
+                shapes.Add(new MarksGraphic.Shape { kind = "sector", a = c, b = c + at(s.sensors.coneBrg) * r, inner = inner, half = s.sensors.coneArc, alpha = coneFillAlpha });
                 foreach (int side in new[] { -1, 1 })
                 {
                     var edge = at(s.sensors.coneBrg + side * s.sensors.coneArc);
-                    shapes.Add(new HandoffMarksGraphic.Shape { kind = "line", a = c + edge * inner, b = c + edge * r, alpha = coneEdgeAlpha });
+                    shapes.Add(new MarksGraphic.Shape { kind = "line", a = c + edge * inner, b = c + edge * r, alpha = coneEdgeAlpha });
                 }
             }
         }
@@ -641,8 +641,8 @@ public class HandoffPlotPanel : HandoffPanel
     // time at our speed: "45 S", "15 MIN", "1 H 12 MIN" (mission time)
     static string Duration(double seconds)
     {
-        if (seconds < 60) return HandoffBoardState.JsRound(seconds) + " S";
-        int min = HandoffBoardState.JsRound(seconds / 60);
+        if (seconds < 60) return ShipState.JsRound(seconds) + " S";
+        int min = ShipState.JsRound(seconds / 60);
         return min < 60 ? min + " MIN" : (min / 60) + " H " + (min % 60) + " MIN";
     }
 
@@ -708,7 +708,7 @@ public class HandoffPlotPanel : HandoffPanel
         return labels[i];
     }
 
-    HandoffHit Hit(int i)
+    ClickSpot Hit(int i)
     {
         while (hits.Count <= i)
         {
@@ -719,7 +719,7 @@ public class HandoffPlotPanel : HandoffPanel
             rt.anchorMin = rt.anchorMax = new Vector2(0, 1);
             rt.pivot = new Vector2(0.5f, 0.5f);
             go.AddComponent<Image>().color = new Color(0, 0, 0, 0);
-            var h = go.AddComponent<HandoffHit>();
+            var h = go.AddComponent<ClickSpot>();
             h.action = "plot.erase";
             hits.Add(h);
         }
@@ -794,7 +794,7 @@ public class HandoffPlotPanel : HandoffPanel
     static string Brg(double dx, double dyNorth)
     {
         double deg = (System.Math.Atan2(dx, dyNorth) * 180 / System.Math.PI + 360) % 360;
-        return (HandoffBoardState.JsRound(deg) % 360).ToString("000");
+        return (ShipState.JsRound(deg) % 360).ToString("000");
     }
 
     // clk: hh:mm:ss from the mission clock; seconds print as JS prints a number (2.25 stays 2.25)

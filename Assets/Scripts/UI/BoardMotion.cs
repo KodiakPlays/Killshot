@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// reads game state; Step 33 calls these methods from the board's controls.
 /// Tweens run in play mode; in edit mode every change lands at once.
 /// </summary>
-public class HandoffBoardMotion : MonoBehaviour
+public class BoardMotion : MonoBehaviour
 {
     [System.Serializable]
     public class Drawer

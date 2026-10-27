@@ -31,7 +31,7 @@ public class NavSystem : MonoBehaviour
     public int[] approachRanges = { 2000, 4000, 8000, 12000, 18000, 24000 };
 
     /// <summary>The ship this belongs to. Navigation reads its ENG bus and its engine room.</summary>
-    [System.NonSerialized] public HandoffBoardState ship;
+    [System.NonSerialized] public ShipState ship;
 
     /// <summary>This ship's numbers for movement: its section of the ship's stats file (Assets/Ships,
     /// Starwolf → Tuning).</summary>
@@ -66,7 +66,7 @@ public class NavSystem : MonoBehaviour
     // the bow turns whole degrees; fractions of a degree bank here so x0.25 turns at the right speed too
     [System.NonSerialized] private double turnBank;
     // the board's clock, for drawing between ticks (Step 75)
-    private HandoffBoardControls board;
+    private BoardManager board;
 
     // Step 75 (owner 2026-10-26): the rules step once per board tick; between ticks the ship is drawn gliding on
     // along its velocity, its bow still swinging, so a ship in view moves smoothly. Only the drawing; x and y stay true.
@@ -94,16 +94,16 @@ public class NavSystem : MonoBehaviour
 
     double EngineRoom => ship.damage.CompHealth("eng") / 5.0;
     /// <summary>Degrees the bow swings per game second now (the design's per-tick swing at x1).</summary>
-    double TurnPerS => System.Math.Max(1, HandoffBoardState.JsRound(stats.turnRate * EngineRoom));
+    double TurnPerS => System.Math.Max(1, ShipState.JsRound(stats.turnRate * EngineRoom));
     /// <summary>thrCap: ENG units x 20 x the engine room's integrity.</summary>
-    public int ThrottleCap => HandoffBoardState.JsRound((double)ship.power.BusUnits("eng") * 20 * EngineRoom);
+    public int ThrottleCap => ShipState.JsRound((double)ship.power.BusUnits("eng") * 20 * EngineRoom);
     /// <summary>gLoadNum: 1 G plus 1 G at full throttle, plus the approach mode's extra.</summary>
     public double GLoad => 1 + throttle / 100.0 + (approachMode == "FLANK" ? 0.5 : approachMode == "EVASIVE" ? 1.2 : 0);
     /// <summary>stabNum: 45 points lost per G over 1, 0..100.</summary>
     public double Stability => System.Math.Max(0, System.Math.Min(100, 100 - (GLoad - 1) * 45));
 
     /// <summary>thrDown: from the pointer's height in the fader well, top = 100, capped at the press.</summary>
-    public void SetThrottle(double fromTop01, int cap) => throttle = System.Math.Max(0, System.Math.Min(System.Math.Min(100, cap), HandoffBoardState.JsRound((1 - fromTop01) * 100)));
+    public void SetThrottle(double fromTop01, int cap) => throttle = System.Math.Max(0, System.Math.Min(System.Math.Min(100, cap), ShipState.JsRound((1 - fromTop01) * 100)));
     /// <summary>setAtt: click to hold, click again to release.</summary>
     public void ToggleAttitude(string k) => attitude = attitude == k ? "" : k;
     public void SetApproachMode(string k) => approachMode = k;
@@ -163,7 +163,7 @@ public class NavSystem : MonoBehaviour
         y += vy * dt;
     }
 
-    private void Awake() => board = FindAnyObjectByType<HandoffBoardControls>();
+    private void Awake() => board = FindAnyObjectByType<BoardManager>();
 
     // in Update, so the ship cameras (LateUpdate) follow the model where it is this frame
     private void Update() => PlaceModel();

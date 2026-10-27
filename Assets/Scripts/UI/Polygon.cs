@@ -5,7 +5,7 @@ using UnityEngine.UI;
 /// A filled convex polygon over the rect: a CSS clip-path polygon(). Points are fractions of the
 /// box, x from the left and y from the top, as CSS writes them.
 /// </summary>
-public class HandoffPolygon : MaskableGraphic
+public class Polygon : MaskableGraphic
 {
     [SerializeField] private Vector2[] points = { new Vector2(0.5f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) };
 

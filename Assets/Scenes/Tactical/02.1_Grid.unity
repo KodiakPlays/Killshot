@@ -3790,7 +3790,7 @@ GameObject:
   - component: {fileID: 1765047284}
   - component: {fileID: 1765047286}
   m_Layer: 5
-  m_Name: HandoffBoard
+  m_Name: Tactical Board
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

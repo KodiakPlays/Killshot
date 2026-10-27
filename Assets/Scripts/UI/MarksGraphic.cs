@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// with its bearing line (COMPASS), in own-force blue (UIStateSpec §8.4). Positions are given in
 /// board px; sizes are screen px, so marks keep their size across zoom (--lbl = 1 / zoom).
 /// </summary>
-public class HandoffMarksGraphic : MaskableGraphic
+public class MarksGraphic : MaskableGraphic
 {
     public struct Shape
     {
