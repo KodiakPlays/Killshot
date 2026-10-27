@@ -17,8 +17,8 @@ Last updated: 2026-10-27. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 **The board refactor is mostly done** (section 8, "Board refactor"). All eight ship parts are
 systems in `Assets/Scripts/Systems`. Each ship's numbers are in its stats file in `Assets/Ships`.
 All ten panels and seven frame pieces are prefabs in `Assets/UI/Board/Panels`. The board's colours
-are in one palette file. Left: the fonts, the "Handoff" rename (in progress by the UI Restructure
-session), the Test Runner and the clock move. The order of all the remaining work is in the
+are in one palette file. The fonts are in `Assets/UI/Fonts`, with a Fonts list on each panel (Step
+89). Left: the "Handoff" rename, the Test Runner and the clock move. The order of all the remaining work is in the
 owner-approved plan: settle, finish the refactor (new features paused), then the Tuning and Level
 tools, then the mission scripter, then features.
 
@@ -39,10 +39,15 @@ passed. Every control is clickable and shows its states. The flow is `00_Start` 
 `02.1_Grid`, with `Level_01` loaded on top of the board. The full record is
 `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
 
-**Next up:** the list at the top of section 8, "To do next". The UI Restructure session is working
-through the "UI restructure" list in section 8: the fonts first, then the "Handoff" rename. The UI
-asset audit is done (`ASSET_AUDIT.md`). The Claude Design request still stands, but placeholder art
-is fine, so it does not block a demo.
+**Next up (2026-10-27, owner offline; both sessions paused with everything committed):**
+
+- killshot-81: the "UI restructure — to do" list in section 8, steps 6 to 8: the "Handoff" rename
+  (`rename_handoff.py`, dry run first), the docs pass, the checker. Steps 1 to 5 are done (Step 89).
+- Tooling: "To do next" items 6 to 9 in section 8, starting with the battle space per level
+  (decision 50).
+- Waiting on the owner: playing the Mac app through (Step 87); whether to delete TextMeshPro's
+  examples (Step 87 notes); three possible bugs ("Bugs, not fixed yet", items 6 to 8).
+- The Claude Design request still stands, but placeholder art is fine, so it does not block a demo.
 
 **Agreed on 2026-10-25, not built:** the combat autopilot with W/S throttle. It is in section 8,
 with the owner's ruling on Soham's old scripts.
@@ -136,8 +141,9 @@ Do not run ahead. Do one step, show it, wait.
 | 86 | The playtest checks the battle space's edge: zoom limit, axis numbers, pan limit, `C`, the warning, the x1 drop, the countdown | **Done** — playtest 209/209 |
 | 87 | The Mac app | **In progress** — built and starts; the owner's play-through is next (section 8, Step 87) |
 | 88 | A shot hits within 100 km of any ship; a hit's damage comes from the weapon that fired it | **Done** — playtest 209/209 |
+| 89 | UI restructure steps 1 to 5: fonts in `Assets/UI/Fonts` with a Fonts list per panel; materials; two stencils and the plot's mock-up deleted; the old export's reference files kept, the rest of `UI2` deleted | **Done** — 0 pixels changed by the fonts; playtest 209/209 |
 
-Steps 6 to 28 and Steps 34 to 88 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 89 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -753,7 +759,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 88, in detail
+## 6 · Steps 6 to 28, and 34 to 89, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3755,6 +3761,39 @@ first slug hits with its aim 30 km off, the led shot 6 km off; HE, EMP and PEN h
 Garuda's missiles hit us; the step-22 kill and MISSION COMPLETE still pass. The scale study: a fight
 still takes about 11 minutes at x1, 5 slugs for 5 hits.
 
+### Step 89 — UI restructure, steps 1 to 5: fonts, materials, two stencils, the mock-up, the old export
+
+**What it is.**
+
+- The board's fonts are in `Assets/UI/Fonts`, one folder per family, with their `.ttf` files and
+  licences: `BarlowCondensed`, `ShareTechMono` and `NotoSansSymbols2`.
+- Each panel and frame piece has a **Fonts** list beside its Art list. Swap a font in the list and
+  every text under it changes. Each entry is a font, a material preset if the texts use one (Share
+  Tech Mono's "Small"), and the texts.
+- The board's two materials are in `Assets/UI/Board/Materials`.
+- The frame stencils CL II EQUIP and CONSOLE HARNESS are deleted. BUS A-14 and VENT PLENUM 3 are
+  left.
+- The plot's design mock-up: 43 unused parts are deleted. Kept: the passive label template, and the
+  SENSOR RANGE label and value. Their entries in `HandoffBoardMotion` (one drift, one pulse) are
+  removed.
+- The old design export's reference files are in `Assets/UI/Board/Design`: the README, the asset
+  map, the tokens, `layout/layout.json`, the 1920 × 1080 reference picture (the switched-off
+  `ReferenceOverlay` uses it), `UIStateSpec.md`, `board-logic.js` and `plot-grid.json`. The rest of
+  `Assets/UI2` is deleted, the folder too.
+
+**How it works.** `HandoffPanel.FontSlot` and `ApplyFonts`, called from `OnValidate` in the editor.
+`ArtList` uses the same. A material made for another font is ignored, and the font's own material is
+used. Every move went through the Editor, so every link stayed.
+
+**Checked.**
+
+- The board rendered before and after the fonts: 0 pixels changed.
+- After the stencils and the mock-up: only the two stencils' pixels changed.
+- No broken links in the board scene or in any panel prefab.
+- Playtest 2026-10-27_105858: 209/209.
+
+**Left:** steps 6 to 8 of the "UI restructure — to do" list.
+
 ---
 
 ## 7 · How to keep this log
@@ -3799,8 +3838,9 @@ code move, or once at the end of a batch.
    step 6, below. Owner 2026-10-27: the playable steps (82 to 87) come first, then the UI
    restructure. When the rename is done, the docs need one pass for the new names.
 
-**Who does what (2026-10-27).** Tooling: items 4 to 9. killshot-81: Steps 82 to 87, then the UI
-restructure list. Ask the other session before taking Unity.
+**Who does what (2026-10-27).** Tooling: items 4 to 9 (4 and 5 done in Step 88). killshot-81: Steps
+82 to 87 (done, except the owner's play-through of the Mac app), then the UI restructure list (steps 1
+to 5 done in Step 89; 6 to 8 left). Ask the other session before taking Unity.
 
 **Weapons**
 
@@ -4242,6 +4282,10 @@ Found by the doc check after Step 66. Fix each with the owner.
    ship fights on while it moves and the boats ride with it (decision 44).
 4. ~~**Enter can do nothing on the briefing.**~~ Fixed in Step 83.
 5. ~~**The playtest has no battle-space checks.**~~ Added in Step 86.
+6. **Engineering's REPAIR, SEAL and VENT cost nothing.** The orders station charges AUX for the same
+   orders. Found by Tooling's spec check (2026-10-27). Ask the owner which is right.
+7. **ANGLE stays thrown after turning out of arc,** so the shot can still fire. Same check.
+8. **Losing WEP power after LOAD does not release the firing ladder.** Same check.
 
 ### Checks to run (owner, 2026-10-27). Done in Step 79
 
@@ -4590,7 +4634,7 @@ same (render the board before and after and compare pixels), look at it in play 
 full playtest at the end of the batch (owner 2026-10-27: no full playtest per change). Ask the
 other sessions before taking Unity, and before editing scripts they may be editing.
 
-1. **Fonts.** Move the board's fonts into `Assets/UI/Fonts`, one folder per family, with their
+1. **Fonts.** Done in Step 89. Move the board's fonts into `Assets/UI/Fonts`, one folder per family, with their
    source files and licences. The font assets add letters as text needs them, so they need their
    source `.ttf` next to them. Use the Editor (AssetDatabase.MoveAsset) so the links stay.
    - `Assets/UI/Fonts/BarlowCondensed/`: the three `BarlowCondensed-* SDF.asset` from
@@ -4606,17 +4650,17 @@ other sessions before taking Unity, and before editing scripts they may be editi
      `fonts` field, and `ApplyFonts` called from `OnValidate`. It puts the font and material on
      each text. A material made for another font is ignored, and the font's own material is used.
      Fill each panel's and frame piece's list by grouping its texts by font and material.
-2. **Materials.** Move `BoardGammaToLinear.mat` and `BoardLinearImage.mat` from
+2. **Materials.** Done in Step 89. Move `BoardGammaToLinear.mat` and `BoardLinearImage.mat` from
    `Assets/UI2/Generated` to `Assets/UI/Board/Materials` (the board's gamma presenter uses them).
-3. **Two frame stencils.** Delete `Frame/Stencils/CL II EQUIP` and `Frame/Stencils/CONSOLE
+3. **Two frame stencils.** Done in Step 89. Delete `Frame/Stencils/CL II EQUIP` and `Frame/Stencils/CONSOLE
    HARNESS` in `Panels/Frame.prefab` (owner 2026-10-26: no use for them).
-4. **The plot's design mock-up.** In `Panels/Plot.prefab`, delete the parts of
+4. **The plot's design mock-up.** Done in Step 89. In `Panels/Plot.prefab`, delete the parts of
    `Design mock-up (off)` that nothing uses (owner 2026-10-27: "if it's not in use… kick it").
    - Keep `Passive label template` (the plot copies it) and `SENSOR RANGE label (off)` and
      `SENSOR RANGE value (off)` (the sensors drawer links to them).
    - `HandoffBoardMotion` (on the board root) lists some mock-up parts in its `drifts` and
      `pulses`. Remove those entries first, or the lists point at nothing.
-5. **The old design export.** Move its reference files to `Assets/UI/Board/Design`: `README.md`,
+5. **The old design export.** Done in Step 89. Move its reference files to `Assets/UI/Board/Design`: `README.md`,
    `asset-map.csv`, `tokens.json`, `layout/layout.json`, `layout/board-1920x1080.png` (the
    switched-off `ReferenceOverlay` on the board uses it), `reference/UIStateSpec.md`,
    `reference/board-logic.js` and `textures/plot-grid.json`. Then delete
@@ -4648,7 +4692,7 @@ other sessions before taking Unity, and before editing scripts they may be editi
 
 After this: the whole-project folder cleanup, as its own job.
 
-**Next:** the UI restructure to-do above.
+**Next:** steps 6 to 8 of the UI restructure to-do above. Steps 1 to 5 are done (Step 89).
 
 **Why.** On 2026-10-25 the board was hard to follow:
 - One 1,915-line class (`HandoffBoardState`) had every rule. Now the rules are in the eight ship
@@ -4681,8 +4725,8 @@ are ship parts, one set per ship.
    `Scripts/Game`. Move only. Part done: the ship parts and the eight panels are in place. Left: the
    board scripts still in `Scripts/Tactical`. The rename moves the "Handoff" ones.
 6. **Make the panels prefabs** (decision 31). Done (2026-10-26 and 27):
-   - Each panel's sprites are an Art list in its own inspector. Fonts: left (the UI restructure
-     to-do above, step 1).
+   - Each panel's sprites are an Art list in its own inspector. Fonts: a Fonts list beside it (Step
+     89).
    - Shared colours are in one palette file that every panel points at.
    - Each object is named after its control, and each control's parts are under one parent.
    - The builder and the import menu are deleted.
