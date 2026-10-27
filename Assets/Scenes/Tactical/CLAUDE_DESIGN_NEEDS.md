@@ -5,7 +5,8 @@ to make or decide. It is built from `HANDOFF_GAPS.md` (rows 1–106) and was che
 package, the reference picture and the live scene. The "Gap" column gives the `HANDOFF_GAPS.md`
 row, where the full detail is. "New" means the check found it, and it is not in that file yet.
 
-**Package:** `Assets/UI2/Claude Design handoff/export/`, generated 2026-09-27.
+**Package:** generated 2026-09-27. Its reference files are in `Assets/UI/Board/Design/`. The rest of
+it was deleted in Step 89.
 **Board in Unity:** `Assets/Scenes/Tactical/02.1_Grid.unity`, first built in Steps 28–33. Its panels
 are prefabs in `Assets/UI/Board/Panels`, edited directly.
 

@@ -6,7 +6,7 @@ rooms. Engineering handles them with the design's existing buttons. A reactor at
 ship, ours included. This is built one step at a time, in the order at the bottom.
 
 **Sources.** The design audit §09 (`References/Star Wolf - Design Audit.dc.html`) is the base. The
-handoff (`Assets/UI2/Claude Design handoff/export/reference/board-logic.js`) gives the buttons. The
+handoff (`Assets/UI/Board/Design/reference/board-logic.js`) gives the buttons. The
 owner's decisions of 2026-10-24 fill the gaps. Where these disagree, this file says what we do.
 Every rate is per game second, so x10 runs everything ten times as fast.
 

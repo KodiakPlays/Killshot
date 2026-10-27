@@ -276,7 +276,7 @@ indefinitely.
 
 Soham's older Unity code has four typed failure reasons (`QuestSystem.cs`). The tactical board does
 not use it. On the board a ship is lost in two ways: its reactor room reaches integrity 0
-(`DamageSystem.cs`), or it stays outside the battle space too long (`HandoffBoardState.TickArena`).
+(`DamageSystem.cs`), or it stays outside the battle space too long (`ShipState.TickArena`).
 
 ---
 

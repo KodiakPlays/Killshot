@@ -42,7 +42,7 @@ game exists.       Historical.     expression.                    system.       
 | Rank | Source | Decides |
 |---|---|---|
 | **1** | **What the owner says, most recently** | **Everything.** Overrides all of the below. |
-| 2 | `Assets/UI2/Claude Design handoff/export/` (the newer Claude Design handoff) | The visual system, and the board built into `02.1_Grid`. The owner ruled it wins on weapons, power and distances |
+| 2 | The newer Claude Design handoff. Its reference files are in `Assets/UI/Board/Design/` | The visual system, and the board built into `02.1_Grid`. The owner ruled it wins on weapons, power and distances |
 | 3 | `References/Tactical spaceship UI planning.zip` (the older Claude Design handoff) | The visual system — colour, type, layout, marker shapes — where the newer export is silent |
 | 4 | Silent Shark (released tactical submarine sim) | How the game should present itself |
 | 5 | `References/starwolf-prototype.html` | How systems behave, and **every number** |
@@ -63,9 +63,9 @@ pages, and most of it has been overtaken.
 |---|---|
 | Why the game exists, the fantasy, the tone | `References/Starwolf GDD.pdf` |
 | What a system does and what number it uses | `Assets/TACTICAL_BOARD_SPEC.md`, then `References/starwolf-prototype.html` |
-| What the board looks like — colour, type, spacing, markers | `Assets/UI2/Claude Design handoff/export/README.md`, then the older handoff zip's `README.md`. Two of the export README's rules are wrong in this project: sprites are imported with sRGB **off**, and colours are not typed in as the token's hex. |
-| How each control on the new board behaves, state by state | `export/reference/UIStateSpec.md` and `export/reference/board-logic.js` |
-| Where every element is on the new board, in pixels | `export/layout/layout.json` |
+| What the board looks like — colour, type, spacing, markers | `Assets/UI/Board/Design/README.md`, then the older handoff zip's `README.md`. Two of the first README's rules are wrong in this project: sprites are imported with sRGB **off**, and colours are not typed onto an image as the token's hex. The token's hex goes in the palette file, `Assets/UI/Board/Palette.asset`. |
+| How each control on the new board behaves, state by state | `Assets/UI/Board/Design/reference/UIStateSpec.md` and `Assets/UI/Board/Design/reference/board-logic.js` |
+| Where every element is on the new board, in pixels | `Assets/UI/Board/Design/layout/layout.json` |
 | What the handoff package left out | `Assets/Scenes/Tactical/HANDOFF_GAPS.md` |
 | What Claude Design must still provide, verified | `Assets/Scenes/Tactical/CLAUDE_DESIGN_NEEDS.md` |
 | How the prototype actually behaves, without opening 4,472 lines | `Assets/PROTOTYPE_BASELINE.md` |
@@ -95,7 +95,7 @@ pages, and most of it has been overtaken.
 ### References — owner-authored input. Never edit anything in `References/`.
 
 **`References/Tactical spaceship UI planning.zip`** — the older Claude Design handoff. **The newer
-export in `Assets/UI2/Claude Design handoff/export/` is the one built into `02.1_Grid`.** A 430-line README
+handoff is the one built into `02.1_Grid`. Its reference files are in `Assets/UI/Board/Design/`.** A 430-line README
 plus four `.dc.html` reference builds, a metal-plate WebGL shader, and a baked PNG.
 *Good for:* exact hex values, type, px layout, easings, marker shapes, icon designs.
 *Not good for:* the time model. Its README describes a paused-time, plan-then-EXECUTE game. **That is
@@ -128,17 +128,19 @@ take from it: the plot is inhabited not consulted,
 instruments are stations not a HUD, information costs time, uncertainty is drawn. What we reject: its
 10000× time compression.
 
-### The new Claude Design handoff — `Assets/UI2/Claude Design handoff/export/`
+### The new Claude Design handoff — `Assets/UI/Board/Design/`
 
-The newer handoff, and the one built into `02.1_Grid`. The full board cut into images, fonts and
-measurements. Read it, but don't change what's in it. The art the board uses is being moved out of it,
-one panel at a time, into `Assets/UI/Board/Art/` (owner, 2026-10-26). Once everything is out, the
-owner deletes the export. See `Assets/UI/Board/README.md`.
+The newer handoff, and the one built into `02.1_Grid`. It came as the full board cut into images,
+fonts and measurements. The art the board uses is in `Assets/UI/Board/Art/`. The fonts are in
+`Assets/UI/Fonts/`. The rest of the export is deleted (Step 89). Its reference files are in
+`Assets/UI/Board/Design/`. Read them, but don't change them. See `Assets/UI/Board/README.md`.
 
 - `README.md` — what the package is and how to use it.
+- `asset-map.csv` — every piece of art in the package. `tokens.json` — the design's colours and sizes.
 - `reference/UIStateSpec.md` — every control's states.
 - `reference/board-logic.js` — the board's behaviour, as code.
 - `layout/layout.json` — where every element is, in pixels.
+- `layout/board-1920x1080.png` — the whole board as one picture.
 
 ### Project documents — ours, and editable.
 
@@ -316,7 +318,7 @@ Do not treat any of these as decided. Ask the owner.
 - Firing a railgun spends 70 of the weapon charge and adds 25 to our signal. Nothing vents.
 - A bus on DRAW takes units the reactor has spare. With all ten units placed, it waits until another
   bus vents.
-- The plot shows 60.9 px per 1,000 km at zoom 1 (`HandoffPlotPanel.cs`, `pxPer1000Km`).
+- The plot shows 60.9 px per 1,000 km at zoom 1 (`PlotPanel.cs`, `pxPer1000Km`).
 - PDC groups have fixed arcs and fire by themselves on AUTO. Missiles fire from the VLS on the Fire
   Control panel.
 - Each level sets its battle space with a Battle Space box (Starwolf → Level, Step 91). Without one it is 100,000 × 100,000 km (`ShipState.arenaWidthKm`).

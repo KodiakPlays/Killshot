@@ -10,11 +10,10 @@ the smaller pieces on it: two rails of keys, the time control, the console, the 
 the signal box.
 
 Each panel and each frame piece is a prefab file in `Panels/`. You can open a prefab by itself
-and change its art. You don't need to touch code.
+and change its art and its fonts. You don't need to touch code.
 
-The art files are in `Art/`.
-
-The shared colour palette and the fonts are not done yet. See [Not done yet](#not-done-yet).
+The art files are in `Art/`. The fonts are in `Assets/UI/Fonts`. The board's colours are in one
+file, `Palette.asset`.
 
 ## Overview
 
@@ -24,17 +23,38 @@ There is one prefab per panel or frame piece. The top object of each panel has t
 script. For example, the script **Power Panel** is on the object `Power`. The script shows the
 ship's state on the panel and passes clicks to the game.
 
-The panel scripts are in `Assets/Scripts/UI/Panels/`. The periscope and plot scripts are in
-`Assets/Scripts/Tactical/`. The frame pieces have no panel script. The board script runs them
-(see [Frame pieces](#frame-pieces)).
+The panel scripts are in `Assets/Scripts/UI/Panels/`. The frame pieces have no panel script. The
+board script runs them (see [Frame pieces](#frame-pieces)).
 
-### The Art list
+### The Art list and the Fonts list
 
 Each panel script has an **Art** list. Each frame piece has the same list, on its **Art List**
 script. Each entry is one piece of art: a name, a sprite, and every image that shows it. Change
 the sprite in an entry, and all of its images change.
 
-### Art folders
+Beside the Art list is a **Fonts** list. It works the same way. Each entry is one font: a name, a
+font, a material, and every text that uses them. Change the font in an entry, and all of its
+texts change.
+- Leave **Material** empty to use the material that comes with the font.
+- Share Tech Mono has a second material, "Small". The texts that use it have a separate entry.
+- A material made for another font is ignored. The text gets the material that comes with the
+  font.
+
+### Colours
+
+The board's colours are in one file, `Palette.asset`, in this folder. It has 23 colours. Each one
+has a note on what it is for: green for working, amber for caution, red for alarm, the greys for
+text, the unlit lamps and cells, and white for our ship.
+
+Every panel and the board script take their colours from this file. Change a colour in it, and
+every part that uses it changes.
+
+Five colours are used by one panel only. They are fields on that panel's script:
+- the plot's axis numbers (**Axis Colour**) and its amber sweep (**Sweep Ink Amber**)
+- the sensors drawer's band rows and contact rows (**Band Row On**, **Contact Row Lit**)
+- the periscope's rail legend (**Rail Legend**)
+
+### Folders
 
 Art that only one panel or frame piece uses is in a folder named after it. Art that more than one uses is
 in a folder for its kind.
@@ -59,7 +79,14 @@ Art/Screens/       screen glass with its bezel
 Art/Plates/        label plates
 Art/Wells/         recessed wells for controls
 Art/Shapes/        plain rounded shapes the code colours (key faces, cells, the dial ring)
+Materials/         the board's two materials
+Design/            the design's reference files: its README, asset map, tokens, layout and board logic
+Palette.asset      the board's colours
 ```
+
+The fonts are in `Assets/UI/Fonts`, one folder per font: `BarlowCondensed`, `ShareTechMono` and
+`NotoSansSymbols2`. Each folder has the font asset, its `.ttf` file and its licence. Keep the `.ttf`
+next to its font asset. The font asset adds letters from it as text needs them.
 
 ### Groups and draw order
 
@@ -87,16 +114,16 @@ without the minus.
 
 ### On the board
 
-The board is in the scene `Assets/Scenes/Tactical/02.1_Grid.unity`, under `Board/HandoffBoard`.
-- The helm is `HandoffBoard/Helm`. It has two states. `Closed` is the header strip shown when the
+The board is in the scene `Assets/Scenes/Tactical/02.1_Grid.unity`, under `Board/Tactical Board`.
+- The helm is `Tactical Board/Helm`. It has two states. `Closed` is the header strip shown when the
   helm is folded down. `Open` is the whole helm.
-- The orders station is `HandoffBoard/Orders`. Like the helm, it has `Closed` and `Open`.
-- The plot is `HandoffBoard/Plot`.
-- The periscope is `HandoffBoard/Periscope`. It is housed until you lower it. Its LOWERED label,
-  `HandoffBoard/State · periscope`, is outside the prefab.
-- The drawers are under `HandoffBoard/Drawers`. A drawer slides out from behind the metal frame.
+- The orders station is `Tactical Board/Orders`. Like the helm, it has `Closed` and `Open`.
+- The plot is `Tactical Board/Plot`.
+- The periscope is `Tactical Board/Periscope`. It is housed until you lower it. Its LOWERED label,
+  `Tactical Board/State · periscope`, is outside the prefab.
+- The drawers are under `Tactical Board/Drawers`. A drawer slides out from behind the metal frame.
   It is switched off until it opens.
-- The frame pieces are under `HandoffBoard`: `Frame`, `ToolRail`, `SystemsRail`, `TimeControl`,
+- The frame pieces are under `Tactical Board`: `Frame`, `ToolRail`, `SystemsRail`, `TimeControl`,
   `Console`, `AlarmStrip` and `SignalBox`.
 
 ## How to change a panel's art
@@ -163,10 +190,10 @@ Hierarchy, stand-in parts have names that start with `STAND-IN`.
   **Centre** (the knob's centre) and a **Home Position** (the pointer's start). If you move a
   knob, these must change too.
 - Sprites the code swaps, such as rocker switches. These sprites are fields on the script,
-  outside the Art list. The rockers also slide in play. The script for that is **Handoff
-  Rockers**, on `HandoffBoard` in the scene. It uses the rocker sprites too.
-- Colours that change in play, such as lamps lighting up. The code sets them from the script's
-  **Colours** section. A colour you set on the image is replaced in play.
+  outside the Art list. The rockers also slide in play. The script for that is **Rockers**, on
+  `Tactical Board` in the scene. It uses the rocker sprites too.
+- Colours that change in play, such as lamps lighting up. The code takes them from the palette
+  (see [Colours](#colours)). A colour you set on the image is replaced in play.
 - Links to objects outside the prefab. Only the sensors drawer has these.
 
 ## Panel by panel
@@ -231,7 +258,7 @@ Ask a technical artist before you change these:
 
 ### Periscope
 
-`Panels/Periscope.prefab`. Script: **Handoff Periscope Panel**, on `Periscope`. The periscope
+`Panels/Periscope.prefab`. Script: **Periscope Panel**, on `Periscope`. The periscope
 looks along one bearing. You slew it, zoom it with the MAG knob, and classify what is in the
 sight.
 
@@ -264,7 +291,7 @@ Ask a technical artist before you change these:
 - The code swaps the aperture's sprite: **Aperture Idle**, and **Aperture Slewing** (the amber rim
   while slewing).
 - The board's motion script sets the clip's height: **Scope Housed Px** (44) and
-  **Scope Lowered Px** (656), on **Handoff Board Motion** on `HandoffBoard`.
+  **Scope Lowered Px** (656), on **Board Motion** on `Tactical Board`.
 - The code draws the sight picture every frame, on `Sight/Mask/Sight (drawScope)`. Its colours
   are fields on that part's script.
 - The code moves the target brackets sideways and hides them when no target is near:
@@ -277,7 +304,7 @@ Ask a technical artist before you change these:
 
 ### Plot
 
-`Panels/Plot.prefab`. Script: **Handoff Plot Panel**, on `Plot`. The plot is the map in the
+`Panels/Plot.prefab`. Script: **Plot Panel**, on `Plot`. The plot is the map in the
 middle of the board. It shows our ship, the contacts, the sensor and weapon rings, and the marks
 made with the plot tools.
 
@@ -290,8 +317,8 @@ count from that corner.
 The prefab has these parts, from back to front:
 - `Ground`, `Grid` and `Glow`: the plot's background, the grid and its glow
 - `Scale`: the axis numbers, made by code
-- `Design mock-up (off)`: the design's sample picture, 46 parts, all switched off. Three of
-  them are still used:
+- `Design mock-up (off)`: switched off. It has the three parts that were kept from the design's
+  sample picture:
   - `Passive label template`: the plot copies it for each passive bearing label
   - `SENSOR RANGE label (off)` and `SENSOR RANGE value (off)`: the sensors drawer links to them
 
@@ -322,8 +349,8 @@ Ask a technical artist before you change these:
   **Axis Font Size** and **Axis Colour**.
 - The code places labels with **Point Label Offset**, **Ruler Label Offset**,
   **Ring Label Offset** and **Contact Label Offset**.
-- The code sets the colours of our ship (**Own Ship Color**) and wrecks (**Wreck Ink**). The
-  **Colours** section sets the colours of contacts, rings, the sweep and marks.
+- The code sets the colours of our ship, wrecks, contacts, rings, the sweep and marks. They come
+  from the palette. The amber sweep's colour is on the script (**Sweep Ink Amber**).
 
 ### Power
 
@@ -523,7 +550,7 @@ Ask a technical artist before you change these:
 when the mission is won or lost. It says MISSION COMPLETE or SHIP LOST, and why. It shows the
 target, our ship and the time taken. Its two buttons are RESTART MISSION and MAIN MENU.
 
-It is the last part under `HandoffBoard`, so it draws over everything else. Keep it last.
+It is the last part under `Tactical Board`, so it draws over everything else. Keep it last.
 
 The prefab has these parts:
 - `Screen`: switched off while the mission runs. The script switches it on. Leave it off.
@@ -537,24 +564,24 @@ Art list is empty. To give it art, add the sprites to the Art list.
 
 Ask a technical artist before you change these:
 - The script writes the title, the reason and the values. It colours the title green or red.
-- Each button has a **Handoff Hit** with its action (`end.restart`, `end.menu`).
+- Each button has a **Click Spot** with its action (`end.restart`, `end.menu`).
 - **Delay Seconds** (2) is the wait between the end and the screen, so the last hit is seen
   first. It is on the Board tab of **Starwolf → Tuning**, under Board & time.
 
 ## Frame pieces
 
 The frame pieces are the metal frame and the smaller pieces on it. Each one is a prefab in
-`Panels/`, under `HandoffBoard` on the board. Each one has the **Art List** script on its top
-object. It has no panel script.
+`Panels/`, under `Tactical Board` on the board. Each one has the **Art List** script on its top
+object, with its Art list and its Fonts list. It has no panel script.
 
-The board script, **Handoff Board Controls** on `HandoffBoard`, runs the frame pieces. Its
-fields for them are on `HandoffBoard` in the scene, outside the prefabs. Its colours for them
-are there too.
+The board script, **Board Manager** on `Tactical Board`, runs the frame pieces. Its
+fields for them are on `Tactical Board` in the scene, outside the prefabs. Its colours for them
+come from the palette.
 
 The prefabs:
 - `Frame`: the metal frame. Its parts are `Steel frame`, `Black backing`, `Conduits`,
-  `Corner bolts` and `Stencils` (the four painted labels). The art files are in `Art/Frame`. The
-  Art list has 5 entries.
+  `Corner bolts` and `Stencils` (two painted labels, BUS A-14 and VENT PLENUM 3). The art files
+  are in `Art/Frame`. The Art list has 5 entries.
 - `ToolRail`: the keys for the plot tools, CURSOR, POINT, RULER, COMPASS and ERASE, with their
   lamps, plates, icons and labels. The art files are in `Art/ToolRail` and `Art/Rails`. The Art
   list has 13 entries.
@@ -586,14 +613,5 @@ Ask a technical artist before you change these:
 - The playtest finds `AlarmStrip/Words`, `SignalBox/Signal · percent` and
   `SignalBox/Signal · note` by name. The board script and the playtest find some frame pieces by name too. Don't rename
   them.
-- The board script sets the colours of the rail lamps (**Tool Lamp On**, **Tool Lamp Off**),
-  the pause label and lamp, the rate key labels, and the tint lamps and labels.
-
-## Not done yet
-
-- The shared colour palette. Each panel's colours are still fields in its script's **Colours**
-  section. The frame pieces' colours are fields on the board script. The plan is one palette
-  asset that every panel uses.
-- The fonts. They are still in `Assets/UI2/Generated/Fonts`.
-- The small 1x art copies. Only the @2x art the board uses has moved. The 1x copies are still in
-  `Assets/UI2/Claude Design handoff/export/sprites/`.
+- The board script sets the colours of the rail lamps, the pause label and lamp, the rate key
+  labels, and the tint lamps and labels. It takes them from the palette.

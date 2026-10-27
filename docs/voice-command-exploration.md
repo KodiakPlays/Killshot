@@ -3,7 +3,7 @@
 **Summary.** The captain could speak orders ("come about to port", "all ahead full", "sweep bearing
 045") and the crew would carry them out. This is an idea, not built. It comes after the board is
 finished. It is not hard: every button already goes through one function,
-`HandoffBoardControls.Click(action, arg)`, so a spoken order only has to reach that same function.
+`BoardManager.Click(action, arg)`, so a spoken order only has to reach that same function.
 The hard part is turning speech into words, and Whisper already does that.
 
 Explored with the owner on 2026-10-26. The decision itself is BUILD_LOG decision 36.
@@ -77,7 +77,7 @@ A sketch to show the size. Not in the project.
 ```csharp
 public class OrderDoor : MonoBehaviour
 {
-    [SerializeField] HandoffBoardControls board;
+    [SerializeField] BoardManager board;
     readonly ConcurrentQueue<string> tray = new ConcurrentQueue<string>();
 
     void Start() => new Thread(Listen) { IsBackground = true }.Start(); // the helper

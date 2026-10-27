@@ -33,16 +33,16 @@ it. You can launch fighters and assault boats at it. You can destroy it or captu
 can kill our ship. There is no mission yet. **Starwolf → Tuning** edits each ship's stats file and
 the board's own values. Each step's detail is in section 6.
 
-**Changed direction on 2026-10-04.** A new Claude Design handoff arrived at
-`Assets/UI2/Claude Design handoff/export/`. It is fully built into `02.1_Grid`, and the final QA
+**Changed direction on 2026-10-04.** A new Claude Design handoff arrived. Its
+reference files are now in `Assets/UI/Board/Design`. It is fully built into `02.1_Grid`, and the final QA
 passed. Every control is clickable and shows its states. The flow is `00_Start` → `01_Briefing` →
 `02.1_Grid`, with `Level_01` loaded on top of the board. The full record is
 `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
 
 **Next up (2026-10-27, owner offline; both sessions paused with everything committed):**
 
-- killshot-81: the "UI restructure — to do" list in section 8, steps 7 and 8: the docs pass and
-  the checker. Steps 1 to 5 are done (Step 89), step 6, the "Handoff" rename, too (Step 90).
+- killshot-81: the "UI restructure — to do" list in section 8, step 8: the checker. Steps 1 to 5
+  are done (Step 89), step 6, the "Handoff" rename, too (Step 90), and step 7, the docs pass.
 - Tooling: "To do next" items 6 to 9 in section 8, starting with the battle space per level
   (decision 50).
 - Waiting on the owner: playing the Mac app through (Step 87); whether to delete TextMeshPro's
@@ -200,9 +200,10 @@ built and verified. Step 34 added the first game state: a `World` root object (b
 - The scene is edited directly. The ten panels and seven frame pieces are prefabs in
   `Assets/UI/Board/Panels`, with one copy of each on the board. How to work on them:
   `Assets/UI/Board/README.md`.
-- Runtime code: `Assets/Scripts/Tactical/` (the board script, the ship state, the world, the
-  periscope and plot panels, and shared pieces), `Assets/Scripts/Systems/` (the ship parts) and
-  `Assets/Scripts/UI/` (the other eight panels, `ArtList`, `BoardPalette`). See section 3.
+- Runtime code: `Assets/Scripts/Game/` (the board script, `BoardManager`),
+  `Assets/Scripts/Systems/` (the ship state, `ShipState`, and the ship parts), `Assets/Scripts/UI/`
+  (the shared board pieces, `ArtList`, `BoardPalette`), `Assets/Scripts/UI/Panels/` (every panel)
+  and `Assets/Scripts/Tactical/` (the world, the spawns and the rest). See section 3.
 - The full record: `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
 - What the package left out: `Assets/Scenes/Tactical/HANDOFF_GAPS.md` (106 rows).
 - What Claude Design must still provide, verified: `Assets/Scenes/Tactical/CLAUDE_DESIGN_NEEDS.md`.
@@ -226,9 +227,10 @@ Added in Step 34:
     to the level's `Enemy Spawn · Garuda`.
   - `Contact View Camera · Garuda`: a `ShipView` camera that draws the Garuda's model for the plot.
   - Both models are about 12–14 km long. Models only, no old scripts.
-- The design's sample picture on the plot is `Plot/Design mock-up (off)`: switched off, not deleted.
+- The design's sample picture on the plot was `Plot/Design mock-up (off)`. Step 89 deleted all but
+  three parts the code uses. The group is switched off.
 
-Added in Steps 66 and 68 (under `Board/HandoffBoard`):
+Added in Steps 66 and 68 (under `Board/Tactical Board`):
 
 - `Drawers` — just above `Plot`. The six drawers are under it: `Power`, `Sensors`, `Comms`,
   `Fire Control`, `Hangar` and `Engineering`. It clips them to the frame's opening with a
@@ -238,7 +240,7 @@ Added in Steps 66 and 68 (under `Board/HandoffBoard`):
 - `State · periscope` is the periscope's LOWERED label. It is the one object left with an old
   `State · …` name.
 
-Changed in Step 74 (now under `Board/HandoffBoard/Drawers/Engineering/Compartments/Ship picture/Hull`):
+Changed in Step 74 (now under `Board/Tactical Board/Drawers/Engineering/Compartments/Ship picture/Hull`):
 
 - The six `Lamp · …` objects are gone.
 - Four RawImages, one per side: `Ship · PROW`, `Ship · STBD`, `Ship · AFT`, `Ship · PORT`. Each
@@ -246,7 +248,7 @@ Changed in Step 74 (now under `Board/HandoffBoard/Drawers/Engineering/Compartmen
 
 Added in Step 85:
 
-- `End Screen` — the last child of `Board/HandoffBoard`, so it draws over everything. A prefab
+- `End Screen` — the last child of `Board/Tactical Board`, so it draws over everything. A prefab
   (`Assets/UI/Board/Panels/End Screen.prefab`) with `EndScreenPanel`. Its `Screen` is off until
   the mission ends.
 - `QuestSystem` on `World`: the mission, win and loss.
@@ -302,28 +304,28 @@ The chain was run in play mode twice in Step 4: `00_Start` → click → `01_Bri
 `02_Grid`. Both times it worked. Since Step 28 the chain ends at `02.1_Grid` instead, also checked in
 play mode.
 
-### The handoff board — new in Steps 29–33
+### The board — new in Steps 29–33
 
 Everything on the `02.1_Grid` board. Detail is in `UI_INTEGRATION_LOG.md`; do not copy it here.
 
 | File | What it is |
 |---|---|
-| `Assets/Scripts/Tactical/HandoffBoardControls.cs` | The board script. Runs the 0.42 s tick and the board's own clock, and takes every click (`Click`). |
-| `Assets/Scripts/Tactical/HandoffBoardState.cs` | One ship's state. It has the contact list, what the periscope has classified, the plot marks, the battle space, destroyed and captured, the EMP clock, the dice and kills. It reaches the ship's parts through `nav`, `power`, `sensors`, `comms`, `weapons`, `hangar`, `damage` and `orders`. |
-| `Assets/Scripts/Tactical/HandoffPanel.cs` | The base class for every panel, with the Art list (`ApplyArt`). |
-| `Assets/Scripts/Tactical/HandoffPeriscopePanel.cs`, `HandoffPlotPanel.cs` | The periscope and the plot. |
+| `Assets/Scripts/Game/BoardManager.cs` | The board script (was `HandoffBoardControls`). Runs the 0.42 s tick and the board's own clock, and takes every click (`Click`). |
+| `Assets/Scripts/Systems/ShipState.cs` | One ship's state (was `HandoffBoardState`). It has the contact list, what the periscope has classified, the plot marks, the battle space, destroyed and captured, the EMP clock, the dice and kills. It reaches the ship's parts through `nav`, `power`, `sensors`, `comms`, `weapons`, `hangar`, `damage` and `orders`. |
+| `Assets/Scripts/UI/Panel.cs` | The base class for every panel, with the Art list (`ApplyArt`) and the Fonts list (`ApplyFonts`). |
+| `Assets/Scripts/UI/Panels/PeriscopePanel.cs`, `PlotPanel.cs` | The periscope and the plot. |
 | `Assets/Scripts/UI/Panels/*Panel.cs` | The other eight panels: helm, power, sensors, comms, fire control, hangar, engineering, orders. Each shows its ship part and passes clicks to it. |
 | `Assets/Scripts/UI/Panels/EndScreenPanel.cs` | The end screen (Step 85): how the mission ended, RESTART MISSION and MAIN MENU. |
 | `Assets/Scripts/Game/QuestSystem.cs` | The mission (Step 85): win and loss, checked each tick. It pauses the board at the end. On `World`. |
-| `Assets/Scripts/Tactical/Handoff*.cs` (the rest) | Shared pieces: motion, easing, hit testing, shapes, marks, plot grid, sweep, rockers, scope sight. |
-| `Assets/Scripts/UI/ArtList.cs` | The Art list for the frame pieces, which have no panel script. |
+| `Assets/Scripts/UI/BoardMotion.cs`, `Eased.cs`, `ClickSpot.cs`, `Polygon.cs`, `Wedge.cs`, `MarksGraphic.cs`, `PlotGrid.cs`, `SweepGraphic.cs`, `Rockers.cs`, `ScopeSight.cs` | Shared pieces: motion, easing, click spots, shapes, marks, plot grid, sweep, rockers, scope sight. |
+| `Assets/Scripts/UI/ArtList.cs` | The Art list and the Fonts list for the frame pieces, which have no panel script. |
 | `Assets/Scripts/UI/BoardPalette.cs` | The board's colours. The file is `Assets/UI/Board/Palette.asset`. Every panel reads its colours from it. |
 | `Assets/UI/Board/Panels/*.prefab` | The ten panels (Helm, Power, Sensors, Comms, Fire Control, Hangar, Engineering, Orders, Periscope, Plot) and the seven frame pieces (Frame, ToolRail, SystemsRail, TimeControl, Console, AlarmStrip, SignalBox). Guide: `Assets/UI/Board/README.md`. |
 | `Assets/Scripts/Tactical/GammaBoardPresenter.cs` | Shows the board in gamma space. See decision 15. |
 | `Assets/Scripts/Tactical/CssEase.cs` | The handoff's CSS easing curves. |
 
 Since Step 34 the World feeds the board (below). Since Step 35 power makes the ship loud (`signal`,
-now in `SensorSystem`), and `HandoffBoardControls` stops the whole tick while paused. Details in
+now in `SensorSystem`), and `BoardManager` stops the whole tick while paused. Details in
 section 6, Step 35.
 
 ### The ship parts — new in the board refactor (2026-10-26) and Step 80
@@ -362,11 +364,11 @@ nothing on screen. Its numbers are in its `Stats` section, in the ship's stats f
 
 Changed for it:
 
-- `HandoffBoardControls.Ticked` — fires once per board tick, after the state ticks, before the
+- `BoardManager.Ticked` — fires once per board tick, after the state ticks, before the
   panels redraw. The world steps inside the board's single timer.
-- `HandoffBoardState.KeepTracks` — drops tracks with no world contact, and prunes identified and
+- `ShipState.KeepTracks` — drops tracks with no world contact, and prunes identified and
   classified.
-- `HandoffPlotPanel` — draws identified hostile contacts at their true km position. Since Step 75,
+- `PlotPanel` — draws identified hostile contacts at their true km position. Since Step 75,
   a contact out of visual range is drawn where the sweep last touched it. In visual range it is
   drawn as its model.
 
@@ -380,7 +382,7 @@ Details in section 6, Step 34.
 | `Assets/Editor/LevelWindow.cs` | menu **Starwolf → Level** | Lists, opens and makes levels; adds an enemy spawn, the one Player Spawn (Step 73), and a Debris Field (Step 77). Shows the open level from above: the battle space's edge, debris as dots, the spawn boxes. Pick a debris field to see its settings and a preview of Scatter. |
 | `Assets/Scripts/Game/DebrisField.cs` | a node in a level scene | Step 77. A shape filled with pieces; the pieces are saved under it. `Layout()` places them from the seed. Nothing runs at play. |
 | `Assets/Editor/DebrisFieldEditor.cs` | the Debris Field's inspector | Step 77. Scatter and Reshuffle; `Check()` is the layout's own test. |
-| `Assets/Scripts/Tactical/PlayerSpawn.cs` | a node in a level scene | Step 73. Where our ship starts: a white box in the Scene view only. At play our ship starts there facing its way (`TacticalWorld.SpawnPlayer`), and the plot opens on it (`HandoffPlotPanel.CentreOnOurShip`, which the C key uses too). One per level. |
+| `Assets/Scripts/Tactical/PlayerSpawn.cs` | a node in a level scene | Step 73. Where our ship starts: a white box in the Scene view only. At play our ship starts there facing its way (`TacticalWorld.SpawnPlayer`), and the plot opens on it (`PlotPanel.CentreOnOurShip`, which the C key uses too). One per level. |
 
 ### Terrain prefabs — new in Step 73
 
@@ -400,7 +402,7 @@ Details in section 6, Step 67.
 
 ### The plot grid
 
-The board's grid is drawn by `HandoffPlotGrid` (`Assets/Scripts/Tactical/HandoffPlotGrid.cs`), a UI
+The board's grid is drawn by `PlotGrid` (`Assets/Scripts/UI/PlotGrid.cs`), a UI
 mesh in the Plot prefab. Two files from the old board are still on disk, and nothing uses them:
 
 - `Assets/UI/Shader/TacticalGrid.shader` and `TacticalGrid.mat` (Step 5). See Known issues #13.
@@ -450,7 +452,7 @@ These are settled. Do not reopen them.
    - Sensor cyan `#3FA9C9`
    - Plot glass `#0A1719`
 9. **The grid is a world-space plane, not a UI element.** `TacticalGrid.shader`, not `NavGrid`.
-   Now: the board's grid is `HandoffPlotGrid`, a UI mesh on the plot.
+   Now: the board's grid is `PlotGrid`, a UI mesh on the plot.
 10. **The scene stays 3D top-down**, so collision and physics work later without rework.
 11. **The new handoff wins on weapons and power** (owner, 2026-10-04, editable later): two railgun
     turrets, two PDC groups, one missile launcher, four power buses (ENG, WEP, SEN, AUX). Its fire
@@ -550,7 +552,7 @@ These are settled. Do not reopen them.
     push-to-talk. Voice sits beside the buttons, never replacing them. The crew takes a moment to
     carry an order out and answers with a quiet "roger". Speech is heard offline, on the player's
     machine. Firing stays on buttons. Not built yet. Until then, every action keeps going through
-    `HandoffBoardControls.Click`, so a spoken order can use the same path and its refusals.
+    `BoardManager.Click`, so a spoken order can use the same path and its refusals.
     Details in `docs/voice-command-exploration.md`.
 37. **Engineering shows side armour on the ship picture** (owner, 2026-10-26). The picture is our
     ship in four parts, one per side. Each part is a bright outline with its panel lines in grey (Step 75). Each
@@ -651,7 +653,8 @@ These are settled. Do not reopen them.
    tmp.ForceMeshUpdate(true);
    ```
 
-   The project font is `Assets/UI/Fonts/Optimus SDF.asset`.
+   The old project font is `Assets/UI/Fonts/Optimus SDF.asset`. The board's fonts are in
+   `Assets/UI/Fonts`, one folder per font (Step 89).
 
 3. **Children of a Screen Space-Camera canvas come out the wrong size.** The canvas itself sits at
    scale 0.01, and anything created under it while it is in that mode inherits a nonsense
@@ -757,7 +760,11 @@ These are settled. Do not reopen them.
     `ProjectSettings/EditorSettings.asset`. The project's setting is **on**. If `git status` shows
     that file changed, switch it back on in Unity. Changing the file while Unity is open doesn't
     stick.
-27. Nothing else. The Unity console is clean: no errors, no warnings.
+27. **Scene and prefab files still show the old "Handoff" script names (Step 90).** They are in the
+    `m_EditorClassIdentifier` lines. These are only labels. Unity links each script by its GUID,
+    and the GUIDs did not change. Unity rewrites a label when that part is next edited. Don't
+    hand-edit them, and don't search the YAML for a script by these labels.
+28. Nothing else. The Unity console is clean: no errors, no warnings.
 
 ---
 
@@ -3900,13 +3907,12 @@ code move, or once at the end of a batch.
    `CLAUDE_DESIGN_NEEDS.md` and `Tools/notebooklm` are fixed. `CLAUDE.md`'s three wrong facts are
    fixed: git tracks `Killshot.slnx`; `StarwolfIntro` uses a namespace; the board's damage goes
    through `DamageSystem`.
-3. **The "Handoff" rename.** The owner chose the new names; they are in "UI restructure — to do",
-   step 6, below. Owner 2026-10-27: the playable steps (82 to 87) come first, then the UI
-   restructure. When the rename is done, the docs need one pass for the new names.
+3. ~~**The "Handoff" rename.**~~ Done in Step 90. The docs pass for the new names is done too
+   ("UI restructure — to do", step 7).
 
 **Who does what (2026-10-27).** Tooling: items 4 to 9 (4 and 5 done in Step 88). killshot-81: Steps
 82 to 87 (done, except the owner's play-through of the Mac app), then the UI restructure list (steps 1
-to 5 done in Step 89; 6 to 8 left). Ask the other session before taking Unity.
+to 5 done in Step 89, step 6 in Step 90, step 7 the docs pass; step 8 left). Ask the other session before taking Unity.
 
 **Weapons**
 
@@ -3945,7 +3951,7 @@ this too. Planned on 2026-10-27 by the killshot-da session. No code or scene is 
 - The owner said to make the design calls without asking. The calls are listed below. Each one can
   be changed. Report any new call made on the way.
 - Unity is shared. Message Tooling and UI Restructure before you compile, play or build.
-- UI Restructure has paused the "Handoff" rename. Use today's names. The rename comes later.
+- The "Handoff" rename is done (Step 90). Use the new names.
 - After each step: the full playtest (**Starwolf → Playtest → Run power-up playtest**), this log,
   and a commit of only your own files.
 - Read the GDD's mission pages (`References/Starwolf GDD.pdf`, "GAME FLOW", "QUESTS" and "RULES")
@@ -3983,7 +3989,7 @@ this too. Planned on 2026-10-27 by the killshot-da session. No code or scene is 
 
 - `SensorSystem`: a new `Listening`: DRADIS on, and at least 1 unit on the SEN bus. `Heard()` uses
   it in place of `dradis`.
-- `HandoffPlotPanel`: four places read `sensors.dradis`. They read `Listening` instead:
+- `PlotPanel`: four places read `sensors.dradis`. They read `Listening` instead:
   `SensorRingKm`, the sweep in `Update`, and `DrawSensorRing` twice.
 - Playtest, at load (power cold): raise the gain by hand (a stand-in), then check DRADIS hears
   nothing and the plot shows no circle and no sweep. Put the gain back.
@@ -4011,17 +4017,17 @@ this too. Planned on 2026-10-27 by the killshot-da session. No code or scene is 
     `WorldBoundary`, `GameClock` and `InternalSubsystems` hooks. Git history keeps them.
   - Put it on the `World` object in `02.1_Grid`. (`Prototype Dev` also has one. Its old fields go
     unused.)
-- **`HandoffBoardControls`:** a new `public void Pause()`: `paused = true; ShowTime();`.
-- **The end screen panel.** New `Assets/Scripts/UI/Panels/EndScreenPanel.cs`, a `HandoffPanel`:
+- **`BoardManager`:** a new `public void Pause()`: `paused = true; ShowTime();`.
+- **The end screen panel.** New `Assets/Scripts/UI/Panels/EndScreenPanel.cs`, a `Panel`:
   - It shows the screen once the mission is over and the 2 seconds have passed.
   - It fills in the title, the line under it and the three rows.
   - `end.restart` loads its own scene again. `end.menu` loads `00_Start`.
 - **The end screen prefab.** New `Assets/UI/Board/Panels/End Screen.prefab`, the last child of
-  `HandoffBoard`, so it draws over everything. Its parts:
+  `Tactical Board`, so it draws over everything. Its parts:
   - A dark layer over the whole board. It takes the clicks, so nothing under it can be pressed.
   - A plate in the middle, with the title, the line under it and the rows (fixed labels, and one
     text for the values).
-  - Two buttons, each with a `HandoffHit` (`end.restart`, `end.menu`).
+  - Two buttons, each with a `ClickSpot` (`end.restart`, `end.menu`).
   - The board palette. Barlow Condensed for the title, Share Tech Mono for the rest. Art in
     `Assets/UI/Board/Art/End Screen/`. Placeholder art is fine. Set sRGB off on new board art.
 - **SHIP LOST clears** because the restart loads the scene again. `deserted`, `destroyed` and the
@@ -4367,9 +4373,8 @@ tried them by hand yet.
 **Where it stands (2026-10-27).** Done: all eight ship parts are systems in `Scripts/Systems`, and
 each ship's numbers are in its stats file (Step 80). All ten panels and seven frame pieces are
 prefabs in `Assets/UI/Board/Panels`, placed in `02.1_Grid`. The colours are in one palette file. The
-builder and the import menu are deleted. Left: the fonts and the "Handoff" rename (both in the UI
-restructure to-do below, in progress by the UI Restructure session), the Test Runner (step 2) and
-the clock move (step 8).
+builder and the import menu are deleted. The fonts and the "Handoff" rename are done (Steps 89 and
+90). Left: the Test Runner (step 2) and the clock move (step 8).
 
 Replaces the 2026-10-24 "clean-up once the game is working" list.
 
@@ -4382,8 +4387,8 @@ the way through, then a playtest and a commit. The scripts go into three folders
 - **`Scripts/Game`:** everything bigger than one ship or one panel: the game manager, the clock, the
   world, levels, the mission and enemy brains.
 
-So far `Scripts/Game` has only `DebrisField.cs`. The world, the mission clock and the enemy brain
-are still in `Scripts/Tactical`.
+So far `Scripts/Game` has `BoardManager.cs`, `DebrisField.cs` and `QuestSystem.cs`. The world, the
+mission clock and the enemy brain are still in `Scripts/Tactical`.
 
 The board builder is deleted. The scene is edited directly.
 
@@ -4391,7 +4396,7 @@ The board builder is deleted. The scene is edited directly.
 - **Navigation (2026-10-26).** All ship movement is in `Systems/NavSystem.cs`: position, heading,
   throttle, turning, speed, drift and placing the 3D model. It replaced `TickHelm` and `TickMove`
   in `HandoffBoardState`, and the model placing in `TacticalWorld`.
-  - `OwnShip` and `Garuda · Cruiser` (was `Dummy · TRACK 07`) each carry a NavSystem. `HandoffBoardControls.nav` points at
+  - `OwnShip` and `Garuda · Cruiser` (was `Dummy · TRACK 07`) each carry a NavSystem. `BoardManager.nav` points at
     ours, and every ship state reaches its own through `.nav`.
   - `HandoffHelmPanel` became `UI/Panels/HelmPanel`. It only shows the NavSystem and passes the
     throttle, the A and D keys and the clicks to it.
@@ -4402,14 +4407,14 @@ The board builder is deleted. The scene is edited directly.
   Level_01's spawn is `Enemy Spawn · Garuda`. Playtest 171/171 (run 2026-10-26_013236).
 - **Helm panel prefab (2026-10-26).** `Assets/UI/Board/Panels/Helm.prefab`, made from the helm in the
   scene. The builder was not used. How to use it: `Assets/UI/Board/README.md`.
-  - The helm is one object, `Helm`, under `HandoffBoard`. Its children are `Closed` and `Open`
+  - The helm is one object, `Helm`, under `Tactical Board`. Its children are `Closed` and `Open`
     (were `Helm` and `State · helm`). `HelmPanel` moved onto it. The board now finds panels on
     child objects too.
   - Every part is named after its control. Each control's parts are under one parent, for
     example `Open/01 Flight/Throttle/Cap`. The draw order is the same as before. Screenshots
     before and after match pixel for pixel, closed and open.
   - The helm's art is a list on `HelmPanel` (**Art**, 20 entries). Swap a sprite there and every
-    image under it changes. The list is in `HandoffPanel`, and every panel has one.
+    image under it changes. The list is in `Panel`, and every panel has one.
   - Art files moved, and their links still work. Art only the helm uses went to
     `Assets/UI/Board/Art/Helm`. Art other panels use too went to the folder for its kind
     (`Art/Lamps`, `Art/Bolts` …). Four shapes went to `Art/Shapes`. Only the @2x files the board
@@ -4433,7 +4438,7 @@ The board builder is deleted. The scene is edited directly.
   units, selector and signal per unit, the load shed, the reactor cap, and filling and draining once
   per tick. It replaced the buses, `CycleBus`, `ToggleShed` and `TickPower` in `HandoffBoardState`.
   - `OwnShip` and `Garuda · Cruiser` each carry a PowerSystem, with the same numbers the board had
-    (10 units, 5 a bus). `HandoffBoardControls.power` points at ours, and every ship state reaches
+    (10 units, 5 a bus). `BoardManager.power` points at ours, and every ship state reaches
     its own through `.power`. The enemy's engines start powered (`PowerEngines`), as before.
   - `HandoffPowerPanel` became `UI/Panels/PowerPanel` (its link kept, so the prefab still holds it).
     It only shows the PowerSystem and passes the shed and selector clicks to it.
@@ -4465,7 +4470,7 @@ The board builder is deleted. The scene is edited directly.
   trail, and what is heard, covered by the cone or in sight. It replaced those fields and rules in
   `HandoffBoardState`, and `TickSensors`.
   - `OwnShip` and `Garuda · Cruiser` each carry a SensorSystem, with the board's numbers.
-    `HandoffBoardControls.sensors` points at ours, and every ship state reaches its own through
+    `BoardManager.sensors` points at ours, and every ship state reaches its own through
     `.sensors`.
   - The contact list (`tracks`) stays on the ship state, and the sensors read it. `classified` stays
     too: the periscope fills it, and it moves with the periscope.
@@ -4486,7 +4491,7 @@ The board builder is deleted. The scene is edited directly.
   the four cipher dials, the message and its cipher. It replaced those fields and rules in
   `HandoffBoardState`.
   - `OwnShip` and `Garuda · Cruiser` each carry a CommsSystem, with the board's numbers.
-    `HandoffBoardControls.comms` points at ours, and every ship state reaches its own through `.comms`.
+    `BoardManager.comms` points at ours, and every ship state reaches its own through `.comms`.
   - `HandoffCommsPanel` became `UI/Panels/CommsPanel` (its link kept, so the prefab still holds it).
   - No behaviour change. Playtest 171/171 (run 2026-10-26_084735). The run before it failed 3 checks
     (our ship moving on the plot, and the POINT and RULER staying put) and passed on the re-run. It
@@ -4536,7 +4541,7 @@ The board builder is deleted. The scene is edited directly.
   picking a target, salvo, PDC loaders and AUTO, the capacitor and the fire lever; leading a moving
   target; slugs and missiles in flight; enemy missiles coming in and our PDCs' chance at them.
   - `OwnShip` and `Garuda · Cruiser` each carry a WeaponSystem, with the board's numbers.
-    `HandoffBoardControls.weapons` points at ours, and every ship state reaches its own through
+    `BoardManager.weapons` points at ours, and every ship state reaches its own through
     `.weapons`. The Garuda's fire-back reads its own launcher and fires at our ship, as before.
   - Stays on the ship state: the contact list, damage (`TakeSlug`, `TakeWarhead`), kills, the
     periscope and the plot marks. The weapons read them.
@@ -4555,7 +4560,7 @@ The board builder is deleted. The scene is edited directly.
   the launch stages, the bay doors, the launch bearing and lever, squadrons in flight, the fighters'
   attack runs, and the assault boats with the marines they carry.
   - `OwnShip` and `Garuda · Cruiser` each carry a HangarSystem, with the board's numbers.
-    `HandoffBoardControls.hangar` points at ours, and every ship state reaches its own through
+    `BoardManager.hangar` points at ours, and every ship state reaches its own through
     `.hangar`.
   - Stays on the ship state: `captured` (the ship's own status, like `destroyed`), the crew
     (`TotalCrew`, `KillCrew`), damage, kills and the alert gates. Boarding still rolls the ship's
@@ -4582,7 +4587,7 @@ The board builder is deleted. The scene is edited directly.
   fire, vacuum and radiation spreading, the crew, and damage control (the selected compartment, the
   repair orders and the team out).
   - `OwnShip` and `Garuda · Cruiser` each carry a DamageSystem, with the board's numbers.
-    `HandoffBoardControls.damage` points at ours, and every ship state reaches its own through
+    `BoardManager.damage` points at ours, and every ship state reaches its own through
     `.damage`. The Garuda took our damage numbers each tick (`CopyDamageTuning`). Since Step 80 it
     uses its own, in `Garuda.asset`.
   - Stays on the ship state: whether it is `destroyed` or `captured`, its EMP clock (`empUntil`, which
@@ -4595,7 +4600,7 @@ The board builder is deleted. The scene is edited directly.
     box that held it).
 - **Orders station prefab (2026-10-26).** `Assets/UI/Board/Panels/Orders.prefab`, the same way as the
   helm.
-  - The orders station is one object, `Orders`, under `HandoffBoard`. It has `Closed` and `Open`
+  - The orders station is one object, `Orders`, under `Tactical Board`. It has `Closed` and `Open`
     (they were `Orders` and `State · orders`). `HandoffOrdersPanel` moved onto it.
   - Parts are grouped: `Bolts`, `Header`, `Alert` (with `Selector`), and in `Open` also `AUX pool`
     (with `Cells`) and `Order switches` (`Housings`, `PARTY`, `SEAL`, `VENT`, `FIRE`, `BLKHD`,
@@ -4614,7 +4619,7 @@ The board builder is deleted. The scene is edited directly.
   AUX order pool, what each order costs and why one is refused, and the repair and order rockers that
   flick back after a throw.
   - `OwnShip` and `Garuda · Cruiser` each carry an OrdersSystem, with the board's numbers.
-    `HandoffBoardControls.orders` points at ours, and every ship state reaches its own through
+    `BoardManager.orders` points at ours, and every ship state reaches its own through
     `.orders`. The weapons, hangar and damage systems read its alert (`WeaponsReleased`,
     `FlightOpsReleased`, the repair rate). Its repairs are damage control's (`damage.EngBlock`,
     `damage.ApplyOrder`).
@@ -4625,7 +4630,7 @@ The board builder is deleted. The scene is edited directly.
     battle space. Every ship part is a system.
 - **Periscope prefab (2026-10-27).** `Assets/UI/Board/Panels/Periscope.prefab`.
   - `Periscope` is a clip window. It grows from 44 px (housed) to 656 px (lowered). The periscope
-    script `HandoffPeriscopePanel` is now on it.
+    script `PeriscopePanel` is now on it.
   - Parts are grouped: `Carriage`, `Bolts`, `Sight` (with `Brackets`), `Readout`, `Mag knob`,
     `Convergence`, `Slew button`, `Subject` and `Classify button`. The mount plate, caption, screen
     and text stay at the top level. In a group they would draw under the aperture, which overlaps
@@ -4636,13 +4641,14 @@ The board builder is deleted. The scene is edited directly.
   - Art list: 15 entries. The aperture is not in it. The code swaps its idle and slewing sprites.
   - Art moved: 8 periscope-only files to `Art/Periscope`.
   - `State · periscope` (the LOWERED label) stays on the board. The board's motion script shows it.
-- **Plot prefab (2026-10-27).** `Assets/UI/Board/Panels/Plot.prefab`. `HandoffPlotPanel` is now on
+- **Plot prefab (2026-10-27).** `Assets/UI/Board/Panels/Plot.prefab`. `PlotPanel` is now on
   `Plot`.
   - The plot's parts already had plain names (`Ground`, `Grid`, `Marks (drawn)` …). They keep them.
   - `Mockup` is now `Design mock-up (off)`. Its 46 parts are the design's sample picture, all
     switched off. Three are still used: `Passive label template` (the plot copies it for passive
     bearing labels), and the SENSOR RANGE label and value (the sensors drawer links to them).
-    The board's motion script also animates some of them. Nothing was deleted.
+    The board's motion script also animates some of them. Nothing was deleted. Step 89 later
+    deleted the other 43.
   - Art list: 5 entries (ground, glow, fighter wedge, scanlines, vignette). Art moved: the glow,
     scanlines and vignette to `Art/Plot`, `round_6` to `Art/Shapes`. The fighter wedge stays in
     `Assets/Art/Hulls`.
@@ -4654,7 +4660,7 @@ The board builder is deleted. The scene is edited directly.
   `Console`, `AlarmStrip` and `SignalBox` are prefabs in `Assets/UI/Board/Panels`. They keep their
   object names: the board script and the playtest find some of them by name.
   - They have no panel script. Owner 2026-10-27: each gets a small new script, `UI/ArtList.cs`,
-    that has only the Art list. The list code is shared with the panels (`HandoffPanel.ApplyArt`).
+    that has only the Art list. The list code is shared with the panels (`Panel.ApplyArt`).
     The pause key and the four rate keys are not in it: the board script swaps their sprites.
   - Parts are named after what they are. `Frame`, `TimeControl` and `Console` have groups
     (`Conduits`, `Corner bolts`, `Stencils`; `Clock`, `Pause`, `Rate keys`; `Power`, `Scale`,
@@ -4746,7 +4752,7 @@ other sessions before taking Unity, and before editing scripts they may be editi
      playtest (`Board/HandoffBoard/SignalBox`, `HandoffBoard/AlarmStrip/Words`) and
      `GammaBoardPresenter` (`HandoffBoard (gamma)`).
    - None of the new names is taken. Nothing uses `UnityEngine.UIElements`.
-7. **Docs.** Wait until the Tooling session says its doc agents are done. Then one pass over the
+7. **Docs.** Done (2026-10-27). Wait until the Tooling session says its doc agents are done. Then one pass over the
    docs for the new script names, the new font and design paths, the palette and the fonts lists.
    The UI guide is `Assets/UI/Board/README.md`; write it in the owner's plain English
    (`memory/shagun-wants-plain-english.md`).
@@ -4755,17 +4761,17 @@ other sessions before taking Unity, and before editing scripts they may be editi
 
 After this: the whole-project folder cleanup, as its own job.
 
-**Next:** steps 7 and 8 of the UI restructure to-do above. Steps 1 to 5 are done (Step 89), step 6
-too (Step 90).
+**Next:** step 8 of the UI restructure to-do above. Steps 1 to 5 are done (Step 89), step 6 too
+(Step 90), and step 7.
 
 **Why.** On 2026-10-25 the board was hard to follow:
-- One 1,915-line class (`HandoffBoardState`) had every rule. Now the rules are in the eight ship
+- One 1,915-line class (`HandoffBoardState`, now `ShipState`) had every rule. Now the rules are in the eight ship
   parts, and that class is 386 lines.
 - The builder made the scene from code and deleted it on every run, so hand edits were lost. Now
   the builder is deleted, and the scene is edited directly.
 - Drawer parts were named by export record (`sprite#178 rocker_30x38_locked`). Now each part is
   named after its control.
-- The code used "Handoff" names. The rename is in progress (step 4).
+- The code used "Handoff" names. They are gone (Step 90).
 
 On 2026-10-25, three read-only checks found that a UI artist could not work on the board without a
 programmer. The guide for UI artists is now `Assets/UI/Board/README.md`.
@@ -4795,10 +4801,10 @@ are ship parts, one set per ship.
    - Each object is named after its control, and each control's parts are under one parent.
    - The builder and the import menu are deleted.
    - The guide for UI artists is `Assets/UI/Board/README.md`.
-7. **Split `HandoffBoardState` into ship parts,** one component each: power, sensors, comms, helm,
+7. **Split `HandoffBoardState` (now `ShipState`) into ship parts,** one component each: power, sensors, comms, helm,
    weapons, hangar, damage and orders. Done: the eight systems (2026-10-26) and a stats file per
    ship (Step 80). Where the board already worked, its rules stayed.
-8. **Move the clock, pause and tick out of `HandoffBoardControls` into `GameManager`.** First move
+8. **Move the clock, pause and tick out of `BoardManager` into `GameManager`.** First move
    `ReadOnlyAttribute` out of the old `GameManager.cs`, then delete that file. Left.
    `ReadOnlyAttribute` is still in `GameManager.cs`.
 
@@ -4907,7 +4913,7 @@ Left unfinished when the Step 73 chat closed. Plan each with the owner before bu
    in from off-screen and ease to a stop, vertical lines alternately from the top and bottom,
    horizontal lines alternately from the left and right, big squares first, then small; about
    2 s; then our ship, the sensor circle and the sweep fade in. Not built. Idea: offset each line
-   in `HandoffPlotGrid`'s mesh and clip it to the plot.
+   in `PlotGrid`'s mesh and clip it to the plot.
 5. **Smaller.** The wrecks are whole ships (break some apart later). Soham's `Asteroid.cs` could make rocks
    breakable later (add the "Asteroid" tag first). WRECK-4 and WRECK-11 use the same cruiser model
    as the Garuda. The ship models go to 100–500 m when the outside cameras come.

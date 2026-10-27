@@ -95,7 +95,7 @@ are built the same way.
 - **The Garuda has its own stats file**, `Assets/Ships/Garuda.asset`. Today its numbers are the
   same as ours (`Asura.asset`). Only the class name is different. A new class, such as DERELICT, is
   a new stats file.
-- **`WorldContact` builds a `HandoffBoardState` for the enemy** from its eight system components.
+- **`WorldContact` builds a `ShipState` for the enemy** from its eight system components.
   That state has the ship's contacts (`tracks`). The systems are reached through
   it: `nav`, `power`, `sensors`, `comms`, `weapons`, `hangar`, `damage`, `orders`.
 - **The same code runs it.** Each system has its own tick: `PowerSystem.Tick`, `NavSystem.Tick`,
@@ -221,7 +221,7 @@ with a 70% kill chance (Step 55). That is the PDC's tutorial moment.
   hangar, damage and orders. `Asura.asset` is ours and `Garuda.asset` is the enemy's. A DERELICT
   needs a file of its own.
 - Each ship has the eight system components plus `Ship`, which points at its stats file.
-  `WorldContact` builds the ship's `HandoffBoardState` from those components. An `EnemyBrain` on
+  `WorldContact` builds the ship's `ShipState` from those components. An `EnemyBrain` on
   the same object drives it.
 - `TacticalWorld` runs on `board.Ticked` and knows every contact. Each tick it runs each contact's
   damage conditions, then its brain, then its `NavSystem.Tick`, then syncs. Nothing runs in
@@ -299,7 +299,7 @@ How, in one place:
 - The FTUE keeps **one allow-list of action names** (the `action` strings the board already
   dispatches: `pause`, `rate`, `tool`, `drawer`, `helm`, `power.bus`, and so on). Read them from
   the panels' `Click` cases and `UIStateSpec.md` §10.
-- `HandoffBoardControls.Click`, `Down` and `Up` ask the FTUE first. Not on the list → the board
+- `BoardManager.Click`, `Down` and `Up` ask the FTUE first. Not on the list → the board
   refuses the same way it refuses a locked rocker today: the "refused" nudge the press-and-click
   step is building, and no state change. The XO box does not need to react. The hint line already
   says what is wanted.
@@ -316,7 +316,7 @@ dispatch.
 ## 8 · The walkthrough
 
 Each row is one step: what the XO says (a draft, the owner will rewrite), what the player does, and
-how the code knows it is done. Done checks read `HandoffBoardState` (`State`), our ship's systems
+how the code knows it is done. Done checks read `ShipState` (`State`), our ship's systems
 through it (`State.power`, `State.nav` and the rest), and the board (`board`), nothing else. Field
 names are today's; check them when you build.
 
@@ -369,7 +369,7 @@ Small steps, each shown to the owner before the next. Each has its own BUILD_LOG
 
 | Step | What | Needs first | Done when the owner can see |
 |---|---|---|---|
-| **A** | **Done, Step 51.** The Garuda patrols. Its own `HandoffBoardState`, built by `WorldContact` from its system components and its stats file, ticked by `TacticalWorld` after ours; `EnemyBrain` orders waypoints through `nav.orderedHeading` and `nav.throttle`. | The helm (so we can go and look). | The contact moves between sweeps and loops its route. Stops while paused. |
+| **A** | **Done, Step 51.** The Garuda patrols. Its own `ShipState`, built by `WorldContact` from its system components and its stats file, ticked by `TacticalWorld` after ours; `EnemyBrain` orders waypoints through `nav.orderedHeading` and `nav.throttle`. | The helm (so we can go and look). | The contact moves between sweeps and loops its route. Stops while paused. |
 | **B** | The Garuda hears. Awareness 0 → 3 from its own sensors (`SensorSystem.Heard`, `ConeCovers`) reading our `sensors.signal`. Thresholds in Tuning. A debug readout in the Tuning window or the console. | A. Power P1 (done). | Going loud near it raises the number. It never drops. |
 | **C** | Investigate and sweep. SEARCHING steers to last-heard; ALERT runs the sweep, then closes. The sweep shows on our board. | B. The sensors step. | It turns toward where we were. On ALERT its signal jumps and it comes straight at us. |
 | **D** | Derelicts. Two static contacts from a DERELICT class, with hull sides and compartments. Scanning one fills in the target readout: its sides and compartments, drawn as ours are. | Sensors. | They show, scan, read DERELICT, and the readout shows their insides. |
