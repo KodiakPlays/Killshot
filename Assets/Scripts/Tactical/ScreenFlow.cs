@@ -15,13 +15,18 @@ public class ScreenFlow : MonoBehaviour
     [SerializeField] private bool advanceOnEnter = false;
     [Tooltip("Optional. Enter shows this first (the beta page's INITIALISING... line, owner 2026-10-24); it calls Advance() when it is done.")]
     [SerializeField] private GameObject showFirst;
+    [Tooltip("Optional. Seconds after the scene opens before it moves on by itself, as Enter does. 0: it waits "
+           + "(owner 2026-10-27: WOLF HUNT shows, then INITIALISING..., with no Enter press).")]
+    [SerializeField] private float advanceAfterSeconds = 0f;
 
     private bool going;
 
     private void Update()
     {
-        if (!advanceOnEnter || going) return;
-        if (!Input.GetKeyDown(KeyCode.Return) && !Input.GetKeyDown(KeyCode.KeypadEnter)) return;
+        if (going) return;
+        bool timeUp = advanceAfterSeconds > 0f && Time.timeSinceLevelLoad >= advanceAfterSeconds;
+        bool enter = advanceOnEnter && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter));
+        if (!timeUp && !enter) return;
         if (showFirst && !showFirst.activeSelf) showFirst.SetActive(true);
         else if (!showFirst) Advance();
     }

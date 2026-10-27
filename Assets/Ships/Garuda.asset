@@ -15,10 +15,10 @@ MonoBehaviour:
   shipClass: Garuda-class cruiser
   navigation:
     headingKeyStep: 3
-    turnRate: 20
-    topSpeedKms: 12.5
-    accelKms2: 0.2175
-    brakeKms2: 0.4075
+    turnRate: 14
+    topSpeedKms: 8.75
+    accelKms2: 0.15199999511241913
+    brakeKms2: 0.2849999964237213
     driftKeepPerS: 0.96307
     dragKeepPerS: 0.997502
   power:
@@ -30,7 +30,7 @@ MonoBehaviour:
     - 10
     - 10
   sensors:
-    senRangeBaseKm: 12000
+    senRangeBaseKm: 10000
     senRangePerStepKm: 3600
     visualRangeKm: 10000
     uvRangeFactor: 0.55
@@ -49,14 +49,14 @@ MonoBehaviour:
       shortName: RG-A
       arc: 42
       halfArc: 80
-      rangeKm: 25000
+      rangeKm: 18000
       ammo: 22
     - id: RGB
       label: RAILGUN TURRET B
       shortName: RG-B
       arc: 250
       halfArc: 80
-      rangeKm: 25000
+      rangeKm: 18000
       ammo: 22
     - id: PDA
       label: PDC GROUP A
@@ -71,14 +71,14 @@ MonoBehaviour:
       arc: 200
       halfArc: 35
       rangeKm: 10000
-      ammo: 2400
+      ammo: 0
     - id: VLS
       label: MISSILE VLS
       shortName: VLS
       arc: 0
       halfArc: 180
       rangeKm: 35000
-      ammo: 8
+      ammo: 4
     manualStartRangeKm: 10000
     salvo: 2
     loaders: 1
@@ -90,9 +90,9 @@ MonoBehaviour:
     missileSpreadDeg: 3
     pdcRoundsPerGo: 100
     hitRadiusKm: 100
-    slugArmourDamage: 50
-    slugCompartmentDamage: 2
-    heArmourDamage: 100
+    slugArmourDamage: 75
+    slugCompartmentDamage: 3
+    heArmourDamage: 150
     empSeconds: 60
     fireChanceHE: 0.6
     fireChancePEN: 0.4
@@ -107,7 +107,7 @@ MonoBehaviour:
     fighterArmourDamage: 10
     fighterCompartmentDamage: 1
     boatSpeedKms: 30
-    marines: 18
+    marines: 0
     marinesPerBoat: 6
     dockKm: 50
     boardMaxSpeedKms: 0.5
@@ -119,10 +119,10 @@ MonoBehaviour:
   damage:
     partySeconds: 6
     sideArmourMax:
-    - 100
-    - 100
-    - 50
-    - 100
+    - 150
+    - 150
+    - 75
+    - 150
     collisionArmourDamage: 25
     collisionCompartmentDamage: 1
     radChanceReactor: 0.5

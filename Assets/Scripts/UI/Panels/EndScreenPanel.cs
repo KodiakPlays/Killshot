@@ -36,7 +36,7 @@ public class EndScreenPanel : Panel
         string fate = enemy == null ? "" : enemy.destroyed ? "DESTROYED" : enemy.captured ? "CAPTURED" : "AFLOAT";
         title.text = won ? "MISSION COMPLETE" : "SHIP LOST";
         Paint(title, won ? Palette.nominal : Palette.alarm);
-        reason.text = won ? name + " " + fate
+        reason.text = won ? name + " " + fate + (quest.ExitOpen ? " · JUMPED OUT" : "")
                     : quest.FailReason == MissionFailReason.Desertion ? "LEFT THE BATTLE SPACE" : "REACTOR DESTROYED";
         float armour = 0f, most = 0f;
         for (int i = 0; i < s.damage.SideArmour.Length; i++) { armour += s.damage.SideArmour[i]; most += s.damage.stats.sideArmourMax[i]; }

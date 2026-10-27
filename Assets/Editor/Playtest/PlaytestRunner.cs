@@ -332,6 +332,7 @@ public static class PlaytestRunner
         //     moves it with the same maths as ours.
         var brain = GameObject.Find("World").GetComponentInChildren<EnemyBrain>();
         if (brain) brain.firesBack = false; // stand-in: it holds its fire until the point-defence step (21e)
+        if (brain) brain.hunts = false; // stand-in: it does not listen for us; Wolf Hunt's own checks turn it on
         // stand-in: no hit starts a condition until the conditions step (24), so the steps before stay as written
         float[] condChances = { s.weapons.stats.fireChanceHE, s.weapons.stats.fireChancePEN, s.weapons.stats.breachChanceSlug, s.damage.stats.radChanceReactor }; // the first three are the shooter's (Weapons)
         s.weapons.stats.fireChanceHE = s.weapons.stats.fireChancePEN = s.weapons.stats.breachChanceSlug = s.damage.stats.radChanceReactor = 0f;
@@ -433,8 +434,8 @@ public static class PlaytestRunner
         string pt0 = MarkLabel(board, 0), ru0 = MarkLabel(board, 1), co0 = MarkLabel(board, 2);
         Vector2 ptPos0 = MarkLabelPos(board, 0), ruPos0 = MarkLabelPos(board, 1);
         Check("POINT shows the mission time", pt0.Contains(":") && !pt0.Contains("RNG"), "\"" + pt0 + "\"");
-        Check("RULER reads a distance", ru0.StartsWith("RNG "), "\"" + ru0 + "\"");
-        Check("COMPASS reads range and bearing from our ship", co0.StartsWith("RNG "), "\"" + co0 + "\"");
+        Check("RULER reads only a distance (owner 2026-10-27)", ru0.EndsWith(" km") && !ru0.Contains("BRG"), "\"" + ru0 + "\"");
+        Check("COMPASS reads range and bearing from our ship", co0.Contains(" km · BRG ") && co0.EndsWith("°"), "\"" + co0 + "\"");
         Shot("10_marks");
         yield return 0.2f;
 
@@ -455,7 +456,7 @@ public static class PlaytestRunner
               "moved " + (shipImg.anchoredPosition.x - ship0.x).ToString("0.0") + " px (expected " + shift.ToString("0.0") + ")");
         Check("The POINT stays put", (ptPos1 - ptPos0).magnitude < 0.01f && pt1 == pt0, "moved " + (ptPos1 - ptPos0).magnitude.ToString("0.00") + " px, label unchanged");
         Check("The RULER stays put", (ruPos1 - ruPos0).magnitude < 0.01f && ru1 == ru0, "moved " + (ruPos1 - ruPos0).magnitude.ToString("0.00") + " px, still \"" + ru1 + "\"");
-        Check("The COMPASS re-measures from our ship", co1 != co0 && co1.StartsWith("RNG "), "\"" + co0 + "\" → \"" + co1 + "\"");
+        Check("The COMPASS re-measures from our ship", co1 != co0 && co1.Contains(" km · BRG "), "\"" + co0 + "\" → \"" + co1 + "\"");
         Shot("11_ship_moved");
         yield return 0.2f;
         s.nav.x = home;
@@ -668,7 +669,7 @@ public static class PlaytestRunner
         if (!PlotDrag(board, new Vector2(500, 300), new Vector2(620, 300), "draw a RULER")) yield break;
         yield return 0.3f;
         string timed = MarkLabel(board, 0);
-        Check("A RULER shows the time to cover it at our speed", timed.Contains(" MIN") || timed.EndsWith(" S"), "\"" + timed + "\" at " + s.nav.SpeedKms.ToString("0.00") + " km/s");
+        Check("Under way, a RULER still shows only the distance (owner 2026-10-27: no travel time)", timed.EndsWith(" km") && !timed.Contains("MIN"), "\"" + timed + "\" at " + s.nav.SpeedKms.ToString("0.00") + " km/s");
 
         //     Two timed POINTs, and a RULER between them, make a track: course, speed, projection.
         if (!Click("tool", "POINT", "POINT tool")) yield break;
@@ -1132,6 +1133,10 @@ public static class PlaytestRunner
         Check("With no PDC on AUTO, both hit us, with the alert tone", s.weapons.hitsTaken == taken0 + 2 && s.weapons.incomingReport != null && s.weapons.incomingReport.StartsWith("MISSILE HIT · ") && board.LastSound == "alert",
               (s.weapons.hitsTaken - taken0) + " hits, last \"" + s.weapons.incomingReport + "\", last cue \"" + board.LastSound + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     Step 96: GARUDA's HE hits 1.5x harder now, and two hits leave our magazine below the 3 it needs to fire.
+        //     Stand-in for damage control: our ship as it was before that salvo.
+        System.Array.Copy(ourArmour, s.damage.SideArmour, ourArmour.Length);
+        for (int c = 0; c < s.damage.compartments.Length; c++) s.damage.compartments[c].integ = ourInteg[c];
         //     PDC-B (owner 2026-10-27), on its last go. Stand-in for the helm: turned so GARUDA bears 200° (PDC-B's arc).
         s.nav.heading = s.nav.orderedHeading = ((t07.bearing - 200) % 360 + 360) % 360; // it has been patrolling since 21e
         if (!Click("fc.mount", null, "PDC selector (PDC-B)")) yield break;
@@ -1521,15 +1526,23 @@ public static class PlaytestRunner
         yield return 1f;
 
         // 25. The mission (Step 85). It has been off since the board started, because the run above kills both ships
-        //     part way. On now: GARUDA is a wreck since step 22, so the next tick wins it.
+        //     part way. On now: GARUDA is a wreck since step 22, so the next tick opens the jump point (Step 98).
         var endPanel = board.GetComponentInChildren<EndScreenPanel>(true);
         quest.enabled = true;
+        yield return (Func<bool>)(() => quest.ExitOpen);
+        var exitWords = GameObject.Find("Board").transform.Find("Tactical Board/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
+        yield return (Func<bool>)(() => exitWords.gameObject.activeInHierarchy && exitWords.text.StartsWith("JUMP POINT"));
+        Check("GARUDA destroyed: a jump point opens at a far edge, and the alarm strip gives its bearing and range",
+              quest.Stage == QuestStage.ExitRegion && !board.Paused && exitWords.text.StartsWith("JUMP POINT · BRG ") && exitWords.text.EndsWith(" KM")
+              && (quest.ExitAt - new Vector2((float)s.nav.x, (float)s.nav.y)).magnitude > 20000f,
+              quest.Stage + ", \"" + exitWords.text + "\", at " + quest.ExitAt);
+        s.nav.PlaceAt(quest.ExitAt.x, quest.ExitAt.y - 500f, 0); s.nav.vx = s.nav.vy = 0; // stand-in for the flight there
         yield return (Func<bool>)(() => quest.Over);
-        Check("GARUDA destroyed: MISSION COMPLETE, and the game pauses at once", quest.Stage == QuestStage.MissionComplete && board.Paused && !endPanel.Showing,
+        Check("At the jump point: MISSION COMPLETE, and the game pauses at once", quest.Stage == QuestStage.MissionComplete && board.Paused && !endPanel.Showing,
               quest.Stage + ", paused " + board.Paused + ", end screen " + endPanel.Showing);
         yield return (Func<bool>)(() => endPanel.Showing);
-        Check("The end screen comes up 2 s later: MISSION COMPLETE, GARUDA DESTROYED",
-              endPanel.Showing && Time.unscaledTime - quest.EndedAt >= 1.99f && EndText(endPanel, "title") == "MISSION COMPLETE" && EndText(endPanel, "reason") == "GARUDA DESTROYED"
+        Check("The end screen comes up 2 s later: MISSION COMPLETE, GARUDA DESTROYED · JUMPED OUT",
+              endPanel.Showing && Time.unscaledTime - quest.EndedAt >= 1.99f && EndText(endPanel, "title") == "MISSION COMPLETE" && EndText(endPanel, "reason") == "GARUDA DESTROYED · JUMPED OUT"
               && EndText(endPanel, "values").StartsWith("GARUDA · DESTROYED\n"),
               "\"" + EndText(endPanel, "title") + "\" / \"" + EndText(endPanel, "reason") + "\" / \"" + EndText(endPanel, "values").Replace("\n", " / ") + "\"");
         Shot("29_mission_complete");

@@ -424,18 +424,25 @@ public class BoardManager : MonoBehaviour
 
     // ---- alarm strip ---------------------------------------------------------------------
 
+    /// <summary>Wolf Hunt: the mission's own line on the alarm strip (JUMP POINT …, REINFORCEMENTS INBOUND) and its
+    /// count, set by QuestSystem. Null: none. The battle space's warnings come first.</summary>
+    [System.NonSerialized] public string missionAlarm, missionCount;
+
+    /// <summary>The alert tone, and the strip redrawn now (QuestSystem: the mission changed).</summary>
+    public void Alert() { ShowAlarm(); Play(alertSound, "alert"); }
+
     void ShowAlarm()
     {
         // Step 65: the battle space's warnings take the strip over; its count shows the seconds left
         string edge = state.deserted ? "SHIP LOST — LEFT THE BATTLE SPACE"
                     : state.outsideFor >= 0f ? "EXITING THE BATTLE SPACE — TURN BACK"
                     : state.NearArenaEdge ? "APPROACHING THE EDGE OF THE BATTLE SPACE" : null;
-        bool on = edge != null || state.sensors.newContacts > 0;
+        bool on = edge != null || missionAlarm != null || state.sensors.newContacts > 0;
         foreach (var p in alarmParts) if (p && p.activeSelf != on) p.SetActive(on);
         if (!on) return;
-        if (alarmCount) alarmCount.text = edge == null ? state.sensors.newContacts.ToString()
-            : state.outsideFor >= 0f && !state.deserted ? Mathf.CeilToInt(state.arenaReturnSeconds - state.outsideFor).ToString() : "!";
-        if (alarmText) alarmText.text = edge ?? (state.sensors.newContacts == 1 ? "NEW CONTACT SINCE COMMIT" : "NEW CONTACTS SINCE COMMIT");
+        if (alarmCount) alarmCount.text = edge != null ? (state.outsideFor >= 0f && !state.deserted ? Mathf.CeilToInt(state.arenaReturnSeconds - state.outsideFor).ToString() : "!")
+            : missionAlarm != null ? missionCount ?? "!" : state.sensors.newContacts.ToString();
+        if (alarmText) alarmText.text = edge ?? missionAlarm ?? (state.sensors.newContacts == 1 ? "NEW CONTACT SINCE COMMIT" : "NEW CONTACTS SINCE COMMIT");
     }
 
     // ---- systems rail --------------------------------------------------------------------

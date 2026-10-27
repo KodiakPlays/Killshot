@@ -145,6 +145,8 @@ public class PlotPanel : Panel
     [SerializeField] private Vector2 rulerLabelOffset = new Vector2(0, -12);
     [Tune("Plot tools")]
     [SerializeField] private Vector2 ringLabelOffset = new Vector2(8, 0);
+    [Tooltip("Step 100 (owner 2026-10-27): the size of the RULER and COMPASS labels, pt. 0: the template's own.")]
+    [Tune("Plot tools")] [SerializeField] private float markLabelSize = 14f;
     [Tooltip("ERASE click area: the point box, and the ruler's height (§8.4).")]
     [SerializeField] private float pointBox = 16f, rulerBox = 14f;
     [Tune("Plot tools")]
@@ -331,6 +333,7 @@ public class PlotPanel : Panel
         var all = new List<ShipState.Mark>(s.marks);
         if (s.draft != null) all.Add(s.draft);
         var shapes = new List<MarksGraphic.Shape>();
+        int graded = 0; // compass numbers used this refresh
         for (int i = 0; i < all.Count; i++)
         {
             var m = all[i];
@@ -346,8 +349,9 @@ public class PlotPanel : Panel
             else
             {
                 double dx = m.x2 - s.MarkX(m), dy = m.y2 - s.MarkY(m); // km, y north
-                label.text = "RNG " + ShipState.JsRound(s.MarkLen(m)).ToString("#,0", System.Globalization.CultureInfo.InvariantCulture)
-                           + " km · BRG " + Brg(dx, dy) + "°";
+                string km = ShipState.JsRound(s.MarkLen(m)).ToString("#,0", System.Globalization.CultureInfo.InvariantCulture) + " km";
+                label.text = m.kind == "ruler" ? km : km + " · BRG " + Brg(dx, dy) + "°"; // owner 2026-10-27: the ruler shows the distance only
+                if (m.kind == "ring") Grade(shapes, a, (b - a).magnitude, alpha, ref graded);
                 if (m.kind == "ruler")
                 {
                     label.alignment = TextAlignmentOptions.Center;
@@ -362,7 +366,6 @@ public class PlotPanel : Panel
                         shapes.Add(new MarksGraphic.Shape { kind = "dash", a = Screen(toPt.x, toPt.y),
                             b = Screen(toPt.x + System.Math.Sin(rc) * ahead, toPt.y + System.Math.Cos(rc) * ahead), alpha = alpha });
                     }
-                    else if (s.nav.SpeedKms >= 0.01) label.text += " · " + Duration(s.MarkLen(m) / s.nav.SpeedKms); // time to cover it at our speed
                     // the board rounds the label's spot to whole layer px from the plot centre. km→px
                     // leaves float dust (250.49999999999997 for 250.5), so trim it before rounding
                     double mx = ShipState.JsRound(System.Math.Round((m.x + dx / 2.0 - viewX) / KmPerPx, 6));
@@ -382,6 +385,8 @@ public class PlotPanel : Panel
             else { float r = (b - a).magnitude; hr.sizeDelta = new Vector2(2 * r, 2 * r); Put(hr, a, 0f); }
         }
         for (int i = all.Count; i < labels.Count; i++) labels[i].gameObject.SetActive(false);
+        for (int i = graded; i < gradeLabels.Count; i++) gradeLabels[i].gameObject.SetActive(false);
+        ShowJumpPoint(shapes);
         for (int i = all.Count; i < hits.Count; i++) hits[i].gameObject.SetActive(false);
         // our slugs in flight (Step 48): a dot with a short trail fading behind it, no label;
         // white like our ship, not the marks' blue (owner 2026-10-26)
@@ -523,11 +528,13 @@ public class PlotPanel : Panel
                 pictured = t.key;
                 labelPush = px * view.ShipFill / 2f;
             }
-            else if (t.wreck || !known) continue; // no picture: a wreck keeps its dim dot (below); an unknown shows nothing
+            else if (t.wreck) continue; // no picture: a wreck keeps its dim dot (below); an unknown in sight is an amber dot (Step 99)
             else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
             if (t.wreck) continue; // a wreck carries no label (Step 49)
             var cl = ContactLabel(n++);
             Paint(cl, ink);
+            var look = cl.GetComponent<ClickSpot>(); // Step 99: click a contact's label to look at it, and target it
+            if (look) look.arg = t.key;
             float rng = inSight ? t.rangeKm : t.seenRangeKm;
             cl.text = (known ? t.name : "BOGEY " + t.key.ToUpperInvariant()) + "\nRNG " + ShipState.JsRound(rng).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
             Place(cl.rectTransform, at + contactLabelOffset + new Vector2(labelPush, 0f), 0f);
@@ -704,6 +711,57 @@ public class PlotPanel : Panel
         return contactLabels[i];
     }
 
+    // Step 100 (owner 2026-10-27): the compass ring is graded like a compass: a tick every 10 degrees, a longer one
+    // every 30 with its number, 000 at the top (north), 359 just left of it and 001 just right.
+    readonly List<TMP_Text> gradeLabels = new List<TMP_Text>();
+    void Grade(List<MarksGraphic.Shape> shapes, Vector2 c, float r, float alpha, ref int used)
+    {
+        if (r < 12f) return;
+        for (int d = 0; d < 360; d += 10)
+        {
+            bool major = d % 30 == 0;
+            var dir = new Vector2(Mathf.Sin(d * Mathf.Deg2Rad), -Mathf.Cos(d * Mathf.Deg2Rad)); // board y is down
+            shapes.Add(new MarksGraphic.Shape { kind = "line", a = c + dir * r, b = c + dir * (r + (major ? 10f : 5f)), alpha = alpha });
+            if (!major || r < 40f) continue;
+            while (gradeLabels.Count <= used)
+            {
+                var t = Instantiate(labelTemplate, labelTemplate.transform.parent);
+                t.name = "Compass number " + gradeLabels.Count;
+                Paint(t, ownForce);
+                t.alignment = TextAlignmentOptions.Center;
+                gradeLabels.Add(t);
+            }
+            var l = gradeLabels[used++];
+            l.gameObject.SetActive(true);
+            l.alpha = alpha;
+            l.text = d.ToString("000");
+            Place(l.rectTransform, c + dir * (r + 20f), 0.5f);
+        }
+    }
+
+    // Step 98: once the target is down, the jump point: a ring the size of the reach that wins, and its name
+    QuestSystem quest;
+    TMP_Text jumpLabel;
+    void ShowJumpPoint(List<MarksGraphic.Shape> shapes)
+    {
+        if (!quest) quest = FindAnyObjectByType<QuestSystem>();
+        bool open = quest && quest.ExitOpen;
+        if (open)
+        {
+            var at = Screen(quest.ExitAt.x, quest.ExitAt.y);
+            float r = Mathf.Max(6f, (float)(quest.ExitReachKm / KmPerPx * Controls.ZoomExact));
+            var ink = Palette.nominal.gamma;
+            shapes.Add(new MarksGraphic.Shape { kind = "circle", a = at, b = at + new Vector2(r, 0f), alpha = 1f, ink = ink });
+            shapes.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = ink });
+            if (!jumpLabel) { jumpLabel = Instantiate(labelTemplate, labelTemplate.transform.parent); jumpLabel.name = "Jump point label"; }
+            Paint(jumpLabel, Palette.nominal);
+            jumpLabel.text = "JUMP POINT";
+            jumpLabel.alignment = TextAlignmentOptions.Left;
+            Place(jumpLabel.rectTransform, at + new Vector2(r + 6f, 0f), 0f);
+        }
+        if (jumpLabel && jumpLabel.gameObject.activeSelf != open) jumpLabel.gameObject.SetActive(open);
+    }
+
     TMP_Text Label(int i)
     {
         while (labels.Count <= i)
@@ -711,6 +769,7 @@ public class PlotPanel : Panel
             var t = Instantiate(labelTemplate, labelTemplate.transform.parent);
             t.name = "Mark label " + labels.Count;
             Paint(t, ownForce);
+            if (markLabelSize > 0f) { t.fontSize = markLabelSize; t.fontSharedMaterial = t.font.material; } // owner 2026-10-27: larger and clearer
             labels.Add(t);
         }
         labels[i].gameObject.SetActive(true);

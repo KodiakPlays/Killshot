@@ -464,24 +464,44 @@ public class WeaponSystem : MonoBehaviour
         }
     }
 
-    /// <summary>Each tick: our PDCs take their chances, then every enemy missile homes on us; one that
-    /// passes within its firing ship's hitRadiusKm strikes the side facing it.</summary>
+    /// <summary>Wolf Hunt (Step 97): an enemy at (x, y) fires a railgun slug at us on this true bearing. It flies
+    /// straight at its ship's slug speed. PDCs cannot stop a slug.</summary>
+    public void ShootAt(Stats by, double x, double y, double brgDeg, double maxKm)
+    {
+        double b = brgDeg * System.Math.PI / 180;
+        Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = maxKm, speed = by.slugSpeedKms, by = by });
+    }
+
+    /// <summary>Each tick: our PDCs take their chances, then every enemy missile homes on us and every enemy
+    /// slug flies straight; one that passes within its firing ship's hitRadiusKm strikes the side facing it.</summary>
     public void TickIncoming(double dt)
     {
         var list = Incoming;
         for (int i = list.Count - 1; i >= 0; i--)
         {
             var r = list[i];
-            if (PdcStops(r)) { list.RemoveAt(i); continue; }
-            SteerAt(r, ship.nav.x, ship.nav.y, dt);
-            double step = System.Math.Min(r.speed * dt, r.maxKm - r.travelled);
-            double px = ship.nav.x - r.x, py = ship.nav.y - r.y;
-            double u = System.Math.Max(0, System.Math.Min(step, px * r.dx + py * r.dy)); // closest point along the path
-            double cx = px - r.dx * u, cy = py - r.dy * u;
+            if (r.missile && PdcStops(r)) { list.RemoveAt(i); continue; }
+            if (r.missile) SteerAt(r, ship.nav.x, ship.nav.y, dt);
+            double step = System.Math.Min(r.speed * dt, r.maxKm - r.travelled), cx, cy;
+            if (r.missile)
+            {
+                double px = ship.nav.x - r.x, py = ship.nav.y - r.y;
+                double u = System.Math.Max(0, System.Math.Min(step, px * r.dx + py * r.dy)); // closest point along the path
+                cx = px - r.dx * u; cy = py - r.dy * u;
+            }
+            else
+            {
+                // a slug against our own motion through the tick: our ship has already moved this tick
+                double wx = r.dx * r.speed - ship.nav.vx, wy = r.dy * r.speed - ship.nav.vy;
+                double ox = r.x - (ship.nav.x - ship.nav.vx * dt), oy = r.y - (ship.nav.y - ship.nav.vy * dt);
+                double ww = wx * wx + wy * wy, tau = ww > 0 ? System.Math.Max(0, System.Math.Min(step / r.speed, -(ox * wx + oy * wy) / ww)) : 0;
+                cx = ox + wx * tau; cy = oy + wy * tau;
+            }
             if (cx * cx + cy * cy <= r.by.hitRadiusKm * r.by.hitRadiusKm)
             {
                 string side = ShipState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, ship.nav.heading);
-                incomingReport = "MISSILE HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead], r.by);
+                incomingReport = r.missile ? "MISSILE HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead], r.by)
+                                           : "SLUG HIT · " + side + ship.damage.TakeSlug(side, r.by);
                 hitsTaken++;
                 list.RemoveAt(i);
                 continue;
@@ -529,6 +549,17 @@ public class WeaponSystem : MonoBehaviour
         var t = ship.TrackOf(key);
         return m != null && t != null && t.hostile && t.rangeKm <= m.rangeKm && ShipState.AngDiff(t.bearing, m.arc) <= m.halfArc;
     }
+    /// <summary>Step 99: a new target, whatever its range or arc: the ladder, the lever, fired and the
+    /// solutions reset (a solution was worked out on the old target).</summary>
+    public void Retarget(string key)
+    {
+        target = key;
+        fired = false;
+        ClearSwitches(); // a PDC group on AUTO keeps its ladder
+        for (int i = 0; i < sol.Length; i++) sol[i] = new Solution();
+        fireLever = 0f;
+    }
+
     /// <summary>pickTarget: a valid contact becomes the target; the ladder, lever and fired reset.</summary>
     public void PickTarget(string key)
     {

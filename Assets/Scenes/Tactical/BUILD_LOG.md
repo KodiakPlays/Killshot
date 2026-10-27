@@ -146,8 +146,16 @@ Do not run ahead. Do one step, show it, wait.
 | 91 | Each level has its own battle space: a Battle Space box, set in the Level window | **Done** — quick check in play mode |
 | 92 | Ruins and debris on the plot: inside the DRADIS circle with DRADIS on, else within 10,000 km; line art on top of the circles | **Done** — playtest 209/209 (2026-10-28_012951) |
 | 93 | Debris you can fly through: Level_01's crowded belts thinned out; running into a piece damages the ship, no push-out | **Done** — playtest 209/209 (2026-10-28_012951) |
+| 94 | Wolf Hunt: WOLF HUNT, then INITIALISING, then the board; the DEMO page gone | **Done** — playtest 210/210 |
+| 95 | Wolf Hunt: the Garuda starts at a random point in its spawn box | **Done** — playtest 210/210 |
+| 96 | Wolf Hunt: the Garuda bigger, slower, tougher, harder-hitting, shorter reach | **Done** — playtest 210/210 |
+| 97 | Wolf Hunt: the Garuda's mind: it hunts the map, hears us by our signal, searches, fights side-on with railguns and missiles | **Done** — checked in play mode; playtest 210/210 |
+| 98 | Wolf Hunt: the jump point at the kill; reaching it wins | **Done** — playtest 210/210 |
+| 99 | Wolf Hunt: the alarm, the 3:00 countdown, Naga frigates at the edges; click a contact to target it | **Done** — checked in play mode |
+| 100 | Ruler: distance only, larger text; compass: graded 0–359 ring with the bearing; the jump point on the plot | **Done** — screenshot; playtest 210/210 |
+| 101 | Fighters scout: ships and ruins near them show on our plot | **Done** — playtest 210/210 |
 
-Steps 6 to 28 and Steps 34 to 93 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 101 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -770,7 +778,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 93, in detail
+## 6 · Steps 6 to 28, and 34 to 101, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3951,6 +3959,112 @@ it can still look bigger than a gap.
 **Checked.** Quick check in play mode: put on a near-belt piece, the prow went to 75%; staying on
 it, no second hit; out and back in, the prow went to 50%. Not committed: see Step 92.
 
+### Steps 94 to 101 — Wolf Hunt: the hunt, the fight, the reinforcements, the exit, the tools
+
+Built overnight (2026-10-28) by killshot-81 while the owner slept ("I want a Mac playable at the end").
+Every call made without the owner is listed at the end, and can be changed.
+
+**What it plays like.**
+
+1. NEW GAME. "WOLF HUNT" types in green on the phosphor screen, holds, then INITIALISING... and the
+   board. No Enter press (Step 94).
+2. Our Asura starts at the Player Spawn. The Garuda starts at a random point in its spawn box, facing a
+   random way, every game (Step 95). The box stays inside the battle space.
+3. The Garuda is bigger and slower than us and hits harder, with shorter reach (Step 96). See its
+   numbers below.
+4. The Garuda hunts the map (Step 97). It picks points across the battle space, drifting from its
+   half toward ours over 15 game minutes. It listens with its own DRADIS. It hears us out to its
+   DRADIS reach times our signal: silent, never; at full signal, from about 21,000 km when it is
+   calm, 28,000 km when alert. Inside 10,000 km it sees us, whatever our signal. Our fighters are loud
+   to it (a signal of 60) and lead it to them.
+   - UNEASY: it heard us faintly. It turns for where it heard us.
+   - SEARCHING: heard more clearly, or heard again after a gap. It speeds up and searches round that
+     spot.
+   - ALERT: heard loud and close, seen, or hit. It closes to its railguns' reach, turns a turret's side
+     to us, and fires railgun slugs (they fly straight at 2,500 km/s; PDCs cannot stop them) and HE
+     missile salvos while it has a fix on us. Out of power (an EMP), it cannot fire.
+5. The moment it is ALERT, the alarm strip says REINFORCEMENTS INBOUND, with a 3:00 countdown in game
+   time (Step 99). At 0, two Naga-class frigates enter at random edges of the battle space, at least
+   25,000 km from us, told roughly where we are. One more comes every 2 game minutes. The strip then
+   says ENEMY SHIPS IN THE SECTOR: n. Each frigate hunts with the same mind.
+6. Clicking a contact's label on the plot turns the periscope to it and makes it fire control's target
+   (Step 99). Before, the target was always the Garuda. A ship in sight that we have not identified
+   shows as an amber dot labelled BOGEY (it showed nothing before).
+7. The Garuda destroyed or captured: a jump point opens at the middle of the battle space's edge
+   farthest from us, 5,000 km in (Step 98). The plot shows it as a green ring (the 2,000 km that
+   counts as there) with JUMP POINT beside it. The alarm strip gives its bearing and distance. Reaching
+   it wins: MISSION COMPLETE, "GARUDA DESTROYED · JUMPED OUT".
+8. Tools (Step 100): the RULER shows only the distance, in larger, sharper text. The COMPASS ring is
+   graded like a compass: a tick every 10°, a longer one every 30° with its number, 000 at the top,
+   and its label gives the distance and the bearing. The text size is `markLabelSize` (14 pt) on the
+   plot, Board tab of Starwolf → Tuning, under Plot tools.
+9. Fighters scout (Step 101): any ship or ruin within 10,000 km of one of our fighter flights shows on
+   our plot, kept up to date while they are near.
+
+**The numbers.**
+
+| | Asura (ours) | Garuda | Naga frigate |
+|---|---|---|---|
+| Top speed, km/s | 12.5 | 8.75 | 15 |
+| Turn, °/s | 20 | 14 | 30 |
+| Side armour (prow, stbd, aft, port) | 100, 100, 50, 100 | 150, 150, 75, 150 | 50, 50, 25, 50 |
+| Railguns | 2, 25,000 km | 2, 18,000 km, hits 1.5× | 1, 18,000 km, 12 slugs |
+| Missile cells | 8 | 4, HE hits 1.5× | none |
+| PDC groups | 2 | 1 (PDC-B emptied) | none |
+| DRADIS base reach, km | 12,000 | 10,000 | 10,000 |
+| Marines | 18 | none | none |
+
+The Garuda's file is `Assets/Ships/Garuda.asset`; the frigate's is the new `Assets/Ships/Frigate.asset`.
+
+**How it is built.**
+
+- `EnemyBrain` (rewritten): awareness COLD, UNEASY, SEARCHING, ALERT (never goes down); `hunts` turns
+  the hunting on (the playtest's older checks set it off); `Brief(where, now)` for an arriving ship.
+  Its numbers are on the Board tab of Starwolf → Tuning, under Enemy.
+- `WeaponSystem.ShootAt`: an enemy slug into our `Incoming` list. `TickIncoming` tests a slug against
+  our own motion through the tick. `Retarget(key)`: a new target resets the ladder and solutions.
+- `QuestSystem`: the jump point (`ExitOpen`, `ExitAt`, `ExitReachKm`), the alarm and countdown
+  (`AlarmAt`, `Arrived`), the arrivals. `BoardManager.missionAlarm` / `missionCount` put its line on
+  the alarm strip; `BoardManager.Alert()` sounds the tone.
+- `TacticalWorld.AnyAlert`, `TacticalWorld.AddContact(template, key, at, hdg, brief, now)`;
+  `ShipState.AddTrack`. The frigate template is `World/Frigate (template)` in `02.1_Grid`, switched
+  off: a copy of the Garuda with the frigate's stats file and its model at 0.6 scale.
+- `ScreenFlow.advanceAfterSeconds` (4 s on the briefing). `EnemySpawn.sizeKm` (40,000 × 12,000 km).
+- `PlotPanel`: the compass grading (`Grade`), the jump point (`ShowJumpPoint`), contact labels with a
+  `plot.look` ClickSpot. `SensorSystem.InSight` and `TacticalWorld`'s ruin sighting count our
+  fighters (`HangarSystem.Sees`).
+
+**Checked.**
+
+- A reviewer agent applied every patch to copies and compiled the whole project with Unity's own
+  compiler: 0 errors. It found ten problems; the real ones were fixed before anything went in (stale
+  alarm strip text, a stuck 0:00, a spawn box past the edge, EMP, PDC AUTO on retarget, identified
+  contacts not clickable, unknown contacts in sight not drawn, the awareness middle steps barely
+  used).
+- In play mode, by hand (stand-ins for the helm): the Garuda started at (-445, 40,038), heading 250.
+  With our ship loud and 18,000 km off, it went UNEASY and turned toward us; at 11,865 km it went
+  ALERT, turned side-on, fired five slugs and a missile salvo and hit us four times ("SLUG HIT · PROW
+  · MAG −3"). The strip said REINFORCEMENTS INBOUND 1:40. Two frigates arrived when it ended, then one
+  every 2 game minutes (NAGA 1 to NAGA 6), each SEARCHING where it was told we were. Killing the
+  Garuda opened the jump point at (0, 45,000) with "JUMP POINT · BRG 000° · 90,000 KM" on the strip;
+  reaching it: MISSION COMPLETE, "GARUDA DESTROYED · JUMPED OUT". No errors in the console.
+- Screenshot `Logs/Shots/wolfhunt_tools_check.png`: the graded compass, the ruler's distance, the jump
+  point ring.
+- The playtest: two checks failed once (PDC-B), because the Garuda's harder HE hits left our magazine
+  below the 3 it needs. The playtest now repairs us before PDC-B (a stand-in for damage control).
+
+**Calls made without the owner (can be changed).**
+
+- Clicking a contact's label targets it. The frigate's name (Naga-class), model (the Garuda's at 0.6)
+  and numbers above.
+- The Garuda's hearing: DRADIS gain 3 when calm, 4 searching, 5 alert; SEARCHING from 0.25 of its
+  hearing distance, ALERT from 0.5; a fix lasts 30 game s; railgun reload 12–17 game s; aim off by up
+  to 0.4°; a salvo every 90 game s once ALERT.
+- The jump point's place and 2,000 km reach; arrivals at a random edge, at least 25,000 km from us,
+  told where we are to within 5,000 km.
+- The compass grades in our marks' blue; numbers only when the ring is over 40 px.
+- The nav wheel art was not used for the compass: the ring is drawn, so it scales with the zoom.
+
 ---
 
 ## 7 · How to keep this log
@@ -3973,7 +4087,7 @@ Nothing else in the repo gets written by the log keeper. Only this file.
 
 Still not done. **This is the list to work from.** Read it before picking up any work.
 
-### Wolf Hunt — the first level, playable today (owner, 2026-10-27). In progress
+### Wolf Hunt — the first level, playable today (owner, 2026-10-27). Steps 92 to 101 done
 
 **What it is.** The first level, called WOLF HUNT. Our Asura starts at the bottom of a ruined
 starbase. The Garuda starts somewhere at the top. It patrols and does not know where we are. We hunt
@@ -4021,28 +4135,9 @@ game is the hunt." Every tool must make sense.
 - Debris: the gaps must be wide enough to fly through, at the plot's zoom limits. Hitting a piece
   damages the ship, with no push-out (owner, 2026-10-26).
 
-**Status when the laptop was closed (2026-10-28, night).** Steps 94 to 99 are written and checked
-against the code, but **not yet in the project**. The code is in
-`~/Documents/GitHub/Killshot-Builds/wolf-hunt-drafts/` (outside the repo). To put it in, with Unity
-free, from the project root, in this order:
-
-1. `python3 <drafts>/apply_94_95_97.py`: the start screen's timer (ScreenFlow), the random start in the
-   Garuda's box (EnemySpawn), the Garuda's mind (EnemyBrain) and its railgun shots at us
-   (WeaponSystem.ShootAt). The playtest's older checks get `brain.hunts = false`. Compile, then in the
-   Editor: in `01_Briefing`, the WELCOME Screen's title becomes WOLF HUNT (title offset 0), delete
-   BriefingText and EnterPrompt, and set ScreenFlow's `advanceAfterSeconds` to about 4.
-2. Step 96: run `step96_garuda.cs.txt` in the Editor (the Garuda's numbers).
-3. `python3 <drafts>/apply_98.py`: the jump point (QuestSystem), the alarm strip's mission line
-   (BoardManager.missionAlarm), JUMPED OUT on the end screen, and the playtest's Step 85 section.
-4. `python3 <drafts>/apply_99_quest.py`, then `apply_99_world.py`, then run `step99_frigate.cs.txt` in the
-   Editor (`Frigate.asset` and the switched-off `Frigate (template)` under World).
-5. Quick check of each in play mode, one full playtest, commit, then the Mac app (Step 103).
-
-Each patch stops with an error if a file changed under it. Then apply that part by hand.
-
-**Who does what next.** Tooling: Step 100 (ruler and compass), the jump point drawn on the plot
-(`QuestSystem.ExitOpen`, `QuestSystem.ExitAt`, world km), Step 101 (fighters as scouts). killshot-81:
-Steps 94 to 99 as above.
+**Status (2026-10-28, about 02:10).** Steps 92 to 101 are built, checked and committed (Steps 94 to
+101 by killshot-81, written up in section 6). Tooling closed; killshot-81 took over its Steps 92–93 and
+its share (100, 101). Left: Step 102 (play it, fix what is not fun) and Step 103 (the Mac app).
 
 **Calls made without the owner (can be changed).**
 

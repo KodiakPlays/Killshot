@@ -253,6 +253,503 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!1 &165162270
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 165162282}
+  - component: {fileID: 165162271}
+  - component: {fileID: 165162281}
+  - component: {fileID: 165162280}
+  - component: {fileID: 165162279}
+  - component: {fileID: 165162278}
+  - component: {fileID: 165162277}
+  - component: {fileID: 165162276}
+  - component: {fileID: 165162275}
+  - component: {fileID: 165162274}
+  - component: {fileID: 165162273}
+  - component: {fileID: 165162272}
+  m_Layer: 0
+  m_Name: Frigate (template)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &165162271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ca35bf2a2b734bef8e1a5f9afd307a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldContact
+  trackKey: r0
+--- !u!114 &165162272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5dbfbcc980c6846d1b2162a26c9f3a1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Ship
+  statsFile: {fileID: 11400000, guid: 3ec8e0bd63b5541cd9f4167da99f137d, type: 2}
+--- !u!114 &165162273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 252e0b7af016b417581286ab08796550, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OrdersSystem
+  alert: 0
+  dcThrown: []
+  auxCharge: 0
+  orderFail: 
+--- !u!114 &165162274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 954f199f3ef674d42a16233b1a8ed177, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageSystem
+  compartments:
+  - key: mag
+    tag: MAG
+    name: MAGAZINE
+    integ: 5
+    crew: 4
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: bri
+    tag: BRI
+    name: BRIDGE
+    integ: 5
+    crew: 9
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: hab
+    tag: HAB
+    name: HABITATION
+    integ: 5
+    crew: 18
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: hgr
+    tag: HGR
+    name: HANGAR BAY
+    integ: 5
+    crew: 7
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: rct
+    tag: RCT
+    name: REACTOR
+    integ: 5
+    crew: 6
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  - key: eng
+    tag: ENG
+    name: ENGINE ROOM
+    integ: 5
+    crew: 8
+    vented: 0
+    cond: 
+    fire: 0
+    rad: 0
+    doorsShut: 0
+  engSel: rct
+  partyComp: 
+  partyT: -1
+--- !u!114 &165162275
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6429248f03be3420288c7ba28ad63bfa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HangarSystem
+  squads:
+  - key: gw
+    name: INTERCEPTOR
+    shortName: INTCP
+    type: STARFIGHTER
+    role: INTERCEPT / ESCORT
+    orders:
+    - destroy
+    - disable
+    - escort
+    orderLabels:
+    - DESTROY
+    - DISABLE
+    - ESCORT
+    craft:
+    - tag: 01
+      pilot: HALLORAN
+      state: READY
+      fuel: 100
+    - tag: 02
+      pilot: VOSS
+      state: READY
+      fuel: 100
+    - tag: 03
+      pilot: IDE
+      state: READY
+      fuel: 96
+    - tag: 04
+      pilot: MARCHETTI
+      state: READY
+      fuel: 88
+    - tag: 05
+      pilot: REYES
+      state: REARM
+      fuel: 41
+    - tag: 06
+      pilot: OKONKWO
+      state: DOWN
+      fuel: 0
+  - key: ih
+    name: ASSAULT BOAT
+    shortName: ASSLT
+    type: ASSAULT BOAT
+    role: BOARDING / SECURE
+    orders:
+    - destroy
+    - disable
+    - secure
+    orderLabels:
+    - DESTROY
+    - DISABLE
+    - SECURE
+    craft:
+    - tag: 11
+      pilot: DRAKOS
+      state: READY
+      fuel: 100
+    - tag: 12
+      pilot: SANTOS
+      state: READY
+      fuel: 100
+    - tag: 13
+      pilot: ELLERY
+      state: READY
+      fuel: 74
+    - tag: 14
+      pilot: BRENNAN
+      state: REARM
+      fuel: 62
+  squad: 0
+  order: destroy
+  launchedSquads: []
+  launchedOrders: []
+  stages:
+  - id: crew
+    label: CREW
+    rate: 22
+    on: 0
+    progress: 0
+  - id: fuel
+    label: FUEL
+    rate: 18
+    on: 0
+    progress: 0
+  - id: ord
+    label: ORDNANCE
+    rate: 14
+    on: 0
+    progress: 0
+  - id: evac
+    label: EVAC
+    rate: 20
+    on: 0
+    progress: 0
+  - id: doors
+    label: DOORS
+    rate: 26
+    on: 0
+    progress: 0
+  - id: cat
+    label: CATAPULT
+    rate: 12
+    on: 0
+    progress: 0
+  doorsOpen: 0
+  lbrg: 62
+  launchConeDeg: 60
+  launchLever: 0
+  leverFireAt: 0.9
+--- !u!114 &165162276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ec965ef54abf43fb8d6283da82d382e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponSystem
+  systems:
+  - id: RG
+    label: RAILGUN
+    mounts:
+    - RGA
+    - RGB
+    shot: 70
+  - id: PD
+    label: PDC
+    mounts:
+    - PDA
+    - PDB
+    shot: 25
+  - id: MS
+    label: MISSILE
+    mounts:
+    - VLS
+    shot: 40
+  warheads:
+  - HE
+  - EMP
+  - PENETRATOR
+  switches:
+  - load
+  - angle
+  - bearing
+  - arm
+  sys: RG
+  mount: RGA
+  target: t07
+  sw: 00000000
+  sol:
+  - set: 0
+    rangeKm: 0
+    brg: 0
+    spd: 0
+    manual: 0
+    hasCourse: 0
+    course: 0
+    wx: 0
+    wy: 0
+    t: 0
+  - set: 0
+    rangeKm: 0
+    brg: 0
+    spd: 0
+    manual: 0
+    hasCourse: 0
+    course: 0
+    wx: 0
+    wy: 0
+    t: 0
+  - set: 0
+    rangeKm: 0
+    brg: 0
+    spd: 0
+    manual: 0
+    hasCourse: 0
+    course: 0
+    wx: 0
+    wy: 0
+    t: 0
+  warhead: 0
+  quads: 01010000
+  pdcAuto: 0000
+  fired: 0
+  wepCharge: 0
+  fireLever: 0
+--- !u!114 &165162277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85cef530539a44ed6853f0eac83fb5d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CommsSystem
+  chan: 1
+  freq: 34
+  locked: 0
+  dials: 00000000000000000000000000000000
+  activeDial: -1
+  signalChan: 2
+  signalFreq: 72.2
+  lockWindow: 0.3
+  cipherKey: 160000000e0000000b00000005000000
+  message: HOSTILE FLEET INBOUND VECTOR TWO SEVEN NINE HOLD STATION AWAIT RELIEF
+--- !u!114 &165162278
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3d6532bff89d4d879ac26f4afa4912e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SensorSystem
+  dradis: 1
+  active: 0
+  senBoost: 1
+  spectra:
+  - THERM
+  - RAD
+  - UV
+  - EM
+  spectrum: THERM
+  coneBrg: 62
+  coneArc: 40
+  signal: 0
+  identified:
+  - bc1
+--- !u!114 &165162279
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 315a87cb26a1d4d16bd5b6470f2a87ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PowerSystem
+  buses:
+  - key: eng
+    label: ENG
+    fill: 0
+    mode: 1
+    dir: 1
+  - key: wep
+    label: WEP
+    fill: 0
+    mode: 1
+    dir: 1
+  - key: sen
+    label: SEN
+    fill: 0
+    mode: 1
+    dir: 1
+  - key: aux
+    label: AUX
+    fill: 0
+    mode: 1
+    dir: 1
+  shed: 0
+--- !u!114 &165162280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0bc5c1abf6aa47b28cc3e5ffcbe37ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HelmSystem
+  x: 0
+  y: 0
+  heading: 0
+  orderedHeading: 0
+  throttle: 0
+  attitude: NOSE
+  approachMode: DIRECT
+  approachRange: 2
+  approachRanges: d0070000a00f0000401f0000e02e000050460000c05d0000
+--- !u!114 &165162281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b21730c2a5b4a4b4583d2d1cd71f531e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyBrain
+  hunts: 1
+  cruiseKms: 5.5
+  arriveKm: 300
+  driftSeconds: 900
+  legMinKm: 12000
+  searchKm: 6000
+  gainByAwareness: 03000000030000000400000005000000
+  fighterSignal: 60
+  searchingAt: 0.25
+  alertAt: 0.5
+  fixSeconds: 30
+  fightAtShare: 0.8
+  fightSpeedShare: 0.4
+  railgunReloadSeconds: 12
+  railgunJitterSeconds: 5
+  aimErrorDeg: 0.4
+  salvoSeconds: 90
+  firesBack: 1
+  fireBackSalvo: 2
+  fireBackSeconds: 120
+--- !u!4 &165162282
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 165162270}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 18058.42, y: 16259.874, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1352961846}
+  m_Father: {fileID: 506961321}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &165926799 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 686693876916685826, guid: 8b8ded66887214c15aef0520e0c0f7cd, type: 3}
@@ -924,6 +1421,7 @@ Transform:
   - {fileID: 478801457}
   - {fileID: 1612466235}
   - {fileID: 1654847266}
+  - {fileID: 165162282}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &506961322
@@ -940,6 +1438,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestSystem
   board: {fileID: 1765047281}
   targetKey: t07
+  exitInsetKm: 5000
+  exitReachKm: 2000
+  reinforceSeconds: 180
+  firstWave: 2
+  reinforceEverySeconds: 120
+  arriveInsetKm: 2000
+  briefErrorKm: 5000
+  reinforcement: {fileID: 165162271}
 --- !u!114 &513092477 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7897388879271788647, guid: c720bfe275f514198bee05e639c92bc8, type: 3}
@@ -1555,13 +2061,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b21730c2a5b4a4b4583d2d1cd71f531e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyBrain
-  route:
-  - {x: 0, y: 0}
-  - {x: -6000, y: -4000}
-  - {x: 0, y: -8000}
-  - {x: 6000, y: -4000}
+  hunts: 1
   cruiseKms: 5.5
   arriveKm: 300
+  driftSeconds: 900
+  legMinKm: 12000
+  searchKm: 6000
+  gainByAwareness: 03000000030000000400000005000000
+  fighterSignal: 60
+  searchingAt: 0.25
+  alertAt: 0.5
+  fixSeconds: 30
+  fightAtShare: 0.8
+  fightSpeedShare: 0.4
+  railgunReloadSeconds: 12
+  railgunJitterSeconds: 5
+  aimErrorDeg: 0.4
+  salvoSeconds: 90
   firesBack: 1
   fireBackSalvo: 2
   fireBackSeconds: 120
@@ -3053,6 +3569,99 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!1 &1352961845
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1352961846}
+  - component: {fileID: 1352961848}
+  - component: {fileID: 1352961847}
+  m_Layer: 9
+  m_Name: Model
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1352961846
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1352961845}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.69671017, y: 0.69671017, z: 0.69671017}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 165162282}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!23 &1352961847
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1352961845}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 8335051615239543530, guid: 0bc4cfb67b9d703428626321b2bf2b48, type: 3}
+  - {fileID: 80361134873614883, guid: 0bc4cfb67b9d703428626321b2bf2b48, type: 3}
+  - {fileID: 9086690917048539937, guid: 0bc4cfb67b9d703428626321b2bf2b48, type: 3}
+  - {fileID: -56281428317717923, guid: 0bc4cfb67b9d703428626321b2bf2b48, type: 3}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &1352961848
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1352961845}
+  m_Mesh: {fileID: -5650213058856993184, guid: 0bc4cfb67b9d703428626321b2bf2b48, type: 3}
 --- !u!114 &1354058895 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2370030769388211685, guid: c720bfe275f514198bee05e639c92bc8, type: 3}

@@ -101,7 +101,8 @@ public class TacticalWorld : MonoBehaviour
         foreach (var p in ruins)
         {
             if (!p.r) continue;
-            bool show = (p.at - us).magnitude <= sight + p.half;
+            bool show = (p.at - us).magnitude <= sight + p.half
+                     || (s.hangar && s.hangar.Sees(p.at.x, p.at.y, s.sensors.stats.visualRangeKm + p.half)); // Step 101: what our fighters see
             if (p.r.enabled != show) p.r.enabled = show;
             if (show) n++;
         }
@@ -168,6 +169,36 @@ public class TacticalWorld : MonoBehaviour
         var plot = FindAnyObjectByType<PlotPanel>();
         if (plot) plot.CentreOnOurShip();
         Sync();
+    }
+
+    /// <summary>Wolf Hunt (Step 99): an enemy brain has found us (ALERT). QuestSystem starts the reinforcements' countdown.</summary>
+    public bool AnyAlert
+    {
+        get { foreach (var b in brains) if (b && b.enabled && b.hunts && b.Level == EnemyBrain.Awareness.Alert) return true; return false; }
+    }
+
+    /// <summary>Wolf Hunt (Step 99): a ship arrives during play. A copy of the switched-off template, with its own
+    /// track (key), at `at` facing `hdg`. Its brain is told roughly where we are (`brief`). From the next tick it is
+    /// run and measured like the rest.</summary>
+    public WorldContact AddContact(WorldContact template, string key, Vector2 at, int hdg, Vector2 brief, float now)
+    {
+        var c = Instantiate(template, transform);
+        c.name = template.name.Replace(" (template)", "") + " " + key.ToUpperInvariant();
+        c.trackKey = key;
+        c.transform.SetPositionAndRotation(new Vector3(at.x, at.y, template.transform.position.z), Quaternion.Euler(0f, 0f, -hdg));
+        c.gameObject.SetActive(true);
+        // "Naga-class frigate" -> NAGA 1, FRIGATE
+        string cls = c.GetComponent<Ship>() ? c.GetComponent<Ship>().Stats.shipClass : "";
+        int dash = cls.IndexOf("-class");
+        string name = (dash > 0 ? cls.Substring(0, dash) : "CONTACT").ToUpperInvariant() + " " + key.Substring(1);
+        string klass = cls.Contains(" ") ? cls.Substring(cls.LastIndexOf(' ') + 1).ToUpperInvariant() : "SHIP";
+        board.State.AddTrack(new ShipState.Track { key = key, name = name, klass = klass, hostile = true, sig = new[] { "THERM", "RAD" } });
+        System.Array.Resize(ref contacts, contacts.Length + 1); contacts[contacts.Length - 1] = c;
+        System.Array.Resize(ref brains, brains.Length + 1); brains[brains.Length - 1] = c.GetComponent<EnemyBrain>();
+        StartShip(c);
+        if (brains[brains.Length - 1]) brains[brains.Length - 1].Brief(brief, now);
+        Sync();
+        return c;
     }
 
     private void OnDestroy() { if (board) board.Ticked -= OnTick; SceneManager.sceneLoaded -= OnSceneLoaded; }

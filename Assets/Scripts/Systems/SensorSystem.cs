@@ -157,7 +157,12 @@ public class SensorSystem : MonoBehaviour
     /// <summary>Step 75 (owner 2026-10-26): the sweep touches a contact. Out of sight, the plot shows it here until the next pass.</summary>
     public void See(ShipState.Track t) { t.seen = true; t.seenX = t.worldX; t.seenY = t.worldY; t.seenBrg = ExactBearing(t); t.seenRangeKm = t.rangeKm; }
     /// <summary>Step 75: close enough to see with the eye.</summary>
-    public bool InSight(ShipState.Track t) => t.hasWorld && t.rangeKm <= stats.visualRangeKm;
+    public bool InSight(ShipState.Track t)
+    {
+        if (!t.hasWorld) return false;
+        if (t.rangeKm <= stats.visualRangeKm) return true;
+        return ship.hangar && ship.hangar.Sees(t.worldX, t.worldY, stats.visualRangeKm); // Step 101: our fighters scout
+    }
 
     public void PruneBearings(float now) { BearingFixes.RemoveAll(f => now - f.t >= stats.bearingTrailSeconds); }
 

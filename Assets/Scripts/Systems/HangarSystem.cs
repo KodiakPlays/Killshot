@@ -156,6 +156,13 @@ public class HangarSystem : MonoBehaviour
     [System.NonSerialized] public string flightReport;
     [System.NonSerialized] public int flightRuns;
 
+    /// <summary>Step 101 (owner 2026-10-27): fighters scout. A flight sees within this distance of itself, km.</summary>
+    public bool Sees(double x, double y, double withinKm)
+    {
+        foreach (var f in Flights) { double dx = x - f.x, dy = y - f.y; if (dx * dx + dy * dy <= withinKm * withinKm) return true; }
+        return false;
+    }
+
     /// <summary>Each tick: fly to the target (or home, or with us on ESCORT); inside attack range, every fighter
     /// makes a run every stats.fighterRunSeconds; home and close, they land and the squadron is ready again.</summary>
     public void TickFlights(double dt)

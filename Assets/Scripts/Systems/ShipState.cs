@@ -246,11 +246,21 @@ public class ShipState
     }
 
     /// <summary>lookAt: lower the scope (by the caller) and put it on the contact's bearing.</summary>
-    public bool LookAt(string key) { var t = TrackOf(key); if (t == null) return false; scopeBrg = t.bearing; slewDx = 0; return true; }
+    public bool LookAt(string key)
+    {
+        var t = TrackOf(key); if (t == null) return false;
+        scopeBrg = t.bearing; slewDx = 0;
+        // Wolf Hunt (Step 99): with reinforcements there is more than one enemy. A hostile contact looked at
+        // (clicked on the plot) becomes fire control's target.
+        if (t.hostile && !t.wreck && weapons && weapons.target != key) weapons.Retarget(key);
+        return true;
+    }
 
     // ---- fire control ----------------------------------------------------------------------
 
     public Track TrackOf(string key) { foreach (var t in tracks) if (t.key == key) return t; return null; }
+    /// <summary>Wolf Hunt (Step 99): a ship that arrives during play gets a track.</summary>
+    public void AddTrack(Track t) { System.Array.Resize(ref tracks, tracks.Length + 1); tracks[tracks.Length - 1] = t; }
     /// <summary>Keep only the tracks a world contact drives (Step 34, TacticalWorld).</summary>
     public void KeepTracks(System.Collections.Generic.ICollection<string> keys)
     {
