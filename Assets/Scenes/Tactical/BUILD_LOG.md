@@ -3889,6 +3889,80 @@ Nothing else in the repo gets written by the log keeper. Only this file.
 
 Still not done. **This is the list to work from.** Read it before picking up any work.
 
+### Wolf Hunt — the first level, playable today (owner, 2026-10-27). In progress
+
+**What it is.** The first level, called WOLF HUNT. Our Asura starts at the bottom of a ruined
+starbase. The Garuda starts somewhere at the top. It patrols and does not know where we are. We hunt
+it, and it hunts us. We stay quiet, scan, send fighters ahead to scout, and pick our moment: guns,
+a missile salvo, or a broadside followed by marines. If it finds us, it calls for help, and a
+countdown starts. When the countdown ends, enemy frigates arrive. Kill or capture the Garuda, and a
+jump point appears. Reach it to win.
+
+**The owner's goal for today:** a playable Mac app of this level, and game feel. "The fun of the
+game is the hunt." Every tool must make sense.
+
+**How it plays.**
+
+1. NEW GAME. "WOLF HUNT" types in green, then INITIALISING..., then the board.
+2. We start at the Player Spawn, at the bottom. The Garuda starts at a random point in its spawn box
+   at the top, facing a random way. We only know it is somewhere up there.
+3. We move through the ruins. DRADIS finds ruins piece by piece as we go (Step 92). We keep our
+   signal low. Fighters scout ahead: what they see shows on our plot.
+4. The Garuda patrols the ruins. It listens with its own DRADIS. If it hears us, it grows uneasy,
+   then searches where it heard us, then sweeps actively, closes and fights side-on.
+5. When the Garuda finds us (ALERT), the alarm says REINFORCEMENTS INBOUND, and a 3-minute
+   countdown starts (game time).
+6. At 0, two frigates enter at the battle space's edges and hunt us. One more comes every 2 minutes
+   until we leave.
+7. The Garuda destroyed or captured: a jump point appears on the plot at a far edge. We fly to it.
+   Reaching it wins: MISSION COMPLETE.
+8. We lose if our reactor reaches 0, or if we stay outside the battle space too long.
+
+**The owner's answers (2026-10-27).**
+
+- The countdown starts when the Garuda finds us (its ALERT). Stay hidden, and it never starts.
+- When it runs out, real enemy ships arrive: 2 frigates, then 1 more every 2 minutes. Countdown 3
+  game minutes. Frigates: small, fast, weak, one railgun each. Placeholder models are fine.
+- The exit is revealed at the kill (or capture), at a far edge. Reaching it wins.
+- The Garuda against our Asura: speed 70% of ours, turns slower; armour 1.5×; railgun hits 1.5×
+  harder, but its reach is 18,000 km (ours 25,000); 4 missile cells; one PDC group (ours two); no
+  fighters and no boats; DRADIS hears a little less far. All tunable after the owner plays it.
+- The Garuda starts at a random point in its box, every game.
+- The start: WOLF HUNT, then INITIALISING with its loading bar. The DEMO page goes. No Enter press.
+- Fighters as scouts: any ship or ruin within 10,000 km of a fighter shows on our plot, kept up to
+  date while they are near. Their engines are loud, so the Garuda can hear them too.
+- Ruler: distance only, in bigger, clearer text. No bearing.
+- Compass: a graded ring, 0 at the top, 359 to the left, 1 to the right, with the bearing and the
+  distance. Use the nav wheel art if it fits.
+- Debris: the gaps must be wide enough to fly through, at the plot's zoom limits. Hitting a piece
+  damages the ship, with no push-out (owner, 2026-10-26).
+
+**This replaces:** "To do next" item 9 (the sample game): Wolf Hunt is the sample game. FTUE_PLAN §1's
+"no reinforcements" and "ends at the kill" (owner, 2026-10-27: the newer rule wins). The XO
+walkthrough and the derelicts (FTUE_PLAN §5–8) are not in today's build. Item 8 (the mission
+scripter) stays for later: Wolf Hunt's countdown, arrivals and exit go straight into `QuestSystem`
+today. The scripter will turn them into editable steps.
+
+**The steps, in order.** Each: build, a quick check in play mode, the log. One full playtest per
+batch. Ask the other session before taking Unity.
+
+| Step | What | Who |
+|---|---|---|
+| 93 | Debris you can fly through: gaps wide enough; hitting a piece damages the ship, no push-out; the scatter tool keeps a minimum gap | Tooling |
+| 94 | The start: DEMO page gone; WOLF HUNT, then INITIALISING, then the board | killshot-81 |
+| 95 | Spawns: the Garuda at a random point in its box, random heading | killshot-81 |
+| 96 | The Garuda's numbers, in `Assets/Ships/Garuda.asset` | killshot-81 |
+| 97 | The Garuda's mind: patrol, hear, search, sweep, fight side-on with railguns and missiles (FTUE_PLAN §4.2 and §4.4) | killshot-81 |
+| 98 | The exit: the jump point at the kill; reaching it wins; the end screen's new lines | killshot-81 |
+| 99 | Reinforcements: the alarm, the 3-minute countdown, frigates at the edges that hunt us | killshot-81 |
+| 100 | Ruler and compass | killshot-81 |
+| 101 | Fighters as scouts | killshot-81 |
+| 102 | Test every system; fix what is not fun; one full playtest | both |
+| 103 | The Mac app; the owner plays it | killshot-81 |
+
+**Not today:** fog of war beyond "ruins once found"; the disguise mechanic; the XO; derelicts;
+enemies that use engineering, comms or the plot tools.
+
 ### To do next (written 2026-10-27, end of the Tooling session)
 
 **A new chat starts here.** Do these in order. Put each design call to the owner before building.
@@ -3924,10 +3998,9 @@ to 5 done in Step 89, step 6 in Step 90, step 7 the docs pass; step 8 left). Ask
 6. ~~**The battle space size moves from the board into each level**~~ **Done in Step 91**
    (decision 50).
 7. **Debris and ruins on the plot, shown once found** (Level tool item 4, Ruins item 1).
-8. **The mission scripter**, its own menu item (**Starwolf → Mission**). Proposed, not agreed: a
+8. **The mission scripter** (later: Wolf Hunt writes its rules straight into `QuestSystem` first), its own menu item (**Starwolf → Mission**). Proposed, not agreed: a
    chain of steps, each with "when this happens, do that" rules. Plan it with the owner first.
-9. **The sample game** (owner): debris in Level_01, both ships at their spawn points, and a real
-   fight between them. Play it and report what it is like.
+9. ~~**The sample game**~~ Replaced by Wolf Hunt (owner, 2026-10-27), at the top of section 8.
 
 **After the tooling**
 
