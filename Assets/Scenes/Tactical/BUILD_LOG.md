@@ -618,6 +618,10 @@ These are settled. Do not reopen them.
     shooter's (Hangar). These stay with the ship being hit, in its Damage group: armour per side,
     the reactor's radiation chance, how fire, vacuum and radiation spread, crew losses and repairs.
     Tune how hard our weapons hit on the Ship tab, and the Garuda's on the Enemy tab.
+50. **Each level has its own battle space** (owner, 2026-10-27; not built yet). A Battle Space box
+    in the level, like the spawn boxes, with a width and height in km. The Level window sets them
+    and its map shows the edge. The board uses them when the level loads. A level without a box
+    uses 100,000 × 100,000 km, today's size.
 
 ---
 
@@ -3805,7 +3809,12 @@ restructure list. Ask the other session before taking Unity.
 
 **Tooling (the current stage of the work order)**
 
-6. **The battle space size moves from the board into each level** (Level tool item 2).
+6. **The battle space size moves from the board into each level** (Level tool item 2). Agreed
+   with the owner: decision 50. Tooling session, next. Plan: a `BattleSpace` component like
+   `EnemySpawn` (`Assets/Scripts/Tactical`), with `widthKm` and `heightKm`. In `Start` it sets the
+   board's `arenaWidthKm` and `arenaHeightKm` (`HandoffBoardState`). The Level window adds a
+   "Battle space" button, and its map reads the box. Check the plot's zoom limit, axis numbers and
+   pan limit follow it (the Step 86 playtest checks cover these).
 7. **Debris and ruins on the plot, shown once found** (Level tool item 4, Ruins item 1).
 8. **The mission scripter**, its own menu item (**Starwolf → Mission**). Proposed, not agreed: a
    chain of steps, each with "when this happens, do that" rules. Plan it with the owner first.
