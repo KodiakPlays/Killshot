@@ -18,7 +18,7 @@ Last updated: 2026-10-27. Unity 6000.5.10f1. Editor instance `Killshot@99ec15372
 systems in `Assets/Scripts/Systems`. Each ship's numbers are in its stats file in `Assets/Ships`.
 All ten panels and seven frame pieces are prefabs in `Assets/UI/Board/Panels`. The board's colours
 are in one palette file. The fonts are in `Assets/UI/Fonts`, with a Fonts list on each panel (Step
-89). Left: the "Handoff" rename, the Test Runner and the clock move. The order of all the remaining work is in the
+89). The "Handoff" names are gone (Step 90). Left: the Test Runner and the clock move. The order of all the remaining work is in the
 owner-approved plan: settle, finish the refactor (new features paused), then the Tuning and Level
 tools, then the mission scripter, then features.
 
@@ -41,9 +41,8 @@ passed. Every control is clickable and shows its states. The flow is `00_Start` 
 
 **Next up (2026-10-27, owner offline; both sessions paused with everything committed):**
 
-- killshot-81: the "UI restructure — to do" list in section 8, steps 6 to 8: the "Handoff" rename
-  (the UI Restructure session wrote a script for it, `rename_handoff.py`, in its temporary
-  scratchpad; if it is gone, the names in step 6 are all you need), the docs pass, the checker. Steps 1 to 5 are done (Step 89).
+- killshot-81: the "UI restructure — to do" list in section 8, steps 7 and 8: the docs pass and
+  the checker. Steps 1 to 5 are done (Step 89), step 6, the "Handoff" rename, too (Step 90).
 - Tooling: "To do next" items 6 to 9 in section 8, starting with the battle space per level
   (decision 50).
 - Waiting on the owner: playing the Mac app through (Step 87); whether to delete TextMeshPro's
@@ -143,8 +142,9 @@ Do not run ahead. Do one step, show it, wait.
 | 87 | The Mac app | **In progress** — built and starts; the owner's play-through is next (section 8, Step 87) |
 | 88 | A shot hits within 100 km of any ship; a hit's damage comes from the weapon that fired it | **Done** — playtest 209/209 |
 | 89 | UI restructure steps 1 to 5: fonts in `Assets/UI/Fonts` with a Fonts list per panel; materials; two stencils and the plot's mock-up deleted; the old export's reference files kept, the rest of `UI2` deleted | **Done** — 0 pixels changed by the fonts; playtest 209/209 |
+| 90 | UI restructure step 6: "Handoff" is gone from every script name; the board's root object is `Tactical Board` | **Done** — no missing scripts; playtest 209/209 |
 
-Steps 6 to 28 and Steps 34 to 89 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 90 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -760,7 +760,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 89, in detail
+## 6 · Steps 6 to 28, and 34 to 90, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3795,6 +3795,33 @@ used. Every move went through the Editor, so every link stayed.
 
 **Left:** steps 6 to 8 of the "UI restructure — to do" list.
 
+### Step 90 — UI restructure, step 6: "Handoff" is gone from every script name
+
+**What it is.** Only names changed. The game looks and plays the same.
+
+| Old name | New name | Folder |
+|---|---|---|
+| `HandoffBoardControls` | `BoardManager` | `Scripts/Game` |
+| `HandoffBoardState` | `ShipState` | `Scripts/Systems` |
+| `HandoffHit` | `ClickSpot` | `Scripts/UI` |
+| `HandoffPanel` | `Panel` | `Scripts/UI` |
+| `HandoffBoardMotion`, `HandoffRockers`, `HandoffPlotGrid`, `HandoffMarksGraphic`, `HandoffSweepGraphic`, `HandoffScopeSight`, `HandoffWedge`, `HandoffPolygon`, `HandoffEased` | the same without "Handoff" | `Scripts/UI` |
+| `HandoffPlotPanel`, `HandoffPeriscopePanel` | `PlotPanel`, `PeriscopePanel` | `Scripts/UI/Panels` |
+
+The board's root object in `02.1_Grid` is now `Tactical Board` (was `HandoffBoard`). The code that
+finds it by name (the playtest and `GammaBoardPresenter`) uses the new name.
+
+**How it was done.** Each file moved with `git mv`, its `.meta` too, so every scene and prefab kept
+its link. Then the names were replaced, whole words only, in 39 `.cs` files.
+
+**Checked.** It compiles with no errors. No missing scripts on the board (1,741 scripts, as before).
+The board renders the same (36 pixels off by 1 step in 255, scattered: rounding after the reload).
+Playtest 2026-10-27_232526: 209/209.
+
+**Trap.** Scene and prefab files still show the old names in their `m_EditorClassIdentifier` lines.
+Those are only labels: Unity links scripts by their GUID, which did not change. Unity rewrites a label
+when that part is next edited. Don't hand-edit them.
+
 ---
 
 ## 7 · How to keep this log
@@ -4668,7 +4695,8 @@ other sessions before taking Unity, and before editing scripts they may be editi
    `Assets/UI2/Claude Design handoff/` (111 small 1x art copies and 4 unused sprites are left in
    it) and the empty `Assets/UI2/Generated` folders (owner 2026-10-27: approved). Check first that
    nothing in a scene or prefab points into it.
-6. **Drop "Handoff" from every script name** (owner 2026-10-27: approved, names chosen). Move each
+6. **Drop "Handoff" from every script name** (owner 2026-10-27: approved, names chosen). Done in
+   Step 90. Move each
    file with its `.meta` (git mv keeps the link), then replace the names, whole words only, in
    every `.cs` file. 37 files change. Do it when no other session is editing scripts.
    - `HandoffBoardControls` → `BoardManager` (`Scripts/Game/`)
@@ -4693,7 +4721,8 @@ other sessions before taking Unity, and before editing scripts they may be editi
 
 After this: the whole-project folder cleanup, as its own job.
 
-**Next:** steps 6 to 8 of the UI restructure to-do above. Steps 1 to 5 are done (Step 89).
+**Next:** steps 7 and 8 of the UI restructure to-do above. Steps 1 to 5 are done (Step 89), step 6
+too (Step 90).
 
 **Why.** On 2026-10-25 the board was hard to follow:
 - One 1,915-line class (`HandoffBoardState`) had every rule. Now the rules are in the eight ship
@@ -4719,12 +4748,12 @@ are ship parts, one set per ship.
    Soham's old scripts included.** Done for the old `02_Grid` board: the scene and its scripts are
    deleted (commits bb530a3 and 87676e1). Two unused files from it are still there:
    `PlotAnnotation.cs` and `TacticalGrid.shader` / `.mat`.
-4. **Drop "Handoff" from the names.** Nothing else changes. In progress by the UI Restructure
-   session. The eight panels in `Scripts/UI/Panels` already have plain names. The new names for the
-   rest are in the UI restructure to-do above (step 6).
+4. **Drop "Handoff" from the names.** Done in Step 90. Nothing else changed.
 5. **Move files into folders:** `Scripts/Systems`, `Scripts/UI`, `Scripts/UI/Panels` and
-   `Scripts/Game`. Move only. Part done: the ship parts and the eight panels are in place. Left: the
-   board scripts still in `Scripts/Tactical`. The rename moves the "Handoff" ones.
+   `Scripts/Game`. Move only. Part done: the ship parts and the eight panels are in place. The rename
+   moved the "Handoff" ones (Step 90). Left in `Scripts/Tactical`: `TacticalWorld`, `WorldContact`,
+   `EnemyBrain`, the spawns, `ScreenFlow`, `GammaBoardPresenter`, `MissionClock`, `ShipView`,
+   `TuneAttribute`, `CssEase` and the unused `PlotAnnotation`.
 6. **Make the panels prefabs** (decision 31). Done (2026-10-26 and 27):
    - Each panel's sprites are an Art list in its own inspector. Fonts: a Fonts list beside it (Step
      89).
