@@ -5470,6 +5470,29 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 5ecb6ec05a1cc4aa49a4867f727742da, type: 3}
     images:
     - {fileID: 7626423691018222541}
+  fonts:
+  - name: Share Tech Mono, small
+    font: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
+    material: {fileID: 2100000, guid: cb0bd2ec5e4244f009e5536b9e245560, type: 2}
+    texts:
+    - {fileID: 7002447520995364330}
+    - {fileID: 4076223872208893164}
+    - {fileID: 2055695819377338710}
+    - {fileID: 4904480514894025198}
+    - {fileID: 6530072405324983125}
+    - {fileID: 1637717989356614562}
+    - {fileID: 8198703259229069299}
+    - {fileID: 7638462106950192450}
+    - {fileID: 7938543051851476704}
+    - {fileID: 2550792925144990895}
+    - {fileID: 7230924995011232891}
+    - {fileID: 2156643174247279478}
+    - {fileID: 2743890152629358469}
+    - {fileID: 1339554822848741128}
+    - {fileID: 6028439933558254470}
+    - {fileID: 727579718886699605}
+    - {fileID: 8808946268694601329}
+    - {fileID: 3530159816268059543}
   palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   mountShort: {fileID: 3530159816268059543}
   aperture: {fileID: 2911259057633267030}

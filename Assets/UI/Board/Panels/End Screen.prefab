@@ -1270,6 +1270,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EndScreenPanel
   art: []
+  fonts:
+  - name: Barlow Condensed SemiBold
+    font: {fileID: 11400000, guid: cae59a5581506424582bca42766005d4, type: 2}
+    material: {fileID: 0}
+    texts:
+    - {fileID: 1852674942609689603}
+    - {fileID: 4834527499837552796}
+    - {fileID: 4262672030894701776}
+  - name: Share Tech Mono
+    font: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
+    material: {fileID: 0}
+    texts:
+    - {fileID: 6337814685272112477}
+    - {fileID: 7070421447374374135}
+    - {fileID: 1286317893007393278}
   palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   screen: {fileID: 1397536125095317326}
   title: {fileID: 1852674942609689603}

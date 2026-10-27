@@ -9,8 +9,10 @@ public class ArtList : MonoBehaviour
 {
     [Tooltip("This piece's art. Swap a sprite here and every image listed under it changes.")]
     [SerializeField] private HandoffPanel.ArtSlot[] art;
+    [Tooltip("This piece's fonts. Swap a font here and every text listed under it changes.")]
+    [SerializeField] private HandoffPanel.FontSlot[] fonts;
 
 #if UNITY_EDITOR
-    private void OnValidate() => HandoffPanel.ApplyArt(art);
+    private void OnValidate() { HandoffPanel.ApplyArt(art); HandoffPanel.ApplyFonts(fonts); }
 #endif
 }

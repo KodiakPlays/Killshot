@@ -4520,6 +4520,64 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 860863308ca4a4310bb898d1b6ecd011, type: 3}
     images:
     - {fileID: 1762538039796601822}
+  fonts:
+  - name: Barlow Condensed Medium
+    font: {fileID: 11400000, guid: af39da1b92a5047489af5b9b6260855d, type: 2}
+    material: {fileID: 0}
+    texts:
+    - {fileID: 6136877466920899907}
+  - name: Barlow Condensed SemiBold
+    font: {fileID: 11400000, guid: cae59a5581506424582bca42766005d4, type: 2}
+    material: {fileID: 0}
+    texts:
+    - {fileID: 3099605328249047613}
+  - name: Share Tech Mono, small
+    font: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
+    material: {fileID: 2100000, guid: cb0bd2ec5e4244f009e5536b9e245560, type: 2}
+    texts:
+    - {fileID: 388861611922880963}
+    - {fileID: 9055088668726388855}
+    - {fileID: 1766733922962478212}
+    - {fileID: 1872718609506132074}
+    - {fileID: 6640034053476229024}
+    - {fileID: 5380170389078740675}
+    - {fileID: 7054979174024606011}
+    - {fileID: 7570088857228089474}
+    - {fileID: 8356497493895726971}
+    - {fileID: 3617260388704056097}
+    - {fileID: 4148303087098730276}
+    - {fileID: 5699812579891859872}
+    - {fileID: 6954662565510959152}
+    - {fileID: 8008690594573753354}
+    - {fileID: 2308287013558996028}
+    - {fileID: 2396611869170444902}
+    - {fileID: 2708486133321816557}
+    - {fileID: 367427656579848790}
+    - {fileID: 5079734195173450918}
+    - {fileID: 5901288458902747021}
+    - {fileID: 3968402066449339798}
+    - {fileID: 4716086706681796556}
+    - {fileID: 1526823844657390013}
+    - {fileID: 8660810813616148332}
+    - {fileID: 1037852660554131304}
+    - {fileID: 2602773414126332464}
+    - {fileID: 284164167505551063}
+    - {fileID: 9096979622918223132}
+    - {fileID: 2371427841536070095}
+    - {fileID: 6187018669049479233}
+    - {fileID: 7567518731730500947}
+    - {fileID: 515126487915009483}
+    - {fileID: 5586899972313322605}
+    - {fileID: 90077845118449613}
+    - {fileID: 4261290045672095017}
+    - {fileID: 3833044204167169787}
+    - {fileID: 8604846354543938426}
+    - {fileID: 5746171410662769321}
+    - {fileID: 3539489869185966768}
+    - {fileID: 4376054610771551162}
+    - {fileID: 786581570336870877}
+    - {fileID: 7119596611695800940}
+    - {fileID: 2486404398193387206}
   palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   mountShort: {fileID: 2486404398193387206}
   sightLamp: {fileID: 2677351096254986193}

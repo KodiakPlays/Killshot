@@ -6013,6 +6013,38 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 8d75e854ba9dd4e639ee84805a998178, type: 3}
     images:
     - {fileID: 1101328494384087217}
+  fonts:
+  - name: Barlow Condensed Regular
+    font: {fileID: 11400000, guid: cfa465d925db84593b82587692c947dd, type: 2}
+    material: {fileID: 0}
+    texts:
+    - {fileID: 3250748168041841143}
+  - name: Barlow Condensed SemiBold
+    font: {fileID: 11400000, guid: cae59a5581506424582bca42766005d4, type: 2}
+    material: {fileID: 0}
+    texts:
+    - {fileID: 3841549853881997622}
+    - {fileID: 8732092836862469878}
+    - {fileID: 5936015161950076427}
+  - name: Share Tech Mono, small
+    font: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
+    material: {fileID: 2100000, guid: cb0bd2ec5e4244f009e5536b9e245560, type: 2}
+    texts:
+    - {fileID: 6046239813012456586}
+    - {fileID: 645212230794614931}
+    - {fileID: 6002382774006487913}
+    - {fileID: 1028932359481100048}
+    - {fileID: 9064129110279749522}
+    - {fileID: 1476122037843145275}
+    - {fileID: 1722815629673788172}
+    - {fileID: 7440700927071658728}
+    - {fileID: 571418431784830328}
+    - {fileID: 8194494891945367355}
+    - {fileID: 5948037787362777971}
+    - {fileID: 4047161596429251838}
+    - {fileID: 6337045329482355875}
+    - {fileID: 3845959635087170199}
+    - {fileID: 8280778689010012937}
   palette: {fileID: 11400000, guid: fe97d261305d74f4db5a8e1407199eaf, type: 2}
   capture: {fileID: 6456487586159712752}
   marks: {fileID: 6964172141166405100}

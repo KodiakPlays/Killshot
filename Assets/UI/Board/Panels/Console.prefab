@@ -896,6 +896,16 @@ MonoBehaviour:
     images:
     - {fileID: 3406515023452781465}
     - {fileID: 4351980982292370045}
+  fonts:
+  - name: Share Tech Mono, small
+    font: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
+    material: {fileID: 2100000, guid: cb0bd2ec5e4244f009e5536b9e245560, type: 2}
+    texts:
+    - {fileID: 6475172289158729495}
+    - {fileID: 1932825840570357226}
+    - {fileID: 1902272980632518596}
+    - {fileID: 3051314048730494700}
+    - {fileID: 5573886174429098057}
 --- !u!1 &3275499062911847355
 GameObject:
   m_ObjectHideFlags: 0

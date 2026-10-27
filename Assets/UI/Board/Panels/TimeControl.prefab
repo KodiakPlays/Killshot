@@ -1432,6 +1432,23 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: beb2659b5357a4faba9150dc839d96ba, type: 3}
     images:
     - {fileID: 8618814651209418712}
+  fonts:
+  - name: Barlow Condensed SemiBold
+    font: {fileID: 11400000, guid: cae59a5581506424582bca42766005d4, type: 2}
+    material: {fileID: 0}
+    texts:
+    - {fileID: 6275089850263696759}
+  - name: Share Tech Mono, small
+    font: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
+    material: {fileID: 2100000, guid: cb0bd2ec5e4244f009e5536b9e245560, type: 2}
+    texts:
+    - {fileID: 9158992613206027552}
+    - {fileID: 3501737825175262064}
+    - {fileID: 4311018655083207170}
+    - {fileID: 2051517720316080136}
+    - {fileID: 809480415497600266}
+    - {fileID: 8190757154071130448}
+    - {fileID: 8016782708503949418}
 --- !u!1 &4660797072937646481
 GameObject:
   m_ObjectHideFlags: 0

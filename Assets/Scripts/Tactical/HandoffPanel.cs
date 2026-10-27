@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// Base for one drawer or station of the handoff board. HandoffBoardControls passes on the input
@@ -17,8 +18,21 @@ public abstract class HandoffPanel : MonoBehaviour
         public Image[] images;
     }
 
+    /// <summary>One font of the panel: the font, its material, and every text that uses them.</summary>
+    [System.Serializable]
+    public class FontSlot
+    {
+        public string name;
+        public TMP_FontAsset font;
+        [Tooltip("One of this font's material presets. Leave it empty for the font's own material.")]
+        public Material material;
+        public TMP_Text[] texts;
+    }
+
     [Tooltip("This panel's art. Swap a sprite here and every image listed under it changes.")]
     [SerializeField] private ArtSlot[] art;
+    [Tooltip("This panel's fonts. Swap a font here and every text listed under it changes.")]
+    [SerializeField] private FontSlot[] fonts;
 
     [Tooltip("The board's colours: Assets/UI/Board/Palette.asset. Every panel uses the same file.")]
     [SerializeField] private BoardPalette palette;
@@ -54,8 +68,8 @@ public abstract class HandoffPanel : MonoBehaviour
     public static void Show(Component c, bool on) { if (c) c.gameObject.SetActive(on); }
 
 #if UNITY_EDITOR
-    // a sprite swapped in the art list goes onto its images
-    private void OnValidate() => ApplyArt(art);
+    // a sprite or font swapped in the lists goes onto its images and texts
+    private void OnValidate() { ApplyArt(art); ApplyFonts(fonts); }
 
     /// <summary>Puts each entry's sprite on its images. The ArtList script uses it too.</summary>
     public static void ApplyArt(ArtSlot[] art)
@@ -65,6 +79,25 @@ public abstract class HandoffPanel : MonoBehaviour
             if (a != null && a.sprite && a.images != null)
                 foreach (var img in a.images)
                     if (img && img.sprite != a.sprite) { img.sprite = a.sprite; UnityEditor.EditorUtility.SetDirty(img); }
+    }
+
+    /// <summary>Puts each entry's font and material on its texts. A material made for another font
+    /// is ignored, and the font's own material is used. The ArtList script uses it too.</summary>
+    public static void ApplyFonts(FontSlot[] fonts)
+    {
+        if (fonts == null) return;
+        foreach (var f in fonts)
+        {
+            if (f == null || !f.font || f.texts == null) continue;
+            var mat = f.material && f.material.GetTexture(ShaderUtilities.ID_MainTex) == f.font.atlasTexture ? f.material : f.font.material;
+            foreach (var t in f.texts)
+            {
+                if (!t || (t.font == f.font && t.fontSharedMaterial == mat)) continue;
+                t.font = f.font;
+                t.fontSharedMaterial = mat;
+                UnityEditor.EditorUtility.SetDirty(t);
+            }
+        }
     }
 #endif
 
