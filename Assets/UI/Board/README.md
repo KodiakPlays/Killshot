@@ -422,7 +422,10 @@ The prefab has these parts:
 - `04 Arming sequence`: `Housings`, and the `LOAD`, `ANGLE`, `BEARING` and `ARM` rockers
 - `Fire lever`: `Slot`, `Lit track` and `Cap`
 
-The PDC and missile controls are not drawn yet.
+PDCs and missiles work through the same system selector, mount selector and arming rockers
+(Steps 53 and 55). With MISSILE selected, the mount selector picks the warhead. The design's own
+PDC controls (quadrants, LOADERS) and missile controls (warhead, SALVO) are not drawn yet. The
+loaders and the salvo start from each ship's stats file.
 
 Its art files are in `Art/Fire Control` and the folders for each kind. The Art list has 19
 entries.

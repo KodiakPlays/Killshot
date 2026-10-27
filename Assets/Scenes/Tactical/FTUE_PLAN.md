@@ -3,7 +3,7 @@
 **Summary.** NEW GAME drops you straight into one mission, which is also the tutorial. The ship is
 already under way. Your XO talks to you through a small comms box on the plot and walks you through
 every station on the board, one at a time, in a fixed order. Nothing you have not been shown yet
-will work. You practise on derelicts first. Then one enemy frigate, far away, that patrols, hears
+will work. You practise on derelicts first. Then one enemy, the Garuda-class cruiser, far away, that patrols, hears
 you, comes to look, sweeps, and fights. You kill it, the XO says "let's get out of here", and the
 mission ends. No reinforcements.
 
@@ -24,7 +24,7 @@ Status is not kept here. `BUILD_LOG.md` is the single living record; log each st
 | What a scan shows | **The enemy's ship state, drawn as ours is.** Class, hull sides, compartments and integrity, power and signal. Our hits update it. Side-to-room map: `DAMAGE_README.md` (owner 2026-10-24). |
 | Which weapons | **The handoff's.** Two railgun turrets, one on either side of the ship, two PDC groups, the VLS, with the design's arcs, ranges and arming rules. The GDD's weapon list is dated. |
 | Where the FTUE ends | **At the kill.** The XO's last line is "let's get out of here." The escape to a jump point is a later addition. |
-| Does the enemy shoot back | **Yes, but built later** (§9, step J). **No reinforcements**, ever, in this mission. |
+| Does the enemy shoot back | **Yes, but built later** (§9, step J). **No reinforcements**, ever, in this mission. Part built: since Step 55 the Garuda fires an HE missile salvo back when we hit it. |
 | Strict or loose | **Strict.** You go through every station before you fight. A control you have not been shown is refused. |
 | What you fight first | **Derelicts** before the live enemy. |
 | Distance and length | Not decided. Ten minutes of travel is acceptable. Tune later. |
@@ -37,18 +37,19 @@ Open questions for the owner are in §10.
 
 ## 2 · Where this fits
 
-The owner's wiring order (BUILD_LOG §8) is: power (done), plot tools (done), press and click
-interactions (in progress), helm, sensors, periscope and fire control, fire, hit, then **5. enemy AI
-and the alert net**, **6. railgun in the world and damage**, **7. mission, win and lose**.
+The owner's wiring order (BUILD_LOG §8) is: power, plot tools, press and click interactions, helm,
+sensors, periscope and fire control, fire, hit, then **5. enemy AI and the alert net**, **6. railgun
+in the world and damage**, **7. mission, win and lose**. Everything up to the hit is done (Steps
+40–48). Railgun hits and damage are done (Steps 48, 49 and 57–59).
 
 This plan is items 5 and 7, with the alert net removed. It needs:
 
-- **The helm wired** (our ship really moves) before the enemy can be approached. Enemy patrol (step A)
-  can start as soon as this exists.
-- **Sensors wired** before the "it hears you" and "it sweeps" steps mean anything on screen.
-- **Fire, hit and damage wired** before the derelict fight and the kill.
-- Every other station wired before its walkthrough step can be built. The walkthrough grows as
-  stations come online (§9, step G). That is fine. It is a list.
+- **The helm wired** (our ship really moves) before the enemy can be approached. Done. Enemy patrol
+  (step A) is done too (Step 51).
+- **Sensors wired** before the "it hears you" and "it sweeps" steps mean anything on screen. Done.
+- **Fire, hit and damage wired** before the derelict fight and the kill. Done.
+- Every other station wired before its walkthrough step can be built. All the stations in §8 are
+  wired now.
 
 "Power P3: the enemy notices you (UNEASY, SEARCHING, ALERT)", parked in BUILD_LOG, is step B here.
 
@@ -56,16 +57,18 @@ This plan is items 5 and 7, with the alert net removed. It needs:
 
 ## 3 · The world of the first mission
 
-Everything lives under the `World` root in `02.1_Grid`, as `WorldContact`s, the way the dummy
-enemy does today. Units are the board's km (`TacticalWorld`: 1 unit = 1 km). The board's own
-numbers already use this scale (sensor range 12,000 + 3,600 per gain step, railgun 30,000), so the
+Everything goes under the `World` root in `02.1_Grid`, as `WorldContact`s, the way the Garuda
+(`Garuda · Cruiser`) is today. Where each one starts is set by a spawn point in the level scene
+(`Assets/Scenes/Levels/Level_01.unity`, for example `Enemy Spawn · Garuda`). Units are the board's
+km (`TacticalWorld`: 1 unit = 1 km). The board's own numbers already use this scale: DRADIS range
+12,000 + 3,600 km per gain step, railguns 25,000 km, missiles 35,000 km, PDCs 10,000 km. So the
 spec's distances carry over as they are.
 
 | Thing | Count | Where | What it does |
 |---|---|---|---|
 | Our ship | 1 | One edge of the sector | Already under way at mission start: a throttle and a heading set before the first tick. **The clock starts running** (see §10, Q1). |
 | Derelicts | 2 | Near the route, 8,000 to 15,000 from the start | Dead hulks. Do not move. Can be heard, scanned, targeted, hit and destroyed. Scanning says DERELICT. |
-| The frigate | 1 | Far away, the other side of the sector | The enemy. §4. |
+| The Garuda | 1 | Far away, the other side of the sector | The enemy, a Garuda-class cruiser. §4. |
 
 Nothing else. No nebula, no asteroids, no second enemy. Add when the real mission needs them.
 
@@ -83,25 +86,31 @@ something, the answer is: the way we do it.
 
 ### 4.1 One ship, two drivers
 
-`HandoffBoardState` is already the ship: buses and reactor, compartments and crew, heading and
-throttle, sensors and signal, mounts and the arming ladder, its own track list of what it knows.
-It is a plain class, not a component, so a second one can exist.
+A ship is an object with eight system components: `NavSystem`, `PowerSystem`, `SensorSystem`,
+`CommsSystem`, `WeaponSystem`, `HangarSystem`, `DamageSystem` and `OrdersSystem`
+(`Assets/Scripts/Systems/`). It also has a `Ship` component, which points at its `ShipStats` file in
+`Assets/Ships`. Each system reads its numbers from its section of that file. Our ship and the Garuda
+are built the same way.
 
-- **The frigate owns its own `HandoffBoardState`** with its own stats: fewer reactor units, a
-  smaller bus max, thinner compartments, its own mounts, its own sensor range. All of these are
-  already fields. Set them per class in a small `ShipClass` asset (FRIGATE, DERELICT, later more).
-- **The same tick runs it.** `TickPower`, `TickHelm`, `TickSensors`, `TickWeapons` on its state,
-  on the board tick, after ours. Its signal rises when it powers up, exactly as ours does. Nothing
-  moves while paused.
-- **The brain only writes orders.** `ordHdg`, `thr`, bus modes, `dradis`, `active` and the cone
-  bearing, the target, the arming switches, fire. It touches nothing else. If the brain wants
-  something the player cannot do, the brain is wrong.
-- **Its track list is what it knows about us.** Our own board's `Heard` and `ConeCovers` rules,
-  run from its side, decide whether it hears us. A track is what you know, not what is true.
+- **The Garuda has its own stats file**, `Assets/Ships/Garuda.asset`. Today its numbers are the
+  same as ours (`Asura.asset`). Only the class name is different. A new class, such as DERELICT, is
+  a new stats file.
+- **`WorldContact` builds a `HandoffBoardState` for the enemy** from its eight system components.
+  That state has the ship's contacts (`tracks`). The systems are reached through
+  it: `nav`, `power`, `sensors`, `comms`, `weapons`, `hangar`, `damage`, `orders`.
+- **The same code runs it.** Each system has its own tick: `PowerSystem.Tick`, `NavSystem.Tick`,
+  `SensorSystem.Tick`, `WeaponSystem.TickCharge` and the rest. Today `TacticalWorld` runs the
+  Garuda's `NavSystem.Tick` and `DamageSystem.TickConditions` on the board tick, after ours. Its
+  power, sensors and weapons ticks are added in the steps that need them. Nothing moves while
+  paused.
+- **The brain only writes orders.** `nav.orderedHeading`, `nav.throttle`, bus modes,
+  `sensors.dradis`, `sensors.active` and the cone bearing, the target, the arming switches, fire.
+  It touches nothing else. If the brain wants something the player cannot do, the brain is wrong.
+- **Its track list is what it knows about us.** `SensorSystem.Heard` and `ConeCovers`, run from
+  its side, decide whether it hears us. A track is what you know, not what is true.
 
-The board-only parts of the state (the active tool, drawer selections, the comms dials, plot
-marks) sit unused on the frigate's copy. That is fine. If it ever hurts, split ship from board
-then, not now.
+The board-only parts of the state (the periscope and the plot marks) are unused on the Garuda's
+copy. That is fine.
 
 ### 4.2 Awareness
 
@@ -144,22 +153,23 @@ list is dated). That means the handoff's mounts, arcs, ranges, the arming ladder
 BEARING, ARM, the solution that needs a known track, the charge, the fire lever. Not the GDD's
 cannons and boarding pods, and not the prototype's broadside guns.
 
-The handoff's fit, which is ours and so is the frigate's starting point:
+The handoff's fit is ours and the Garuda's. The numbers are in `WeaponSystem.Stats.mounts`, in
+each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`):
 
-| Mount | What | Where it points | Covers | Range |
+| Mount | What | Where it points | Covers | Reach (km) |
 |---|---|---|---|---|
-| RG-A | Railgun turret A | **starboard side**, arc centre 42° | ±80° | 30,000 |
-| RG-B | Railgun turret B | **port side**, arc centre 250° | ±80° | 30,000 |
-| PDC-A, PDC-B | Point defence groups | 42° and 200° | ±35° | 4,000 |
-| VLS | Missile cells | all round | ±180° | 40,000 |
+| RG-A | Railgun turret A | **starboard side**, arc centre 42° | ±80° | 25,000 |
+| RG-B | Railgun turret B | **port side**, arc centre 250° | ±80° | 25,000 |
+| PDC-A, PDC-B | Point defence groups | 42° and 200° | ±35° | 10,000 |
+| VLS | Missile cells | all round | ±180° | 35,000 |
 
 **Two turrets, one on either side of the ship** (owner, 2026-10-18). Each sees most of its own
 side and nothing of the other. So a ship fights **side-on**, and which side it shows is both its
-armour and its gun. The FRIGATE class carries the same layout with smaller numbers: shorter range,
-one slug per turret, no VLS unless the owner wants it.
+armour and its gun. The Garuda has the same layout and, today, the same numbers as ours.
 
 Rounds, flight, hits and damage are whatever the fire, hit and damage steps build for us, used from
-the other end. The frigate gets them for free.
+the other end. A railgun slug flies at 2,500 km/s, about 10 s to its 25,000 km reach (owner,
+2026-10-27). The Garuda uses the same code.
 
 The brain's tactic, from the prototype, fits this layout exactly:
 
@@ -193,32 +203,35 @@ integrity, its power and signal. Because the enemy is our ship, this is the same
 engineering drawer paints of us, drawn for the selected track. A scan fills it in, more detail with
 a better scan (GDD scanner intent, spec §9.4). Our hits update it, so the player watches a side open
 and picks the next shot. Unscanned, a track shows nothing but a bearing, a range and a class guess.
-Which drawer holds the picture is a design question for the sensors and fire-control steps; a target
-readout inside fire control is the natural home. **Not on the plot** (owner, Step 39).
+Since Step 61 the periscope is the targeting computer. Its SUBJECT box shows a scanned ship's name
+and class, then each hull face and, through an open face, the room behind it. **Not on the plot**
+(owner, Step 39).
 **What the player sees.** No outside view. A hit on us is the alarm strip, a compartment's INTEG
-dropping in the engineering drawer, and damage drawn on the forward screen (spec Rule 13.5.a). Its
-round in flight is a fast small contact on the plot, so a watchful player sees it coming.
+dropping in the engineering drawer, and the side and room colours on engineering's ship picture
+(Step 74). Its round in flight is a fast small contact on the plot, so a watchful player sees it
+coming.
 
 **Defence.** Three things, all already in the design: turn a fresh side to it, open the range, and
-the PDCs, which engage incoming rounds inside their range on a short cooldown, faster with more
-weapons power (prototype `updatePDC`). That is the PDC's tutorial moment.
+the PDCs. A PDC group on AUTO gets one chance at each incoming missile inside its arc and reach,
+with a 70% kill chance (Step 55). That is the PDC's tutorial moment.
 
 ### 4.5 How it is built
 
-- A `ShipClass` ScriptableObject: the stat block that fills a `HandoffBoardState` (reactor units,
-  bus max, compartments, mounts, sensor range, turn rate, throttle cap). One asset for FRIGATE, one
-  for DERELICT. Ours stays as it is today.
-- `WorldContact` grows a `HandoffBoardState` of its own, filled from its class at load, and a
-  reference to its brain, if any.
-- `TacticalWorld`, which already runs on `board.Ticked` and already knows every contact, ticks each
-  contact's state after ours, then runs each brain, then syncs as it does today. Nothing runs in
+- A `ShipStats` file per ship in `Assets/Ships` (Step 80): navigation, power, sensors, weapons,
+  hangar, damage and orders. `Asura.asset` is ours and `Garuda.asset` is the enemy's. A DERELICT
+  needs a file of its own.
+- Each ship has the eight system components plus `Ship`, which points at its stats file.
+  `WorldContact` builds the ship's `HandoffBoardState` from those components. An `EnemyBrain` on
+  the same object drives it.
+- `TacticalWorld` runs on `board.Ticked` and knows every contact. Each tick it runs each contact's
+  damage conditions, then its brain, then its `NavSystem.Tick`, then syncs. Nothing runs in
   `Update`.
-- `EnemyBrain`: one component, one file. Holds awareness, the waypoints, last-heard, and a
-  `Think()` that writes orders into its own state. Nothing else. The movement maths comes from the
-  same place ours does (`TickHelm`), not from a copy.
-- Hearing: run the board's own `Heard` / `ConeCovers` with the frigate as the listener and us as
-  the track. Do not write a second hearing rule.
-- Weapons and damage: whatever the fire, hit and damage steps build for us, called with the frigate
+- `EnemyBrain`: one component, one file. It has the waypoints, the fire-back settings and a
+  `Think()` that writes orders into its own ship. Awareness and last-heard come in step B. The
+  movement maths is the same as ours (`NavSystem.Tick`).
+- Hearing: run `SensorSystem.Heard` / `ConeCovers` with the Garuda as the listener and us as the
+  track. Do not write a second hearing rule.
+- Weapons and damage: whatever the fire, hit and damage steps build for us, called with the Garuda
   as the shooter or the target. If it needs a parameter to say "which ship", add the parameter.
   Do not fork the code.
 - Do not use the old `EnemyShip` / `Radar` / `PlayerShip` scripts (owner 2026-10-17).
@@ -227,7 +240,7 @@ weapons power (prototype `updatePDC`). That is the PDC's tutorial moment.
 
 - **Retreat** (the GDD lists it). The easy enemy does not run. Add for the real mission.
 - **The alert net and reinforcements** (spec §5.4). Owner: none in this mission.
-- **The disguise mechanic** (matching your output to a scanned class). For now the frigate reads us
+- **The disguise mechanic** (matching your output to a scanned class). For now the Garuda reads us
   as neutral because its awareness is 0. The shared model makes the real version cheap later: its
   scan of us returns our class, and the lie holds while our signal matches.
 - **An enemy that uses engineering, comms, the hangar or the plot tools.** It has the systems. The
@@ -303,8 +316,9 @@ dispatch.
 ## 8 · The walkthrough
 
 Each row is one step: what the XO says (a draft, the owner will rewrite), what the player does, and
-how the code knows it is done. Done checks read `HandoffBoardState` (`State`) and the board
-(`board`), nothing else. Field names are today's; check them when you build.
+how the code knows it is done. Done checks read `HandoffBoardState` (`State`), our ship's systems
+through it (`State.power`, `State.nav` and the rest), and the board (`board`), nothing else. Field
+names are today's; check them when you build.
 
 The order follows the owner's wiring order, so each step can be built as its station comes online.
 
@@ -312,30 +326,30 @@ The order follows the owner's wiring order, so each step can be built as its sta
 |---|---|---|---|---|
 | 1 | — | "Captain. XO here. We're under way and we're alone out here. Let's get this ship together. First: the clock. Everything on this board waits when the clock is stopped." | Pauses, then runs again | `board.Paused` has been true, then false |
 | 2 | Time | "Time keys next to it. Push the clock when nothing is happening. Pull it back before anything does." | Picks a faster rate, then back to 1 | `board.Rate` changed from 1 and returned |
-| 3 | Power | "Raw power is everything. Open the power drawer. Put the engine bus on DRAW." | Opens POWER, ENG bus to DRAW | `BusUnits("eng") >= 1` |
+| 3 | Power | "Raw power is everything. Open the power drawer. Put the engine bus on DRAW." | Opens POWER, ENG bus to DRAW | `power.BusUnits("eng") >= 1` |
 | 4 | Power | "Watch the signal meter as that fills. Power in a system is power the enemy can hear. The reactor itself is silent." | Nothing. Talk line. | next click |
-| 5 | Power | "Put sensors on DRAW too. Then take engines back to STANDBY when it's where you want it." | SEN to DRAW, ENG to STANDBY | `BusUnits("sen") >= 1` and `eng` bus mode Standby |
-| 6 | Helm | "Helm. Open it. Order a new heading and bring the throttle up. She's slow to answer. Mind that." | Opens the helm, changes `ordHdg`, changes `thr` | `ordHdg != start` and `thr != start`, and `hdg` has moved |
+| 5 | Power | "Put sensors on DRAW too. Then take engines back to STANDBY when it's where you want it." | SEN to DRAW, ENG to STANDBY | `power.BusUnits("sen") >= 1` and `eng` bus mode Standby |
+| 6 | Helm | "Helm. Open it. Order a new heading and bring the throttle up. She's slow to answer. Mind that." | Opens the helm, changes `nav.orderedHeading`, changes `nav.throttle` | `nav.orderedHeading != start` and `nav.throttle != start`, and `nav.heading` has moved |
 | 7 | Plot | "Your plot tools, left rail. Drop a POINT on our own position. That's a timestamp. Drop another in a minute and you have our speed." | POINT twice | two `point` marks, at least 30 s apart |
 | 8 | Plot | "RULER between them. COMPASS on us. Erase when you're done. Marks are notes, nothing more." | RULER, COMPASS, ERASE | a ruler mark and a compass mark have existed; an erase has happened |
-| 9 | Sensors | "Sensors. DRADIS on. We only hear what has power in it, and only inside our range. Boost the gain." | Opens SENSORS, DRADIS on, gain up | `dradis` and `senBoost` raised |
-| 10 | Sensors | "There. Something dead ahead, close. Point the cone at it and go active. Active is loud. Remember that." | Cone onto derelict 1, active scan | `ConeCovers(derelict1)` and `active` for one full tick cycle |
-| 11 | Sensors | "A derelict. Dead hull. Look at the readout: its sides, its compartments, what is left of them. A scan shows you a ship the way you see your own. Now listen: every time you go active, anyone out there hears you. Switch active off." | Opens the target readout, active off | derelict 1 scanned and its compartments shown; `!active` |
-| 12 | Comms | "Comms. There's chatter on the net. Find the channel, tune it, lock it, and work the dials. The key is our own callsign." | Tune, LOCK, decrypt | `Solved` |
-| 13 | Comms | "That's a hostile patrol order. One frigate, their side of the sector. So we know who's out here, and roughly where." | Talk line. Also drops a rough marker on the plot, the way the spec's comms payoff does. | next click |
-| 14 | Orders | "Orders station, bottom left. Set CONDITION 2. Weapons and flight ops are released from Condition 2 up. AUX pays for orders; watch the pool." | `alert` to 1 | `alert >= 1` |
-| 15 | Engineering | "Engineering. I've staged a drill: the hangar bay reads INTEG 4. Select it and send a repair party. Six ticks and it lands." | Select HGR, PARTY | `CompHealth("hgr") == 5` again |
+| 9 | Sensors | "Sensors. DRADIS on. We only hear what has power in it, and only inside our range. Boost the gain." | Opens SENSORS, DRADIS on, gain up | `sensors.dradis` and `sensors.senBoost` raised |
+| 10 | Sensors | "There. Something dead ahead, close. Point the cone at it and go active. Active is loud. Remember that." | Cone onto derelict 1, active scan | `sensors.ConeCovers(derelict1)` and `sensors.active` for one full tick cycle |
+| 11 | Sensors | "A derelict. Dead hull. Look at the readout: its sides, its compartments, what is left of them. A scan shows you a ship the way you see your own. Now listen: every time you go active, anyone out there hears you. Switch active off." | Opens the target readout, active off | derelict 1 scanned and its compartments shown; `!sensors.active` |
+| 12 | Comms | "Comms. There's chatter on the net. Find the channel, tune it, lock it, and work the dials. The key is our own callsign." | Tune, LOCK, decrypt | `comms.Solved` |
+| 13 | Comms | "That's a hostile patrol order. One cruiser, their side of the sector. So we know who's out here, and roughly where." | Talk line. Also drops a rough marker on the plot, the way the spec's comms payoff does. | next click |
+| 14 | Orders | "Orders station, bottom left. Set CONDITION 2. Weapons and flight ops are released from Condition 2 up. AUX pays for orders; watch the pool." | `orders.alert` to 1 | `orders.alert >= 1` |
+| 15 | Engineering | "Engineering. I've staged a drill: the hangar bay reads INTEG 4. Select it and send a repair party. Six ticks and it lands." | Select HGR, PARTY | `damage.CompHealth("hgr") == 5` again |
 | 16 | Engineering | "REBOOT, SEAL and VENT live here too. You'll need them when we take a hit. Not today." | Talk line | next click |
-| 17 | Hangar | "Hangar. Spot the interceptors, DESTROY order, run the launch stages, open the doors, launch. Then RECALL. Flight ops cost AUX." | Launch the `gw` squad, recall | `launchedSquads` contained `gw`, now empty |
-| 18 | Periscope | "The scope. Slew to the derelict's bearing and look at it. This is the only window you have." | Opens the scope, slews on bearing | `OnBearing(derelict1)` |
-| 19 | Fire control | "Fire control. Weapons bus to two units. Railgun, turret A, target the derelict. LOAD. ANGLE. BEARING. ARM. The ladder refuses out of order, and refuses a target it can't reach." | WEP ≥ 2, select, ladder | `WepReady` and `AllSet` on derelict 1 |
-| 20 | Fire control | "Fire." | Fire lever | `fired` and a hit lands on derelict 1 |
+| 17 | Hangar | "Hangar. Spot the interceptors, DESTROY order, run the launch stages, open the doors, launch. Then RECALL. Flight ops cost AUX." | Launch the `gw` squad, recall | `hangar.launchedSquads` contained `gw`, now empty |
+| 18 | Periscope | "The scope. Slew to the derelict's bearing and look at it. This is the only window you have." | Opens the scope, slews on bearing | `ScopeOn(derelict1, scopeDown)` |
+| 19 | Fire control | "Fire control. Weapons bus to two units. Railgun, turret A, target the derelict. LOAD. ANGLE. BEARING. ARM. The ladder refuses out of order, and refuses a target it can't reach." | WEP ≥ 2, select, ladder | `weapons.WepReady` and `weapons.AllSet` on derelict 1 |
+| 20 | Fire control | "Fire." | Fire lever | `weapons.fired` and a hit lands on derelict 1 |
 | 21 | Fire control | "Hit. Hull side matters: you hit what faces you. Finish it." | Fires until destroyed | derelict 1 destroyed |
 | 22 | — | "The second derelict is yours, Captain. Your choice of weapon. Take it when you like." | Any kill | derelict 2 destroyed |
-| 23 | Enemy | "That frigate is still out there. Set a course. Go dark on the way in: power down what you don't need. It's listening. When you are close enough, scan it before it knows you are there. Know where its reactor sits before you shoot." | Steers toward the frigate, scans it | range to frigate < 20,000 and the frigate scanned (its compartments shown) |
-| 24 | Enemy | *(fires when the frigate reaches SEARCHING)* "It heard something. It's turning toward where we were. Decide, Captain: go dark and wait, or go loud and fast." | Nothing | frigate awareness ≥ 2 |
-| 25 | Enemy | *(fires on ALERT)* "Active sweep. They have us. No more hiding. Weapons free." | Fights | frigate awareness == 3 |
-| 26 | Enemy | "Kill it." | Kills the frigate | frigate destroyed |
+| 23 | Enemy | "That cruiser is still out there. Set a course. Go dark on the way in: power down what you don't need. It's listening. When you are close enough, scan it before it knows you are there. Know where its reactor sits before you shoot." | Steers toward the Garuda, scans it | range to the Garuda < 20,000 and the Garuda scanned (its compartments shown) |
+| 24 | Enemy | *(fires when the Garuda reaches SEARCHING)* "It heard something. It's turning toward where we were. Decide, Captain: go dark and wait, or go loud and fast." | Nothing | Garuda awareness ≥ 2 |
+| 25 | Enemy | *(fires on ALERT)* "Active sweep. They have us. No more hiding. Weapons free." | Fights | Garuda awareness == 3 |
+| 26 | Enemy | "Kill it." | Kills the Garuda | Garuda destroyed |
 | 27 | — | "Good shooting. Let's get out of here." | — | **Mission ends.** Short end card, then the menu (§10, Q4). |
 
 Steps 24 and 25 are **event lines**, not gates. They fire when the enemy changes state. If the
@@ -355,18 +369,18 @@ Small steps, each shown to the owner before the next. Each has its own BUILD_LOG
 
 | Step | What | Needs first | Done when the owner can see |
 |---|---|---|---|
-| **A** | The frigate patrols. A `ShipClass` asset for FRIGATE, its own `HandoffBoardState`, ticked by `TacticalWorld` after ours; `EnemyBrain` orders waypoints through `ordHdg` and `thr`. | The helm (so we can go and look). | The contact moves between sweeps and loops its route. Stops while paused. |
-| **B** | The frigate hears. Awareness 0 → 3 from its own sensors (`Heard`, `ConeCovers`) reading our `signal`. Thresholds in Tuning. A debug readout in the Tuning window or the console. | A. Power P1 (done). | Going loud near it raises the number. It never drops. |
+| **A** | **Done, Step 51.** The Garuda patrols. Its own `HandoffBoardState`, built by `WorldContact` from its system components and its stats file, ticked by `TacticalWorld` after ours; `EnemyBrain` orders waypoints through `nav.orderedHeading` and `nav.throttle`. | The helm (so we can go and look). | The contact moves between sweeps and loops its route. Stops while paused. |
+| **B** | The Garuda hears. Awareness 0 → 3 from its own sensors (`SensorSystem.Heard`, `ConeCovers`) reading our `sensors.signal`. Thresholds in Tuning. A debug readout in the Tuning window or the console. | A. Power P1 (done). | Going loud near it raises the number. It never drops. |
 | **C** | Investigate and sweep. SEARCHING steers to last-heard; ALERT runs the sweep, then closes. The sweep shows on our board. | B. The sensors step. | It turns toward where we were. On ALERT its signal jumps and it comes straight at us. |
 | **D** | Derelicts. Two static contacts from a DERELICT class, with hull sides and compartments. Scanning one fills in the target readout: its sides and compartments, drawn as ours are. | Sensors. | They show, scan, read DERELICT, and the readout shows their insides. |
 | **E** | The comms box and the step runner, with steps 1 to 5 only. No gating yet. | Nothing. Can be built now. | The box appears top-left, walks power, and clears on each done check. |
 | **F** | Strict gating. The allow-list, checked once before dispatch, refusing with the existing nudge. | E. The press-and-click step (the nudge). | A control not yet introduced nudges and does nothing. |
 | **G** | The rest of the walkthrough, one station at a time as each gets wired: helm, plot, sensors, comms, orders, engineering (with the drill), hangar, periscope. | Each station. | Each row in §8 clears in play. |
 | **H** | Fire on the derelicts, hit, destroy, WRECK. Steps 19 to 22. | Fire, hit, damage from the wiring order. | Both derelicts can be killed. |
-| **I** | Fight the frigate. Steps 23 to 27: scan it, the kill, the end card, back to the menu. Our hits on it update its readout live. | A to H. | NEW GAME to "let's get out of here" in one sitting. |
-| **J** | The frigate fights back. Its two turrets, through the same arming, fire, hit and damage code we use, landing on our side facing it and the compartments behind. | I. Our own fire and damage model. | It hurts. Engineering is now real. |
+| **I** | Fight the Garuda. Steps 23 to 27: scan it, the kill, the end card, back to the menu. Our hits on it update its readout live. | A to H. | NEW GAME to "let's get out of here" in one sitting. |
+| **J** | **Part done, Step 55.** The Garuda fights back. Built: when we hit it, it fires an HE missile salvo of 2 at us, at most once every 120 s, if we are inside its VLS reach. The missiles hit our side facing them. Still to build: its two turrets, through the same arming, fire, hit and damage code we use. | I. Our own fire and damage model. | It hurts. Engineering is now real. |
 
-E can start today. A can start the day the helm works. Nothing here blocks the other agent.
+A is done. E can start today. Nothing here blocks the other agent.
 
 ---
 
@@ -377,7 +391,7 @@ E can start today. A can start the day the helm works. Nothing here blocks the o
    from the first frame. Confirm. If yes, the first XO line teaches pausing, as written.
 2. **The engineering drill.** The load state is undamaged (owner, 2026-10-04). To teach a repair
    before anything has shot us, the XO stages a drill: one compartment drops to INTEG 4. Yes, or
-   move engineering after the frigate shoots back (step J)?
+   move engineering after the Garuda shoots back (step J)?
 3. **The XO's name** and portrait. Any name, and a placeholder tile, unblocks step E.
 4. **The end.** After "let's get out of here": a plain text end card and back to the menu? The GDD
    has a credits screen. Minimum is the card.
@@ -388,13 +402,14 @@ E can start today. A can start the day the helm works. Nothing here blocks the o
 
 ## 11 · Traps
 
-- **Do not write a second ship.** No enemy-only movement, power, sensor, weapon or damage code. The enemy is a second `HandoffBoardState` driven by a brain. If the shared code needs a "which ship" parameter, add the parameter.
+- **Do not write a second ship.** No enemy-only movement, power, sensor, weapon or damage code. The enemy is a second set of the same system components, driven by a brain. If the shared code needs a "which ship" parameter, add the parameter.
 - **Do not run anything in `Update`.** The world steps on `board.Ticked`, inside the single timer.
   Spec Rule 2.d: nothing real changes while paused.
 - **Do not port the old scripts.** `EnemyShip`, `Radar`, `PlayerShip`, `Autopilot` are the older
   build. Owner 2026-10-17: the new world feeds the board.
-- **Do not hardcode a number.** Every speed, range and threshold is a `[Tune]` field in
-  **Starwolf → Tuning**.
+- **Do not hardcode a number.** A ship's numbers go in its stats file (`Assets/Ships`), on the
+  Ship and Enemy tabs of **Starwolf → Tuning**. Brain and board numbers are `[Tune]` fields, on
+  the Board tab.
 - **Do not put text on the plot.** The comms box is a panel, not a plot label (owner, Step 39).
 - **Do not build a quest log.** One box, one line, one hint.
 - **Do not add a second lock system.** One allow-list, one check, before dispatch.

@@ -1,6 +1,19 @@
-# Starwolf — Codebase Baseline
+# Starwolf — Baseline of Soham's Older Scripts
 
-**Purpose.** A line-by-line reference for the Unity implementation, written so a future session can
+**What this covers.** Soham's older scripts, read line by line as they were on 2026-09-01. The
+board's code is newer and is not in this file: `Assets/Scripts/Systems/`, `Assets/Scripts/Tactical/`,
+`Assets/Scripts/UI/`, `Assets/Scripts/Game/` and `Assets/StarwolfIntro/`.
+`Assets/Scenes/Tactical/BUILD_LOG.md` section 3 describes the board's code.
+
+**Changes to Soham's scripts since 2026-09-01.** There are three:
+
+- `UIController.cs` (2026-09-02): it returns early where a panel's canvas is missing, so its
+  `Update` runs to the end in the scenes under `Assets/Scenes/Tactical/`.
+- `PowerManager.cs` (2026-10-26): its serializable class `PowerSystem` is now called `PowerChannel`.
+  `PowerSystem` is now the board's power code, in `Assets/Scripts/Systems/PowerSystem.cs`.
+- `Editor/WireUIReferencesEditor.cs` (2026-10-27): deleted, with its two menus.
+
+**Purpose.** A line-by-line reference for Soham's scripts, written so a future session can
 understand the code without re-reading it. Every statement here comes from reading the file in full,
 not from search results.
 
@@ -10,16 +23,15 @@ not from search results.
 **Status of this document.** Describes the code as it is, not as it should be. Where behaviour
 differs from a design document, that is recorded as an observation, not a defect.
 
-**Do not treat this file as authoritative over the code.** It will drift. Code and live Editor
-state win. See `CLAUDE.md`.
+**The code and the running Editor win over this file.** It will drift. See `CLAUDE.md`.
 
 ---
 
 ## 1. Source inventory
 
-Runtime gameplay code lives in the global namespace, compiled into `Assembly-CSharp`. Editor code
-lives in `Assets/Editor/` and compiles into `Assembly-CSharp-Editor`. There are no asmdefs and no
-namespaces anywhere in the project.
+Soham's runtime code is in the global namespace and compiles into `Assembly-CSharp`. Editor code is
+in `Assets/Editor/` and compiles into `Assembly-CSharp-Editor`. There are no asmdefs. Soham's code
+uses no namespaces. The newer intro code in `Assets/StarwolfIntro/Runtime/` uses `namespace Starwolf.Intro`.
 
 | Area | Path | Files |
 |---|---|---|
@@ -34,7 +46,7 @@ namespaces anywhere in the project.
 | Interfaces | `Assets/Scripts/Interfaces/` | `IDamageable` |
 | UI | `Assets/UI/UI_Script/` | `UIController`, `BogieClass`, `UIPowerClass` |
 | Test scaffolding | `Assets/` | `TestUIKeyControler.cs` |
-| Editor tooling | `Assets/Editor/` | `WireUIReferencesEditor`, `PowerManagerEditor`, `ReadOnlyDrawer` |
+| Editor tooling | `Assets/Editor/` | `PowerManagerEditor`, `ReadOnlyDrawer` (`WireUIReferencesEditor` was deleted on 2026-10-27) |
 
 ---
 
@@ -90,6 +102,10 @@ Consequences worth knowing:
   `TargetingSystem`, and `Asteroid` are on no prefab and in no scene.
 
 **Scenes**
+
+This table is as of 2026-09-01. The board's scenes are newer: `Tactical/00_Start`, `Tactical/01_Briefing`,
+`Tactical/02.1_Grid` and `Levels/Level_01`. The working scene is now `Tactical/02.1_Grid`. See
+`Assets/Scenes/Tactical/BUILD_LOG.md` section 2.
 
 | Scene | Contents | Role |
 |---|---|---|
@@ -339,7 +355,7 @@ threshold instead. Weapon cycling is bound only to gamepad Y, with no keyboard e
 `[DefaultExecutionOrder(-10)]`, guaranteeing its `Start` runs before `UIController.Start`.
 
 `PowerState`: `Standby`, `Draw`, `Vent`.
-`PowerSystem` (serializable): `name`, `currentState`, `maxPower` (5), `currentPower` (0),
+`PowerChannel` (serializable; called `PowerSystem` until 2026-10-26): `name`, `currentState`, `maxPower` (5), `currentPower` (0),
 `readyToVent`, `finishingCurrentBar`.
 
 Five systems: **engines, arms, bay, support, sig**.
@@ -1265,7 +1281,7 @@ Sits on `PlayerShip.prefab`, not on a canvas. `Awake` is a singleton guard that 
 `Destroy(gameObject)` on a duplicate — which destroys the entire ship it is attached to.
 
 `Start()` order: resolve `shipPlayer` (see below) → find `PowerManager` and cache the five
-`PowerSystem` references in UI button order (engines, arms, bay, support, sig) → `StartPower()` →
+`PowerChannel` references in UI button order (engines, arms, bay, support, sig) → `StartPower()` →
 `WorldGridStart()` → `RadarStart()` → `WorldGridZoom(0)` → start speedometer polling → `NewScan()` →
 `ScanTargetLoc(0)` → `ScanTargetSize(0)` → `BtnBogieTab()` → `GlitchStart()` → find `WeaponManager` →
 find `HullSystem` and populate the hull display once.
@@ -1370,7 +1386,7 @@ ramps `_GlitchOpacity` down from `o`, holds for `t`, then clears. `updateShipHit
 offsets `shipHit.localPosition` by `Random.insideUnitSphere * shipHitCurve.Evaluate(t)` each frame.
 
 **Ability stubs.** `BtnScannerCloke()`, `BtnRepair()`, and `SignalGhost()` have empty bodies containing
-only a comment. `WireUIReferencesEditor` wires buttons to all three.
+only a comment. Buttons call all three. The deleted `WireUIReferencesEditor` wired those buttons.
 
 ### Observations
 
@@ -1474,52 +1490,19 @@ public inspector fields that nothing reads. The former A/D handlers and the `gri
 commented out, making `rotation` and `movmentSpeed` dead fields. There is no `#if UNITY_EDITOR` guard,
 so this ships in the runtime assembly and runs in a build if left on a GameObject.
 
-### Editor/WireUIReferencesEditor.cs
+### Editor/WireUIReferencesEditor.cs — deleted
 
-Editor-only static class with two menu items under a `Starwolf` top-level menu.
-
-**`Starwolf/Wire UI References`** wires exactly two references, both named `playerTransform`, both to
-`playerShip.transform`: `Radar.playerTransform` (fetched from the PlayerShip GameObject specifically)
-then `WorldBoundary.playerTransform` (found scene-wide). It requires a `UIController` in the scene as a
-precondition but never assigns anything on it. It marks the scene dirty and instructs the user to save.
-
-**`Starwolf/Wire Button OnClicks`** operates on `uiController.GetComponentsInChildren<Button>(true)`
-(including inactive), in two passes.
-
-*Pass 1 — repair broken persistent calls.* For each `onClick` entry whose target is null, it inspects
-the serialized `m_TargetAssemblyTypeName`. Entries naming `UIController`, `GameManager`, or
-`CommsManager` are retargeted to the live `UIController` and their type string rewritten to
-`"UIController, Assembly-CSharp"`, but only for a whitelist of nine method names: `WorldGridZoom`,
-`ChargeBtn`, `ChargeOn`, `ChargeOff`, `VentBtn`, `BtnScannerCloke`, `BtnRepair`, `SignalGhost`,
-`FrequancyTune`. Anything else logs "Unknown method … skipping". Entries naming `PowerManager` are
-retargeted to the ship's `PowerManager` with no type rewrite and no method check.
-
-*Pass 2 — add listeners to named buttons with zero persistent calls.* A switch on GameObject name:
-
-| Name | Target |
-|---|---|
-| `btn_scannerCloke` / `btn_repair` / `btn_signalGhost` | `UIController.BtnScannerCloke` / `BtnRepair` / `SignalGhost` |
-| `btn_emergencyVent` / `btn_blackAlert` | `PowerManager.EmergencyVent` / `BlackAlert` |
-| `btn_add_eng` / `_arms` / `_bay` / `_spprt` / `_sig` | `PowerManager.Add*Power` |
-| `btn_remove_eng` / `_arms` / `_bay` / `_spprt` / `_sig` | `PowerManager.Remove*Power` |
-
-**Why this tool matters.** `UnityEvent` persistent calls are scene-serialized data, not runtime
-registrations — nothing at play time adds them. So the entire HUD button surface, plus
-`Radar.playerTransform` and `WorldBoundary.playerTransform` (which no runtime code assigns), is
-connected **exclusively** by this menu item or by hand in the inspector. The `GameManager`/`CommsManager`
-→ `UIController` retarget in pass 1 is the only automated path that repairs buttons authored before the
-UI was consolidated onto `UIController`.
-
-**Observations.** `WireReferences` logs success and increments its counter even when `FindProperty`
-returned null. In pass 1's `PowerManager` branch a null manager silently leaves the call broken. Pass 2
-only touches buttons with **zero** persistent calls, so a button with a pre-existing but wrong listener
-is never corrected. The tool never saves the scene.
+Deleted on 2026-10-27 (owner), with its two menus, `Starwolf/Wire UI References` and
+`Starwolf/Wire Button OnClicks`. The first menu set `Radar.playerTransform` and
+`WorldBoundary.playerTransform`. The second repaired and added the old HUD's button calls. The calls
+and references it set are saved in the scenes and prefabs. No runtime code sets them. Any new ones are
+set by hand in the inspector.
 
 ### Editor/PowerManagerEditor.cs
 
 `[CustomEditor(typeof(PowerManager))]`. Subscribes `ForceRepaint` to `EditorApplication.update` in
 `OnEnable` and unsubscribes in `OnDisable`; the handler calls `Repaint()` only while
-`Application.isPlaying`, so the five `PowerSystem` blocks stay live in the inspector during play.
+`Application.isPlaying`, so the five `PowerChannel` blocks stay up to date in the inspector during play.
 `OnInspectorGUI` is overridden to call `DrawDefaultInspector()` — functionally identical to not
 overriding it at all, so the repaint subscription is the class's only real effect. No
 `[CanEditMultipleObjects]`.
@@ -1603,7 +1586,10 @@ bindings, and `UIController` is on the player ship prefab. `TestUIKeyControler` 
 
 ## 15. Documentation inventory
 
-Eight documents. Authority runs GDD → Art Spec → UI doc → the markdown files.
+This section is as of 2026-09-01. There are many more documents now, and the newest source wins. For
+the current list and which source wins, see `Assets/CONTEXT_INDEX.md`.
+
+On 2026-09-01 there were eight documents. Authority ran GDD → Art Spec → UI doc → the markdown files.
 
 | Document | Size | What it is |
 |---|---|---|
@@ -1674,8 +1660,9 @@ Recorded as facts, not as defects — several are likely deliberate.
 
 ## 16. How to use this document
 
-- Trust it for **what the code does today**. It was produced by reading every line of every runtime and
-  editor script listed in §1.
+- Trust it for **what Soham's scripts do**, as they were on 2026-09-01. It was produced by reading
+  every line of every runtime and editor script listed in §1. The changes since then are listed at
+  the top of this file. It does not cover the board's code.
 - Do **not** trust it as a specification. The GDD is oriented at the Unity build; the HTML prototype is
   the playable game and runs ahead of both.
 - Anything marked "Observation" is a factual note about behaviour, not a request to change it. Several
@@ -1683,5 +1670,5 @@ Recorded as facts, not as defects — several are likely deliberate.
 - Before acting on any wiring claim, re-confirm against the live Editor — the serialized-state analysis
   in §3 was done by reading YAML with the Editor closed.
 
-**Not yet covered by this document:** `References/starwolf-prototype.html`, and the gap between it and
-the Unity build. That is the next piece of work.
+**Not covered by this document:** `References/starwolf-prototype.html`. It is read line by line in
+`Assets/PROTOTYPE_BASELINE.md`.

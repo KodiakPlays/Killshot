@@ -80,7 +80,7 @@ The orders station's PARTY, SEAL and VENT do the same, paid from the AUX pool.
 
 ## Numbers
 
-All are in **Starwolf → Tuning**: the team's time under "Engineering & orders", the rest under "Damage control". These are the starting values.
+All are in each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`), in the Damage section. Edit them in **Starwolf → Tuning**, on the Ship or Enemy tab. These are the starting values.
 
 | | |
 |---|---|
@@ -108,7 +108,8 @@ All are in **Starwolf → Tuning**: the team's time under "Engineering & orders"
    door state. Request the art from Claude Design; working placeholders meanwhile.
    **Armour per face started, Step 74:** engineering's ship picture colours each side white
    (full), amber (hit) or red (open), and the room rings go white, amber or red by health
-   (`BUILD_LOG.md`, Step 74). Since Step 75 each side is a dim fill with a bright outline.
+   (`BUILD_LOG.md`, Step 74). Since Step 75 each side is a bright 3 px outline with its panel lines
+   at 40% brightness. There is no fill.
 
 ## Still open
 

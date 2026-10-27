@@ -7,10 +7,11 @@ instruments: a plotting board showing where things are, panels for power and
 weapons, and a set of tools for measuring and marking up the board. Everything
 runs in real time, and you can pause.
 
-The tension is that you cannot do everything at once. The reactor makes a fixed
-amount of power. Engines, weapons, sensors and the rest all want some of it.
-Running the radar wide means less power for the guns. Turning hard costs
-stability. Every advantage is bought by giving something up.
+The tension is that you cannot do everything at once. The reactor makes ten
+units of power. Four buses share it: engines (ENG), weapons (WEP), sensors (SEN)
+and auxiliary (AUX). A bus takes at most five units, so you can fully run only
+two. More power to DRADIS means less power for the guns. Every unit you draw
+makes the ship louder. Every advantage is bought by giving something up.
 
 ## Running it
 
@@ -25,21 +26,35 @@ To skip straight to the board, open `02.1_Grid.unity` instead.
 
 ## Controls
 
+Almost everything is done with the mouse, on the board's switches. The keyboard
+does a few things.
+
 | Input | What it does |
 |---|---|
-| `1` | Draw power to engines. Five bars, about ten seconds to fill. |
-| `W` / `S` | Forward and reverse thrust |
-| `A` / `D` | Turn left and right |
-| Scroll wheel | Zoom, anchored on the cursor |
-| Middle-drag or right-drag | Pan the board |
-| `C` | Centre the plot on our ship |
-| Left rail | Pick a tool: mouse, point, ruler, compass, eraser |
-| Left-click / drag on the board | Use the live tool |
+| `Enter` | Move on from the start screens. On the menu, the arrow keys or `Tab` move and `Enter` or `Space` picks. |
+| Pause key, rate keys | Stop or start time. The rate keys run time at x0.25, x1, x5 or x10. The board opens paused. |
+| Power panel, bus selectors | Click to step a bus between VENT, STANDBY and DRAW. A bus on DRAW gains one unit per game second. A bus on VENT loses one. |
+| Helm, throttle fader | Drag to set the throttle. |
+| `A` / `D` | Step the ordered heading 3° to port or starboard. Hold to repeat. The bow swings round to it. |
+| Scroll wheel over the plot | Zoom in and out. The SCALE knob does the same when dragged. |
+| Drag the empty grid, or the arrow keys | Pan the plot. With POINT, RULER or COMPASS picked, a drag draws a mark instead. |
+| `C` | Centre the plot on our ship. |
+| Left rail | Pick a tool: CURSOR, POINT, RULER, COMPASS, ERASE. |
+| Click or drag on the plot | Use the tool you picked. |
+| Right rail | Open a drawer: fire control, sensors, power, hangar, engineering, comms. |
 
-**Engine power gates movement.** With no power the ship cannot turn at all and
-crawls at 5 units per second. Press `1` first and wait for the bars.
+What each panel's switches do is in `Assets/UI/Board/README.md`.
 
-**Clear the board** by pressing the eraser a second time while it is already
+**Engine power sets your top throttle.** Each unit on the ENG bus allows 20%
+throttle, so five units allow 100%. With no ENG power the ship has no thrust.
+Put the ENG bus on DRAW first and let it fill. If the ENG bus drops, the
+throttle goes back to zero and you set it again. Turning does not need power. A
+damaged engine room turns the ship more slowly and lowers the throttle limit.
+
+**Stability** is shown on the helm. Throttle lowers it. The FLANK and EVASIVE
+approach modes lower it more. Nothing else in the game reads it so far.
+
+**Clear the board** by pressing ERASE a second time while it is already
 selected.
 
 ## Where to read next

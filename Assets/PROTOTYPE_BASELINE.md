@@ -5,12 +5,13 @@
 > the numbers here. The prototype is authoritative; this document is derived.
 
 **What this is.** A reference for `References/starwolf-prototype.html` (4,472 lines), the **playable
-build**. It runs ahead of the Unity implementation. Companion to `Assets/CODEBASE_BASELINE.md`,
-which documents Unity.
+build**. Companion to `Assets/CODEBASE_BASELINE.md`, which documents Soham's older Unity scripts.
+The tactical board's code is in neither file.
 
 **Authority.** The prototype is the owner's design expressed as working code. Where it and the GDD
-disagree, that is a decision for the owner, not a defect. Where it and Unity disagree, Unity is
-behind unless noted.
+disagree, that is a decision for the owner, not a defect. The Unity board is ahead of the prototype
+on many systems, and differs from it on purpose in places. Where they disagree, the newer source
+wins: the board and the owner's later rulings. The prototype is a floor for the finished game.
 
 **Two corrections applied here** that intermediate analysis got wrong — see §9.
 
@@ -273,8 +274,9 @@ once to print `LIFESUP FAIL 90s` as a warning string. It is **never compared aga
 anywhere reads player hull for a loss check. You can sit at 0/0/0/0 armour with every internal gutted
 indefinitely.
 
-Unity, by contrast, has four typed failure reasons wired to real events. This is the one axis where
-the Unity build is meaningfully ahead of the prototype on game design rather than infrastructure.
+Soham's older Unity code has four typed failure reasons (`QuestSystem.cs`). The tactical board does
+not use it. On the board a ship is lost in two ways: its reactor room reaches integrity 0
+(`DamageSystem.cs`), or it stays outside the battle space too long (`HandoffBoardState.TickArena`).
 
 ---
 

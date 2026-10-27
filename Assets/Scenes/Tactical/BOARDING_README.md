@@ -22,13 +22,13 @@ than 15,000 km from our ship. Leave them out of range too long and they are lost
    boat carries 6 marines from the ship's 18.
 2. **Fly out** at 30 km/s, drawn as the fighters' wedges.
 3. **Hold off** until the target can be boarded. The hangar line says why it is waiting:
-   - "HOLDING OFF TRACK 07 · NO OPEN SIDE": no face of its armour is broken;
-   - "HOLDING OFF TRACK 07 · TARGET UNDER WAY": it is moving faster than 0.5 km/s.
+   - "HOLDING OFF GARUDA · NO OPEN SIDE": no face of its armour is broken;
+   - "HOLDING OFF GARUDA · TARGET UNDER WAY": it is moving faster than 0.5 km/s.
 
    You have to fight it down first: wreck its engine room, or knock its power out with EMP.
    Targets are named as everywhere else: "BOGEY T07" until an active scan identifies it, then
-   "TRACK 07".
-4. **Board.** The boats dock and the marines fight for 60 game seconds: "BOARDING TRACK 07 · 42 S".
+   "GARUDA".
+4. **Board.** The boats dock and the marines fight for 60 game seconds: "BOARDING GARUDA · 42 S".
    Once they are aboard, the ship may get under way again (its EMP wears off). It keeps moving and
    firing until the fight is over. The boats ride with it, and the fight goes on (owner 2026-10-27).
 5. **The odds:** marines ÷ (marines + defenders). A quarter of the enemy's crew defend.
@@ -55,13 +55,14 @@ The boats go no further than **15,000 km** from our ship.
 
 | Order | When the marines win |
 |---|---|
-| DESTROY | They blow its reactor: the ship is destroyed, a wreck. "TRACK 07 SCUTTLED" |
-| DISABLE | They wreck its engine room and magazine (integrity 0): it comes to a stop, alive, and cannot fire. "TRACK 07 DISABLED" |
-| SECURE | They take it: it stops fighting and is a prize, shown on the plot as an own-force dot. "TRACK 07 SECURED" |
+| DESTROY | They blow its reactor: the ship is destroyed, a wreck. "GARUDA SCUTTLED" |
+| DISABLE | They wreck its engine room and magazine (integrity 0): it comes to a stop, alive, and cannot fire. "GARUDA DISABLED" |
+| SECURE | They take it: it stops fighting and is a prize, shown on the plot as an own-force dot. "GARUDA SECURED" |
 
 ## Numbers
 
-All are in **Starwolf → Tuning**, under "Hangar & fighters".
+All are in each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`), in the Hangar
+section. Edit them in **Starwolf → Tuning**, on the Ship or Enemy tab.
 
 | | |
 |---|---|

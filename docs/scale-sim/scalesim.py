@@ -17,7 +17,7 @@ BASE = dict(top=12.5, acc=0.2175, brk=0.4075, drift=0.96307, drag=0.997502, turn
             cruise=5.5, slug=2500.0, missile=100.0, mturn=6.5)
 HIT_R, OUR_HIT_R = 210.0, 210.0
 WEAPON_RANGE = 25000.0              # railgun reach (decision 42)
-DRADIS = 12000.0 + 2 * 7000.0      # gain 2
+DRADIS = 12000.0 + 2 * 3600.0      # gain 2 (senRangeBaseKm + gain x senRangePerStepKm)
 ENEMY_HOME = (18058.42, 16259.874)
 ROUTE = [(0, 0), (-6000, -4000), (0, -8000), (6000, -4000)]
 PX_PER_KM = 0.0609                  # plot px per km at zoom 1 (the plot's maximum)

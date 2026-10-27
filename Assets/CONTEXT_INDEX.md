@@ -66,14 +66,23 @@ pages, and most of it has been overtaken.
 | Why a design decision was made, and what was rejected | `Assets/TACTICAL_BOARD_PLAN.md` |
 | What the board looks like — colour, type, spacing, markers | `Assets/UI2/Claude Design handoff/export/README.md`, then the older handoff zip's `README.md`. Two of the export README's rules are wrong in this project: sprites are imported with sRGB **off**, and colours are not typed in as the token's hex. See `UI_INTEGRATION_LOG.md`, "Problems found on screen, and fixed", item (a). |
 | How each control on the new board behaves, state by state | `export/reference/UIStateSpec.md` and `export/reference/board-logic.js` |
-| Where every element sits on the new board, in pixels | `export/layout/layout.json` |
+| Where every element is on the new board, in pixels | `export/layout/layout.json` |
 | How the new handoff was built into `02.1_Grid`, step by step | `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md` |
 | What the handoff package left out | `Assets/Scenes/Tactical/HANDOFF_GAPS.md` |
 | What Claude Design must still provide, verified | `Assets/Scenes/Tactical/CLAUDE_DESIGN_NEEDS.md` |
 | Which of those needs our own assets can fill | `Assets/Scenes/Tactical/ASSET_AUDIT.md` |
 | How the prototype actually behaves, without opening 4,472 lines | `Assets/PROTOTYPE_BASELINE.md` |
-| What C# exists today | `Assets/CODEBASE_BASELINE.md` |
+| What the game is, how to run it, the controls | `README.md` (repo root) |
+| What Soham's older scripts do, read line by line as of 2026-09-01 | `Assets/CODEBASE_BASELINE.md` |
+| What the board's scripts are and what they are wired to | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 3 |
 | What is built in the tactical scene, and the traps already hit | `Assets/Scenes/Tactical/BUILD_LOG.md` |
+| A ship's numbers: speed, power, weapons, armour | `Assets/Ships/Asura.asset` (our ship) and `Assets/Ships/Garuda.asset` (the enemy). Edit them in **Starwolf → Tuning**, on the Ship and Enemy tabs. |
+| How damage works: armour, rooms, fire, vacuum, radiation | `Assets/Scenes/Tactical/DAMAGE_README.md` |
+| How boarding works: the assault boats and their orders | `Assets/Scenes/Tactical/BOARDING_README.md` |
+| The design audit the damage model is built on | `References/Star Wolf - Design Audit.dc.html` |
+| How to make or change a level | Menu **Starwolf → Level** (`Assets/Editor/LevelWindow.cs`). The levels are in `Assets/Scenes/Levels/`. |
+| Whether a change to speeds, ranges or weapons still gives a fight of the right length | `docs/scale-sim/README.md` |
+| How to turn the repo into NotebookLM sources | `Tools/notebooklm/README.md` |
 | How the green phosphor screen works (intro, welcome page, INITIALISING), and how to put it on a new screen | `Assets/StarwolfIntro/README.md` |
 | Which canvas, camera, render texture and GameObject feeds each panel and button **of the old cockpit UI** (not the current board) | `Assets/Scenes/Tactical/UICONTROLLER_PARTS.md` |
 | What exists for weapons, tracks and contacts, and what still has to be built | `Assets/Scenes/Tactical/TARGETING_AUDIT.md` |
@@ -114,6 +123,9 @@ not part of spec". Treat those as sketches.
 **`References/Starwolf_ Art Spec.pdf`** — superseded on visuals by the handoff.
 *Still the only source for:* ship design language, the class size table, obstacle tiers.
 
+**`References/Star Wolf - Design Audit.dc.html`** — the design audit, "Design Audit & Fix Register".
+Open it in a browser. Its §09 is the base of the damage model (see `DAMAGE_README.md`).
+
 **`References/UI Killshot documentation.pdf`** — 4 pages. The UI author's API contract for the old
 `UIController`. Historical, tied to the cockpit UI that is being retired.
 
@@ -132,9 +144,11 @@ owner deletes the export. See `Assets/UI/Board/README.md`.
 - `README.md` — what the package is and how to use it.
 - `reference/UIStateSpec.md` — every control's states.
 - `reference/board-logic.js` — the board's behaviour, as code.
-- `layout/layout.json` — where every element sits, in pixels.
+- `layout/layout.json` — where every element is, in pixels.
 
 ### Project documents — ours, and editable.
+
+**`README.md`** (repo root) — what the game is, how to run it, and the controls. Short.
 
 **`Assets/TACTICAL_BOARD_SPEC.md`** — ~1,750 lines. **The specification.** What the game does, system
 by system, with numbered rules. Start at §1 Summary and §2 How it plays; jump to a system after that.
@@ -148,8 +162,9 @@ something.
 **`Assets/PROTOTYPE_BASELINE.md`** — ~335 lines. The prototype read line by line, so you do not have
 to open the 4,472-line HTML.
 
-**`Assets/CODEBASE_BASELINE.md`** — ~1,690 lines. Every Unity script read line by line. Describes the
-code as it is, not as it should be.
+**`Assets/CODEBASE_BASELINE.md`** — ~1,700 lines. Soham's older scripts read line by line, as they
+were on 2026-09-01. The board's code in `Assets/Scripts/Systems/`, `Tactical/`, `UI/`, `Game/` and
+`Assets/StarwolfIntro/` is newer and is not in it. `BUILD_LOG.md` section 3 describes the board's code.
 
 **`Assets/PARITY_PLAN.md`** — earlier plan to bring Unity to prototype parity. Its UI sections are
 superseded by `TACTICAL_BOARD_PLAN.md`. Its systems work items still stand.
@@ -159,7 +174,7 @@ as historical.
 
 ### The tactical scene — `Assets/Scenes/Tactical/`
 
-**`BUILD_LOG.md`** — ~3,300 lines. The build history of the tactical board, step by step: what exists,
+**`BUILD_LOG.md`** — ~4,500 lines. The build history of the tactical board, step by step: what exists,
 what is wired to what, which step we are on, what to do next. It ends with a long **Known issues**
 list of traps already hit. **Read it before touching that scene.**
 
@@ -182,6 +197,19 @@ provide. Checked against every source. The basis for the Claude Design request.
 **`TARGETING_COMPUTER_SPEC.md`** — the measured build spec for the targeting drawer. Every pixel
 figure comes from rendering the handoff's `Star Wolf Board Live.dc.html` in Chrome.
 
+**`DAMAGE_README.md`** — how damage works. Armour on each face, the rooms behind it, fire, vacuum and
+radiation, and the Engineering buttons that deal with them. A reactor at 0 destroys any ship.
+
+**`BOARDING_README.md`** — how boarding works. The assault boats take marines to a nearly stopped
+enemy with an open face. If the marines win, they DESTROY, DISABLE or SECURE the ship.
+
+### Levels — `Assets/Scenes/Levels/`
+
+Each level is a small scene. The board loads one on top of itself at play (`TacticalWorld.cs`,
+`levelScene`). `Level_01.unity` is the first. The spawn points, the debris fields and the broken
+starbase are placed in the level. Make and edit levels with the menu **Starwolf → Level** (`Assets/Editor/LevelWindow.cs`).
+The Level tool is described in `BUILD_LOG.md` section 3.
+
 ### `docs/reference-sim/` — reference only. Nothing compiles it.
 
 The simulation core of the shelved TypeScript prototype. The rest of that project was broken and has
@@ -199,6 +227,17 @@ Read it when porting a mechanic to C#. Do not re-derive these from scratch.
 
 **`CLAUDE.md`** — how to work in this repo: Unity MCP rules, C# conventions, repo hygiene. Not design.
 
+### `docs/scale-sim/README.md`
+
+A small Python script that plays whole fights with the board's rules and numbers. It reports how long
+a win takes and how many shots are traded. It set the 5× speed scale in Step 63. Re-run it after any
+change to speeds, ranges, weapons or the enemy.
+
+### `Tools/notebooklm/README.md`
+
+A Python script that turns the repo into a few documents to load into NotebookLM. The output goes to
+`Build/notebooklm/`, which git ignores.
+
 ---
 
 ## 4 · DECISIONS ALREADY MADE — DO NOT REOPEN
@@ -209,26 +248,25 @@ document, and do not quietly design around them.
 | Decision | The rule |
 |---|---|
 | **No cockpit** | The 3D cockpit interior is gone. The plot is the whole window. Station panels slide over it and never replace it. |
-| **No shields** | `Shields.cs` is removed, not reworked. **The hull side you present is your only armour** — prow 50, port 50, starboard 50, aft 40. Facing is the defensive decision. |
+| **No shields** | The board has no shields. Soham's old `Assets/Scripts/Shields.cs` is still in the repo, and the board does not use it. **The hull side you present is your only armour** — prow 100, starboard 100, aft 50, port 100 (`Assets/Ships/Asura.asset`). Facing is the defensive decision. |
 | **No boarding pods** | Boarding runs through the **hangar**: two assault boats with marines, each with a target and a job. A target must have been scanned first. The pod-as-a-weapon is dropped. |
 | **No EXECUTE, no emergency abort** | The only time controls are **PAUSE** and **PLAY RATE**. There is no commit step and no order queue. Orders take effect as you give them. |
 | **Real time with optional pause** | Pause is a convenience, not the core verb. The handoff's paused-time framing is wrong for this game. |
-| **No broadside cannon, no spinal railgun** | Delete both. There is no gun that fires down the length of the ship. |
-| **Three railgun turrets** | Two forward on the spine (rest `000°`, ±90°), one aft (rest `180°`, ±90°). One barrel each, armed one at a time, one shot per arming. Coverage is 360°; **firepower is two barrels forward, one aft.** |
-| **Four PDCs, player-aimed** | One at each corner. You switch it on and point its **cone**; it then fires by itself at anything entering. ~80° cone, ~100° traverse. They are the only answer to a missile salvo. |
-| **Missiles** | Fire in any direction, no arc. |
+| **No broadside cannon, no spinal railgun** | The board has neither. There is no gun that fires down the length of the ship. Soham's old `Weapons/BroadsideCannon.cs` and `Weapons/Railgun.cs` are kept as old code. The board does not use them. |
+| **Two railgun turrets** | RG-A covers 042° ±80° from the bow. RG-B covers 250° ±80°. One each side. Reach 25,000 km, 22 rounds each. One shot per arming. The slug flies at 2,500 km/s, so it takes about 10 s to reach 25,000 km. |
+| **Two PDC groups** | PDC-A covers 042° ±35° from the bow. PDC-B covers 200° ±35°. Reach 10,000 km, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy missiles entering its arc, with a 70% chance to kill each one. They are the only answer to a missile salvo. |
+| **Missiles** | Fire in any direction, no arc. Fired from the VLS on the Fire Control panel, two to a salvo. Reach 35,000 km, 8 missiles. |
 | **A volley is a consequence, not a mode** | There is no salvo button, no spread control, no fire pattern menu. Arm several turrets on the same bearing and they converge. Arm them on different bearings and you get a fan. The width of the fan is the difference between the numbers you typed. |
 | **Density over time compression** | The empty-board problem is solved with a smaller, debris-dense arena, not by fast-forwarding. Modest play-rate range only. Collision is gameplay, not an error. |
-| **Ten reactor points, five systems** | ENGINES · WEAPONS · SCANNER · COMMS · AUXILIARY, five points each. Ten points means **you can fully run two.** Points are moved, not spent, and moving them takes seconds. Every allocated point makes you louder. |
+| **Ten reactor units, four buses** | ENG · WEP · SEN · AUX, five units each at most. Ten units means **you can fully run two.** A bus on DRAW gains one unit per game second. A bus on VENT loses one. Every unit on a bus makes you louder. |
 | **The plot is a square grid** | Not a circle. No elliptical mask anywhere. |
 | **Colour is a code** | Shape says class, colour says allegiance, and a shape is never used for two sides. No new hues without extending the code. |
 | **Panels do not pause the game** | The clock is universal and keeps running while you work a panel. |
-| **Damage shows on the forward screen only** | The plot glyph never shows damage. It stays a symbol. |
-| **Units are world units** | The kilometre figures in the handoff are display only. They do not set the numbers the game runs on. |
+| **The plot glyph never shows damage** | It stays a symbol. The periscope shows a target's damage. The Engineering panel shows ours on a picture of the hull. |
+| **Everything runs in kilometres and game seconds** | Ranges, speeds and the battle space are in km. Every rate runs per game second, so x10 runs everything ten times as fast. |
 
-**Owner rulings on 2026-10-04 override parts of this table** for the new board: the new handoff wins
-on weapons and power, and distances are kilometres. See `Assets/Scenes/Tactical/BUILD_LOG.md`,
-section 4.
+The weapon, power and armour rows above match the code and the ship stats files in `Assets/Ships/`.
+The owner's rulings since 2026-10-04 are in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 4.
 
 ---
 
@@ -242,10 +280,11 @@ summary and still know what the game is.
 
 **Every tunable number goes in the inspector. Never a literal in a method body.** Speeds, ranges,
 timers, damage, layout constants, arena size — all of it. The owner tunes by hand. Art references
-work the same way: swappable, nothing hard-wired. `TacticalTuning.cs` and `TacticalArtProfile.cs`
-belong to the old `02_Grid` board. On the current board, numbers are fields marked `[Tune]` on its
-scripts. The plan is one stats file per ship, and each panel's art as fields on its own prefab (see
-`BUILD_LOG.md`, section 4).
+work the same way: swappable, nothing hard-wired. Each ship has one stats file: `Assets/Ships/Asura.asset`
+for our ship and `Assets/Ships/Garuda.asset` for the enemy (`ShipStats`, read through `Ship.cs`). Edit
+them in **Starwolf → Tuning**, on the Ship and Enemy tabs. The board's numbers are fields marked
+`[Tune]` on its scripts, on the Board tab. Each panel prefab has an **Art** list with its sprites (see
+`Assets/UI/Board/README.md`).
 
 **Do not invent design to fill a gap.** If a document is silent, say it is open and stop. Mark it
 `TBD` or put it in an "Open" list. Guessing and writing it down as if it were decided is the worst
@@ -263,14 +302,15 @@ ceiling.
 The flow is `00_Start` → `01_Briefing` → `02.1_Grid`. The new Claude Design handoff is fully built
 into `02.1_Grid` and passed its final QA. Every control is clickable and shows its states. Wiring to
 game systems started in Step 34 and is ongoing. The asset audit is done (`ASSET_AUDIT.md`). The older
-board in `02_Grid` is still in Build Settings, but nothing leads to it. For the current step, read
-section 1 of `BUILD_LOG.md`.
+`02_Grid` board has been deleted. At play the board loads a level on top of itself, `Assets/Scenes/Levels/Level_01.unity`.
+For the current step, read section 1 of `BUILD_LOG.md`.
 
 **Read `Assets/Scenes/Tactical/BUILD_LOG.md` before you touch that scene.** The owner builds one step
 at a time and checks each step on screen before the next one starts. Do one step, show it, wait.
 
 The rest of the Unity build is an older attempt at a different UI — a six-screen 3D cockpit. It
-decides nothing about design. `Assets/CODEBASE_BASELINE.md` records what C# exists.
+decides nothing about design. `Assets/CODEBASE_BASELINE.md` describes those older scripts, as they were
+on 2026-09-01.
 
 There was also a web prototype in TypeScript. It was abandoned and deleted. Its simulation core was
 kept at `docs/reference-sim/`, as reference only.
@@ -286,27 +326,31 @@ Do not treat any of these as decided. Ask the owner.
 
 **Blocking**
 
-1. **Enemy AI.** Unspecified in every document, including the GDD. The largest hole in the design.
-2. **What firing a railgun really costs.** §8.4 says firing sets every powered system to vent. If
-   that is true, a three-turret volley is impossible and the volley rules are wrong. One of the two
-   has to give.
-3. **Where a drawn power point comes from.** Is there an unallocated pool? Must a point be vented
-   from somewhere else first? What happens when you press draw with all ten already placed?
-4. **What happens when stability reaches zero.** Four sections spend numbers on it; none says what it
-   is for.
-5. **World units to plot pixels.** Nothing maps them, so nobody can say what zoom 1.0 shows.
-6. **PDC aiming** has no written section, and **missiles have no control surface** — nothing says
-   where they are fired from.
-7. **Arena size.** Needs a first number. Grid ticks and zoom range derive from it.
+1. **Enemy AI beyond the first brain.** `Assets/Scripts/Tactical/EnemyBrain.cs` patrols a loop of
+   waypoints. When we hit it, it fires 2 missiles back, at most once every 120 s. How an enemy hears
+   us, hunts us and reacts is still unspecified in every document, including the GDD.
+2. **What happens when stability reaches zero.** Four sections spend numbers on it; none says what it
+   is for. On the board, stability is a meter on the helm, and nothing else reads it.
 
 **Not blocking**
 
-8. Squadron size, fuel and ammo scales. Whether fighters need orders beyond a target. Whether craft
-   must be recovered to rearm. Whether losses persist between missions.
-9. Whether the stern stays a glass jaw (GDD: 10 hp) or the softer prototype value (40).
-10. Whether starbase hulks are destructible, and whether terrain blocks radar, sensors, or both.
-11. Whether a dry trigger pull should wake the alert net.
-12. What goes in the Engineering panel, and what replaces the freed shield readout.
-13. Who draws the real hulls. Two tiers per class — a detailed silhouette and a separately drawn
-    plot glyph — is the largest art commitment in the project. Starbase wreckage art does not exist
-    at all.
+3. Squadron size and fuel. Whether fighters need orders beyond a target. Whether craft must be
+   recovered to rearm. Whether losses persist between missions.
+4. Whether starbase hulks are destructible, and whether terrain blocks DRADIS.
+5. Whether a dry trigger pull should wake the alert net.
+6. Who draws the real hulls. Two tiers per class — a detailed silhouette and a separately drawn
+   plot glyph — is the largest art commitment in the project. The broken starbase is placeholder
+   shapes for now (`Assets/Prefabs/Terrain/BaseHusk.prefab`).
+
+**Settled by the code since this list was first written:**
+
+- Firing a railgun spends 70 of the weapon charge and adds 25 to our signal. Nothing vents.
+- A bus on DRAW takes units the reactor has spare. With all ten units placed, it waits until another
+  bus vents.
+- The plot shows 60.9 px per 1,000 km at zoom 1 (`HandoffPlotPanel.cs`, `pxPer1000Km`).
+- PDC groups have fixed arcs and fire by themselves on AUTO. Missiles fire from the VLS on the Fire
+  Control panel.
+- The battle space is 100,000 × 100,000 km (`HandoffBoardState.cs`, `arenaWidthKm`).
+- Ammunition is a real count in the ship stats files.
+- The aft armour is 50.
+- The Engineering panel is built (`Assets/Scripts/UI/Panels/EngineeringPanel.cs`).

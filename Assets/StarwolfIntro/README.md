@@ -21,7 +21,6 @@ What changed, step by step, and why, is in `Assets/Scenes/Tactical/BUILD_LOG.md`
 | `Resources/StarwolfIntro/glyphs.json` | The dot font: each letter drawn as rows of `1` and `0`. Also holds the two colours. |
 | `Resources/StarwolfIntro/hardware-hum.wav` | The low hum that plays under the screen. |
 | `Materials/ShareTechMono-Regular SDF Phosphor Glow.mat` | Material for normal TextMeshPro text: green glow to match the dots. |
-| `Editor/StarwolfIntroTools.cs` | Builds the intro scene from scratch. You should not need it. |
 
 ---
 
