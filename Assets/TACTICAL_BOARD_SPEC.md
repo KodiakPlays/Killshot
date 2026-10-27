@@ -195,7 +195,7 @@ Distances are **kilometres**. Speeds are km/s. Times are game seconds.
 
 | Number | Value |
 |---|---|
-| Battle space | 100,000 × 100,000 km (set with Starwolf → Level) |
+| Battle space | Set per level with a Battle Space box (Starwolf → Level); 100,000 × 100,000 km without one |
 | DRADIS reach | 15,600 km at gain 1, 30,000 km at gain 5 |
 | Visual range | 10,000 km |
 | Railgun reach | 25,000 km |

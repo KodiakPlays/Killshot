@@ -40457,6 +40457,52 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 144461307820360089, guid: e99cf01990782470e82b9ff17c59afc3, type: 3}
   m_PrefabInstance: {fileID: 1505314180}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1506915068
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1506915070}
+  - component: {fileID: 1506915069}
+  m_Layer: 0
+  m_Name: Battle Space
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1506915069
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1506915068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04ecf7eaf75b5452f9c3f8da488a8a1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleSpace
+  widthKm: 100000
+  heightKm: 100000
+--- !u!4 &1506915070
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1506915068}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1508705895
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -58047,3 +58093,4 @@ SceneRoots:
   - {fileID: 100432862}
   - {fileID: 1379138733}
   - {fileID: 1834761846}
+  - {fileID: 1506915070}

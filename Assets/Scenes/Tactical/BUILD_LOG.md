@@ -143,8 +143,9 @@ Do not run ahead. Do one step, show it, wait.
 | 88 | A shot hits within 100 km of any ship; a hit's damage comes from the weapon that fired it | **Done** — playtest 209/209 |
 | 89 | UI restructure steps 1 to 5: fonts in `Assets/UI/Fonts` with a Fonts list per panel; materials; two stencils and the plot's mock-up deleted; the old export's reference files kept, the rest of `UI2` deleted | **Done** — 0 pixels changed by the fonts; playtest 209/209 |
 | 90 | UI restructure step 6: "Handoff" is gone from every script name; the board's root object is `Tactical Board` | **Done** — no missing scripts; playtest 209/209 |
+| 91 | Each level has its own battle space: a Battle Space box, set in the Level window | **Done** — quick check in play mode |
 
-Steps 6 to 28 and Steps 34 to 90 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 91 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -625,7 +626,7 @@ These are settled. Do not reopen them.
     shooter's (Hangar). These stay with the ship being hit, in its Damage group: armour per side,
     the reactor's radiation chance, how fire, vacuum and radiation spread, crew losses and repairs.
     Tune how hard our weapons hit on the Ship tab, and the Garuda's on the Enemy tab.
-50. **Each level has its own battle space** (owner, 2026-10-27; not built yet). A Battle Space box
+50. **Each level has its own battle space** (owner, 2026-10-27; built in Step 91). A Battle Space box
     in the level, like the spawn boxes, with a width and height in km. The Level window sets them
     and its map shows the edge. The board uses them when the level loads. A level without a box
     uses 100,000 × 100,000 km, today's size.
@@ -760,7 +761,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 90, in detail
+## 6 · Steps 6 to 28, and 34 to 91, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3822,6 +3823,42 @@ Playtest 2026-10-27_232526: 209/209.
 Those are only labels: Unity links scripts by their GUID, which did not change. Unity rewrites a label
 when that part is next edited. Don't hand-edit them.
 
+### Step 91 — Each level has its own battle space
+
+**What it is.** The battle space is the area you may fight in. Leave it and you get the turn-back
+warning and the countdown. Until now every level had the same one, 100,000 × 100,000 km. Now each
+level sets its own.
+
+1. Open a level in **Starwolf → Level**.
+2. Press **Battle space**. Two boxes appear under the map: Width, km and Height, km.
+3. Type the size. The map's edge follows as you type.
+4. Play the level: the board uses that size. The edge, the turn-back warning, the zoom-out limit
+   and how far you can scroll all follow it.
+
+A level without a Battle Space keeps the board's size, 100,000 × 100,000 km. The battle space is
+always centred on the grid's centre.
+
+**Owner direction (2026-10-27).** Decision 50, as proposed: "Yes, a box per level."
+
+**How it works.**
+
+- `Assets/Scripts/Tactical/BattleSpace.cs`, beside the spawn boxes. At play it sets the board's
+  `arenaWidthKm` and `arenaHeightKm` (`ShipState`) and clamps the zoom again. In the Scene view it
+  draws the edge with its size.
+- The Level window's map uses the level's Battle Space, or the board's size without one. It also
+  widens to show any spawn outside the edge, and it no longer draws outside its frame.
+- If a spawn is outside the battle space, the window warns: that ship would start outside.
+- `Level_01` has a Battle Space at 100,000 × 100,000 km, so it plays as before.
+
+**Calls made without the owner (can be changed):** the warning for a spawn outside the edge; the map
+widening to show such a spawn.
+
+**Checked.** Quick check in play mode, with Level_01 set to 60,000 × 80,000 km for the test (not
+saved): the board took that size, the zoom-out limit went from 0.35 to 0.47, and the grid's edge
+followed. Our ship started at the player spawn, 45,000 km south, so it was outside, as expected. The
+window's warning and map by screenshot. Level_01 saved at 100,000 × 100,000 km. No new console
+errors.
+
 ---
 
 ## 7 · How to keep this log
@@ -3877,12 +3914,8 @@ to 5 done in Step 89; 6 to 8 left). Ask the other session before taking Unity.
 
 **Tooling (the current stage of the work order)**
 
-6. **The battle space size moves from the board into each level** (Level tool item 2). Agreed
-   with the owner: decision 50. Tooling session, next. Plan: a `BattleSpace` component like
-   `EnemySpawn` (`Assets/Scripts/Tactical`), with `widthKm` and `heightKm`. In `Start` it sets the
-   board's `arenaWidthKm` and `arenaHeightKm` (`HandoffBoardState`). The Level window adds a
-   "Battle space" button, and its map reads the box. Check the plot's zoom limit, axis numbers and
-   pan limit follow it (the Step 86 playtest checks cover these).
+6. ~~**The battle space size moves from the board into each level**~~ **Done in Step 91**
+   (decision 50).
 7. **Debris and ruins on the plot, shown once found** (Level tool item 4, Ruins item 1).
 8. **The mission scripter**, its own menu item (**Starwolf → Mission**). Proposed, not agreed: a
    chain of steps, each with "when this happens, do that" rules. Plan it with the owner first.
@@ -4855,8 +4888,10 @@ Left unfinished when the Step 73 chat closed. Plan each with the owner before bu
 1. **Ruins on the plot.** A camera that draws the `WorldTerrain` layer at the plot's pan and zoom,
    as line art like our ship's picture, true to scale, behind the marks. Board side, the same for
    every level. **Agreed:** a ruin shows **once found, then stays** (the prototype's rule: within
-   sensor range plus half its size). Proposed, not agreed: found only while DRADIS is on, like
-   hearing a contact; a whole set piece (the husk) is found at once.
+   sensor range plus half its size). **Agreed (owner, 2026-10-27):** found only while DRADIS is on
+   and SEN has power, like hearing a contact; with DRADIS off you fly blind into new debris.
+   **Agreed (owner, 2026-10-27):** found piece by piece, the husk too; its shape fills in as you
+   fly round it.
 2. **What ruins do, one step each.** Block shots (the prototype's penetration against toughness:
    asteroid 3, structure 4, ruins 3, starbase 5); hide us from sensors (line of sight); hurt us
    when we hit them (the prototype pushes the ship out and damages it above an impact speed). Our

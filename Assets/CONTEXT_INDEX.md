@@ -319,7 +319,7 @@ Do not treat any of these as decided. Ask the owner.
 - The plot shows 60.9 px per 1,000 km at zoom 1 (`HandoffPlotPanel.cs`, `pxPer1000Km`).
 - PDC groups have fixed arcs and fire by themselves on AUTO. Missiles fire from the VLS on the Fire
   Control panel.
-- The battle space is 100,000 × 100,000 km (`HandoffBoardState.cs`, `arenaWidthKm`).
+- Each level sets its battle space with a Battle Space box (Starwolf → Level, Step 91). Without one it is 100,000 × 100,000 km (`ShipState.arenaWidthKm`).
 - Ammunition is a real count in the ship stats files.
 - The aft armour is 50.
 - The Engineering panel is built (`Assets/Scripts/UI/Panels/EngineeringPanel.cs`).

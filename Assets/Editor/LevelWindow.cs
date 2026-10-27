@@ -69,6 +69,7 @@ public class LevelWindow : EditorWindow
             EditorGUILayout.LabelField(level.name + " from above", EditorStyles.boldLabel);
             DrawMap(level);
             EditorGUILayout.LabelField("Grey: debris.  Amber: the picked field, as Scatter would lay it.  Red: enemy spawn.  White: player spawn.  Line: the battle space's edge.", EditorStyles.wordWrappedMiniLabel);
+            DrawBattleSpace(level);
             DrawFields(level);
         }
 
@@ -78,6 +79,7 @@ public class LevelWindow : EditorWindow
         {
             if (GUILayout.Button("Enemy spawn")) Add<EnemySpawn>(level, "Enemy Spawn");
             if (GUILayout.Button("Player spawn")) AddPlayerSpawn(level);
+            if (GUILayout.Button("Battle space")) AddBattleSpace(level);
             if (GUILayout.Button("Debris field")) { AddDebrisField(level); picked = Selection.activeGameObject.GetComponent<DebrisField>(); }
         }
         EditorGUILayout.EndScrollView();
@@ -89,9 +91,12 @@ public class LevelWindow : EditorWindow
     {
         float w = EditorGUIUtility.currentViewWidth - 30, h = Mathf.Clamp(w * 0.8f, 200, 520);
         var r = GUILayoutUtility.GetRect(w, h, GUILayout.ExpandWidth(true));
-        var half = ArenaHalfKm();
-        float kmPerPx = Mathf.Max(half.x * 2 / r.width, half.y * 2 / r.height) * 1.04f; // the whole battle space, a little margin
-        System.Func<Vector3, Vector2> px = p => new Vector2(r.center.x + p.x / kmPerPx, r.center.y - p.y / kmPerPx);
+        var half = ArenaHalfKm(level);
+        var view = half; // the battle space, and any spawn outside it
+        foreach (var t in Find<EnemySpawn>(level).Select(s => s.transform).Concat(Find<PlayerSpawn>(level).Select(s => s.transform)))
+            view = Vector2.Max(view, new Vector2(Mathf.Abs(t.position.x), Mathf.Abs(t.position.y)));
+        float kmPerPx = Mathf.Max(view.x * 2 / r.width, view.y * 2 / r.height) * 1.04f; // a little margin
+        System.Func<Vector3, Vector2> px = p => new Vector2(r.width / 2 + p.x / kmPerPx, r.height / 2 - p.y / kmPerPx); // inside the map's clip
 
         // a click on a debris field picks it
         var e = Event.current;
@@ -110,7 +115,8 @@ public class LevelWindow : EditorWindow
         }
         if (e.type != EventType.Repaint) return;
 
-        EditorGUI.DrawRect(r, Ground);
+        GUI.BeginClip(r); // anything outside the battle space stays inside the map's frame
+        EditorGUI.DrawRect(new Rect(0, 0, r.width, r.height), Ground);
         Frame(px(new Vector3(-half.x, half.y)), px(new Vector3(half.x, -half.y)), Edge);
         int terrain = LayerMask.NameToLayer("WorldTerrain");
         foreach (var root in level.GetRootGameObjects())
@@ -127,6 +133,7 @@ public class LevelWindow : EditorWindow
         }
         foreach (var s in Find<EnemySpawn>(level)) Marker(px(s.transform.position), Enemy, "E");
         foreach (var s in Find<PlayerSpawn>(level)) Marker(px(s.transform.position), Player, "P");
+        GUI.EndClip();
     }
 
     // the picked field's pieces as Scatter would lay them now; worked out again only when a setting changes
@@ -184,15 +191,53 @@ public class LevelWindow : EditorWindow
         GUI.Label(new Rect(c.x + 6, c.y - 8, 20, 16), letter, style);
     }
 
-    // the battle space's half width and height, km, from the board (Step 65); 50,000 if no board is open
-    static Vector2 ArenaHalfKm()
+    // the battle space's half width and height, km: the level's Battle Space (decision 50), else the
+    // board's (Step 65); 50,000 if no board is open
+    static Vector2 ArenaHalfKm(Scene level)
     {
+        var space = Find<BattleSpace>(level).FirstOrDefault();
+        if (space) return new Vector2(space.widthKm / 2, space.heightKm / 2);
         var board = FindAnyObjectByType<BoardManager>();
         if (!board) return new Vector2(50000, 50000);
         var so = new SerializedObject(board);
         var w = so.FindProperty("state.arenaWidthKm");
         var h = so.FindProperty("state.arenaHeightKm");
         return w != null && h != null ? new Vector2((float)w.doubleValue / 2, (float)h.doubleValue / 2) : new Vector2(50000, 50000);
+    }
+
+    // ---- the battle space ------------------------------------------------------------------
+
+    // its size, typed in here; the map follows as you type
+    static void DrawBattleSpace(Scene level)
+    {
+        EditorGUILayout.Space(6);
+        EditorGUILayout.LabelField("Battle space", EditorStyles.boldLabel);
+        var space = Find<BattleSpace>(level).FirstOrDefault();
+        if (!space)
+        {
+            var half = ArenaHalfKm(level);
+            EditorGUILayout.HelpBox("This level uses the board's battle space, " + (half.x * 2).ToString("N0") + " × " + (half.y * 2).ToString("N0") + " km. Press Battle space below to give it its own size.", MessageType.None);
+            return;
+        }
+        var so = new SerializedObject(space);
+        EditorGUILayout.PropertyField(so.FindProperty("widthKm"), new GUIContent("Width, km"));
+        EditorGUILayout.PropertyField(so.FindProperty("heightKm"), new GUIContent("Height, km"));
+        so.ApplyModifiedProperties();
+        // a ship that starts outside gets the turn-back warning at once
+        System.Func<Vector3, bool> outside = p => Mathf.Abs(p.x) > space.widthKm / 2 || Mathf.Abs(p.y) > space.heightKm / 2;
+        var lost = Find<PlayerSpawn>(level).Where(s => outside(s.transform.position)).Select(s => "the player spawn")
+            .Concat(Find<EnemySpawn>(level).Where(s => outside(s.transform.position)).Select(s => s.name)).ToArray();
+        if (lost.Length > 0)
+            EditorGUILayout.HelpBox("Outside the battle space: " + string.Join(", ", lost) + ". That ship starts outside and gets the turn-back warning at once.", MessageType.Warning);
+    }
+
+    // one per level, so a second press finds the one it has
+    static void AddBattleSpace(Scene level)
+    {
+        var space = Find<BattleSpace>(level).FirstOrDefault();
+        if (space) { Selection.activeGameObject = space.gameObject; return; }
+        Add<BattleSpace>(level, "Battle Space");
+        Selection.activeGameObject.transform.position = Vector3.zero; // its edge is always round the grid's centre
     }
 
     // ---- the debris fields -----------------------------------------------------------------
