@@ -24,15 +24,13 @@ programmatically, and nothing outside Google can query one. So the loop is:
 this script renders the files, you drag them into the notebook by hand.
 
 That manual step is the whole integration. Everything else here exists to make
-it cheap: one command, eight files, drop them in, delete the old ones.
+it cheap: one command, six files, drop them in, delete the old ones.
 
 ## What it produces
 
 | Source | Contents |
 |---|---|
 | `00-MANIFEST.md` | Build stamp — commit, branch, Unity version, dirty-tree warning — plus a reading guide for the notebook |
-| `01-game-overview.md` | `STAKEHOLDER_DOCUMENTATION.md`: the April 2026 cockpit build's design |
-| `02-code-architecture.md` | `DOCUMENTATION.md` + the weapon system READMEs: Soham's cockpit code |
 | `03-api-index.md` | **Generated** from the C#: every type, base class, public member, and `[SerializeField]` field |
 | `04-source-core.md` | Full source of `Assets/Scripts/*.cs` |
 | `05-source-weapons.md` | Full source of `Weapons/`, `Targeting/`, `Interfaces/` |
@@ -43,8 +41,7 @@ Every code section is preceded by a `FILE: <path>` line, so the notebook cites
 real repository paths in its answers instead of vague section references.
 
 `03-api-index.md` is the one source that cannot rot: it is extracted from the
-code at generation time, so where the prose docs disagree with it, it wins. The
-manifest tells the notebook this explicitly.
+code at generation time.
 
 ## Refreshing the notebook
 

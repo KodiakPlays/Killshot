@@ -1587,7 +1587,9 @@ bindings, and `UIController` is on the player ship prefab. `TestUIKeyControler` 
 ## 15. Documentation inventory
 
 This section is as of 2026-09-01. There are many more documents now, and the newest source wins. For
-the current list and which source wins, see `Assets/CONTEXT_INDEX.md`.
+the current list and which source wins, see `Assets/CONTEXT_INDEX.md`. The four markdown files below
+(`DOCUMENTATION.md`, `STAKEHOLDER_DOCUMENTATION.md` and the two weapon READMEs) were deleted on
+2026-10-27 (owner). Git history has them.
 
 On 2026-09-01 there were eight documents. Authority ran GDD → Art Spec → UI doc → the markdown files.
 

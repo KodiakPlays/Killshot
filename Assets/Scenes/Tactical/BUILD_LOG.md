@@ -128,10 +128,18 @@ Do not run ahead. Do one step, show it, wait.
 | 78 | The active scan cone on the plot: two bright edges and a faint fill, from the small circle round our ship out to the scan's range | **Done** — checked by screenshot; playtest not needed (visual only) |
 | 79 | Ammunition is a real count; boarding goes on while the target moves; the boats' 15,000 km range | **Done** — playtest 191/191 |
 | 80 | The Tuning window's tabs (Ship, Enemy, Board) and a stats file per ship | **Done** — playtest 191/191 |
-| 81 | The Level window shows the level from above, with a preview of the picked debris field; the railgun slug at 2,500 km/s | **Done** — playtest 188/191, fixes not yet confirmed (see Step 81) |
+| 81 | The Level window shows the level from above, with a preview of the picked debris field; the railgun slug at 2,500 km/s | **Done** — playtest 191/191 after the fixes |
 
 Steps 6 to 28 and Steps 34 to 81 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
+
+**Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
+old cockpit game: `Assets/DOCUMENTATION.md`, `Assets/STAKEHOLDER_DOCUMENTATION.md`,
+`Assets/TACTICAL_BOARD_PLAN.md`, `Assets/PARITY_PLAN.md`, the two READMEs in
+`Assets/Scripts/Weapons`, and in `Assets/Scenes/Tactical`: `VERIFICATION.md`, `ASSET_AUDIT.md`,
+`TARGETING_AUDIT.md`, `TARGETING_COMPUTER_SPEC.md`, `UICONTROLLER_PARTS.md` and
+`UI_INTEGRATION_LOG.md`. This log still names them in old steps. To read one, use git:
+`git show 12ccdd1:Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
 
 ---
 
@@ -3560,7 +3568,8 @@ x10 one tick is 10 game seconds, and the slug lands inside it, before the pause 
   sooner. The third failure, "RECALL eases down while held" (53), passed in the 7 runs before;
   it looks like a timing flake.
 - The run after the fixes (2026-10-27_012852) hung after screenshot 28f (boats holding) and was
-  stopped, with no report. The fixes are not confirmed yet: "To do next", item 1.
+  stopped, with no report.
+- The next run (2026-10-27_084153) passed 191/191. The fixes are confirmed.
 
 **Owner, after Step 81:** no hit radius; a slug must hit the ship itself (decision 47; to do).
 
@@ -3594,33 +3603,22 @@ code move, or once at the end of a batch.
 
 **Finish first (in progress when this was written)**
 
-0. **Confirm Step 81's playtest fixes.** In play mode, check only the first railgun shot (checks
-   94 to 100): the slug is still in flight at the pause, and the cue after it lands is "hit".
-   Also find out why the run of 2026-10-27_012852 hung after screenshot 28f (boats holding). The
-   run before it went from 28f to 28g within a minute.
-1. **The doc fixes.** Agents fixed stale facts in this file, `TACTICAL_BOARD_SPEC.md`,
-   `CONTEXT_INDEX.md`, `README.md`, `CODEBASE_BASELINE.md`, `BOARDING_README.md`,
-   `DAMAGE_README.md`, `FTUE_PLAN.md`, `CLAUDE_DESIGN_NEEDS.md`, `HANDOFF_GAPS.md`,
-   `PROTOTYPE_BASELINE.md`, `StarwolfIntro/README.md`, `docs/scale-sim/README.md` and
-   `Tools/notebooklm/README.md`. If they are not committed yet, read the changes (`git diff`),
-   check them against the code, and commit them.
-2. **Old docs: ask the owner whether to delete them or move them to an archive folder.** They
-   describe deleted code, the deleted 02_Grid or the old cockpit game:
-   - `Assets/DOCUMENTATION.md`
-   - `Assets/STAKEHOLDER_DOCUMENTATION.md`
-   - `Assets/Scripts/Weapons/WEAPON_SYSTEM_README.md`
-   - `Assets/Scripts/Weapons/RAILGUN_SETUP.md`
-   - `Assets/TACTICAL_BOARD_PLAN.md`
-   - `Assets/PARITY_PLAN.md`
-   - in `Assets/Scenes/Tactical`: `VERIFICATION.md`, `ASSET_AUDIT.md`, `TARGETING_AUDIT.md`,
-     `TARGETING_COMPUTER_SPEC.md`, `UICONTROLLER_PARTS.md` and `UI_INTEGRATION_LOG.md`
+0. ~~**Confirm Step 81's playtest fixes.**~~ Done 2026-10-27: run 2026-10-27_084153 passed
+   191/191. The first railgun shot (checks 94 to 100) passes. The run went on past 28f. The run
+   that stopped at 28f (2026-10-27_012852) left its video unfinished, so Unity froze or was shut
+   then. The cause was not found, and it did not happen again.
+1. ~~**The doc fixes.**~~ Done (Tooling, commits a59d15e and 12ccdd1).
+2. ~~**Old docs.**~~ Deleted (owner, 2026-10-27). The list is in section 1. The links to them in
+   `CLAUDE.md`, `CONTEXT_INDEX.md`, `CODEBASE_BASELINE.md`, `HANDOFF_GAPS.md`,
+   `CLAUDE_DESIGN_NEEDS.md` and `Tools/notebooklm` are fixed. `CLAUDE.md`'s three wrong facts are
+   fixed: git tracks `Killshot.slnx`; `StarwolfIntro` uses a namespace; the board's damage goes
+   through `DamageSystem`.
+3. **The "Handoff" rename.** The owner chose the new names; they are in "UI restructure — to do",
+   step 6, below. Owner 2026-10-27: the playable steps (82 to 87) come first, then the UI
+   restructure. When the rename is done, the docs need one pass for the new names.
 
-   Then fix the links to them in `CLAUDE.md`, `CONTEXT_INDEX.md` and this file. `CLAUDE.md` also
-   has three wrong facts: git tracks `Killshot.slnx`; `StarwolfIntro` uses a namespace; the
-   board's damage does not go through `IDamageable`.
-3. **The "Handoff" rename** (UI Restructure session). The owner chose the new names; they are in
-   "UI restructure — to do", step 6, below. When it is done, the docs need one pass for the new
-   names.
+**Who does what (2026-10-27).** Tooling: items 4 to 9. killshot-81: Steps 82 to 87, then the UI
+restructure list. Ask the other session before taking Unity.
 
 **Weapons**
 

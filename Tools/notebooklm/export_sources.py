@@ -287,10 +287,8 @@ def build_manifest(stamp_lines, files_written, dirty):
     for stem, title, words in files_written:
         body.append(f"| `{stem}.md` | {title} | {words:,} |")
     body.append("\n## How to read these sources\n")
-    body.append("- **Game overview** is design intent — what the game is meant to feel like.")
-    body.append("- **Code architecture** is the maintained prose docs. It can lag the code.")
     body.append("- **API index** is generated directly from the C# and is always in sync with "
-                "the commit above. When prose and index disagree, the index is right.")
+                "the commit above.")
     body.append("- **Source bundles** are the complete C# text, so answers can quote real code.")
     body.append("- Every code section is preceded by a `FILE:` line giving its repository path. "
                 "Cite that path when answering questions about where something lives.")
@@ -330,29 +328,6 @@ def main():
     def emit(stem, title, text):
         _, words = write(out, stem, text)
         written.append((stem, title, words))
-
-    # 01 — game overview -----------------------------------------------------
-    parts = [header("Game Overview & Design Intent", stamp,
-                    "Design-intent document. Describes what the game is meant to be, "
-                    "not necessarily what is currently implemented.")]
-    sd = REPO / "Assets" / "STAKEHOLDER_DOCUMENTATION.md"
-    if sd.exists():
-        parts.append(f"FILE: Assets/STAKEHOLDER_DOCUMENTATION.md\n\n")
-        parts.append(sd.read_text())
-    emit("01-game-overview", "Game overview & design intent", "".join(parts))
-
-    # 02 — architecture prose ------------------------------------------------
-    parts = [header("Code Architecture (maintained docs)", stamp,
-                    "Hand-written architecture docs. These can lag the code — "
-                    "the API index and source bundles are authoritative.")]
-    for rel in ["Assets/DOCUMENTATION.md",
-                "Assets/Scripts/Weapons/WEAPON_SYSTEM_README.md",
-                "Assets/Scripts/Weapons/RAILGUN_SETUP.md"]:
-        p = REPO / rel
-        if p.exists():
-            parts.append(f"\n\n---\n\nFILE: {rel}\n\n")
-            parts.append(p.read_text())
-    emit("02-code-architecture", "Architecture docs (prose)", "".join(parts))
 
     # 03 — generated API index ----------------------------------------------
     files = code_files()

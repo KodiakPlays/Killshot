@@ -51,15 +51,9 @@ Read what's relevant before non-trivial work. These sources are **rolling** — 
 | **Tactical board pickup point** — state, next step, traps | `Assets/Scenes/Tactical/BUILD_LOG.md` |
 | **Start here** — routes you to everything else | `Assets/CONTEXT_INDEX.md` |
 | **The specification** (how the game works) | `Assets/TACTICAL_BOARD_SPEC.md` |
-| **Decision log** (why, and what was rejected) | `Assets/TACTICAL_BOARD_PLAN.md` |
 | **Verified code baseline** (every script read line by line) | `Assets/CODEBASE_BASELINE.md` |
 | **Reference simulation** (turret arming and radar tracks, in TS) | `docs/reference-sim/` |
 | **Prototype baseline** (the playable build, read line by line) | `Assets/PROTOTYPE_BASELINE.md` |
-| **Unity→prototype parity plan** (work items, decisions, traps) | `Assets/PARITY_PLAN.md` |
-| Code structure & main systems | `Assets/DOCUMENTATION.md` |
-| Game overview & design intent | `Assets/STAKEHOLDER_DOCUMENTATION.md` |
-| Weapon system architecture | `Assets/Scripts/Weapons/WEAPON_SYSTEM_README.md` |
-| Railgun setup | `Assets/Scripts/Weapons/RAILGUN_SETUP.md` |
 | Engine version | `ProjectSettings/ProjectVersion.txt` |
 | Packages & render pipeline | `Packages/manifest.json` |
 | Input backend, serialization mode | `ProjectSettings/ProjectSettings.asset`, `ProjectSettings/EditorSettings.asset` |
@@ -77,7 +71,7 @@ Docs may lag the code. **Code and live Editor state win.**
 - **Do** read the relevant reference before building or changing a system it covers. A prototype is the owner's intent expressed as working code — feel, pacing, numbers, UI layout, state flow.
 - **Do** treat a prototype as a **specification of behaviour, not of implementation.** Rebuild the mechanic in idiomatic Unity and the conventions below; never transliterate its DOM, canvas, or global-variable structure into C#.
 - **Do** treat references as a floor. Never scope a Unity feature down to what a reference happened to do, and never "correct" the Unity build back toward a prototype just because they differ.
-- **Don't** assume either build is ahead — check per system. Unity and the prototype were built **in parallel**. Unity was intended to lead but is unfinished; the prototype is a fully playable experience and currently holds much of the core playability. See `Assets/PARITY_PLAN.md` for the current mapping.
+- **Don't** assume either build is ahead — check per system. Unity and the prototype were built **in parallel**. Unity was intended to lead but is unfinished; the prototype is a fully playable experience and currently holds much of the core playability.
 - **Don't** mirror a reference's contents into this file or into docs. Link the path.
 - **Don't** edit anything in `References/`. It is owner-authored input, not a build artifact.
 
@@ -95,17 +89,17 @@ Docs may lag the code. **Code and live Editor state win.**
 - **Do** commit the `.meta` file alongside every asset you add, move, or delete. A missing or orphaned `.meta` silently breaks references for everyone else.
 - **Do** keep asset serialization on **Force Text**. Text YAML is what makes diffs and merges possible at all.
 - **Don't** commit or edit generated and machine-local directories: `Library/`, `Temp/`, `Logs/`, `obj/`, `UserSettings/`, `Build*/`.
-- **Don't** edit `Assembly-CSharp.csproj`, `Assembly-CSharp-Editor.csproj`, or `Killshot.slnx`. Unity regenerates them and git ignores them.
+- **Don't** edit `Assembly-CSharp.csproj`, `Assembly-CSharp-Editor.csproj`, or `Killshot.slnx`. Unity regenerates them. Git ignores the `.csproj` files; it tracks `Killshot.slnx`.
 - **Don't** commit build outputs or archives. They belong outside the repo.
 
 ## C# conventions
 
 These describe the existing codebase. Match them; do not introduce a competing style.
 
-- **No namespaces.** Every type sits in the global namespace. Don't add one to a new file.
+- **No namespaces.** Every type is in the global namespace, except the intro package (`Assets/StarwolfIntro`, namespace `Starwolf.Intro`). Don't add one to a new file.
 - **No asmdefs.** Runtime code compiles into `Assembly-CSharp`; code under `Assets/Editor/` into `Assembly-CSharp-Editor`. Adding an `.asmdef` silently severs existing references — treat it as a deliberate architectural decision, not a tidy-up.
 - **Prefer `[SerializeField] private`** over public fields for inspector-exposed state.
-- **Damage flows through `IDamageable`** (`Assets/Scripts/Interfaces/IDamageable.cs`). Anything damageable implements it; damage dealers depend on the interface, never on concrete types.
+- **The board's damage goes through `DamageSystem`** (`Assets/Scripts/Systems/DamageSystem.cs`): armour, compartments, conditions, crew. Add new damage there. `IDamageable` (`Assets/Scripts/Interfaces/IDamageable.cs`) is for Soham's physics weapons and ships only.
 - **The tactical board's weapons are in `Assets/Scripts/Systems/WeaponSystem.cs`** (owner, 2026-10-26): fire control, slugs, missiles and PDCs, worked out in km and game time. Add weapons there. Soham's `WeaponBase` / `WeaponManager` (shots as physics objects in real time) are kept but the board doesn't use them. `Weapons.cs` is the superseded monolith — don't extend it.
 - **Editor-only code lives in `Assets/Editor/`.** Never `using UnityEditor;` from a runtime script outside `#if UNITY_EDITOR`.
 - Use the existing `[ReadOnly]` attribute for inspector-visible but non-editable fields; the drawer already exists.

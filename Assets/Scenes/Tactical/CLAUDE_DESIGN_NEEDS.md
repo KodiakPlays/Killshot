@@ -9,7 +9,7 @@ row, where the full detail is. "New" means the check found it, and it is not in 
 **Board in Unity:** `Assets/Scenes/Tactical/02.1_Grid.unity`, first built in Steps 28–33. Its panels
 are prefabs in `Assets/UI/Board/Panels`, edited directly.
 
-**Note (updated 2026-10-05, asset audit):** `sprites/Starship_Silhouette.png` in the export was made by the owner, with ChatGPT image tools. It is usable, but it is **not** a Claude Design package file. See `ASSET_AUDIT.md`.
+**Note (updated 2026-10-05, asset audit):** `sprites/Starship_Silhouette.png` in the export was made by the owner, with ChatGPT image tools. It is usable, but it is **not** a Claude Design package file.
 
 **Priority:**
 - **High:** a player sees it as broken or missing, or a control cannot be used.

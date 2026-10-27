@@ -5,7 +5,7 @@ This file lists every gap found in the Claude Design handoff package
 becomes one request to Claude Design, asking them to fill every gap at once.
 
 Record numbers like "drawn #41" are positions in the lists in `layout/layout.json`, counted from 0.
-The details behind each row are in `UI_INTEGRATION_LOG.md`. The board was first built from the
+The board was first built from the
 package in Steps 29–33. Its panels are now prefabs in `Assets/UI/Board/Panels`, edited directly.
 
 Every plot mock-up from the package is now hidden. The plot draws only what the game is doing.
