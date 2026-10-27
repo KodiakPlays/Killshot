@@ -3845,19 +3845,20 @@ always centred on the grid's centre.
 - `Assets/Scripts/Tactical/BattleSpace.cs`, beside the spawn boxes. At play it sets the board's
   `arenaWidthKm` and `arenaHeightKm` (`ShipState`) and clamps the zoom again. In the Scene view it
   draws the edge with its size.
-- The Level window's map uses the level's Battle Space, or the board's size without one. It also
-  widens to show any spawn outside the edge, and it no longer draws outside its frame.
-- If a spawn is outside the battle space, the window warns: that ship would start outside.
+- The Level window's map uses the level's Battle Space, or the board's size without one. It no
+  longer draws outside its frame.
+- **Spawns always stay inside** (owner, 2026-10-27). Shrink the battle space past a spawn, or drag a
+  spawn out, and the Level window moves it to 3,000 km inside the edge, just clear of the turn-back
+  warning (which starts 2,500 km from the edge). One undo puts it back.
 - `Level_01` has a Battle Space at 100,000 × 100,000 km, so it plays as before.
 
-**Calls made without the owner (can be changed):** the warning for a spawn outside the edge; the map
-widening to show such a spawn.
+**Calls made without the owner (can be changed):** how far inside a moved spawn goes (3,000 km).
 
 **Checked.** Quick check in play mode, with Level_01 set to 60,000 × 80,000 km for the test (not
 saved): the board took that size, the zoom-out limit went from 0.35 to 0.47, and the grid's edge
 followed. Our ship started at the player spawn, 45,000 km south, so it was outside, as expected. The
-window's warning and map by screenshot. Level_01 saved at 100,000 × 100,000 km. No new console
-errors.
+window and map by screenshot. Then, at 80,000 km tall, both spawns moved from 45,000 to 37,000 km
+from the centre. Level_01 saved at 100,000 × 100,000 km. No new console errors.
 
 ---
 

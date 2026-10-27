@@ -67,6 +67,7 @@ public class LevelWindow : EditorWindow
         {
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField(level.name + " from above", EditorStyles.boldLabel);
+            if (Event.current.type == EventType.Layout) KeepSpawnsInside(level);
             DrawMap(level);
             EditorGUILayout.LabelField("Grey: debris.  Amber: the picked field, as Scatter would lay it.  Red: enemy spawn.  White: player spawn.  Line: the battle space's edge.", EditorStyles.wordWrappedMiniLabel);
             DrawBattleSpace(level);
@@ -92,10 +93,7 @@ public class LevelWindow : EditorWindow
         float w = EditorGUIUtility.currentViewWidth - 30, h = Mathf.Clamp(w * 0.8f, 200, 520);
         var r = GUILayoutUtility.GetRect(w, h, GUILayout.ExpandWidth(true));
         var half = ArenaHalfKm(level);
-        var view = half; // the battle space, and any spawn outside it
-        foreach (var t in Find<EnemySpawn>(level).Select(s => s.transform).Concat(Find<PlayerSpawn>(level).Select(s => s.transform)))
-            view = Vector2.Max(view, new Vector2(Mathf.Abs(t.position.x), Mathf.Abs(t.position.y)));
-        float kmPerPx = Mathf.Max(view.x * 2 / r.width, view.y * 2 / r.height) * 1.04f; // a little margin
+        float kmPerPx = Mathf.Max(half.x * 2 / r.width, half.y * 2 / r.height) * 1.04f; // the whole battle space, a little margin
         System.Func<Vector3, Vector2> px = p => new Vector2(r.width / 2 + p.x / kmPerPx, r.height / 2 - p.y / kmPerPx); // inside the map's clip
 
         // a click on a debris field picks it
@@ -223,12 +221,23 @@ public class LevelWindow : EditorWindow
         EditorGUILayout.PropertyField(so.FindProperty("widthKm"), new GUIContent("Width, km"));
         EditorGUILayout.PropertyField(so.FindProperty("heightKm"), new GUIContent("Height, km"));
         so.ApplyModifiedProperties();
-        // a ship that starts outside gets the turn-back warning at once
-        System.Func<Vector3, bool> outside = p => Mathf.Abs(p.x) > space.widthKm / 2 || Mathf.Abs(p.y) > space.heightKm / 2;
-        var lost = Find<PlayerSpawn>(level).Where(s => outside(s.transform.position)).Select(s => "the player spawn")
-            .Concat(Find<EnemySpawn>(level).Where(s => outside(s.transform.position)).Select(s => s.name)).ToArray();
-        if (lost.Length > 0)
-            EditorGUILayout.HelpBox("Outside the battle space: " + string.Join(", ", lost) + ". That ship starts outside and gets the turn-back warning at once.", MessageType.Warning);
+    }
+
+    // Spawns always start inside the battle space (owner, 2026-10-27): one outside, or in the turn-back
+    // warning's band, moves to just inside the edge
+    const float SpawnInsetKm = 3000f; // past the board's warning band (arenaWarnKm, 2,500)
+    static void KeepSpawnsInside(Scene level)
+    {
+        var half = Vector2.Max(Vector2.zero, ArenaHalfKm(level) - Vector2.one * SpawnInsetKm);
+        foreach (var t in Find<EnemySpawn>(level).Select(s => s.transform).Concat(Find<PlayerSpawn>(level).Select(s => s.transform)))
+        {
+            var p = t.position;
+            var inside = new Vector3(Mathf.Clamp(p.x, -half.x, half.x), Mathf.Clamp(p.y, -half.y, half.y), p.z);
+            if (inside == p) continue;
+            Undo.RecordObject(t, "Keep a spawn inside the battle space");
+            t.position = inside;
+            EditorSceneManager.MarkSceneDirty(level);
+        }
     }
 
     // one per level, so a second press finds the one it has
