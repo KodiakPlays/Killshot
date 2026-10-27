@@ -38,6 +38,14 @@ public class PlotPanel : Panel
     Color ownShipColor => Palette.ownShip;
     private ShipView shipView;
 
+    [Header("Ruins on the plot (owner 2026-10-27): the level's terrain within visual range, from above, behind the marks")]
+    [Tooltip("Covers the plot. Its own camera draws the WorldTerrain layer at the plot's pan and zoom (TacticalWorld shows only the pieces within visual range). "
+           + "Needs the BoardLinearImage material, as our ship's view: the line art comes red on black, and the material keys the black out.")]
+    [SerializeField] private RawImage ruinsImage;
+    Color ruinsColor => Palette.secondary;
+    private Camera ruinsCamera;
+    private RenderTexture ruinsTexture;
+
     [Header("Sensor circle (Step 42): what DRADIS can hear, around our ship")]
     [Tooltip("Owner 2026-10-18: while DRADIS is on, a circle around our ship at the sensor (hearing) range.")]
     [SerializeField] private MarksGraphic sensorRing;
@@ -315,6 +323,7 @@ public class PlotPanel : Panel
             grid.OffsetPx = new Vector2((float)(-viewX * z), (float)(viewY * z));
             grid.ArenaHalfKm = new Vector2((float)s.ArenaHalfW, (float)s.ArenaHalfH); // Step 65: the grid is the battle space
             ShowAxes();
+            ShowRuins(r.size, z);
         }
         if (capture) capture.raycastTarget = Capturing;
         bool erasing = Controls.Tool == "ERASE";
@@ -776,6 +785,44 @@ public class PlotPanel : Panel
     }
 
     // Children of a plot-sized rect anchored top-left at the plot origin (104,100).
+    // Ruins (see ruinsImage): a camera looking straight down at the found terrain, framed as the plot is
+    // (the view's centre at plotCentre, z board px per km), into a picture the size of the plot
+    void ShowRuins(Vector2 size, double z)
+    {
+        if (!ruinsImage) return;
+        int w = Mathf.Max(1, Mathf.RoundToInt(size.x)), h = Mathf.Max(1, Mathf.RoundToInt(size.y));
+        if (!ruinsCamera)
+        {
+            ruinsCamera = new GameObject("Ruins View Camera").AddComponent<Camera>();
+            ruinsCamera.orthographic = true;
+            ruinsCamera.allowHDR = false; // as the ship views: the line-art pass keeps its red on black
+            ruinsCamera.clearFlags = CameraClearFlags.SolidColor;
+            ruinsCamera.backgroundColor = new Color(0, 0, 0, 0);
+            ruinsCamera.cullingMask = LayerMask.GetMask("WorldTerrain");
+            ruinsCamera.nearClipPlane = 1f;
+            ruinsCamera.farClipPlane = 200000f;
+        }
+        if (!ruinsTexture || ruinsTexture.width != w || ruinsTexture.height != h)
+        {
+            if (ruinsTexture) { ruinsCamera.targetTexture = null; ruinsTexture.Release(); Destroy(ruinsTexture); }
+            ruinsTexture = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear)
+            { name = "Ruins view", hideFlags = HideFlags.DontSave, antiAliasing = 4 };
+            ruinsCamera.targetTexture = ruinsTexture;
+            ruinsImage.texture = ruinsTexture;
+        }
+        ruinsCamera.orthographicSize = (float)(h / 2.0 / z);
+        ruinsCamera.transform.SetPositionAndRotation(new Vector3((float)viewX, (float)viewY, -100000f), Quaternion.identity); // look along +z, north up
+        ruinsImage.rectTransform.sizeDelta = size;
+        Put(ruinsImage.rectTransform, plotCentre, 0f);
+        ruinsImage.color = ruinsColor.gamma; // the board canvas linearises vertex colours; pre-encode
+    }
+
+    private void OnDestroy()
+    {
+        if (ruinsCamera) { ruinsCamera.targetTexture = null; Destroy(ruinsCamera.gameObject); }
+        if (ruinsTexture) { ruinsTexture.Release(); Destroy(ruinsTexture); }
+    }
+
     void Put(RectTransform rt, Vector2 board, float rotZ)
     {
         var o = marks ? marks.origin : Vector2.zero;

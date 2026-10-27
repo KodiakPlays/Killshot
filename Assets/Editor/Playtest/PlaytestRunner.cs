@@ -335,6 +335,8 @@ public static class PlaytestRunner
         // stand-in: no hit starts a condition until the conditions step (24), so the steps before stay as written
         float[] condChances = { s.weapons.stats.fireChanceHE, s.weapons.stats.fireChancePEN, s.weapons.stats.breachChanceSlug, s.damage.stats.radChanceReactor }; // the first three are the shooter's (Weapons)
         s.weapons.stats.fireChanceHE = s.weapons.stats.fireChancePEN = s.weapons.stats.breachChanceSlug = s.damage.stats.radChanceReactor = 0f;
+        // stand-in: the run flies through Level_01's debris, and a collision (Step 93) would dent the armour the checks expect
+        s.damage.stats.collisionArmourDamage = 0f; s.damage.stats.collisionCompartmentDamage = 0;
         var t07Ship = brain ? brain.GetComponent<WorldContact>().Ship : null;
         // the Garuda has its own stats file (Step 80), no longer a copy of ours: its hits start no condition either
         if (t07Ship != null) t07Ship.weapons.stats.fireChanceHE = t07Ship.weapons.stats.fireChancePEN = t07Ship.weapons.stats.breachChanceSlug = t07Ship.damage.stats.radChanceReactor = 0f;

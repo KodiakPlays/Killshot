@@ -144,8 +144,10 @@ Do not run ahead. Do one step, show it, wait.
 | 89 | UI restructure steps 1 to 5: fonts in `Assets/UI/Fonts` with a Fonts list per panel; materials; two stencils and the plot's mock-up deleted; the old export's reference files kept, the rest of `UI2` deleted | **Done** — 0 pixels changed by the fonts; playtest 209/209 |
 | 90 | UI restructure step 6: "Handoff" is gone from every script name; the board's root object is `Tactical Board` | **Done** — no missing scripts; playtest 209/209 |
 | 91 | Each level has its own battle space: a Battle Space box, set in the Level window | **Done** — quick check in play mode |
+| 92 | Ruins and debris on the plot: inside the DRADIS circle with DRADIS on, else within 10,000 km; line art on top of the circles | **Done** — playtest 209/209 (2026-10-28_012951) |
+| 93 | Debris you can fly through: Level_01's crowded belts thinned out; running into a piece damages the ship, no push-out | **Done** — playtest 209/209 (2026-10-28_012951) |
 
-Steps 6 to 28 and Steps 34 to 91 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 93 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -768,7 +770,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 91, in detail
+## 6 · Steps 6 to 28, and 34 to 93, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3867,6 +3869,88 @@ followed. Our ship started at the player spawn, 45,000 km south, so it was outsi
 window and map by screenshot. Then, at 80,000 km tall, both spawns moved from 45,000 to 37,000 km
 from the centre. Level_01 saved at 100,000 × 100,000 km. No new console errors.
 
+### Step 92 — Ruins and debris on the plot, in range
+
+**What it is.** The level's ruins and debris show on the plot only while they are in range of our
+ship. With DRADIS on and power on SEN, that is every piece inside the DRADIS circle. With DRADIS off,
+it is every piece within visual range, 10,000 km. Out of range a piece disappears again. They are
+drawn in grey line art, true to scale, on top of the DRADIS circle, sweep and weapon ring, and under
+our ship, contacts and marks. They move with the plot's pan and zoom.
+
+**Owner direction (2026-10-27).** First built as "found by DRADIS, then stays". The owner played it:
+"The field … is not meant to be constantly active. It should not be visible unless it's within
+your visual range", "not meant to be constantly visible and way beyond the visibility of DRADIS",
+"the debris should not be drawn underneath the circles. The debris has to be visible when your
+sensors are on." This replaces the rules in Ruins item 1.
+
+**How it works.**
+
+- `TacticalWorld` hides every renderer on the `WorldTerrain` layer when a level loads. Each board
+  tick it shows the pieces within range plus half the piece's size, and hides the rest. The range is
+  the DRADIS circle (`SensorSystem.PassiveRangeKm`) while DRADIS listens (`Listening`), and visual
+  range (`Stats.visualRangeKm`) otherwise. `RuinsInSight` counts them.
+- `PlotPanel` makes a camera that looks straight down at the `WorldTerrain` layer, framed exactly
+  as the plot (its centre and km per pixel), into a picture the plot's size. The picture is
+  `Plot/Ruins (3D view)`, just above `Sensor sweep (drawn)` and below `Own ship (3D view)`.
+- The ruins come out as line art by the same full-screen pass as our ship's picture: red lines on
+  black. The `BoardLinearImage` material keys the black out and tints the lines with the palette's
+  `secondary` grey. The ruins camera has HDR off, as the ship views do.
+- Nothing else draws the `WorldTerrain` layer, so a hidden piece is hidden everywhere.
+
+**Calls made without the owner (can be changed):** the grey (`secondary`); a piece counts as in sight
+by its centre plus half its size.
+
+**Trap.** A camera picture shown on the board needs the `BoardLinearImage` material. With the
+default UI material, the line-art pass shows as red lines on solid black and covers the grid.
+
+**Checked.** Quick check in play mode on Level_01: 15 pieces in sight at the player spawn; 111 at
+14,000 km south of the centre, in the near belt; back at the spawn, 15 again. There, DRADIS on with
+3 units on SEN (circle 15,600 km): 354 in sight, none outside the circle, drawn over it. Screenshot
+`Logs/Shots/ruins_dradis_circle_on_top.png`.
+
+**The hang, solved (2026-10-28, killshot-81).** Two full runs hung with `NullReferenceException` in
+`BoardManager.Update` (`state.orders`) and in `Eased.Set`. The cause was not this step's code. Unity's
+"Script Changes While Playing" was "Recompile And Continue Playing", so a script saved by another
+session during a run recompiled the game mid-run, and the board lost its links to the ship's systems.
+It is now "Recompile After Finished Playing" (an Editor preference on this Mac, not in the project).
+Run 2026-10-28_012951: 209/209.
+
+### Step 93 — Debris you can fly through; running into a piece damages the ship
+
+**What it is.**
+
+- Level_01's crowded debris is thinned out. Pieces were removed at random, and the shape of each
+  belt is kept. The near belt has 50 pieces (was 216), the debris inside the husk 26 (was 81), the
+  middle belt 140 (was 228). The far belt and the asteroid fields are unchanged.
+- Running our ship into a piece damages it: 25 armour off the side facing the piece. With that side
+  open, 1 integrity off the room behind. It hits once each time the ship goes in; staying inside does
+  nothing more. The ship is not pushed back out.
+
+**Owner direction (2026-10-26/27).** "If it hits it takes damage. It doesn't get pushed out."
+"There's no way that you could even fly through it." Asked whether to spread the debris out: "Yes."
+
+**How it works.**
+
+- `TacticalWorld` checks each board tick whether our ship's centre is inside a piece (the piece's own
+  box, level with the piece). On the way in, `DamageSystem.TakeCollision` hits the side facing the
+  piece, like a fighter's run (no fire, breach or radiation). `collisionReport` holds the last one
+  ("COLLISION · PROW ARMOUR 75%"); `collisions` counts them.
+- The numbers are in each ship's stats file, Damage group: `collisionArmourDamage` (25) and
+  `collisionCompartmentDamage` (1).
+- The Debris Field tool already has a minimum gap (its Gap setting).
+
+**Calls made without the owner (can be changed):** the damage (25 armour, 1 integrity); our ship
+counts as a point (its real size is 100 to 500 m); how many pieces each belt kept; only our ship
+collides for now (the Garuda's patrol does not steer round debris); no sound yet.
+
+**Measured.** Gap to the nearest piece, median: near belt about 1,000 km before, 1,300 km after
+(many of its pieces are next to the husk); middle belt 1,950 km before, 2,180 km after; far belt
+4,380 km. Our ship's picture on the plot is about 1,250 km long at full zoom, so in the near belt
+it can still look bigger than a gap.
+
+**Checked.** Quick check in play mode: put on a near-belt piece, the prow went to 75%; staying on
+it, no second hit; out and back in, the prow went to 50%. Not committed: see Step 92.
+
 ---
 
 ## 7 · How to keep this log
@@ -3906,8 +3990,8 @@ game is the hunt." Every tool must make sense.
 1. NEW GAME. "WOLF HUNT" types in green, then INITIALISING..., then the board.
 2. We start at the Player Spawn, at the bottom. The Garuda starts at a random point in its spawn box
    at the top, facing a random way. We only know it is somewhere up there.
-3. We move through the ruins. DRADIS finds ruins piece by piece as we go (Step 92). We keep our
-   signal low. Fighters scout ahead: what they see shows on our plot.
+3. We move through the ruins. The ruins show inside the DRADIS circle while DRADIS is on, and
+   within 10,000 km when it is off (Step 92). We keep our signal low. Fighters scout ahead: what they see shows on our plot.
 4. The Garuda patrols the ruins. It listens with its own DRADIS. If it hears us, it grows uneasy,
    then searches where it heard us, then sweeps actively, closes and fights side-on.
 5. When the Garuda finds us (ALERT), the alarm says REINFORCEMENTS INBOUND, and a 3-minute
@@ -3985,19 +4069,19 @@ batch. Ask the other session before taking Unity.
 
 | Step | What | Who |
 |---|---|---|
-| 93 | Debris you can fly through: gaps wide enough; hitting a piece damages the ship, no push-out; the scatter tool keeps a minimum gap | Tooling |
+| 93 | Debris you can fly through: gaps wide enough; hitting a piece damages the ship, no push-out; the scatter tool keeps a minimum gap | Tooling — **done** (Step 93) |
 | 94 | The start: DEMO page gone; WOLF HUNT, then INITIALISING, then the board | killshot-81 |
 | 95 | Spawns: the Garuda at a random point in its box, random heading | killshot-81 |
 | 96 | The Garuda's numbers, in `Assets/Ships/Garuda.asset` | killshot-81 |
 | 97 | The Garuda's mind: patrol, hear, search, sweep, fight side-on with railguns and missiles (FTUE_PLAN §4.2 and §4.4) | killshot-81 |
 | 98 | The exit: the jump point at the kill; reaching it wins; the end screen's new lines | killshot-81 |
 | 99 | Reinforcements: the alarm, the 3-minute countdown, frigates at the edges that hunt us | killshot-81 |
-| 100 | Ruler and compass | killshot-81 |
-| 101 | Fighters as scouts | killshot-81 |
+| 100 | Ruler and compass; the jump point drawn on the plot (from Step 98) | Tooling |
+| 101 | Fighters as scouts | Tooling |
 | 102 | Test every system; fix what is not fun; one full playtest | both |
 | 103 | The Mac app; the owner plays it | killshot-81 |
 
-**Not today:** fog of war beyond "ruins once found"; the disguise mechanic; the XO; derelicts;
+**Not today:** fog of war beyond "ruins in range" (Step 92); the disguise mechanic; the XO; derelicts;
 enemies that use engineering, comms or the plot tools.
 
 ### To do next (written 2026-10-27, end of the Tooling session)
@@ -4034,7 +4118,7 @@ to 5 done in Step 89, step 6 in Step 90, step 7 the docs pass; step 8 left). Ask
 
 6. ~~**The battle space size moves from the board into each level**~~ **Done in Step 91**
    (decision 50).
-7. **Debris and ruins on the plot, shown once found** (Level tool item 4, Ruins item 1).
+7. ~~**Debris and ruins on the plot, shown once found**~~ **Done in Step 92** (Level tool item 4, Ruins item 1).
 8. **The mission scripter** (later: Wolf Hunt writes its rules straight into `QuestSystem` first), its own menu item (**Starwolf → Mission**). Proposed, not agreed: a
    chain of steps, each with "when this happens, do that" rules. Plan it with the owner first.
 9. ~~**The sample game**~~ Replaced by Wolf Hunt (owner, 2026-10-27), at the top of section 8.
@@ -4448,6 +4532,12 @@ From `UI_INTEGRATION_LOG.md`, section 10. In order:
    - `TACTICAL_BOARD_SPEC.md` §8, §9 and §11 still give the HTML prototype's numbers (3 s radar
      pulse, 38,000 railgun, 40,000 radar range). Update them when the ranges are tuned. §9.6 is
      current.
+6. **A little more life in the plot's grid** (owner, 2026-10-28). Small, optional, after the
+   refactor. The full green phosphor plot is **dropped** (owner, 2026-10-28): don't build it.
+   - The owner would like one of these: a slightly brighter white grid, or some colour on the
+     grid's edge. The grid as it is today is fine too.
+   - The grid is `PlotGrid` (tint white or amber, `PlotGrid.Tint`). Show the owner screenshots
+     before choosing.
 
 ### Bugs, not fixed yet (2026-10-25)
 
@@ -4989,8 +5079,8 @@ Step 67 made the tool and the enemy spawn box. Plan each of these with the owner
 2. The battle space size moves from the board into the level.
 3. ~~Debris fields: a shape, which pieces, how many and how big, how they spread, and
    Reshuffle.~~ **Done in Step 77** (Debris Field).
-4. Debris on the board: shown once found. Whether it blocks shots or hides us is a later talk. *(See
-   "Ruins and the level, next" below.)*
+4. ~~Debris on the board: shown once found.~~ **Done in Step 92.** Whether it blocks shots or hides
+   us is a later talk. *(See "Ruins and the level, next" below.)*
 5. ~~The Tuning window's tabs: Ship, Enemy, Board.~~ **Done in Step 80.**
 6. The mission scripter, its own menu item. Proposed, not agreed: a chain of steps, each with
    "when this happens, do that" rules.
@@ -5008,14 +5098,16 @@ Left unfinished when the Step 73 chat closed. Plan each with the owner before bu
    sensor range plus half its size). **Agreed (owner, 2026-10-27):** found only while DRADIS is on
    and SEN has power, like hearing a contact; with DRADIS off you fly blind into new debris.
    **Agreed (owner, 2026-10-27):** found piece by piece, the husk too; its shape fills in as you
-   fly round it.
+   fly round it. **Changed by the owner after playing it (2026-10-27):** a piece shows only while it
+   is in range, inside the DRADIS circle with DRADIS on, else within visual range (10,000 km), and
+   hides again out of range; drawn on top of the circles. **Done in Step 92.**
 2. **What ruins do, one step each.** Block shots (the prototype's penetration against toughness:
    asteroid 3, structure 4, ruins 3, starbase 5); hide us from sensors (line of sight); hurt us
    when we hit them (the prototype pushes the ship out and damages it above an impact speed). Our
    ship's collision size is not decided. **Owner, 2026-10-26:** a debris field is there to fly
    through and around; otherwise you hit the pieces. **Hitting a piece damages the ship. The ship is
-   not pushed back out** (owner, 2026-10-26; this replaces the prototype's push). Today the ship
-   passes straight through them. When to build it: after the refactor, unless the owner says sooner.
+   not pushed back out** (owner, 2026-10-26; this replaces the prototype's push). **Done in Step 93**
+   (damage only; blocking shots and hiding us are still to come).
 3. **The Garuda hunts you.** It comes in through the core, searches, hunts you when it hears you,
    and goes to where it last heard you. Not built; the owner wants it planned properly. Today it
    patrols a loop about 12,000 × 8,000 km round its spawn, so from the top it stays near the top.

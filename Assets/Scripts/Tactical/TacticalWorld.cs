@@ -24,6 +24,20 @@ public class TacticalWorld : MonoBehaviour
     private WorldContact[] contacts = new WorldContact[0];
     private EnemyBrain[] brains = new EnemyBrain[0];
 
+    // Ruins (owner 2026-10-27): a piece of the level's terrain shows only while it is in range of our ship
+    // (its centre within range plus half its size): inside the DRADIS circle while DRADIS listens, else
+    // within visual range. Out of range it hides again.
+    // Our ship running into a piece takes damage, once each time it goes in; it is not pushed out
+    // (owner 2026-10-26).
+    struct Ruin { public Renderer r; public Vector2 at; public float half; }
+    private readonly List<Ruin> ruins = new List<Ruin>();
+    private readonly HashSet<Renderer> inside = new HashSet<Renderer>();
+    /// <summary>How many pieces of the level's terrain show now (within visual range).</summary>
+    public int RuinsInSight { get; private set; }
+    /// <summary>The last time our ship ran into a piece ("COLLISION · PROW ARMOUR 75%"), and how many times.</summary>
+    [System.NonSerialized] public string collisionReport;
+    [System.NonSerialized] public int collisions;
+
     private void Awake()
     {
         if (!board) board = FindAnyObjectByType<BoardManager>();
@@ -54,7 +68,66 @@ public class TacticalWorld : MonoBehaviour
         Sync(); // before the board's first refresh (its Start), so it never shows mock numbers
         board.Ticked += OnTick;
         // the level arrives a frame later; the board starts paused, so nothing has moved by then
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        for (int i = 0; i < SceneManager.sceneCount; i++) HideRuins(SceneManager.GetSceneAt(i)); // a level already open in the editor
         if (!string.IsNullOrEmpty(levelScene) && !LevelOpen()) SceneManager.LoadSceneAsync(levelScene, LoadSceneMode.Additive);
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode) { HideRuins(scene); SeeRuins(); }
+
+    // every piece of a level's terrain starts hidden
+    void HideRuins(Scene scene)
+    {
+        if (!scene.isLoaded || !scene.path.StartsWith(LevelFolder + "/")) return;
+        int terrain = LayerMask.NameToLayer("WorldTerrain");
+        foreach (var root in scene.GetRootGameObjects())
+            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r.gameObject.layer != terrain || !r.enabled) continue;
+                var b = r.bounds;
+                ruins.Add(new Ruin { r = r, at = b.center, half = Mathf.Max(b.extents.x, b.extents.y) });
+                r.enabled = false;
+            }
+    }
+
+    // each piece in range shows; the rest hide (see ruins)
+    void SeeRuins()
+    {
+        var s = board.State;
+        if (!s.sensors) return;
+        var us = new Vector2((float)s.nav.x, (float)s.nav.y);
+        float sight = Mathf.Max(s.sensors.stats.visualRangeKm, s.sensors.Listening ? s.sensors.PassiveRangeKm : 0f); // the plot's DRADIS circle is PassiveRangeKm
+        int n = 0;
+        foreach (var p in ruins)
+        {
+            if (!p.r) continue;
+            bool show = (p.at - us).magnitude <= sight + p.half;
+            if (p.r.enabled != show) p.r.enabled = show;
+            if (show) n++;
+        }
+        RuinsInSight = n;
+    }
+
+    // Our ship's centre inside a piece (the piece's box, level with the piece): the side facing it takes
+    // the damage, once per time in. Our ship's real size (100 to 500 m) is too small to count.
+    void Collide()
+    {
+        var s = board.State;
+        if (s.destroyed || !s.damage) return;
+        foreach (var p in ruins)
+        {
+            if (!p.r) continue;
+            if ((p.at - new Vector2((float)s.nav.x, (float)s.nav.y)).magnitude > p.half * 1.8f) { inside.Remove(p.r); continue; } // nowhere near (a box's corner is at most ~1.7 half-widths out)
+            var local = p.r.transform.InverseTransformPoint(new Vector3((float)s.nav.x, (float)s.nav.y, p.r.bounds.center.z));
+            var lb = p.r.localBounds;
+            var d = local - lb.center;
+            bool hit = Mathf.Abs(d.x) <= lb.extents.x && Mathf.Abs(d.y) <= lb.extents.y && Mathf.Abs(d.z) <= lb.extents.z;
+            if (!hit) { inside.Remove(p.r); continue; }
+            if (!inside.Add(p.r)) continue; // still inside from before
+            string side = ShipState.SideAt(Bearing(p.at - new Vector2((float)s.nav.x, (float)s.nav.y)), s.nav.heading);
+            collisionReport = "COLLISION ·" + s.damage.TakeCollision(side); // " PROW ARMOUR 75%"
+            collisions++;
+        }
     }
 
     static bool LevelOpen()
@@ -97,7 +170,7 @@ public class TacticalWorld : MonoBehaviour
         Sync();
     }
 
-    private void OnDestroy() { if (board) board.Ticked -= OnTick; }
+    private void OnDestroy() { if (board) board.Ticked -= OnTick; SceneManager.sceneLoaded -= OnSceneLoaded; }
 
     // One board tick: each contact with a brain takes its orders and moves (the same maths as our ship),
     // then everything is placed and measured. Paused, no tick, so nothing moves.
@@ -119,6 +192,8 @@ public class TacticalWorld : MonoBehaviour
             ship.nav.Tick(board.Rate); // it steers, moves, and puts its model where it is
         }
         Sync();
+        SeeRuins();
+        Collide();
     }
 
     /// <summary>Write each contact's true bearing and range from our ship into its board track.

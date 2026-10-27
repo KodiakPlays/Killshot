@@ -24,6 +24,10 @@ public class DamageSystem : MonoBehaviour
         public float partySeconds = 6f;
         [Tooltip("Armour per side: PROW, STBD, AFT, PORT. At 0 the side is open (owner: prow and flanks take 2 slugs, the aft 1).")]
         public float[] sideArmourMax = { 100f, 100f, 50f, 100f };
+        [Tooltip("Running into a piece of debris (owner 2026-10-26: it hurts; the ship is not pushed out): armour off the side facing it.")]
+        public float collisionArmourDamage = 25f;
+        [Tooltip("Running into debris with that side open: integrity off the room behind it.")]
+        public int collisionCompartmentDamage = 1;
         [Header("Conditions (Step 59, DAMAGE_README.md): every rate per game second")]
         [Tooltip("Chance a hit on the reactor room (not a fighter's) leaks radiation. The fire and breach chances are the shooter's (Weapons).")]
         [Range(0f, 1f)] public float radChanceReactor = 0.5f;
@@ -186,6 +190,10 @@ public class DamageSystem : MonoBehaviour
         }
         return " " + Sides[i] + Behind(i, compartmentDamage, "fighter", null);
     }
+
+    /// <summary>The ship runs into a piece of debris (TacticalWorld): the side facing it, then the room behind,
+    /// as a fighter's run does. Starts no fire, breach or radiation.</summary>
+    public string TakeCollision(string side) => TakeFighterRun(side, false, stats.collisionArmourDamage, stats.collisionCompartmentDamage);
 
     // The room behind side i loses the damage given. A wrecked room takes no more, but the hit can still start
     // a condition there (Step 59). The ship is destroyed when its reactor's structure reaches 0 (any ship, ours
