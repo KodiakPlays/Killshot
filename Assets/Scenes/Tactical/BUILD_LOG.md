@@ -133,8 +133,9 @@ Do not run ahead. Do one step, show it, wait.
 | 83 | Enter on the briefing always leads on, even if INITIALISING can't start | **Done** — playtest 193/193 |
 | 84 | Prototype Dev off the build list | **Done** — playtest 193/193 |
 | 85 | Win, loss and restart: the mission script, the end screen, RESTART MISSION and MAIN MENU; SHIP LOST clears | **Done** — playtest 201/201 |
+| 86 | The playtest checks the battle space's edge: zoom limit, axis numbers, pan limit, `C`, the warning, the x1 drop, the countdown | **Done** — playtest 209/209 |
 
-Steps 6 to 28 and Steps 34 to 85 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 86 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -738,7 +739,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 85, in detail
+## 6 · Steps 6 to 28, and 34 to 86, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3678,12 +3679,31 @@ just after the board opens, and on again at the end. A new last section:
    later: MISSION COMPLETE, GARUDA DESTROYED. Screenshot `29_mission_complete`.
 2. RESTART MISSION, clicked for real: a fresh board, paused, power cold, the Garuda back, the
    mission at its start, no end screen.
-3. Our ship placed outside the edge, with a 3 s clock (a stand-in; Step 86 checks the real one):
+3. The battle space's edge (Step 86), ending with our ship lost at the edge:
    SHIP LOST, LEFT THE BATTLE SPACE, our ship LOST. Screenshot `30_ship_lost_edge`.
 4. RESTART MISSION: not lost, no countdown, and the alarm strip does not say SHIP LOST after a tick.
 5. Our reactor set to 0 (a stand-in for enemy fire): SHIP LOST, REACTOR DESTROYED. Screenshot
    `31_ship_lost_reactor`.
 6. MAIN MENU: `00_Start` loads.
+
+### Step 86 — The playtest checks the battle space's edge
+
+**What it is.** The playtest now checks the battle space (Step 65). Nothing in the game changed.
+The checks run on the board after the first RESTART MISSION, with our ship at the centre and the
+Garuda's fire off:
+
+- At x1 the axis numbers show 0 level with our ship. Every other number is a whole number of big
+  squares of 5,000 km.
+- The mouse wheel, turned far out, stops the zoom at x0.35. The big squares are then 10,000 km.
+- The grid, dragged far past a corner, stops with the plot's edge on the map's edge.
+- `C` brings the view back to our ship. The playtest calls `CentreOnOurShip`, which is what `C`
+  calls. A script can't press keys read by Unity's old Input class.
+- Our ship 1,250 km inside the east edge, then RUN: the alarm strip says APPROACHING THE EDGE OF
+  THE BATTLE SPACE.
+- At x10, our ship just outside: the rate drops to x1. The strip says EXITING THE BATTLE SPACE —
+  TURN BACK, and its count shows 30, then counts down.
+- x10 again: at 0 our ship is lost, and the end screen says SHIP LOST, LEFT THE BATTLE SPACE. This
+  replaces Step 85's 3-second stand-in clock.
 
 ---
 
@@ -3759,7 +3779,7 @@ restructure list. Ask the other session before taking Unity.
 12. **Soham's 8 unused scripts:** read each in full before any verdict.
 13. **The playtest moves into the Unity Test Runner** (decision 31).
 
-### Playable end to end, and a Mac app (owner, 2026-10-27). In progress: Steps 82 to 85 done
+### Playable end to end, and a Mac app (owner, 2026-10-27). In progress: Steps 82 to 86 done
 
 **What this is.** The owner asked for the game to be playable from start to finish, and to run as a
 Mac app outside Unity. Today nothing ends the game: destroy the Garuda, or lose our ship, and play
@@ -3870,7 +3890,7 @@ this too. Planned on 2026-10-27 by the killshot-da session. No code or scene is 
   7. MAIN MENU: `00_Start` loads.
 - Add the end screen to `Assets/UI/Board/README.md`.
 
-**Step 86. The playtest checks the battle space's edge** (bug 5). In the restarted board (part 3
+**Step 86. The playtest checks the battle space's edge** (bug 5). Done. In the restarted board (part 3
 above), with our ship moved to the centre and the Garuda's fire off:
 
 - Zoom out past the limit: it stops at x0.35.
@@ -4155,8 +4175,7 @@ Found by the doc check after Step 66. Fix each with the owner.
 3. ~~**Boats can be dragged along mid-boarding.**~~ Fixed in Step 79. The owner: once aboard, the
    ship fights on while it moves and the boats ride with it (decision 44).
 4. ~~**Enter can do nothing on the briefing.**~~ Fixed in Step 83.
-5. **The playtest has no battle-space checks:** the warning, countdown, x1 drop, zoom limit, pan
-   limit, axis numbers and the `C` key.
+5. ~~**The playtest has no battle-space checks.**~~ Added in Step 86.
 
 ### Checks to run (owner, 2026-10-27). Done in Step 79
 

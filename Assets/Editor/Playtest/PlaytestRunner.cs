@@ -1549,10 +1549,58 @@ public static class PlaytestRunner
         var freshBrain = GameObject.Find("World").GetComponentInChildren<EnemyBrain>();
         if (freshBrain) freshBrain.firesBack = false; // stand-in: a missile must not lose our ship before the edge does
 
-        //     Our ship lost at the edge: SHIP LOST, LEFT THE BATTLE SPACE.
-        s.arenaReturnSeconds = 3f; // stand-in: a short clock (Step 86 checks the real one); the restart below resets it
-        s.nav.PlaceAt(s.ArenaHalfW + 1000, 0, 90); s.nav.vx = s.nav.vy = 0;
+        // 25b. The battle space's edge (Step 86), on the fresh board: our ship at the centre, GARUDA's fire off.
+        s.nav.PlaceAt(0, 0, 0); s.nav.vx = s.nav.vy = 0;
+        var plotP = board.GetComponentInChildren<HandoffPlotPanel>(true);
+        var plotGrid = board.GetComponentInChildren<HandoffPlotGrid>(true);
+        var axisNums = typeof(HandoffPlotPanel).GetField("axisLabels", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(plotP) as List<TMPro.TextMeshProUGUI>;
+        plotP.CentreOnOurShip();
+        yield return 0.6f;
+        float cellPx;
+        double bigKm = plotGrid.CellKm(out cellPx) * plotGrid.MajorEvery;
+        var shown = axisNums.FindAll(lbl => lbl.gameObject.activeSelf).ConvertAll(lbl => lbl.text);
+        Check("The axis numbers at x1: 0 level with our ship, then whole big squares of 5,000 km", AxisWhole(shown, bigKm) && System.Math.Abs(bigKm - 5000) < 1e-6,
+              "big square " + bigKm.ToString("N0") + " km: " + string.Join(" ", shown.ToArray()));
+        for (int n = 0; n < 40; n++) board.Scroll("plot", null, -1f); // the mouse wheel, out past the limit
+        yield return 0.6f;
+        Check("Zoomed out past the limit, the zoom stops at x0.35", System.Math.Abs(board.ZoomExact - 0.35) < 1e-6 && board.ZoomExact == board.MinZoom,
+              "x" + board.ZoomExact.ToString("0.00") + ", limit x" + board.MinZoom.ToString("0.00"));
+        double cellKm = plotGrid.CellKm(out cellPx);
+        bigKm = cellKm * plotGrid.MajorEvery;
+        shown = axisNums.FindAll(lbl => lbl.gameObject.activeSelf).ConvertAll(lbl => lbl.text);
+        Check("The axis numbers at x0.35: 0 level with our ship, then whole big squares of 10,000 km", AxisWhole(shown, bigKm) && System.Math.Abs(bigKm - 10000) < 1e-6,
+              "big square " + bigKm.ToString("N0") + " km: " + string.Join(" ", shown.ToArray()));
+        if (!Click("tool", "CURSOR", "CURSOR tool")) yield break;
+        if (!PlotDrag(board, new Vector2(700, 300), new Vector2(2700, 2300), "drag the grid far past a corner", "plot.pan")) yield break;
+        yield return 0.6f;
+        Rect gridRect = plotGrid.rectTransform.rect;
+        double edgeX = s.ArenaHalfW - gridRect.width / 2 * (cellKm / cellPx), edgeY = s.ArenaHalfH - gridRect.height / 2 * (cellKm / cellPx);
+        Check("Dragged far past a corner, the view stops with the plot's edge on the map's edge",
+              System.Math.Abs(System.Math.Abs(plotP.View.x) - edgeX) < 1 && System.Math.Abs(System.Math.Abs(plotP.View.y) - edgeY) < 1,
+              "view " + plotP.View.x.ToString("N0") + ", " + plotP.View.y.ToString("N0") + " km; limit ±" + edgeX.ToString("N0") + ", ±" + edgeY.ToString("N0"));
+        plotP.CentreOnOurShip(); // what C calls: a script can't press keys read by Unity's old Input class
+        yield return 0.6f;
+        Check("C brings the view back to our ship", System.Math.Abs(plotP.View.x - s.nav.x) < 1 && System.Math.Abs(plotP.View.y - s.nav.y) < 1,
+              "view " + plotP.View.x.ToString("N0") + ", " + plotP.View.y.ToString("N0") + " km");
+        var edgeWords = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
+        var edgeCount = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/Count").GetComponent<TMPro.TMP_Text>();
+        s.nav.PlaceAt(s.ArenaHalfW - 1250, 0, 90); s.nav.vx = s.nav.vy = 0;
         if (!Click("pause", null, "PAUSE/RUN key")) yield break;
+        float edgeAt = board.MissionSeconds;
+        yield return (Func<bool>)(() => board.MissionSeconds > edgeAt);
+        Check("1,250 km inside the east edge: APPROACHING THE EDGE OF THE BATTLE SPACE", edgeWords.gameObject.activeInHierarchy && edgeWords.text == "APPROACHING THE EDGE OF THE BATTLE SPACE",
+              "\"" + (edgeWords.gameObject.activeInHierarchy ? edgeWords.text : "") + "\"");
+        if (!Click("rate", "10", "x10 rate key")) yield break;
+        s.nav.PlaceAt(s.ArenaHalfW + 100, 0, 90); s.nav.vx = s.nav.vy = 0; // just outside, at x10
+        yield return (Func<bool>)(() => s.outsideFor >= 0f);
+        Check("Just outside at x10: the rate drops to x1; EXITING THE BATTLE SPACE — TURN BACK, the count at 30",
+              board.Rate == 1f && edgeWords.text == "EXITING THE BATTLE SPACE — TURN BACK" && edgeCount.text == "30",
+              "x" + board.Rate + ", \"" + edgeWords.text + "\", count " + edgeCount.text);
+        yield return (Func<bool>)(() => s.outsideFor >= 2f);
+        Check("The count goes down", edgeCount.text == Mathf.CeilToInt(s.arenaReturnSeconds - s.outsideFor).ToString() && int.Parse(edgeCount.text) < 30, "count " + edgeCount.text);
+
+        //     x10 again: at 0 our ship is lost. SHIP LOST, LEFT THE BATTLE SPACE.
+        if (!Click("rate", "10", "x10 rate key")) yield break;
         yield return (Func<bool>)(() => quest.Over);
         yield return (Func<bool>)(() => endPanel.Showing);
         Check("Lost at the edge: SHIP LOST, LEFT THE BATTLE SPACE, our ship LOST",
@@ -1667,6 +1715,18 @@ public static class PlaytestRunner
         var list = f.GetValue(board.GetComponentInChildren<HandoffPlotPanel>(true)) as List<TMPro.TMP_Text>;
         return list != null && i < list.Count ? list[i] : null;
     }
+    // Step 86: the axis shows 0 (level with our ship), and every number is a whole number of big squares.
+    static bool AxisWhole(List<string> shown, double bigKm)
+    {
+        if (!shown.Contains("0")) return false;
+        foreach (var x in shown)
+        {
+            double v;
+            if (!double.TryParse(x.Replace(",", ""), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out v) || System.Math.Abs(v % bigKm) > 1e-6) return false;
+        }
+        return true;
+    }
+
     static string EndText(EndScreenPanel p, string field)
     {
         var t = typeof(EndScreenPanel).GetField(field, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(p) as TMPro.TMP_Text;
