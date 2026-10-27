@@ -134,6 +134,7 @@ Do not run ahead. Do one step, show it, wait.
 | 84 | Prototype Dev off the build list | **Done** — playtest 193/193 |
 | 85 | Win, loss and restart: the mission script, the end screen, RESTART MISSION and MAIN MENU; SHIP LOST clears | **Done** — playtest 201/201 |
 | 86 | The playtest checks the battle space's edge: zoom limit, axis numbers, pan limit, `C`, the warning, the x1 drop, the countdown | **Done** — playtest 209/209 |
+| 87 | The Mac app | **In progress** — built and starts; the owner's play-through is next (section 8, Step 87) |
 
 Steps 6 to 28 and Steps 34 to 86 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -3779,7 +3780,7 @@ restructure list. Ask the other session before taking Unity.
 12. **Soham's 8 unused scripts:** read each in full before any verdict.
 13. **The playtest moves into the Unity Test Runner** (decision 31).
 
-### Playable end to end, and a Mac app (owner, 2026-10-27). In progress: Steps 82 to 86 done
+### Playable end to end, and a Mac app (owner, 2026-10-27). In progress: Steps 82 to 86 done; Step 87 built, play-through left
 
 **What this is.** The owner asked for the game to be playable from start to finish, and to run as a
 Mac app outside Unity. Today nothing ends the game: destroy the Garuda, or lose our ship, and play
@@ -3920,6 +3921,21 @@ above), with our ship moved to the centre and the Garuda's fire off:
   `#if UNITY_EDITOR`. The intro's shader is linked from its scene, so it goes into the build. Mac
   build support for Mono is installed with this Unity.
 - List everything else that breaks in the app, fix each one, and write the list here.
+
+**Step 87 so far (2026-10-27, killshot-81).**
+
+- The board's canvas scaler (`Board` in `02.1_Grid`) is on Expand. At 16:9 nothing changes.
+- The app is built for Apple Silicon (ARM64), Mono, at
+  `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app` (344 MB, 44 s). The owner's MacBook is an
+  Apple M3. The ARM64 setting is kept in `Library`, on this machine only. Unity's default is Intel.
+- The app starts and runs the intro with no errors in `Player.log` (25 s, in a 1440 × 932 window).
+- The build log has 3 shader errors. They come from TextMeshPro's examples
+  (`Assets/TextMesh Pro/Examples & Extras`). Those are in a `Resources` folder, so every build takes
+  them. Their shaders need `TMPro.cginc`, deleted in commit b47111e. The game's own text uses a
+  different shader and is fine. Fix: delete the examples (owner's yes needed), or restore the file.
+- **Left: the play-through, by the owner,** full screen on the MacBook: intro, menu, briefing, board,
+  a fight, the end screen, restart. A session can't see the app or press keys in it
+  (`screencapture` gives a black image here).
 
 ### Wiring order (owner, 2026-10-17)
 
