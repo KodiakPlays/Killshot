@@ -154,6 +154,7 @@ Do not run ahead. Do one step, show it, wait.
 | 99 | Wolf Hunt: the alarm, the 3:00 countdown, Naga frigates at the edges; click a contact to target it | **Done** — checked in play mode |
 | 100 | Ruler: distance only, larger text; compass: graded 0–359 ring with the bearing; the jump point on the plot | **Done** — screenshot; playtest 210/210 |
 | 101 | Fighters scout: ships and ruins near them show on our plot | **Done** — playtest 210/210 |
+| 103 | The Mac app of Wolf Hunt | **Built** — `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`; the owner's play-through is next |
 
 Steps 6 to 28 and Steps 34 to 101 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -4137,7 +4138,21 @@ game is the hunt." Every tool must make sense.
 
 **Status (2026-10-28, about 02:10).** Steps 92 to 101 are built, checked and committed (Steps 94 to
 101 by killshot-81, written up in section 6). Tooling closed; killshot-81 took over its Steps 92–93 and
-its share (100, 101). Left: Step 102 (play it, fix what is not fun) and Step 103 (the Mac app).
+its share (100, 101). **The Mac app (Step 103) is built:** `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app` (Apple Silicon,
+Mono, 344 MB, from commit ac7bfcf). Checked:
+
+- It runs the intro for 30 s in a window with no errors in its log
+  (`~/Library/Logs/Shagun Shah/Starwolf/Player.log`).
+- A throwaway build that opens straight on the board loaded the board and Level_01 with no errors. One
+  harmless warning repeats: the plot's axis numbers ask for TextMeshPro's default font, which is not in
+  the app, before the code gives them their own (Share Tech Mono). They show in their own font.
+- Its 3 build errors are TextMeshPro's examples (`Assets/TextMesh Pro/Examples & Extras`), which the game
+  does not use. Deleting them needs the owner's yes.
+- The macOS ARM64 setting is kept in `Library` on this Mac. A Unity restart can put it back to Intel:
+  set it again before a build.
+
+**Left:** the owner plays it full screen (a session can't see or click the app), then Step 102: fix what
+is not fun.
 
 **Calls made without the owner (can be changed).**
 
