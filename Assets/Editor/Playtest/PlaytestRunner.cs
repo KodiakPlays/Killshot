@@ -246,6 +246,10 @@ public static class PlaytestRunner
         Check("The board is running", board != null, "");
         if (board == null) yield break;
         var s = board.State;
+        var quest = UnityEngine.Object.FindAnyObjectByType<QuestSystem>();
+        Check("The mission is on the board, at its start", quest && quest.Stage == QuestStage.LocateTarget, quest ? quest.Stage.ToString() : "no QuestSystem");
+        if (!quest) yield break;
+        quest.enabled = false; // stand-in: the run kills both ships part way and tests on; the mission comes back on at the end (25)
         Shot("03_board");
         yield return 0.2f;
 
@@ -1513,6 +1517,86 @@ public static class PlaytestRunner
         if (t07Ship != null) { t07Ship.damage.stats.fireChanceHE = condChances[0]; t07Ship.damage.stats.fireChancePEN = condChances[1]; t07Ship.damage.stats.breachChanceSlug = condChances[2]; t07Ship.damage.stats.radChanceReactor = condChances[3]; }
         if (!Click("drawer", "engineering", "ENGR key (close)")) yield break;
         yield return 1f;
+
+        // 25. The mission (Step 85). It has been off since the board started, because the run above kills both ships
+        //     part way. On now: GARUDA is a wreck since step 22, so the next tick wins it.
+        var endPanel = board.GetComponentInChildren<EndScreenPanel>(true);
+        quest.enabled = true;
+        yield return (Func<bool>)(() => quest.Over);
+        Check("GARUDA destroyed: MISSION COMPLETE, and the game pauses at once", quest.Stage == QuestStage.MissionComplete && board.Paused && !endPanel.Showing,
+              quest.Stage + ", paused " + board.Paused + ", end screen " + endPanel.Showing);
+        yield return (Func<bool>)(() => endPanel.Showing);
+        Check("The end screen comes up 2 s later: MISSION COMPLETE, GARUDA DESTROYED",
+              endPanel.Showing && Time.unscaledTime - quest.EndedAt >= 1.99f && EndText(endPanel, "title") == "MISSION COMPLETE" && EndText(endPanel, "reason") == "GARUDA DESTROYED"
+              && EndText(endPanel, "values").StartsWith("GARUDA · DESTROYED\n"),
+              "\"" + EndText(endPanel, "title") + "\" / \"" + EndText(endPanel, "reason") + "\" / \"" + EndText(endPanel, "values").Replace("\n", " / ") + "\"");
+        Shot("29_mission_complete");
+        yield return 0.2f;
+
+        //     RESTART MISSION, clicked for real: the board scene loads again, with its level.
+        var oldBoard = board;
+        if (!Click("end.restart", null, "RESTART MISSION")) yield break;
+        yield return (Func<bool>)(() => !oldBoard && UnityEngine.Object.FindAnyObjectByType<HandoffBoardControls>());
+        yield return 1.5f; // the level loads on top a frame later
+        board = UnityEngine.Object.FindAnyObjectByType<HandoffBoardControls>();
+        s = board.State;
+        quest = UnityEngine.Object.FindAnyObjectByType<QuestSystem>();
+        endPanel = board.GetComponentInChildren<EndScreenPanel>(true);
+        var garuda = s.ShipOf != null ? s.ShipOf("t07") : null;
+        Check("RESTART MISSION: a fresh board, paused, power cold, GARUDA back, the mission at its start, no end screen",
+              board.Paused && BusesAre(s, PowerSystem.BusMode.Standby, 0) && garuda != null && !garuda.destroyed && !s.TrackOf("t07").wreck && quest.Stage == QuestStage.LocateTarget && !endPanel.Showing,
+              "paused " + board.Paused + ", " + Buses(s) + ", GARUDA " + (garuda == null ? "missing" : garuda.destroyed ? "destroyed" : "afloat") + ", " + quest.Stage);
+        var freshBrain = GameObject.Find("World").GetComponentInChildren<EnemyBrain>();
+        if (freshBrain) freshBrain.firesBack = false; // stand-in: a missile must not lose our ship before the edge does
+
+        //     Our ship lost at the edge: SHIP LOST, LEFT THE BATTLE SPACE.
+        s.arenaReturnSeconds = 3f; // stand-in: a short clock (Step 86 checks the real one); the restart below resets it
+        s.nav.PlaceAt(s.ArenaHalfW + 1000, 0, 90); s.nav.vx = s.nav.vy = 0;
+        if (!Click("pause", null, "PAUSE/RUN key")) yield break;
+        yield return (Func<bool>)(() => quest.Over);
+        yield return (Func<bool>)(() => endPanel.Showing);
+        Check("Lost at the edge: SHIP LOST, LEFT THE BATTLE SPACE, our ship LOST",
+              quest.Stage == QuestStage.MissionFailed && quest.FailReason == MissionFailReason.Desertion && EndText(endPanel, "title") == "SHIP LOST"
+              && EndText(endPanel, "reason") == "LEFT THE BATTLE SPACE" && EndText(endPanel, "values").Contains("\nLOST\n"),
+              "\"" + EndText(endPanel, "title") + "\" / \"" + EndText(endPanel, "reason") + "\" / \"" + EndText(endPanel, "values").Replace("\n", " / ") + "\"");
+        Shot("30_ship_lost_edge");
+        yield return 0.2f;
+
+        //     RESTART again: SHIP LOST is gone (it outlasted nothing before, because nothing restarted).
+        oldBoard = board;
+        if (!Click("end.restart", null, "RESTART MISSION")) yield break;
+        yield return (Func<bool>)(() => !oldBoard && UnityEngine.Object.FindAnyObjectByType<HandoffBoardControls>());
+        yield return 1.5f;
+        board = UnityEngine.Object.FindAnyObjectByType<HandoffBoardControls>();
+        s = board.State;
+        quest = UnityEngine.Object.FindAnyObjectByType<QuestSystem>();
+        endPanel = board.GetComponentInChildren<EndScreenPanel>(true);
+        freshBrain = GameObject.Find("World").GetComponentInChildren<EnemyBrain>();
+        if (freshBrain) freshBrain.firesBack = false;
+        if (!Click("pause", null, "PAUSE/RUN key")) yield break;
+        float restartAt = board.MissionSeconds;
+        yield return (Func<bool>)(() => board.MissionSeconds > restartAt);
+        var stripWords = GameObject.Find("Board").transform.Find("HandoffBoard/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
+        Check("After RESTART, SHIP LOST is gone: not lost, no countdown, and the alarm strip does not say it, after a tick",
+              !s.deserted && !s.destroyed && s.outsideFor < 0f && !(stripWords.gameObject.activeInHierarchy && stripWords.text.StartsWith("SHIP LOST")),
+              "deserted " + s.deserted + ", destroyed " + s.destroyed + ", outside " + s.outsideFor + ", strip \"" + (stripWords.gameObject.activeInHierarchy ? stripWords.text : "") + "\"");
+
+        //     Our reactor at 0 (stand-in for enemy fire): SHIP LOST, REACTOR DESTROYED.
+        s.damage.Comp("rct").integ = 0; s.destroyed = true;
+        yield return (Func<bool>)(() => quest.Over);
+        yield return (Func<bool>)(() => endPanel.Showing);
+        Check("Reactor at 0: SHIP LOST, REACTOR DESTROYED, our ship LOST",
+              quest.FailReason == MissionFailReason.Destroyed && EndText(endPanel, "title") == "SHIP LOST" && EndText(endPanel, "reason") == "REACTOR DESTROYED"
+              && EndText(endPanel, "values").Contains("\nLOST\n"),
+              "\"" + EndText(endPanel, "title") + "\" / \"" + EndText(endPanel, "reason") + "\" / \"" + EndText(endPanel, "values").Replace("\n", " / ") + "\"");
+        Shot("31_ship_lost_reactor");
+        yield return 0.2f;
+
+        //     MAIN MENU: the intro, then the menu.
+        if (!Click("end.menu", null, "MAIN MENU")) yield break;
+        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "00_Start");
+        Check("MAIN MENU loads the intro", SceneManager.GetActiveScene().name == "00_Start", SceneManager.GetActiveScene().name);
+        yield return 1f;
     }
 
     // How close a slug fired from (px,py) on this bearing passes a target moving at (vx,vy), km.
@@ -1582,6 +1666,11 @@ public static class PlaytestRunner
         var f = typeof(HandoffPlotPanel).GetField("labels", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var list = f.GetValue(board.GetComponentInChildren<HandoffPlotPanel>(true)) as List<TMPro.TMP_Text>;
         return list != null && i < list.Count ? list[i] : null;
+    }
+    static string EndText(EndScreenPanel p, string field)
+    {
+        var t = typeof(EndScreenPanel).GetField(field, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(p) as TMPro.TMP_Text;
+        return t ? t.text : "?";
     }
     static string MarkLabel(HandoffBoardControls board, int i) { var t = MarkLabelText(board, i); return t ? t.text : "?"; }
     static Vector2 MarkLabelPos(HandoffBoardControls board, int i) { var t = MarkLabelText(board, i); return t ? t.rectTransform.anchoredPosition : Vector2.zero; }

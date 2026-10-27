@@ -517,6 +517,30 @@ Ask a technical artist before you change these:
 - The code sets the colours of the room rows and rings, the status lines, the lamps and the
   rocker labels.
 
+### End Screen
+
+`Panels/End Screen.prefab`. Script: **End Screen Panel**, on `End Screen`. It covers the board
+when the mission is won or lost. It says MISSION COMPLETE or SHIP LOST, and why. It shows the
+target, our ship and the time taken. Its two buttons are RESTART MISSION and MAIN MENU.
+
+It is the last part under `HandoffBoard`, so it draws over everything else. Keep it last.
+
+The prefab has these parts:
+- `Screen`: switched off while the mission runs. The script switches it on. Leave it off.
+- `Shade`: a dark layer over the whole board. It takes the clicks, so nothing under it can be
+  pressed.
+- `Plate`: the box in the middle, with `Title`, `Reason`, `Rows` (`Labels` and `Values`) and
+  the two buttons.
+
+It has no art yet. The shade, the plate and the buttons are plain colours with an outline. The
+Art list is empty. To give it art, add the sprites to the Art list.
+
+Ask a technical artist before you change these:
+- The script writes the title, the reason and the values. It colours the title green or red.
+- Each button has a **Handoff Hit** with its action (`end.restart`, `end.menu`).
+- **Delay Seconds** (2) is the wait between the end and the screen, so the last hit is seen
+  first. It is on the Board tab of **Starwolf → Tuning**, under Board & time.
+
 ## Frame pieces
 
 The frame pieces are the metal frame and the smaller pieces on it. Each one is a prefab in

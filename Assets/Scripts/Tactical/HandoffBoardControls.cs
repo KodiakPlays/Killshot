@@ -449,6 +449,9 @@ public class HandoffBoardControls : MonoBehaviour
 
     // ---- time control --------------------------------------------------------------------
 
+    /// <summary>Stop time, as the PAUSE key does (Step 85: the mission's end).</summary>
+    public void Pause() { paused = true; ShowTime(); }
+
     void ShowTime()
     {
         if (pauseKey) pauseKey.sprite = paused ? pauseKeyPaused : pauseKeyRun;

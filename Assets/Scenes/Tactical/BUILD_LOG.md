@@ -132,8 +132,9 @@ Do not run ahead. Do one step, show it, wait.
 | 82 | DRADIS needs SEN power: no unit on SEN, no hearing, no circle, no sweep | **Done** — playtest 193/193 |
 | 83 | Enter on the briefing always leads on, even if INITIALISING can't start | **Done** — playtest 193/193 |
 | 84 | Prototype Dev off the build list | **Done** — playtest 193/193 |
+| 85 | Win, loss and restart: the mission script, the end screen, RESTART MISSION and MAIN MENU; SHIP LOST clears | **Done** — playtest 201/201 |
 
-Steps 6 to 28 and Steps 34 to 84 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 85 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -232,6 +233,13 @@ Changed in Step 74 (now under `Board/HandoffBoard/Drawers/Engineering/Compartmen
 - Four RawImages, one per side: `Ship · PROW`, `Ship · STBD`, `Ship · AFT`, `Ship · PORT`. Each
   shows one part of our ship from `Assets/Art/Board/Hull/`, through `BoardLinearImage`.
 
+Added in Step 85:
+
+- `End Screen` — the last child of `Board/HandoffBoard`, so it draws over everything. A prefab
+  (`Assets/UI/Board/Panels/End Screen.prefab`) with `EndScreenPanel`. Its `Screen` is off until
+  the mission ends.
+- `QuestSystem` on `World`: the mission, win and loss.
+
 ### `Level_01` — made in Step 67
 
 - In `Assets/Scenes/Levels/` and in Build Settings. Loaded on top of `02.1_Grid` at play.
@@ -294,6 +302,8 @@ Everything on the `02.1_Grid` board. Detail is in `UI_INTEGRATION_LOG.md`; do no
 | `Assets/Scripts/Tactical/HandoffPanel.cs` | The base class for every panel, with the Art list (`ApplyArt`). |
 | `Assets/Scripts/Tactical/HandoffPeriscopePanel.cs`, `HandoffPlotPanel.cs` | The periscope and the plot. |
 | `Assets/Scripts/UI/Panels/*Panel.cs` | The other eight panels: helm, power, sensors, comms, fire control, hangar, engineering, orders. Each shows its ship part and passes clicks to it. |
+| `Assets/Scripts/UI/Panels/EndScreenPanel.cs` | The end screen (Step 85): how the mission ended, RESTART MISSION and MAIN MENU. |
+| `Assets/Scripts/Game/QuestSystem.cs` | The mission (Step 85): win and loss, checked each tick. It pauses the board at the end. On `World`. |
 | `Assets/Scripts/Tactical/Handoff*.cs` (the rest) | Shared pieces: motion, easing, hit testing, shapes, marks, plot grid, sweep, rockers, scope sight. |
 | `Assets/Scripts/UI/ArtList.cs` | The Art list for the frame pieces, which have no panel script. |
 | `Assets/Scripts/UI/BoardPalette.cs` | The board's colours. The file is `Assets/UI/Board/Palette.asset`. Every panel reads its colours from it. |
@@ -728,7 +738,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 84, in detail
+## 6 · Steps 6 to 28, and 34 to 85, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3629,6 +3639,52 @@ The build list is now `00_Start`, `01_Briefing`, `02.1_Grid` and `Level_01`. `Pr
 old cockpit test scene) is off it. The scene file stays. Nothing loaded it. Nothing loads a scene by
 its build number.
 
+### Step 85 — Win, loss and restart; SHIP LOST clears
+
+**What it is.**
+
+- You win when the Garuda is destroyed, or when our marines take it (SECURE).
+- You lose when our reactor reaches 0, or when our ship is lost at the battle space's edge.
+- When the mission ends, the game pauses at once. 2 seconds later the end screen covers the board.
+- The end screen says MISSION COMPLETE in green, or SHIP LOST in red. The line under it says
+  GARUDA DESTROYED, GARUDA CAPTURED, REACTOR DESTROYED or LEFT THE BATTLE SPACE. Three rows
+  follow: TARGET (GARUDA · DESTROYED, CAPTURED or AFLOAT), OUR SHIP (its armour left, as a
+  percent, or LOST) and TIME (game time since the board opened).
+- RESTART MISSION loads the board again, with its level. It skips the intro and the briefing.
+  MAIN MENU loads `00_Start`: the intro, then the menu.
+- After a restart, SHIP LOST is gone. The restart loads the scene again, so everything starts
+  fresh.
+
+**Owner direction (2026-10-27).** Playable from start to finish. The calls in "Playable end to
+end" (calls 1 to 5) were made for the owner, who said to make them without asking.
+
+**How it works.**
+
+- `Assets/Scripts/Game/QuestSystem.cs` (moved from `Assets/Scripts`). It is on `World` in
+  `02.1_Grid`. Each board tick (`Ticked`) it checks our ship, then the target (`t07`). Our sensors
+  identifying the target moves it from LocateTarget to EliminateTarget. At the end it keeps the
+  stage, the reason and the real time, and calls `HandoffBoardControls.Pause()`. Soham's old
+  version (tags, the jump point, `WorldBoundary`, `GameClock`, `InternalSubsystems`) is in git
+  history. The two enums are kept.
+- `Assets/Scripts/UI/Panels/EndScreenPanel.cs`, on `End Screen` (`Assets/UI/Board/Panels/End
+  Screen.prefab`), the last child of `HandoffBoard`. It shows the screen once the mission is over
+  and **Delay Seconds** (2, Board & time on the Tuning window) have passed.
+- The screen is placeholder: plain colours, Barlow Condensed for the title and buttons, Share Tech
+  Mono for the rest. There is no art yet.
+
+**The playtest.** The run kills both ships part way and tests on, so the mission is switched off
+just after the board opens, and on again at the end. A new last section:
+1. Mission on: MISSION COMPLETE at the next tick, and the game pauses. The end screen comes up 2 s
+   later: MISSION COMPLETE, GARUDA DESTROYED. Screenshot `29_mission_complete`.
+2. RESTART MISSION, clicked for real: a fresh board, paused, power cold, the Garuda back, the
+   mission at its start, no end screen.
+3. Our ship placed outside the edge, with a 3 s clock (a stand-in; Step 86 checks the real one):
+   SHIP LOST, LEFT THE BATTLE SPACE, our ship LOST. Screenshot `30_ship_lost_edge`.
+4. RESTART MISSION: not lost, no countdown, and the alarm strip does not say SHIP LOST after a tick.
+5. Our reactor set to 0 (a stand-in for enemy fire): SHIP LOST, REACTOR DESTROYED. Screenshot
+   `31_ship_lost_reactor`.
+6. MAIN MENU: `00_Start` loads.
+
 ---
 
 ## 7 · How to keep this log
@@ -3703,7 +3759,7 @@ restructure list. Ask the other session before taking Unity.
 12. **Soham's 8 unused scripts:** read each in full before any verdict.
 13. **The playtest moves into the Unity Test Runner** (decision 31).
 
-### Playable end to end, and a Mac app (owner, 2026-10-27). In progress: Steps 82 to 84 done
+### Playable end to end, and a Mac app (owner, 2026-10-27). In progress: Steps 82 to 85 done
 
 **What this is.** The owner asked for the game to be playable from start to finish, and to run as a
 Mac app outside Unity. Today nothing ends the game: destroy the Garuda, or lose our ship, and play
@@ -3769,7 +3825,7 @@ this too. Planned on 2026-10-27 by the killshot-da session. No code or scene is 
 **Step 84. Prototype Dev off the build list** (item 3). Done. Change the list through the Editor
 (`EditorBuildSettings.scenes`). Keep `Level_01` on the list: the board loads it by name.
 
-**Step 85. Win, loss and restart; SHIP LOST clears** (item 1 and bug 2).
+**Step 85. Win, loss and restart; SHIP LOST clears** (item 1 and bug 2). Done.
 
 - **The mission script.** Move `Assets/Scripts/QuestSystem.cs` and its `.meta` to
   `Assets/Scripts/Game/`. Rewrite its inside for the board, the way `TacticalWorld` works:
@@ -4094,8 +4150,8 @@ From `UI_INTEGRATION_LOG.md`, section 10. In order:
 Found by the doc check after Step 66. Fix each with the owner.
 
 1. ~~**A ship with no power still hears on DRADIS.**~~ Fixed in Step 82.
-2. **A ship lost at the battle space's edge stays "SHIP LOST".** `deserted` is never cleared. It
-   matters once there is a restart.
+2. ~~**A ship lost at the battle space's edge stays "SHIP LOST".**~~ Fixed in Step 85: the restart
+   loads the scene again.
 3. ~~**Boats can be dragged along mid-boarding.**~~ Fixed in Step 79. The owner: once aboard, the
    ship fights on while it moves and the boats ride with it (decision 44).
 4. ~~**Enter can do nothing on the briefing.**~~ Fixed in Step 83.
