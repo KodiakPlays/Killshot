@@ -65,8 +65,8 @@ public class HandoffPlotPanel : HandoffPanel
     /// <summary>The sweep's bearing now, degrees clockwise from north; and whether it shows.</summary>
     public float SweepDeg => sweepDeg;
     public bool SweepShown => sweep && sweep.isActiveAndEnabled;
-    /// <summary>The sensor circle's radius now, km (it eases), or 0 while DRADIS is off.</summary>
-    public float SensorRingKm => State != null && State.sensors.dradis ? sensorKm : 0f;
+    /// <summary>The sensor circle's radius now, km (it eases), or 0 while DRADIS is off or SEN has no power.</summary>
+    public float SensorRingKm => State != null && State.sensors.Listening ? sensorKm : 0f;
 
     [Header("Passive bearings (Step 44): contacts DRADIS hears but has not identified")]
     [SerializeField] private HandoffMarksGraphic passiveLines;
@@ -201,7 +201,7 @@ public class HandoffPlotPanel : HandoffPanel
     private void Update()
     {
         if (Controls == null) return;
-        if (sweep && State.sensors.dradis && !Controls.Paused)
+        if (sweep && State.sensors.Listening && !Controls.Paused)
         {
             float turn = Mathf.Max(0.5f, sweepSecondsBase - State.sensors.senBoost * sweepSecondsPerGain);
             // in game time (owner 2026-10-24): `turn` seconds a sweep at x1, ten times as fast at x10
@@ -586,12 +586,12 @@ public class HandoffPlotPanel : HandoffPanel
         }
     }
 
-    // The hearing range: Heard() takes a contact inside it while DRADIS is on (PassiveRangeKm).
+    // The hearing range: Heard() takes a contact inside it while DRADIS is listening (PassiveRangeKm).
     void DrawSensorRing()
     {
         var s = State;
         var shapes = new List<HandoffMarksGraphic.Shape>();
-        if (s.sensors.dradis && sensorKm > 0f)
+        if (s.sensors.Listening && sensorKm > 0f)
         {
             bool amber = Controls.GridAmber;
             Paint(sensorRing, amber ? alarm : data);
@@ -616,7 +616,7 @@ public class HandoffPlotPanel : HandoffPanel
         sensorRing.Set(shapes);
 
         if (!sweep) return;
-        bool on = s.sensors.dradis && sensorKm > 0f;
+        bool on = s.sensors.Listening && sensorKm > 0f;
         if (sweep.gameObject.activeSelf != on) sweep.gameObject.SetActive(on);
         if (!on) return;
         bool red = Controls.GridAmber;

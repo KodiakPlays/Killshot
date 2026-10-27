@@ -129,8 +129,11 @@ Do not run ahead. Do one step, show it, wait.
 | 79 | Ammunition is a real count; boarding goes on while the target moves; the boats' 15,000 km range | **Done** — playtest 191/191 |
 | 80 | The Tuning window's tabs (Ship, Enemy, Board) and a stats file per ship | **Done** — playtest 191/191 |
 | 81 | The Level window shows the level from above, with a preview of the picked debris field; the railgun slug at 2,500 km/s | **Done** — playtest 191/191 after the fixes |
+| 82 | DRADIS needs SEN power: no unit on SEN, no hearing, no circle, no sweep | **Done** — playtest 193/193 |
+| 83 | Enter on the briefing always leads on, even if INITIALISING can't start | **Done** — playtest 193/193 |
+| 84 | Prototype Dev off the build list | **Done** — playtest 193/193 |
 
-Steps 6 to 28 and Steps 34 to 81 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 84 are written up in section 6. Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`. What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -591,6 +594,9 @@ These are settled. Do not reopen them.
     itself. The code still counts a slug within 210 km of a cruiser as a hit. With that radius and
     a 10 s flight, a slug aimed straight at the Garuda hits, since it moves at most 125 km in that
     time. Not built yet: see "To do next", item 4.
+48. **No power on SEN, no hearing** (owner, 2026-10-25; built in Step 82). DRADIS hears only with
+    at least 1 unit on the SEN bus. With none, the plot shows no circle and no sweep. The DRADIS
+    switch stays where the player set it.
 
 ---
 
@@ -722,7 +728,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 81, in detail
+## 6 · Steps 6 to 28, and 34 to 84, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -3573,6 +3579,56 @@ x10 one tick is 10 game seconds, and the slug lands inside it, before the pause 
 
 **Owner, after Step 81:** no hit radius; a slug must hit the ship itself (decision 47; to do).
 
+### Step 82 — DRADIS needs SEN power
+
+**What it is.**
+
+- With no power on the SEN bus, DRADIS hears nothing. The plot shows no sensor circle, no sweep and
+  no scan cone, the same as with DRADIS off.
+- The DRADIS switch stays where the player set it.
+- The buses are empty at load, so the plot has no sweep until SEN has power.
+
+**Owner direction (2026-10-25).** No power, no hearing. The calls in "Playable end to end" (call 7)
+were made for the owner, who said to make them without asking.
+
+**How it works.**
+
+- `SensorSystem.Listening`: DRADIS on, and at least 1 unit on the SEN bus. `Heard()` uses it in
+  place of the DRADIS switch.
+- `HandoffPlotPanel` reads `Listening` in four places: `SensorRingKm`, the sweep in `Update`, and
+  `DrawSensorRing` twice.
+
+**What it does to play.** The reactor gives 10 units and a bus holds 5. With ENG and SEN both
+full, WEP gets nothing. To charge the guns, the player takes units off SEN or ENG. Take SEN to 0
+and DRADIS goes deaf.
+
+**The playtest.**
+
+- A new check at load (power cold): the gain raised by hand to 2, which reaches TRACK 07; DRADIS
+  hears nothing, and the plot shows no circle and no sweep.
+- After LOAD SHED, the playtest puts SEN back on DRAW with ENG (the DRADIS circle checks need it).
+  Step 17 no longer clicks SEN on; it is already on.
+- Before the first shot, SEN gives back all but one unit (a stand-in for VENT, then STANDBY at 1),
+  so DRADIS still hears through the fight. It used to give back all five.
+
+### Step 83 — Enter on the briefing always leads on
+
+**What it is.** If the INITIALISING screen can't start (a missing shader), the game goes straight
+on to the board. Before, Enter did nothing.
+
+**How it works.** `StarwolfIntroController.Awake`: if it fails and `initialisingOnly` is ticked, it
+calls `finished` before it switches itself off. The briefing's `ScreenFlow` listens to `finished`
+and loads the board.
+
+**The playtest.** At the briefing it makes an INITIALISING controller with no shader, switches it
+on, and checks that it calls `finished`. That logs one error, which is expected.
+
+### Step 84 — Prototype Dev off the build list
+
+The build list is now `00_Start`, `01_Briefing`, `02.1_Grid` and `Level_01`. `Prototype Dev` (Soham's
+old cockpit test scene) is off it. The scene file stays. Nothing loaded it. Nothing loads a scene by
+its build number.
+
 ---
 
 ## 7 · How to keep this log
@@ -3647,7 +3703,7 @@ restructure list. Ask the other session before taking Unity.
 12. **Soham's 8 unused scripts:** read each in full before any verdict.
 13. **The playtest moves into the Unity Test Runner** (decision 31).
 
-### Playable end to end, and a Mac app (owner, 2026-10-27). Planned, not started
+### Playable end to end, and a Mac app (owner, 2026-10-27). In progress: Steps 82 to 84 done
 
 **What this is.** The owner asked for the game to be playable from start to finish, and to run as a
 Mac app outside Unity. Today nothing ends the game: destroy the Garuda, or lose our ship, and play
@@ -3694,7 +3750,7 @@ this too. Planned on 2026-10-27 by the killshot-da session. No code or scene is 
 9. **The Mac app fits the owner's screen, 2880 × 1864.** The whole board shows, with a dark band
    above and below it. Filling those bands (frame metal, or a taller board) is a later UI job.
 
-**Step 82. DRADIS needs SEN power** (bug 1).
+**Step 82. DRADIS needs SEN power** (bug 1). Done.
 
 - `SensorSystem`: a new `Listening`: DRADIS on, and at least 1 unit on the SEN bus. `Heard()` uses
   it in place of `dradis`.
@@ -3703,14 +3759,14 @@ this too. Planned on 2026-10-27 by the killshot-da session. No code or scene is 
 - Playtest, at load (power cold): raise the gain by hand (a stand-in), then check DRADIS hears
   nothing and the plot shows no circle and no sweep. Put the gain back.
 
-**Step 83. Enter on the briefing always leads on** (bug 4).
+**Step 83. Enter on the briefing always leads on** (bug 4). Done.
 
 - `StarwolfIntroController.Awake`: if it fails and `initialisingOnly` is ticked, it calls
   `finished` before it switches itself off. `ScreenFlow` then loads the board.
 - Playtest, at the briefing: make an INITIALISING controller with no shader, switch it on, and
   check that it calls `finished`. It logs one error, which is expected.
 
-**Step 84. Prototype Dev off the build list** (item 3). Change the list through the Editor
+**Step 84. Prototype Dev off the build list** (item 3). Done. Change the list through the Editor
 (`EditorBuildSettings.scenes`). Keep `Level_01` on the list: the board loads it by name.
 
 **Step 85. Win, loss and restart; SHIP LOST clears** (item 1 and bug 2).
@@ -4037,14 +4093,12 @@ From `UI_INTEGRATION_LOG.md`, section 10. In order:
 
 Found by the doc check after Step 66. Fix each with the owner.
 
-1. **A ship with no power still hears on DRADIS.** The owner: no power, no hearing.
-   `SensorSystem.Heard` checks only the DRADIS switch.
+1. ~~**A ship with no power still hears on DRADIS.**~~ Fixed in Step 82.
 2. **A ship lost at the battle space's edge stays "SHIP LOST".** `deserted` is never cleared. It
    matters once there is a restart.
 3. ~~**Boats can be dragged along mid-boarding.**~~ Fixed in Step 79. The owner: once aboard, the
    ship fights on while it moves and the boats ride with it (decision 44).
-4. **Enter can do nothing on the briefing.** If the INITIALISING screen's controller switches
-   itself off (a missing shader), `finished` never fires. Not seen in a run.
+4. ~~**Enter can do nothing on the briefing.**~~ Fixed in Step 83.
 5. **The playtest has no battle-space checks:** the warning, countdown, x1 drop, zoom limit, pan
    limit, axis numbers and the `C` key.
 

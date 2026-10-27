@@ -74,7 +74,13 @@ namespace Starwolf.Intro
                 if (hardwareHum) source.Play();
                 else Debug.LogWarning("Starwolf: hardware hum asset missing.", this);
             }
-            catch (Exception e) { Debug.LogException(e, this); enabled = false; }
+            catch (Exception e)
+            {
+                Debug.LogException(e, this);
+                enabled = false;
+                // Step 83: INITIALISING... can't play, so the game goes straight on to the board
+                if (initialisingOnly && !done) { done = true; finished.Invoke(); }
+            }
         }
         // The picture goes to the screen through a Canvas, not OnGUI. OnGUI encoded it twice, which
         // paled the text and rounded the dark green field to black (Step 70, measured). A black

@@ -67,8 +67,11 @@ public class SensorSystem : MonoBehaviour
     public float PassiveRangeKm => spectrum == "UV" ? SenRangeKm * stats.uvRangeFactor : SenRangeKm;
     public int GainCap => Mathf.Max(1, ship.power.BusUnits("sen"));
 
-    /// <summary>heard: DRADIS on, the contact emits in the chosen band, and it is in range.</summary>
-    public bool Heard(HandoffBoardState.Track t) => !t.own && !t.wreck && dradis && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeKm <= PassiveRangeKm;
+    /// <summary>DRADIS on, with at least 1 unit on the SEN bus (Step 82, owner: no power, no hearing).</summary>
+    public bool Listening => dradis && ship.power.BusUnits("sen") >= 1;
+
+    /// <summary>heard: DRADIS listening, the contact emits in the chosen band, and it is in range.</summary>
+    public bool Heard(HandoffBoardState.Track t) => !t.own && !t.wreck && Listening && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeKm <= PassiveRangeKm;
 
     /// <summary>coneCovers: active scan on, inside the cone, inside sensor range.</summary>
     public bool ConeCovers(HandoffBoardState.Track t) => active && HandoffBoardState.AngDiff(t.bearing, coneBrg) <= coneArc && t.rangeKm <= SenRangeKm;

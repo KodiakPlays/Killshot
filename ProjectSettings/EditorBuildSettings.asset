@@ -15,9 +15,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Tactical/02.1_Grid.unity
     guid: db225074494dd4259bc8aab05e48399e
   - enabled: 1
-    path: Assets/Scenes/Prototype Dev.unity
-    guid: ea23deeb671a2214cab61c57d774c647
-  - enabled: 1
     path: Assets/Scenes/Levels/Level_01.unity
     guid: 4cf76e81d39984c4db973e752f8bef63
   m_configObjects:

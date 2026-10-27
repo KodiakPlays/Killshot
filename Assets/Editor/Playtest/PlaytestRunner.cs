@@ -224,6 +224,18 @@ public static class PlaytestRunner
         Shot("02_briefing");
         yield return 0.2f;
 
+        // 2b. Step 83: if the INITIALISING screen can't start (here, no shader), it still calls finished, so Enter
+        //     leads on to the board. It logs one error, which is expected.
+        var probe = new GameObject("Playtest INITIALISING probe");
+        probe.SetActive(false);
+        var probeIntro = probe.AddComponent<Starwolf.Intro.StarwolfIntroController>();
+        probeIntro.initialisingOnly = true; probeIntro.displayShader = null;
+        bool probeDone = false;
+        probeIntro.finished.AddListener(() => probeDone = true);
+        probe.SetActive(true);
+        Check("INITIALISING can't start (no shader): it still calls finished, so Enter leads on", probeDone && !probeIntro.enabled, "");
+        UnityEngine.Object.Destroy(probe);
+
         // 3. Briefing → board (Enter; old Input class — call what Enter calls)
         var flow = UnityEngine.Object.FindAnyObjectByType<ScreenFlow>();
         if (flow) flow.Advance();
@@ -260,6 +272,18 @@ public static class PlaytestRunner
         // 5. Paused at load; signal silent
         Check("The board starts paused", board.Paused, "");
         Check("Signal starts at 0 — RUNNING SILENT", s.sensors.signal == 0f && SigNote(board) == "RUNNING SILENT", s.sensors.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
+
+        // 5b. Step 82 (owner): no power on the SEN bus, DRADIS hears nothing. Stand-in for the gain fader: gain 2
+        //     reaches TRACK 07 (19,200 km), but the bus is empty.
+        var plot0 = board.GetComponentInChildren<HandoffPlotPanel>(true);
+        int gainWas = s.sensors.senBoost;
+        s.sensors.senBoost = 2;
+        plot0.Refresh();
+        Check("No SEN power: DRADIS hears nothing, and the plot shows no circle and no sweep",
+              s.sensors.dradis && !s.sensors.Listening && s.tracks[0].rangeKm <= s.sensors.PassiveRangeKm && !s.sensors.Heard(s.tracks[0]) && plot0.SensorRingKm == 0f && !plot0.SweepShown,
+              "DRADIS " + (s.sensors.dradis ? "on" : "off") + ", SEN " + s.power.BusUnits("sen") + ", TRACK 07 at " + s.tracks[0].rangeKm.ToString("N0") + " of " + s.sensors.PassiveRangeKm.ToString("N0") + " km");
+        s.sensors.senBoost = gainWas;
+        plot0.Refresh();
 
         // 6. Open the Power drawer from the systems rail
         int snd = board.Sounds;
@@ -490,7 +514,8 @@ public static class PlaytestRunner
         yield return 0.8f;
         if (!Click("power.shed", null, "LOAD SHED (release)")) yield break;
         if (!Click("power.bus", "0", "ENG selector")) yield break;
-        Check("ENG back on DRAW after the shed", !s.power.shed && s.power.buses[0].mode == PowerSystem.BusMode.Draw, Buses(s));
+        if (!Click("power.bus", "2", "SEN selector")) yield break; // Step 82: DRADIS hears only with SEN power
+        Check("ENG and SEN back on DRAW after the shed", !s.power.shed && s.power.buses[0].mode == PowerSystem.BusMode.Draw && s.power.buses[2].mode == PowerSystem.BusMode.Draw, Buses(s));
         yield return (Func<bool>)(() => s.nav.ThrottleCap >= 60);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         if (!Click("helm", null, "HELM header")) yield break;
@@ -574,8 +599,7 @@ public static class PlaytestRunner
         Check("Nothing heard yet: the alarm strip is quiet", s.sensors.newContacts == 0 && !alarmWords.gameObject.activeInHierarchy, s.sensors.newContacts + " new");
         if (!Click("drawer", "power", "PWR key")) yield break;
         yield return 0.8f;
-        if (!Click("power.bus", "2", "SEN selector")) yield break;
-        yield return (Func<bool>)(() => s.sensors.GainCap >= 2);
+        yield return (Func<bool>)(() => s.sensors.GainCap >= 2); // SEN has been on DRAW since the helm step (Step 82)
         s.sensors.SetGain(2); // stand-in: the gain fader is a drag
         var t07 = s.TrackOf("t07");
         yield return (Func<bool>)(() => s.sensors.Heard(t07) && s.sensors.newContacts > 0);
@@ -723,11 +747,12 @@ public static class PlaytestRunner
         Check("CONDITION 2: weapons released", s.orders.WeaponsReleased, "alert " + s.orders.alert);
         if (!Click("orders", null, "ORDERS header (close)")) yield break;
         yield return 0.6f;
-        //     Power for the guns: SEN gives its units back, WEP draws and charges.
+        //     Power for the guns: SEN gives back all but one unit, WEP draws and charges.
+        //     Step 82: with no unit on SEN, DRADIS goes deaf, so SEN keeps one.
         if (!Click("drawer", "power", "PWR key")) yield break;
         yield return 0.8f;
         if (!Click("power.bus", "2", "SEN selector (STANDBY)")) yield break;
-        if (!Click("power.bus", "2", "SEN selector (VENT)")) yield break;
+        s.power.buses[2].fill = 1; // stand-in: SEN on VENT until one unit is left, then back to STANDBY
         if (!Click("power.bus", "1", "WEP selector (DRAW)")) yield break;
         yield return (Func<bool>)(() => s.weapons.WepReady && s.weapons.wepCharge >= s.weapons.ShotCost);
         Check("WEP charged for a shot", s.weapons.WepReady && s.weapons.wepCharge >= s.weapons.ShotCost, s.weapons.wepCharge.ToString("0") + "% of " + s.weapons.ShotCost + "%");
@@ -1289,6 +1314,8 @@ public static class PlaytestRunner
         s.nav.x = t07.worldX + System.Math.Sin(tb) * 10000; s.nav.y = t07.worldY + System.Math.Cos(tb) * 10000;
         s.nav.vx = s.nav.vy = 0; s.nav.throttle = 0;
         s.nav.heading = s.nav.orderedHeading = ((int)System.Math.Round(t07.worldHdg) + 180) % 360;
+        //     Step 82: our ship's death in 21e emptied every bus; SEN needs a unit for DRADIS to hear (stand-in for the power drawer)
+        s.power.buses[2].fill = 1;
         yield return 1f;
         s.LookAt("t07");
         s.weapons.sol[s.weapons.SysIndex] = new WeaponSystem.Solution(); // stand-in: clear the old solution
