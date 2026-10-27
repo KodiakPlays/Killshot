@@ -42,7 +42,8 @@ passed. Every control is clickable and shows its states. The flow is `00_Start` 
 **Next up (2026-10-27, owner offline; both sessions paused with everything committed):**
 
 - killshot-81: the "UI restructure — to do" list in section 8, steps 6 to 8: the "Handoff" rename
-  (`rename_handoff.py`, dry run first), the docs pass, the checker. Steps 1 to 5 are done (Step 89).
+  (the UI Restructure session wrote a script for it, `rename_handoff.py`, in its temporary
+  scratchpad; if it is gone, the names in step 6 are all you need), the docs pass, the checker. Steps 1 to 5 are done (Step 89).
 - Tooling: "To do next" items 6 to 9 in section 8, starting with the battle space per level
   (decision 50).
 - Waiting on the owner: playing the Mac app through (Step 87); whether to delete TextMeshPro's
