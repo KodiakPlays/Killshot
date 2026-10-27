@@ -809,9 +809,10 @@ sweep passes it. The numbers are in each ship's stats file, under sensors.
 
 ### 9.1 DRADIS and the sweep
 
-DRADIS hears a contact when all three are true:
+DRADIS hears a contact when all four are true:
 
 - DRADIS is on.
+- The SEN bus has at least 1 unit (Step 82, owner: no power, no hearing).
 - The contact gives off the band you have picked: THERM, RAD, UV or EM. The Garuda gives off THERM
   and RAD.
 - It is within range.
@@ -824,7 +825,7 @@ UV hears to 0.55 of that range
 You set the gain on the Sensors drawer. It can go up to the SEN units, never below 1. It loads at 1.
 
 > **Rule 9.1.a** The sweep turns once every `5.4 − 0.5 × gain` game seconds: 4.9 s at gain 1,
-> 2.9 s at gain 5. It stops while paused, and while DRADIS is off.
+> 2.9 s at gain 5. It stops while paused, while DRADIS is off, and while the SEN bus is empty.
 
 > **Rule 9.1.b** Between passes, a contact out of sight stays where the sweep last touched it
 > (§9.6).
@@ -833,7 +834,9 @@ You set the gain on the Sensors drawer. It can go up to the SEN units, never bel
 > where our ship was. The lines fade out over 120 game seconds. As our ship moves, the lines cross
 > at the contact. That is how you find a passive contact's range (owner, 2026-10-23).
 
-While DRADIS is on, the plot shows its hearing range as a circle round our ship, and the sweep.
+While DRADIS is on and SEN has power, the plot shows its hearing range as a circle round our ship,
+and the sweep. The buses are empty at load, so there is no sweep until SEN has power. The DRADIS
+switch stays where the player set it.
 
 ### 9.2 How things are drawn as you zoom
 
@@ -1278,7 +1281,8 @@ The orders station gives PARTY, SEAL and VENT for AUX charge (§6).
 
 ## 15 · Mission
 
-**Not built yet.** Only the level's ruins are built (§15.3).
+**Built so far:** the first mission's win and loss (§15.2, Step 85) and the level's ruins (§15.3). The
+rest of this section is the full design, not built yet.
 
 **What it is.** One handcrafted region of space, one Traitor Lord's flagship hidden in it, one way
 out.
@@ -1307,6 +1311,18 @@ Three stages, run in the background with no popups and no quest journal:
 > still alive is still hunting you.
 
 > **Rule 15.2.c** There are no cutscenes. You reach the edge and disappear.
+
+**Built now (Step 85).** The first mission ends at the kill (`FTUE_PLAN.md` §1, owner 2026-10-18).
+Rule 15.2.a, the escape, comes later.
+
+- You win when the Garuda is destroyed, or when our marines take it (SECURE).
+- You lose when our reactor reaches 0, or when our ship stays outside the battle space until its
+  countdown ends.
+- Locate target ends when our sensors identify the Garuda.
+- When the mission ends, the game pauses. 2 s later the end screen covers the board: MISSION
+  COMPLETE or SHIP LOST, the reason, then the target, our ship and the time taken.
+- RESTART MISSION plays the level again, from the board. MAIN MENU goes back to the intro.
+- The code is `QuestSystem` (on `World`) and `EndScreenPanel` (`End Screen.prefab`).
 
 ### 15.3 The level
 
@@ -1363,7 +1379,8 @@ faithfully.
 
 **Not built yet**
 
-1. **The win condition** (§15). There is no mission, no win and no escape.
+1. **The escape** (§15.2). The first mission ends at the kill (Step 85). The jump point and the
+   escape are not built.
 2. **The combat autopilot** (§4.6). TAIL is not defined. TARGET LOST is only proposed.
 3. **Being seen** (§5). The signal is built. Nothing in the enemy hears it.
 4. **The enemy's mind.** The Garuda patrols a loop at 5.5 km/s. When hit, it fires two HE missiles
