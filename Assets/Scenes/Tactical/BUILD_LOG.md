@@ -3937,6 +3937,43 @@ game is the hunt." Every tool must make sense.
 - Debris: the gaps must be wide enough to fly through, at the plot's zoom limits. Hitting a piece
   damages the ship, with no push-out (owner, 2026-10-26).
 
+**Status when the laptop was closed (2026-10-28, night).** Steps 94 to 99 are written and checked
+against the code, but **not yet in the project**. The code is in
+`~/Documents/GitHub/Killshot-Builds/wolf-hunt-drafts/` (outside the repo). To put it in, with Unity
+free, from the project root, in this order:
+
+1. `python3 <drafts>/apply_94_95_97.py`: the start screen's timer (ScreenFlow), the random start in the
+   Garuda's box (EnemySpawn), the Garuda's mind (EnemyBrain) and its railgun shots at us
+   (WeaponSystem.ShootAt). The playtest's older checks get `brain.hunts = false`. Compile, then in the
+   Editor: in `01_Briefing`, the WELCOME Screen's title becomes WOLF HUNT (title offset 0), delete
+   BriefingText and EnterPrompt, and set ScreenFlow's `advanceAfterSeconds` to about 4.
+2. Step 96: run `step96_garuda.cs.txt` in the Editor (the Garuda's numbers).
+3. `python3 <drafts>/apply_98.py`: the jump point (QuestSystem), the alarm strip's mission line
+   (BoardManager.missionAlarm), JUMPED OUT on the end screen, and the playtest's Step 85 section.
+4. `python3 <drafts>/apply_99_quest.py`, then `apply_99_world.py`, then run `step99_frigate.cs.txt` in the
+   Editor (`Frigate.asset` and the switched-off `Frigate (template)` under World).
+5. Quick check of each in play mode, one full playtest, commit, then the Mac app (Step 103).
+
+Each patch stops with an error if a file changed under it. Then apply that part by hand.
+
+**Who does what next.** Tooling: Step 100 (ruler and compass), the jump point drawn on the plot
+(`QuestSystem.ExitOpen`, `QuestSystem.ExitAt`, world km), Step 101 (fighters as scouts). killshot-81:
+Steps 94 to 99 as above.
+
+**Calls made without the owner (can be changed).**
+
+- Clicking a hostile contact on the plot also makes it fire control's target (`ShipState.LookAt`). Before,
+  the target was always the Garuda, so arriving frigates could not be shot.
+- The frigate is the "Naga-class frigate" (NAGA 1, NAGA 2…), a placeholder name. It uses the Garuda's model
+  at 0.6 scale. Numbers: top speed 15 km/s, turns 30°/s, armour 50/50/25/50, one railgun (12 slugs,
+  18,000 km), no missiles, no PDCs.
+- The Garuda's second PDC group is emptied rather than deleted (the code expects two groups).
+- Its awareness: SEARCHING from 0.35 of its hearing distance, ALERT from 0.7, a fix lasts 30 game s;
+  railgun reload 12–17 game s; aim off by up to 0.4°; a missile salvo every 90 game s once ALERT. Our
+  fighters are as loud to it as a signal of 60. All on the Board tab of Starwolf → Tuning, under Enemy.
+- The jump point: the middle of the battle space edge farthest from our ship, 5,000 km in; reaching
+  within 2,000 km wins. The arrivals: a random edge, 2,000 km in, told where we are to within 5,000 km.
+
 **This replaces:** "To do next" item 9 (the sample game): Wolf Hunt is the sample game. FTUE_PLAN §1's
 "no reinforcements" and "ends at the kill" (owner, 2026-10-27: the newer rule wins). The XO
 walkthrough and the derelicts (FTUE_PLAN §5–8) are not in today's build. Item 8 (the mission
