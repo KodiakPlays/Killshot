@@ -4234,7 +4234,8 @@ Mono, 344 MB, from commit ac7bfcf). Checked:
 
 **Left:** the owner plays it full screen (a session can't see or click the app), then Step 102: fix what
 is not fun. Step 105 played it in the Editor first: four bugs fixed, and eight game-feel questions for
-the owner, listed at the end of Step 105 in section 6. The app needs a rebuild to carry Steps 104 and 105.
+the owner, listed at the end of Step 105 in section 6. **The app was rebuilt from 80bc679** (Steps 104 and
+105 in it): 0 build errors, Apple Silicon, 341 MB; it starts with no errors in its log.
 
 **Calls made without the owner (can be changed).**
 
