@@ -151,8 +151,9 @@ Do not run ahead. Do one step, show it, wait.
 | 104 | TextMesh Pro's example files deleted (owner's yes); its missing shader file `TMPro.cginc` put back: the 3 build errors are gone | **Done** — the shaders compile clean |
 | 105 | A real play-through of Wolf Hunt in the Editor, and four fixes: a hit puts the Garuda on ALERT; "HOSTILE SET HAS YOUR RANGE" tells the truth; the alarm strip shows enemy fire coming and what just hit us, debris too | **Done** — checked in play mode; playtest 211/211 |
 | 106 | The owner's play report: W/S throttle, P pause, the 10,000 km visual ring, MISSION ONE then WOLF HUNT, TRACK takes the plot, the periscope picks the target; bugs 7 and 8; the plot follows our ship; PDCs in two halves; drift with no ENG power; Level_02 gone; the bundle ID; with killshot-a2's 60,000 km Level_01 and bug 6 | **Done** — checked in play mode; playtest 214/214 |
+| 107 | Wolf Hunt's level made smaller (60,000 km, the husk gone, 136 pieces); engineering pays AUX for its orders (bug 6); crew numbers in each ship's stats file | **Done** — playtest 214/214 (in Step 106's run); crew checked in play, COMPLEMENT 52 (7e82b40) |
 
-Steps 6 to 28 and Steps 34 to 105 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 107 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -263,14 +264,14 @@ Added in Step 85:
 ### `Level_01` — made in Step 67
 
 - In `Assets/Scenes/Levels/` and in Build Settings. Loaded on top of `02.1_Grid` at play.
-- `Enemy Spawn · Garuda` with `EnemySpawn` (trackKey `t07`). Since Step 73 at (0, +45,000), centre
-  top, facing south (z 180). It was at (18058.42, 16259.87), where the Garuda is placed in
-  `02.1_Grid`.
-- `Player Spawn` (Step 73) with `PlayerSpawn`, at (0, −45,000), centre bottom, 5,000 km above the
-  edge, facing north. (Named `Our Ship Start` until the owner renamed it.)
-- `Terrain` (Step 73): `Base Husk` at (0, 0), then groups Wrecks (5), Asteroid field 1–4 (34 rocks),
-  Debris · in the husk (81), · near (216), · middle (228), · far (202). 767 prefab copies, 826
-  colliders, all `WorldTerrain`.
+- `Battle Space`: 60,000 × 60,000 km since Step 107 (was 100,000).
+- `Enemy Spawn · Garuda` with `EnemySpawn` (trackKey `t07`). Since Step 107 at (0, +22,000), centre
+  top, facing south (z 180), its box 24,000 × 7,200 km. (Step 73 put it at (0, +45,000).)
+- `Player Spawn` (Step 73) with `PlayerSpawn`, at (0, −22,000) since Step 107, centre bottom, facing
+  north. (Named `Our Ship Start` until the owner renamed it.)
+- `Terrain`: since Step 107 no husk. Groups Wrecks (5), Asteroid field 1–4 (34 rocks), Debris · near
+  (12), · middle (35), · far (50): 136 pieces, all `WorldTerrain`. (Step 73 had `Base Husk` at (0, 0)
+  and Debris · in the husk; Step 93 thinned the belts.)
 - No camera and no light: the board's are used.
 
 ### Deleted in Step 1
@@ -350,7 +351,7 @@ nothing on screen. Its numbers are in its `Stats` section, in the ship's stats f
 | `Assets/Scripts/Systems/HangarSystem.cs` | Squadrons, launches, fighters' attack runs, assault boats and marines. |
 | `Assets/Scripts/Systems/DamageSystem.cs` | Compartments, side armour, fire, vacuum, radiation, crew, damage control. |
 | `Assets/Scripts/Systems/OrdersSystem.cs` | The alert condition, the AUX order pool, and the orders. |
-| `Assets/Scripts/Systems/Ship.cs` | On each ship. Points at its stats file. The parts read their numbers through it. In play each ship uses a copy of its file. |
+| `Assets/Scripts/Systems/Ship.cs` | On each ship. Points at its stats file. The parts read their numbers through it. In play each ship uses a copy of its file. At the start it fills in what the ship then uses up: the salvo, the PDC loaders, the marines and each room's crew (Step 107). |
 | `Assets/Scripts/Systems/ShipStats.cs` | One ship's numbers: one section per part. |
 | `Assets/Ships/Asura.asset`, `Assets/Ships/Garuda.asset` | The stats files: our ship and the Garuda. |
 
@@ -638,7 +639,13 @@ These are settled. Do not reopen them.
 50. **Each level has its own battle space** (owner, 2026-10-27; built in Step 91). A Battle Space box
     in the level, like the spawn boxes, with a width and height in km. The Level window sets them
     and its map shows the edge. The board uses them when the level loads. A level without a box
-    uses 100,000 × 100,000 km, today's size.
+    uses 100,000 × 100,000 km. (`Level_01` is 60,000 × 60,000 km since Step 107.)
+51. **Crew numbers are tuning numbers, in each ship's stats file** (owner, 2026-10-29: "crew numbers
+    need to be a tuning variable and should not be hard-coded"; built in Step 107). The Damage group
+    has **Crew**, one number per room. Never put a crew number in code.
+52. **Engineering and the orders station charge the same AUX for the same order** (owner, 2026-10-29,
+    bug 6; built in Step 107). REPAIR 30, SEAL 25, VENT 15, from the ship's stats file. REBOOT and
+    RECALL are free.
 
 ---
 
@@ -775,7 +782,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 101, in detail
+## 6 · Steps 6 to 28, and 34 to 107, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -4196,6 +4203,50 @@ killshot-a2's).
 grid moves). A new check: not scanned, TRACK takes the plot. The EMP check is now "without power it
 drifts". The periscope stand-in replaces the label click. Two old checks assumed a still plot (marks stay put on screen) and the 100,000 km map's zoom limit (x0.35); both now check the new rules. Playtest 2026-10-29_011619: **214/214**, with killshot-a2's bug 6 checks and Level_01.
 
+### Step 107 — A smaller Wolf Hunt; engineering pays AUX; crew in the stats file
+
+Three of the owner's answers from 2026-10-29. Built by killshot-a2. Its Unity link was down, so the
+Worker ran the level script and compiled the code.
+
+**1. The level is smaller.** The opening took about 7.5 real minutes at x10 before the first contact
+(Step 105). The owner: "If we need to make a smaller level, let's make a smaller level. Let's even
+remove the big piece of debris and have a little bit of debris." The owner chose a 60,000 km square
+with a few small debris fields.
+
+- `Base Husk` and `Debris · in the husk` are deleted. `BaseHusk.prefab` stays for later levels.
+- Everything else moved toward the centre by 0.6 (100,000 km to 60,000 km), so the layout keeps its
+  shape. Pieces keep their size. The asteroid fields moved as a whole, so their rocks keep their
+  spacing. Each wreck moved on its own.
+- The near, middle and far belts kept about a quarter of their pieces (12 of 50, 35 of 140, 50 of
+  202), in a fixed shuffled order. Every kept piece is at least 1,200 km from every other, and none
+  is within 3,000 km of our start, so we start in open space.
+- The Battle Space is 60,000 × 60,000 km. Player Spawn (0, −22,000); Enemy Spawn (0, +22,000), its
+  box 24,000 × 7,200 km. The ships start about 44,000 km apart (the check: 43,592). DRADIS hears
+  30,000 km out, so first contact comes after about 2 real minutes at x10 at the Step 105 pace.
+- 136 pieces, none outside the battle space. Nothing in code changed: the Garuda's hunt, the jump
+  point and the frigates' arrival all work from the battle space's size. The plot now zooms out to
+  x0.47 (was x0.35).
+- How: a script for Unity's `execute_code`, first tried in Python on the real positions. Unity checked
+  it in play mode: no errors.
+
+**2. Engineering pays AUX (bug 6).** Engineering's REPAIR, SEAL and VENT cost the same AUX as the
+orders station's (REPAIR 30, SEAL 25, VENT 15). `DamageSystem.EngBlock` now gives the room's reason
+first, then "INSUFFICIENT AUX — N% REQUIRED", the orders station's words. The orders station asks
+`EngBlock` too, so the two can't disagree. `EngRun` spends the AUX. The rocker locks and engineering's
+note shows the reason, as it already did for SEAL THE DOORS FIRST. Playtest: two new checks, REPAIR
+spends AUX (100 → 70%), and with no AUX engineering refuses REPAIR. The five engineering orders in a
+row cost 130, so the playtest fills the pool to 100 twice as a stand-in.
+
+**3. Crew in the stats file** (owner: "crew numbers need to be a tuning variable and should not be
+hard-coded"). The Damage group of each ship's stats file has **Crew**: six numbers, one per room,
+in order MAG, BRI, HAB, HGR, RCT, ENG. Each starts at today's 4, 9, 18, 7, 6, 8 (52). Tune the Garuda
+and the frigates on the Enemy tab. `Ship.Awake` fills each room's crew from the file, as it does the
+marines. The rooms' list in `DamageSystem` no longer has crew numbers.
+
+**Checked.** Parts 1 and 2: playtest 2026-10-29_011619, 214/214 (with Step 106). Part 3: compiled by
+the Worker, written into Asura, Garuda and Frigate through the Editor, and COMPLEMENT 52 in play
+(commit 7e82b40).
+
 ---
 
 ## 7 · How to keep this log
@@ -4241,8 +4292,8 @@ section below. **Who:** "Worker" is the session that was killshot-81.
    call.**
 4. **Bug 7 and bug 8: fixed in Step 106.** A thrown LOAD or ANGLE now drops when its gate fails, and
    the lever checks again before it fires.
-5. **Bug 6:** engineering's REPAIR, SEAL and VENT are free, while the orders station charges AUX for
-   the same orders (`DamageSystem.EngRun` against `OrdersSystem`). **Owner's call:** which is right?
+5. ~~**Bug 6:** engineering's REPAIR, SEAL and VENT are free.~~ **Fixed in Step 107:** both charge
+   AUX (owner).
 6. **W/S throttle keys, the P pause key, the title: done in Step 106.** The title is two cards,
    MISSION ONE, then WOLF HUNT (owner's pick). W/S does not yet switch off the autopilot (there is none).
 7. **Four font files rewrite themselves** whenever Unity runs (the Barlow, Share Tech Mono and Noto
@@ -4253,8 +4304,7 @@ section below. **Who:** "Worker" is the session that was killshot-81.
 
 8. **Play the Mac app through, full screen.** Done by the owner on 2026-10-28: "I was able to load the
    game, and the app works." The problems were the weapon system's playability (item 1).
-9. **`Level_02.unity`**, and its place on the build list, were made on 2026-10-28 at 10:05 and are not
-   committed. Owner: keep it? While it is on the build list, it goes into every Mac app.
+9. ~~**`Level_02.unity`**~~ **Deleted in Step 106** (owner: an experiment).
 10. Optional: give the terminal Accessibility permission, so a session can play the app itself.
 
 **Traps for the next build.** The ARM64 setting can go back to Intel after a Unity restart (set it
@@ -4296,8 +4346,11 @@ killshot-a2 does 8 and 9.
 7. The first salvo: **no change.** "We are both hunting each other. Whoever shoots first gets to shoot
    first."
 8. The long opening: **a smaller level.** Take out the big husk and the debris inside it, and keep
-   a little debris. The size goes to the owner first.
-9. Bug 6: **engineering charges AUX too**, the same as the orders station.
+   a little debris. The owner chose 60,000 km with a few small fields. **Done in Step 107.**
+9. Bug 6: **engineering charges AUX too**, the same as the orders station. **Done in Step 107.**
+
+1, 3 and 5 were built in Step 106; 2, 4, 6 and 7 need no change. Also asked on 2026-10-29: **crew
+numbers in the stats file**, done in Step 107.
 
 Also from the owner (2026-10-29): **delete `Level_02`** (an experiment) and take it off the build
 list. **The Mac app opened in a small window:** its bundle ID is still the URP template's
@@ -4374,6 +4427,9 @@ it, and it hunts us. We stay quiet, scan, send fighters ahead to scout, and pick
 a missile salvo, or a broadside followed by marines. If it finds us, it calls for help, and a
 countdown starts. When the countdown ends, enemy frigates arrive. Kill or capture the Garuda, and a
 jump point appears. Reach it to win.
+
+**Since Step 107** the level is a 60,000 km square with no husk and a little debris; the ships start
+about 44,000 km apart.
 
 **The owner's goal for today:** a playable Mac app of this level, and game feel. "The fun of the
 game is the hunt." Every tool must make sense.
@@ -4963,7 +5019,7 @@ Found by the doc check after Step 66. Fix each with the owner.
    ship fights on while it moves and the boats ride with it (decision 44).
 4. ~~**Enter can do nothing on the briefing.**~~ Fixed in Step 83.
 5. ~~**The playtest has no battle-space checks.**~~ Added in Step 86.
-6. **Engineering's REPAIR, SEAL and VENT cost nothing.** The orders station charges AUX for the same
+6. ~~**Engineering's REPAIR, SEAL and VENT cost nothing.**~~ **Fixed in Step 107** (owner: both charge AUX). The orders station charges AUX for the same
    orders. Found by Tooling's spec check (2026-10-27). Ask the owner which is right.
 7. **ANGLE stays thrown after turning out of arc,** so the shot can still fire. Same check.
 8. **Losing WEP power after LOAD does not release the firing ladder.** Same check.
