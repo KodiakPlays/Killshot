@@ -1622,18 +1622,22 @@ public static class PlaytestRunner
               "big square " + bigKm.ToString("N0") + " km: " + string.Join(" ", shown.ToArray()));
         for (int n = 0; n < 40; n++) board.Scroll("plot", null, -1f); // the mouse wheel, out past the limit
         yield return 0.6f;
-        Check("Zoomed out past the limit, the zoom stops where the battle space fills the plot", board.ZoomExact == board.MinZoom && board.MinZoom > 0.1,
+        Check("Zoomed out past the limit, the zoom stops at x0.1 (owner 2026-10-29)", board.ZoomExact == board.MinZoom && System.Math.Abs(board.MinZoom - 0.1) < 1e-6,
               "x" + board.ZoomExact.ToString("0.00") + ", limit x" + board.MinZoom.ToString("0.00"));
+        Shot("25b_zoomed_out"); // the grid carries on past the battle space's heavier edge
         double cellKm = plotGrid.CellKm(out cellPx);
         bigKm = cellKm * plotGrid.MajorEvery;
         shown = axisNums.FindAll(lbl => lbl.gameObject.activeSelf).ConvertAll(lbl => lbl.text);
-        Check("The axis numbers at x0.35: 0 level with our ship, then whole big squares of 10,000 km", AxisWhole(shown, bigKm) && System.Math.Abs(bigKm - 10000) < 1e-6,
+        Check("The axis numbers at x0.1: 0 level with our ship, then whole big squares of 25,000 km", AxisWhole(shown, bigKm) && System.Math.Abs(bigKm - 25000) < 1e-6,
               "big square " + bigKm.ToString("N0") + " km: " + string.Join(" ", shown.ToArray()));
+        board.SetZoom(0.5); // in again, where the battle space is bigger than the plot
+        yield return 0.6f;
+        cellKm = plotGrid.CellKm(out cellPx);
         if (!Click("tool", "CURSOR", "CURSOR tool")) yield break;
         if (!PlotDrag(board, new Vector2(700, 300), new Vector2(2700, 2300), "drag the grid far past a corner", "plot.pan")) yield break;
         yield return 0.6f;
         Rect gridRect = plotGrid.rectTransform.rect;
-        double edgeX = s.ArenaHalfW - gridRect.width / 2 * (cellKm / cellPx), edgeY = s.ArenaHalfH - gridRect.height / 2 * (cellKm / cellPx);
+        double edgeX = System.Math.Max(0, s.ArenaHalfW - gridRect.width / 2 * (cellKm / cellPx)), edgeY = System.Math.Max(0, s.ArenaHalfH - gridRect.height / 2 * (cellKm / cellPx));
         Check("Dragged far past a corner, the view stops with the plot's edge on the map's edge",
               System.Math.Abs(System.Math.Abs(plotP.View.x) - edgeX) < 1 && System.Math.Abs(System.Math.Abs(plotP.View.y) - edgeY) < 1,
               "view " + plotP.View.x.ToString("N0") + ", " + plotP.View.y.ToString("N0") + " km; limit ±" + edgeX.ToString("N0") + ", ±" + edgeY.ToString("N0"));

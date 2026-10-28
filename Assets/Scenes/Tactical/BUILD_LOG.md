@@ -157,6 +157,7 @@ Do not run ahead. Do one step, show it, wait.
 | 107 | Wolf Hunt's level made smaller (60,000 km, the husk gone, 136 pieces); engineering pays AUX for its orders (bug 6); crew numbers in each ship's stats file | **Done** — playtest 214/214 (in Step 106's run); crew checked in play, COMPLEMENT 52 (7e82b40) |
 | 108 | Keys 1–6 open the six drawers; Starwolf → Keys lists every board key and changes it | **Done** — compiled clean; drawers checked in play mode; the key presses themselves not yet pressed by a person |
 | 109 | The periscope shows the enemy ship: the plot's top-down picture, level, pointing left or right the way it heads; zoom until it fills the brackets, then CLASS | **Done**. Checked in play mode (before and after shots: the red lines are unchanged); playtest 215/216 (2026-10-29_015659; my check passes; the one failure is #56 RECALL, frame timing, not this work) |
+| 110 | The plot zooms out to x0.1; the grid carries on past the battle space, with a heavier line at its edge | **Done**. Compiled clean; checked in play mode at x0.1, white and amber (`Logs/GridCheck`); playtest section 25b updated, not run |
 
 Steps 6 to 28 and Steps 34 to 109 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -835,7 +836,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 109, in detail
+## 6 · Steps 6 to 28, and 34 to 110, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -4362,6 +4363,45 @@ Pointing left was checked too (heading 338°). The playtest gained one check bef
 whether that means the four white corner marks (the brackets) in the sight; no answer before they went
 to sleep. The brackets are unchanged. CLASS uses them: the ship must fill them.
 
+### Step 110 — Zoom out to x0.1; the grid carries on past the battle space
+
+The owner, 2026-10-29: zooming out stopped too soon, and it was hard to see enough. Built by Grid
+Visual.
+
+**What the player sees.** The SCALE knob and the mouse wheel go out to x0.1. Past the battle space
+the grid carries on: the same big squares, with 5 × 5 small ones inside. A thicker, brighter line
+marks the battle space's edge, white on the white grid and amber on the amber grid. At x0.1 Wolf
+Hunt's 60,000 km battle space is about a fifth of the plot's width, with grid all round it. Panning
+still stops at the edge (owner's pick). Once the whole battle space fits, it stays in the middle.
+
+**What changed.**
+
+- `BoardManager.MinZoom` is just **Zoom Out Limit**, now 0.1, saved in `02.1_Grid`. Step 65's
+  second rule is gone. It stopped zooming sooner, where the map filled the plot's width: x0.47 for
+  Wolf Hunt.
+- `PlotGrid` draws its lines across the whole plot, still counted from the battle space's corner.
+  Then it draws the edge on top. **Edge Width Px** (3), **White Edge** (0.6) and **Amber Edge** (0.9)
+  are on Plot Grid in the inspector.
+- Below about x0.29 the small squares are 5,000 km and the big ones 25,000 km. At x0.1 a small square
+  is 30 px.
+- Playtest section 25b: the zoom stops at x0.1, the big squares there are 25,000 km, then it zooms in
+  to x0.5 before the drag-past-a-corner check. Earlier steps that zoom to 0.25, 0.3 and 0.4 for
+  screenshots now really get there. Before, they stopped at x0.47.
+
+**Checked.** Compiled clean. In play mode the mouse wheel stopped at x0.1. Screenshots at x0.1, white
+and amber, are in `Logs/GridCheck`. The full playtest was not run, because KM to Units changes the
+scale next and will update section 25b again.
+
+**Seen on the way.** The axis numbers count from our ship. At x0.1 they don't sit on the grid lines,
+because 60,000 km is not a whole number of 25,000 km squares. This was already the case whenever our
+ship was off a line.
+
+**Calls made on the fly.** x0.1 is the owner's first number. The edge is 3 px, at 0.6 white and 0.9
+amber. The grid outside is as bright as inside. 5,000 km stays the biggest small square.
+
+**Next.** KM to Units changes the plot to units (760 px per 1,000 units) and takes the zoom limit to
+x0.01.
+
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 
 - **Navigation (2026-10-26).** All ship movement is in `Systems/NavSystem.cs`: position, heading,
@@ -4855,25 +4895,15 @@ From KM to Units. Nothing in code, scenes or Unity changed yet.
   - `Assets/Scenes/Tactical/FTUE_PLAN.md`: §3 and the §4.4 table (railgun 25,000; the Garuda's is
     18,000), §8 step 23 ("range < 20,000").
 
-### Plot zoom-out (owner, 2026-10-29). Agreed in part, not built
+### Plot zoom-out (owner, 2026-10-29). Built in Step 110; a few looks still open
 
-From Grid Visual. It waits on the units work above: KM to Units settles with the owner what zooming
-out means, then hands over.
+From Grid Visual. Built: zoom out to x0.1, the grid past the battle space, a heavier edge line, panning
+still stops at the edge. KM to Units takes the limit further (x0.01) with its change to units.
 
-- Zooming out stops at x0.35 today. The code also stops at x0.28, where a 100,000 km map fills the
-  plot's width (`BoardManager.MinZoom`). The owner finds it hard to see enough.
-- Agreed: zoom out further. Past the battle space, show more of the same grid (big squares with 5 × 5
-  small inside) instead of black. Draw a thicker, stronger line at the battle space's edge. The battle
-  space itself does not change.
-- Not settled: how far out. The owner first said x0.1, then said it needn't be. Suggested: the whole
-  battle space with about one big square of grid round it (about x0.2 for 100,000 km). Also not
-  settled: whether the view may pan past the edge (the owner first said "stops at the edge, as now";
-  suggested since: the plot's middle may reach the edge line, no further); the biggest small square
-  (5,000 km today, or a 10,000 km step); the outside grid the same or a little dimmer; the edge colour
-  (white or amber with the tint, or red).
-- Files: `PlotGrid.cs` (draws only inside the battle space today), `BoardManager.MinZoom` and
-  `zoomOutLimit` (0.35, saved in `02.1_Grid`), the pan stop in `PlotPanel.Refresh`, and the playtest
-  check "zoom stops at x0.35".
+- Still open for the owner: whether the view may pan past
+  the edge (suggested: the plot's middle may reach the edge line, no further); the outside grid the
+  same or a little dimmer; the edge colour (white or amber with the tint today, or red); a bigger small
+  square than 5,000 km when zoomed far out.
 - Also from Grid Visual: the spec has "Body cam — not built yet" under §12.2 (commit b8dffe9), an idea
   for a marine helmet-camera window during boarding. Not to be built yet.
 

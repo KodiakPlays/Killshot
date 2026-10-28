@@ -179,9 +179,9 @@ public class BoardManager : MonoBehaviour
 
     [Header("Console — SCALE knob and grid tint")]
     [SerializeField, Range(0.1f, 1f)] private float zoom = 1f;
-    [Tooltip("Full zoom-out (owner 2026-10-25). If the battle space is too narrow to fill the plot's width at this zoom, zooming stops sooner, where it does.")]
+    [Tooltip("Full zoom-out (owner 2026-10-29: x0.1). Past the battle space the grid carries on.")]
     [Tune("Board & time")]
-    [SerializeField, Range(0.1f, 1f)] private float zoomOutLimit = 0.35f;
+    [SerializeField, Range(0.1f, 1f)] private float zoomOutLimit = 0.1f;
     [Tooltip("SCALE knob: zoom x10 per this many px of drag (UIStateSpec §8.2).")]
     [Tune("Board & time")]
     [SerializeField] private float zoomDragPxPerDecade = 160f;
@@ -531,11 +531,10 @@ public class BoardManager : MonoBehaviour
 
     // ---- console -------------------------------------------------------------------------
 
-    /// <summary>Step 65 (owner 2026-10-25): zooming out stops at `zoomOutLimit`, or sooner where the battle space's left
-    /// and right edges reach the plot's sides (1712 px at 60.9 px per 1,000 km), so there's never black down the sides.
-    /// A 100,000 km map fills at x0.28, past the x0.35 limit; only one under about 80,000 km wide stops sooner. The top
-    /// and bottom run on past the plot and you pan to them. The design went to 0.1.</summary>
-    public double MinZoom => System.Math.Max(zoomOutLimit, System.Math.Min(1.0, (grid ? grid.rectTransform.rect.width : 1712.0) / (state.arenaWidthKm * 60.9 / 1000.0)));
+    /// <summary>Owner 2026-10-29: zooming out stops at `zoomOutLimit`, x0.1 as the design had it, whatever the battle
+    /// space's size. Past its edge the grid carries on (PlotGrid). Step 65 stopped sooner, where the map filled the
+    /// plot's width, to keep black off the sides.</summary>
+    public double MinZoom => zoomOutLimit;
 
     public void SetZoom(double z)
     {

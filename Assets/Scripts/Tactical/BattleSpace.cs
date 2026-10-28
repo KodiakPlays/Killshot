@@ -21,7 +21,7 @@ public class BattleSpace : MonoBehaviour
         if (!board) return;
         board.State.arenaWidthKm = widthKm;
         board.State.arenaHeightKm = heightKm;
-        board.SetZoom(board.ZoomExact); // the zoom-out limit follows the size
+        board.SetZoom(board.ZoomExact); // redraws the plot at the new size
     }
 
 #if UNITY_EDITOR

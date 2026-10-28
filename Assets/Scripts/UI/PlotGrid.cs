@@ -4,10 +4,10 @@ using UnityEngine.UI;
 /// <summary>
 /// The plot's two grid layers, drawn as one UI mesh. Colours and line weights come from the handoff's
 /// textures/plot-grid.json. Tint toggles white and amber (owner, 2026-10-04 — the handoff's red is replaced by amber).
-/// Step 65 (owner 2026-10-25): the grid is the battle space, drawn only inside it, and square. The minor cell is
-/// still the step whose on-screen size is nearest the target, 5 x 5 to a big square, but the lines start from the
-/// battle space's corner, not the plot centre, so its edge is always a line. The design drew cells 4.4 % shorter
-/// than wide; that can't hold a square edge.
+/// Step 65 (owner 2026-10-25): the grid is square. The minor cell is still the step whose on-screen size is nearest
+/// the target, 5 x 5 to a big square, but the lines start from the battle space's corner, not the plot centre, so
+/// its edge is always a line. The design drew cells 4.4 % shorter than wide; that can't hold a square edge.
+/// Owner 2026-10-29: the lines carry on past the battle space, and its edge is a heavier line.
 /// </summary>
 [RequireComponent(typeof(CanvasRenderer))]
 public class PlotGrid : MaskableGraphic
@@ -21,6 +21,8 @@ public class PlotGrid : MaskableGraphic
     [SerializeField] private float targetCellPx = 61f;
     [SerializeField] private int majorEvery = 5;
     [SerializeField] private float lineWidthPx = 1f;
+    [Tooltip("The battle space's edge (owner 2026-10-29).")]
+    [SerializeField] private float edgeWidthPx = 3f;
 
     [Header("Tint")]
     [SerializeField] private Tint tint = Tint.White;
@@ -28,6 +30,8 @@ public class PlotGrid : MaskableGraphic
     [SerializeField] private Color whiteMajor = new Color32(0xE8, 0xED, 0xF0, 66);  // ink.data .26
     [SerializeField] private Color amberMinor = new Color32(0xE0, 0xA0, 0x20, 87);  // accent.caution .34
     [SerializeField] private Color amberMajor = new Color32(0xE0, 0xA0, 0x20, 158); // accent.caution .62
+    [SerializeField] private Color whiteEdge = new Color32(0xE8, 0xED, 0xF0, 153);  // ink.data .6
+    [SerializeField] private Color amberEdge = new Color32(0xE0, 0xA0, 0x20, 230);  // accent.caution .9
     [Tooltip("On for the handoff board, which blends in gamma space (GammaBoardPresenter): the colours " +
              "above are pre-encoded so the canvas's linear conversion lands on them exactly.")]
     [SerializeField] private bool gammaBoard = true;
@@ -65,16 +69,29 @@ public class PlotGrid : MaskableGraphic
         CellKm(out cell);
         if (cell < 2f) return;
         Rect r = rectTransform.rect;
-        // the world origin on this rect (x right, y down from its top-left), and the battle space's edges clipped to it
+        // the world origin on this rect (x right, y down from its top-left), and the battle space's edges
         float ox = r.width / 2f + offsetPx.x, oy = r.height / 2f + offsetPx.y;
         float hw = arenaHalfKm.x * pxPer1000km * zoom / 1000f, hh = arenaHalfKm.y * pxPer1000km * zoom / 1000f;
-        float left = Mathf.Max(0f, ox - hw), right = Mathf.Min(r.width, ox + hw);
-        float top = Mathf.Max(0f, oy - hh), bottom = Mathf.Min(r.height, oy + hh);
-        if (left >= right || top >= bottom) return;
+        float x0 = ox - hw, x1 = ox + hw, y0 = oy - hh, y1 = oy + hh;
         bool white = tint == Tint.White;
-        // from the battle space's top-left corner, so its edges fall on lines
-        Lines(vh, r, ox - hw, oy - hh, cell, left, right, top, bottom, Enc(white ? whiteMinor : amberMinor));
-        Lines(vh, r, ox - hw, oy - hh, cell * majorEvery, left, right, top, bottom, Enc(white ? whiteMajor : amberMajor));
+        // across the whole plot, from the battle space's top-left corner, so its edges fall on lines
+        Lines(vh, r, x0, y0, cell, 0f, r.width, 0f, r.height, Enc(white ? whiteMinor : amberMinor));
+        Lines(vh, r, x0, y0, cell * majorEvery, 0f, r.width, 0f, r.height, Enc(white ? whiteMajor : amberMajor));
+        // the edge on top
+        Color e = Enc(white ? whiteEdge : amberEdge);
+        float w = edgeWidthPx / 2f;
+        Box(vh, r, x0 - w, y0 - w, x0 + w, y1 + w, e);
+        Box(vh, r, x1 - w, y0 - w, x1 + w, y1 + w, e);
+        Box(vh, r, x0 + w, y0 - w, x1 - w, y0 + w, e);
+        Box(vh, r, x0 + w, y1 - w, x1 - w, y1 + w, e);
+    }
+
+    // A box from (x0, y0) to (x1, y1), rect px (x right, y down), cut to the rect.
+    static void Box(VertexHelper vh, Rect r, float x0, float y0, float x1, float y1, Color c)
+    {
+        x0 = Mathf.Max(x0, 0f); y0 = Mathf.Max(y0, 0f);
+        x1 = Mathf.Min(x1, r.width); y1 = Mathf.Min(y1, r.height);
+        if (x0 < x1 && y0 < y1) Quad(vh, r.xMin + x0, r.yMax - y1, x1 - x0, y1 - y0, c);
     }
 
     Color Enc(Color c)
@@ -85,7 +102,7 @@ public class PlotGrid : MaskableGraphic
         return g;
     }
 
-    // Lines every `step` px from (ox, oy), only between the battle space's edges (left..right, top..bottom).
+    // Lines every `step` px from (ox, oy), only between left..right and top..bottom.
     void Lines(VertexHelper vh, Rect r, float ox, float oy, float step, float left, float right, float top, float bottom, Color c)
     {
         for (float x = ox + Mathf.Ceil((left - ox) / step - 1e-4f) * step; x <= right + 0.01f; x += step)
