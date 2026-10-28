@@ -27,10 +27,10 @@ the briefing; Enter shows INITIALISING... and then the board in `02.1_Grid`.
 
 The board looks and clicks right, and you can fight on it. Our ship is the Asura-class destroyer.
 It starts at the level's Player Spawn. The enemy is the Garuda-class cruiser, `Garuda · Cruiser` in
-the scene. It starts at `Enemy Spawn · Garuda` in `Level_01`, patrols a loop, and fires missile
-salvos back when hit. You can hear it on DRADIS, plot it, scan it, and fire railguns and missiles at
-it. You can launch fighters and assault boats at it. You can destroy it or capture it. Its missiles
-can kill our ship. There is no mission yet. **Starwolf → Tuning** edits each ship's stats file and
+the scene. It starts at a random point in its spawn box in `Level_01`, hunts us, and fights back
+with railguns and missiles (Step 97). You can hear it on DRADIS, plot it, scan it, and fire railguns and missiles at
+it. You can launch fighters and assault boats at it. You can destroy it or capture it. It can kill
+our ship. The first mission, Wolf Hunt, is playable (Steps 94 to 105). **Starwolf → Tuning** edits each ship's stats file and
 the board's own values. Each step's detail is in section 6.
 
 **Changed direction on 2026-10-04.** A new Claude Design handoff arrived. Its
@@ -39,15 +39,8 @@ passed. Every control is clickable and shows its states. The flow is `00_Start` 
 `02.1_Grid`, with `Level_01` loaded on top of the board. The full record is
 `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
 
-**Next up (2026-10-27, owner offline; both sessions paused with everything committed):**
-
-- killshot-81: the "UI restructure — to do" list in section 8, step 8: the checker. Steps 1 to 5
-  are done (Step 89), step 6, the "Handoff" rename, too (Step 90), and step 7, the docs pass.
-- Tooling: "To do next" items 6 to 9 in section 8, starting with the battle space per level
-  (decision 50).
-- Waiting on the owner: playing the Mac app through (Step 87); whether to delete TextMeshPro's
-  examples (Step 87 notes); three possible bugs ("Bugs, not fixed yet", items 6 to 8).
-- The Claude Design request still stands, but placeholder art is fine, so it does not block a demo.
+**Next up (2026-10-29):** the first level, Wolf Hunt, is playable (Steps 92 to 105) and built as a
+Mac app. Everything left is sorted in **section 8, "Triage: everything left, sorted"**. Start there.
 
 **Agreed on 2026-10-25, not built:** the combat autopilot with W/S throttle. It is in section 8,
 with the owner's ruling on Soham's old scripts.
@@ -4169,6 +4162,74 @@ Nothing else in the repo gets written by the log keeper. Only this file.
 
 Still not done. **This is the list to work from.** Read it before picking up any work.
 
+### Triage: everything left, sorted (2026-10-29, killshot-a2)
+
+The owner asked for everything left over, with nothing missed. This list sorts every open item in
+this file into: blocks play, hurts play, owner only, and later. The detail stays in each item's own
+section below. **Who:** "Worker" is the session that was killshot-81.
+
+**Blocks play** (a new player can't get through Wolf Hunt)
+
+1. **The instruments don't lead you to the enemy or to a shot.** No visual range ring, no way to read
+   the range, and the firing switches refuse without saying why. From the owner's play report
+   (2026-10-28). **Worker, in progress.**
+2. **The first salvo decides the fight** (Step 105, question 7). In the play-through the fight was
+   lost 70 game seconds after the first hit. **Owner's call.**
+
+**Hurts play**
+
+3. The Step 105 questions 1–6 and 8 (plot follows our ship; bearing lines last longer; PDC arcs;
+   noise is all power; cutting ENG stops dead; periscope stays down; the long opening). **Owner's
+   call.**
+4. **Bug 7 and bug 8, confirmed in the code on 2026-10-29.** `WeaponSystem.Fire` checks only that the
+   switches are thrown (`AllSet`), and nothing drops a thrown rung when its gate fails. So a shot
+   still fires after turning out of arc, or after WEP loses power. Same code as item 1, so offered to
+   the Worker.
+5. **Bug 6:** engineering's REPAIR, SEAL and VENT are free, while the orders station charges AUX for
+   the same orders (`DamageSystem.EngRun` against `OrdersSystem`). **Owner's call:** which is right?
+6. **W/S throttle keys, the P pause key, the title as "MISSION 1 · WOLF HUNT"** (owner's play
+   report). **Worker, in progress.** The agreed W/S rule is in "Combat autopilot and W/S" below.
+7. **Four font files rewrite themselves** whenever Unity runs (the Barlow, Share Tech Mono and Noto
+   SDF assets). They show as changed in every `git status`. Put them back, don't commit them. A
+   lasting fix (a TextMesh Pro setting) is for later.
+
+**Owner only**
+
+8. **Play the Mac app through, full screen.** It has only been checked in the app up to the menu.
+9. **`Level_02.unity`**, and its place on the build list, were made on 2026-10-28 at 10:05 and are not
+   committed. Owner: keep it? While it is on the build list, it goes into every Mac app.
+10. Optional: give the terminal Accessibility permission, so a session can play the app itself.
+
+**Traps for the next build.** The ARM64 setting can go back to Intel after a Unity restart (set it
+again). The disk is nearly full (about 8 GB free; each app is about 340 MB).
+
+**Later, in the owner's order: refactor, then tools, then the mission scripter, then features**
+
+- **Refactor** ("Board refactor" below). Step 2: the playtest into the Test Runner. Step 5: move the
+  last scripts out of `Scripts/Tactical`. Step 8: the clock, pause and tick from `BoardManager` into
+  `GameManager` (move `ReadOnlyAttribute` out of the old `GameManager.cs` first). Steps 2 and 8 touch
+  `PlaytestRunner.cs` and `BoardManager.cs`, so they wait for the Worker's batch. Step 3: unused
+  files for the owner to pick from: `PlotAnnotation.cs`, `TacticalGrid.shader` and `.mat`.
+- **UI restructure step 8, the check: done (2026-10-29).** No missing scripts in the four build
+  scenes or the board's prefabs; nothing points into `UI2`; the last playtest passed 211/211.
+- **Tools:** the mission scripter (Starwolf → Mission). Plan it with the owner first.
+- **Features, each planned with the owner:** the combat autopilot (A/P); ruins block shots and hide
+  us; the grid forms as the board appears; what is left of the hangar launch; a faster way to dial
+  long ranges; the periscope shows the real enemy; salvage, fuel and range; enemy boarders; the
+  conditions page abilities and the FIRE, BLKHD and SCRUB switches; a verdict on Soham's 8 unused
+  scripts (read each in full first); spoken orders; the plot grid touch-up; the XO walkthrough,
+  derelicts, the disguise and fog of war.
+- **Small jobs:** Board follow-ups 3 to 5 (helm, orders and periscope don't slide; the wreck's grey;
+  one contact model at a time; tune visual range and DRADIS reach; `scalesim.py`; the spec's
+  numbers). From Step 27: the corner microtext; `Title` and `StartButton` in `00_Start` are switched
+  off, not deleted (delete with the owner's yes); SETTINGS does nothing; LOAD GAME is dimmed;
+  `Assets/Screenshots` has 38 old PNGs (clear with the owner's yes). The Claude Design request. The
+  whole-project folder cleanup.
+
+**Marked done on 2026-10-29** (these were still listed as open): the Garuda hunts you (Step 97); the
+enemy notices us, P3 (Step 97); hitting debris hurts the ship (Step 93); the battle space per level
+(Step 91); the UI restructure check (above).
+
 ### Wolf Hunt — the first level, playable today (owner, 2026-10-27). Steps 92 to 101 done
 
 **What it is.** The first level, called WOLF HUNT. Our Asura starts at the bottom of a ruined
@@ -4341,7 +4402,7 @@ to 5 done in Step 89, step 6 in Step 90, step 7 the docs pass; step 8 left). Ask
 
 **After the tooling**
 
-10. **Hitting debris damages the ship. No push-out** (Ruins item 2).
+10. ~~**Hitting debris damages the ship. No push-out** (Ruins item 2).~~ **Done in Step 93.**
 11. **The abilities and switches on the conditions page:** Repair, Reload, Signal Distort,
     Reactor Flush, Damage Control, Emergency Vent, Black Alert; the FIRE, BLKHD and SCRUB
     switches.
@@ -4520,8 +4581,8 @@ order:
    fire, then hit. **Done in Steps 42–55.** What is still open is listed below.
    - **Sensors step:** the sensor circle (Step 42), the radar sweep (Step 43), and hearing, with
      bearing lines, the alarm strip trigger and the tracked blink (Step 44; removed in Step 66, the
-     signal box of Step 68 warns instead), are done. Still to do:
-     the enemy noticing us (P3, `FTUE_PLAN.md` step B).
+     signal box of Step 68 warns instead), are done. The enemy noticing us (P3, `FTUE_PLAN.md`
+     step B) is done too (Step 97).
    - **Plotting feeds the firing solution (owner, 2026-10-23).** Step 45, the bearing trail, is done.
      Step 46, the intercept helpers, is done too:
      - a RULER drawn between two POINTs snaps to them and becomes a track (course, speed, projected
@@ -4557,7 +4618,7 @@ step E (the comms box) can start now. Step A (the enemy patrol) is done (Step 51
 
 **Parked.** It folds into the sensors step later:
 
-- Power P3: the enemy notices you (UNEASY, SEARCHING, ALERT).
+- ~~Power P3: the enemy notices you (UNEASY, SEARCHING, ALERT).~~ **Done in Step 97.**
 
 **The plot tools, as the owner defined them (2026-10-17):**
 
@@ -5172,13 +5233,13 @@ other sessions before taking Unity, and before editing scripts they may be editi
    docs for the new script names, the new font and design paths, the palette and the fonts lists.
    The UI guide is `Assets/UI/Board/README.md`; write it in the owner's plain English
    (`memory/shagun-wants-plain-english.md`).
-8. **Check.** Run a checker agent over the whole restructure: the playtest reports, prefab links,
-   no missing scripts, no file left pointing into `UI2`.
+8. **Check.** Done (2026-10-29, killshot-a2). Run a checker agent over the whole restructure: the playtest reports, prefab links,
+   no missing scripts, no file left pointing into `UI2`. Result: no missing scripts in the four build
+   scenes or the board's prefabs, nothing points into `UI2`, and the last playtest passed 211/211.
 
 After this: the whole-project folder cleanup, as its own job.
 
-**Next:** step 8 of the UI restructure to-do above. Steps 1 to 5 are done (Step 89), step 6 too
-(Step 90), and step 7.
+**All eight steps are done** (step 8 on 2026-10-29). Next: the whole-project folder cleanup.
 
 **Why.** On 2026-10-25 the board was hard to follow:
 - One 1,915-line class (`HandoffBoardState`, now `ShipState`) had every rule. Now the rules are in the eight ship
@@ -5292,7 +5353,7 @@ values, and approach mode only adds G.
 Step 67 made the tool and the enemy spawn box. Plan each of these with the owner first:
 
 1. ~~Our ship's start point in the level.~~ **Done in Step 73** (Player Spawn).
-2. The battle space size moves from the board into the level.
+2. ~~The battle space size moves from the board into the level.~~ **Done in Step 91.**
 3. ~~Debris fields: a shape, which pieces, how many and how big, how they spread, and
    Reshuffle.~~ **Done in Step 77** (Debris Field).
 4. ~~Debris on the board: shown once found.~~ **Done in Step 92.** Whether it blocks shots or hides
@@ -5325,8 +5386,7 @@ Left unfinished when the Step 73 chat closed. Plan each with the owner before bu
    not pushed back out** (owner, 2026-10-26; this replaces the prototype's push). **Done in Step 93**
    (damage only; blocking shots and hiding us are still to come).
 3. **The Garuda hunts you.** It comes in through the core, searches, hunts you when it hears you,
-   and goes to where it last heard you. Not built; the owner wants it planned properly. Today it
-   patrols a loop about 12,000 × 8,000 km round its spawn, so from the top it stays near the top.
+   and goes to where it last heard you. **Done in Step 97.**
 4. **The grid forms as the board appears** (owner approved the look, 2026-10-26): grid lines glide
    in from off-screen and ease to a stop, vertical lines alternately from the top and bottom,
    horizontal lines alternately from the left and right, big squares first, then small; about
