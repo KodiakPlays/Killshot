@@ -18,15 +18,20 @@ public class ScreenFlow : MonoBehaviour
     [Tooltip("Optional. Seconds after the scene opens before it moves on by itself, as Enter does. 0: it waits "
            + "(owner 2026-10-27: WOLF HUNT shows, then INITIALISING..., with no Enter press).")]
     [SerializeField] private float advanceAfterSeconds = 0f;
+    [Tooltip("Optional. Title cards shown in turn, each for advanceAfterSeconds (or until Enter), before showFirst "
+           + "(owner 2026-10-29: MISSION ONE, then WOLF HUNT). Switch the first on and the rest off in the scene.")]
+    [SerializeField] private GameObject[] cards;
 
     private bool going;
+    private int card;
 
     private void Update()
     {
         if (going) return;
-        bool timeUp = advanceAfterSeconds > 0f && Time.timeSinceLevelLoad >= advanceAfterSeconds;
+        bool timeUp = advanceAfterSeconds > 0f && Time.timeSinceLevelLoad >= advanceAfterSeconds * (card + 1);
         bool enter = advanceOnEnter && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter));
         if (!timeUp && !enter) return;
+        if (cards != null && card + 1 < cards.Length) { cards[card].SetActive(false); cards[++card].SetActive(true); return; }
         if (showFirst && !showFirst.activeSelf) showFirst.SetActive(true);
         else if (!showFirst) Advance();
     }

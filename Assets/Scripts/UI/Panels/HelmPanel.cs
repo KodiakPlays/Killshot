@@ -71,9 +71,11 @@ public class HelmPanel : Panel
     [SerializeField] private Graphic[] stabCells;
     [SerializeField] private TMP_Text stabPct, gLoad;
 
-    [Header("Keyboard — A and D step the ordered heading (onKey); held keys repeat as a browser does")]
+    [Header("Keyboard — A and D step the ordered heading (onKey), W and S the throttle; held keys repeat as a browser does")]
     [Tune("Helm")]
     [SerializeField] private float repeatDelay = 0.5f, repeatInterval = 0.033f;
+    [Tooltip("Owner 2026-10-29: W and S step the throttle this many percent, up to what the ENG bus allows.")]
+    [Tune("Helm")] [SerializeField] private int throttleKeyStep = 10;
 
     Color nominal => Palette.nominal;
     Color caution => Palette.caution;
@@ -87,8 +89,9 @@ public class HelmPanel : Panel
     Color stabCellOff => Palette.lampOffPanel;
 
     private int thrPressCap;
-    private int heldDir;
+    private KeyCode heldKey;
     private float nextRepeat;
+    static readonly KeyCode[] helmKeys = { KeyCode.A, KeyCode.D, KeyCode.W, KeyCode.S };
 
     public override bool Click(string action, string arg)
     {
@@ -124,16 +127,20 @@ public class HelmPanel : Panel
         if (Controls == null) return;
         // onKey ignores keys while a text field has focus
         var sel = EventSystem.current ? EventSystem.current.currentSelectedGameObject : null;
-        if (sel && sel.GetComponent<TMP_InputField>()) { heldDir = 0; return; }
-        int dir = 0;
-        if (Input.GetKeyDown(KeyCode.D)) dir = 1;
-        else if (Input.GetKeyDown(KeyCode.A)) dir = -1;
-        if (dir != 0) { heldDir = dir; nextRepeat = Time.unscaledTime + repeatDelay; Step(dir); return; }
-        if (heldDir != 0 && !Input.GetKey(heldDir > 0 ? KeyCode.D : KeyCode.A)) heldDir = 0;
-        if (heldDir != 0 && Time.unscaledTime >= nextRepeat) { nextRepeat += repeatInterval; Step(heldDir); }
+        if (sel && sel.GetComponent<TMP_InputField>()) { heldKey = KeyCode.None; return; }
+        foreach (var k in helmKeys)
+            if (Input.GetKeyDown(k)) { heldKey = k; nextRepeat = Time.unscaledTime + repeatDelay; Press(k); return; }
+        if (heldKey != KeyCode.None && !Input.GetKey(heldKey)) heldKey = KeyCode.None;
+        if (heldKey != KeyCode.None && Time.unscaledTime >= nextRepeat) { nextRepeat += repeatInterval; Press(heldKey); }
     }
 
-    void Step(int dir) { State.nav.StepOrderedHeading(dir); Refresh(); }
+    void Press(KeyCode k)
+    {
+        var n = State.nav;
+        if (k == KeyCode.A || k == KeyCode.D) n.StepOrderedHeading(k == KeyCode.D ? 1 : -1);
+        else n.throttle = Mathf.Clamp(n.throttle + (k == KeyCode.W ? throttleKeyStep : -throttleKeyStep), 0, Mathf.Min(100, n.ThrottleCap));
+        Refresh();
+    }
 
     public override void Refresh()
     {

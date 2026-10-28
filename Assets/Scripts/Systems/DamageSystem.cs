@@ -101,8 +101,18 @@ public class DamageSystem : MonoBehaviour
 
     /// <summary>engBlock: why an engineering repair is refused, or null. Step 59 (DAMAGE_README.md): the team
     /// comes from elsewhere, so it needs no crew in the room; it fights a fire, restores the air once the doors
-    /// are shut, or repairs. SEAL shuts an airless room's doors. RECALL (the design's DUMMY 1) calls the team back.</summary>
-    public string EngBlock(string id)
+    /// are shut, or repairs. SEAL shuts an airless room's doors. RECALL (the design's DUMMY 1) calls the team back.
+    /// Bug 6 (owner 2026-10-29): REPAIR, SEAL and VENT cost the same AUX here as at the orders station; the room's
+    /// own reason comes first.</summary>
+    public string EngBlock(string id) => RoomBlock(id) ?? AuxBlock(id);
+
+    string AuxBlock(string id)
+    {
+        int cost = ship.orders.OrderCost(id);
+        return cost > 0 && ship.orders.auxCharge < cost ? "INSUFFICIENT AUX \u2014 " + cost + "% REQUIRED" : null;
+    }
+
+    string RoomBlock(string id)
     {
         var c = Comp(engSel);
         switch (id)
@@ -125,6 +135,8 @@ public class DamageSystem : MonoBehaviour
     public bool EngRun(string id, float now)
     {
         if (EngBlock(id) != null) return false;
+        int cost = ship.orders.OrderCost(id); // bug 6: REBOOT and RECALL are free (-1)
+        if (cost > 0) ship.orders.auxCharge -= cost;
         ApplyOrder(id);
         ship.orders.FlickBack("eng_" + id, now);
         return true;

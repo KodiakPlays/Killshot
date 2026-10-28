@@ -204,8 +204,8 @@ public class FireControlPanel : Panel
         Color solInk = sol.set ? nominal : tid != null ? caution : lampOffSelector;
         Paint(solLamp, solInk); Paint(solGlow, solInk); Show(solGlow, sol.set || tid != null);
         bool manual = sol.set && sol.manual; // Step 47: dialled by hand from the plot
-        if (trackId) { trackId.text = manual ? "MANUAL" : tid ?? "NO TRACK"; Paint(trackId, manual || tid != null ? data : stencil); }
-        if (trackSrc) trackSrc.text = manual ? "DIALLED BY HAND" : tid != null ? "FROM SENSOR LOCK" : "NOT IDENTIFIED ON SENSORS";
+        if (trackId) { trackId.text = manual ? (sol.fromPlot ? "PLOT" : "MANUAL") : tid ?? "NO TRACK"; Paint(trackId, manual || tid != null ? data : stencil); }
+        if (trackSrc) trackSrc.text = manual ? (sol.fromPlot ? "FROM YOUR PLOT" : "DIALLED BY HAND") : tid != null ? "FROM SENSOR LOCK" : "NOT IDENTIFIED ON SENSORS";
         Color valInk = sol.set ? data : wellStencil;
         if (solRange) { solRange.text = sol.set ? sol.rangeKm.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) : "—"; Paint(solRange, valInk); }
         if (solBrg) { solBrg.text = (sol.set ? (sol.brg > 0 ? "+" : "") + sol.brg : "—") + "°"; Paint(solBrg, valInk); }

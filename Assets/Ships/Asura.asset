@@ -61,15 +61,15 @@ MonoBehaviour:
     - id: PDA
       label: PDC GROUP A
       shortName: PDC-A
-      arc: 42
-      halfArc: 35
+      arc: 90
+      halfArc: 90
       rangeKm: 10000
       ammo: 2400
     - id: PDB
       label: PDC GROUP B
       shortName: PDC-B
-      arc: 200
-      halfArc: 35
+      arc: 270
+      halfArc: 90
       rangeKm: 10000
       ammo: 2400
     - id: VLS

@@ -118,14 +118,17 @@ public class PlotPanel : Panel
     private double viewX, viewY, panX0, panY0;
     private bool viewSet, panning;
     private Vector2 panPress;
+    /// <summary>Owner 2026-10-29: the plot follows our ship as it moves, until you pan it; C follows again.</summary>
+    private bool following = true;
     /// <summary>The world point at the plot centre, km.</summary>
     public Vector2 View => new Vector2((float)viewX, (float)viewY);
-    /// <summary>C, and a level's start point (Step 73): the view jumps to our ship. Before the board is up
-    /// there is nothing to do: its first refresh centres on our ship anyway.</summary>
+    /// <summary>C, and a level's start point (Step 73): the view jumps to our ship, and follows it again. Before the
+    /// board is up there is nothing to do: its first refresh centres on our ship anyway.</summary>
     public void CentreOnOurShip()
     {
+        following = true;
         if (!Controls) return;
-        viewX = State.nav.x; viewY = State.nav.y; viewSet = true;
+        viewX = State.nav.DrawnX; viewY = State.nav.DrawnY; viewSet = true;
         Refresh();
     }
 
@@ -163,6 +166,9 @@ public class PlotPanel : Panel
     [SerializeField] private MarksGraphic weaponRing;
     [Tooltip("A PDC arc's curved edge is drawn in steps this many degrees long (Step 55).")]
     [SerializeField] private float pdcArcStepDeg = 2f;
+    [Tooltip("Owner 2026-10-29: a thin ring round our ship at the visual range (the ship's stats file, 10,000 km), always on. "
+           + "Inside it you see ships with your eyes. Its strength, 0 to 1; 0 hides it.")]
+    [Tune("Sensors")] [SerializeField] private float visualRingAlpha = 0.35f;
 
     [Header("Fighters (Step 54): one small wedge per craft, white like our ship (owner 2026-10-26), no labels")]
     [Tooltip("A hidden wedge image (hull_wedge_filled, nose up; the outline vanishes this small), cloned per fighter in flight.")]
@@ -235,6 +241,7 @@ public class PlotPanel : Panel
         }
         // Step 75: ships glide between ticks, so while time runs the plot redraws every frame
         // ponytail: redraws the whole plot, as panning already does; redraw only what moves if the profiler minds
+        if (following) { viewX = State.nav.DrawnX; viewY = State.nav.DrawnY; } // where our ship is drawn, so it holds still at the centre
         if (!Controls.Paused) Refresh();
         // not while typing in a field (the hangar's launch bearing)
         var typing = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
@@ -244,6 +251,7 @@ public class PlotPanel : Panel
         float x = (Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.LeftArrow) ? 1f : 0f);
         float y = (Input.GetKey(KeyCode.UpArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.DownArrow) ? 1f : 0f);
         if (x == 0f && y == 0f) return;
+        following = false;
         double km = panKeysPxPerS * Time.unscaledDeltaTime * KmPerPx / Controls.ZoomExact;
         viewX += x * km;
         viewY += y * km;
@@ -256,9 +264,6 @@ public class PlotPanel : Panel
         {
             case "plot.erase":
                 if (Controls.Tool == "ERASE") State.EraseMark(int.Parse(arg));
-                return true;
-            case "plot.look":
-                if (State.LookAt(arg) && Controls.Motion && !Controls.Motion.ScopeDown) Controls.Motion.SetScopeDown(true);
                 return true;
         }
         return false;
@@ -282,6 +287,7 @@ public class PlotPanel : Panel
         if (action == "plot.pan" && panning)
         {
             // the world follows the pointer: drag right and the view centre moves west
+            if (board != panPress) following = false; // a click on the grid that doesn't move it keeps following
             double k = KmPerPx / Controls.ZoomExact;
             viewX = panX0 - (board.x - panPress.x) * k;
             viewY = panY0 + (board.y - panPress.y) * k;
@@ -475,6 +481,12 @@ public class PlotPanel : Panel
                 for (float d = from; d < to; d += pdcArcStepDeg)
                     reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = at(d), b = at(Mathf.Min(to, d + pdcArcStepDeg)), alpha = 0.45f });
             }
+            if (visualRingAlpha > 0f)
+            {
+                Vector2 own = OwnAt;
+                reachShapes.Add(new MarksGraphic.Shape { kind = "circle", a = own, b = own + new Vector2((float)(s.sensors.stats.visualRangeKm / KmPerPx * Controls.ZoomExact), 0f),
+                                                         alpha = visualRingAlpha, ink = data.gamma });
+            }
             Paint(weaponRing, caution);
             weaponRing.Set(reachShapes);
         }
@@ -533,8 +545,7 @@ public class PlotPanel : Panel
             if (t.wreck) continue; // a wreck carries no label (Step 49)
             var cl = ContactLabel(n++);
             Paint(cl, ink);
-            var look = cl.GetComponent<ClickSpot>(); // Step 99: click a contact's label to look at it, and target it
-            if (look) look.arg = t.key;
+            cl.raycastTarget = false; // owner 2026-10-29: clicking a contact does nothing; the periscope picks the target
             float rng = inSight ? t.rangeKm : t.seenRangeKm;
             cl.text = (known ? t.name : "BOGEY " + t.key.ToUpperInvariant()) + "\nRNG " + ShipState.JsRound(rng).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
             Place(cl.rectTransform, at + contactLabelOffset + new Vector2(labelPush, 0f), 0f);
@@ -578,8 +589,7 @@ public class PlotPanel : Panel
             pl.alpha = on ? 1f : 0.6f;
             Paint(pl, on ? caution : Controls.GridAmber ? alarm : data);
             Place(pl.rectTransform, ownAt + dir * Mathf.Min(reach, passiveLabelPx), dir.x < 0f ? 1f : 0f);
-            var look = pl.GetComponent<ClickSpot>();
-            if (look) look.arg = t.key;
+            pl.raycastTarget = false; // owner 2026-10-29: clicking a bearing does nothing
         }
         for (int i = np; i < passiveLabels.Count; i++) passiveLabels[i].gameObject.SetActive(false);
         // wrecks (Step 49): a dim dot where each destroyed ship drifts, no label; in sight it shows grey as its model (Step 75)

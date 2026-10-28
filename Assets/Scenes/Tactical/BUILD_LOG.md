@@ -150,6 +150,7 @@ Do not run ahead. Do one step, show it, wait.
 | 103 | The Mac app of Wolf Hunt | **Built** — `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`; the owner's play-through is next |
 | 104 | TextMesh Pro's example files deleted (owner's yes); its missing shader file `TMPro.cginc` put back: the 3 build errors are gone | **Done** — the shaders compile clean |
 | 105 | A real play-through of Wolf Hunt in the Editor, and four fixes: a hit puts the Garuda on ALERT; "HOSTILE SET HAS YOUR RANGE" tells the truth; the alarm strip shows enemy fire coming and what just hit us, debris too | **Done** — checked in play mode; playtest 211/211 |
+| 106 | The owner's play report: W/S throttle, P pause, the 10,000 km visual ring, MISSION ONE then WOLF HUNT, TRACK takes the plot, the periscope picks the target; bugs 7 and 8; the plot follows our ship; PDCs in two halves; drift with no ENG power; Level_02 gone; the bundle ID; with killshot-a2's 60,000 km Level_01 and bug 6 | **Done** — checked in play mode; playtest 214/214 |
 
 Steps 6 to 28 and Steps 34 to 105 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -4140,6 +4141,61 @@ line, new contacts. The playtest has one new check: the strip warns of the Garud
 8. **The opening is long:** 88,000 km apart, first contact after about 7.5 real minutes at x10. Start
    closer, or add x20?
 
+The owner's answers to these are in section 8, "The owner's answers (2026-10-29)". Step 106 builds them.
+
+### Step 106 — The owner's play report: keys, the ring, the title, the plot feeds the gun, and the Step 105 answers
+
+The owner played the Mac app (2026-10-28): "the app works", but the instruments did not lead to the
+enemy or to a shot, W/S did not work, and P did not pause. Built by the Worker (was killshot-81), the
+owner's answers taken first.
+
+**Keys.** W and S step the throttle **Throttle Key Step** (10%) a press, held keys repeating, up to
+what the ENG bus allows (`HelmPanel`, Tuning: Helm). P pauses and runs, as the PAUSE key does
+(`BoardManager`). Neither works while typing in a text field.
+
+**The visual range ring.** A thin ring round our ship at the visual range (10,000 km, the ship's stats
+file), always on: inside it you see ships with your eyes (`PlotPanel`, **Visual Ring Alpha**, Tuning:
+Sensors; 0 hides it). The owner chose this look.
+
+**The title.** Two cards, MISSION ONE, then WOLF HUNT, 3 s each, then INITIALISING. `ScreenFlow` has a
+list of **Cards** shown in turn. The title screen's letters have no digit 1, so it is spelled out.
+
+**The plot feeds the gun (owner's yes, 2026-10-29).** TRACK now chooses what to lock, in this order: a
+scanned enemy the periscope is on (within 4°); else the target, if scanned; else **your plot**: the
+newest POINT is where it was, and the newest POINT-to-POINT RULER is its course and speed, reckoned
+forward from the POINT's time to now. Fire control's ID reads PLOT, "FROM YOUR PLOT". The knobs then
+fine-tune it. So the quiet way works: hear it, cross the bearing lines, drop POINTs, RULER between them,
+TRACK, SLEW TO, arm, fire. No long knob drags. (`WeaponSystem.ComputeSol`, `Solution.fromPlot`.)
+
+**The periscope picks the target (owner, 2026-10-29: no clicking the plot to aim).** Clicking a
+contact's label or a bearing label does nothing now; the labels let clicks through to the plot. You turn
+the periscope by hand (SLEW), or SLEW TO puts it on the solution's bearing. TRACK on a scanned ship
+under the periscope makes it the target (the Step 99 call that clicking a label targets it is undone).
+The owner said no to plain-word hints on the firing switches.
+
+**Bugs 7 and 8 (Tooling's).** A thrown LOAD whose gate fails (WEP power, the magazine, CONDITION 2,
+rounds) or a thrown ANGLE out of arc now drops, with every rung after it, on the next tick; the lever
+checks the gates again before it fires (`WeaponSystem.TickCharge`, `Fire`). BEARING is left alone: a
+moving target drifts off it slowly.
+
+**The Step 105 answers built here.** (1) The plot follows our ship as it moves; panning stops it, C
+follows again (`PlotPanel`). (3) PDC-A covers the starboard half (000–180), PDC-B the port half
+(180–360), in the code's defaults and all three stats files, set through the Editor. (5) With no power on
+the ENG bus there is no thrust and no braking: the ship drifts on (`NavSystem.Move`). This is every
+ship's rule, so an EMP'd enemy drifts too, at full speed (before, it slowed); boarding it then waits
+for it to be slowed some other way. **A call made without the owner: change it if EMP should still stop
+a ship.**
+
+**Also.** `Level_02` is off the build list and out of the project (the owner: "it can be chucked
+away"); a copy is in `~/Documents/GitHub/Killshot-Builds/removed-2026-10-29`. The app's bundle ID is now
+`com.shagunshah.starwolf`. For killshot-a2, whose Unity link was down, the Worker ran its Level_01
+script (the 60,000 km square: the husk gone, 136 pieces kept, spawns at ±22,000 km; its write-up is
+killshot-a2's).
+
+**Playtest changes.** Step 15's check is now "the plot follows our ship" (its image holds still, the
+grid moves). A new check: not scanned, TRACK takes the plot. The EMP check is now "without power it
+drifts". The periscope stand-in replaces the label click. Two old checks assumed a still plot (marks stay put on screen) and the 100,000 km map's zoom limit (x0.35); both now check the new rules. Playtest 2026-10-29_011619: **214/214**, with killshot-a2's bug 6 checks and Level_01.
+
 ---
 
 ## 7 · How to keep this log
@@ -4172,7 +4228,9 @@ section below. **Who:** "Worker" is the session that was killshot-81.
 
 1. **The instruments don't lead you to the enemy or to a shot.** No visual range ring, no way to read
    the range, and the firing switches refuse without saying why. From the owner's play report
-   (2026-10-28). **Worker, in progress.**
+   (2026-10-28). **Worker, in progress.** The ring is done (Step 106). The owner said no to clicking a
+   contact on the plot to make it the target (2026-10-29), and asked how POINT and RULER can matter:
+   the Worker's proposal ("the plot feeds the gun") is with the owner.
 2. **The first salvo decides the fight** (Step 105, question 7). In the play-through the fight was
    lost 70 game seconds after the first hit. **Owner's call.**
 
@@ -4181,21 +4239,20 @@ section below. **Who:** "Worker" is the session that was killshot-81.
 3. The Step 105 questions 1–6 and 8 (plot follows our ship; bearing lines last longer; PDC arcs;
    noise is all power; cutting ENG stops dead; periscope stays down; the long opening). **Owner's
    call.**
-4. **Bug 7 and bug 8, confirmed in the code on 2026-10-29.** `WeaponSystem.Fire` checks only that the
-   switches are thrown (`AllSet`), and nothing drops a thrown rung when its gate fails. So a shot
-   still fires after turning out of arc, or after WEP loses power. Same code as item 1, so offered to
-   the Worker.
+4. **Bug 7 and bug 8: fixed in Step 106.** A thrown LOAD or ANGLE now drops when its gate fails, and
+   the lever checks again before it fires.
 5. **Bug 6:** engineering's REPAIR, SEAL and VENT are free, while the orders station charges AUX for
    the same orders (`DamageSystem.EngRun` against `OrdersSystem`). **Owner's call:** which is right?
-6. **W/S throttle keys, the P pause key, the title as "MISSION 1 · WOLF HUNT"** (owner's play
-   report). **Worker, in progress.** The agreed W/S rule is in "Combat autopilot and W/S" below.
+6. **W/S throttle keys, the P pause key, the title: done in Step 106.** The title is two cards,
+   MISSION ONE, then WOLF HUNT (owner's pick). W/S does not yet switch off the autopilot (there is none).
 7. **Four font files rewrite themselves** whenever Unity runs (the Barlow, Share Tech Mono and Noto
    SDF assets). They show as changed in every `git status`. Put them back, don't commit them. A
    lasting fix (a TextMesh Pro setting) is for later.
 
 **Owner only**
 
-8. **Play the Mac app through, full screen.** It has only been checked in the app up to the menu.
+8. **Play the Mac app through, full screen.** Done by the owner on 2026-10-28: "I was able to load the
+   game, and the app works." The problems were the weapon system's playability (item 1).
 9. **`Level_02.unity`**, and its place on the build list, were made on 2026-10-28 at 10:05 and are not
    committed. Owner: keep it? While it is on the build list, it goes into every Mac app.
 10. Optional: give the terminal Accessibility permission, so a session can play the app itself.
@@ -4226,9 +4283,88 @@ again). The disk is nearly full (about 8 GB free; each app is about 340 MB).
   `Assets/Screenshots` has 38 old PNGs (clear with the owner's yes). The Claude Design request. The
   whole-project folder cleanup.
 
+**The owner's answers (2026-10-29)** to the Step 105 questions and bug 6. Worker does 1, 3 and 5;
+killshot-a2 does 8 and 9.
+
+1. The plot follows our ship while it moves: **yes**.
+2. Bearing lines: **keep 2 game minutes.** No change.
+3. PDCs: **two halves.** PDC-A covers the starboard half (0–180°), PDC-B the port half (180–360°).
+   "Keep it simple."
+4. All power makes noise: **keep.**
+5. Cutting ENG: **the ship drifts** (keeps its speed, no thrust) instead of stopping dead.
+6. The periscope: **no auto-raise.** The owner raises it.
+7. The first salvo: **no change.** "We are both hunting each other. Whoever shoots first gets to shoot
+   first."
+8. The long opening: **a smaller level.** Take out the big husk and the debris inside it, and keep
+   a little debris. The size goes to the owner first.
+9. Bug 6: **engineering charges AUX too**, the same as the orders station.
+
+Also from the owner (2026-10-29): **delete `Level_02`** (an experiment) and take it off the build
+list. **The Mac app opened in a small window:** its bundle ID is still the URP template's
+(`com.Unity-Technologies.com.unity.template.urp-blank`), and a test launch in a 1440 × 932 window
+had saved that size in its prefs. The prefs were cleared (killshot-a2). Give it its own bundle ID, and
+**never launch the app with a window size**: it saves it.
+
 **Marked done on 2026-10-29** (these were still listed as open): the Garuda hunts you (Step 97); the
 enemy notices us, P3 (Step 97); hitting debris hurts the ship (Step 93); the battle space per level
 (Step 91); the UI restructure check (above).
+
+### Found by two audits (2026-10-29, Worker)
+
+The owner asked for the old logs to be gone through, so nothing they asked for slips, and for a check
+that the restructure was really done. Two agents read every owner message in the 26 past sessions,
+and checked the restructure against the code. Read-only; nothing was changed. Items already in the
+triage above are left out.
+
+**Owner requests never done, or only partly** (not in the triage above):
+
+- **Supercruise switch on the helm** (owner, 2026-10-25). Never answered, never logged.
+- **Set the heading by bearing or with the mouse** (2026-09-01; the old orange nav wheel on the helm,
+  2026-10-04 and 10-17). Only A/D work, 3° a step.
+- **A stale firing solution expires after about 20 s** (2026-09-01). Not built, never logged. Maybe
+  dropped when the handoff's fire sequence came in; nobody confirmed.
+- **Salvo, PDC quadrants, LOADERS and warhead controls on fire control** (2026-10-04, 10-23). Salvo
+  is in the Tuning window only; the others are not drawn.
+- **The comms cipher does nothing in play** (2026-09-01: "keep the comms game"). It solves on the
+  panel; nothing reads it.
+- **Ruins and clouds hide us; ruins block shots** (2026-09-01). Listed under features; not built.
+- **The cloak (Reflex)** (2026-09-01: "I like the cloak"). Only the spec mentions it.
+- **Waypoints** (2026-09-01: "later"). Not tracked anywhere until now.
+- **Engineering's missing displays**: conditions per room, broken parts, team roster, door state
+  (owner 2026-10-24: "request + placeholder"). Only the armour picture is done (Step 74). Damage build
+  steps 5–7 (teams, breakdowns, displays) are open.
+- **The board fits the MacBook's 2880 × 1864 screen** with dark bands above and below (Step 87). Filling
+  them is "a later UI job".
+- **Fighter loadouts and fuel; salvage and intel from boarding** (2026-09-01). Not built.
+
+**Owner questions never answered** (beyond the triage): "Shall our slugs glide smoothly?" (10-26);
+the autopilot's TAIL facing; whether stability matters (nothing reads it); the asset audit's 28 items
+(`ASSET_AUDIT.md`, in git at 12ccdd1); deleting the 127 old playtest report folders; the interceptor
+art on the hangar panel; the calls made overnight in Steps 94–101 (none confirmed yet).
+
+**Answered by the owner but not acted on:** the grid glide-in (answers given 10-25); the damage
+displays (10-24); "delete I guess" for `Assets/Screenshots` (10-26); "whatever's not in use, just start
+removing" (10-26), which arguably covers `PlotAnnotation.cs` and `TacticalGrid.shader/.mat`.
+
+**Records that disagree with the code:**
+
+- Step 96 says the Garuda is "bigger". No stats file has a size; every hit uses one 100 km radius.
+  Bigger only in its numbers, not on the plot or to a slug (not checked in the scene).
+- The playtest keeps only the newest run's video, and screenshots from 3 runs. The owner asked for the
+  last two runs to keep both (`PlaytestRunner.cs`, around line 102).
+- `FTUE_PLAN` still lists the Garuda's hearing, searching and firing back as not built (Step 97 built them).
+- The palette has 22 colours, not 23 (README and this log). The board has 11 panels (End Screen
+  included), not ten.
+- The knowledge graph (`graphify-out`) was last built on 2026-10-27, before the Handoff renames.
+
+**Restructure: done**, apart from what the triage lists (refactor steps 2, 5 and 8). Also found:
+`BattleSpace.cs` belongs on step 5's list of scripts to move out of `Scripts/Tactical`; the first plan
+renamed `TacticalWorld` to `WorldManager`, and no record says that was dropped (owner's call); more
+unused files from the old 02_Grid commit (4e43ea9) for the owner to choose from: `Assets/Art/Icons`
+(23), `Assets/Art/Frames` (4), `Art/Hulls/hull_wedge_outline.png`, `UI/ui_square.png`, and the empty
+folders `_TransferTmp` and `Font`; one object still has a record-number name, `text#406 LOWERED` in
+`02.1_Grid` (rename in the Editor); `HangarSystem.cs` scuttle sets the reactor to 0 directly instead
+of through `DamageSystem`; `PlotPanel.cs` asks for a text field every frame (minor).
 
 ### Wolf Hunt — the first level, playable today (owner, 2026-10-27). Steps 92 to 101 done
 

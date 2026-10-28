@@ -250,9 +250,6 @@ public class ShipState
     {
         var t = TrackOf(key); if (t == null) return false;
         scopeBrg = t.bearing; slewDx = 0;
-        // Wolf Hunt (Step 99): with reinforcements there is more than one enemy. A hostile contact looked at
-        // (clicked on the plot) becomes fire control's target.
-        if (t.hostile && !t.wreck && weapons && weapons.target != key) weapons.Retarget(key);
         return true;
     }
 

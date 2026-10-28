@@ -262,6 +262,12 @@ public class BoardManager : MonoBehaviour
         // The board's single timer (tickPower). Only the mission clock is board-local so far.
         // thrown repair and order rockers fall back after 400 ms (flickBack)
         if (state.orders.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
+        // owner 2026-10-29: P pauses and runs, as the PAUSE key does (not while typing in a text field)
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            var sel = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+            if (!sel || !sel.GetComponent<TMP_InputField>()) Click("pause", null);
+        }
         // a shot fired (from the lever) and a shot landing (in the tick) each get their cue
         if (state.weapons.shotsFired != shotsHeard) { shotsHeard = state.weapons.shotsFired; Play(railgunSound, "railgun"); }
         if (state.weapons.shotResults != resultsHeard)

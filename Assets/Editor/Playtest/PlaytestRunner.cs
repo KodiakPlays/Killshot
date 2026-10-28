@@ -439,23 +439,26 @@ public static class PlaytestRunner
         Shot("10_marks");
         yield return 0.2f;
 
-        //     Put our ship 5,000 km west (the board owns its position since Step 41). The grid stays
-        //     put and the ship moves across it, so marks keep their place on screen. West, away from TRACK 07:
-        //     east took it inside gain 1's 15,600 km (Step 75), and it was heard before the hearing step.
+        //     Put our ship 5,000 km west (the board owns its position since Step 41). Owner 2026-10-29: the plot
+        //     follows our ship, so it holds still on screen and the world slides east under it; marks stay put in
+        //     space, so they slide with it. West, away from TRACK 07: east took it inside gain 1's 15,600 km
+        //     (Step 75), and it was heard before the hearing step.
         var own = GameObject.Find("World").transform.Find("OwnShip");
         var shipImg = (RectTransform)GameObject.Find("Own ship (3D view)").transform;
         double home = s.nav.x;
         Vector2 ship0 = shipImg.anchoredPosition;
         s.nav.x = home - 5000.0;
-        double shift = -5000.0 * 60.9 / 1000.0 * board.ZoomExact; // px our ship travels on the plot
+        double shift = 5000.0 * 60.9 / 1000.0 * board.ZoomExact; // px the world slides east on the plot
         yield return 1.2f; // a few board ticks
         string pt1 = MarkLabel(board, 0), ru1 = MarkLabel(board, 1), co1 = MarkLabel(board, 2);
         Vector2 ptPos1 = MarkLabelPos(board, 0), ruPos1 = MarkLabelPos(board, 1);
         Check("The 3D model follows the board's position", Mathf.Abs(own.position.x - (float)(home - 5000.0)) < 0.01f, "model x " + own.position.x.ToString("0") + " km");
-        Check("Our ship moves across the plot", Mathf.Abs(shipImg.anchoredPosition.x - ship0.x - (float)shift) < 0.5f && Mathf.Abs(shipImg.anchoredPosition.y - ship0.y) < 0.5f,
-              "moved " + (shipImg.anchoredPosition.x - ship0.x).ToString("0.0") + " px (expected " + shift.ToString("0.0") + ")");
-        Check("The POINT stays put", (ptPos1 - ptPos0).magnitude < 0.01f && pt1 == pt0, "moved " + (ptPos1 - ptPos0).magnitude.ToString("0.00") + " px, label unchanged");
-        Check("The RULER stays put", (ruPos1 - ruPos0).magnitude < 0.01f && ru1 == ru0, "moved " + (ruPos1 - ruPos0).magnitude.ToString("0.00") + " px, still \"" + ru1 + "\"");
+        Check("The plot follows our ship: it holds still on screen", (shipImg.anchoredPosition - ship0).magnitude < 0.5f,
+              "moved " + (shipImg.anchoredPosition - ship0).magnitude.ToString("0.0") + " px");
+        Check("The POINT stays put in space: it slides with the world", Mathf.Abs(ptPos1.x - ptPos0.x - (float)shift) < 1f && Mathf.Abs(ptPos1.y - ptPos0.y) < 1f && pt1 == pt0,
+              "slid " + (ptPos1.x - ptPos0.x).ToString("0.0") + " px (expected " + shift.ToString("0.0") + "), label unchanged");
+        Check("The RULER stays put in space", Mathf.Abs(ruPos1.x - ruPos0.x - (float)shift) < 1f && Mathf.Abs(ruPos1.y - ruPos0.y) < 1f && ru1 == ru0, // labels sit on whole px
+              "slid " + (ruPos1.x - ruPos0.x).ToString("0.0") + " px, still \"" + ru1 + "\"");
         Check("The COMPASS re-measures from our ship", co1 != co0 && co1.Contains(" km · BRG "), "\"" + co0 + "\" → \"" + co1 + "\"");
         Shot("11_ship_moved");
         yield return 0.2f;
@@ -536,7 +539,8 @@ public static class PlaytestRunner
         Check("The ship gathers speed", s.nav.SpeedKms > 0.01, s.nav.SpeedKms.ToString("0.000") + " km/s after 4 s at x10");
         Check("It moves along its heading", moved > 0 && System.Math.Abs(((s.nav.CourseDeg - s.nav.heading + 540) % 360) - 180) < 2,
               moved.ToString("0.0") + " km, course " + s.nav.CourseDeg.ToString("000") + "°, heading " + s.nav.heading.ToString("000") + "°");
-        Check("Our ship's image moves; the grid stays put", shipImg.anchoredPosition != img0 && board.GetComponentInChildren<PlotGrid>().OffsetPx == grid0, "");
+        Check("The plot follows our ship (owner 2026-10-29): its image holds still, the grid moves under it",
+              (shipImg.anchoredPosition - img0).magnitude < 0.5f && board.GetComponentInChildren<PlotGrid>().OffsetPx != grid0, "");
         Shot("16_under_way");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
 
@@ -696,6 +700,16 @@ public static class PlaytestRunner
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
         Check("Fire Control open: the railgun's reach shows round our ship, as far as the mount reaches (owner 2026-10-26: 25,000 km)", plotPanel.WeaponRingKm == s.weapons.MountOf(s.weapons.mount).rangeKm && plotPanel.WeaponRingKm == 25000f, plotPanel.WeaponRingKm.ToString("N0") + " km");
+        //     Owner 2026-10-29: the plot feeds the gun. GARUDA isn't scanned, so TRACK takes the newest POINT (B), with
+        //     the POINT-to-POINT RULER's course and speed, reckoned forward to now.
+        if (!Click("fc.track", null, "TRACK (not scanned: from the plot)")) yield break;
+        double legRad = System.Math.Atan2(pb.x - pa.x, pb.y - pa.y), since = s.missionNow - pb.t;
+        double aimX = pb.x + System.Math.Sin(legRad) * expSpd * since - s.nav.x, aimY = pb.y + System.Math.Cos(legRad) * expSpd * since - s.nav.y;
+        double aimKm = System.Math.Sqrt(aimX * aimX + aimY * aimY);
+        var plotSol = s.weapons.Sol;
+        Check("Not scanned, TRACK takes the plot: the newest POINT, led along the track", plotSol.set && plotSol.fromPlot && plotSol.hasCourse && System.Math.Abs(plotSol.rangeKm - aimKm) < 1 && System.Math.Abs(plotSol.spd - expSpd) < 0.006,
+              "RNG " + plotSol.rangeKm.ToString("N0") + " km (expected " + aimKm.ToString("N0") + "), SPD " + plotSol.spd.ToString("0.00") + ", from plot " + plotSol.fromPlot);
+        s.weapons.sol[s.weapons.SysIndex] = new WeaponSystem.Solution(); // stand-in: clear it for the hand-dialled steps below (the board has no clear)
         board.SetZoom(0.25);
         yield return 0.4f;
         Shot("25_weapon_ring");
@@ -745,7 +759,8 @@ public static class PlaytestRunner
         foreach (var a in dummyShip.damage.SideArmour) if (a <= 0f) whole = false;
         Check("GARUDA starts undamaged", whole, "");
         //     The periscope onto the contact, by its bearing label (it is still heard).
-        if (!Click("plot.look", "t07", "BRG label (periscope onto GARUDA)")) yield break;
+        s.LookAt("t07"); // stand-in for SLEW, a drag (owner 2026-10-29: clicking the plot no longer aims the periscope)
+        if (board.Motion && !board.Motion.ScopeDown) board.Motion.SetScopeDown(true);
         yield return 0.6f;
         //     Weapons released: CONDITION 2 from the orders station.
         if (!Click("orders", null, "ORDERS header")) yield break;
@@ -955,7 +970,7 @@ public static class PlaytestRunner
         double spdHit = t07Ship.nav.SpeedKms;
         Check("EMP: its power goes down", s.weapons.shotReport != null && s.weapons.shotReport.EndsWith(" · EMP · POWER DOWN") && dummyShip.power.buses[0].fill == 0, "\"" + s.weapons.shotReport + "\"");
         yield return 2f;
-        Check("Without power it slows", t07Ship.nav.SpeedKms < spdHit, spdHit.ToString("0.00") + " → " + t07Ship.nav.SpeedKms.ToString("0.00") + " km/s");
+        Check("Without power it drifts: no thrust, no braking, the same speed (owner 2026-10-29)", System.Math.Abs(t07Ship.nav.SpeedKms - spdHit) < 0.01, spdHit.ToString("0.00") + " → " + t07Ship.nav.SpeedKms.ToString("0.00") + " km/s");
         //     PENETRATOR: straight to a compartment behind the side.
         if (!Click("fc.mount", null, "warhead selector (PENETRATOR)")) yield break;
         s.LookAt("t07");
@@ -1461,7 +1476,10 @@ public static class PlaytestRunner
         Check("A fire takes integrity off its room over time", s.damage.Comp("mag").integ < magBurn, "MAG " + magBurn + " → " + s.damage.Comp("mag").integ);
         //     REPAIR sends the team to the magazine: it puts the fire out.
         if (!Click("eng.pick", "mag", "MAG cell")) yield break;
+        s.orders.auxCharge = 100; // stand-in: a full AUX pool. Engineering's orders cost AUX since bug 6 (owner 2026-10-29), and this part runs five (130 in all)
         if (!Click("eng.run", "party", "REPAIR rocker (MAG)")) yield break;
+        Check("Engineering's REPAIR spends AUX, as the orders station does (bug 6)", s.orders.auxCharge <= 100 - s.orders.OrderCost("party") + 0.5,
+              "100 \u2192 " + s.orders.auxCharge.ToString("0") + "%");
         yield return (Func<bool>)(() => !s.damage.PartyOut);
         Check("The team puts the magazine's fire out", !s.damage.Comp("mag").fire && s.damage.Comp("mag").cond != "FIRE", "");
         //     VENT the bridge: the fire goes, and so does its crew.
@@ -1480,6 +1498,7 @@ public static class PlaytestRunner
               "\"" + slugHit + "\", crew " + hgrCrew + " → " + s.damage.Comp("hgr").crew);
         if (!Click("eng.pick", "hgr", "HGR cell")) yield break;
         Check("REPAIR waits until the doors are shut", s.damage.EngBlock("party") == "SEAL THE DOORS FIRST", s.damage.EngBlock("party") ?? "open");
+        s.orders.auxCharge = 100; // stand-in, as above: SEAL and two REPAIRs follow
         if (!Click("eng.run", "seal", "SEAL rocker (HGR)")) yield break;
         s.damage.stats.vacuumSpreadPerSecond = 1f;
         float tickV = board.MissionSeconds;
@@ -1492,6 +1511,10 @@ public static class PlaytestRunner
         //     RECALL calls a team back before it finishes.
         s.damage.Comp("eng").integ = 3;
         if (!Click("eng.pick", "eng", "ENG cell")) yield break;
+        double auxHold = s.orders.auxCharge; s.orders.auxCharge = 0; // stand-in: an empty AUX pool
+        string noAux = "INSUFFICIENT AUX \u2014 " + s.orders.OrderCost("party") + "% REQUIRED";
+        Check("With no AUX, engineering refuses REPAIR, as the orders station does (bug 6)", s.damage.EngBlock("party") == noAux, s.damage.EngBlock("party") ?? "open");
+        s.orders.auxCharge = auxHold;
         if (!Click("eng.run", "party", "REPAIR rocker (ENG)")) yield break;
         if (!Click("eng.run", "recall", "RECALL rocker")) yield break;
         yield return 2f;
@@ -1580,7 +1603,7 @@ public static class PlaytestRunner
               "big square " + bigKm.ToString("N0") + " km: " + string.Join(" ", shown.ToArray()));
         for (int n = 0; n < 40; n++) board.Scroll("plot", null, -1f); // the mouse wheel, out past the limit
         yield return 0.6f;
-        Check("Zoomed out past the limit, the zoom stops at x0.35", System.Math.Abs(board.ZoomExact - 0.35) < 1e-6 && board.ZoomExact == board.MinZoom,
+        Check("Zoomed out past the limit, the zoom stops where the battle space fills the plot", board.ZoomExact == board.MinZoom && board.MinZoom > 0.1,
               "x" + board.ZoomExact.ToString("0.00") + ", limit x" + board.MinZoom.ToString("0.00"));
         double cellKm = plotGrid.CellKm(out cellPx);
         bigKm = cellKm * plotGrid.MajorEvery;

@@ -148,6 +148,8 @@ public class NavSystem : MonoBehaviour
     void Move(double dt)
     {
         if (dt <= 0) return;
+        // owner 2026-10-29: with no power on the ENG bus there is no thrust and no braking: the ship drifts on
+        if (ship.power.BusUnits("eng") == 0) { x += vx * dt; y += vy * dt; return; }
         double h = heading * System.Math.PI / 180;
         double nx = System.Math.Sin(h), ny = System.Math.Cos(h); // the nose
         double fwd = vx * nx + vy * ny, side = vx * ny - vy * nx; // side: to starboard

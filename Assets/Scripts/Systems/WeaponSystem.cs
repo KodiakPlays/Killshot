@@ -30,8 +30,9 @@ public class WeaponSystem : MonoBehaviour
         {
             new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET A", shortName = "RG-A", ammo = 22 },
             new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET B", shortName = "RG-B", ammo = 22 },
-            new Mount { id = "PDA", arc = 42, halfArc = 35, rangeKm = 10000, label = "PDC GROUP A", shortName = "PDC-A", ammo = 2400 },
-            new Mount { id = "PDB", arc = 200, halfArc = 35, rangeKm = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
+            // owner 2026-10-29: two halves, "keep it simple": PDC-A the starboard side (000–180), PDC-B the port side (180–360)
+            new Mount { id = "PDA", arc = 90, halfArc = 90, rangeKm = 10000, label = "PDC GROUP A", shortName = "PDC-A", ammo = 2400 },
+            new Mount { id = "PDB", arc = 270, halfArc = 90, rangeKm = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
             new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 35000, label = "MISSILE VLS", shortName = "VLS", ammo = 8 },
         };
         [Tooltip("A knob turned with no solution starts one here, on the periscope's bearing at speed 0 (owner 2026-10-23).")]
@@ -97,6 +98,8 @@ public class WeaponSystem : MonoBehaviour
         public bool set; public float rangeKm; public int brg; public float spd;
         [Tooltip("Step 47: dialled by hand from the plot, not by TRACK. It aims at a point in space, not a locked contact.")]
         public bool manual;
+        [Tooltip("Owner 2026-10-29: TRACK made it from the plot (the newest POINT, and the newest POINT-to-POINT RULER).")]
+        public bool fromPlot;
         [Tooltip("Step 52: the target's course is known (from a plotted track, or TRACK's lock), so the shot is led.")]
         public bool hasCourse;
         public float course;
@@ -222,17 +225,55 @@ public class WeaponSystem : MonoBehaviour
     public void ToggleLoaders() { loaders = !loaders; if (!loaders) pdcAuto[0] = pdcAuto[1] = false; ClearSwitches(); }
     public void ToggleQuad(int i) { quads[i] = !quads[i]; }
 
-    /// <summary>computeSol: needs an identified target and the bridge; stores range, relative
-    /// bearing and speed for the current system and clears the ladder.</summary>
+    /// <summary>TRACK (computeSol), with the bridge. A scanned ship the periscope is on, else the target if it is
+    /// scanned, gives a sensor lock: range, relative bearing, course and speed, and becomes the target (owner
+    /// 2026-10-29: the periscope picks the target). With neither, the plot feeds the gun: the newest POINT is where it
+    /// was, the newest POINT-to-POINT RULER its course and speed, reckoned forward to now. Clears the ladder.</summary>
     public void ComputeSol()
     {
-        var t = ship.TrackOf(target);
-        if (t == null || !ship.sensors.identified.Contains(t.key) || !ship.damage.BriOk) return;
-        int rel = ((t.bearing - ship.nav.heading + 540) % 360) - 180;
-        // Step 52: an active lock knows its true course and speed, and where it is now, so TRACK's shot is led
-        sol[SysIndex] = new Solution { set = true, rangeKm = t.rangeKm, brg = rel, spd = t.speed,
-            hasCourse = t.speed > 0.01f, course = (float)t.course, wx = t.worldX, wy = t.worldY, t = ship.missionNow };
+        if (!ship.damage.BriOk) return;
+        var t = ScopeTarget() ?? ship.TrackOf(target);
+        if (t != null && !t.wreck && ship.sensors.identified.Contains(t.key))
+        {
+            if (target != t.key) Retarget(t.key); // the other weapons' solutions were worked out on the old target
+            int rel = ((t.bearing - ship.nav.heading + 540) % 360) - 180;
+            // Step 52: an active lock knows its true course and speed, and where it is now, so TRACK's shot is led
+            sol[SysIndex] = new Solution { set = true, rangeKm = t.rangeKm, brg = rel, spd = t.speed,
+                hasCourse = t.speed > 0.01f, course = (float)t.course, wx = t.worldX, wy = t.worldY, t = ship.missionNow };
+            ClearSwitches(); fired = false;
+            return;
+        }
+        ShipState.Mark p = null;
+        foreach (var m in ship.marks) if (m.kind == "point" && (p == null || m.id > p.id)) p = m;
+        if (p == null) return;
+        var cur = new Solution { set = true, manual = true, fromPlot = true };
+        ApplyTrack(cur);
+        double px = p.x, py = p.y;
+        if (cur.hasCourse)
+        {
+            double c = cur.course * System.Math.PI / 180, dt = ship.missionNow - p.t;
+            px += System.Math.Sin(c) * cur.spd * dt; py += System.Math.Cos(c) * cur.spd * dt;
+        }
+        double dx = px - ship.nav.x, dy = py - ship.nav.y;
+        cur.rangeKm = (float)System.Math.Sqrt(dx * dx + dy * dy);
+        cur.brg = (ShipState.JsRound((System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360) - ship.nav.heading + 540) % 360 - 180;
+        cur.wx = px; cur.wy = py; cur.t = ship.missionNow;
+        sol[SysIndex] = cur;
         ClearSwitches(); fired = false;
+    }
+
+    // The scanned enemy the periscope is on (within onBearingDeg), nearest its axis, or null.
+    ShipState.Track ScopeTarget()
+    {
+        ShipState.Track best = null;
+        double bestOff = ship.onBearingDeg;
+        foreach (var t in ship.tracks)
+        {
+            if (t.own || !t.hostile || t.wreck || !ship.sensors.identified.Contains(t.key)) continue;
+            double off = ShipState.AngDiffD(t.bearing, ship.scopeBrg);
+            if (off <= bestOff) { bestOff = off; best = t; }
+        }
+        return best;
     }
 
     /// <summary>nudgeSol: RNG ±100 km, BRG ±1° (±180), SPD ±stats.spdStep (2 dp; the design had 0.05, x5 in Step 63); clears the ladder.</summary>
@@ -289,6 +330,7 @@ public class WeaponSystem : MonoBehaviour
     {
         if (sys == "PD") return; // Step 55: PDCs on AUTO fire by themselves; the lever does nothing
         if (!AllSet) return; // moveSlew fires on every new pull while allSet() holds; the panel's per-pull latch stops repeats (Step 33g verification)
+        if (RungGated(0) || RungGated(1)) return; // a gate failed since its rung was thrown (TickCharge drops it on the next tick)
         if (wepCharge < ShotCost || Empty) return;
         if (sys == "MS" && !MissileReady) return;
         fired = true;
@@ -540,6 +582,9 @@ public class WeaponSystem : MonoBehaviour
     {
         float feed = ship.power.BusUnits("wep") * stats.wepFeedPerUnit * (float)dt;
         wepCharge = feed > 0f ? Mathf.Min(100f, wepCharge + feed) : Mathf.Max(0f, wepCharge - stats.wepBleed * (float)dt);
+        // Tooling's bugs 7 and 8: a thrown LOAD whose gate fails (WEP power, magazine, release, rounds) or a thrown ANGLE
+        // out of arc drops, with every rung after it. BEARING is left alone: a moving target drifts off it slowly.
+        for (int i = 0; i < 2; i++) if (sw[i] && RungGated(i)) { Flip(i); break; }
     }
 
     /// <summary>validSet: hostile contacts inside the current mount's range and arc.</summary>
@@ -549,8 +594,8 @@ public class WeaponSystem : MonoBehaviour
         var t = ship.TrackOf(key);
         return m != null && t != null && t.hostile && t.rangeKm <= m.rangeKm && ShipState.AngDiff(t.bearing, m.arc) <= m.halfArc;
     }
-    /// <summary>Step 99: a new target, whatever its range or arc: the ladder, the lever, fired and the
-    /// solutions reset (a solution was worked out on the old target).</summary>
+    /// <summary>Step 99: a new target, whatever its range or arc (TRACK on the ship the periscope is on): the ladder,
+    /// the lever, fired and the solutions reset (a solution was worked out on the old target).</summary>
     public void Retarget(string key)
     {
         target = key;

@@ -315,12 +315,12 @@ GameObject:
   - component: {fileID: 751530472}
   - component: {fileID: 751530471}
   m_Layer: 0
-  m_Name: WELCOME Screen
+  m_Name: WOLF HUNT card
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &751530471
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -456,6 +456,76 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1504229155
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1504229157}
+  - component: {fileID: 1504229156}
+  m_Layer: 0
+  m_Name: MISSION ONE card
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1504229156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1504229155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e22b0be2be252fbb5aefb5efc8197d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Starwolf.Intro.StarwolfIntroController
+  glyphData: {fileID: 0}
+  displayShader: {fileID: 4800000, guid: 322627cc3a3e54c8bdaa4dc899202abd, type: 3}
+  hardwareHum: {fileID: 0}
+  sectionDuration: 2.5
+  initialisingDuration: 2
+  titleDuration: 2
+  typeShare: 0.5
+  initialisingOnly: 0
+  titleOnly: 1
+  titleText: MISSION ONE
+  titleOffset: 0
+  canvasOrder: 0
+  finished:
+    m_PersistentCalls:
+      m_Calls: []
+  humVolume: 0.12
+  newGame:
+    m_PersistentCalls:
+      m_Calls: []
+  loadGame:
+    m_PersistentCalls:
+      m_Calls: []
+  settings:
+    m_PersistentCalls:
+      m_Calls: []
+  loadGameAvailable: 0
+--- !u!4 &1504229157
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1504229155}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1675068441
 GameObject:
   m_ObjectHideFlags: 0
@@ -488,7 +558,10 @@ MonoBehaviour:
   nextScene: 02.1_Grid
   advanceOnEnter: 1
   showFirst: {fileID: 976202080}
-  advanceAfterSeconds: 4
+  advanceAfterSeconds: 3
+  cards:
+  - {fileID: 1504229155}
+  - {fileID: 751530470}
 --- !u!4 &1675068443
 Transform:
   m_ObjectHideFlags: 0
@@ -580,5 +653,6 @@ SceneRoots:
   - {fileID: 2112797141}
   - {fileID: 625657234}
   - {fileID: 1675068443}
+  - {fileID: 1504229157}
   - {fileID: 751530472}
   - {fileID: 976202082}
