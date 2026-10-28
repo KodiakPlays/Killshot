@@ -82,3 +82,7 @@ Starwolf_Demo_Build_v0.3.zip
 # Agent tooling - not part of the game
 /.agents/
 /skills-lock.json
+
+# Old builds live in ~/Documents/GitHub/Killshot-Builds (owner, 2026-10-29)
+/Starwolf_Demo_Build_*
+/node_modules/

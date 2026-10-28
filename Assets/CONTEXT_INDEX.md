@@ -88,7 +88,6 @@ pages, and most of it has been overtaken.
 | How to turn the repo into NotebookLM sources | `Tools/notebooklm/README.md` |
 | How the green phosphor screen works (intro, welcome page, INITIALISING), and how to put it on a new screen | `Assets/StarwolfIntro/README.md` |
 | The tutorial mission with the XO walking you through each station — the plan, not built (Wolf Hunt was built first) | `Assets/Scenes/Tactical/FTUE_PLAN.md` |
-| A mechanic that is already written, before you port it to C# | `docs/reference-sim/` |
 | Where a panel's prefab and art are, and how to swap its art | `Assets/UI/Board/README.md` |
 | Spoken orders, and how an outside program (or Claude) could drive the built game — an idea, not built | `docs/voice-command-exploration.md` |
 | Ship silhouettes, class size table, obstacle tiers | `References/Starwolf_ Art Spec.pdf` |
@@ -189,20 +188,11 @@ Each level is a small scene. The board loads one on top of itself at play (`Tact
 fields are placed in the level. Since Step 107 it has no broken starbase. Make and edit levels with the menu **Starwolf → Level** (`Assets/Editor/LevelWindow.cs`).
 The Level tool is described in `BUILD_LOG.md` section 3.
 
-### `docs/reference-sim/` — reference only. Nothing compiles it.
+### `docs/reference-sim/` — deleted (owner, 2026-10-29)
 
-The simulation core of the shelved TypeScript prototype. The rest of that project was broken and has
-been deleted. This part was kept because it already expresses the mechanics that were agreed.
-
-- `weapons.ts` — turrets with `arcCentre`, `halfArc`, and a state of `empty | arming | armed`. Each
-  turret has its own `aimBearing`. `fire()` disarms it, so one arming is one shot, and a volley is a
-  consequence rather than a button.
-- `radar.ts` — the full track model: `resolved`, `lastFix`, estimated heading and speed, confidence,
-  uncertainty, two-bearing triangulation.
-- `ship.ts`, `power.ts`, `tuning.ts`, `geometry.ts`, `world.ts` — the supporting model.
-- `README.md` — what each file is and why it was kept.
-
-Read it when porting a mechanic to C#. Do not re-derive these from scratch.
+The TypeScript simulation core of the shelved web prototype. Most of its mechanics are now in the
+game's C#. Git has it: `git show 218acc8:docs/reference-sim/<file>` (`weapons.ts`, `radar.ts`,
+`ship.ts`, `power.ts`, `tuning.ts`, `geometry.ts`, `world.ts`).
 
 ### `docs/scale-sim/README.md`
 
@@ -292,7 +282,7 @@ decides nothing about design. `Assets/CODEBASE_BASELINE.md` describes those olde
 on 2026-09-01.
 
 There was also a web prototype in TypeScript. It was abandoned and deleted. Its simulation core was
-kept at `docs/reference-sim/`, as reference only.
+kept at `docs/reference-sim/` until 2026-10-29, when it was deleted too (git has it at 218acc8).
 
 Placeholder hull art exists at `Assets/Art/Hulls/` — white with alpha, tinted per allegiance in
 engine. Placeholder. Replace before ship.

@@ -52,7 +52,6 @@ Read what's relevant before non-trivial work. These sources are **rolling** — 
 | **Start here** — routes you to everything else | `Assets/CONTEXT_INDEX.md` |
 | **The specification** (how the game works) | `Assets/TACTICAL_BOARD_SPEC.md` |
 | **Verified code baseline** (every script read line by line) | `Assets/CODEBASE_BASELINE.md` |
-| **Reference simulation** (turret arming and radar tracks, in TS) | `docs/reference-sim/` |
 | **Prototype baseline** (the playable build, read line by line) | `Assets/PROTOTYPE_BASELINE.md` |
 | Engine version | `ProjectSettings/ProjectVersion.txt` |
 | Packages & render pipeline | `Packages/manifest.json` |
