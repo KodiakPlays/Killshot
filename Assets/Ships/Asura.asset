@@ -123,6 +123,7 @@ MonoBehaviour:
     - 100
     - 50
     - 100
+    crew: 040000000900000012000000070000000600000008000000
     collisionArmourDamage: 25
     collisionCompartmentDamage: 1
     radChanceReactor: 0.5

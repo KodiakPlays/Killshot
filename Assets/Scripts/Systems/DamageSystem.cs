@@ -24,6 +24,9 @@ public class DamageSystem : MonoBehaviour
         public float partySeconds = 6f;
         [Tooltip("Armour per side: PROW, STBD, AFT, PORT. At 0 the side is open (owner: prow and flanks take 2 slugs, the aft 1).")]
         public float[] sideArmourMax = { 100f, 100f, 50f, 100f };
+        [Tooltip("Crew in each room at the start: MAG, BRI, HAB, HGR, RCT, ENG (owner 2026-10-29: a tuning number, per ship). "
+               + "Breaches, VENT and radiation kill them.")]
+        public int[] crew = { 4, 9, 18, 7, 6, 8 };
         [Tooltip("Running into a piece of debris (owner 2026-10-26: it hurts; the ship is not pushed out): armour off the side facing it.")]
         public float collisionArmourDamage = 25f;
         [Tooltip("Running into debris with that side open: integrity off the room behind it.")]
@@ -52,6 +55,7 @@ public class DamageSystem : MonoBehaviour
     {
         public string key, tag, name;
         [Range(0, 5)] public int integ;
+        [Tooltip("The crew in the room now. It starts from the stats file (damage → crew).")]
         public int crew;
         public bool vented;
         [Tooltip("What the design's row shows: FIRE, RAD or empty. Step 59: derived from fire and rad below.")]
@@ -69,12 +73,12 @@ public class DamageSystem : MonoBehaviour
     [Tooltip("The design loads damaged (MAG vented, HAB RAD, HGR FIRE) only to show its behaviours; the game starts undamaged.")]
     public Compartment[] compartments =
     {
-        new Compartment { key = "mag", tag = "MAG", name = "MAGAZINE", integ = 5, crew = 4 },
-        new Compartment { key = "bri", tag = "BRI", name = "BRIDGE", integ = 5, crew = 9 },
-        new Compartment { key = "hab", tag = "HAB", name = "HABITATION", integ = 5, crew = 18 },
-        new Compartment { key = "hgr", tag = "HGR", name = "HANGAR BAY", integ = 5, crew = 7 },
-        new Compartment { key = "rct", tag = "RCT", name = "REACTOR", integ = 5, crew = 6 },
-        new Compartment { key = "eng", tag = "ENG", name = "ENGINE ROOM", integ = 5, crew = 8 },
+        new Compartment { key = "mag", tag = "MAG", name = "MAGAZINE", integ = 5 },
+        new Compartment { key = "bri", tag = "BRI", name = "BRIDGE", integ = 5 },
+        new Compartment { key = "hab", tag = "HAB", name = "HABITATION", integ = 5 },
+        new Compartment { key = "hgr", tag = "HGR", name = "HANGAR BAY", integ = 5 },
+        new Compartment { key = "rct", tag = "RCT", name = "REACTOR", integ = 5 },
+        new Compartment { key = "eng", tag = "ENG", name = "ENGINE ROOM", integ = 5 },
     };
 
     public string engSel = "rct";

@@ -18,12 +18,15 @@ public class Ship : MonoBehaviour
     /// <summary>Copy the file's numbers into the running copy (the Tuning window calls this after an edit in play).</summary>
     public void PullFromFile() { if (live) JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(statsFile), live); }
 
-    // Values the ship changes as it plays start from the file: the salvo, the PDC loaders, the marines aboard.
+    // Values the ship changes as it plays start from the file: the salvo, the PDC loaders, the marines aboard,
+    // the crew in each room.
     private void Awake()
     {
         var w = GetComponent<WeaponSystem>();
         if (w) { w.salvo = Stats.weapons.salvo; w.loaders = Stats.weapons.loaders; }
         var h = GetComponent<HangarSystem>();
         if (h) h.marines = Stats.hangar.marines;
+        var d = GetComponent<DamageSystem>();
+        if (d) for (int i = 0; i < d.compartments.Length && i < Stats.damage.crew.Length; i++) d.compartments[i].crew = Stats.damage.crew[i];
     }
 }
