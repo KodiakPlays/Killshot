@@ -4388,6 +4388,46 @@ had saved that size in its prefs. The prefs were cleared (killshot-a2). Give it 
 enemy notices us, P3 (Step 97); hitting debris hurts the ship (Step 93); the battle space per level
 (Step 91); the UI restructure check (above).
 
+### Play-through 2: scan, fighters, missiles, boarding against the live Garuda (2026-10-29, Worker)
+
+The owner asked whether fighters, active scan, missiles and boarding were ever tested for real. In the
+playtest they are, with stand-ins (the Garuda held still, our ship placed by hand, the scan faked, the
+marines sure to win). So the Worker played a second game in the Editor, on the 60,000 km Level_01,
+through the board's switches. The playtest now scans for real too (ACTIVE + the cone dial, step 21b;
+not yet run).
+
+**Worked, in order.** First contact at 29,960 km after about 2 real minutes at x10 (it was 7.5 on the old
+map). With ENG cut, the ship drifted on. Fighters: CONDITION 2, doors, the six stages, the lever, four
+interceptors away. They scouted (the Garuda showed on our plot at 17,800 km) and made attack runs:
+its bow to 30, its stern **open**. The fighters' hit put it on ALERT, and the strip warned of its
+missiles. ACTIVE SCAN with the cone dial identified it; TRACK, SLEW TO, the missile ladder and the lever
+sent an HE salvo of two. PDC-B went on AUTO.
+
+**Found (for the owner):**
+
+1. **Fighters always know where the enemy is.** They fly to its true position even when we have only
+   heard its bearing. The launch bearing only sets where they take off; there is no "scout along a
+   bearing" order. So scouting can't fail, and the hunt loses its search.
+2. **A fighter's hit tells the Garuda where our ship is,** not where the fighters are: it gets a fix on
+   us and opens fire on us (`EnemyBrain.Listen`, the hit branch uses our position). Probably a bug.
+3. **One magazine hit leaves us defenceless.** The magazine sits behind the bow. A wrecked magazine stops
+   the railguns and missiles, and the PDCs too: PDC fire needs `WepReady`, which needs the magazine,
+   though PDC rounds are counted per mount. Should PDCs keep firing with the magazine gone?
+4. **Its railguns don't miss.** Drifting straight at 14,000 km, we took a slug every 15 game seconds:
+   three opened the bow, wrecked and breached the magazine, and the vacuum spread to every room; the
+   reactor fell to 2 units and DRADIS went deaf. The same as the first game. Our missiles take about
+   150 game seconds to cover 15,000 km; its slugs, 6. (The owner chose "whoever shoots first"; here our
+   fighters shot first, and still lost the duel.)
+5. **"HANGAR BAY DAMAGED — CANNOT SPOT CRAFT"** shows when the hangar is only airless (integrity 5/5).
+   Wrong words, or the wrong rule.
+6. **The plot can't show the fight.** At its widest zoom (x0.47 on the 60,000 km map) it shows about
+   14,000 km each way, so a contact at 15,000–30,000 km, inside our DRADIS circle and our railgun's
+   reach, is off the screen.
+7. **Boarding is still untested in a real game.** The Garuda's stern was open, but by then our hangar
+   was airless and the boats could not launch.
+
+None of these were changed: they are game feel or game rules, so the owner decides.
+
 ### Found by two audits (2026-10-29, Worker)
 
 The owner asked for the old logs to be gone through, so nothing they asked for slips, and for a check
