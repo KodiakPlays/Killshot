@@ -1195,6 +1195,33 @@ DISABLE and SECURE.
 
 > **Rule 12.2.d** Boarding needs no scan. It needs an open side and a slow target.
 
+#### Body cam — not built yet
+
+An idea from the owner (2026-10-29). Don't build it yet.
+
+While the marines fight aboard, a small window on the board shows one marine's helmet camera. You
+watch the minute of fighting: a corridor, gunfire, a door blown open. The picture has static and
+flicker, with the marine's name and heart rate on it.
+
+The feed follows the real fight. When a marine dies, that feed cuts to static and the window
+switches to another marine. A win ends on the order being carried out. A loss ends in static. Today
+the fight is decided once, at the end of its 60 seconds (`HangarSystem`). For feeds to drop out one
+by one, the losses would have to come during the minute.
+
+Three ways to fake the picture, least work first:
+
+1. **Short video clips** played in the window, with static, name and heart rate on top. The
+   suggested start.
+2. **Still pictures** shaken and cut between, with muzzle flashes and static. Less art, looks cheaper.
+3. **A small 3D corridor** with a camera walking through it, matched to the fight. The most work.
+   Move to this if the clips feel repetitive.
+
+Open questions for the owner:
+
+- Whose marines: ours aboard the enemy, the enemy's aboard our ship (not built), or both.
+- Where the window goes: over the plot, in the hangar drawer, or its own small screen.
+- Where the clips come from.
+
 ### 12.3 Launching
 
 Six stages, each a rocker: CREW, FUEL, ORDNANCE, EVAC, DOORS and CATAPULT. Each runs to 100% over
