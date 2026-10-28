@@ -152,6 +152,7 @@ Do not run ahead. Do one step, show it, wait.
 | 105 | A real play-through of Wolf Hunt in the Editor, and four fixes: a hit puts the Garuda on ALERT; "HOSTILE SET HAS YOUR RANGE" tells the truth; the alarm strip shows enemy fire coming and what just hit us, debris too | **Done** — checked in play mode; playtest 211/211 |
 | 106 | The owner's play report: W/S throttle, P pause, the 10,000 km visual ring, MISSION ONE then WOLF HUNT, TRACK takes the plot, the periscope picks the target; bugs 7 and 8; the plot follows our ship; PDCs in two halves; drift with no ENG power; Level_02 gone; the bundle ID; with killshot-a2's 60,000 km Level_01 and bug 6 | **Done** — checked in play mode; playtest 214/214 |
 | 107 | Wolf Hunt's level made smaller (60,000 km, the husk gone, 136 pieces); engineering pays AUX for its orders (bug 6); crew numbers in each ship's stats file | **Done** — playtest 214/214 (in Step 106's run); crew checked in play, COMPLEMENT 52 (7e82b40) |
+| 108 | Keys 1–6 open the six drawers; Starwolf → Keys lists every board key and changes it | **Done** — compiled clean; drawers checked in play mode; the key presses themselves not yet pressed by a person |
 
 Steps 6 to 28 and Steps 34 to 107 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -4191,7 +4192,8 @@ follows again (`PlotPanel`). (3) PDC-A covers the starboard half (000–180), PD
 the ENG bus there is no thrust and no braking: the ship drifts on (`NavSystem.Move`). This is every
 ship's rule, so an EMP'd enemy drifts too, at full speed (before, it slowed); boarding it then waits
 for it to be slowed some other way. **A call made without the owner: change it if EMP should still stop
-a ship.**
+a ship.** **Owner, 2026-10-29: keep it.** "An EMP should kill the ship's engines. It should shut it all
+off, so it will be drifting." (An EMP already empties every bus for its time, `PowerSystem.BlackOut`.)
 
 **Also.** `Level_02` is off the build list and out of the project (the owner: "it can be chucked
 away"); a copy is in `~/Documents/GitHub/Killshot-Builds/removed-2026-10-29`. The app's bundle ID is now
@@ -4246,6 +4248,30 @@ marines. The rooms' list in `DamageSystem` no longer has crew numbers.
 **Checked.** Parts 1 and 2: playtest 2026-10-29_011619, 214/214 (with Step 106). Part 3: compiled by
 the Worker, written into Asura, Garuda and Frigate through the Editor, and COMPLEMENT 52 in play
 (commit 7e82b40).
+
+### Step 108 — Keys for the drawers, and a window to change every key
+
+The owner, 2026-10-29: number keys open the systems, and a tool in the Starwolf menu changes the keys.
+Built by killshot-76.
+
+**What the player gets.** 1 Fire Control, 2 Sensors, 3 Power, 4 Hangar, 5 Engineering, 6 Comms. A key
+opens its drawer, or closes it if it is already out, the same as clicking the systems key. Like P and
+WASD, the keys do nothing while you type in a text box (the hangar's launch bearing).
+
+**What the owner gets.** **Starwolf → Keys** opens the Tuning window on a new **Keys** tab. It lists
+all 16 board keys: the six drawers, Pause Run (P), Turn Port (A), Turn Starboard (D), Throttle Up (W),
+Throttle Down (S), Centre On Ship (C) and the four Pan keys (arrows). Pick a new key from each list.
+The Board tab no longer shows these.
+
+**Where the keys are.** The drawer and pause keys are on `BoardManager`, the helm's on `HelmPanel`,
+the plot's on `PlotPanel`, each marked `[Tune("Keys")]`. A change made in edit mode goes into the
+board scene, so save the scene. A change made in play mode is lost unless "Keep play-mode changes"
+is ticked.
+
+**Checked.** Unity compiled clean. All 16 keys are on the Keys tab with their starting keys. In play
+mode, through the same call the keys make, each drawer opens in turn and comms closes the second
+time; no errors in 636 frames. Nobody
+has pressed the keys by hand yet; Unity can't fake a key press here.
 
 ---
 
