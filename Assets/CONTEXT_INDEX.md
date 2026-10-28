@@ -24,6 +24,10 @@ you as friendly and **all of them are passive at the start**. The game is about 
 that lie going, and picking the moment to drop it. Detection is not failure. It is the rhythm: hide,
 gather, act, get found, break away, gather again.
 
+**What is built today** is the first mission, **Wolf Hunt**. A Garuda-class cruiser hunts you. You
+find it, destroy it or capture it, then fly to a jump point to win. How it plays is in
+`Assets/Scenes/Tactical/BUILD_LOG.md`, section 6, "Steps 94 to 101".
+
 ---
 
 ## 2 · Which source wins — READ THIS BEFORE ANYTHING ELSE
@@ -72,8 +76,10 @@ pages, and most of it has been overtaken.
 | What the game is, how to run it, the controls | `README.md` (repo root) |
 | What Soham's older scripts do, read line by line as of 2026-09-01 | `Assets/CODEBASE_BASELINE.md` |
 | What the board's scripts are and what they are wired to | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 3 |
-| What is built in the tactical scene, and the traps already hit | `Assets/Scenes/Tactical/BUILD_LOG.md` |
-| A ship's numbers: speed, power, weapons, armour | `Assets/Ships/Asura.asset` (our ship) and `Assets/Ships/Garuda.asset` (the enemy). Edit them in **Starwolf → Tuning**, on the Ship and Enemy tabs. |
+| What is built in the tactical scene, and the traps already hit | `Assets/Scenes/Tactical/BUILD_LOG.md`. The traps are in section 5. |
+| What is left to do, sorted | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 8, "Triage" |
+| A ship's numbers: speed, power, weapons, armour, crew per room | `Assets/Ships/Asura.asset` (our ship), `Assets/Ships/Garuda.asset` (the enemy cruiser) and `Assets/Ships/Frigate.asset` (the Naga-class frigates). Edit them in **Starwolf → Tuning**, on the Ship and Enemy tabs. |
+| The keys, and how to change them | `README.md`, Controls. Change them in **Starwolf → Keys**. |
 | How damage works: armour, rooms, fire, vacuum, radiation | `Assets/Scenes/Tactical/DAMAGE_README.md` |
 | How boarding works: the assault boats and their orders | `Assets/Scenes/Tactical/BOARDING_README.md` |
 | The design audit the damage model is built on | `References/Star Wolf - Design Audit.dc.html` |
@@ -81,7 +87,7 @@ pages, and most of it has been overtaken.
 | Whether a change to speeds, ranges or weapons still gives a fight of the right length | `docs/scale-sim/README.md` |
 | How to turn the repo into NotebookLM sources | `Tools/notebooklm/README.md` |
 | How the green phosphor screen works (intro, welcome page, INITIALISING), and how to put it on a new screen | `Assets/StarwolfIntro/README.md` |
-| The first mission, the tutorial walkthrough, and the first enemy AI — the plan | `Assets/Scenes/Tactical/FTUE_PLAN.md` |
+| The tutorial mission with the XO walking you through each station — the plan, not built (Wolf Hunt was built first) | `Assets/Scenes/Tactical/FTUE_PLAN.md` |
 | A mechanic that is already written, before you port it to C# | `docs/reference-sim/` |
 | Where a panel's prefab and art are, and how to swap its art | `Assets/UI/Board/README.md` |
 | Spoken orders, and how an outside program (or Claude) could drive the built game — an idea, not built | `docs/voice-command-exploration.md` |
@@ -146,8 +152,10 @@ fonts and measurements. The art the board uses is in `Assets/UI/Board/Art/`. The
 
 **`README.md`** (repo root) — what the game is, how to run it, and the controls. Short.
 
-**`Assets/TACTICAL_BOARD_SPEC.md`** — ~1,750 lines. **The specification.** What the game does, system
-by system, with numbered rules. Start at §1 Summary and §2 How it plays; jump to a system after that.
+**`CLAUDE.md`** (repo root) — how to work in this repo: Unity MCP rules, C# conventions, repo hygiene. Not design.
+
+**`Assets/TACTICAL_BOARD_SPEC.md`** — ~1,800 lines. **The specification.** What the game does, system
+by system, with numbered rules. Start at "Summary" and "How it plays"; jump to a system after that.
 *Not good for:* why. It deliberately omits reasoning.
 
 **`Assets/PROTOTYPE_BASELINE.md`** — ~335 lines. The prototype read line by line, so you do not have
@@ -159,9 +167,9 @@ were on 2026-09-01. The board's code in `Assets/Scripts/Systems/`, `Tactical/`, 
 
 ### The tactical scene — `Assets/Scenes/Tactical/`
 
-**`BUILD_LOG.md`** — ~4,500 lines. The build history of the tactical board, step by step: what exists,
-what is wired to what, which step we are on, what to do next. It ends with a long **Known issues**
-list of traps already hit. **Read it before touching that scene.**
+**`BUILD_LOG.md`** — ~5,700 lines. The build history of the tactical board, step by step: what exists,
+what is wired to what, which step we are on, what to do next. Section 5 lists the traps already hit.
+Section 8 is what is left, sorted in its "Triage" list. **Read it before touching that scene.**
 
 **`HANDOFF_GAPS.md`** — 106 rows of what the handoff package left out.
 
@@ -177,8 +185,8 @@ enemy with an open face. If the marines win, they DESTROY, DISABLE or SECURE the
 ### Levels — `Assets/Scenes/Levels/`
 
 Each level is a small scene. The board loads one on top of itself at play (`TacticalWorld.cs`,
-`levelScene`). `Level_01.unity` is the first. The spawn points, the debris fields and the broken
-starbase are placed in the level. Make and edit levels with the menu **Starwolf → Level** (`Assets/Editor/LevelWindow.cs`).
+`levelScene`). `Level_01.unity` is the first, and is Wolf Hunt's map. The spawn points and the debris
+fields are placed in the level. Since Step 107 it has no broken starbase. Make and edit levels with the menu **Starwolf → Level** (`Assets/Editor/LevelWindow.cs`).
 The Level tool is described in `BUILD_LOG.md` section 3.
 
 ### `docs/reference-sim/` — reference only. Nothing compiles it.
@@ -196,8 +204,6 @@ been deleted. This part was kept because it already expresses the mechanics that
 
 Read it when porting a mechanic to C#. Do not re-derive these from scratch.
 
-**`CLAUDE.md`** — how to work in this repo: Unity MCP rules, C# conventions, repo hygiene. Not design.
-
 ### `docs/scale-sim/README.md`
 
 A small Python script that plays whole fights with the board's rules and numbers. It reports how long
@@ -207,7 +213,7 @@ change to speeds, ranges, weapons or the enemy.
 ### `Tools/notebooklm/README.md`
 
 A Python script that turns the repo into a few documents to load into NotebookLM. The output goes to
-`Build/notebooklm/`, which git ignores.
+`Build/notebooklm/`, which git ignores. It covers Soham's older code. It leaves out the board's code.
 
 ---
 
@@ -225,7 +231,7 @@ document, and do not quietly design around them.
 | **Real time with optional pause** | Pause is a convenience, not the core verb. The handoff's paused-time framing is wrong for this game. |
 | **No broadside cannon, no spinal railgun** | The board has neither. There is no gun that fires down the length of the ship. Soham's old `Weapons/BroadsideCannon.cs` and `Weapons/Railgun.cs` are kept as old code. The board does not use them. |
 | **Two railgun turrets** | RG-A covers 042° ±80° from the bow. RG-B covers 250° ±80°. One each side. Reach 25,000 km, 22 rounds each. One shot per arming. The slug flies at 2,500 km/s, so it takes about 10 s to reach 25,000 km. |
-| **Two PDC groups** | PDC-A covers 042° ±35° from the bow. PDC-B covers 200° ±35°. Reach 10,000 km, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy missiles entering its arc, with a 70% chance to kill each one. They are the only answer to a missile salvo. |
+| **Two PDC groups** | PDC-A covers the starboard half, 090° ±90° from the bow. PDC-B covers the port half, 270° ±90° (Step 106). Reach 10,000 km, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy missiles entering its arc, with a 70% chance to kill each one. They are the only answer to a missile salvo. |
 | **Missiles** | Fire in any direction, no arc. Fired from the VLS on the Fire Control panel, two to a salvo. Reach 35,000 km, 8 missiles. |
 | **A volley is a consequence, not a mode** | There is no salvo button, no spread control, no fire pattern menu. Arm several turrets on the same bearing and they converge. Arm them on different bearings and you get a fan. The width of the fan is the difference between the numbers you typed. |
 | **Density over time compression** | The empty-board problem is solved with a smaller, debris-dense arena, not by fast-forwarding. Modest play-rate range only. Collision is gameplay, not an error. |
@@ -251,10 +257,11 @@ summary and still know what the game is.
 
 **Every tunable number goes in the inspector. Never a literal in a method body.** Speeds, ranges,
 timers, damage, layout constants, arena size — all of it. The owner tunes by hand. Art references
-work the same way: swappable, nothing hard-wired. Each ship has one stats file: `Assets/Ships/Asura.asset`
-for our ship and `Assets/Ships/Garuda.asset` for the enemy (`ShipStats`, read through `Ship.cs`). Edit
-them in **Starwolf → Tuning**, on the Ship and Enemy tabs. The board's numbers are fields marked
-`[Tune]` on its scripts, on the Board tab. Each panel prefab has an **Art** list with its sprites (see
+work the same way: swappable, nothing hard-wired. Each ship has one stats file in `Assets/Ships/`:
+`Asura.asset` for our ship, `Garuda.asset` for the enemy cruiser and `Frigate.asset` for the Naga
+frigates (`ShipStats`, read through `Ship.cs`). Edit them in **Starwolf → Tuning**, on the Ship and
+Enemy tabs. The board's numbers are fields marked `[Tune]` on its scripts, on the Board tab. The keys
+are on the Keys tab (**Starwolf → Keys**). Each panel prefab has an **Art** list with its sprites (see
 `Assets/UI/Board/README.md`).
 
 **Do not invent design to fill a gap.** If a document is silent, say it is open and stop. Mark it
@@ -272,7 +279,8 @@ ceiling.
 
 The flow is `00_Start` → `01_Briefing` → `02.1_Grid`. The new Claude Design handoff is fully built
 into `02.1_Grid` and passed its final QA. Every control is clickable and shows its states. Wiring to
-game systems started in Step 34 and is ongoing. The older
+game systems started in Step 34 and is ongoing. The first mission, Wolf Hunt, is playable, and built
+as a Mac app at `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`. The older
 `02_Grid` board has been deleted. At play the board loads a level on top of itself, `Assets/Scenes/Levels/Level_01.unity`.
 For the current step, read section 1 of `BUILD_LOG.md`.
 
@@ -297,9 +305,10 @@ Do not treat any of these as decided. Ask the owner.
 
 **Blocking**
 
-1. **Enemy AI beyond the first brain.** `Assets/Scripts/Tactical/EnemyBrain.cs` patrols a loop of
-   waypoints. When we hit it, it fires 2 missiles back, at most once every 120 s. How an enemy hears
-   us, hunts us and reacts is still unspecified in every document, including the GDD.
+1. **Enemy AI beyond Wolf Hunt.** `Assets/Scripts/Tactical/EnemyBrain.cs` drives the Garuda. It
+   hunts the map, hears us by our signal, searches, then turns a side to us and fires railguns and
+   missiles (Step 97). Anything past that one brain is still unspecified in every document, including
+   the GDD.
 2. **What happens when stability reaches zero.** Four sections spend numbers on it; none says what it
    is for. On the board, stability is a meter on the helm, and nothing else reads it.
 
@@ -310,8 +319,8 @@ Do not treat any of these as decided. Ask the owner.
 4. Whether starbase hulks are destructible, and whether terrain blocks DRADIS.
 5. Whether a dry trigger pull should wake the alert net.
 6. Who draws the real hulls. Two tiers per class — a detailed silhouette and a separately drawn
-   plot glyph — is the largest art commitment in the project. The broken starbase is placeholder
-   shapes for now (`Assets/Prefabs/Terrain/BaseHusk.prefab`).
+   plot glyph — is the largest art commitment in the project. The broken starbase
+   (`Assets/Prefabs/Terrain/BaseHusk.prefab`) is placeholder shapes. No level uses it since Step 107.
 
 **Settled by the code since this list was first written:**
 

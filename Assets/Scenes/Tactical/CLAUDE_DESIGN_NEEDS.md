@@ -10,7 +10,7 @@ it was deleted in Step 89.
 **Board in Unity:** `Assets/Scenes/Tactical/02.1_Grid.unity`, first built in Steps 28–33. Its panels
 are prefabs in `Assets/UI/Board/Panels`, edited directly.
 
-**Note (updated 2026-10-05, asset audit):** `sprites/Starship_Silhouette.png` in the export was made by the owner, with ChatGPT image tools. It is usable, but it is **not** a Claude Design package file.
+**Note (updated 2026-10-05, asset audit):** `sprites/Starship_Silhouette.png` in the export was made by the owner, with ChatGPT image tools. It is usable, but it is **not** a Claude Design package file. It was deleted with the rest of the export in Step 89. Git has it (commit `499909d`).
 
 **Priority:**
 - **High:** a player sees it as broken or missing, or a control cannot be used.
@@ -98,6 +98,9 @@ and boats are drawn from a wedge template (Step 54).
 ---
 
 ## Bucket 6 — Data format fixes (so a re-export doesn't break the build)
+
+The board no longer reads the export. The builder is gone and the panels are prefabs, edited by hand
+(BUILD_LOG decision 31). These fixes matter only if a new package is imported again.
 
 | # | Need | Gap |
 |---|---|---|

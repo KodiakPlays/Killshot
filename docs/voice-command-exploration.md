@@ -10,7 +10,7 @@ Explored with the owner on 2026-10-26. The decision itself is BUILD_LOG decision
 
 ## What the owner decided
 
-- **Voice sits beside the buttons.** It never replaces them.
+- **Voice is an extra way to give orders.** It never replaces the buttons.
 - **The crew takes a moment** to carry an order out. Buttons stay instant.
 - **The crew answers softly** — a quiet "roger", not chatter.
 - **Offline only.** Speech is heard on the player's own machine. No online AI.
@@ -113,6 +113,10 @@ A real one would also answer each line ("ok", "refused: no power", "unknown orde
 Most orders already exist as clicks. Heading, speed and the scan cone's bearing are drags today, so
 they need simple named orders such as `helm.heading 045`. Each would call a function that already
 exists: `nav.SetThrottle`, `nav.StepOrderedHeading`, `SetCone`.
+
+Some keys skip `Click` today. `P` and `1` to `6` go through it. `W`, `S`, `A` and `D` change the
+throttle and heading directly (`HelmPanel`). `C` and the arrow keys move the plot directly
+(`PlotPanel`).
 
 ## The two ways to use it
 

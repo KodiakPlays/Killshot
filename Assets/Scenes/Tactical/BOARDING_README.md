@@ -25,12 +25,13 @@ than 15,000 km from our ship. Leave them out of range too long and they are lost
    - "HOLDING OFF GARUDA · NO OPEN SIDE": no face of its armour is broken;
    - "HOLDING OFF GARUDA · TARGET UNDER WAY": it is moving faster than 0.5 km/s.
 
-   You have to fight it down first: wreck its engine room, or knock its power out with EMP.
+   You have to fight it down first: wreck its engine room. An EMP does not stop it. With no power
+   on its engines, a ship drifts on at the same speed (owner, 2026-10-29).
    Targets are named as everywhere else: "BOGEY T07" until an active scan identifies it, then
    "GARUDA".
 4. **Board.** The boats dock and the marines fight for 60 game seconds: "BOARDING GARUDA · 42 S".
-   Once they are aboard, the ship may get under way again (its EMP wears off). It keeps moving and
-   firing until the fight is over. The boats ride with it, and the fight goes on (owner 2026-10-27).
+   Once they are aboard, the ship may get under way again. It keeps moving and firing until the
+   fight is over. The boats ride with it, and the fight goes on (owner 2026-10-27).
 5. **The odds:** marines ÷ (marines + defenders). A quarter of the enemy's crew defend.
    - **Win:** the defenders die; we lose half a marine per defender; the order is carried out.
    - **Lose:** all our marines aboard die; they kill half their number of the enemy's crew.
@@ -61,8 +62,8 @@ The boats go no further than **15,000 km** from our ship.
 
 ## Numbers
 
-All are in each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`), in the Hangar
-section. Edit them in **Starwolf → Tuning**, on the Ship or Enemy tab.
+All are in each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`, `Frigate.asset`),
+in the Hangar section. The Garuda and the frigates have no marines. Edit them in **Starwolf → Tuning**, on the Ship or Enemy tab.
 
 | | |
 |---|---|

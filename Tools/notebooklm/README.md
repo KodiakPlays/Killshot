@@ -2,9 +2,10 @@
 
 Renders part of the Killshot repo into a small set of NotebookLM-ready documents.
 
-**What it covers.** The full source and the docs it exports are Soham's older code: the scripts
-at the top of `Assets/Scripts/`, `Weapons/`, `Targeting/`, `Interfaces/`, `UI/UI_Script/` and the
-top of `Assets/Editor/`. The tactical board's code is left out of the source bundles:
+**What it covers.** The full source and the docs it exports are mostly Soham's older code: the
+scripts at the top of `Assets/Scripts/`, its `Weapons/`, `Targeting/` and `Interfaces/` folders,
+`Assets/UI/UI_Script/`, and the top of `Assets/Editor/`. The top of `Assets/Editor/` also has the
+board's Level and Tuning windows. The rest of the tactical board's code is left out of the source bundles:
 `Assets/Scripts/Systems/`, `Assets/Scripts/Tactical/`, `Assets/Scripts/UI/`,
 `Assets/Scripts/Game/`, `Assets/StarwolfIntro/` and `Assets/Editor/Playtest/`. Only the API index
 (`03-api-index.md`) lists the board's code. So the notebook does not describe the board as it is
@@ -34,7 +35,7 @@ it cheap: one command, six files, drop them in, delete the old ones.
 | `03-api-index.md` | **Generated** from the C#: every type, base class, public member, and `[SerializeField]` field |
 | `04-source-core.md` | Full source of `Assets/Scripts/*.cs` |
 | `05-source-weapons.md` | Full source of `Weapons/`, `Targeting/`, `Interfaces/` |
-| `06-source-ui-editor.md` | Full source of `UI/UI_Script/`, `Editor/`, `TestUIKeyControler.cs` |
+| `06-source-ui-editor.md` | Full source of `Assets/UI/UI_Script/`, the top of `Assets/Editor/`, `Assets/TestUIKeyControler.cs` |
 | `07-project-config.md` | Unity version, packages, input backend, script inventory, and the scenes at the top of `Assets/Scenes/` and prefabs in `Assets/Prefabs/` (it misses `Scenes/Tactical/` and `Scenes/Levels/`) |
 
 Every code section is preceded by a `FILE: <path>` line, so the notebook cites

@@ -22,7 +22,7 @@ Every rate is per game second, so x10 runs everything ten times as fast.
 | Starboard | HGR hangar bay | launch |
 
 - **One fixed room per face**, with no random pick, so you can learn the ship and turn to protect it.
-- **Bridge (BRI) and habitation (HAB) sit inside.** They are never hit directly; only conditions
+- **Bridge (BRI) and habitation (HAB) are inside.** They are never hit directly; only conditions
   spreading in can hurt them.
 - **A hit on a wrecked room** (integrity 0) does no more structural damage, but it can still start a
   condition there.
@@ -66,7 +66,10 @@ Every rate is per game second, so x10 runs everything ten times as fast.
 | REBOOT | Adds 1 integrity to a damaged room; no longer clears a condition. It restarts broken parts in the breakdowns step. |
 | DUMMY 1 | Becomes **RECALL**: brings the team back before it finishes. |
 
-The orders station's PARTY, SEAL and VENT do the same, paid from the AUX pool.
+REPAIR, SEAL and VENT cost AUX: 30, 25 and 15 (owner, 2026-10-29; BUILD_LOG decision 52). REBOOT
+and RECALL are free. With too little AUX the button is refused: `INSUFFICIENT AUX — 30% REQUIRED`.
+The room's own reason shows first. The orders station's PARTY, SEAL and VENT do the same, for the
+same AUX.
 
 **Changes to the design's buttons:**
 
@@ -80,7 +83,7 @@ The orders station's PARTY, SEAL and VENT do the same, paid from the AUX pool.
 
 ## Numbers
 
-All are in each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`). Edit them in **Starwolf → Tuning**, on the Ship or Enemy tab. These are the starting values.
+All are in each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`, `Frigate.asset`). Edit them in **Starwolf → Tuning**, on the Ship or Enemy tab. These are the starting values.
 
 The fire and breach chances are the firing ship's, in its Weapons section (BUILD_LOG decision 49):
 
@@ -100,6 +103,9 @@ The rest are the damaged ship's, in its Damage section:
 | Radiation: crew loss | 1 every 20 s |
 | Radiation fades after the reactor is fixed | 90 s |
 | Team: time to finish | 6 s |
+| Crew per room: MAG, BRI, HAB, HGR, RCT, ENG | 4, 9, 18, 7, 6, 8 (52 in all; decision 51) |
+
+The AUX costs are in the Orders section: REPAIR 30, SEAL 25, VENT 15.
 
 ## Build order
 
@@ -120,6 +126,7 @@ The rest are the damaged ship's, in its Damage section:
 
 ## Still open
 
-- What happens when our ship is destroyed: a game-over screen has not been designed.
+- What happens when our ship is destroyed: since Step 85 a plain end screen reads SHIP LOST, with
+  RESTART MISSION and MAIN MENU. Whether it needs more is still open.
 - A room can hold fire and radiation at once, but the design's row shows one condition. The
   displays step settles how both show.

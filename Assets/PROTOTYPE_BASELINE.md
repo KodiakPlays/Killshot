@@ -274,9 +274,9 @@ once to print `LIFESUP FAIL 90s` as a warning string. It is **never compared aga
 anywhere reads player hull for a loss check. You can sit at 0/0/0/0 armour with every internal gutted
 indefinitely.
 
-Soham's older Unity code has four typed failure reasons (`QuestSystem.cs`). The tactical board does
-not use it. On the board a ship is lost in two ways: its reactor room reaches integrity 0
-(`DamageSystem.cs`), or it stays outside the battle space too long (`ShipState.TickArena`).
+The Unity board can be lost. A ship is lost in two ways: its reactor room reaches integrity 0
+(`DamageSystem.cs`), or it stays outside the battle space too long (`ShipState.TickArena`). When our
+ship is lost, `Assets/Scripts/Game/QuestSystem.cs` ends the mission (Step 85).
 
 ---
 

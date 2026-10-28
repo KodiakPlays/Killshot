@@ -1,13 +1,13 @@
 # The phosphor screen
 
 **Summary.** This folder draws the old green-screen look used by the intro (SECTION 36, STARWOLF, the
-menu), the welcome page (DEMO) and INITIALISING with its loading bar. One shader draws the screen. One
+menu), the two title cards (MISSION ONE, then WOLF HUNT) and INITIALISING with its loading bar. One shader draws the screen. One
 script puts it on the screen and decides what it shows. A text material gives normal text the same
 green glow. To use the look on a new screen, add the script to an object, pick a mode, and put any
 normal text on a canvas above it.
 
 What changed, step by step, and why, is in `Assets/Scenes/Tactical/BUILD_LOG.md` (Steps 27, 56, 70,
-71). This file only says how it works and how to use it.
+71, 94, 106). This file only says how it works and how to use it.
 
 ---
 
@@ -48,11 +48,19 @@ Set these on the script in the inspector.
 | Mode | Tick | What it shows | Used in |
 |---|---|---|---|
 | Full intro | nothing | SECTION 36, then the title, then the menu | `00_Start` |
-| Title only | `titleOnly` | The title types in and stays. No menu. | `01_Briefing`, `WELCOME Screen` |
+| Title only | `titleOnly` | The title types in and stays. No menu. | `01_Briefing`, `MISSION ONE card` and `WOLF HUNT card` |
 | INITIALISING only | `initialisingOnly` | INITIALISING... and the loading bar, then it calls `finished` | `01_Briefing`, `INITIALISING` |
 
 The loading bar fills from empty to full over `initialisingDuration` seconds. When it is full, the
 script calls `finished`. In `01_Briefing`, `finished` loads the board.
+
+In `01_Briefing`, the `ScreenFlow` object runs the order (`Assets/Scripts/Tactical/ScreenFlow.cs`).
+MISSION ONE shows first. After 3 seconds, or when you press Enter, WOLF HUNT replaces it. After 3 more
+seconds, or Enter, INITIALISING switches on. Its loading bar fills, then the board loads. The cards are
+in ScreenFlow's **Cards** list. The first card is switched on in the scene and the rest are off.
+
+The whole order: `00_Start` shows SECTION 36, STARWOLF and the menu. NEW GAME loads `01_Briefing`, which
+shows MISSION ONE, WOLF HUNT and INITIALISING. Then the board loads (`02.1_Grid`).
 
 ---
 
@@ -63,8 +71,8 @@ script calls `finished`. In `01_Briefing`, `finished` loads the board.
 | `glyphData`, `displayShader`, `hardwareHum` | The font, the shader and the hum. `displayShader` must be set. The other two load themselves if empty. |
 | `sectionDuration`, `titleDuration`, `initialisingDuration` | How long each word stays, in seconds. |
 | `typeShare` | How much of that time the typing takes. 0.5 = types in the first half, holds for the second. |
-| `titleText` | The title word. STARWOLF in the intro, DEMO on the welcome page. Only letters in the font work (see section 6). |
-| `titleOffset` | Moves the title up, in pixels on the 1920 × 1080 screen. 0 = centre. The welcome page uses 300. |
+| `titleText` | The title word. STARWOLF in the intro, MISSION ONE and WOLF HUNT on the title cards. Only letters in the font work (see section 6). |
+| `titleOffset` | Moves the title up, in pixels on the 1920 × 1080 screen. 0 = centre. |
 | `canvasOrder` | Which canvases draw on top. The screen covers every canvas with a lower number. Default 32767 covers everything. |
 | `humVolume` | Volume of the hum. |
 | `newGame`, `loadGame`, `settings`, `loadGameAvailable` | Menu wiring. Full intro mode only. |
@@ -85,7 +93,8 @@ script calls `finished`. In `01_Briefing`, `finished` loads the board.
    - Colour: `#A2F9A0`. Upper case. A little letter spacing looks right.
 5. Press Play and look at it.
 
-The welcome page in `01_Briefing` is a working example of all of this.
+`MISSION ONE card` in `01_Briefing` is a working example of steps 1 to 3. No screen has normal text on
+top now. The DEMO welcome page had it until Step 94 removed the page.
 
 ---
 

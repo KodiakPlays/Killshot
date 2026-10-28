@@ -2,10 +2,16 @@
 
 **What this covers.** Soham's older scripts, read line by line as they were on 2026-09-01. The
 board's code is newer and is not in this file: `Assets/Scripts/Systems/`, `Assets/Scripts/Tactical/`,
-`Assets/Scripts/UI/`, `Assets/Scripts/Game/` and `Assets/StarwolfIntro/`.
+`Assets/Scripts/UI/`, `Assets/Scripts/Game/` and `Assets/StarwolfIntro/`. The board's editor tools
+are not in this file either: `LevelWindow`, `StarwolfTuningWindow`, `DebrisFieldEditor` and
+`Playtest/PlaytestRunner` in `Assets/Editor/`.
 `Assets/Scenes/Tactical/BUILD_LOG.md` section 3 describes the board's code.
 
-**Changes to Soham's scripts since 2026-09-01.** There are three:
+**Changes to Soham's scripts since 2026-09-01.** There are four:
+
+- `QuestSystem.cs` (2026-10-27, Step 85): moved to `Assets/Scripts/Game/` and rewritten to run on the
+  board. It no longer uses `GameClock`, `WorldBoundary` or `InternalSubsystems`. Section 5 and the
+  other mentions of `QuestSystem` here describe the old version.
 
 - `UIController.cs` (2026-09-02): it returns early where a panel's canvas is missing, so its
   `Update` runs to the end in the scenes under `Assets/Scenes/Tactical/`.

@@ -10,7 +10,22 @@ mission ends. No reinforcements.
 Planned with the owner on 2026-10-18. This is a pickup document for whoever builds it. The build
 order is in §9. Build one step, show it, wait. Do not run ahead (BUILD_LOG decision 17).
 
-Status is not kept here. `BUILD_LOG.md` is the single living record; log each step there.
+**What is built (checked 2026-10-29).** The enemy half of this plan is built, as the mission Wolf
+Hunt (Steps 95 to 99). The Garuda hunts us, hears us, searches, and fights back with railguns and
+missiles. The tutorial half is not built: no XO, no comms box, no gating, no walkthrough, no
+derelicts.
+
+**Changed by the owner since (2026-10-27).** Two rules in this plan are replaced:
+
+- **Reinforcements are in.** When an enemy ship reaches ALERT, a 3:00 countdown starts, then Naga
+  frigates arrive.
+- **The mission ends at the jump point.** Killing or capturing the Garuda opens a jump point.
+  Reaching it wins.
+
+How both work is in `Assets/TACTICAL_BOARD_SPEC.md` §5.3, §5.4 and §15.2. The rest of this plan
+stands until the owner says otherwise.
+
+Detailed status is not kept here. `BUILD_LOG.md` is the single living record; log each step there.
 
 ---
 
@@ -23,8 +38,8 @@ Status is not kept here. `BUILD_LOG.md` is the single living record; log each st
 | What the enemy is | **Our ship with different stats.** Same power, signature, sensors, helm, weapons and damage. A brain drives it instead of the board. One ship model, two drivers. §4. |
 | What a scan shows | **The enemy's ship state, drawn as ours is.** Class, hull sides, compartments and integrity, power and signal. Our hits update it. Side-to-room map: `DAMAGE_README.md` (owner 2026-10-24). |
 | Which weapons | **The handoff's.** Two railgun turrets, one on either side of the ship, two PDC groups, the VLS, with the design's arcs, ranges and arming rules. The GDD's weapon list is dated. |
-| Where the FTUE ends | **At the kill.** The XO's last line is "let's get out of here." The escape to a jump point is a later addition. |
-| Does the enemy shoot back | **Yes, but built later** (§9, step J). **No reinforcements**, ever, in this mission. Part built: since Step 55 the Garuda fires an HE missile salvo back when we hit it. |
+| Where the FTUE ends | **At the kill.** The XO's last line is "let's get out of here." The escape to a jump point is a later addition. **Replaced (owner, 2026-10-27):** the jump point is built; reaching it wins. |
+| Does the enemy shoot back | **Yes** (§9, step J). **Built, Step 97:** railgun slugs and HE missile salvos once it is ALERT. **No reinforcements**, ever, in this mission. **Replaced (owner, 2026-10-27):** reinforcements are in. |
 | Strict or loose | **Strict.** You go through every station before you fight. A control you have not been shown is refused. |
 | What you fight first | **Derelicts** before the live enemy. |
 | Distance and length | Not decided. Ten minutes of travel is acceptable. Tune later. |
@@ -92,27 +107,34 @@ A ship is an object with eight system components: `NavSystem`, `PowerSystem`, `S
 `Assets/Ships`. Each system reads its numbers from its section of that file. Our ship and the Garuda
 are built the same way.
 
-- **The Garuda has its own stats file**, `Assets/Ships/Garuda.asset`. Today its numbers are the
-  same as ours (`Asura.asset`). Only the class name is different. A new class, such as DERELICT, is
-  a new stats file.
+- **The Garuda has its own stats file**, `Assets/Ships/Garuda.asset`. Since Step 96 its numbers
+  differ from ours (`Asura.asset`): it is bigger, slower, better armoured, hits harder and reaches
+  less far. The Naga frigate is `Frigate.asset`. A new class, such as DERELICT, is a new stats file.
 - **`WorldContact` builds a `ShipState` for the enemy** from its eight system components.
   That state has the ship's contacts (`tracks`). The systems are reached through
   it: `nav`, `power`, `sensors`, `comms`, `weapons`, `hangar`, `damage`, `orders`.
 - **The same code runs it.** Each system has its own tick: `PowerSystem.Tick`, `NavSystem.Tick`,
   `SensorSystem.Tick`, `WeaponSystem.TickCharge` and the rest. Today `TacticalWorld` runs the
-  Garuda's `NavSystem.Tick` and `DamageSystem.TickConditions` on the board tick, after ours. Its
-  power, sensors and weapons ticks are added in the steps that need them. Nothing moves while
+  Garuda's `DamageSystem.TickConditions`, then its brain, then its `NavSystem.Tick`, on the board
+  tick, after ours. Its power, sensors and weapons ticks are not run yet. Nothing moves while
   paused.
 - **The brain only writes orders.** `nav.orderedHeading`, `nav.throttle`, bus modes,
   `sensors.dradis`, `sensors.active` and the cone bearing, the target, the arming switches, fire.
   It touches nothing else. If the brain wants something the player cannot do, the brain is wrong.
 - **Its track list is what it knows about us.** `SensorSystem.Heard` and `ConeCovers`, run from
-  its side, decide whether it hears us. A track is what you know, not what is true.
+  its side, decide whether it hears us. A track is what you know, not what is true. **Built
+  differently (Step 97):** `EnemyBrain.Listen` hears us out to its DRADIS reach times our signal,
+  and remembers where it last heard us. It does not use a track list or the cone.
 
 The board-only parts of the state (the periscope and the plot marks) are unused on the Garuda's
 copy. That is fine.
 
 ### 4.2 Awareness
+
+> **Built in Step 97, differently from the table below.** COLD hunts the map instead of patrolling
+> a loop. The brain does not change its bus modes or go active; it raises its DRADIS gain as it
+> grows more aware. Inside its visual range it sees us, and a hit puts it on ALERT. What is built is
+> in `Assets/TACTICAL_BOARD_SPEC.md` §5.3. The table is the plan as written.
 
 The spec's ladder stays (§5.3). What changes is **how** each rung is reached: not a fixed distance,
 but **its own sensors hearing our signal**, with the same rules ours use.
@@ -160,12 +182,13 @@ each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`):
 |---|---|---|---|---|
 | RG-A | Railgun turret A | **starboard side**, arc centre 42° | ±80° | 25,000 |
 | RG-B | Railgun turret B | **port side**, arc centre 250° | ±80° | 25,000 |
-| PDC-A, PDC-B | Point defence groups | 42° and 200° | ±35° | 10,000 |
+| PDC-A, PDC-B | Point defence groups | 090° and 270°: the starboard half and the port half (owner, 2026-10-29) | ±90° | 10,000 |
 | VLS | Missile cells | all round | ±180° | 35,000 |
 
 **Two turrets, one on either side of the ship** (owner, 2026-10-18). Each sees most of its own
 side and nothing of the other. So a ship fights **side-on**, and which side it shows is both its
-armour and its gun. The Garuda has the same layout and, today, the same numbers as ours.
+armour and its gun. The Garuda has the same layout. Its numbers differ (Step 96): see
+`Assets/Ships/Garuda.asset`. The table gives ours.
 
 Rounds, flight, hits and damage are whatever the fire, hit and damage steps build for us, used from
 the other end. A railgun slug flies at 2,500 km/s, about 10 s to its 25,000 km reach (owner,
@@ -183,6 +206,11 @@ What the prototype adds that we keep as tunables: it fires only when the arc bea
 (22°), a short retry (0.4 s) when it does not, and a random pause between shots (2.5 to 4.5 s) so
 it is not metronomic. The "enemy hits a little softer" factor of 0.65 (spec §8.1) stays, as one
 tunable on its damage.
+
+> **Built differently (Step 97).** It fires a turret when we are inside that turret's arc, with a
+> pause of 12 to 17 game seconds between shots and its aim off by up to 0.4°. It fires an HE
+> salvo every 90 game seconds once ALERT. It hits 1.5 times as hard as we do. The numbers are in
+> its stats file. It does not use the arming ladder. The settings are on `EnemyBrain`.
 
 **Where its hits land on us.** The side facing it takes the hit. Once a side is open, each further
 hit damages the room behind that side. That is what makes engineering real.
@@ -226,11 +254,12 @@ with a 70% kill chance (Step 55). That is the PDC's tutorial moment.
 - `TacticalWorld` runs on `board.Ticked` and knows every contact. Each tick it runs each contact's
   damage conditions, then its brain, then its `NavSystem.Tick`, then syncs. Nothing runs in
   `Update`.
-- `EnemyBrain`: one component, one file. It has the waypoints, the fire-back settings and a
-  `Think()` that writes orders into its own ship. Awareness and last-heard come in step B. The
+- `EnemyBrain`: one component, one file. It has the hunt, the hearing, the fighting settings and a
+  `Think()` that writes orders into its own ship. Awareness and last-heard are built (Step 97). The
   movement maths is the same as ours (`NavSystem.Tick`).
 - Hearing: run `SensorSystem.Heard` / `ConeCovers` with the Garuda as the listener and us as the
-  track. Do not write a second hearing rule.
+  track. Do not write a second hearing rule. **Not followed:** Step 97 wrote its own rule in
+  `EnemyBrain.Listen` (§4.1).
 - Weapons and damage: whatever the fire, hit and damage steps build for us, called with the Garuda
   as the shooter or the target. If it needs a parameter to say "which ship", add the parameter.
   Do not fork the code.
@@ -239,7 +268,8 @@ with a 70% kill chance (Step 55). That is the PDC's tutorial moment.
 ### 4.6 Deliberately left out
 
 - **Retreat** (the GDD lists it). The easy enemy does not run. Add for the real mission.
-- **The alert net and reinforcements** (spec §5.4). Owner: none in this mission.
+- **The alert net and reinforcements** (spec §5.4). Owner: none in this mission. **Replaced (owner,
+  2026-10-27):** they are in, built in Step 99.
 - **The disguise mechanic** (matching your output to a scanned class). For now the Garuda reads us
   as neutral because its awareness is 0. The shared model makes the real version cheap later: its
   scan of us returns our class, and the lie holds while our signal matches.
@@ -369,18 +399,19 @@ Small steps, each shown to the owner before the next. Each has its own BUILD_LOG
 
 | Step | What | Needs first | Done when the owner can see |
 |---|---|---|---|
-| **A** | **Done, Step 51.** The Garuda patrols. Its own `ShipState`, built by `WorldContact` from its system components and its stats file, ticked by `TacticalWorld` after ours; `EnemyBrain` orders waypoints through `nav.orderedHeading` and `nav.throttle`. | The helm (so we can go and look). | The contact moves between sweeps and loops its route. Stops while paused. |
-| **B** | The Garuda hears. Awareness 0 → 3 from its own sensors (`SensorSystem.Heard`, `ConeCovers`) reading our `sensors.signal`. Thresholds in Tuning. A debug readout in the Tuning window or the console. | A. Power P1 (done). | Going loud near it raises the number. It never drops. |
-| **C** | Investigate and sweep. SEARCHING steers to last-heard; ALERT runs the sweep, then closes. The sweep shows on our board. | B. The sensors step. | It turns toward where we were. On ALERT its signal jumps and it comes straight at us. |
+| **A** | **Done, Step 51. Since Step 97 it hunts the map instead of looping a route.** The Garuda patrols. Its own `ShipState`, built by `WorldContact` from its system components and its stats file, ticked by `TacticalWorld` after ours; `EnemyBrain` orders waypoints through `nav.orderedHeading` and `nav.throttle`. | The helm (so we can go and look). | The contact moves between sweeps and loops its route. Stops while paused. |
+| **B** | **Done, Step 97** (its own hearing rule, §4.1). The Garuda hears. Awareness 0 → 3 from its own sensors (`SensorSystem.Heard`, `ConeCovers`) reading our `sensors.signal`. Thresholds in Tuning. A debug readout in the Tuning window or the console. | A. Power P1 (done). | Going loud near it raises the number. It never drops. |
+| **C** | **Done, Step 97, without the sweep:** it does not go active, so no sweep shows on our board. Investigate and sweep. SEARCHING steers to last-heard; ALERT runs the sweep, then closes. The sweep shows on our board. | B. The sensors step. | It turns toward where we were. On ALERT its signal jumps and it comes straight at us. |
 | **D** | Derelicts. Two static contacts from a DERELICT class, with hull sides and compartments. Scanning one fills in the target readout: its sides and compartments, drawn as ours are. | Sensors. | They show, scan, read DERELICT, and the readout shows their insides. |
 | **E** | The comms box and the step runner, with steps 1 to 5 only. No gating yet. | Nothing. Can be built now. | The box appears top-left, walks power, and clears on each done check. |
 | **F** | Strict gating. The allow-list, checked once before dispatch, refusing with the existing nudge. | E. The press-and-click step (the nudge). | A control not yet introduced nudges and does nothing. |
 | **G** | The rest of the walkthrough, one station at a time as each gets wired: helm, plot, sensors, comms, orders, engineering (with the drill), hangar, periscope. | Each station. | Each row in §8 clears in play. |
 | **H** | Fire on the derelicts, hit, destroy, WRECK. Steps 19 to 22. | Fire, hit, damage from the wiring order. | Both derelicts can be killed. |
 | **I** | Fight the Garuda. Steps 23 to 27: scan it, the kill, the end card, back to the menu. Our hits on it update its readout live. | A to H. | NEW GAME to "let's get out of here" in one sitting. |
-| **J** | **Part done, Step 55.** The Garuda fights back. Built: when we hit it, it fires an HE missile salvo of 2 at us, at most once every 120 s, if we are inside its VLS reach. The missiles hit our side facing them. Still to build: its two turrets, through the same arming, fire, hit and damage code we use. | I. Our own fire and damage model. | It hurts. Engineering is now real. |
+| **J** | **Done, Steps 55 and 97.** The Garuda fights back. When we hit it, it fires an HE missile salvo of 2 at us, at most once every 120 s, if we are inside its VLS reach. Once ALERT it fires both turrets and a salvo every 90 s. Its turrets do not use our arming ladder (§4.4). | I. Our own fire and damage model. | It hurts. Engineering is now real. |
 
-A is done. E can start today. Nothing here blocks the other agent.
+A, B, C and J are done (A is now a hunt). D to I, the tutorial half, are not built. E can
+start today.
 
 ---
 
@@ -413,5 +444,6 @@ A is done. E can start today. Nothing here blocks the other agent.
 - **Do not put text on the plot.** The comms box is a panel, not a plot label (owner, Step 39).
 - **Do not build a quest log.** One box, one line, one hint.
 - **Do not add a second lock system.** One allow-list, one check, before dispatch.
-- **Do not add reinforcements**, even behind a flag. The owner ruled none.
+- ~~**Do not add reinforcements**, even behind a flag. The owner ruled none.~~ Replaced (owner,
+  2026-10-27): reinforcements are in (spec §5.4).
 - **Do not hand-edit the scene.** Everything goes through the Editor over MCP.

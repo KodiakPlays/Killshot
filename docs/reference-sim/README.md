@@ -17,6 +17,7 @@ and re-deriving them would risk getting them wrong again:
 - `ship.ts` — commanded versus actual state. Turning points the hull; it does
   not turn the velocity. Drift bleeds off separately.
 - `power.ts`, `tuning.ts`, `geometry.ts`, `world.ts` — supporting model.
+- `_sim_draft.js` — an earlier draft of the same core, all in one JavaScript file. Nothing uses it.
 
 **This is reference, not build output.** Nothing compiles it and nothing
 imports it. Read it when porting a mechanic to C#.

@@ -1,7 +1,7 @@
 # Starwolf — Specification
 
-**Version** 0.3 · 2026-10-27
-**Status** Describes the tactical board as built on 2026-10-27. Sections marked **Not built yet**
+**Version** 0.4 · 2026-10-29
+**Status** Describes the tactical board as built on 2026-10-29. Sections marked **Not built yet**
 describe design intent.
 
 Each ship's numbers are in its stats file: `Assets/Ships/Asura.asset` (our ship) and
@@ -53,8 +53,9 @@ Straight from the GDD:
 You drop in at one edge of a handcrafted region of space, with **old, unverified Imperial
 records** that mark a few landmarks. Everything else you have to find.
 
-Built so far: an intro, a menu and a briefing, then the board with one enemy, the Garuda. The
-mission, the win and the escape are not built yet (§15).
+Built so far: an intro, a menu and a briefing, then one mission, Wolf Hunt, in `Level_01`. The
+Garuda hunts you. Once it finds you, more enemy ships come. Kill or capture it, then reach the jump
+point to win (§15.2).
 
 ### Order of operations
 
@@ -101,7 +102,7 @@ Everything below breaks down system by system. Read in order for the whole pictu
 | 2 | Time | Pause, the four rates, game time |
 | 3 | Power | The reactor, four buses, draw and vent |
 | 4 | Movement | Throttle, drift, stability, the combat autopilot (not built yet) |
-| 5 | Being seen | Our signal; detection, disguise and awareness (not built yet) |
+| 5 | Being seen | Our signal; how the enemy hears us; reinforcements; the disguise (not built yet) |
 | 6 | Auxiliary | The orders station, its AUX pool and the alert condition |
 | 7 | Reflex | The cloak (not built yet) |
 | 8 | Weapons | Two railgun turrets, two PDC groups, the missile launcher, damage |
@@ -111,7 +112,7 @@ Everything below breaks down system by system. Read in order for the whole pictu
 | 12 | Hangar | Interceptors, assault boats, launching |
 | 13 | Damage | Four sides, six compartments, conditions, repairs |
 | 14 | Failure | How our ship is lost |
-| 15 | Mission | How a mission runs, how you win, the level (not built yet) |
+| 15 | Mission | How a mission runs, how you win, the level |
 | 16 | Prototype defects | Bugs in the prototype not to copy |
 | 17 | Open items | What is still to decide or build |
 | 18 | Plotting tools | The tools and the firing solution |
@@ -240,7 +241,8 @@ so at x10 everything runs ten times as fast (owner, 2026-10-24).
 | **Paused** | Nothing real changes. Controls still work. |
 
 The rates are x0.25, x1, x5 and x10, on four keys on the time control. The board loads paused.
-Pressing a rate key also starts the clock. The pause key stops and starts it. Crossing out of the
+Pressing a rate key also starts the clock. The pause key, or P on the keyboard, stops and starts
+it. Crossing out of the
 battle space drops the rate to x1 (§14).
 
 > **Rule 2.a** Pause and play rate are the **only** time controls. There is no commit or execute
@@ -337,7 +339,8 @@ Venting comes first, so units freed by a vent can be drawn in the same second.
 > **Rule 3.3.c** The **emergency load shed** puts every bus on VENT and locks the selectors.
 > Releasing it puts every bus on STANDBY.
 
-An EMP empties every bus at once. The power stays out for 60 game seconds (§8.1a).
+An EMP empties every bus at once. The power stays out for 60 game seconds (§8.1a). With no power
+on ENG, the ship drifts (§4.3).
 
 ### 3.4 What a unit is worth
 
@@ -377,7 +380,8 @@ Actual moves toward ordered at capped rates whenever the clock runs.
 
 ### 4.2 Throttle
 
-You drag the throttle on the helm, from 0 to 100%. It loads at 0.
+You drag the throttle on the helm, from 0 to 100%, or press W and S to step it 10% a press. It
+loads at 0.
 
 ```
 throttle cap = ENG units × 20 × (engine room integrity ÷ 5)
@@ -402,6 +406,10 @@ sideways speed × 0.96307
 all speed      × 0.997502
 ```
 
+> **Rule 4.3.b** With no units on the ENG bus there is no thrust and no braking. The ship drifts on
+> at the same speed and direction (owner, 2026-10-29). This is true of every ship, so an EMP leaves
+> a ship drifting too.
+
 ### 4.4 Stability
 
 The helm shows G load and stability. Nothing uses them yet.
@@ -413,7 +421,10 @@ stability = 100 − 45 × (G load − 1), from 0 to 100
 
 ### 4.5 Collision
 
-Not built yet. Ships pass through ruins, debris and each other.
+Ships pass through each other. Our ship can fly into a ruin or a piece of debris, but each time it
+goes in it takes 25 armour off the side facing the piece. With that side open, the room behind it
+loses 1 integrity. The ship is not pushed back out. The alarm strip reads `COLLISION · PROW ARMOUR
+75%`. Only our ship is hit this way for now. The numbers are in each ship's stats file, under damage.
 
 ### 4.6 Autopilot (combat)
 
@@ -472,8 +483,8 @@ little outward when it is inside. So the ship settles onto a circle at that rang
 
 ## 5 · Being seen
 
-**Not built yet.** Our signal is built (§5.0). Nothing in the enemy reacts to it yet. Everything
-after §5.0 is design intent.
+**Part built.** Our signal (§5.0), how the enemy hears us (§5.3) and the reinforcements (§5.4) are
+built. The detection number (§5.1) and the disguise (§5.2) are design intent, not built yet.
 
 **What it is.** How visible you are, and what the enemy does about it.
 
@@ -498,8 +509,12 @@ signal target = 10 per unit on any bus + 35 while ACTIVE is on        (at most 1
 ```
 
 The signal climbs toward its target at 9 per game second and falls at 6. Each railgun shot or
-missile salvo adds 25 at once. At 45 or more, the signal box reads `1 HOSTILE SET HAS YOUR RANGE`
-and the alert tone plays once. The numbers are in each ship's stats file, under sensors and power.
+missile salvo adds 25 at once. As the signal crosses 45, the alert tone plays once. The numbers are
+in each ship's stats file, under sensors and power.
+
+The signal box says who can hear you. While an enemy ship hears or sees our ship, it reads
+`1 HOSTILE SET HAS YOUR RANGE` (or `2 HOSTILE SETS HAVE YOUR RANGE`), at any signal. At 45 or more
+with nobody hearing, it reads `NO HOSTILE SET HAS YOUR RANGE`. At 0 it reads `RUNNING SILENT`.
 
 ### 5.1 The detection number
 
@@ -549,8 +564,22 @@ how you get your costume.
 
 ### 5.3 Awareness
 
-Once provoked, an enemy climbs a ladder. **It does not come back down.** The numbers below are the
-prototype's, in its own units.
+Once provoked, an enemy climbs a ladder. **It does not come back down.**
+
+**Built (Step 97, owner 2026-10-27).** Every enemy ship listens with its own DRADIS. It hears our
+ship out to its DRADIS reach times our signal (0 to 100%), so a silent ship is never heard. Inside
+its visual range it sees us, whatever our signal. Our fighters are loud to it too.
+
+| Level | Raised when | What it does |
+|---|---|---|
+| COLD | At the start | Hunts the map. It picks points across the battle space, moving from its own half toward ours |
+| UNEASY | It hears us faintly | Turns for where it heard us |
+| SEARCHING | It hears us more clearly, or hears us again after a gap | Speeds up and searches round that spot |
+| ALERT | It hears us loud and close, sees us, or we hit it | Closes to its railguns' reach, turns a turret's side to us, and fires railgun slugs and missile salvos while it knows where we are. The reinforcements' countdown starts (§5.4) |
+
+The code is `EnemyBrain`. Its numbers are on the Board tab of **Starwolf → Tuning**, under Enemy.
+
+The prototype's ladder, in the prototype's own units, for reference:
 
 | Condition | Raises to |
 |---|---|
@@ -563,12 +592,21 @@ prototype's, in its own units.
 
 ### 5.4 The alert net
 
-Firing any weapon triggers it. In the prototype: a 59-second window, then two reinforcements at
-once, then one every 14 s, alternating DESTROYER / FRIGATE, entering at the arena edge and closing
-at 92 units/s, ramming for 400 damage.
+**Built (Step 99, owner 2026-10-27).** The moment an enemy ship reaches ALERT, the alarm strip reads
+REINFORCEMENTS INBOUND with a 3:00 countdown in game time, and the alert tone plays. At 0:00 two
+Naga-class frigates enter at random edges of the battle space, told roughly where we are. One more
+comes every 2 game minutes until we jump out. The strip then reads ENEMY SHIPS IN THE SECTOR and the
+count. Each frigate starts SEARCHING and hunts with the same mind as the Garuda (§5.3). The frigate's
+numbers are in `Assets/Ships/Frigate.asset`. The countdown and the waves are on `QuestSystem`, on the
+Board tab of **Starwolf → Tuning**, under Mission.
 
-> **Rule 5.4.a** `TBD` — in the prototype this fires *before* the validity check, so a dry trigger
-> pull wakes the alert. Keep or fix.
+The prototype's version, for reference: firing any weapon triggers it. A 59-second window, then
+two reinforcements at once, then one every 14 s, alternating DESTROYER / FRIGATE, entering at the
+arena edge and closing at 92 units/s, ramming for 400 damage.
+
+> **Rule 5.4.a** On the board, firing does not start the countdown by itself. Only an enemy ship
+> reaching ALERT does. A shot adds 25 to our signal, which makes us easier to hear (§5.0). A hit on
+> an enemy puts it on ALERT at once.
 
 > **Rule 5.4.b** Reinforcements do not stop. The alert is a **soft fail timer**: once it is running,
 > finish and leave.
@@ -594,8 +632,9 @@ ship's stats file, under orders.
 | SEAL | 25 | Shuts the doors of an airless room |
 | VENT | 15 | Dumps the room's air. Any fire goes out. The crew and any party in the room die |
 
-The orders act on the room selected on the Engineering drawer. FIRE, BLKHD and SCRUB are blank
-plates. They are not fitted.
+The orders act on the room selected on the Engineering drawer. Engineering's REPAIR, SEAL and VENT
+spend the same pool, at the same cost (§13.6). FIRE, BLKHD and SCRUB are blank plates. They are not
+fitted.
 
 > **Rule 6.b** An order is refused when the pool is short, or when the room's state blocks it
 > (§13.6). The refusal shows for 0.42 s, and the refused sound plays.
@@ -676,14 +715,19 @@ fighters (owner, 2026-10-27; BUILD_LOG decision 49).
 | Railgun slug | Takes 50 armour off the side it hits | Takes 2 integrity off the room behind; 50% chance to breach it |
 | HE missile | Takes 100 armour | Takes 2 integrity off the room behind; 60% chance of fire |
 | PENETRATOR missile | Goes straight through | Takes 2 integrity off the room behind; 40% chance of fire |
-| EMP missile | No damage | No damage. The ship's power goes out for 60 game seconds |
+| EMP missile | No damage | No damage. The ship's power goes out for 60 game seconds, and it drifts (§4.3) |
 | Fighter run | Takes 10 armour per fighter | Takes 1 integrity per fighter off the room behind |
+
+These are our ship's numbers. The Garuda's slugs and HE missiles hit 1.5 times as hard: a slug takes
+75 armour and 3 integrity, an HE missile 150 armour.
 
 Any hit on the reactor room, except a fighter's, has a 50% chance to leak radiation. That chance
 is in the Damage group of the ship being hit. What damage does to a ship is in §13.
 
-> **Rule 8.1.a** Two slugs open the prow, starboard or port side. One slug opens the aft. One HE
-> missile opens any side.
+> **Rule 8.1.a** On our ship, two of our slugs open the prow, starboard or port side, and one opens
+> the aft. The Garuda's armour is 1.5 times ours (§13.2), so our slugs need three hits on its prow,
+> starboard or port side, and two on its aft. One HE missile opens any of our sides. Our HE
+> missiles need two hits on the Garuda's prow, starboard or port side, and one on its aft.
 
 ### 8.1a Warheads
 
@@ -703,8 +747,8 @@ There are no broadside guns. Arcs are measured from the bow, clockwise.
 |---|---|---|---|---|
 | RG-A, railgun turret A | 042° ±80° | 322° → 122° | 25,000 km | 22 slugs |
 | RG-B, railgun turret B | 250° ±80° | 170° → 330° | 25,000 km | 22 slugs |
-| PDC-A, PDC group A | 042° ±35° | 007° → 077° | 10,000 km | 2,400 rounds |
-| PDC-B, PDC group B | 200° ±35° | 165° → 235° | 10,000 km | 2,400 rounds |
+| PDC-A, PDC group A | 090° ±90° | 000° → 180°, the starboard half | 10,000 km | 2,400 rounds |
+| PDC-B, PDC group B | 270° ±90° | 180° → 360°, the port half | 10,000 km | 2,400 rounds |
 | VLS, missile launcher | All round | All round | 35,000 km | 8 cells |
 
 > **Rule 8.3.a** Fire control works one mount at a time. You pick the system (RAILGUN, PDC or
@@ -716,7 +760,14 @@ There are no broadside guns. Arcs are measured from the bow, clockwise.
 > **Rule 8.3.c** The railgun arcs leave a gap from 123° to 169°, on the starboard quarter. They
 > overlap from 322° to 330°, on the port bow. Turning the ship brings a turret to bear.
 
+> **Rule 8.3.d** The two PDC groups cover a half each, so together they cover all round (owner,
+> 2026-10-29: "keep it simple").
+
 The armour is PROW 100, STBD 100, AFT 50, PORT 100 (§13.2). The aft is the weakest side.
+
+The Garuda has the same mounts. Its railguns reach less far, it has 4 missile cells, and its PDC-B
+has no rounds. A Naga frigate has one railgun, RG-A, with 12 slugs, and no PDCs or missiles. Their
+numbers are in `Assets/Ships/Garuda.asset` and `Assets/Ships/Frigate.asset`.
 
 ### 8.4 Railgun
 
@@ -974,7 +1025,9 @@ Design resolution 1920 × 1080.
 - The **periscope** lowers into the board and goes back up.
 - The **time control** has the pause key, the four rate keys and the mission clock.
 - The **console** has a power lamp, the SCALE knob and the grid tint knob.
-- The **alarm strip** shows new contacts and battle space warnings, only when there is one.
+- The **alarm strip** shows one line, only when there is one. First a battle space warning, then
+  what just hit us, then enemy fire in flight (INCOMING MISSILES), then the mission's line
+  (REINFORCEMENTS INBOUND, JUMP POINT), then a new contact.
 - The **signal box**, in the frame's top-right, shows our signal.
 
 > **Rule 11.1.a** The plot is the subject. Everything else comes second.
@@ -989,7 +1042,8 @@ The plot is a grid. Its tint is white or amber, set with the console's tint knob
 - Zoom: drag the SCALE knob (×10 per 160 px) or turn the mouse wheel (×1.12 per notch). Zoom is
   rounded to 0.01. Zoom 1 is the closest. Zooming out stops at 0.35, or sooner, where the battle
   space's left and right edges reach the plot's sides (owner, 2026-10-25).
-- Pan: drag the grid, or use the arrow keys. `C` centres the plot on our ship again.
+- The plot follows our ship as it moves (owner, 2026-10-29). Pan it, by dragging the grid or with
+  the arrow keys, and it stops following. `C` centres it on our ship and follows again.
 - The numbers on the top and left edges measure from our ship: 0 level with it, then 5,000,
   10,000 km and on. They move with the ship (owner, 2026-10-26).
 
@@ -1022,8 +1076,13 @@ The tool rail: CURSOR, POINT, RULER, COMPASS and ERASE (§18). The systems rail:
 | Enemy missiles | A red dot with a short trail |
 | A ship our marines secured | A dot |
 | DRADIS | The hearing circle and the sweep; with ACTIVE on, the scan cone |
+| Visual range | A thin ring round our ship, always on. Inside it you see ships with your eyes (§9.3) |
 | Fire control | The selected mount's reach as a dashed ring while the drawer is out; each PDC group on AUTO as a dashed sector |
 | Marks | POINT, RULER and COMPASS (§18) |
+| Jump point | Once the target is down: a green ring, the size of the distance that counts as there, with JUMP POINT beside it (§15.2) |
+
+> **Rule 11.4.b** Clicking a contact's label or a bearing label on the plot does nothing (owner,
+> 2026-10-29). The periscope picks the target (§20).
 
 ### 11.5 Colour
 
@@ -1044,8 +1103,12 @@ The board's colours are in one file, `Assets/UI/Board/Palette.asset`.
 ### 11.6 Periscope
 
 The periscope looks along one bearing. Lower it to use it. Drag across it to slew it. Turn MAG to
-zoom, from 1× to 8×. Press SLEW to swing it onto the target. Press CLASS to classify what is in the
-sight (§9.3).
+zoom, from 1× to 8×. Press SLEW TO to swing it onto a hand-dialled or plotted solution's bearing,
+or else onto the target. Press CLASS to classify what is in the sight (§9.3). It stays down until
+you raise it (owner, 2026-10-29).
+
+The periscope picks the target. TRACK on a scanned enemy under the periscope, within 4°, makes it
+fire control's target (§20).
 
 Its bearing matters to fire control. BEARING, the third rocker of the arming ladder, needs the
 periscope within 4° of the target (§20).
@@ -1100,6 +1163,9 @@ Six starfighters. Their orders are DESTROY, DISABLE and ESCORT. Only craft marke
   1 integrity off the room behind it.
 - DISABLE always attacks the stern, and so the engine room.
 - ESCORT stays with our ship.
+- Fighters scout. Any ship or ruin within visual range of a flight shows on our plot while they are
+  near (Step 101).
+- Enemy ships hear our fighters, and go to look (§5.3).
 
 ### 12.2 Assault boats — marines
 
@@ -1177,6 +1243,9 @@ damage. The full rules are in `Assets/Scenes/Tactical/DAMAGE_README.md`.
 | AFT | 50 | ENG, the engine room |
 | PORT | 100 | RCT, the reactor |
 
+These are our ship's. The Garuda's armour is 150, 150, 75 and 150. A Naga frigate's is 50, 50, 25
+and 50. Each ship's armour is in its stats file, under damage.
+
 The bridge (BRI) and habitation (HAB) are inboard. No hit reaches them directly.
 
 ```
@@ -1196,7 +1265,8 @@ side hit = the side facing the direction the shot came from
 
 ### 13.3 Compartments
 
-Six rooms per ship, 52 crew in all.
+Six rooms per ship, 52 crew in all. The crew in each room is a number in each ship's stats file,
+under damage (owner, 2026-10-29). The table gives the starting numbers, the same for every ship.
 
 | Room | Crew | What damage does |
 |---|---|---|
@@ -1244,7 +1314,10 @@ there.
 
 ### 13.6 Damage control
 
-Engineering acts on one selected room. Its rockers cost no charge:
+Engineering acts on one selected room. REPAIR, SEAL and VENT cost AUX charge, the same as at the
+orders station: 30, 25 and 15 (owner, 2026-10-29). REBOOT and RECALL are free. With too little
+charge, the rocker is refused and engineering's note reads `INSUFFICIENT AUX — 30% REQUIRED`. The
+room's own reason, from the table below, shows first.
 
 | Rocker | What it does | Refused when |
 |---|---|---|
@@ -1254,7 +1327,7 @@ Engineering acts on one selected room. Its rockers cost no charge:
 | VENT | Dumps the room's air. Any fire goes out. The crew and any party in the room die | The room is already vented |
 | RECALL | Calls the party back | No party is out |
 
-The orders station gives PARTY, SEAL and VENT for AUX charge (§6).
+The orders station gives PARTY, SEAL and VENT for the same AUX charge, under the same rules (§6).
 
 ---
 
@@ -1275,14 +1348,16 @@ The orders station gives PARTY, SEAL and VENT for AUX charge (§6).
 > BATTLE SPACE. Outside, it reads EXITING THE BATTLE SPACE — TURN BACK and counts down the seconds
 > left. Crossing out drops the rate to x1 and plays the alert tone.
 
-> **Rule 14.b** A lost ship goes dark. Its power is out for good. There is no defeat screen yet.
+> **Rule 14.b** A lost ship goes dark. Its power is out for good. The end screen reads SHIP LOST
+> (§15.2).
 
 ---
 
 ## 15 · Mission
 
-**Built so far:** the first mission's win and loss (§15.2, Step 85) and the level's ruins (§15.3). The
-rest of this section is the full design, not built yet.
+**Built so far:** one mission, Wolf Hunt: the hunt, the win, the loss and the jump point (§15.2,
+Steps 85 to 99), and the level's ruins (§15.3). The rest of this section is the full design, not
+built yet.
 
 **What it is.** One handcrafted region of space, one Traitor Lord's flagship hidden in it, one way
 out.
@@ -1312,13 +1387,17 @@ Three stages, run in the background with no popups and no quest journal:
 
 > **Rule 15.2.c** There are no cutscenes. You reach the edge and disappear.
 
-**Built now (Step 85).** The first mission ends at the kill (`FTUE_PLAN.md` §1, owner 2026-10-18).
-Rule 15.2.a, the escape, comes later.
+**Built now: Wolf Hunt (Steps 85 and 98, owner 2026-10-27).** Rule 15.2.a is built. The FTUE
+plan's "ends at the kill" (`FTUE_PLAN.md` §1) is replaced.
 
-- You win when the Garuda is destroyed, or when our marines take it (SECURE).
+- Locate target ends when our sensors identify the Garuda.
+- When the Garuda is destroyed, or our marines take it (SECURE), a jump point opens. It is in the
+  middle of the battle space's edge farthest from our ship, a little way in. The alarm strip gives its
+  bearing and distance, and the alert tone plays. The plot shows it as a green ring (§11.4).
+- You win when our ship reaches the jump point: MISSION COMPLETE, `GARUDA DESTROYED · JUMPED OUT`.
 - You lose when our reactor reaches 0, or when our ship stays outside the battle space until its
   countdown ends.
-- Locate target ends when our sensors identify the Garuda.
+- The reinforcements keep coming while you run for it (§5.4).
 - When the mission ends, the game pauses. 2 s later the end screen covers the board: MISSION
   COMPLETE or SHIP LOST, the reason, then the target, our ship and the time taken.
 - RESTART MISSION plays the level again, from the board. MAIN MENU goes back to the intro.
@@ -1330,10 +1409,11 @@ Rule 15.2.a, the escape, comes later.
 > shattered moon, a dead fleet's wreckage, a broken starbase. These are functional: they change
 > DRADIS returns, scan noise and where you can move.
 
-Built so far: each level is its own scene, loaded on top of the board. `Level_01` has a starbase
-husk at the centre and a debris belt, thicker toward the centre. Our ship starts at the bottom
-facing north; the Garuda starts at the top facing south, 90,000 km away. The ruins do not yet stop
-ships, shots or sensors.
+Built so far: each level is its own scene, loaded on top of the board. `Level_01` has a few small
+debris fields; its starbase husk was taken out in Step 107. Our ship starts at the bottom facing
+north. The Garuda starts at a random point in its spawn box at the top, facing a random way, every
+game (Step 95), 90,000 km away. The ruins do not stop ships, shots or sensors, but flying into one
+damages our ship (§4.5).
 
 You arrive with **old, unverified Imperial records** marking a few landmarks — a listening post, an
 abandoned dock, a comms tower. They must be scanned or approached to confirm.
@@ -1345,6 +1425,9 @@ abandoned dock, a comms tower. They must be scanned or approached to confirm.
 > *where it is and how it is guarded* is the puzzle.
 
 ### 15.4 Loadouts
+
+**Not built yet.** These are the prototype's loadouts, in its own numbers. The board's sweep time
+and weapons are different (§8, §9.1).
 
 | Loadout | railgun | missile | hull/side | sensors | DRADIS sweep | aux start |
 |---|---|---|---|---|---|---|
@@ -1379,21 +1462,22 @@ faithfully.
 
 **Not built yet**
 
-1. **The escape** (§15.2). The first mission ends at the kill (Step 85). The jump point and the
-   escape are not built.
+1. **The mission flow** (§15.1). The Traitor card, the pre-launch sequence, hyperspace and credits.
+   Wolf Hunt is built (§15.2).
 2. **The combat autopilot** (§4.6). TAIL is not defined. TARGET LOST is only proposed.
-3. **Being seen** (§5). The signal is built. Nothing in the enemy hears it.
-4. **The enemy's mind.** The Garuda patrols a loop at 5.5 km/s. When hit, it fires two HE missiles
-   back if we are within 35,000 km, at most once every 120 game seconds. Hearing and hunting are not
-   built. Its settings are on its `EnemyBrain` in the board scene.
-5. **Picking a target** (§20). Fire control's target is always the Garuda, the one enemy.
+3. **The disguise** (§5.1, §5.2). The enemy hears our signal (§5.3), but there is no false ID and no
+   gas cloud or debris cover.
+4. **The enemy's mind, what is left.** It never retreats. It does not use engineering, comms or the
+   hangar.
+5. **Picking a target** (§20). Built: the periscope picks it, with TRACK. Fire control has no
+   other way to pick one.
 6. **Undrawn controls** (§8). The PDC quadrant keys, LOADERS, the warhead selector and the salvo
    knob are not drawn on Fire Control.
 7. **Stability** (§4.4). It is shown, but nothing uses it.
-8. **Terrain** (§4.5, §8.2). Ships and shots pass through ruins and debris.
+8. **Terrain** (§4.5, §8.2). Ships and shots pass through ruins and debris. Only our ship takes
+   damage flying into one.
 9. **What comms gives you** (§10). A read message changes nothing.
 10. **Reflex numbers** (§7): `E_floor`, `reflexSpeedMax`, `staleTrackTimeout`.
-11. **The dry trigger pull** (§5.4.a). Whether it should raise the alert.
 
 ## 18 · Plotting tools and the firing solution
 
@@ -1403,8 +1487,9 @@ The tool rail has five tools (§11.3). They draw on the plot and change nothing 
 solution they help you build.
 
 **How it plays.** You work the target out yourself. Lay bearing lines, drop POINTs, wait, drop
-more, and run a RULER between them to read the target's course and speed. Then dial the solution in
-by hand. Once an active scan has identified the target, TRACK does it for you.
+more, and run a RULER between them to read the target's course and speed. Press TRACK and it takes
+the solution from your plot. Then fine-tune it by hand. Once an active scan has identified the
+target, TRACK takes the solution from the sensor lock instead.
 
 **How it's built.** Marks are stored in world kilometres. Each POINT has a mission-time stamp.
 Exactly one tool is active. A RULER from one POINT to another, placed at different times, is a
@@ -1431,7 +1516,7 @@ These are three different numbers and the player needs all three:
 Angle on bow is the one that tells you how much to lead. A target coming straight at you needs
 almost no lead. A target crossing your line of sight needs a lot.
 
-The board shows bearing on RULER and COMPASS. Fire control's BRG is a relative bearing. Angle on bow
+The board shows bearing on COMPASS. Fire control's BRG is a relative bearing. Angle on bow
 is not shown yet.
 
 ### 18.2 The tools
@@ -1446,8 +1531,8 @@ time.
 
 #### RULER
 
-Drag from one spot to another. It shows `RNG` (distance), `BRG` (bearing), and the time to cover
-that distance at our current speed.
+Drag from one spot to another. It shows the distance only, such as `12,400 km` (owner,
+2026-10-27).
 
 A RULER end snaps to a POINT nearby. A RULER from one POINT to another, placed at different times,
 is a **track**. It shows the target's course and speed instead, such as `CRS 210° · 5.50 km/s`. A
@@ -1458,8 +1543,9 @@ dashed line shows where the target will be 300 game seconds on.
 
 #### COMPASS
 
-Drag out from our ship. It draws a ring round our ship and shows the ring's `RNG` and `BRG`. The
-ring moves with our ship.
+Drag out from our ship. It draws a ring round our ship and shows its distance and bearing, such as
+`8,000 km · BRG 045°`. The ring moves with our ship. It is marked like a compass: a tick every 10°,
+and a longer tick every 30° with its number, 000 at the top (Step 100).
 
 > **Rule 18.2.c** The compass measures around our ship (owner, 2026-10-17).
 
@@ -1479,12 +1565,19 @@ bearing trail's lines cross at the contact.
 the contact later. Run a RULER from the first POINT to the second. It reads the course and speed
 (§18.2).
 
-**3 · Dial the solution.** Turn a solution knob on Fire Control: RNG (100 km a step), BRG (1° a
-step) or SPD (0.25 km/s a step). The first turn starts a hand-dialled solution at 10,000 km, on the
-periscope's bearing, at speed 0. The latest track gives it a course and speed.
+**3 · Press TRACK.** TRACK needs the bridge (§13.3). It fills the solution from the first of these
+it finds (owner, 2026-10-29):
 
-**4 · Or press TRACK.** Once an active scan has identified the target, TRACK fills the solution
-from the sensor lock: its true range, bearing, course and speed. TRACK needs the bridge (§13.3).
+- A scanned enemy under the periscope, within 4°. That ship becomes fire control's target.
+- The target, if an active scan has identified it.
+- Your plot. The newest POINT is where the target was. The newest POINT-to-POINT RULER gives its
+  course and speed. TRACK works out where it is now. Fire control's ID reads PLOT.
+
+From a scan, the solution is the target's true range, bearing, course and speed.
+
+**4 · Fine-tune it by hand.** Turn a solution knob on Fire Control: RNG (100 km a step), BRG (1° a
+step) or SPD (0.25 km/s a step). With no solution yet, the first turn starts a hand-dialled solution
+at 10,000 km, on the periscope's bearing, at speed 0. The latest track gives it a course and speed.
 
 **5 · Check the arc.** If the solution's bearing is outside the mount's arc, ANGLE will not throw.
 Turn the ship.
@@ -1494,12 +1587,13 @@ Turn the ship.
 > **Rule 18.3.a** A solution with a course is led. The shot is aimed where the target will be when
 > the slug arrives.
 
-> **Rule 18.3.b** A hand-dialled solution aims at a point in space. It needs no identified target.
-> Missiles still need one (§8.5).
+> **Rule 18.3.b** A hand-dialled or plotted solution aims at a point in space. It needs no
+> identified target. Missiles still need one (§8.5).
 
 ### 18.4 The targeting computer
 
 **Not built yet.** Today TRACK gives an exact solution from the sensor lock, with no error cone.
+From the plot, it is as good as your POINTs and RULER.
 
 You are a starship. The computer predicts. What it cannot do is predict from information you have
 not gathered.
@@ -1599,7 +1693,8 @@ drawer closes. Each panel is a prefab (`Assets/UI/Board/README.md`).
 | Slide time | 0.42 s |
 | Easing | `cubic-bezier(.2, .85, .25, 1)` — fast out, settles slowly |
 | Fade | 0.3 s |
-| Closes on | Its rail key again, or its latch |
+| Closes on | Its rail key again, its number key again, or its latch |
+| Number keys | 1 Fire Control, 2 Sensors, 3 Power, 4 Hangar, 5 Engineering, 6 Comms. Change them in **Starwolf → Keys** |
 
 > **Rule 19.1.d** **One drawer at a time.** Opening a second closes the first.
 
@@ -1652,7 +1747,7 @@ Some things are too important to hide behind a click.
 | Mission clock, paused or running, the rate | The time control |
 | Heading, turn, throttle, G load, autopilot state | The helm's header |
 | Alert condition | The orders station's header |
-| New contacts and battle space warnings, when there are any | The alarm strip |
+| Battle space warnings, hits on us, incoming fire, the mission's line and new contacts, when there are any (§11.1) | The alarm strip |
 | DRADIS hearing circle and sweep, while DRADIS is on | Plot |
 | The scan cone, while ACTIVE is on | Plot |
 | PDC arcs, while a group is on AUTO | Plot |
@@ -1667,14 +1762,16 @@ Some things are too important to hide behind a click.
 **What it is.** The Fire Control drawer: pick a weapon, set a firing solution, arm and fire. The
 whole job is in one drawer, since only one drawer can be out at a time (§19.1.d).
 
-**How it plays.** You pick a weapon and a mount. You set a solution by hand from your plot, or with
-TRACK once the target is identified. You throw the arming ladder one rocker at a time. A locked
-rocker tells you why it is locked. Then you pull the lever.
+**How it plays.** You pick a weapon and a mount. You press TRACK to take a solution from your plot,
+or from the sensor lock once the target is identified, and fine-tune it by hand. You throw the
+arming ladder one rocker at a time. A locked rocker tells you why it is locked. Then you pull the
+lever.
 
 **How it's built.** Fire control has a system (RAILGUN, PDC or MISSILE), a mount, one solution per
 system, the four-rocker arming ladder, the capacitor and the fire lever. All of it stays when the
-drawer closes. Fire control's target is the Garuda, the one enemy. There is no way to pick another
-target yet.
+drawer closes. Fire control's target starts as the Garuda. TRACK on a scanned enemy under the
+periscope makes that ship the target, and clears the ladder and every solution (owner, 2026-10-29).
+Clicking a ship on the plot does nothing (§11.4.b).
 
 > **Rule 20.a** PDCs use no solution and no lever. Their ladder puts them on AUTO (§8.6).
 
@@ -1698,12 +1795,13 @@ much.
 
 | Control | Shows |
 |---|---|
-| TRACK key | Fills the solution from the sensor lock |
-| Track ID | `TK-048-T07` from a lock, `MANUAL` when dialled by hand, or `NO TRACK` |
-| Source | FROM SENSOR LOCK, DIALLED BY HAND, or NOT IDENTIFIED ON SENSORS |
+| TRACK key | Fills the solution from the sensor lock, or else from your plot (§18.3) |
+| Track ID | `TK-048-T07` from a lock, `PLOT` from your plot, `MANUAL` when dialled by hand, or `NO TRACK` |
+| Source | FROM SENSOR LOCK, FROM YOUR PLOT, DIALLED BY HAND, or NOT IDENTIFIED ON SENSORS |
 | RNG, BRG, SPD | The solution, with a knob each (§18.3) |
 
-> **Rule 20.1.a** TRACK needs an identified target and the bridge at integrity 3 or more.
+> **Rule 20.1.a** TRACK needs the bridge at integrity 3 or more. It also needs an identified target,
+> or a POINT on the plot.
 
 #### 03 Capacitor
 
@@ -1764,12 +1862,15 @@ Per §19.2.a, everything here draws on the plot too.
 | System or mount changed | The ladder |
 | Warhead changed | The ladder |
 | Solution changed by TRACK or a knob | The ladder |
+| A new target, from TRACK | The ladder and every solution |
 | Shot fired | ARM only. The solution stays |
 | Last round gone | The ladder |
-| The ship turns out of arc | Nothing |
+| LOAD's needs fail: WEP units, the magazine, CONDITION, rounds | The ladder, on the next board step |
+| The ship turns out of arc | ANGLE and every rocker after it, on the next board step |
 
-> **Rule 20.3.b** Turning the ship after ANGLE is thrown does not release it. You can turn away,
-> turn back, and still be loaded.
+> **Rule 20.3.b** A thrown rocker whose need fails drops on the next board step, with every rocker
+> after it (Step 106). This is true of LOAD and ANGLE. BEARING is not checked again. A moving
+> target drifts off it slowly. The lever checks LOAD and ANGLE once more before it fires.
 
 > **Rule 20.3.c** A solution stays until it is replaced.
 
@@ -1780,8 +1881,8 @@ Per §19.2.a, everything here draws on the plot too.
 > **Rule 20.4.b** The cost is a **threshold**. A loaded weapon uses no units. The charge for each
 > shot comes from the capacitor (§8.4).
 
-> **Rule 20.4.c** Losing WEP units after LOAD does not release the ladder. A shot still needs the
-> capacitor's charge, and with no WEP units the capacitor loses 3 per game second.
+> **Rule 20.4.c** Dropping below 2 WEP units after LOAD releases the whole ladder on the next board
+> step (Rule 20.3.b). With no WEP units the capacitor loses 3 per game second.
 
 > **Rule 20.4.d** Any rocker can be released at any time. Releasing is immediate and free.
 
