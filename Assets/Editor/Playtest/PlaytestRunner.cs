@@ -1100,6 +1100,8 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.weapons.Incoming.Count > 0);
         float salvo1At = board.MissionSeconds;
         Check("Hit, GARUDA fires a salvo of two back at us", s.weapons.Incoming.Count == 2 && dummyShip.weapons.vlsCells == enemyCells - 2, s.weapons.Incoming.Count + " incoming, its cells " + enemyCells + " → " + dummyShip.weapons.vlsCells);
+        yield return 0.5f;
+        Check("The alarm strip warns of them, with their bearing (owner 2026-10-28)", alarmWords.gameObject.activeInHierarchy && alarmWords.text.StartsWith("INCOMING MISSILES · BRG "), "\"" + alarmWords.text + "\"");
         if (!Click("rate", "10", "x10 rate key")) yield break;
         yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0 || System.Math.Sqrt((s.weapons.Incoming[0].x - s.nav.x) * (s.weapons.Incoming[0].x - s.nav.x) + (s.weapons.Incoming[0].y - s.nav.y) * (s.weapons.Incoming[0].y - s.nav.y)) < 4600);
         Shot("28e_incoming_pdc_arc");

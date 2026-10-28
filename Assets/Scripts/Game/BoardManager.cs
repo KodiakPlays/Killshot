@@ -148,6 +148,9 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private GameObject[] alarmParts;
     [Tooltip("The strip's count (\"3\") and its words (\"NEW CONTACTS SINCE COMMIT\").")]
     [SerializeField] private TMP_Text alarmCount, alarmText;
+    [Tooltip("Owner 2026-10-28 (the Wolf Hunt play-through): what just hit us (a slug, a missile, debris) stays on the "
+           + "strip this long, real seconds.")]
+    [SerializeField] private float hitLineSeconds = 4f;
 
     [Header("Sound — the prototype's click cues (audioCue tab, power, auxfail)")]
     [Tune("Sound")] [SerializeField] private Tone tabSound = new Tone(560f, 0.035f, 0.018f, false);
@@ -267,7 +270,7 @@ public class BoardManager : MonoBehaviour
             if (state.kills != killsHeard) { killsHeard = state.kills; Play(killSound, "kill"); }
             else Play(state.weapons.lastShotHit ? hitSound : missSound, state.weapons.lastShotHit ? "hit" : "miss");
         }
-        if (state.weapons.hitsTaken != hitsTakenHeard) { hitsTakenHeard = state.weapons.hitsTaken; Play(alertSound, "alert"); } // Step 55: an enemy missile hit us
+        if (state.weapons.hitsTaken != hitsTakenHeard) { hitsTakenHeard = state.weapons.hitsTaken; Struck(state.weapons.incomingReport); } // Step 55: an enemy missile or slug hit us
         if (state.hangar.boatWarnings != boatWarningsHeard) { boatWarningsHeard = state.hangar.boatWarnings; Play(alertSound, "alert"); } // owner 2026-10-27: boats stranded, or lost
         Eased.TickAll(); // control transitions (Step 33j)
         // setInterval drops ticks it missed during a stall; do the same rather than bursting
@@ -290,6 +293,9 @@ public class BoardManager : MonoBehaviour
                 bool nearEdge = state.NearArenaEdge || state.outsideFor >= 0f;
                 if (nearEdge && !edgeWarned) Play(alertSound, "alert");
                 edgeWarned = nearEdge;
+                bool incoming = state.weapons.Incoming.Count > 0; // enemy fire in flight: the tone once as it starts
+                if (incoming && !incomingWarned) Play(alertSound, "alert");
+                incomingWarned = incoming;
                 ShowAlarm();
                 state.weapons.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
                 state.hangar.TickFlights(rate); // Step 54: fighters fly, attack, come home
@@ -431,18 +437,45 @@ public class BoardManager : MonoBehaviour
     /// <summary>The alert tone, and the strip redrawn now (QuestSystem: the mission changed).</summary>
     public void Alert() { ShowAlarm(); Play(alertSound, "alert"); }
 
+    /// <summary>Something hit us (WeaponSystem's report, or TacticalWorld's debris): the tone, and the line on the strip
+    /// for <see cref="hitLineSeconds"/>.</summary>
+    public void Struck(string line) { hitLine = line; hitLineUntil = Time.unscaledTime + hitLineSeconds; Alert(); }
+    private string hitLine;
+    private float hitLineUntil;
+    private bool incomingWarned;
+
+    // Order: the battle space's edge, what just hit us, enemy fire in flight, the mission, new contacts.
     void ShowAlarm()
     {
         // Step 65: the battle space's warnings take the strip over; its count shows the seconds left
         string edge = state.deserted ? "SHIP LOST — LEFT THE BATTLE SPACE"
                     : state.outsideFor >= 0f ? "EXITING THE BATTLE SPACE — TURN BACK"
                     : state.NearArenaEdge ? "APPROACHING THE EDGE OF THE BATTLE SPACE" : null;
-        bool on = edge != null || missionAlarm != null || state.sensors.newContacts > 0;
+        string hit = hitLine != null && Time.unscaledTime < hitLineUntil ? hitLine : null;
+        var inc = state.weapons.Incoming;
+        string incoming = inc.Count == 0 ? null
+            : (inc.TrueForAll(r => r.missile) ? (inc.Count == 1 ? "INCOMING MISSILE" : "INCOMING MISSILES") : "INCOMING FIRE") + " · BRG " + IncomingBearing();
+        bool on = edge != null || hit != null || incoming != null || missionAlarm != null || state.sensors.newContacts > 0;
         foreach (var p in alarmParts) if (p && p.activeSelf != on) p.SetActive(on);
         if (!on) return;
         if (alarmCount) alarmCount.text = edge != null ? (state.outsideFor >= 0f && !state.deserted ? Mathf.CeilToInt(state.arenaReturnSeconds - state.outsideFor).ToString() : "!")
+            : hit != null ? "!" : incoming != null ? inc.Count.ToString()
             : missionAlarm != null ? missionCount ?? "!" : state.sensors.newContacts.ToString();
-        if (alarmText) alarmText.text = edge ?? missionAlarm ?? (state.sensors.newContacts == 1 ? "NEW CONTACT SINCE COMMIT" : "NEW CONTACTS SINCE COMMIT");
+        if (alarmText) alarmText.text = edge ?? hit ?? incoming ?? missionAlarm ?? (state.sensors.newContacts == 1 ? "NEW CONTACT SINCE COMMIT" : "NEW CONTACTS SINCE COMMIT");
+    }
+
+    // The bearing from our ship to the nearest enemy round, "000".
+    string IncomingBearing()
+    {
+        WeaponSystem.Round near = null;
+        double best = double.MaxValue;
+        foreach (var r in state.weapons.Incoming)
+        {
+            double d = (r.x - state.nav.x) * (r.x - state.nav.x) + (r.y - state.nav.y) * (r.y - state.nav.y);
+            if (d < best) { best = d; near = r; }
+        }
+        double brg = (System.Math.Atan2(near.x - state.nav.x, near.y - state.nav.y) * 180 / System.Math.PI + 360) % 360;
+        return (ShipState.JsRound(brg) % 360).ToString("000");
     }
 
     // ---- systems rail --------------------------------------------------------------------

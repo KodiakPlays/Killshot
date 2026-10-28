@@ -128,6 +128,7 @@ public class TacticalWorld : MonoBehaviour
             string side = ShipState.SideAt(Bearing(p.at - new Vector2((float)s.nav.x, (float)s.nav.y)), s.nav.heading);
             collisionReport = "COLLISION ·" + s.damage.TakeCollision(side); // " PROW ARMOUR 75%"
             collisions++;
+            board.Struck(collisionReport); // owner 2026-10-28: running into debris must not go unnoticed
         }
     }
 
@@ -175,6 +176,12 @@ public class TacticalWorld : MonoBehaviour
     public bool AnyAlert
     {
         get { foreach (var b in brains) if (b && b.enabled && b.hunts && b.Level == EnemyBrain.Awareness.Alert) return true; return false; }
+    }
+
+    /// <summary>Enemy ships, still alive, that hear or see our ship now: our sensors' "n HOSTILE SETS HAVE YOUR RANGE".</summary>
+    public int HearingUs
+    {
+        get { int n = 0; for (int i = 0; i < brains.Length; i++) if (brains[i] && brains[i].enabled && brains[i].HearsUs && !contacts[i].Ship.destroyed) n++; return n; }
     }
 
     /// <summary>Wolf Hunt (Step 99): a ship arrives during play. A copy of the switched-off template, with its own

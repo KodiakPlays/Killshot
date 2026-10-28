@@ -54,7 +54,8 @@ public class SensorSystem : MonoBehaviour
         public float signalFall = 6f;
         [Tooltip("Signal ACTIVE SCAN adds while it is on. Default 35 (reference sim: a scan is worth 3.5 units).")]
         public float activeScanSignal = 35f;
-        [Tooltip("Own emissions at or above this mean hostile sets have your range (sigNote, blink).")]
+        [Tooltip("At or above this our signal shows red and the alert tone sounds once. Whether an enemy hears us is its own "
+               + "brain's call (EnemyBrain.HearsUs, owner 2026-10-28).")]
         public float signalTrackedAt = 45f;
         [Tooltip("A bearing line fades out over this much mission time (owner 2026-10-23: 2 minutes).")]
         public float bearingTrailSeconds = 120f;
@@ -82,15 +83,6 @@ public class SensorSystem : MonoBehaviour
         float range = band == "UV" ? SenRangeKm * stats.uvRangeFactor : SenRangeKm;
         int n = 0;
         foreach (var t in ship.tracks) if (!t.own && System.Array.IndexOf(t.sig, band) >= 0 && t.rangeKm <= range) n++;
-        return n;
-    }
-
-    /// <summary>trackers: hostile sets that have your range once emissions reach the threshold.</summary>
-    public int Trackers()
-    {
-        if (signal < stats.signalTrackedAt) return 0;
-        int n = 0;
-        foreach (var t in ship.tracks) if (!t.own && t.hostile) n++;
         return n;
     }
 

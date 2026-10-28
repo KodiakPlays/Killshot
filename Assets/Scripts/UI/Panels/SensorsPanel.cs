@@ -172,6 +172,7 @@ public class SensorsPanel : Panel
         if (glow) { if (sigGlowBase < 0f) sigGlowBase = glow.color.a; var g = glow.color; g.a = sigGlowBase * (lit ? 1f : blinkLowAlpha); glow.color = g; }
     }
 
+    TacticalWorld world;
     void ShowSignal(TMP_Text pctText, TMP_Text note, Image[] cells, Image lamp, Image glow)
     {
         var s = State;
@@ -190,9 +191,11 @@ public class SensorsPanel : Panel
         Show(glow, s.sensors.signal > 0);
         if (note)
         {
-            int n = s.sensors.Trackers();
-            note.text = s.sensors.signal >= s.sensors.stats.signalTrackedAt
-                ? n + " HOSTILE " + (n == 1 ? "SET HAS" : "SETS HAVE") + " YOUR RANGE"
+            // owner 2026-10-28 (the play-through): only enemy ships that really hear us. It said 1 with the Garuda 88,000 km off.
+            if (!world) world = FindAnyObjectByType<TacticalWorld>();
+            int n = world ? world.HearingUs : 0;
+            note.text = n > 0 ? n + " HOSTILE " + (n == 1 ? "SET HAS" : "SETS HAVE") + " YOUR RANGE"
+                : s.sensors.signal >= s.sensors.stats.signalTrackedAt ? "NO HOSTILE SET HAS YOUR RANGE"
                 : s.sensors.signal <= 0 ? "RUNNING SILENT"
                 : s.sensors.signal > s.sensors.SignalTarget ? "EMISSIONS DECAYING — NOT YET RESOLVED"
                 : "POWER SIGNATURE — NOT YET RESOLVED"; // stand-in: the design has no line for power-driven signal below the line (Step 35)

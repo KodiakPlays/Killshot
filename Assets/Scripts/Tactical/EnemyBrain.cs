@@ -69,6 +69,8 @@ public class EnemyBrain : MonoBehaviour
 
     /// <summary>How aware it is of us. It never goes down.</summary>
     public Awareness Level { get; private set; }
+    /// <summary>Its last thought heard or saw our ship (not our fighters): our sensors' "HOSTILE SET HAS YOUR RANGE".</summary>
+    public bool HearsUs { get; private set; }
     /// <summary>Where it is heading now, world km.</summary>
     public Vector2 Waypoint => waypoint;
     /// <summary>Where it last heard or saw us (or our fighters), world km; and when, game seconds.</summary>
@@ -100,6 +102,7 @@ public class EnemyBrain : MonoBehaviour
         bool hit = health >= 0f && hp < health;
         health = hp;
 
+        HearsUs = false;
         if (hunts && !us.destroyed) Listen(ship, us, at, ours, dist, now, hit);
         bool fix = Level == Awareness.Alert && HasFix(now);
 
@@ -136,20 +139,19 @@ public class EnemyBrain : MonoBehaviour
         {
             Raise(Awareness.Alert);
             Heard(ours, now, true);
+            HearsUs = true;
             return;
         }
         float clear = Clarity(dist, reach * us.sensors.signal / 100f);
+        HearsUs = clear > 0f;
+        if (hit) Raise(Awareness.Alert); // hit, it is alert whether it heard us or not (the play-through: a faint hearing kept it UNEASY)
         if (clear > 0f)
         {
             bool twice = now - lastHeardAt > 20f && now - lastHeardAt <= 60f; // heard, lost, then heard again
             Raise(clear >= alertAt ? Awareness.Alert : clear >= searchingAt || twice ? Awareness.Searching : Awareness.Uneasy);
             Heard(ours + Off(ship, dist * (1f - clear) * 0.25f), now, Level == Awareness.Alert);
         }
-        else if (hit)
-        {
-            Raise(Awareness.Alert);
-            Heard(ours + Off(ship, dist * 0.15f), now, false); // it knows the way the shot came, not the range
-        }
+        else if (hit) Heard(ours + Off(ship, dist * 0.15f), now, false); // it knows the way the shot came, not the range
         foreach (var f in us.hangar.Flights)
         {
             var p = new Vector2((float)f.x, (float)f.y);

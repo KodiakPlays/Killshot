@@ -155,8 +155,10 @@ Do not run ahead. Do one step, show it, wait.
 | 100 | Ruler: distance only, larger text; compass: graded 0–359 ring with the bearing; the jump point on the plot | **Done** — screenshot; playtest 210/210 |
 | 101 | Fighters scout: ships and ruins near them show on our plot | **Done** — playtest 210/210 |
 | 103 | The Mac app of Wolf Hunt | **Built** — `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`; the owner's play-through is next |
+| 104 | TextMesh Pro's example files deleted (owner's yes); its missing shader file `TMPro.cginc` put back: the 3 build errors are gone | **Done** — the shaders compile clean |
+| 105 | A real play-through of Wolf Hunt in the Editor, and four fixes: a hit puts the Garuda on ALERT; "HOSTILE SET HAS YOUR RANGE" tells the truth; the alarm strip shows enemy fire coming and what just hit us, debris too | **Done** — checked in play mode; playtest 211/211 |
 
-Steps 6 to 28 and Steps 34 to 101 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 105 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -4066,6 +4068,85 @@ The Garuda's file is `Assets/Ships/Garuda.asset`; the frigate's is the new `Asse
 - The compass grades in our marks' blue; numbers only when the ring is over 40 px.
 - The nav wheel art was not used for the compass: the ring is drawn, so it scales with the zoom.
 
+### Step 104 — TextMesh Pro's examples deleted; its shader file put back
+
+The owner said yes to deleting `Assets/TextMesh Pro/Examples & Extras` (2026-10-28). One example font was
+in use, by Soham's old `TestScene` and `Prefabs/UI.prefab`: Electronic Highway Sign. It moved, with its
+links kept, to `Assets/UI/Fonts/ElectronicHighwaySign`.
+
+The 3 build errors were not the examples. They came from TextMesh Pro's own shaders, which need
+`Assets/TextMesh Pro/Shaders/TMPro.cginc`, deleted in February in b47111e ("Removed old project from main").
+It is back, taken from the TextMesh Pro package that comes with this Unity. The board's fonts use the Mobile
+shader, which did not need it, so the board looked the same before.
+
+### Step 105 — Playing Wolf Hunt for real, and four fixes
+
+The owner asked (2026-10-28): did anyone actually play it, and do the systems work together as a flow? Until
+now, no: the playtest checks every control, but with the Garuda's hunting switched off and our ship moved
+by hand. So killshot-81 played a game in the Editor through the board's own switches (clicks and drags
+sent through the EventSystem, as the playtest does). Only two stand-ins: the A key (called as the key
+calls it) and, once, the scroll wheel's zoom.
+
+**What happened.**
+
+1. Power: ENG and SEN on DRAW, throttle up, DRADIS gain 5 (30,000 km). Signal 100%.
+2. Flew north for about 7.5 real minutes at x10. The Garuda drifted toward us.
+3. Heard it at 29,900 km, bearing 336: the alarm strip, the contact board and the bearing line all came
+   up. It had not heard us.
+4. It heard us faintly at 20,700 km (UNEASY), and came our way.
+5. Cut ENG to give WEP the power. The ship stopped dead. Signal stayed 100% (WEP drew what ENG gave back).
+6. CONDITION 2, ACTIVE SCAN, the cone dial onto 321: identified. TRACK, turret B, the ladder. BEARING
+   refused until the periscope was on it; clicking its label on the plot did that. Fired at 16,000 km:
+   **HIT · GARUDA · PROW ARMOUR 67%.** This all worked, and felt good.
+7. It fired two missiles back. Both point-defence groups on AUTO fired nothing: the missiles came from
+   our front-left, which neither group covers. Both hit: our magazine down to 2, on fire.
+8. Engineering: VENT put the fire out; the repair party's first trip only brought the air back.
+9. At 12,200 km it went ALERT: REINFORCEMENTS INBOUND 3:00 came up. It fired a slug every 15 game
+   seconds and hit every time (we were stopped). The second slug wrecked the magazine: we could not
+   fire again. The breach let the vacuum spread through every room; the crew began to die, the reactor
+   fell to 2 units, and DRADIS went deaf. The fight was lost about 70 game seconds after its first hit.
+
+**Fixed (bugs).**
+
+- **A hit did not put the Garuda on ALERT** while it could also hear us faintly: it stayed UNEASY,
+  fired only its hit salvo, and the reinforcements' countdown did not start. Now a hit always means ALERT
+  (`EnemyBrain.Listen`).
+- **"1 HOSTILE SET HAS YOUR RANGE" was false.** It counted every hostile contact once our signal passed
+  45%, even 88,000 km away. Now it counts the enemy ships that really hear or see us
+  (`EnemyBrain.HearsUs`, `TacticalWorld.HearingUs`), at any signal. Loud and unheard, it says
+  NO HOSTILE SET HAS YOUR RANGE. `SensorSystem.Trackers()` is gone.
+- **Nothing showed enemy fire coming.** The alarm strip now shows INCOMING MISSILES · BRG 321 (or
+  INCOMING FIRE when slugs are in it) with the count, and the alert tone sounds once as it starts.
+- **Nothing showed what hit us.** "SLUG HIT · PROW · MAG WRECKED" and Tooling's "COLLISION · PROW ARMOUR
+  75%" were written but never shown. Both now take the strip for 4 real seconds
+  (`BoardManager.Struck`, **Hit Line Seconds**), with the alert tone. Flying through the starbase
+  had cost us half our bow and stern armour, silently.
+
+The strip's order is now: the battle space's edge, what just hit us, enemy fire in flight, the mission's
+line, new contacts. The playtest has one new check: the strip warns of the Garuda's salvo. Playtest
+2026-10-28_081651: 211/211.
+
+**Questions for the owner (not changed).** These are game feel, so they are yours:
+
+1. **The plot does not follow our ship.** At speed it leaves the screen in seconds; you press C again and
+   again. Should the plot follow our ship while under way, until you pan it yourself?
+2. **Bearing lines fade after 2 game minutes.** That is 12 real seconds at x10, and our ship moves only
+   about 1,500 km in that time, so at 20,000 km the lines are nearly parallel and never cross usefully.
+   Make them last longer (say 10 game minutes)?
+3. **The PDCs cover only 140° of 360°**: 7°–77° (front-right) and 165°–235° (back-left). Missiles from
+   ahead or from the left always get through. Keep it (turning to defend is a skill), or widen the arcs?
+   Either way, should the plot show which way to turn?
+4. **Noise is total power drawn.** WEP is as loud as ENG, so you cannot be armed and quiet. Intended?
+5. **Cutting ENG power stops the ship dead.** It doesn't drift. Intended?
+6. **The periscope stays down** over the middle of the plot after you look at a target, hiding our ship.
+   Raise it by itself after a few seconds?
+7. **The first salvo decides the fight.** The magazine sits behind the bow; two hits there (HE at 1.5×)
+   and we can never fire again. A breach then spreads vacuum through every room in under a minute, the
+   reactor crew die and power falls to 2 units. Soften it: slower spread, a sturdier magazine, or the
+   Garuda's hits back to 1×?
+8. **The opening is long:** 88,000 km apart, first contact after about 7.5 real minutes at x10. Start
+   closer, or add x20?
+
 ---
 
 ## 7 · How to keep this log
@@ -4146,13 +4227,14 @@ Mono, 344 MB, from commit ac7bfcf). Checked:
 - A throwaway build that opens straight on the board loaded the board and Level_01 with no errors. One
   harmless warning repeats: the plot's axis numbers ask for TextMeshPro's default font, which is not in
   the app, before the code gives them their own (Share Tech Mono). They show in their own font.
-- Its 3 build errors are TextMeshPro's examples (`Assets/TextMesh Pro/Examples & Extras`), which the game
-  does not use. Deleting them needs the owner's yes.
+- Its 3 build errors were TextMesh Pro's missing `TMPro.cginc`, now put back; the examples are deleted
+  (Step 104, owner's yes).
 - The macOS ARM64 setting is kept in `Library` on this Mac. A Unity restart can put it back to Intel:
   set it again before a build.
 
 **Left:** the owner plays it full screen (a session can't see or click the app), then Step 102: fix what
-is not fun.
+is not fun. Step 105 played it in the Editor first: four bugs fixed, and eight game-feel questions for
+the owner, listed at the end of Step 105 in section 6. The app needs a rebuild to carry Steps 104 and 105.
 
 **Calls made without the owner (can be changed).**
 
@@ -4162,7 +4244,7 @@ is not fun.
   at 0.6 scale. Numbers: top speed 15 km/s, turns 30°/s, armour 50/50/25/50, one railgun (12 slugs,
   18,000 km), no missiles, no PDCs.
 - The Garuda's second PDC group is emptied rather than deleted (the code expects two groups).
-- Its awareness: SEARCHING from 0.35 of its hearing distance, ALERT from 0.7, a fix lasts 30 game s;
+- Its awareness: SEARCHING from 0.25 of its hearing distance, ALERT from 0.5, a fix lasts 30 game s;
   railgun reload 12–17 game s; aim off by up to 0.4°; a missile salvo every 90 game s once ALERT. Our
   fighters are as loud to it as a signal of 60. All on the Board tab of Starwolf → Tuning, under Enemy.
 - The jump point: the middle of the battle space edge farthest from our ship, 5,000 km in; reaching
