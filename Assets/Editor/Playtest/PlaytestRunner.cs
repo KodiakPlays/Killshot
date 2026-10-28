@@ -920,7 +920,17 @@ public static class PlaytestRunner
         Check("Unled, the same shot would have missed", unled > s.weapons.stats.hitRadiusKm, unled.ToString("N0") + " km");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     An active-scan lock: TRACK knows its true course and speed and leads exactly.
-        s.sensors.identified.Add("t07"); // stand-in for an active scan identifying it
+        //     A real active scan (owner 2026-10-29: it was faked here): ACTIVE on, the cone dial onto GARUDA, let go.
+        if (!Click("drawer", "sensors", "SENS key")) yield break;
+        yield return 0.8f;
+        if (!Click("sensors.active", null, "ACTIVE SCAN rocker (on)")) yield break;
+        double coneRad = t07.bearing * System.Math.PI / 180;
+        var conePt = new Vector2(1505f + (float)System.Math.Sin(coneRad) * 40f, 609f - (float)System.Math.Cos(coneRad) * 40f); // the dial's centre, Sensors Panel
+        if (!PlotDrag(board, conePt, conePt, "the cone dial onto GARUDA's bearing", "sensors.cone")) yield break;
+        Check("ACTIVE SCAN on, the cone on its bearing, let go: GARUDA is identified", s.sensors.identified.Contains("t07") && ShipState.AngDiff(s.sensors.coneBrg, t07.bearing) <= 1,
+              "cone " + s.sensors.coneBrg + "°, GARUDA at " + t07.bearing + "°");
+        if (!Click("sensors.active", null, "ACTIVE SCAN rocker (off)")) yield break;
+        if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
         if (!Click("fc.track", null, "TRACK (locked)")) yield break;
         Check("TRACK's solution carries the target's course", s.weapons.Sol.set && !s.weapons.Sol.manual && s.weapons.Sol.hasCourse, "CRS " + s.weapons.Sol.course.ToString("000") + "°, SPD " + s.weapons.Sol.spd.ToString("0.00"));
