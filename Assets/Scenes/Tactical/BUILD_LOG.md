@@ -4769,6 +4769,8 @@ any of them, and no script names them; git keeps them all):
   `package.json` and `package-lock.json` (an unused animation library), and `docs/reference-sim`.
 - On disk only: the old QA folders in `Logs` (`HandoffQA`, `Shots`, `Checks`, `FighterArtTest`), and
   the videos and shots of every playtest run but the newest two. Every `report.md` is kept.
+- Checked after: Unity refreshed and compiled with 0 errors and 0 warnings (Targeting Computer View).
+  Commits cca9051 (the deletions) and fba384c (this log).
 
 **Marked done on 2026-10-29** (these were still listed as open): the Garuda hunts you (Step 97); the
 enemy notices us, P3 (Step 97); hitting debris hurts the ship (Step 93); the battle space per level
