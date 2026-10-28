@@ -29,6 +29,14 @@ public class PeriscopePanel : Panel
     [SerializeField] private TMP_Text targetName;
     [SerializeField] private float bracketHomeX = 887.2f, sightCentreX = 960f, pxPerDeg = 5.2f, maxShift = 150f, visibleDeg = 27f;
 
+    [Header("The ship in the sight (Step 109): the plot's top-down picture of a contact, turned so up is away from us")]
+    [Tooltip("Under the sight's mask, anchored at its centre. Needs the BoardLinearImage material, as the plot's: the line art comes on black, and the material keys the black out.")]
+    [SerializeField] private RawImage shipPicture;
+    [Tooltip("The brackets' size, px: a ship that fits them is this long.")]
+    [SerializeField] private float bracketPx = 42f;
+    [SerializeField] private Color shipInk = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
+    private ShipView[] views;
+
     [Header("Convergence bar (scopeConv), left-anchored")]
     [SerializeField] private RectTransform convBar;
     [SerializeField] private float convLeft = 777f, convWidth = 366f;
@@ -132,6 +140,33 @@ public class PeriscopePanel : Panel
             b.anchoredPosition = new Vector2(bracketX[i] + (x - bracketHomeX), b.anchoredPosition.y);
         }
 
+        // the ship in the sight (Step 109, owner 2026-10-29): the heard contact nearest the sight's centre, where it is,
+        // as big as zoom and range make it. It fills the brackets when CLASS will work. Seen from above, always level
+        // (owner 2026-10-29): bow to the right if it heads to our right, else to the left.
+        if (shipPicture)
+        {
+            ShipView view = null; ShipState.Track seen = null; double seenOff = 0;
+            if (down)
+                foreach (var t in s.tracks)
+                {
+                    double o = ((t.bearing - s.scopeBrg + 540) % 360) - 180;
+                    if (System.Math.Abs(o) >= visibleDeg || (seen != null && System.Math.Abs(o) >= System.Math.Abs(seenOff)) || !s.sensors.Heard(t)) continue;
+                    var v = ViewOf(t.key);
+                    if (v && v.Texture) { view = v; seen = t; seenOff = o; }
+                }
+            shipPicture.enabled = view;
+            if (view)
+            {
+                shipPicture.texture = view.Texture;
+                shipPicture.color = shipInk.gamma; // the board canvas linearises vertex colours; pre-encode
+                float side = Mathf.Min(2000f, (float)s.ScopeFill(seen) * bracketPx / view.ShipFill);
+                shipPicture.rectTransform.sizeDelta = new Vector2(side, side);
+                shipPicture.rectTransform.anchoredPosition = new Vector2(Mathf.Clamp((float)seenOff * pxPerDeg, -maxShift, maxShift), 0f);
+                double rel = ((seen.worldHdg - seen.bearing) % 360 + 360) % 360; // its heading, clockwise from our line of sight
+                shipPicture.rectTransform.localEulerAngles = new Vector3(0f, 0f, (float)(seen.worldHdg - (rel < 180 ? 90 : 270))); // north-up picture: bow to 090 or 270
+            }
+        }
+
         // convergence: 100 - range / mount range, 6..96 %, 0 with no target
         if (convBar)
         {
@@ -159,9 +194,21 @@ public class PeriscopePanel : Panel
             if (subjectClass) subjectClass.text = subj == null ? "NO SUBJECT ON BEARING" : cls ? klass + " HULL" : "HULL UNCLASSIFIED";
         }
         Color classInk = subj == null ? lampOffPanel : cls ? nominal : caution;
-        Paint(classLamp, classInk); Paint(classGlow, classInk); Show(classGlow, subj != null);
+        Paint(classLamp, classInk); Paint(classGlow, classInk); Show(classGlow, subj != null && (cls || s.ScopeFits(subj))); // Step 109: lit when CLASS will work
         Color slewInk = s.ScopeOnAxis ? nominal : caution;
         Paint(slewLamp, slewInk); Paint(slewGlow, slewInk);
+    }
+
+    // The ShipView watching a contact's model (the plot's), if there is one.
+    ShipView ViewOf(string key)
+    {
+        if (views == null) views = FindObjectsByType<ShipView>(FindObjectsSortMode.None);
+        foreach (var v in views)
+        {
+            var wc = v && v.Target ? v.Target.GetComponentInParent<WorldContact>() : null;
+            if (wc && wc.trackKey == key) return v;
+        }
+        return null;
     }
 
     static readonly string[] FaceNames = { "BOW", "STBD", "AFT", "PORT" };

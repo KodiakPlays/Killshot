@@ -72,6 +72,12 @@ public class ShipState
     [Tooltip("px of MAG knob drag per 1x of zoom (magDown).")]
     [Tune("Periscope & fire control")]
     public double magPxPerX = 40;
+    [Tooltip("Step 109: at 1x a ship this far away (km) fills the brackets; at 2x, one twice as far.")]
+    [Tune("Periscope & fire control")]
+    public float scopeFitKm = 3750f;
+    [Tooltip("Step 109: CLASS works while the ship is within this share of the brackets' size, bigger or smaller.")]
+    [Tune("Periscope & fire control")]
+    public float scopeFitSlack = 0.15f;
     public bool slewing;
     public double slewDx;
     [Tooltip("BEARING needs the periscope within this of the target (onBearing).")]
@@ -275,7 +281,11 @@ public class ShipState
     public bool ScopeOnAxis => ScopeOffDeg <= 4;
     /// <summary>scopeSubject: the first heard contact in the sight.</summary>
     public Track ScopeSubject(bool scopeDown) { foreach (var t in tracks) if (Heard(t) && ScopeOn(t, scopeDown)) return t; return null; }
-    public void Classify(bool scopeDown) { var t = ScopeSubject(scopeDown); if (t != null && !classified.Contains(t.key)) classified.Add(t.key); }
+    /// <summary>Step 109: how big a ship looks in the sight against the brackets (1 fills them). Zoom in, or close in, to grow it.</summary>
+    public double ScopeFill(Track t) => scopeZoom * scopeFitKm / System.Math.Max(1.0, t.rangeKm);
+    /// <summary>Step 109 (owner 2026-10-29): CLASS needs the ship to fill the brackets. At 1x a close ship may spill out: the MAG goes no lower.</summary>
+    public bool ScopeFits(Track t) { double f = ScopeFill(t); return f >= 1 - scopeFitSlack && (f <= 1 + scopeFitSlack || scopeZoom <= 1); }
+    public void Classify(bool scopeDown) { var t = ScopeSubject(scopeDown); if (t != null && ScopeFits(t) && !classified.Contains(t.key)) classified.Add(t.key); }
 
     /// <summary>moveSlew: bearing = start + dx x 0.34, wrapped; ignores the first 3 px. Any slew
     /// releases BEARING and ARM (not the rungs after them), rests the lever and clears fired.</summary>

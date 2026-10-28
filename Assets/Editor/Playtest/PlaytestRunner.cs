@@ -1373,6 +1373,15 @@ public static class PlaytestRunner
               subjName && subjHull ? "\"" + subjName.text + "\" / \"" + subjHull.text + "\"" : "no readout");
         //     CLASS in the targeting computer names its class (owner 2026-10-24). Step 75 (owner 2026-10-26): the plot shows
         //     TRACK 07 as its own ship, in red, because it is in sight (10,000 km), not because of CLASS.
+        //     Step 109 (owner 2026-10-29): the sight shows the Garuda's model; CLASS works only once it fills the brackets.
+        var shipPic = typeof(PeriscopePanel).GetField("shipPicture", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as UnityEngine.UI.RawImage;
+        s.scopeZoom = 8; // stand-in for the MAG knob: zoomed right in, the ship spills out of the brackets
+        if (!Click("scope.classify", null, "CLASS key, zoomed in too far")) yield break;
+        yield return 0.3f;
+        Check("The sight shows the Garuda; zoomed in too far it spills out of the brackets, and CLASS does nothing", shipPic && shipPic.enabled && shipPic.texture && !s.classified.Contains("t07"),
+              "picture " + (shipPic && shipPic.enabled) + ", fill " + s.ScopeFill(t07).ToString("0.00") + ", " + t07.rangeKm.ToString("N0") + " km");
+        s.scopeZoom = System.Math.Max(1, System.Math.Min(8, System.Math.Round(t07.rangeKm / s.scopeFitKm, 1))); // stand-in: the MAG knob to fill the brackets
+        yield return 0.3f;
         if (!Click("scope.classify", null, "CLASS key")) yield break;
         yield return 0.6f;
         Check("Classified and in sight: GARUDA shows on the plot as its own ship model, in place of its dot", s.classified.Contains("t07") && s.sensors.InSight(t07) && plotPanel.ContactShipShown && subjName.text == "GARUDA · CRUISER",

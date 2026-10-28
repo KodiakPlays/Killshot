@@ -5,7 +5,7 @@
 The tactical board is the game's main screen. It is made of panels and frame pieces.
 
 The panels are the plot, the helm, the orders station, the periscope and six drawers (power,
-sensors, comms, fire control, hangar and engineering). The frame pieces are the metal frame and
+sensors, comms, fire control, hangar and engineering), and the end screen. The frame pieces are the metal frame and
 the smaller pieces on it: two rails of keys, the time control, the console, the alarm strip and
 the signal box.
 
@@ -42,17 +42,18 @@ texts change.
 
 ### Colours
 
-The board's colours are in one file, `Palette.asset`, in this folder. It has 23 colours. Each one
+The board's colours are in one file, `Palette.asset`, in this folder. It has 22 colours. Each one
 has a note on what it is for: green for working, amber for caution, red for alarm, the greys for
 text, the unlit lamps and cells, and white for our ship.
 
 Every panel and the board script take their colours from this file. Change a colour in it, and
 every part that uses it changes.
 
-Five colours are used by one panel only. They are fields on that panel's script:
+Six colours are used by one panel only. They are fields on that panel's script:
 - the plot's axis numbers (**Axis Colour**) and its amber sweep (**Sweep Ink Amber**)
 - the sensors drawer's band rows and contact rows (**Band Row On**, **Contact Row Lit**)
 - the periscope's rail legend (**Rail Legend**)
+- the periscope's ship picture (**Ship Ink**, the same red as the sight's lines)
 
 ### Folders
 
@@ -80,13 +81,15 @@ Art/Plates/        label plates
 Art/Wells/         recessed wells for controls
 Art/Shapes/        plain rounded shapes the code colours (key faces, cells, the dial ring)
 Materials/         the board's two materials
-Design/            the design's reference files: its README, asset map, tokens, layout and board logic
+Design/            the design's reference files: its README, asset map, tokens, layout, board logic,
+                   state spec (UIStateSpec.md) and grid colours (plot-grid.json)
 Palette.asset      the board's colours
 ```
 
 The fonts are in `Assets/UI/Fonts`, one folder per font: `BarlowCondensed`, `ShareTechMono` and
 `NotoSansSymbols2`. Each folder has the font asset, its `.ttf` file and its licence. Keep the `.ttf`
 next to its font asset. The font asset adds letters from it as text needs them.
+`ElectronicHighwaySign` is an old font. The board does not use it.
 
 ### Groups and draw order
 
@@ -125,6 +128,8 @@ The board is in the scene `Assets/Scenes/Tactical/02.1_Grid.unity`, under `Board
   It is switched off until it opens.
 - The frame pieces are under `Tactical Board`: `Frame`, `ToolRail`, `SystemsRail`, `TimeControl`,
   `Console`, `AlarmStrip` and `SignalBox`.
+- `PlotRing`, a dark rounded shape behind the plot, is an image on `Tactical Board`, outside every
+  prefab. `ReferenceOverlay` is the design's picture, switched off.
 
 ## How to change a panel's art
 
@@ -273,8 +278,8 @@ board x less 750.
 The prefab has these parts:
 - `Carriage`: the plate, lamp and title, and `Housed label` (shown only while housed)
 - `Housing` and `Bolts`: the periscope's body
-- `Sight`: `Aperture`, `Mask` with the sight picture, `Vignette`, the target `Brackets`, four
-  ticks and `Target name`
+- `Sight`: `Aperture`, `Mask` with the sight picture and `Ship picture` (the enemy ship as we
+  see it), `Vignette`, the target `Brackets`, four ticks and `Target name`
 - `Readout`: the off-axis and zoom readouts
 - `Mag knob`
 - `Slew readout`: the bearing, the SLEW label and its marker, and two stand-in parts
@@ -297,6 +302,16 @@ Ask a technical artist before you change these:
 - The code moves the target brackets sideways and hides them when no target is near:
   **Brackets**, **Bracket Home X** (887.2), **Sight Centre X** (960), **Px Per Deg**,
   **Max Shift** and **Visible Deg**.
+- The code shows the enemy ship in `Sight/Mask/Ship picture` when DRADIS hears it and the sight
+  is near its bearing. It moves the picture sideways like the brackets, and sizes it by zoom and
+  range. CLASS works only when the ship fills the brackets. **Ship Picture**, **Bracket Px** (42,
+  the brackets' size) and **Ship Ink** (the colour) are on **Periscope Panel**. The picture is the
+  plot's top-down view of the ship, from `World/Contact View Camera · Garuda`. It always lies
+  level: the ship points straight right if it heads to our right, else straight left. It uses the
+  `BoardLinearImage` material, as the plot's ship pictures do, which makes the black around the
+  ship see-through. The round sight cuts it off at its edge. How far away a ship
+  fills the brackets is **Scope Fit Km**, on the Board tab of **Starwolf → Tuning**, under
+  Periscope & fire control.
 - The code stretches `Convergence/Bar` from the left: **Conv Bar**, **Conv Left** (777),
   **Conv Width** (366) and **Parent Left** (750, the periscope's left edge).
 - The code turns the MAG knob's pointer (**Mag Pointer**).
@@ -582,7 +597,8 @@ The prefabs:
 - `Frame`: the metal frame. Its parts are `Steel frame`, `Black backing`, `Conduits`,
   `Corner bolts` and `Stencils` (two painted labels, BUS A-14 and VENT PLENUM 3). The art files
   are in `Art/Frame`. The Art list has 5 entries.
-- `ToolRail`: the keys for the plot tools, CURSOR, POINT, RULER, COMPASS and ERASE, with their
+- `ToolRail`: the keys for the plot tools, SEL (cursor), PNT (point), RUL (ruler), CMP (compass)
+  and ERS (erase), with their
   lamps, plates, icons and labels. The art files are in `Art/ToolRail` and `Art/Rails`. The Art
   list has 13 entries.
 - `SystemsRail`: one key per drawer, FIRE, SENS, PWR, HGR, ENGR and COMM. The art files are in

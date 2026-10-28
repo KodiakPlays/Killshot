@@ -10,12 +10,22 @@ Shader "Starwolf/UI/BoardLinearImage"
         [PerRendererData] _MainTex ("Image", 2D) = "black" {}
         _Color ("Tint", Color) = (1,1,1,1)
         [Toggle] _KeyBlack ("Line art: black see-through, lines take the Tint", Float) = 1
+        // Step 109: the UI Mask's stencil, so the periscope's round sight can clip the Garuda's picture.
+        // Outside a Mask these stay at their defaults and change nothing.
+        _StencilComp ("Stencil Comparison", Float) = 8
+        _Stencil ("Stencil ID", Float) = 0
+        _StencilOp ("Stencil Operation", Float) = 0
+        _StencilWriteMask ("Stencil Write Mask", Float) = 255
+        _StencilReadMask ("Stencil Read Mask", Float) = 255
+        _ColorMask ("Color Mask", Float) = 15
     }
     SubShader
     {
         Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" "PreviewType"="Plane" "CanUseSpriteAtlas"="True" }
+        Stencil { Ref [_Stencil] Comp [_StencilComp] Pass [_StencilOp] ReadMask [_StencilReadMask] WriteMask [_StencilWriteMask] }
         Cull Off ZWrite Off ZTest [unity_GUIZTestMode]
         Blend SrcAlpha OneMinusSrcAlpha
+        ColorMask [_ColorMask]
 
         Pass
         {
