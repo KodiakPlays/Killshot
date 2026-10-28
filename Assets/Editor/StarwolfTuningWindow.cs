@@ -7,20 +7,24 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 
 /// <summary>
-/// Starwolf → Tuning (owner, 2026-10-27): three tabs.
+/// Starwolf → Tuning (owner, 2026-10-27): four tabs.
 /// - Ship: our ship's stats file, section by section (navigation, power, sensors, weapons, hangar, damage, orders).
 /// - Enemy: the same for each enemy ship in the open scene.
 /// - Board: every value marked [Tune("Section")] on the open scene's other components (the plot, sounds, the
 ///   clock), grouped by section, as before (owner, 2026-10-17).
-/// A stats file edit is kept, in play mode too, and the running game takes it at once. A Board edit made in
-/// play mode is lost when play stops, unless "Keep play-mode changes" is ticked.
+/// - Keys: the board's keys, the values marked [Tune("Keys")]. Starwolf → Keys opens this tab (owner, 2026-10-29).
+/// A stats file edit is kept, in play mode too, and the running game takes it at once. A Board or Keys edit made
+/// in play mode is lost when play stops, unless "Keep play-mode changes" is ticked.
 /// </summary>
 public class StarwolfTuningWindow : EditorWindow
 {
     [MenuItem("Starwolf/Tuning")]
     static void Open() => GetWindow<StarwolfTuningWindow>("Starwolf Tuning");
 
-    static readonly string[] Tabs = { "Ship", "Enemy", "Board" };
+    [MenuItem("Starwolf/Keys")]
+    static void OpenKeys() => GetWindow<StarwolfTuningWindow>("Starwolf Tuning").tab = 3;
+
+    static readonly string[] Tabs = { "Ship", "Enemy", "Board", "Keys" };
     int tab;
 
     class Entry { public SerializedObject so; public string path; public string section; public string owner; public string label; }
@@ -57,7 +61,7 @@ public class StarwolfTuningWindow : EditorWindow
         tab = GUILayout.Toolbar(tab, Tabs);
         EditorGUILayout.Space(4);
         scroll = EditorGUILayout.BeginScrollView(scroll);
-        if (tab == 2) DrawBoard();
+        if (tab >= 2) DrawBoard(tab == 3);
         else
         {
             // ours is the ship that is not a contact; the enemies are the contacts
@@ -104,15 +108,17 @@ public class StarwolfTuningWindow : EditorWindow
         EditorGUILayout.Space(10);
     }
 
-    void DrawBoard()
+    // The Board tab, or the Keys tab: the Keys section on its own
+    void DrawBoard(bool keys)
     {
         if (playing)
         {
             EditorGUILayout.HelpBox("Play mode: changes here are lost when play stops, unless you tick the box below.", MessageType.Warning);
             keepPlayChanges = EditorGUILayout.ToggleLeft("Keep play-mode changes when play stops", keepPlayChanges);
         }
-        if (entries.Count == 0) { EditorGUILayout.HelpBox("Nothing tunable in the open scene. Open 02.1_Grid.", MessageType.Info); return; }
-        foreach (var group in entries.GroupBy(e => e.section).OrderBy(g => g.Key))
+        var shown = entries.Where(e => (e.section == "Keys") == keys).ToList();
+        if (shown.Count == 0) { EditorGUILayout.HelpBox("Nothing tunable in the open scene. Open 02.1_Grid.", MessageType.Info); return; }
+        foreach (var group in shown.GroupBy(e => e.section).OrderBy(g => g.Key))
         {
             bool open;
             if (!folds.TryGetValue(group.Key, out open)) open = true;

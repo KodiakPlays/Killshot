@@ -120,6 +120,12 @@ public class BoardManager : MonoBehaviour
     [Header("Systems rail — one key per drawer, lamp lit while it is out")]
     [SerializeField] private string[] systemDrawers = { "fire control", "sensors", "power", "hangar", "engineering", "comms" };
     [SerializeField] private Image[] systemLamps;
+    [Tooltip("Owner 2026-10-29: each key opens its drawer, or closes it if it is out, as its systems key does. "
+           + "Change them in Starwolf → Keys.")]
+    [Tune("Keys")] [SerializeField] private KeyCode fireControlKey = KeyCode.Alpha1, sensorsKey = KeyCode.Alpha2, powerKey = KeyCode.Alpha3,
+        hangarKey = KeyCode.Alpha4, engineeringKey = KeyCode.Alpha5, commsKey = KeyCode.Alpha6;
+    [Tooltip("Owner 2026-10-29: pauses and runs, as the PAUSE key does.")]
+    [Tune("Keys")] [SerializeField] private KeyCode pauseRunKey = KeyCode.P;
 
     [Header("Time control")]
     [SerializeField] private TMP_Text clock;
@@ -262,11 +268,14 @@ public class BoardManager : MonoBehaviour
         // The board's single timer (tickPower). Only the mission clock is board-local so far.
         // thrown repair and order rockers fall back after 400 ms (flickBack)
         if (state.orders.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
-        // owner 2026-10-29: P pauses and runs, as the PAUSE key does (not while typing in a text field)
-        if (Input.GetKeyDown(KeyCode.P))
+        // owner 2026-10-29: P pauses and runs, and 1–6 open the drawers, as the board's keys do (not while typing in a text field)
+        var sel = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+        if (!sel || !sel.GetComponent<TMP_InputField>())
         {
-            var sel = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
-            if (!sel || !sel.GetComponent<TMP_InputField>()) Click("pause", null);
+            if (Input.GetKeyDown(pauseRunKey)) Click("pause", null);
+            var drawerKeys = new[] { fireControlKey, sensorsKey, powerKey, hangarKey, engineeringKey, commsKey }; // in systemDrawers' order
+            for (int i = 0; i < drawerKeys.Length && i < systemDrawers.Length; i++)
+                if (Input.GetKeyDown(drawerKeys[i])) Click("drawer", systemDrawers[i]);
         }
         // a shot fired (from the lever) and a shot landing (in the tick) each get their cue
         if (state.weapons.shotsFired != shotsHeard) { shotsHeard = state.weapons.shotsFired; Play(railgunSound, "railgun"); }

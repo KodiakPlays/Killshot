@@ -76,6 +76,8 @@ public class HelmPanel : Panel
     [SerializeField] private float repeatDelay = 0.5f, repeatInterval = 0.033f;
     [Tooltip("Owner 2026-10-29: W and S step the throttle this many percent, up to what the ENG bus allows.")]
     [Tune("Helm")] [SerializeField] private int throttleKeyStep = 10;
+    [Tooltip("Owner 2026-10-29: the helm's keys. Change them in Starwolf → Keys.")]
+    [Tune("Keys")] [SerializeField] private KeyCode turnPortKey = KeyCode.A, turnStarboardKey = KeyCode.D, throttleUpKey = KeyCode.W, throttleDownKey = KeyCode.S;
 
     Color nominal => Palette.nominal;
     Color caution => Palette.caution;
@@ -91,7 +93,6 @@ public class HelmPanel : Panel
     private int thrPressCap;
     private KeyCode heldKey;
     private float nextRepeat;
-    static readonly KeyCode[] helmKeys = { KeyCode.A, KeyCode.D, KeyCode.W, KeyCode.S };
 
     public override bool Click(string action, string arg)
     {
@@ -128,7 +129,7 @@ public class HelmPanel : Panel
         // onKey ignores keys while a text field has focus
         var sel = EventSystem.current ? EventSystem.current.currentSelectedGameObject : null;
         if (sel && sel.GetComponent<TMP_InputField>()) { heldKey = KeyCode.None; return; }
-        foreach (var k in helmKeys)
+        foreach (var k in new[] { turnPortKey, turnStarboardKey, throttleUpKey, throttleDownKey })
             if (Input.GetKeyDown(k)) { heldKey = k; nextRepeat = Time.unscaledTime + repeatDelay; Press(k); return; }
         if (heldKey != KeyCode.None && !Input.GetKey(heldKey)) heldKey = KeyCode.None;
         if (heldKey != KeyCode.None && Time.unscaledTime >= nextRepeat) { nextRepeat += repeatInterval; Press(heldKey); }
@@ -137,8 +138,8 @@ public class HelmPanel : Panel
     void Press(KeyCode k)
     {
         var n = State.nav;
-        if (k == KeyCode.A || k == KeyCode.D) n.StepOrderedHeading(k == KeyCode.D ? 1 : -1);
-        else n.throttle = Mathf.Clamp(n.throttle + (k == KeyCode.W ? throttleKeyStep : -throttleKeyStep), 0, Mathf.Min(100, n.ThrottleCap));
+        if (k == turnPortKey || k == turnStarboardKey) n.StepOrderedHeading(k == turnStarboardKey ? 1 : -1);
+        else n.throttle = Mathf.Clamp(n.throttle + (k == throttleUpKey ? throttleKeyStep : -throttleKeyStep), 0, Mathf.Min(100, n.ThrottleCap));
         Refresh();
     }
 

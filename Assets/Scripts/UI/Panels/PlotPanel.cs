@@ -115,6 +115,8 @@ public class PlotPanel : Panel
     [SerializeField] private PlotGrid grid;
     [Tooltip("Arrow keys pan the plot this fast, screen px per second.")]
     [Tune("Plot & our ship")] [SerializeField] private float panKeysPxPerS = 600f;
+    [Tooltip("Owner 2026-10-29: the plot's keys. Change them in Starwolf → Keys.")]
+    [Tune("Keys")] [SerializeField] private KeyCode centreOnShipKey = KeyCode.C, panLeftKey = KeyCode.LeftArrow, panRightKey = KeyCode.RightArrow, panUpKey = KeyCode.UpArrow, panDownKey = KeyCode.DownArrow;
     private double viewX, viewY, panX0, panY0;
     private bool viewSet, panning;
     private Vector2 panPress;
@@ -247,9 +249,9 @@ public class PlotPanel : Panel
         var typing = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
         if (typing && typing.GetComponent<TMP_InputField>()) return;
         // Step 65 (owner 2026-10-25): C centres the plot on our ship again after panning away
-        if (Input.GetKeyDown(KeyCode.C)) { CentreOnOurShip(); return; }
-        float x = (Input.GetKey(KeyCode.RightArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.LeftArrow) ? 1f : 0f);
-        float y = (Input.GetKey(KeyCode.UpArrow) ? 1f : 0f) - (Input.GetKey(KeyCode.DownArrow) ? 1f : 0f);
+        if (Input.GetKeyDown(centreOnShipKey)) { CentreOnOurShip(); return; }
+        float x = (Input.GetKey(panRightKey) ? 1f : 0f) - (Input.GetKey(panLeftKey) ? 1f : 0f);
+        float y = (Input.GetKey(panUpKey) ? 1f : 0f) - (Input.GetKey(panDownKey) ? 1f : 0f);
         if (x == 0f && y == 0f) return;
         following = false;
         double km = panKeysPxPerS * Time.unscaledDeltaTime * KmPerPx / Controls.ZoomExact;
