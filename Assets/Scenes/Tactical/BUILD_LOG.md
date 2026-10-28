@@ -4237,6 +4237,29 @@ is not fun. Step 105 played it in the Editor first: four bugs fixed, and eight g
 the owner, listed at the end of Step 105 in section 6. **The app was rebuilt from 80bc679** (Steps 104 and
 105 in it): 0 build errors, Apple Silicon, 341 MB; it starts with no errors in its log.
 
+**Is the app playable? (owner, 2026-10-28)** Checked in the app itself: it opens, runs the intro and reaches
+the menu (screenshot, no errors in its log). Not checked in the app: NEW GAME through to the board, and
+playing. macOS stops a session sending keys or clicks to the app ("osascript is not allowed to send
+keystrokes"). Giving the terminal Accessibility permission (System Settings → Privacy & Security →
+Accessibility) would let a session press keys in it. The game past the menu was played in the Editor
+(Step 105), from the same files; an earlier test build that opened on the board loaded the board and
+Level_01 with no errors.
+
+**Owner questions from the play-through (Step 105; the detail is there).** Nothing changed yet:
+
+1. Should the plot follow our ship while it moves?
+2. Bearing lines fade after 2 game minutes: make them last 10?
+3. The PDCs cover only front-right and back-left: widen them, or keep "turn to defend"?
+4. All power makes noise, so you can't be armed and quiet: intended?
+5. Cutting ENG stops the ship dead: should it drift?
+6. Should the periscope go back up by itself?
+7. The first salvo decides the fight (magazine behind the bow, vacuum spreads fast): soften it?
+8. First contact takes about 7.5 real minutes at x10: start closer, or add x20?
+
+**Changes from the play-through (Step 105), done:** a hit puts the Garuda on ALERT; HOSTILE SET HAS YOUR
+RANGE counts only enemies that hear us; the alarm strip warns of incoming fire and shows what just hit
+us, debris included.
+
 **Calls made without the owner (can be changed).**
 
 - Clicking a hostile contact on the plot also makes it fire control's target (`ShipState.LookAt`). Before,
