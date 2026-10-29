@@ -166,6 +166,7 @@ Do not run ahead. Do one step, show it, wait.
 | 116 | Training-level play-through fixes: the Garuda no longer fires back in the training levels (two missile salvos had wrecked our magazine, so WEAPONS FREE could not be won); the bubbles no longer say "turn on DRADIS" (it starts on, so that switched it off); the mouse over a list row picks it (two rows were lit); the DRADIS sweep line is unseen (owner: it spins wildly at x10; Sensors tab, sweep opacity 0, still works) | **Done**. Compiled clean; WEAPONS FREE played through the real switches to two hits (found the bugs); after the fix a hit drew no missiles in 80 game s; NO PEEKING and FINDERS KEEPERS not yet played through; full playtest not run |
 | 117 | A QUIT · ESC key on the board and the MISSIONS list. **Removed the same day** (owner: "I don't want any other quit feature"): Escape alone quits, as built before Step 116 | Removed; the board and the list are as before Step 117. Playtest check #5 still counts only the level rows |
 | 118 | DRADIS starts off: the player turns it on (owner); the bubbles say "turn on DRADIS" again | **Done**. Compiled clean; checked in play mode (ours off, the Garuda's on, no circle, the bubble's line); playtest: a new check that it starts off; not run |
+| 119 | The railgun turrets' cones on the plot while Fire Control is open (owner: "the guns need cones… they are not visible… I can't figure out how to shoot"): each turret's arc as a dashed sector out to its reach, the selected one bright, the other dimmer (PlotPanel railArcAlpha 1 / 0.45, on the Periscope & fire control tab; written into Plot.prefab with sweepOpacity 0). WEAPONS FREE filmed: Logs/LevelVideos/WeaponsFree.mp4, 2:23, x5 throughout, fly in, port beam, six hits, MISSION COMPLETE (before the cones) | **Done**. Compiled clean; cones seen in play mode (`Logs/LevelPlay/31_turret_cones_bright.png`); full playtest not run |
 
 Steps 6 to 28 and Steps 34 to 118 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
@@ -1299,7 +1300,6 @@ Measured behaviour, with the ship 116 world units tall:
 |---|---|---|---|
 | 300 | 209 px | 209 px | true scale |
 | 369 | 170 px | 170 px | crossover |
-| 370 | The railgun turrets' cones on the plot while Fire Control is open (owner: "the guns need cones… they are not visible… I can't figure out how to shoot"): each turret's arc as a dashed sector out to its reach, the selected one bright, the other dimmer (PlotPanel railArcAlpha 1 / 0.45, on the Periscope & fire control tab; written into Plot.prefab with sweepOpacity 0). WEAPONS FREE filmed: Logs/LevelVideos/WeaponsFree.mp4, 2:23, x5 throughout, fly in, port beam, six hits, MISSION COMPLETE (before the cones) | **Done**. Compiled clean; cones seen in play mode (`Logs/LevelPlay/31_turret_cones_bright.png`); full playtest not run |
 | 1,000 | 63 px | 170 px | floored |
 | 30,000 | 2.1 px | 170 px | floored |
 | 250,000 | 0.3 px | 170 px | floored |
