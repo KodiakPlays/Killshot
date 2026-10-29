@@ -63,6 +63,9 @@ public class PlotPanel : Panel
     [SerializeField] private SweepGraphic sweep;
     [Tooltip("One turn takes base − perGain × gain seconds (sweepDur: 5.4 − senBoost × .5). It holds still while the board is paused (owner rule).")]
     [Tune("Sensors")] [SerializeField] private float sweepSecondsBase = 5.4f, sweepSecondsPerGain = 0.5f;
+    [Tooltip("How much of the sweep line shows: 1 as designed, 0 unseen (owner 2026-10-29: it spins wildly at x10). "
+           + "Unseen, it still turns, leaves bearing lines and identifies.")]
+    [Tune("Sensors")] [Range(0f, 1f)] [SerializeField] private float sweepOpacity = 0f;
     private float sweepDeg;
     [Tooltip("The small circle round our ship (owner 2026-10-24) sits this far outside the ship's picture, px; the sweep starts there.")]
     [Tune("Sensors")] [SerializeField] private float innerRingMarginPx = 8f;
@@ -647,7 +650,7 @@ public class PlotPanel : Panel
         if (!on) return;
         bool red = Controls.GridAmber;
         Paint(sweep, red ? sweepInkAmber : data);
-        sweep.SetAlphas(red ? 0.75f : 0.7f, red ? 0.11f : 0.09f); // sweepEdge, sweepTail
+        sweep.SetAlphas((red ? 0.75f : 0.7f) * sweepOpacity, (red ? 0.11f : 0.09f) * sweepOpacity); // sweepEdge, sweepTail
         sweep.SetInner(InnerRingPx);
         float d = 2f * (float)(sensorUnits / UnitsPerPx * Controls.ZoomExact);
         if (sweep.rectTransform.sizeDelta != new Vector2(d, d)) sweep.rectTransform.sizeDelta = new Vector2(d, d);

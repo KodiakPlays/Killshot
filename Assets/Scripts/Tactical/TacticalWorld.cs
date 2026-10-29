@@ -163,10 +163,11 @@ public class TacticalWorld : MonoBehaviour
         Sync();
     }
 
-    /// <summary>A level's spawn sets whether this contact's brain hunts us (owner 2026-10-29: in the training levels it doesn't).</summary>
+    /// <summary>A level's spawn sets whether this contact's brain hunts us and fires (owner 2026-10-29: in the training
+    /// levels it does neither; hit, it no longer answers with missiles).</summary>
     public void Hunts(string key, bool on)
     {
-        for (int i = 0; i < contacts.Length; i++) if (contacts[i] && contacts[i].trackKey == key && brains[i]) brains[i].hunts = on;
+        for (int i = 0; i < contacts.Length; i++) if (contacts[i] && contacts[i].trackKey == key && brains[i]) brains[i].hunts = brains[i].firesBack = on;
     }
 
     /// <summary>Step 73: a level's Player Spawn (PlayerSpawn). The player's ship starts there, facing the
