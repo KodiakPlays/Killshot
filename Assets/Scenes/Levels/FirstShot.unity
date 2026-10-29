@@ -2563,6 +2563,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Mission
   goal: 1
+  help: 'WEAPONS FREE. Scan the Garuda, then hit it with the railgun until it breaks
+    up.
+
+    1. Press P to start time.
+
+    2. POWER (key 3): click SEN and WEP to
+    DRAW.
+
+    3. ORDERS: click the alert once, from C3 to C2.
+
+    4. SENSORS (key
+    2): turn on DRADIS. Wait for a bearing line.
+
+    5. Turn on ACTIVE SCAN. Drag
+    the cone dial onto the line and let go.
+
+    6. FIRE CONTROL (key 1): SIGHT,
+    SLEW TO, then TRACK.
+
+    7. Throw LOAD, ANGLE, BEARING and ARM. Pull the lever
+    all the way.
+
+    8. Wait for the charge, throw ARM again, pull again.'
 --- !u!4 &1514499373
 Transform:
   m_ObjectHideFlags: 0

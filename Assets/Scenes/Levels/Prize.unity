@@ -2591,6 +2591,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Mission
   goal: 3
+  help: 'FINDERS KEEPERS. Take the Garuda with your marines. If it blows up, you
+    lose.
+
+    1. Press P. POWER (key 3): click SEN, WEP and AUX to DRAW.
+
+    2.
+    ORDERS: click the alert once, from C3 to C2.
+
+    3. Scan it and fire the railgun,
+    as in WEAPONS FREE. Stop once one side is open.
+
+    4. HANGAR (key 4): pick
+    the interceptors and set DISABLE. Open the doors, throw the six stage switches,
+    pull the launch lever. They stop it.
+
+    5. Do the same with the assault boats
+    on SECURE. The marines take it.'
 --- !u!4 &1431064136
 Transform:
   m_ObjectHideFlags: 0

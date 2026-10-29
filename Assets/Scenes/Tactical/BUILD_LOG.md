@@ -162,8 +162,9 @@ Do not run ahead. Do one step, show it, wait.
 | 112 | Turning after TRACK no longer spoils the aim: the firing solution is a point in space; RNG and BRG follow the bow; ANGLE drops if the turn takes the target out of arc | **Done**. Compiled clean; checked in play mode (a still and a crossing target, both hit after a turn; the old way missed); full playtest not run |
 | 113 | Everything in the game's workings is in units: every km name in the code is now units (range, speed, battle space and the rest); the numbers are the same; the screen still shows km | **Done**. Compiled clean; every saved value carried over (94 checked); playtest 213/218 (2026-10-29_100527): #205–206 the zoom was moved off x1.0 during the run (rechecked in play mode, holds), #89 and #111 follow Step 112's new aim, #56 the old RECALL timing |
 | 114 | Training levels: NEW GAME opens the MISSIONS list (FIRST SHOT, SILENT SHOT, PRIZE, WOLF HUNT); each level has a Mission box with its goal; in the training levels the Garuda doesn't hunt | **Done**. Compiled clean; every goal's win and loss checked in play mode (`Logs/LevelListCheck`); playtest 217/218 (2026-10-29_110455): #5, the new list check, was wrong itself (fixed, rechecked in play mode); not yet played through by hand |
+| 115 | The training levels renamed: WEAPONS FREE, NO PEEKING, FINDERS KEEPERS; a placeholder help bubble on the board says what to do in each level, Wolf Hunt too | **Done**. Compiled clean; checked in play mode (`Logs/HelpBubbleCheck`): the list, the bubble in Wolf Hunt and WEAPONS FREE, the longest text fits, a click closes it; playtest not run |
 
-Steps 6 to 28 and Steps 34 to 114 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 115 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -4637,7 +4638,44 @@ RECALL passed this time.
 - A lost training goal says MISSION FAILED.
 
 **Not done.** No level has been played through by hand, start to finish. Nothing on the board says
-the goal once a level has started.
+the goal once a level has started. (Step 115 added the help bubble.)
+
+### Step 115 — The training levels' names, and a help bubble
+
+The owner, 2026-10-29: "don't call it FirstShot. Need a more cavalier military banter name for each
+level, with a subheading that briefly explains what you have to do." And: "a dummy text bubble which
+will teach you what to do in each level." Built by killshot-fb, with the FTUE chat's yes.
+
+**What the player sees.**
+- The MISSIONS list: 1 WEAPONS FREE, 2 NO PEEKING, 3 FINDERS KEEPERS, 4 WOLF HUNT. Each keeps its
+  line under it saying what to do.
+- On the board, at the start of every level, a dark box with an amber edge sits at the plot's lower
+  left. It is titled BRIEFING and lists what to do, step by step. A click anywhere on it closes it.
+  It does not come back until the level starts again.
+
+**What the owner sees.** Each level's Mission box has a **Help** text box. That is the bubble's
+text. Change it in the level scene. Empty means no bubble. `Level_01` now has a Mission box too
+(goal Wolf Hunt), for its bubble. The bubble is `Help Bubble` under `Tactical Board` in `02.1_Grid`.
+
+**What changed.**
+- `Mission.cs`: the Help text; at the start it hands it to `QuestSystem.ShowHelp`.
+- `QuestSystem.cs`: links to the bubble and its text; `ShowHelp`; a click on the bubble hides it.
+- `02.1_Grid`: the `Help Bubble` object (Image, Button, Outline; Title, Close hint, Text with
+  auto-size 14 to 20). Saving the scene also wrote Step 113's new units names into it; the numbers
+  are the same.
+- `01_Briefing`: three rows renamed (text and object names). The WOLF HUNT row is unchanged; playtest
+  check #5 finds it by name.
+- The four level scenes: the Help text. The scene files keep their names (`FirstShot` and so on).
+
+**Checked** in play mode (`Logs/HelpBubbleCheck`): the list shows the new names; WEAPONS FREE loads
+`FirstShot` with goal Destroy and its bubble; Wolf Hunt shows its bubble; NO PEEKING's text, the
+longest, fits at size 20; a click hides the bubble. Compiled clean. Playtest not run.
+
+**Calls made on the fly.** The names. The title BRIEFING. The bubble's place and look. The steps'
+words. The rows' lines under the names were kept as FTUE wrote them.
+
+**Not done.** The bubble can't be brought back once closed. It doesn't move on step by step as the
+player does each thing; that would be the XO walkthrough (FTUE_PLAN §6).
 
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 

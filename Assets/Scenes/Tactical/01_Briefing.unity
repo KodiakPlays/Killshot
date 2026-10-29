@@ -679,7 +679,7 @@ GameObject:
   - component: {fileID: 1205420450}
   - component: {fileID: 1205420449}
   m_Layer: 0
-  m_Name: SILENT SHOT
+  m_Name: NO PEEKING
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -856,10 +856,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '3  PRIZE
+  m_text: '3  FINDERS KEEPERS
 
-    <size=26><alpha=#B0>   CAPTURE THE GARUDA. STOP IT, THEN
-    SEND THE MARINES.</size>'
+    <size=26><alpha=#B0>   CAPTURE THE GARUDA. STOP
+    IT, THEN SEND THE MARINES.</size>'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
   m_sharedMaterial: {fileID: -3075767671713051146, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
@@ -996,7 +996,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '1  FIRST SHOT
+  m_text: '1  WEAPONS FREE
 
     <size=26><alpha=#B0>   SCAN THE GARUDA AND DESTROY
     IT WITH THE RAILGUN.</size>'
@@ -1317,7 +1317,7 @@ GameObject:
   - component: {fileID: 1707796307}
   - component: {fileID: 1707796306}
   m_Layer: 0
-  m_Name: FIRST SHOT
+  m_Name: WEAPONS FREE
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1627,7 +1627,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '2  SILENT SHOT
+  m_text: '2  NO PEEKING
 
     <size=26><alpha=#B0>   HIT THE GARUDA ONCE. NO SCANS:
     USE POINT AND RULER.</size>'
@@ -1723,7 +1723,7 @@ GameObject:
   - component: {fileID: 2066283959}
   - component: {fileID: 2066283958}
   m_Layer: 0
-  m_Name: PRIZE
+  m_Name: FINDERS KEEPERS
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

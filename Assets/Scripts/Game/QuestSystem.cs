@@ -94,7 +94,25 @@ public class QuestSystem : MonoBehaviour
     private float nextArrival;
     private TacticalWorld world;
 
-    private void Awake() { if (!board) board = FindAnyObjectByType<BoardManager>(); world = FindAnyObjectByType<TacticalWorld>(); }
+    [Header("The help bubble (owner 2026-10-29: a placeholder that says what to do in each level)")]
+    [Tooltip("The bubble on the board. Hidden until a level's Mission gives it text; a click on it hides it.")]
+    [SerializeField] private GameObject helpBubble;
+    [SerializeField] private TMPro.TMP_Text helpText;
+
+    /// <summary>A level's Mission shows what to do in it. Empty text: no bubble.</summary>
+    public void ShowHelp(string text)
+    {
+        if (!helpBubble || !helpText) return;
+        helpText.text = text;
+        helpBubble.SetActive(!string.IsNullOrEmpty(text));
+    }
+
+    private void Awake()
+    {
+        if (!board) board = FindAnyObjectByType<BoardManager>(); world = FindAnyObjectByType<TacticalWorld>();
+        var close = helpBubble ? helpBubble.GetComponent<UnityEngine.UI.Button>() : null;
+        if (close) close.onClick.AddListener(() => helpBubble.SetActive(false));
+    }
     private void OnEnable() { if (board) board.Ticked += Tick; }
     private void OnDisable() { if (board) board.Ticked -= Tick; }
 
