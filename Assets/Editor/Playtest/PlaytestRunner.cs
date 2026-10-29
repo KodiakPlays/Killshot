@@ -236,11 +236,16 @@ public static class PlaytestRunner
         Check("INITIALISING can't start (no shader): it still calls finished, so Enter leads on", probeDone && !probeIntro.enabled, "");
         UnityEngine.Object.Destroy(probe);
 
-        // 3. Briefing → board (Enter; old Input class — call what Enter calls)
-        var flow = UnityEngine.Object.FindAnyObjectByType<ScreenFlow>();
-        if (flow) flow.Advance();
+        // 3. Briefing → board (Step 114, owner 2026-10-29: the briefing is the level list; pick WOLF HUNT — call what a
+        //    click or Enter on its row calls)
+        var rows = System.Array.ConvertAll(UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.InstanceID), b => b.name);
+        var wolfRow = GameObject.Find("WOLF HUNT");
+        bool wolfFound = wolfRow; // read now: the row is gone once the board loads
+        if (wolfFound) wolfRow.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "02.1_Grid");
-        Check("Enter on the briefing opens the board", SceneManager.GetActiveScene().name == "02.1_Grid", "called ScreenFlow.Advance, as Enter does");
+        Check("The level list has its four levels; picking WOLF HUNT opens the board on Level_01",
+              rows.Length == 4 && wolfFound && SceneManager.GetActiveScene().name == "02.1_Grid" && TacticalWorld.chosenLevel == "Level_01",
+              string.Join(", ", rows) + "; called the WOLF HUNT row's onClick, as a click or Enter does");
         yield return 1.5f;
         var board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
         Check("The board is running", board != null, "");

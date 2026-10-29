@@ -36,6 +36,16 @@ public class ScreenFlow : MonoBehaviour
         else if (!showFirst) Advance();
     }
 
+    /// <summary>The level list (owner 2026-10-29): play this level, a scene in Assets/Scenes/Levels by name. Shows
+    /// showFirst, else loads the next scene at once. Safe to call from a Button's onClick.</summary>
+    public void Play(string level)
+    {
+        if (going || (showFirst && showFirst.activeSelf)) return; // picked already
+        TacticalWorld.chosenLevel = level;
+        if (showFirst) showFirst.SetActive(true);
+        else Advance();
+    }
+
     /// <summary>Load the next scene. Safe to call from a Button's onClick.</summary>
     public void Advance()
     {

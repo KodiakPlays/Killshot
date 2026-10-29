@@ -23,9 +23,9 @@ scripts out of `Scripts/Tactical` (step 5) and the clock move (step 8). The orde
 owner-approved plan: settle, finish the refactor (new features paused), then the Tuning and Level
 tools, then the mission scripter, then features.
 
-The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME shows two
-title cards, MISSION ONE and WOLF HUNT, 3 seconds each. Then INITIALISING... and the board. No Enter
-press (Steps 94 and 106).
+The game now opens on the SECTION 36 intro, which runs itself through to a menu. NEW GAME opens the
+MISSIONS list (Step 114): FIRST SHOT, SILENT SHOT, PRIZE and WOLF HUNT. A click or Enter on one plays
+it: INITIALISING... and the board, with that level loaded.
 
 The board looks and clicks right, and you can fight on it. Our ship is the Asura-class destroyer.
 It starts at the level's Player Spawn. The enemy is the Garuda-class cruiser, `Garuda · Cruiser` in
@@ -161,8 +161,9 @@ Do not run ahead. Do one step, show it, wait.
 | 111 | Units: at x1.0 a small square is 50 units and our ship (100 units) is two squares long; the Garuda is 150; the plot zooms out to x0.01 | **Done**. Compiled clean; checked in play mode at x1.0 and x0.01 (`Logs/UnitsCheck`); playtest 218/218 (2026-10-29_021252) |
 | 112 | Turning after TRACK no longer spoils the aim: the firing solution is a point in space; RNG and BRG follow the bow; ANGLE drops if the turn takes the target out of arc | **Done**. Compiled clean; checked in play mode (a still and a crossing target, both hit after a turn; the old way missed); full playtest not run |
 | 113 | Everything in the game's workings is in units: every km name in the code is now units (range, speed, battle space and the rest); the numbers are the same; the screen still shows km | **Done**. Compiled clean; every saved value carried over (94 checked); playtest 213/218 (2026-10-29_100527): #205–206 the zoom was moved off x1.0 during the run (rechecked in play mode, holds), #89 and #111 follow Step 112's new aim, #56 the old RECALL timing |
+| 114 | Training levels: NEW GAME opens the MISSIONS list (FIRST SHOT, SILENT SHOT, PRIZE, WOLF HUNT); each level has a Mission box with its goal; in the training levels the Garuda doesn't hunt | **Done**. Compiled clean; every goal's win and loss checked in play mode (`Logs/LevelListCheck`); playtest 217/218 (2026-10-29_110455): #5, the new list check, was wrong itself (fixed, rechecked in play mode); not yet played through by hand |
 
-Steps 6 to 28 and Steps 34 to 113 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 114 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -179,15 +180,16 @@ old cockpit game: `Assets/DOCUMENTATION.md`, `Assets/STAKEHOLDER_DOCUMENTATION.m
 
 The intro, briefing and board scenes are in `Assets/Scenes/Tactical/`. Levels are in
 `Assets/Scenes/Levels/`. The play order is `00_Start` → `01_Briefing` → `02.1_Grid`, with a level
-loaded on top of the board. Build Settings list four scenes: `00_Start`, `01_Briefing`, `02.1_Grid`
-and `Level_01`. Prototype Dev came off in Step 84.
+loaded on top of the board. Build Settings list seven scenes: `00_Start`, `01_Briefing`, `02.1_Grid`,
+`Level_01`, and the training levels `FirstShot`, `SilentShot` and `Prize` (Step 114). Prototype Dev came off in Step 84.
 
 | Scene | GUID | State |
 |---|---|---|
 | `00_Start.unity` | `e50db2cd323304012ba3e7afb4e531cb` | Built |
 | `01_Briefing.unity` | `326d3f3159fcb4965bebcf61495595c6` | Built |
 | `02.1_Grid.unity` | `db225074494dd4259bc8aab05e48399e` | Built — the board. In the play flow after `01_Briefing` |
-| `Levels/Level_01.unity` | `4cf76e81d39984c4db973e752f8bef63` | Built — the first level, loaded on top of `02.1_Grid` |
+| `Levels/Level_01.unity` | `4cf76e81d39984c4db973e752f8bef63` | Built — Wolf Hunt, loaded on top of `02.1_Grid` |
+| `Levels/FirstShot.unity`, `SilentShot.unity`, `Prize.unity` | (see their `.meta`) | Built in Step 114 — the training levels |
 
 ### `00_Start` — built in Step 2
 
@@ -206,7 +208,11 @@ and `Level_01`. Prototype Dev came off in Step 84.
 
 Same camera, EventSystem and Canvas setup as `00_Start`.
 
-- `MISSION ONE card` (on), `WOLF HUNT card` (off), `INITIALISING` (off), `ScreenFlow`.
+- Since Step 114 it is the MISSIONS list. `MISSIONS card` (on): the green screen, MISSIONS typed at the
+  top (a copy of the WOLF HUNT card; the green screen's letters have no V, so not LEVELS). `Level List`:
+  a canvas over it (sort order 1) with four rows, each a Button whose click calls `ScreenFlow.Play` with
+  its level. The EventSystem selects FIRST SHOT first, so the arrow keys and Enter work at once.
+- `MISSION ONE card` (off) and `WOLF HUNT card` (off) are kept, unused. `INITIALISING` (off), `ScreenFlow`.
 
 ### `02.1_Grid` — made in Step 28, board built in Steps 29–33, World added in Step 34
 
@@ -282,6 +288,19 @@ Added in Step 85:
   (12), · middle (35), · far (50): 136 pieces, all `WorldTerrain`. (Step 73 had `Base Husk` at (0, 0)
   and Debris · in the husk; Step 93 thinned the belts.)
 - No camera and no light: the board's are used.
+- No Mission box, so it plays Wolf Hunt.
+
+### `FirstShot`, `SilentShot`, `Prize` — made in Step 114
+
+The training levels. Each: `Battle Space` 40,000 × 40,000; `Player Spawn` at (0, −12,000) facing north;
+`Enemy Spawn · Garuda` at a fixed spot (box 0 × 0), Hunts off; one `Debris Field`, a circle of 40 pieces;
+a `Mission` box.
+
+| Level | Goal | The Garuda starts | Debris |
+|---|---|---|---|
+| `FirstShot` | Destroy | (0, −1,000), 11,000 ahead, facing east | (−9,000, −4,000) |
+| `SilentShot` | HitUnseen | (9,000, 0), 15,000 away, facing west | (−8,000, 2,000) |
+| `Prize` | Capture | (−4,000, 0), 12,600 away, facing east | (9,000, −3,000) |
 
 ### Deleted in Step 1
 
@@ -313,7 +332,7 @@ Where it is attached:
 | Scene | On | `nextScene` | `advanceOnEnter` | How it fires |
 |---|---|---|---|---|
 | `00_Start` | Its own root object, named `ScreenFlow` | `01_Briefing` | off | NEW GAME calls `Advance()` |
-| `01_Briefing` | Its own root object | `02.1_Grid` (was `02_Grid` until Step 28) | on | Every 3 s or on Enter: the next card, then INITIALISING, whose `finished` calls `Advance()`. |
+| `01_Briefing` | Its own root object | `02.1_Grid` (was `02_Grid` until Step 28) | off | Step 114: it waits. A row on the level list calls `Play(level)`: it sets `TacticalWorld.chosenLevel` and shows INITIALISING, whose `finished` calls `Advance()`. (Until Step 114: every 3 s or on Enter, the next card.) |
 
 The script is on **its own root GameObject**, not on the button or the canvas.
 
@@ -333,7 +352,8 @@ Everything on the `02.1_Grid` board. Detail is in `UI_INTEGRATION_LOG.md` (delet
 | `Assets/Scripts/UI/Panels/PeriscopePanel.cs`, `PlotPanel.cs` | The periscope and the plot. |
 | `Assets/Scripts/UI/Panels/*Panel.cs` | The other eight panels: helm, power, sensors, comms, fire control, hangar, engineering, orders. Each shows its ship part and passes clicks to it. |
 | `Assets/Scripts/UI/Panels/EndScreenPanel.cs` | The end screen (Step 85): how the mission ended, RESTART MISSION and MAIN MENU. |
-| `Assets/Scripts/Game/QuestSystem.cs` | The mission (Step 85): win and loss, checked each tick. It pauses the board at the end. On `World`. Wolf Hunt's jump point and reinforcement countdown (Steps 98, 99). |
+| `Assets/Scripts/Game/QuestSystem.cs` | The mission (Step 85): win and loss, checked each tick. It pauses the board at the end. On `World`. Wolf Hunt's jump point and reinforcement countdown (Steps 98, 99). Step 114: the level's goal (`MissionGoal`); the training goals are won or lost at once. |
+| `Assets/Scripts/Game/Mission.cs` | Step 114. A box in a level scene: the level's goal (Destroy, HitUnseen, Capture, or WolfHunt). At the start it tells QuestSystem. A level without one plays Wolf Hunt. |
 | `Assets/Scripts/UI/BoardMotion.cs`, `Eased.cs`, `ClickSpot.cs`, `Polygon.cs`, `Wedge.cs`, `MarksGraphic.cs`, `PlotGrid.cs`, `SweepGraphic.cs`, `Rockers.cs`, `ScopeSight.cs` | Shared pieces: motion, easing, click spots, shapes, marks, plot grid, sweep, rockers, scope sight. |
 | `Assets/Scripts/UI/ArtList.cs` | The Art list and the Fonts list for the frame pieces, which have no panel script. |
 | `Assets/Scripts/UI/BoardPalette.cs` | The board's colours. The file is `Assets/UI/Board/Palette.asset`. Every panel reads its colours from it. |
@@ -442,8 +462,8 @@ Details in section 6, Step 34.
 
 | File | On what | What it is |
 |---|---|---|
-| `Assets/Scripts/Tactical/EnemySpawn.cs` | a node in a level scene | Where an enemy ship starts. A box in the Scene view only, never on the board. |
-| `Assets/Editor/LevelWindow.cs` | menu **Starwolf → Level** | Lists, opens and makes levels; adds an enemy spawn, the one Player Spawn (Step 73), a Debris Field (Step 77) and the Battle Space box (Step 91). Shows the open level from above: the battle space's edge, debris as dots, the spawn boxes. Pick a debris field to see its settings and a preview of Scatter. |
+| `Assets/Scripts/Tactical/EnemySpawn.cs` | a node in a level scene | Where an enemy ship starts. A box in the Scene view only, never on the board. Step 114: Hunts (on by default) sets whether that ship's brain hunts us. |
+| `Assets/Editor/LevelWindow.cs` | menu **Starwolf → Level** | Lists, opens and makes levels; adds an enemy spawn, the one Player Spawn (Step 73), a Debris Field (Step 77), the Battle Space box (Step 91) and a Mission box (Step 114). Shows the open level from above: the battle space's edge, debris as dots, the spawn boxes. Pick a debris field to see its settings and a preview of Scatter. |
 | `Assets/Scripts/Game/DebrisField.cs` | a node in a level scene | Step 77. A shape filled with pieces; the pieces are saved under it. `Layout()` places them from the seed. Nothing runs at play. |
 | `Assets/Editor/DebrisFieldEditor.cs` | the Debris Field's inspector | Step 77. Scatter and Reshuffle; `Check()` is the layout's own test. |
 | `Assets/Scripts/Tactical/PlayerSpawn.cs` | a node in a level scene | Step 73. Where our ship starts: a white box in the Scene view only. At play our ship starts there facing its way (`TacticalWorld.SpawnPlayer`), and the plot opens on it (`PlotPanel.CentreOnOurShip`, which the C key uses too). One per level. |
@@ -4550,6 +4570,74 @@ tools. The playtest's report text is unchanged.
 
 **Next.** What zooming out means, then speeds, then ranges. The docs checklist under "Distances in
 units" in section 8 is still to do in one go.
+
+### Step 114 — Training levels and the MISSIONS list
+
+The owner, 2026-10-29: the first version of the tutorial is a set of short levels. Each has one small
+goal and a different mix of tools. The player picks one from a list, and NEW GAME opens the list. The
+plan is in `FTUE_PLAN.md` §0. Built by the FTUE chat.
+
+**What the player sees.** NEW GAME opens a green screen with MISSIONS typed in at the top. Under it
+are four rows:
+
+1. FIRST SHOT: scan the Garuda and destroy it with the railgun.
+2. SILENT SHOT: hit the Garuda once without scanning it. A scan loses.
+3. PRIZE: capture the Garuda with the marines. Destroying it loses.
+4. WOLF HUNT: as before.
+
+The arrow keys or the mouse pick a row. Enter or a click plays it: INITIALISING..., then the board.
+In the first three, the Garuda does not hunt us. It cruises the map, never listens for us and never
+fires. Each is won or lost the moment its goal is met. There is no jump point. A lost training goal
+says MISSION FAILED, not SHIP LOST. RESTART MISSION plays the same level again.
+
+**What the owner sees.** Three new levels in Starwolf → Level: FirstShot, SilentShot and Prize
+(section 2 has where everything starts). The Level window has a Mission button. The Mission box sets
+the level's goal. An Enemy Spawn has a Hunts tick box.
+
+**What changed.**
+
+- `Game/Mission.cs` (new): the level's goal. At the start it tells QuestSystem. A level without one
+  plays Wolf Hunt, so `Level_01` is unchanged.
+- `QuestSystem`: the goals (`MissionGoal`: WolfHunt, Destroy, HitUnseen, Capture) and two fail
+  reasons (Scanned, PrizeDestroyed). Wolf Hunt's own rules are untouched.
+- `EnemySpawn`: Hunts, on by default. At the start it sets that ship's brain (`TacticalWorld.Hunts`).
+- `TacticalWorld.chosenLevel`: the level picked on the list. Empty, the board loads its own
+  `levelScene` (`Level_01`), so playing the board straight from the editor is unchanged.
+- `ScreenFlow.Play(level)`: what each row calls.
+- `EndScreenPanel`: MISSION FAILED and its two reasons. A SILENT SHOT win reads "GARUDA HIT · NEVER
+  SCANNED".
+- `01_Briefing` is the list (section 2). Build Settings have the three levels.
+- Playtest check #5 picks WOLF HUNT on the list. It used to call `ScreenFlow.Advance` straight.
+
+**Checked** in play mode (`Logs/LevelListCheck`):
+
+- The list shows, with FIRST SHOT picked. Its click loads `FirstShot` with goal Destroy, the Garuda's
+  Hunts off, both ships on their spawns.
+- 230 game seconds at x10 with our signal held at 100: the Garuda stayed COLD, fired nothing and
+  cruised.
+- Every goal through the end screen: FIRST SHOT destroyed → complete; SILENT SHOT scanned → failed,
+  hit → complete; PRIZE destroyed → failed, captured → complete. RESTART MISSION reloads the level.
+- WOLF HUNT from the list loads `Level_01` with Wolf Hunt's goal and the Garuda hunting.
+- The wins were set by hand, not fought. The playtest's own checks show a shot plotted from two
+  POINTs and a RULER hitting the moving, unscanned Garuda.
+
+Full playtest 217/218 (2026-10-29_110455). The one failure is #5, the new list check. It read the
+WOLF HUNT row after the board had loaded, when the row was gone. The game did the right thing: the
+board opened on `Level_01`, and every check after it passed. The check now reads the row first. It
+was rechecked in play mode (four rows, WOLF HUNT found, `Level_01` chosen), not in a full run. #56
+RECALL passed this time.
+
+**Calls made on the fly.**
+
+- The title is MISSIONS, not LEVELS: the green screen's letters (`glyphs.json`) have no V.
+- In SILENT SHOT a scan loses (`FTUE_PLAN.md` §0, open question 3).
+- FIRST SHOT also counts a capture as a win.
+- After a pick: INITIALISING..., then the board, with no title card. The MISSION ONE and WOLF HUNT
+  cards are kept in the scene, switched off.
+- A lost training goal says MISSION FAILED.
+
+**Not done.** No level has been played through by hand, start to finish. Nothing on the board says
+the goal once a level has started.
 
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 

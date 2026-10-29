@@ -25,7 +25,65 @@ derelicts.
 How both work is in `Assets/TACTICAL_BOARD_SPEC.md` §5.3, §5.4 and §15.2. The rest of this plan
 stands until the owner says otherwise.
 
+**Changed by the owner (2026-10-29): training levels come first.** The first version of the tutorial
+is a set of short training levels, picked from a list. NEW GAME opens the list. It no longer goes
+straight to Wolf Hunt. The one long mission with the XO (§1 to §9) is a later version. §0 has the
+plan.
+
 Detailed status is not kept here. `BUILD_LOG.md` is the single living record; log each step there.
+
+---
+
+## 0 · The first version: training levels (owner, 2026-10-29)
+
+**Summary.** NEW GAME opens a list of levels. The player picks one. Each level is short and has one
+small goal. Each one lets the player try a few tools together. Early levels use a few tools, and
+later ones mix more of them. Each level is a small real job with a clear win at the end.
+
+**What the owner decided.**
+
+- The tutorial starts as a series of short levels. Each has one small goal and a different mix of
+  tools.
+- A new screen lists the levels. NEW GAME goes to it.
+- Two levels the owner named: board an enemy ship that is not hunting you; hit a target with POINT
+  and RULER only, with no scans. The owner calls the passive shot "an ambush move".
+
+**Built, Step 114 (2026-10-29).** The owner said yes to the four levels below. NEW GAME opens the
+list, titled MISSIONS (the green screen's letters have no V). All four can be picked and played. Each
+goal's win and loss is checked; no level has been played through by hand yet. Details: `BUILD_LOG.md`
+Step 114.
+
+**The levels.** In each training level the Garuda
+does not hunt us. It cruises the map, never listens for us and never fires. That is the brain's
+`hunts` switch turned off, which is built.
+
+| # | Level | Goal | Tools |
+|---|---|---|---|
+| 1 | FIRST SHOT | Destroy the Garuda. | ACTIVE scan, periscope, TRACK, the four railgun switches, the lever |
+| 2 | SILENT SHOT | Hit the Garuda once without scanning it. | Listening, bearing lines, POINT, RULER, TRACK from the plot, the railgun |
+| 3 | PRIZE | Capture the Garuda. | Railgun to break a side open, interceptors on DISABLE to stop it, assault boats on SECURE |
+| 4 | WOLF HUNT | As now. | Everything. It hunts us, fights back, and reinforcements come. |
+
+**How it is built (Step 114).**
+
+1. **The list** is `01_Briefing`. Each row calls `ScreenFlow.Play` with its level, which sets
+   `TacticalWorld.chosenLevel`. The board loads that level instead of `Level_01`.
+2. **A Mission box in each level** sets its goal (`MissionGoal`), and `QuestSystem` plays it. The
+   training goals are won or lost at once, with no jump point. A level without a Mission box plays
+   Wolf Hunt.
+3. **Enemy Spawn's Hunts tick box** sets whether that ship hunts us. It is off in the training levels.
+4. **The levels** `FirstShot`, `SilentShot` and `Prize` were made with the Level window's own parts.
+   Each has a battle space, our spawn, the Garuda's spawn, one debris field and a Mission box.
+
+Not needed for this version: the XO, the comms box, gating (§6 and §7).
+
+**Open questions.**
+
+1. Does Wolf Hunt stay on the list as the last level? (It is there now.)
+2. In SILENT SHOT a scan loses the level (a call made while building). Or should ACTIVE be switched
+   off instead?
+3. Are all levels open from the start, or does each open when the one before is won? (All open now.)
+4. Should the board say the goal once a level has started? (It doesn't now.)
 
 ---
 

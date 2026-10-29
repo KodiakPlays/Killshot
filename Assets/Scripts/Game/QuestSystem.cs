@@ -13,6 +13,9 @@ using UnityEngine.Serialization;
 /// - When the Garuda finds us (its awareness reaches ALERT), the alarm says REINFORCEMENTS INBOUND and a
 ///   countdown starts (Step 99).
 /// Lose: our ship destroyed (its reactor at 0), or lost at the battle space's edge. When it ends, the board pauses.
+///
+/// The training levels (owner 2026-10-29, FTUE_PLAN §0): a level's Mission sets another goal. Each is won or lost
+/// the moment it is met, with no jump point.
 /// </summary>
 public enum QuestStage
 {
@@ -30,8 +33,15 @@ public enum MissionFailReason
     Destroyed,
     Desertion,
     TimeExpired,
-    LifeSupportFailed
+    LifeSupportFailed,
+    Scanned,
+    PrizeDestroyed
 }
+
+/// <summary>What a level asks for (its Mission). WolfHunt: find the target, destroy or capture it, reach the jump
+/// point. Destroy: destroy or capture it. HitUnseen: hit it once without scanning it; a scan loses. Capture: take it
+/// with the marines; destroying it loses.</summary>
+public enum MissionGoal { WolfHunt, Destroy, HitUnseen, Capture }
 
 public class QuestSystem : MonoBehaviour
 {
@@ -61,6 +71,8 @@ public class QuestSystem : MonoBehaviour
 
     public QuestStage Stage { get; private set; }
     public MissionFailReason FailReason { get; private set; }
+    /// <summary>The level's goal, set by its Mission. A level without one plays Wolf Hunt.</summary>
+    public MissionGoal Goal { get; set; } = MissionGoal.WolfHunt;
     public string TargetKey => targetKey;
     public bool Over => Stage == QuestStage.MissionComplete || Stage == QuestStage.MissionFailed;
     /// <summary>The jump point is open: the target is down. Where it is, world units.</summary>
@@ -99,7 +111,9 @@ public class QuestSystem : MonoBehaviour
         var us = board.State;
         if (us.destroyed) { End(QuestStage.MissionFailed, us.deserted ? MissionFailReason.Desertion : MissionFailReason.Destroyed); return; }
         var target = us.ShipOf != null ? us.ShipOf(targetKey) : null;
-        if (Stage == QuestStage.LocateTarget && us.sensors.identified.Contains(targetKey)) Stage = QuestStage.EliminateTarget;
+        bool scanned = us.sensors.identified.Contains(targetKey);
+        if (Stage == QuestStage.LocateTarget && scanned) Stage = QuestStage.EliminateTarget;
+        if (Goal != MissionGoal.WolfHunt) { Train(us, target, scanned); return; }
         Reinforce(us);
         if (Stage < QuestStage.ExitRegion && target != null && (target.destroyed || target.captured))
         {
@@ -117,6 +131,21 @@ public class QuestSystem : MonoBehaviour
             if (first) board.Alert(); // the alert tone as the jump point opens, with its line already on the strip
             if (d.magnitude <= exitReachUnits) End(QuestStage.MissionComplete, MissionFailReason.None);
         }
+    }
+
+    // A training level's goal, met or lost at once (FTUE_PLAN §0)
+    void Train(ShipState us, ShipState target, bool scanned)
+    {
+        if (Goal == MissionGoal.HitUnseen)
+        {
+            if (scanned) End(QuestStage.MissionFailed, MissionFailReason.Scanned);
+            else if (us.weapons.lastShotHit) End(QuestStage.MissionComplete, MissionFailReason.None);
+            return;
+        }
+        if (target == null) return;
+        if (target.captured) End(QuestStage.MissionComplete, MissionFailReason.None);
+        else if (target.destroyed && Goal == MissionGoal.Capture) End(QuestStage.MissionFailed, MissionFailReason.PrizeDestroyed);
+        else if (target.destroyed) End(QuestStage.MissionComplete, MissionFailReason.None);
     }
 
     // The alarm: an enemy brain ALERT (it has found us) starts the countdown. At its end the first wave arrives,

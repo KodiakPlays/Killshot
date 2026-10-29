@@ -20,6 +20,8 @@ public class TacticalWorld : MonoBehaviour
 
     /// <summary>Where the level scenes live (owner 2026-10-25: each level is its own scene).</summary>
     public const string LevelFolder = "Assets/Scenes/Levels";
+    /// <summary>The level picked on the level list (owner 2026-10-29). It plays instead of levelScene, and again on RESTART.</summary>
+    public static string chosenLevel;
 
     private WorldContact[] contacts = new WorldContact[0];
     private EnemyBrain[] brains = new EnemyBrain[0];
@@ -70,7 +72,8 @@ public class TacticalWorld : MonoBehaviour
         // the level arrives a frame later; the board starts paused, so nothing has moved by then
         SceneManager.sceneLoaded += OnSceneLoaded;
         for (int i = 0; i < SceneManager.sceneCount; i++) HideRuins(SceneManager.GetSceneAt(i)); // a level already open in the editor
-        if (!string.IsNullOrEmpty(levelScene) && !LevelOpen()) SceneManager.LoadSceneAsync(levelScene, LoadSceneMode.Additive);
+        string level = string.IsNullOrEmpty(chosenLevel) ? levelScene : chosenLevel;
+        if (!string.IsNullOrEmpty(level) && !LevelOpen()) SceneManager.LoadSceneAsync(level, LoadSceneMode.Additive);
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode) { HideRuins(scene); SeeRuins(); }
@@ -158,6 +161,12 @@ public class TacticalWorld : MonoBehaviour
             StartShip(c);
         }
         Sync();
+    }
+
+    /// <summary>A level's spawn sets whether this contact's brain hunts us (owner 2026-10-29: in the training levels it doesn't).</summary>
+    public void Hunts(string key, bool on)
+    {
+        for (int i = 0; i < contacts.Length; i++) if (contacts[i] && contacts[i].trackKey == key && brains[i]) brains[i].hunts = on;
     }
 
     /// <summary>Step 73: a level's Player Spawn (PlayerSpawn). The player's ship starts there, facing the

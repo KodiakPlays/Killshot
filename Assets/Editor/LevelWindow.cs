@@ -82,6 +82,7 @@ public class LevelWindow : EditorWindow
             if (GUILayout.Button("Player spawn")) AddPlayerSpawn(level);
             if (GUILayout.Button("Battle space")) AddBattleSpace(level);
             if (GUILayout.Button("Debris field")) { AddDebrisField(level); picked = Selection.activeGameObject.GetComponent<DebrisField>(); }
+            if (GUILayout.Button("Mission")) Add<Mission>(level, "Mission"); // its goal; without one the level plays Wolf Hunt
         }
         EditorGUILayout.EndScrollView();
     }

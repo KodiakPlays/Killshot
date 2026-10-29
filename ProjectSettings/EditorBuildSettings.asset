@@ -17,5 +17,14 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Levels/Level_01.unity
     guid: 4cf76e81d39984c4db973e752f8bef63
+  - enabled: 1
+    path: Assets/Scenes/Levels/FirstShot.unity
+    guid: c073176007f064110a090bb380919f75
+  - enabled: 1
+    path: Assets/Scenes/Levels/SilentShot.unity
+    guid: 75e0d8815187346c8a29b832aaf0d9ae
+  - enabled: 1
+    path: Assets/Scenes/Levels/Prize.unity
+    guid: 32de13e69d45b428184941e82e37df0e
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

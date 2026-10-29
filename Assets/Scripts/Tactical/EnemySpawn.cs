@@ -13,6 +13,9 @@ public class EnemySpawn : MonoBehaviour
     [Tooltip("The box, units (x across, y up). The ship starts at a random point inside it, facing a random way. 0 x 0: "
            + "always the centre, facing the arrow.")]
     [FormerlySerializedAs("sizeKm")] public Vector2 sizeUnits = new Vector2(40000f, 12000f);
+    [Tooltip("On: it listens for us, hunts us and fights (Wolf Hunt). Off: it cruises the map, never listens for us and "
+           + "never fires (the training levels, owner 2026-10-29).")]
+    public bool hunts = true;
 
     // Start, not Awake: TacticalWorld has set its ships up by now, whether this level was open with
     // the board or loaded on top of it
@@ -20,6 +23,7 @@ public class EnemySpawn : MonoBehaviour
     {
         var world = FindAnyObjectByType<TacticalWorld>();
         if (!world) return;
+        world.Hunts(trackKey, hunts);
         if (sizeUnits.x <= 0f || sizeUnits.y <= 0f) { world.Spawn(trackKey, transform.position, transform.eulerAngles.z); return; }
         var at = transform.position + new Vector3(Random.Range(-0.5f, 0.5f) * sizeUnits.x, Random.Range(-0.5f, 0.5f) * sizeUnits.y, 0f);
         var space = FindAnyObjectByType<BattleSpace>(); // never outside the battle space

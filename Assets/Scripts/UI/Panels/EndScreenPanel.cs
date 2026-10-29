@@ -34,10 +34,14 @@ public class EndScreenPanel : Panel
         var enemy = s.ShipOf != null ? s.ShipOf(quest.TargetKey) : null;
         string name = t != null ? t.name : quest.TargetKey.ToUpperInvariant();
         string fate = enemy == null ? "" : enemy.destroyed ? "DESTROYED" : enemy.captured ? "CAPTURED" : "AFLOAT";
-        title.text = won ? "MISSION COMPLETE" : "SHIP LOST";
+        bool shipLost = quest.FailReason != MissionFailReason.Scanned && quest.FailReason != MissionFailReason.PrizeDestroyed;
+        title.text = won ? "MISSION COMPLETE" : shipLost ? "SHIP LOST" : "MISSION FAILED";
         Paint(title, won ? Palette.nominal : Palette.alarm);
-        reason.text = won ? name + " " + fate + (quest.ExitOpen ? " · JUMPED OUT" : "")
-                    : quest.FailReason == MissionFailReason.Desertion ? "LEFT THE BATTLE SPACE" : "REACTOR DESTROYED";
+        reason.text = won ? name + " " + (quest.Goal == MissionGoal.HitUnseen ? "HIT · NEVER SCANNED" : fate) + (quest.ExitOpen ? " · JUMPED OUT" : "")
+                    : quest.FailReason == MissionFailReason.Desertion ? "LEFT THE BATTLE SPACE"
+                    : quest.FailReason == MissionFailReason.Scanned ? name + " SCANNED · THIS LEVEL ALLOWS NO SCANS"
+                    : quest.FailReason == MissionFailReason.PrizeDestroyed ? name + " DESTROYED · IT WAS TO BE CAPTURED"
+                    : "REACTOR DESTROYED";
         float armour = 0f, most = 0f;
         for (int i = 0; i < s.damage.SideArmour.Length; i++) { armour += s.damage.SideArmour[i]; most += s.damage.stats.sideArmourMax[i]; }
         int secs = Mathf.FloorToInt(Controls.MissionSeconds - quest.StartedAt);
