@@ -722,7 +722,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  pxPer1000km: 60.9
+  pxPer1000Units: 760
   zoom: 1
   stepsKm:
   - 5000
@@ -733,14 +733,17 @@ MonoBehaviour:
   - 100
   - 50
   - 20
-  targetCellPx: 61
+  squareAtFullZoom: 50
   majorEvery: 5
   lineWidthPx: 1
+  edgeWidthPx: 3
   tint: 0
   whiteMinor: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 0.12941177}
   whiteMajor: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 0.25882354}
   amberMinor: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 0.34117648}
   amberMajor: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 0.61960787}
+  whiteEdge: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 0.9019608}
+  amberEdge: {r: 0.8784314, g: 0.29411766, b: 0.23529412, a: 0.9019608}
   gammaBoard: 1
 --- !u!1 &3052294170334661008
 GameObject:
@@ -2325,7 +2328,6 @@ MonoBehaviour:
   hitLayer: {fileID: 2850136482378837668}
   passives: []
   ownShipImage: {fileID: 8877151737208059728}
-  ownShipPxAtFullZoom: 76
   ownShipMinPx: 30
   ownShipMaxPx: 120
   ruinsImage: {fileID: 6430628026388568314}
@@ -2357,9 +2359,13 @@ MonoBehaviour:
   contactLabelOffset: {x: 10, y: 0}
   passiveVisibility: 1
   plotCentre: {x: 960, y: 545}
-  pxPer1000Km: 60.9
   grid: {fileID: 6794299334926293654}
   panKeysPxPerS: 600
+  centreOnShipKey: 99
+  panLeftKey: 276
+  panRightKey: 275
+  panUpKey: 273
+  panDownKey: 274
   axisLayer: {fileID: 6784869637121717738}
   axisFont: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
   axisMaterial: {fileID: 2100000, guid: cb0bd2ec5e4244f009e5536b9e245560, type: 2}
@@ -2368,6 +2374,7 @@ MonoBehaviour:
   pointLabelOffset: {x: 10, y: 0}
   rulerLabelOffset: {x: 0, y: -12}
   ringLabelOffset: {x: 8, y: 0}
+  markLabelSize: 14
   pointBox: 16
   rulerBox: 14
   draftAlpha: 0.75
@@ -2376,6 +2383,7 @@ MonoBehaviour:
   slugTrailPx: 24
   weaponRing: {fileID: 8019246136933200248}
   pdcArcStepDeg: 2
+  visualRingAlpha: 0.35
   fighterTemplate: {fileID: 7922429107365735552}
   fighterPx: 16
   fighterGapPx: 10
