@@ -30,8 +30,10 @@ public class PlotGrid : MaskableGraphic
     [SerializeField] private Color whiteMajor = new Color32(0xE8, 0xED, 0xF0, 66);  // ink.data .26
     [SerializeField] private Color amberMinor = new Color32(0xE0, 0xA0, 0x20, 87);  // accent.caution .34
     [SerializeField] private Color amberMajor = new Color32(0xE0, 0xA0, 0x20, 158); // accent.caution .62
-    [SerializeField] private Color whiteEdge = new Color32(0xE8, 0xED, 0xF0, 153);  // ink.data .6
-    [SerializeField] private Color amberEdge = new Color32(0xE0, 0xA0, 0x20, 230);  // accent.caution .9
+    [Tooltip("The edge on the white grid: amber (owner 2026-10-29).")]
+    [SerializeField] private Color whiteEdge = new Color32(0xE0, 0xA0, 0x20, 230);  // accent.caution .9
+    [Tooltip("The edge on the amber grid: red, as amber would not show (owner 2026-10-29).")]
+    [SerializeField] private Color amberEdge = new Color32(0xE0, 0x4B, 0x3C, 230);  // accent.alarm .9
     [Tooltip("On for the handoff board, which blends in gamma space (GammaBoardPresenter): the colours " +
              "above are pre-encoded so the canvas's linear conversion lands on them exactly.")]
     [SerializeField] private bool gammaBoard = true;
