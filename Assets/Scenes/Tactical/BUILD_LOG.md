@@ -4484,7 +4484,14 @@ BRG on a TRACK solution too.
 - A Garuda crossing at 8.75 km/s. TRACK, then 20 game seconds and a 60° turn. The slug hit. With the
   Garuda turned north after TRACK, the same solution missed.
 - Bow-on, turret A bears. After a 90° turn to starboard, it doesn't.
-Full playtest not run. It should run after KM to Units' km-to-units rename.
+Full playtest 2026-10-29_100527, run with Step 113: two checks failed because they expected the old aim.
+- #89 wanted the dialled solution's RNG and REL BRG unchanged. The point stays put in space, so they
+  drift a little as our ship moves on (RNG 10,994 for 11,000, REL BRG off by 1°). It now allows 100
+  units and 1°.
+- #111 took "unled" as BRG from the bow. BRG now follows the point on along the track, so that shot
+  passed 44 off, inside the 100 hit radius. "Unled" is now straight at where the first POINT put it,
+  two minutes before, as the check meant.
+Both changes are in `PlaytestRunner.cs`. They compiled clean. The playtest has not been run again.
 
 **Call made on the fly.** The RNG and BRG knobs move a TRACK solution's aim point (above).
 

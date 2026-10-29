@@ -733,8 +733,9 @@ public static class PlaytestRunner
                                          rngKnob.transform.TransformPoint(((RectTransform)rngKnob.transform).rect.center)));
         if (!PlotDrag(board, knobAt, knobAt + new Vector2(80, 0), "turn the RNG knob (10 steps)", "fc.knob")) yield break;
         yield return 0.3f;
+        //     Step 112: the dialled point stays put in space, so as our ship moves on, its RNG and REL BRG drift a little
         Check("The RNG knob starts a hand-dialled solution on the periscope's bearing",
-              s.weapons.Sol.set && s.weapons.Sol.manual && s.weapons.Sol.brg == expBrg && s.weapons.Sol.spd == 0f && Mathf.Abs(s.weapons.Sol.rangeUnits - (s.weapons.stats.manualStartRangeUnits + 1000f)) < 0.01f,
+              s.weapons.Sol.set && s.weapons.Sol.manual && System.Math.Abs(s.weapons.Sol.brg - expBrg) <= 1 && s.weapons.Sol.spd == 0f && Mathf.Abs(s.weapons.Sol.rangeUnits - (s.weapons.stats.manualStartRangeUnits + 1000f)) < 100f,
               "RNG " + s.weapons.Sol.rangeUnits.ToString("N0") + " km, REL BRG " + s.weapons.Sol.brg + "°, SPD " + s.weapons.Sol.spd.ToString("0.00"));
         var fc = board.GetComponentInChildren<FireControlPanel>(true);
         var tidField = typeof(FireControlPanel).GetField("trackId", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -909,14 +910,16 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
         for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (led shot)")) yield break; yield return 0.15f; }
         double tvx = t07Ship.nav.vx, tvy = t07Ship.nav.vy;
-        double unled = PassUnits(s.nav.x, s.nav.y, s.nav.heading + s.weapons.Sol.brg, s.weapons.stats.slugSpeedUnits, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
+        //     Unled: straight at where the first POINT put it, two minutes ago (Step 112: BRG now follows the point on along the track)
+        double unled = PassUnits(s.nav.x, s.nav.y, (System.Math.Atan2(s.weapons.Sol.wx - s.nav.x, s.weapons.Sol.wy - s.nav.y) * 180 / System.Math.PI + 360) % 360,
+                                 s.weapons.stats.slugSpeedUnits, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
         double led = PassUnits(s.nav.x, s.nav.y, s.weapons.LeadBearing(), s.weapons.stats.slugSpeedUnits, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
         if (!Click("rate", "10", "x10 rate key")) yield break;
         int landedLed = s.weapons.shotResults;
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (led)", "fc.lever")) yield break;
         yield return (Func<bool>)(() => s.weapons.shotResults > landedLed);
         Check("Led from the track, it hits the moving GARUDA (unscanned: a bare HIT)", s.weapons.lastShotHit && s.weapons.shotReport == "HIT · BOGEY T07",
-              "\"" + s.weapons.shotReport + "\"; aimed straight it would pass " + unled.ToString("N0") + " km off, led " + led.ToString("N0") + " km (hit radius " + s.weapons.stats.hitRadiusUnits + ")");
+              "\"" + s.weapons.shotReport + "\"; aimed at the first POINT it would pass " + unled.ToString("N0") + " km off, led " + led.ToString("N0") + " km (hit radius " + s.weapons.stats.hitRadiusUnits + ")");
         Check("Unled, the same shot would have missed", unled > s.weapons.stats.hitRadiusUnits, unled.ToString("N0") + " km");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     An active-scan lock: TRACK knows its true course and speed and leads exactly.
