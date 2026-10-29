@@ -4942,15 +4942,24 @@ out means, then speeds, then ranges.
   - `Assets/Scenes/Tactical/FTUE_PLAN.md`: §3 and the §4.4 table (railgun 25,000; the Garuda's is
     18,000), §8 step 23 ("range < 20,000").
 
-### Plot zoom-out (owner, 2026-10-29). Built in Step 110; a few looks still open
+### Plot zoom-out (owner, 2026-10-29). Built in Step 110; the owner's answers built too
 
 From Grid Visual. Built: zoom out to x0.1, the grid past the battle space, a heavier edge line, panning
 still stops at the edge. Step 111 took the limit to x0.01 with the change to units.
 
-- Still open for the owner: whether the view may pan past
-  the edge (suggested: the plot's middle may reach the edge line, no further); the outside grid the
-  same or a little dimmer; the edge colour (white or amber with the tint today, or red); a bigger small
-  square than 5,000 km when zoomed far out.
+- The owner's answers (2026-10-29), all settled:
+  - Panning stops at the edge, never past it. As built.
+  - The grid outside the battle space is not dimmer. As built.
+  - The edge is amber on the white grid and red on the amber grid (amber would not show there). Built:
+    `PlotGrid` White Edge and Amber Edge (commit 365056f), and written into `Plot.prefab` (767786d).
+    Checked in play mode at x0.02, both tints (`Logs/GridCheck/edge_*.png`).
+  - A big square always holds 5 x 5 small squares. Zooming out shows more of them, and what each
+    square is worth changes (50, 100 … 5,000 units). That is how the grid already works, so nothing
+    was added. Since Step 111 a small square at x0.01 is 5,000 units and 38 px, the same size as 50
+    units at x1.
+- **Trap: Unity keeps old values in a loaded prefab after a recompile.** A new default in a script does
+  not reach a prefab that is already loaded, even when the prefab file doesn't list the field. The
+  edge stayed white in play mode until `Plot.prefab` was saved with the colours in it.
 - Also from Grid Visual: the spec has "Body cam — not built yet" under §12.2 (commit b8dffe9), an idea
   for a marine helmet-camera window during boarding. Not to be built yet.
 
