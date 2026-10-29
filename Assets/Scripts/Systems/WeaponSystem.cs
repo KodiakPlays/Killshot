@@ -292,7 +292,8 @@ public class WeaponSystem : MonoBehaviour
         if (field == "rng") cur.rangeKm = Mathf.Max(0f, cur.rangeKm + d * 100f);
         if (field == "brg") cur.brg = Mathf.Max(-180, Mathf.Min(180, cur.brg + d));
         if (field == "spd") cur.spd = Mathf.Max(0f, (float)System.Math.Round(cur.spd + d * stats.spdStep, 2, System.MidpointRounding.AwayFromZero));
-        if (cur.manual) Fix(cur); // the dialled point is where the target is now
+        // the dialled point is where the target is now; on TRACK's solution RNG and BRG move its point too (owner 2026-10-29)
+        if (cur.manual || field != "spd") Fix(cur);
         ClearSwitches();
     }
 
@@ -392,17 +393,35 @@ public class WeaponSystem : MonoBehaviour
         cur.t = ship.missionNow;
     }
 
+    // where the solution puts the target now: its point, moved on along its course and speed since it was set
+    void Reckon(Solution cur, out double x, out double y)
+    {
+        double c = cur.course * System.Math.PI / 180, d = cur.hasCourse ? cur.spd * System.Math.Max(0, ship.missionNow - cur.t) : 0;
+        x = cur.wx + System.Math.Sin(c) * d; y = cur.wy + System.Math.Cos(c) * d;
+    }
+
+    /// <summary>Owner 2026-10-29: a solution is a point in space, so turning or moving our ship doesn't spoil it.
+    /// Its range and bearing from our bow are worked out again each tick, for the knobs, ANGLE, BEARING and SLEW TO.
+    /// It knows only the course and speed the target had when it was set: if the target turns, TRACK again.</summary>
+    void Follow(Solution cur)
+    {
+        double x, y; Reckon(cur, out x, out y);
+        double dx = x - ship.nav.x, dy = y - ship.nav.y;
+        cur.rangeKm = (float)System.Math.Sqrt(dx * dx + dy * dy);
+        cur.brg = (ShipState.JsRound((System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360) - ship.nav.heading + 540) % 360 - 180;
+    }
+
     /// <summary>Where to point the slug. With a course, reckon the target forward from where the solution
-    /// put it to now, then aim where it will be when the slug arrives. Otherwise straight down the dialled
-    /// bearing, as before.</summary>
+    /// put it to now, then aim where it will be when the slug arrives. Otherwise straight at the solution's
+    /// point, wherever our bow is now.</summary>
     public double LeadBearing()
     {
         var cur = Sol;
-        double straight = ship.nav.heading + cur.brg;
+        double tx, ty; Reckon(cur, out tx, out ty);
+        tx -= ship.nav.x; ty -= ship.nav.y;
+        double straight = (System.Math.Atan2(tx, ty) * 180 / System.Math.PI + 360) % 360;
         if (!cur.hasCourse || cur.spd <= 0.001f) return straight;
         double c = cur.course * System.Math.PI / 180, vx = cur.spd * System.Math.Sin(c), vy = cur.spd * System.Math.Cos(c);
-        double age = System.Math.Max(0, ship.missionNow - cur.t);
-        double tx = cur.wx + vx * age - ship.nav.x, ty = cur.wy + vy * age - ship.nav.y;
         double a = vx * vx + vy * vy - stats.slugSpeedKms * stats.slugSpeedKms, bq = 2 * (tx * vx + ty * vy), cq = tx * tx + ty * ty;
         double disc = bq * bq - 4 * a * cq;
         if (a >= 0 || disc < 0) return straight; // can't catch it
@@ -582,6 +601,7 @@ public class WeaponSystem : MonoBehaviour
     {
         float feed = ship.power.BusUnits("wep") * stats.wepFeedPerUnit * (float)dt;
         wepCharge = feed > 0f ? Mathf.Min(100f, wepCharge + feed) : Mathf.Max(0f, wepCharge - stats.wepBleed * (float)dt);
+        foreach (var s in sol) if (s.set) Follow(s); // our turn or move since the last tick: the bow's new range and bearing to each point
         // Tooling's bugs 7 and 8: a thrown LOAD whose gate fails (WEP power, magazine, release, rounds) or a thrown ANGLE
         // out of arc drops, with every rung after it. BEARING is left alone: a moving target drifts off it slowly.
         for (int i = 0; i < 2; i++) if (sw[i] && RungGated(i)) { Flip(i); break; }

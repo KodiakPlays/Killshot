@@ -159,8 +159,9 @@ Do not run ahead. Do one step, show it, wait.
 | 109 | The periscope shows the enemy ship: the plot's top-down picture, level, pointing left or right the way it heads; zoom until it fills the brackets, then CLASS | **Done**. Checked in play mode (before and after shots: the red lines are unchanged); playtest 215/216 (2026-10-29_015659; my check passes; the one failure is #56 RECALL, frame timing, not this work) |
 | 110 | The plot zooms out to x0.1; the grid carries on past the battle space, with a heavier line at its edge | **Done**. Compiled clean; checked in play mode at x0.1, white and amber (`Logs/GridCheck`); playtest section 25b updated, not run |
 | 111 | Units: at x1.0 a small square is 50 units and our ship (100 units) is two squares long; the Garuda is 150; the plot zooms out to x0.01 | **Done**. Compiled clean; checked in play mode at x1.0 and x0.01 (`Logs/UnitsCheck`); playtest 218/218 (2026-10-29_021252) |
+| 112 | Turning after TRACK no longer spoils the aim: the firing solution is a point in space; RNG and BRG follow the bow; ANGLE drops if the turn takes the target out of arc | **Done**. Compiled clean; checked in play mode (a still and a crossing target, both hit after a turn; the old way missed); full playtest not run |
 
-Steps 6 to 28 and Steps 34 to 111 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 112 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -839,7 +840,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 110, in detail
+## 6 · Steps 6 to 28, and 34 to 112, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -4447,6 +4448,46 @@ x1.0, so the Garuda is off screen at the start. The ship picture stays between 3
 
 **Next.** What zooming out means, then speeds, then ranges (section 8, "Distances in units"). What the
 player reads comes last. The owner may try our ship at 4 squares at x1.0.
+
+### Step 112 — Turning after TRACK no longer spoils the aim
+
+The owner, 2026-10-29: "can we fix the ship turn after placing track?" If you turn after TRACK, the
+ship fires where the target was worked out to be. It does not keep tracking it.
+
+**The bug.** A firing solution kept its bearing as an angle from our bow. Turn the ship after TRACK
+and the angle turned with it. ANGLE checked the old angle, so it could stay OUT OF ARC after you
+turned. A shot with no course (a still target, a hand-dialled one, or a POINT with no RULER) went off
+by as much as you had turned.
+
+**What the player sees now.**
+- TRACK takes the target's position, course and speed at that moment.
+- The gun aims where the target should be by now, if it kept going straight. Turning or moving our
+  ship doesn't change that.
+- It doesn't follow the target after TRACK. If the target turns, the shot misses. Press TRACK again.
+- The RNG and BRG readouts change as we turn and move. They show the range and bearing from our bow
+  to where the target should be now.
+- Turn far enough that the target leaves the turret's arc, and ANGLE drops (with BEARING and ARM).
+- Turning the RNG or BRG knob after TRACK moves the aim point. Before, against a moving target, these
+  knobs changed only the readout. SPD changes only the speed.
+
+**What changed.** Only `WeaponSystem.cs`. Each game tick, `Follow` works out each solution's range and
+bearing from our bow to its point (`Reckon`: the point, moved on along its course and speed). The slug
+aims at that point (`LeadBearing`), not along the old angle. `NudgeSol` moves the point for RNG and
+BRG on a TRACK solution too.
+
+**Checked.** Compiled clean, no warnings. In play mode on Level_01, with test slugs:
+- A still Garuda 46,000 km away, aimed with no course, then we turn 60°. BRG went from -1 to -61, the
+  gun still aimed at it, and the slug hit. Fired along the old angle (the way before the fix), it
+  missed.
+- A Garuda crossing at 8.75 km/s. TRACK, then 20 game seconds and a 60° turn. The slug hit. With the
+  Garuda turned north after TRACK, the same solution missed.
+- Bow-on, turret A bears. After a 90° turn to starboard, it doesn't.
+Full playtest not run. It should run after KM to Units' km-to-units rename.
+
+**Call made on the fly.** The RNG and BRG knobs move a TRACK solution's aim point (above).
+
+**Found for the owner.** The helm shows "AUTO — DIRECT" at the start, but no autopilot is built.
+Nothing steers the ship. The attitude key NOSE starts lit.
 
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 
