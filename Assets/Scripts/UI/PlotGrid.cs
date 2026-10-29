@@ -14,11 +14,13 @@ public class PlotGrid : MaskableGraphic
 {
     public enum Tint { White, Amber }
 
-    [Header("Scale")]
-    [SerializeField] private float pxPer1000km = 60.9f;
-    [SerializeField, Range(0.1f, 1f)] private float zoom = 1f;
+    [Header("Scale (owner 2026-10-29): at x1 a small square is 50 units, and our ship (100 units) is two of them")]
+    [Tooltip("Board px per 1,000 units at x1: 50 units is 38 px, half our ship's 76 px picture.")]
+    [SerializeField] private float pxPer1000Units = 760f;
+    [SerializeField, Range(0.01f, 1f)] private float zoom = 1f;
     [SerializeField] private float[] stepsKm = { 5000, 2000, 1000, 500, 200, 100, 50, 20 };
-    [SerializeField] private float targetCellPx = 61f;
+    [Tooltip("A small square at x1, units. Zoomed out, the square is the step nearest this size on screen.")]
+    [SerializeField] private float squareAtFullZoom = 50f;
     [SerializeField] private int majorEvery = 5;
     [SerializeField] private float lineWidthPx = 1f;
     [Tooltip("The battle space's edge (owner 2026-10-29).")]
@@ -39,8 +41,10 @@ public class PlotGrid : MaskableGraphic
     [SerializeField] private bool gammaBoard = true;
 
     public int MajorEvery => majorEvery;
+    /// <summary>The plot's scale: board px per 1,000 units at x1 (the plot panel reads it too).</summary>
+    public float PxPer1000Units => pxPer1000Units;
     public Tint GridTint { get { return tint; } set { tint = value; SetVerticesDirty(); } }
-    public float Zoom { get { return zoom; } set { zoom = Mathf.Clamp(value, 0.1f, 1f); SetVerticesDirty(); } }
+    public float Zoom { get { return zoom; } set { zoom = Mathf.Clamp(value, 0.01f, 1f); SetVerticesDirty(); } }
     /// <summary>Step 41: how far the lines are shifted, board px (x right, y down), so the grid
     /// stays fixed in the world when the plot view is panned.</summary>
     public Vector2 OffsetPx { get { return offsetPx; } set { if (value != offsetPx) { offsetPx = value; SetVerticesDirty(); } } }
@@ -54,13 +58,14 @@ public class PlotGrid : MaskableGraphic
     {
         float best = stepsKm[0];
         float bestErr = float.MaxValue;
+        float targetPx = pxPer1000Units / 1000f * squareAtFullZoom;
         foreach (float km in stepsKm)
         {
-            float px = pxPer1000km * zoom / 1000f * km;
-            float err = Mathf.Abs(px - targetCellPx);
+            float px = pxPer1000Units * zoom / 1000f * km;
+            float err = Mathf.Abs(px - targetPx);
             if (err < bestErr) { bestErr = err; best = km; }
         }
-        cellPx = pxPer1000km * zoom / 1000f * best;
+        cellPx = pxPer1000Units * zoom / 1000f * best;
         return best;
     }
 
@@ -73,7 +78,7 @@ public class PlotGrid : MaskableGraphic
         Rect r = rectTransform.rect;
         // the world origin on this rect (x right, y down from its top-left), and the battle space's edges
         float ox = r.width / 2f + offsetPx.x, oy = r.height / 2f + offsetPx.y;
-        float hw = arenaHalfKm.x * pxPer1000km * zoom / 1000f, hh = arenaHalfKm.y * pxPer1000km * zoom / 1000f;
+        float hw = arenaHalfKm.x * pxPer1000Units * zoom / 1000f, hh = arenaHalfKm.y * pxPer1000Units * zoom / 1000f;
         float x0 = ox - hw, x1 = ox + hw, y0 = oy - hh, y1 = oy + hh;
         bool white = tint == Tint.White;
         // across the whole plot, from the battle space's top-left corner, so its edges fall on lines

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Garuda
   m_EditorClassIdentifier: Assembly-CSharp::ShipStats
   shipClass: Garuda-class cruiser
+  length: 150
   navigation:
     headingKeyStep: 3
     turnRate: 14

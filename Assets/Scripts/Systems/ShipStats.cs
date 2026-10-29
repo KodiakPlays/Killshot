@@ -10,6 +10,8 @@ public class ShipStats : ScriptableObject
 {
     [Tooltip("What the ship is, shown at the top of its Tuning tab.")]
     public string shipClass = "Asura-class destroyer";
+    [Tooltip("Length, units (owner 2026-10-29). At x1 a small plot square is 50 units; the plot draws the ship this long.")]
+    public float length = 100f;
     public NavSystem.Stats navigation = new NavSystem.Stats();
     public PowerSystem.Stats power = new PowerSystem.Stats();
     public SensorSystem.Stats sensors = new SensorSystem.Stats();

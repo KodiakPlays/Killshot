@@ -27,6 +27,8 @@ public class ShipView : MonoBehaviour
     public Texture Texture => rt;
     /// <summary>The ship it watches (our ship, or a contact's model).</summary>
     public Transform Target => target;
+    /// <summary>The ship whose model it watches (its stats give the length the plot draws).</summary>
+    public Ship Ship { get; private set; }
 
     /// <summary>The view of our own ship: the one whose target is not a contact (there may be contact views too).</summary>
     public static ShipView Own()
@@ -51,6 +53,7 @@ public class ShipView : MonoBehaviour
         // the ship's longest side, measured once with the model unturned
         if (target)
         {
+            Ship = target.GetComponentInParent<Ship>();
             var rot = target.rotation;
             target.rotation = Quaternion.identity;
             var b = new Bounds(target.position, Vector3.zero);

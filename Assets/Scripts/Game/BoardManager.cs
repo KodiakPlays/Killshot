@@ -178,10 +178,10 @@ public class BoardManager : MonoBehaviour
     static readonly string[] TabActions = { "tool", "drawer", "helm", "orders", "scope" };
 
     [Header("Console — SCALE knob and grid tint")]
-    [SerializeField, Range(0.1f, 1f)] private float zoom = 1f;
-    [Tooltip("Full zoom-out (owner 2026-10-29: x0.1). Past the battle space the grid carries on.")]
+    [SerializeField, Range(0.01f, 1f)] private float zoom = 1f;
+    [Tooltip("Full zoom-out (owner 2026-10-29: x0.01, where a big square is 25,000 units). Past the battle space the grid carries on.")]
     [Tune("Board & time")]
-    [SerializeField, Range(0.1f, 1f)] private float zoomOutLimit = 0.1f;
+    [SerializeField, Range(0.01f, 1f)] private float zoomOutLimit = 0.01f;
     [Tooltip("SCALE knob: zoom x10 per this many px of drag (UIStateSpec §8.2).")]
     [Tune("Board & time")]
     [SerializeField] private float zoomDragPxPerDecade = 160f;
@@ -531,20 +531,24 @@ public class BoardManager : MonoBehaviour
 
     // ---- console -------------------------------------------------------------------------
 
-    /// <summary>Owner 2026-10-29: zooming out stops at `zoomOutLimit`, x0.1 as the design had it, whatever the battle
-    /// space's size. Past its edge the grid carries on (PlotGrid). Step 65 stopped sooner, where the map filled the
-    /// plot's width, to keep black off the sides.</summary>
+    /// <summary>Owner 2026-10-29: zooming out stops at `zoomOutLimit`, x0.01, whatever the battle space's size. Past
+    /// its edge the grid carries on (PlotGrid). Step 65 stopped sooner, where the map filled the plot's width, to keep
+    /// black off the sides.</summary>
     public double MinZoom => zoomOutLimit;
 
     public void SetZoom(double z)
     {
         // z*100 in double, as the browser does, so near-half products round the same way; the
-        // exact double is kept for the next step, the float only for display and the grid
-        zoomExact = System.Math.Max(MinZoom, System.Math.Min(1, System.Math.Floor(z * 100.0 + 0.5) / 100));
+        // exact double is kept for the next step, the float only for display and the grid.
+        // Below x0.1, z*1000 (owner 2026-10-29: down to x0.01), so the wheel's x1.12 still moves it.
+        double k = z < 0.1 ? 1000.0 : 100.0;
+        zoomExact = System.Math.Max(MinZoom, System.Math.Min(1, System.Math.Floor(z * k + 0.5) / k));
         zoom = (float)zoomExact;
         if (grid) grid.Zoom = zoom;
-        if (zoomLabel) zoomLabel.text = "x" + (zoom >= 1f ? "1.0" : zoom.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
-        scaleDial.Set(-140f + Mathf.Log10(zoom / 0.1f) * 280f); // knobAngle
+        if (zoomLabel) zoomLabel.text = "x" + (zoom >= 1f ? "1.0" : zoom.ToString(zoom < 0.1f ? "0.000" : "0.00", System.Globalization.CultureInfo.InvariantCulture));
+        // knobAngle: -140° at full zoom-out, +140° at x1, even per x10
+        float decades = Mathf.Max(0.01f, -Mathf.Log10((float)MinZoom));
+        scaleDial.Set(-140f + (Mathf.Log10(zoom) + decades) / decades * 280f);
         RefreshPanels(); // the plot (marks, contacts, our ship) follows the zoom at once
     }
 

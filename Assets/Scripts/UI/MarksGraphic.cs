@@ -74,12 +74,23 @@ public class MarksGraphic : MaskableGraphic
         vh.AddTriangle(i, i + 1, i + 2); vh.AddTriangle(i, i + 2, i + 3);
     }
 
+    // Owner 2026-10-29 (units): at x1 a weapon's reach is tens of thousands of px, more than one mesh can hold,
+    // so dashes and ring pieces are only drawn where they show (this rect, plus a margin).
+    Rect Seen()
+    {
+        var r = rectTransform.rect;
+        float m = dash + dashGap + lineWidth;
+        return Rect.MinMaxRect(r.xMin - m, r.yMin - m, r.xMax + m, r.yMax + m);
+    }
+
     void DashedLine(Vector2 a, Vector2 b, Color c)
     {
         float len = (b - a).magnitude, period = dash + dashGap;
         if (len < 1e-3f || period <= 0f) return;
         Vector2 d = (b - a) / len;
-        for (float s = 0f; s < len; s += period) Line(a + d * s, a + d * Mathf.Min(len, s + dash), c);
+        Rect seen = Seen();
+        for (float s = 0f; s < len; s += period)
+            if (seen.Contains(L(a + d * s))) Line(a + d * s, a + d * Mathf.Min(len, s + dash), c);
     }
 
     void Dot(Vector2 at, float r, Color c)
@@ -119,6 +130,11 @@ public class MarksGraphic : MaskableGraphic
     {
         if (r <= 0f) return;
         Vector2 p = L(centre);
+        // the whole ring off the plot: round it, or all inside it
+        Rect seen = Seen();
+        float near = (new Vector2(Mathf.Clamp(p.x, seen.xMin, seen.xMax), Mathf.Clamp(p.y, seen.yMin, seen.yMax)) - p).magnitude;
+        float far = new Vector2(Mathf.Max(p.x - seen.xMin, seen.xMax - p.x), Mathf.Max(p.y - seen.yMin, seen.yMax - p.y)).magnitude;
+        if (r < near || r > far) return;
         float rin = r - lineWidth / 2f, rout = r + lineWidth / 2f;
         float circ = 2f * Mathf.PI * r;
         int n = dashed ? Mathf.Max(1, Mathf.FloorToInt(circ / (dash + dashGap))) : 1;
@@ -131,6 +147,7 @@ public class MarksGraphic : MaskableGraphic
             {
                 float t0 = a0 + on * j / parts, t1 = a0 + on * (j + 1) / parts;
                 Vector2 d0 = new Vector2(Mathf.Cos(t0), Mathf.Sin(t0)), d1 = new Vector2(Mathf.Cos(t1), Mathf.Sin(t1));
+                if (!seen.Contains(p + d0 * r)) continue;
                 int i = vh.currentVertCount;
                 vh.AddVert(p + d0 * rout, c, Vector2.zero); vh.AddVert(p + d1 * rout, c, Vector2.zero);
                 vh.AddVert(p + d1 * rin, c, Vector2.zero); vh.AddVert(p + d0 * rin, c, Vector2.zero);

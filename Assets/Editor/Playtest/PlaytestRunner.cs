@@ -411,7 +411,7 @@ public static class PlaytestRunner
         //     Marks stay put in space when our ship moves.
         if (!Click("drawer", "sensors", "SENS key (close the drawer)")) yield break;
         yield return 0.6f;
-        board.SetZoom(1.0);
+        board.SetZoom(X1); // the old x1 view: these checks were written at it
         int plotSounds = 0;
         if (!Click("tool", "POINT", "POINT tool")) yield break;
         snd = board.Sounds;
@@ -448,7 +448,7 @@ public static class PlaytestRunner
         double home = s.nav.x;
         Vector2 ship0 = shipImg.anchoredPosition;
         s.nav.x = home - 5000.0;
-        double shift = 5000.0 * 60.9 / 1000.0 * board.ZoomExact; // px the world slides east on the plot
+        double shift = 5000.0 * PlotScale / 1000.0 * board.ZoomExact; // px the world slides east on the plot
         yield return 1.2f; // a few board ticks
         string pt1 = MarkLabel(board, 0), ru1 = MarkLabel(board, 1), co1 = MarkLabel(board, 2);
         Vector2 ptPos1 = MarkLabelPos(board, 0), ruPos1 = MarkLabelPos(board, 1);
@@ -566,7 +566,7 @@ public static class PlaytestRunner
         var plotPanel = board.GetComponentInChildren<PlotPanel>(true);
         Vector2 v0 = plotPanel.View, gridA = board.GetComponentInChildren<PlotGrid>().OffsetPx;
         if (!PlotDrag(board, new Vector2(700, 300), new Vector2(800, 300), "drag the grid 100 px right", "plot.pan")) yield break;
-        float dragKm = (float)(100 / (60.9 / 1000.0 * board.ZoomExact));
+        float dragKm = (float)(100 / (PlotScale / 1000.0 * board.ZoomExact));
         Check("Dragging the grid pans the plot", Mathf.Abs(plotPanel.View.x - (v0.x - dragKm)) < 1f && Mathf.Abs(board.GetComponentInChildren<PlotGrid>().OffsetPx.x - gridA.x - 100f) < 0.5f,
               "view moved " + (plotPanel.View.x - v0.x).ToString("0") + " km (expected " + (-dragKm).ToString("0") + ")");
         Shot("18_panned");
@@ -588,7 +588,7 @@ public static class PlaytestRunner
         Check("Paused, the sweep holds still", plotPanel.SweepDeg == sw2, "");
         if (!Click("pause", null, "RUN key")) yield break;
         if (!Click("drawer", "sensors", "SENS key")) yield break;
-        board.SetZoom(0.3); // 19,000 km is wider than the plot at x1; zoom out to see the whole circle
+        board.SetZoom(0.3 * X1); // 19,000 km is wider than the plot at the old x1; zoom out to see the whole circle
         yield return 0.8f;
         Shot("19_sensor_circle");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
@@ -602,7 +602,7 @@ public static class PlaytestRunner
         Check("DRADIS on again: the circle is back", s.sensors.dradis && Mathf.Abs(plotPanel.SensorRingKm - s.sensors.PassiveRangeKm) < 1f, plotPanel.SensorRingKm.ToString("N0") + " km");
         Shot("21_dradis_on_again");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
-        board.SetZoom(1.0);
+        board.SetZoom(X1);
         yield return 0.5f;
 
         // 17. Hearing (Step 44): power SEN, raise the gain, and TRACK 07 comes into hearing range.
@@ -710,11 +710,11 @@ public static class PlaytestRunner
         Check("Not scanned, TRACK takes the plot: the newest POINT, led along the track", plotSol.set && plotSol.fromPlot && plotSol.hasCourse && System.Math.Abs(plotSol.rangeKm - aimKm) < 1 && System.Math.Abs(plotSol.spd - expSpd) < 0.006,
               "RNG " + plotSol.rangeKm.ToString("N0") + " km (expected " + aimKm.ToString("N0") + "), SPD " + plotSol.spd.ToString("0.00") + ", from plot " + plotSol.fromPlot);
         s.weapons.sol[s.weapons.SysIndex] = new WeaponSystem.Solution(); // stand-in: clear it for the hand-dialled steps below (the board has no clear)
-        board.SetZoom(0.25);
+        board.SetZoom(0.25 * X1);
         yield return 0.4f;
         Shot("25_weapon_ring");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
-        board.SetZoom(1.0);
+        board.SetZoom(X1);
         if (!Click("drawer", "fire control", "FIRE key (close)")) yield break;
         yield return 0.4f;
         Check("Fire Control shut: the ring goes", plotPanel.WeaponRingKm == 0f, "");
@@ -826,11 +826,11 @@ public static class PlaytestRunner
         Check("Paused, the slug holds still", s.weapons.Rounds.Count == 1 && s.weapons.Rounds[0].travelled == rx, (rx >= 0 ? rx.ToString("N0") + " km flown" : "none"));
         if (!Click("pause", null, "RUN key")) yield break;
         if (board.Motion && board.Motion.ScopeDown) board.Motion.SetScopeDown(false); // the periscope covers the plot's middle
-        board.SetZoom(0.4);
+        board.SetZoom(0.4 * X1);
         yield return 0.8f;
         Shot("27_slug_in_flight");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
-        board.SetZoom(1.0);
+        board.SetZoom(X1);
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0); // 15 s each; the flight is about 2 s at x1
         bool marginal = System.Math.Abs(predicted - s.weapons.stats.hitRadiusKm) < 0.05 * s.weapons.stats.hitRadiusKm; // either way is right this close
@@ -1614,23 +1614,33 @@ public static class PlaytestRunner
         var plotGrid = board.GetComponentInChildren<PlotGrid>(true);
         var axisNums = typeof(PlotPanel).GetField("axisLabels", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(plotP) as List<TMPro.TextMeshProUGUI>;
         plotP.CentreOnOurShip();
+        board.SetZoom(1.0);
         yield return 0.6f;
         float cellPx;
-        double bigKm = plotGrid.CellKm(out cellPx) * plotGrid.MajorEvery;
+        double smallKm = plotGrid.CellKm(out cellPx), bigKm = smallKm * plotGrid.MajorEvery;
         var shown = axisNums.FindAll(lbl => lbl.gameObject.activeSelf).ConvertAll(lbl => lbl.text);
-        Check("The axis numbers at x1: 0 level with our ship, then whole big squares of 5,000 km", AxisWhole(shown, bigKm) && System.Math.Abs(bigKm - 5000) < 1e-6,
-              "big square " + bigKm.ToString("N0") + " km: " + string.Join(" ", shown.ToArray()));
-        for (int n = 0; n < 40; n++) board.Scroll("plot", null, -1f); // the mouse wheel, out past the limit
+        Check("At x1 a small square is 50 units; the axis numbers: 0 level with our ship, then whole big squares of 250 (owner 2026-10-29)",
+              smallKm == 50 && AxisWhole(shown, bigKm) && System.Math.Abs(bigKm - 250) < 1e-6,
+              "small square " + smallKm.ToString("N0") + ", big " + bigKm.ToString("N0") + ": " + string.Join(" ", shown.ToArray()));
+        var ownView = ShipView.Own();
+        float ownLenPx = ((RectTransform)GameObject.Find("Own ship (3D view)").transform).sizeDelta.x * ownView.ShipFill;
+        Check("At x1 our ship (100 units) is drawn two small squares long", ownView.Ship.Stats.length == 100f && Mathf.Abs(ownLenPx - 2f * cellPx) < 0.5f,
+              ownLenPx.ToString("0.0") + " px; a square is " + cellPx.ToString("0.0") + " px");
+        var garudaShip = GameObject.Find("World").GetComponentInChildren<EnemyBrain>().GetComponent<Ship>();
+        Check("The Garuda is 1.5 times our ship's length (150 units)", garudaShip && garudaShip.Stats.length == 150f, garudaShip ? garudaShip.Stats.length + " units" : "no Garuda");
+        Shot("25b_x1");
+        yield return 0.2f; // the shot lands at the end of the frame, before the next action
+        for (int n = 0; n < 60; n++) board.Scroll("plot", null, -1f); // the mouse wheel, out past the limit
         yield return 0.6f;
-        Check("Zoomed out past the limit, the zoom stops at x0.1 (owner 2026-10-29)", board.ZoomExact == board.MinZoom && System.Math.Abs(board.MinZoom - 0.1) < 1e-6,
-              "x" + board.ZoomExact.ToString("0.00") + ", limit x" + board.MinZoom.ToString("0.00"));
+        Check("Zoomed out past the limit, the zoom stops at x0.01 (owner 2026-10-29)", board.ZoomExact == board.MinZoom && System.Math.Abs(board.MinZoom - 0.01) < 1e-6,
+              "x" + board.ZoomExact.ToString("0.000") + ", limit x" + board.MinZoom.ToString("0.000"));
         Shot("25b_zoomed_out"); // the grid carries on past the battle space's heavier edge
         double cellKm = plotGrid.CellKm(out cellPx);
         bigKm = cellKm * plotGrid.MajorEvery;
         shown = axisNums.FindAll(lbl => lbl.gameObject.activeSelf).ConvertAll(lbl => lbl.text);
-        Check("The axis numbers at x0.1: 0 level with our ship, then whole big squares of 25,000 km", AxisWhole(shown, bigKm) && System.Math.Abs(bigKm - 25000) < 1e-6,
-              "big square " + bigKm.ToString("N0") + " km: " + string.Join(" ", shown.ToArray()));
-        board.SetZoom(0.5); // in again, where the battle space is bigger than the plot
+        Check("The axis numbers at x0.01: 0 level with our ship, then whole big squares of 25,000", AxisWhole(shown, bigKm) && System.Math.Abs(bigKm - 25000) < 1e-6,
+              "big square " + bigKm.ToString("N0") + ": " + string.Join(" ", shown.ToArray()));
+        board.SetZoom(0.5 * X1); // in again, where the battle space is bigger than the plot
         yield return 0.6f;
         cellKm = plotGrid.CellKm(out cellPx);
         if (!Click("tool", "CURSOR", "CURSOR tool")) yield break;
@@ -1742,6 +1752,11 @@ public static class PlaytestRunner
 
     /// <summary>Press at board px a, release at board px b, on the plot, through the EventSystem.
     /// The plot's capture surface must be on top there.</summary>
+    // The plot's scale, board px per 1,000 units at x1. Owner 2026-10-29: x1 now shows 50-unit squares, 12.5 times
+    // closer than the x1 most checks were written at (60.9 px per 1,000); X1 is the zoom that shows what that x1 did.
+    static float PlotScale => UnityEngine.Object.FindAnyObjectByType<PlotGrid>().PxPer1000Units;
+    static double X1 => 60.9 / PlotScale;
+
     static bool PlotDrag(BoardManager board, Vector2 a, Vector2 b, string label, string expect = "plot")
     {
         var es = EventSystem.current;

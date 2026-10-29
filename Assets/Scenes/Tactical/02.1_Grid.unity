@@ -4639,7 +4639,7 @@ MonoBehaviour:
     saw: 0
   voice: {fileID: 1765047284}
   zoom: 1
-  zoomOutLimit: 0.1
+  zoomOutLimit: 0.01
   zoomDragPxPerDecade: 160
   wheelStep: 1.12
   scaleDial:

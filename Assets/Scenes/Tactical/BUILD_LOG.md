@@ -158,8 +158,9 @@ Do not run ahead. Do one step, show it, wait.
 | 108 | Keys 1–6 open the six drawers; Starwolf → Keys lists every board key and changes it | **Done** — compiled clean; drawers checked in play mode; the key presses themselves not yet pressed by a person |
 | 109 | The periscope shows the enemy ship: the plot's top-down picture, level, pointing left or right the way it heads; zoom until it fills the brackets, then CLASS | **Done**. Checked in play mode (before and after shots: the red lines are unchanged); playtest 215/216 (2026-10-29_015659; my check passes; the one failure is #56 RECALL, frame timing, not this work) |
 | 110 | The plot zooms out to x0.1; the grid carries on past the battle space, with a heavier line at its edge | **Done**. Compiled clean; checked in play mode at x0.1, white and amber (`Logs/GridCheck`); playtest section 25b updated, not run |
+| 111 | Units: at x1.0 a small square is 50 units and our ship (100 units) is two squares long; the Garuda is 150; the plot zooms out to x0.01 | **Done**. Compiled clean; checked in play mode at x1.0 and x0.01 (`Logs/UnitsCheck`); playtest 218/218 (2026-10-29_021252) |
 
-Steps 6 to 28 and Steps 34 to 109 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 111 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -522,7 +523,9 @@ These are settled. Do not reopen them.
     turrets, two PDC groups, one missile launcher, four power buses (ENG, WEP, SEN, AUX). Its fire
     sequence and the missile salvo knob are wanted.
 12. **Grid tint toggles white and amber**, not white and red. Something to tune.
-13. **Distances are kilometres. One world unit is one kilometre.**
+13. **Distances are kilometres. One world unit is one kilometre.** Replaced in Step 111: the owner
+    thinks in units now (a small square at x1.0 is 50 units, our ship 100). The game's numbers did not
+    change, so one old km is one unit. Code names still say km.
 14. **The handoff is built in order:** static board first, then movement, then interactions with
     no game wiring, then the wiring.
 15. **The board loads undamaged** (all green, rooms sealed) **and is gamma-space only.** See
@@ -4402,6 +4405,49 @@ amber. The grid outside is as bright as inside. 5,000 km stays the biggest small
 **Next.** KM to Units changes the plot to units (760 px per 1,000 units) and takes the zoom limit to
 x0.01.
 
+### Step 111 — Units: a small square is 50 units, our ship two squares; zoom out to x0.01
+
+The owner, 2026-10-29: a ship can't be hundreds of km long. Think in units. At x1.0 a small square is
+50 units and our ship is 2 squares long. "This does not mean you scale down the ship models. It means
+you adjust the size of the squares." Then: "zoom out properly to 0.1 or even 0.01". Built by KM to
+Units.
+
+**What the player sees.** At x1.0 the small squares are 38 px, down from 61, and each one is 50 units.
+A big square is 250. Our ship is drawn 76 px long, as before, which is 2 small squares: 100 units. The
+Garuda is drawn 1.5 times as long: 150 units, 3 squares. Before, both were drawn the same size. The
+SCALE knob and the mouse wheel now go out to x0.01. There the small squares are 5,000 and the big ones
+25,000, and all of Wolf Hunt's 60,000-unit battle space fits, with grid round it. The readout shows
+three places below x0.1 (x0.010).
+
+**What changed.**
+
+- Every ship's stats file has a **Length** in units: Asura 100, Garuda 150, Naga frigate 75. It is in
+  Starwolf → Tuning. The plot draws each ship at its length, between 30 and 120 px.
+- The plot's scale is 760 px per 1,000 units at x1.0 (`PlotGrid` **Px Per 1000 Units**), up from 60.9
+  per 1,000 km: 12.5 times bigger. **Square At Full Zoom** (50) sets the small square at x1.0.
+- No game number changed. Speeds, ranges and the battle space are the same numbers, read as units.
+  So x0.08 now shows what x1.0 showed before.
+- **Zoom Out Limit** is 0.01, saved in `02.1_Grid`. The SCALE knob's sweep covers two steps of ten
+  (x1 to x0.01).
+- The plot's rings and dashed lines draw only the part that shows on the plot. At x1.0 the
+  visual-range ring alone was about 64,000 points, past what one picture can hold, and Unity showed an
+  error.
+- Playtest section 25b checks, at x1.0: a small square is 50 and a big one 250; our ship is drawn 2
+  small squares long and is 100; the Garuda is 150. Then the zoom stops at x0.01, where the big squares
+  are 25,000. Steps that zoomed to old values for screenshots now zoom to the same view as before.
+
+**Checked.** Compiled clean. In play mode: at x1.0 a square is 38 px and our ship 76 px; at x0.01 the
+whole battle space shows. Screenshots are in `Logs/UnitsCheck` (x1.png, x0.01.png). Full playtest
+218/218 (2026-10-29_021252). That run showed the too-many-points error once, without failing a check.
+The fix came after it and was checked in play mode: a ring 22,800 px across now takes 5,660 points,
+and no errors.
+
+**Calls made on the fly.** The Naga frigate is 75 units. Code names still say km. The board starts at
+x1.0, so the Garuda is off screen at the start. The ship picture stays between 30 and 120 px.
+
+**Next.** What zooming out means, then speeds, then ranges (section 8, "Distances in units"). What the
+player reads comes last. The owner may try our ship at 4 squares at x1.0.
+
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 
 - **Navigation (2026-10-26).** All ship movement is in `Systems/NavSystem.cs`: position, heading,
@@ -4865,9 +4911,10 @@ it that way, HANDOFF_GAPS row 32; harmless today). And `WeaponSystem`'s PDC `qua
 design's quadrant switches, never drawn; with PDCs in two halves they are probably not needed. Both are
 the owner's call.
 
-### Distances in units, not km (owner, 2026-10-29). Decided, not built
+### Distances in units, not km (owner, 2026-10-29). Sizes built in Step 111; the rest still to do
 
-From KM to Units. Nothing in code, scenes or Unity changed yet.
+From KM to Units. The sizes step and the zoom-out to x0.01 are built (Step 111). Next: what zooming
+out means, then speeds, then ranges.
 
 - At x1.0, one small plot square is 50 units. Our ship is drawn 76 px long, as now, and is 2 squares
   long: 100 units. The squares shrink to fit the ship: 38 px each, down from 61. The ship art stays the
@@ -4898,7 +4945,7 @@ From KM to Units. Nothing in code, scenes or Unity changed yet.
 ### Plot zoom-out (owner, 2026-10-29). Built in Step 110; a few looks still open
 
 From Grid Visual. Built: zoom out to x0.1, the grid past the battle space, a heavier edge line, panning
-still stops at the edge. KM to Units takes the limit further (x0.01) with its change to units.
+still stops at the edge. Step 111 took the limit to x0.01 with the change to units.
 
 - Still open for the owner: whether the view may pan past
   the edge (suggested: the plot's middle may reach the edge line, no further); the outside grid the

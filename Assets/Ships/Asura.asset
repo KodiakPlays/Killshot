@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Asura
   m_EditorClassIdentifier: Assembly-CSharp::ShipStats
   shipClass: Asura-class destroyer
+  length: 100
   navigation:
     headingKeyStep: 3
     turnRate: 20

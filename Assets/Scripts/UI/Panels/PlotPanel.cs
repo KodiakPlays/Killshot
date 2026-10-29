@@ -28,10 +28,8 @@ public class PlotPanel : Panel
 
     [Header("Our ship on the plot (Step 37): the 3D model seen from above (ShipView)")]
     [SerializeField] private RawImage ownShipImage;
-    [Tooltip("The ship's length on screen at zoom 1×: the design's own-ship glyph is a 34×76 px hull.")]
-    [Tune("Plot & our ship")]
-    [SerializeField] private float ownShipPxAtFullZoom = 76f;
-    [Tooltip("It shrinks with zoom like the design's glyph, but never below this (older handoff: legible at 30 px) "
+    [Tooltip("A ship is drawn at its length (its stats file) at the plot's scale: ours, 100 units, is 76 px at x1. "
+           + "It shrinks with zoom like the design's glyph, but never below this (older handoff: legible at 30 px) "
            + "and never above the maximum (owner 2026-10-17).")]
     [Tune("Plot & our ship")]
     [SerializeField] private float ownShipMinPx = 30f, ownShipMaxPx = 120f;
@@ -69,7 +67,9 @@ public class PlotPanel : Panel
     [Tooltip("The small circle round our ship (owner 2026-10-24) sits this far outside the ship's picture, px; the sweep starts there.")]
     [Tune("Sensors")] [SerializeField] private float innerRingMarginPx = 8f;
     /// <summary>The inner circle's radius on screen: half our ship's drawn length plus the margin.</summary>
-    float InnerRingPx => Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx) / 2f + innerRingMarginPx;
+    float InnerRingPx => ShipPx(shipView) / 2f + innerRingMarginPx;
+    /// <summary>Owner 2026-10-29: a ship's length on screen, px: its length (units) at the plot's scale and zoom, within the min and max.</summary>
+    float ShipPx(ShipView v) => Mathf.Clamp((v && v.Ship ? v.Ship.Stats.length : 0f) / (float)KmPerPx * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx);
     /// <summary>The sweep's bearing now, degrees clockwise from north; and whether it shows.</summary>
     public float SweepDeg => sweepDeg;
     public bool SweepShown => sweep && sweep.isActiveAndEnabled;
@@ -104,9 +104,8 @@ public class PlotPanel : Panel
     [Tooltip("A passive label shows only while its contact is heard and not identified (passives).")]
     [SerializeField] private bool passiveVisibility = true;
 
-    [Header("Plot space (§8.4): 60.9 layer px = 1000 km")]
+    [Header("Plot space (§8.4): the scale is the grid's (owner 2026-10-29: at x1 a small square is 50 units)")]
     [SerializeField] private Vector2 plotCentre = new Vector2(960, 545);
-    [SerializeField] private double pxPer1000Km = 60.9;
 
     // Step 41 (owner 2026-10-18): the grid stays put and our ship moves across it. The plot shows the
     // world around a view centre, which starts on our ship. Drag the empty grid, or hold the arrow
@@ -203,7 +202,7 @@ public class PlotPanel : Panel
 
     // Step 36: marks live in world km (x east, y north) so they stay put when our ship moves.
     // The pointer is still rounded to whole layer px first, as the board's plotPt does.
-    double KmPerPx => 1000.0 / pxPer1000Km;
+    double KmPerPx => 1000.0 / grid.PxPer1000Units;
     double SnapKm => rulerSnapPx * KmPerPx / Controls.ZoomExact;
     double WorldX(float bx) => viewX + LayerX(bx) * KmPerPx;
     double WorldY(float by) => viewY - LayerY(by) * KmPerPx;
@@ -417,8 +416,7 @@ public class PlotPanel : Panel
             ownShipImage.texture = shipView ? shipView.Texture : null;
             ownShipImage.enabled = shipView && shipView.Texture;
             ownShipImage.color = ownShipColor.gamma; // the board canvas linearises vertex colours; pre-encode
-            float shipPx = Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx);
-            float side = shipPx / (shipView ? shipView.ShipFill : 1f);
+            float side = ShipPx(shipView) / (shipView ? shipView.ShipFill : 1f);
             ownShipImage.rectTransform.sizeDelta = new Vector2(side, side);
             Put(ownShipImage.rectTransform, OwnAt, 0f);
         }
@@ -524,7 +522,7 @@ public class PlotPanel : Panel
             }
             else
             {
-                double b = t.bearing * System.Math.PI / 180.0, px = t.rangeKm * pxPer1000Km / 1000.0 * Controls.ZoomExact;
+                double b = t.bearing * System.Math.PI / 180.0, px = t.rangeKm / KmPerPx * Controls.ZoomExact;
                 at = OwnAt + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
             }
             Color ink = t.wreck ? wreckInk : known ? alarm : caution;
@@ -535,7 +533,7 @@ public class PlotPanel : Panel
                 // its model from above, sized as ours is; north up like ours (the model turns)
                 contactShipImage.texture = view.Texture;
                 contactShipImage.color = ink.gamma;
-                float px = Mathf.Clamp(ownShipPxAtFullZoom * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx) / view.ShipFill;
+                float px = ShipPx(view) / view.ShipFill;
                 contactShipImage.rectTransform.sizeDelta = new Vector2(px, px);
                 Put(contactShipImage.rectTransform, at, 0f);
                 contactShipImage.enabled = true;
