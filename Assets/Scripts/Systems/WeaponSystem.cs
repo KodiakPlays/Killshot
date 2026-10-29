@@ -281,6 +281,7 @@ public class WeaponSystem : MonoBehaviour
     public void NudgeSol(string field, int d)
     {
         var cur = Sol;
+        double abs; // the bearing to the point now, degrees from north: exact, as BRG shows it rounded to a degree
         if (!cur.set)
         {
             // Step 47 (owner 2026-10-23): a knob starts a hand-dialled solution, from the plot
@@ -289,12 +290,14 @@ public class WeaponSystem : MonoBehaviour
             cur.brg = (ShipState.JsRound(ship.scopeBrg) - ship.nav.heading + 540) % 360 - 180; // relative, as TRACK stores it
             cur.spd = 0f;
             ApplyTrack(cur);
+            abs = ship.nav.heading + cur.brg;
         }
+        else { double x, y; Reckon(cur, out x, out y); abs = System.Math.Atan2(x - ship.nav.x, y - ship.nav.y) * 180 / System.Math.PI; }
         if (field == "rng") cur.rangeUnits = Mathf.Max(0f, cur.rangeUnits + d * 100f);
-        if (field == "brg") cur.brg = Mathf.Max(-180, Mathf.Min(180, cur.brg + d));
+        if (field == "brg") { int b = Mathf.Max(-180, Mathf.Min(180, cur.brg + d)); abs += b - cur.brg; cur.brg = b; }
         if (field == "spd") cur.spd = Mathf.Max(0f, (float)System.Math.Round(cur.spd + d * stats.spdStep, 2, System.MidpointRounding.AwayFromZero));
         // the dialled point is where the target is now; on TRACK's solution RNG and BRG move its point too (owner 2026-10-29)
-        if (cur.manual || field != "spd") Fix(cur);
+        if (cur.manual || field != "spd") Fix(cur, abs);
         ClearSwitches();
     }
 
@@ -385,10 +388,11 @@ public class WeaponSystem : MonoBehaviour
         cur.spd = (float)System.Math.Round(spd, 2, System.MidpointRounding.AwayFromZero);
     }
 
-    // the dialled range and bearing as a world point, now
-    void Fix(Solution cur)
+    // the dialled range, at a bearing from north, as a world point, now. The bearing is exact: built from the rounded
+    // BRG, a click on a far point would also slide it up to half a degree sideways (killshot-fb, 2026-10-29)
+    void Fix(Solution cur, double absDeg)
     {
-        double b = (ship.nav.heading + cur.brg) * System.Math.PI / 180;
+        double b = absDeg * System.Math.PI / 180;
         cur.wx = ship.nav.x + System.Math.Sin(b) * cur.rangeUnits;
         cur.wy = ship.nav.y + System.Math.Cos(b) * cur.rangeUnits;
         cur.t = ship.missionNow;

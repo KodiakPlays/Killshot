@@ -4493,6 +4493,13 @@ Full playtest 2026-10-29_100527, run with Step 113: two checks failed because th
   two minutes before, as the check meant.
 Both changes are in `PlaytestRunner.cs`. They compiled clean. The playtest has not been run again.
 
+**Fixed after (KM to Units, 2026-10-29; found by killshot-fb).** Each tick BRG is rounded to a whole
+degree. A RNG or BRG click rebuilt the aim point from that rounded BRG. So after flying away from a
+point, one RNG click moved it 100 out and up to half a degree sideways: 104 units at 24,700, more than
+the hit radius. Now a click rebuilds the point from the exact bearing to it. A BRG click still turns it
+by exactly 1°. Checked in play mode, hand-dialled and TRACK: a point 25,276 out, after flying away and
+turning, RNG +1 gave +100.0 out and 0.00 sideways; BRG +1 gave +1.000°. Full playtest 217/218 (2026-10-29_105333): #89, #111 and the x1.0 checks #205-206 pass; the one failure is #56 RECALL, the old frame timing.
+
 **Call made on the fly.** The RNG and BRG knobs move a TRACK solution's aim point (above).
 
 **Found for the owner.** The helm shows "AUTO — DIRECT" at the start, but no autopilot is built.
