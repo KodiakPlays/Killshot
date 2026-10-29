@@ -47,6 +47,9 @@ public class ScreenFlow : MonoBehaviour
         else Advance();
     }
 
+    /// <summary>The QUIT · ESC button (owner 2026-10-29): quits, as Escape does. Does nothing in the editor.</summary>
+    public void Quit() { Application.Quit(); }
+
     /// <summary>Load the next scene. Safe to call from a Button's onClick.</summary>
     public void Advance()
     {

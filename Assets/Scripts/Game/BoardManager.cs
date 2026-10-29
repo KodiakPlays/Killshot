@@ -350,6 +350,7 @@ public class BoardManager : MonoBehaviour
             case "orders": motion.ToggleOrders(); break;
             case "scope": motion.ToggleScope(); RefreshPanels(); break;
             case "pause": paused = !paused; ShowTime(); break;
+            case "quit": Application.Quit(); break; // owner 2026-10-29: the QUIT · ESC key, as the quit key does
             case "rate": rate = float.Parse(arg, System.Globalization.CultureInfo.InvariantCulture); paused = false; ShowTime(); break;
             case "ack": state.sensors.AckContacts(); ShowAlarm(); break;
             case "tint": grid.GridTint = grid.GridTint == PlotGrid.Tint.White ? PlotGrid.Tint.Amber : PlotGrid.Tint.White; ShowTint(); RefreshPanels(); break;

@@ -238,7 +238,8 @@ public static class PlaytestRunner
 
         // 3. Briefing → board (Step 114, owner 2026-10-29: the briefing is the level list; pick WOLF HUNT — call what a
         //    click or Enter on its row calls)
-        var rows = System.Array.ConvertAll(UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.InstanceID), b => b.name);
+        var rows = System.Array.ConvertAll(System.Array.FindAll(UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.InstanceID),
+                                           b => b.onClick.GetPersistentMethodName(0) == "Play"), b => b.name); // the level rows, not QUIT
         var wolfRow = GameObject.Find("WOLF HUNT");
         bool wolfFound = wolfRow; // read now: the row is gone once the board loads
         if (wolfFound) wolfRow.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
