@@ -126,6 +126,8 @@ public class BoardManager : MonoBehaviour
         hangarKey = KeyCode.Alpha4, engineeringKey = KeyCode.Alpha5, commsKey = KeyCode.Alpha6;
     [Tooltip("Owner 2026-10-29: pauses and runs, as the PAUSE key does.")]
     [Tune("Keys")] [SerializeField] private KeyCode pauseRunKey = KeyCode.P;
+    [Tooltip("Owner 2026-10-29: quits the game at once, at any time, even while typing. The intro and the missions list quit on Escape too (ScreenFlow).")]
+    [Tune("Keys")] [SerializeField] private KeyCode quitKey = KeyCode.Escape;
 
     [Header("Time control")]
     [SerializeField] private TMP_Text clock;
@@ -268,6 +270,7 @@ public class BoardManager : MonoBehaviour
         // The board's single timer (tickPower). Only the mission clock is board-local so far.
         // thrown repair and order rockers fall back after 400 ms (flickBack)
         if (state.orders.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
+        if (Input.GetKeyDown(quitKey)) Application.Quit(); // owner 2026-10-29: quit at any time (does nothing in the editor)
         // owner 2026-10-29: P pauses and runs, and 1–6 open the drawers, as the board's keys do (not while typing in a text field)
         var sel = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
         if (!sel || !sel.GetComponent<TMP_InputField>())

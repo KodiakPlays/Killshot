@@ -4680,9 +4680,17 @@ player does each thing; that would be the XO walkthrough (FTUE_PLAN §6).
 **The Mac app, rebuilt 2026-10-29 12:17** with Steps 112 to 115, for the owner's demo. Apple Silicon
 (the setting had gone back to Intel again; set to ARM64 first). 0 errors. Started once: no errors in
 its log, checked only to the menu. The app before it is kept at
-`~/Documents/GitHub/Killshot-Builds/Old/Starwolf-2026-10-29-0850.app`. The build also has
-`Level_02`, which is in the build settings but not committed and not on the list (not made by any
-chat; the owner's?).
+`~/Documents/GitHub/Killshot-Builds/Old/Starwolf-2026-10-29-0850.app`.
+
+**Rebuilt again, 12:23, after two owner asks.**
+- `Level_02` is gone. The owner made it and deleted it, but the file had stayed. It was taken off the
+  build list, and the file and its `.meta` were moved to the Mac's Trash.
+- **Escape quits the game at once, at any time:** on the intro, the MISSIONS list and the board,
+  even while typing. On the board it is **Quit Key** in Starwolf → Keys (`BoardManager`); the intro
+  and the list use `ScreenFlow`, with Escape fixed. It does nothing in the editor. Not yet pressed in
+  the app: a session can't press keys in it.
+- The Mac build is now Apple Silicon in `ProjectSettings` (c3044fa), so it no longer falls back to
+  Intel.
 
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 
