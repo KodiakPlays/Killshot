@@ -863,7 +863,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 112, in detail
+## 6 · Steps 6 to 28, and 34 to 115, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -4676,6 +4676,13 @@ words. The rows' lines under the names were kept as FTUE wrote them.
 
 **Not done.** The bubble can't be brought back once closed. It doesn't move on step by step as the
 player does each thing; that would be the XO walkthrough (FTUE_PLAN §6).
+
+**The Mac app, rebuilt 2026-10-29 12:17** with Steps 112 to 115, for the owner's demo. Apple Silicon
+(the setting had gone back to Intel again; set to ARM64 first). 0 errors. Started once: no errors in
+its log, checked only to the menu. The app before it is kept at
+`~/Documents/GitHub/Killshot-Builds/Old/Starwolf-2026-10-29-0850.app`. The build also has
+`Level_02`, which is in the build settings but not committed and not on the list (not made by any
+chat; the owner's?).
 
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 
