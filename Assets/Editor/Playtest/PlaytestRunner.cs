@@ -282,6 +282,8 @@ public static class PlaytestRunner
         // 5. Paused at load; signal silent
         Check("The board starts paused", board.Paused, "");
         Check("Signal starts at 0 — RUNNING SILENT", s.sensors.signal == 0f && SigNote(board) == "RUNNING SILENT", s.sensors.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
+        Check("DRADIS starts off: the player turns it on (owner 2026-10-29)", !s.sensors.dradis, "dradis " + s.sensors.dradis);
+        s.sensors.ToggleDradis(); // stand-in for the DRADIS rocker (its drawer is shut here; the rocker is clicked in step 16)
 
         // 5b. Step 82 (owner): no power on the SEN bus, DRADIS hears nothing. Stand-in for the gain fader: gain 2
         //     reaches TRACK 07 (19,200 units), but the bus is empty.

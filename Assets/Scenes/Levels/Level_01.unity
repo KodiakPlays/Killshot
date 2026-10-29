@@ -10482,14 +10482,15 @@ MonoBehaviour:
     -
     Keep your power low. Every unit you draw makes you louder.
 
-    - DRADIS and
-    fighters help you find it. ACTIVE SCAN finds it fast, but makes you loud.
+    - Turn on DRADIS
+    (key 2). It and the fighters help you find it. ACTIVE SCAN finds it fast, but
+    makes you loud.
 
-    -
-    Destroy it or capture it. A jump point then opens at the edge of the map. Fly
-    to it to win.
+    - Destroy it or capture it. A jump point then opens at the
+    edge of the map. Fly to it to win.
 
-    - If it finds you, enemy frigates arrive 3 minutes later.'
+    - If it finds you, enemy frigates arrive
+    3 minutes later.'
 --- !u!4 &2091112124
 Transform:
   m_ObjectHideFlags: 0

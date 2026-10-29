@@ -165,8 +165,9 @@ Do not run ahead. Do one step, show it, wait.
 | 115 | The training levels renamed: WEAPONS FREE, NO PEEKING, FINDERS KEEPERS; a placeholder help bubble on the board says what to do in each level, Wolf Hunt too | **Done**. Compiled clean; checked in play mode (`Logs/HelpBubbleCheck`): the list, the bubble in Wolf Hunt and WEAPONS FREE, the longest text fits, a click closes it; playtest not run |
 | 116 | Training-level play-through fixes: the Garuda no longer fires back in the training levels (two missile salvos had wrecked our magazine, so WEAPONS FREE could not be won); the bubbles no longer say "turn on DRADIS" (it starts on, so that switched it off); the mouse over a list row picks it (two rows were lit); the DRADIS sweep line is unseen (owner: it spins wildly at x10; Sensors tab, sweep opacity 0, still works) | **Done**. Compiled clean; WEAPONS FREE played through the real switches to two hits (found the bugs); after the fix a hit drew no missiles in 80 game s; NO PEEKING and FINDERS KEEPERS not yet played through; full playtest not run |
 | 117 | A QUIT · ESC key to see and click (owner): on the board's top bar, left of the signal meter (ClickSpot "quit" → BoardManager.Click), and at the bottom right of the MISSIONS list (ScreenFlow.Quit). Escape still quits | **Done**. Compiled clean; both seen in play mode (`Logs/LevelPlay/10_list_quit.png`, `11_board_quit.png`); the board key is the topmost thing at its centre; quitting itself only works in the app; playtest check #5 now counts only the level rows |
+| 118 | DRADIS starts off: the player turns it on (owner); the bubbles say "turn on DRADIS" again | **Done**. Compiled clean; checked in play mode (ours off, the Garuda's on, no circle, the bubble's line); playtest: a new check that it starts off; not run |
 
-Steps 6 to 28 and Steps 34 to 115 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 118 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -865,7 +866,7 @@ These are settled. Do not reopen them.
 
 ---
 
-## 6 · Steps 6 to 28, and 34 to 115, in detail
+## 6 · Steps 6 to 28, and 34 to 118, in detail
 
 ### Step 6 — corner panels fixed and verified
 
@@ -4693,6 +4694,19 @@ its log, checked only to the menu. The app before it is kept at
   the app: a session can't press keys in it.
 - The Mac build is now Apple Silicon in `ProjectSettings` (c3044fa), so it no longer falls back to
   Intel.
+
+### Step 118 — DRADIS starts off
+
+The owner, 2026-10-29: "dradis should be off. you have to start it." Built by killshot-fb.
+
+- At the start of every level our DRADIS rocker is off: no circle, no sweep, no hearing. The player
+  turns it on in the sensors drawer (key 2), and it needs SEN power to hear (Step 82). This is
+  `OwnShip`'s Sensor System **Dradis** in `02.1_Grid`, now unticked. The Garuda and the frigate
+  template keep theirs on: they still listen for us.
+- The bubbles say "turn on DRADIS" again (WEAPONS FREE, NO PEEKING). Step 116 had changed them to
+  "DRADIS is already on". Wolf Hunt's says "Turn on DRADIS (key 2)".
+- Playtest: a new check at step 5, "DRADIS starts off", then a stand-in turns it on, since the
+  checks after it expect it on.
 
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 

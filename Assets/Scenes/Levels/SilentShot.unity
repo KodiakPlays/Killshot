@@ -2599,20 +2599,20 @@ MonoBehaviour:
     2.
     ORDERS: click the alert once, from C3 to C2.
 
-    3. SENSORS (key 2): DRADIS
-    is already on. A bearing line points at the Garuda.
+    3. SENSORS (key 2): turn on
+    DRADIS. A bearing line points at the Garuda.
 
-    4. Fly sideways with
-    W, A and D. Each sweep leaves a line. Where the lines cross is the Garuda.
+    4. Fly sideways with W, A and
+    D. Each sweep leaves a line. Where the lines cross is the Garuda.
 
-    5.
-    Put a POINT where they cross. A minute later, do it again.
+    5. Put
+    a POINT where they cross. A minute later, do it again.
 
-    6. Draw a RULER
-    from the first POINT to the second.
+    6. Draw a RULER from
+    the first POINT to the second.
 
-    7. FIRE CONTROL (key 1): TRACK, then
-    SIGHT and SLEW TO.
+    7. FIRE CONTROL (key 1): TRACK, then SIGHT
+    and SLEW TO.
 
     8. Throw the four switches and pull the lever.'
 --- !u!4 &1431064136

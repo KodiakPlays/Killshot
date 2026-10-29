@@ -2574,10 +2574,10 @@ MonoBehaviour:
     3. ORDERS: click the alert once, from C3 to C2.
 
     4. SENSORS (key
-    2): DRADIS is already on. Wait for a bearing line.
+    2): turn on DRADIS. Wait for a bearing line.
 
-    5. Turn on ACTIVE SCAN.
-    Drag the cone dial onto the line and let go.
+    5. Turn on ACTIVE SCAN. Drag
+    the cone dial onto the line and let go.
 
     6. FIRE CONTROL (key 1): SIGHT,
     SLEW TO, then TRACK.
