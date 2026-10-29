@@ -4721,6 +4721,10 @@ DESTROYED. No errors. Screenshot: `Logs/FinalCheck/weapons_free_won.png`.
   each time.
 - Not played this time: NO PEEKING, FINDERS KEEPERS (FTUE played those in Step 116) and Wolf Hunt.
 
+**The final app for the owner's demo: built 2026-10-29 12:44**, from e2322b8, at
+`~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app` (Apple Silicon, 0 errors). Started once: no errors in
+its log, checked only to the menu.
+
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 
 - **Navigation (2026-10-26).** All ship movement is in `Systems/NavSystem.cs`: position, heading,
