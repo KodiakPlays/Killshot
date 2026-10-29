@@ -4708,6 +4708,19 @@ The owner, 2026-10-29: "dradis should be off. you have to start it." Built by ki
 - Playtest: a new check at step 5, "DRADIS starts off", then a stand-in turns it on, since the
   checks after it expect it on.
 
+**Played in Unity before the final app (2026-10-29, killshot-fb).** WEAPONS FREE, from the MISSIONS
+list, through the board's own switches as the bubble says: P; SEN and WEP to DRAW; C2; DRADIS on;
+heard at 10,226 units; ACTIVE SCAN and the cone named it GARUDA; SIGHT, SLEW TO, TRACK; the four
+rockers; the lever (set by code, as a drag). Hits opened its prow, then its port side. When it
+turned past turret A's arc, ANGLE dropped and turret B took over. Then MISSION COMPLETE · GARUDA
+DESTROYED. No errors. Screenshot: `Logs/FinalCheck/weapons_free_won.png`.
+- **Found and fixed:** our hits stopped the Garuda's engines, but re-arming without a fresh TRACK
+  kept leading it at its old speed, so three shots missed (Step 112: the solution doesn't follow the
+  target after TRACK). WEAPONS FREE's step 8 said "throw ARM again, pull again". It now says "Each
+  new shot: SLEW TO, TRACK, the four switches, the lever." Shots hit again once TRACK was pressed
+  each time.
+- Not played this time: NO PEEKING, FINDERS KEEPERS (FTUE played those in Step 116) and Wolf Hunt.
+
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 
 - **Navigation (2026-10-26).** All ship movement is in `Systems/NavSystem.cs`: position, heading,

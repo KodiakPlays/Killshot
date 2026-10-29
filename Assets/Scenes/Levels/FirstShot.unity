@@ -2585,7 +2585,8 @@ MonoBehaviour:
     7. Throw LOAD, ANGLE, BEARING and ARM. Pull the lever
     all the way.
 
-    8. Wait for the charge, throw ARM again, pull again.'
+    8. Each new shot: SLEW TO, TRACK, the four switches, the lever.
+    A fresh TRACK keeps up with the Garuda as it moves.'
 --- !u!4 &1514499373
 Transform:
   m_ObjectHideFlags: 0
