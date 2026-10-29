@@ -1299,6 +1299,7 @@ Measured behaviour, with the ship 116 world units tall:
 |---|---|---|---|
 | 300 | 209 px | 209 px | true scale |
 | 369 | 170 px | 170 px | crossover |
+| 370 | The railgun turrets' cones on the plot while Fire Control is open (owner: "the guns need cones… they are not visible… I can't figure out how to shoot"): each turret's arc as a dashed sector out to its reach, the selected one bright, the other dimmer (PlotPanel railArcAlpha 1 / 0.45, on the Periscope & fire control tab; written into Plot.prefab with sweepOpacity 0). WEAPONS FREE filmed: Logs/LevelVideos/WeaponsFree.mp4, 2:23, x5 throughout, fly in, port beam, six hits, MISSION COMPLETE (before the cones) | **Done**. Compiled clean; cones seen in play mode (`Logs/LevelPlay/31_turret_cones_bright.png`); full playtest not run |
 | 1,000 | 63 px | 170 px | floored |
 | 30,000 | 2.1 px | 170 px | floored |
 | 250,000 | 0.3 px | 170 px | floored |

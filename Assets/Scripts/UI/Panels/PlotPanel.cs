@@ -170,6 +170,8 @@ public class PlotPanel : Panel
     [SerializeField] private MarksGraphic weaponRing;
     [Tooltip("A PDC arc's curved edge is drawn in steps this many degrees long (Step 55).")]
     [SerializeField] private float pdcArcStepDeg = 2f;
+    [Tooltip("Owner 2026-10-29: each railgun turret's cone shows while Fire Control is open; the selected turret this bright, the other dimmer.")]
+    [Tune("Periscope & fire control")] [Range(0f, 1f)] [SerializeField] private float railArcAlpha = 1f, railArcAlphaOther = 0.45f;
     [Tooltip("Owner 2026-10-29: a thin ring round our ship at the visual range (the ship's stats file, 10,000 units), always on. "
            + "Inside it you see ships with your eyes. Its strength, 0 to 1; 0 hides it.")]
     [Tune("Sensors")] [SerializeField] private float visualRingAlpha = 0.35f;
@@ -464,25 +466,37 @@ public class PlotPanel : Panel
         {
             var reachShapes = new List<MarksGraphic.Shape>();
             var mount = s.weapons.MountOf(s.weapons.mount);
-            if (Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && mount != null && mount.rangeUnits > 0f)
+            bool fcOpen = Controls.Motion && Controls.Motion.OpenDrawerName == "fire control";
+            if (fcOpen && mount != null && mount.rangeUnits > 0f)
             {
                 Vector2 c = OwnAt;
                 reachShapes.Add(new MarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeUnits / UnitsPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
             }
-            // Step 55: each PDC group on AUTO shows its arc, a dashed sector off our hull (the design's PDC arc, accent.caution at .45)
-            var pdGroups = System.Array.Find(s.weapons.systems, y => y.id == "PD").mounts;
-            for (int g = 0; g < pdGroups.Length && g < s.weapons.pdcAuto.Length; g++)
+            // a mount's arc: a dashed sector off our hull, out to its reach (Step 55's PDC arc)
+            System.Action<WeaponSystem.Mount, float> sector = (pm, alpha) =>
             {
-                var pm = s.weapons.MountOf(pdGroups[g]);
-                if (!s.weapons.pdcAuto[g] || pm == null) continue;
                 Vector2 c = OwnAt;
                 float r = (float)(pm.rangeUnits / UnitsPerPx * Controls.ZoomExact);
                 System.Func<float, Vector2> at = deg => c + new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)) * r; // board y is down
                 float hdg = (float)s.nav.DrawnHeading, from = hdg + pm.arc - pm.halfArc, to = hdg + pm.arc + pm.halfArc;
-                reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = c, b = at(from), alpha = 0.45f });
-                reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = c, b = at(to), alpha = 0.45f });
+                reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = c, b = at(from), alpha = alpha });
+                reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = c, b = at(to), alpha = alpha });
                 for (float d = from; d < to; d += pdcArcStepDeg)
-                    reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = at(d), b = at(Mathf.Min(to, d + pdcArcStepDeg)), alpha = 0.45f });
+                    reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = at(d), b = at(Mathf.Min(to, d + pdcArcStepDeg)), alpha = alpha });
+            };
+            // owner 2026-10-29: the railgun turrets' cones while Fire Control is open, the selected turret brighter
+            if (fcOpen)
+                foreach (var id in System.Array.Find(s.weapons.systems, y => y.id == "RG").mounts)
+                {
+                    var rm = s.weapons.MountOf(id);
+                    if (rm != null) sector(rm, id == s.weapons.mount ? railArcAlpha : railArcAlphaOther);
+                }
+            // Step 55: each PDC group on AUTO shows its arc (the design's PDC arc, accent.caution at .45)
+            var pdGroups = System.Array.Find(s.weapons.systems, y => y.id == "PD").mounts;
+            for (int g = 0; g < pdGroups.Length && g < s.weapons.pdcAuto.Length; g++)
+            {
+                var pm = s.weapons.MountOf(pdGroups[g]);
+                if (s.weapons.pdcAuto[g] && pm != null) sector(pm, 0.45f);
             }
             if (visualRingAlpha > 0f)
             {

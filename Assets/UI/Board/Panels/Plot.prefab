@@ -724,7 +724,7 @@ MonoBehaviour:
       m_Calls: []
   pxPer1000Units: 760
   zoom: 1
-  stepsKm:
+  stepsUnits:
   - 5000
   - 2000
   - 1000
@@ -2348,6 +2348,7 @@ MonoBehaviour:
   sweep: {fileID: 1247043512016191638}
   sweepSecondsBase: 5.4
   sweepSecondsPerGain: 0.5
+  sweepOpacity: 0
   innerRingMarginPx: 8
   passiveLines: {fileID: 537004089543985122}
   passiveLabelTemplate: {fileID: 6337045329482355875}
@@ -2383,6 +2384,8 @@ MonoBehaviour:
   slugTrailPx: 24
   weaponRing: {fileID: 8019246136933200248}
   pdcArcStepDeg: 2
+  railArcAlpha: 1
+  railArcAlphaOther: 0.45
   visualRingAlpha: 0.35
   fighterTemplate: {fileID: 7922429107365735552}
   fighterPx: 16
