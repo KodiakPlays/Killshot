@@ -3,8 +3,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Step 34. The real world behind the tactical board: our ship and the contacts, in km
-/// (1 unit = 1 km, x east, y north). Once per board tick it writes each contact's true bearing and
+/// Step 34. The real world behind the tactical board: our ship and the contacts, in units
+/// (1 unit = 1 units, x east, y north). Once per board tick it writes each contact's true bearing and
 /// range into the board's track list, so every board rule reads real numbers. It never runs per
 /// frame; it steps inside the board's single timer (UIStateSpec "One timer").
 /// Owner decision 2026-10-17: a new world feeds the board; the old Radar / EnemyShip / PlayerShip
@@ -96,13 +96,13 @@ public class TacticalWorld : MonoBehaviour
         var s = board.State;
         if (!s.sensors) return;
         var us = new Vector2((float)s.nav.x, (float)s.nav.y);
-        float sight = Mathf.Max(s.sensors.stats.visualRangeKm, s.sensors.Listening ? s.sensors.PassiveRangeKm : 0f); // the plot's DRADIS circle is PassiveRangeKm
+        float sight = Mathf.Max(s.sensors.stats.visualRangeUnits, s.sensors.Listening ? s.sensors.PassiveRangeUnits : 0f); // the plot's DRADIS circle is PassiveRangeUnits
         int n = 0;
         foreach (var p in ruins)
         {
             if (!p.r) continue;
             bool show = (p.at - us).magnitude <= sight + p.half
-                     || (s.hangar && s.hangar.Sees(p.at.x, p.at.y, s.sensors.stats.visualRangeKm + p.half)); // Step 101: what our fighters see
+                     || (s.hangar && s.hangar.Sees(p.at.x, p.at.y, s.sensors.stats.visualRangeUnits + p.half)); // Step 101: what our fighters see
             if (p.r.enabled != show) p.r.enabled = show;
             if (show) n++;
         }
@@ -251,11 +251,11 @@ public class TacticalWorld : MonoBehaviour
             t.worldX = nav.x;
             t.worldY = nav.y;
             t.worldHdg = nav.heading; // its bow, clockwise from north (Step 48)
-            t.speed = (float)c.Ship.nav.SpeedKms; // its real speed (Step 51); TRACK reads it
+            t.speed = (float)c.Ship.nav.SpeedUnits; // its real speed (Step 51); TRACK reads it
             t.course = c.Ship.nav.CourseDeg;       // and which way it is really going (Step 52)
             var d = new Vector2((float)(t.worldX - s.nav.x), (float)(t.worldY - s.nav.y));
             t.bearing = Bearing(d);
-            t.rangeKm = ShipState.JsRound(d.magnitude); // the board's tracks hold whole km
+            t.rangeUnits = ShipState.JsRound(d.magnitude); // the board's tracks hold whole units
         }
     }
 

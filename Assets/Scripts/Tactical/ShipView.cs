@@ -16,7 +16,7 @@ public class ShipView : MonoBehaviour
     [Tooltip("The ship's length as a share of the frame; the rest is margin for the turn.")]
     [Tune("Plot & our ship")]
     [SerializeField, Range(0.3f, 1f)] private float shipFill = 0.8f;
-    [Tooltip("How far above the ship the camera sits (km). The world is the x/y plane, seen from -z.")]
+    [Tooltip("How far above the ship the camera sits (units). The world is the x/y plane, seen from -z.")]
     [Tune("Plot & our ship")]
     [SerializeField] private float height = 50f;
 

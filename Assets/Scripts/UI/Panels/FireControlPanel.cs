@@ -189,7 +189,7 @@ public class FireControlPanel : Panel
         }
         if (mountLabel) mountLabel.text = m.label;
         if (mountArc) mountArc.text = m.halfArc >= 180 ? "ALL ROUND" : "ARC " + m.arc.ToString("000") + "° ±" + m.halfArc + "°";
-        if (mountRange) mountRange.text = m.rangeKm.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
+        if (mountRange) mountRange.text = m.rangeUnits.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
         if (sysState)
         {
             sysState.text = s.weapons.sys == "RG" ? "SLUGS " + m.ammo // owner 2026-10-27: no "RAIL 2 / 2"
@@ -207,11 +207,11 @@ public class FireControlPanel : Panel
         if (trackId) { trackId.text = manual ? (sol.fromPlot ? "PLOT" : "MANUAL") : tid ?? "NO TRACK"; Paint(trackId, manual || tid != null ? data : stencil); }
         if (trackSrc) trackSrc.text = manual ? (sol.fromPlot ? "FROM YOUR PLOT" : "DIALLED BY HAND") : tid != null ? "FROM SENSOR LOCK" : "NOT IDENTIFIED ON SENSORS";
         Color valInk = sol.set ? data : wellStencil;
-        if (solRange) { solRange.text = sol.set ? sol.rangeKm.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) : "—"; Paint(solRange, valInk); }
+        if (solRange) { solRange.text = sol.set ? sol.rangeUnits.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) : "—"; Paint(solRange, valInk); }
         if (solBrg) { solBrg.text = (sol.set ? (sol.brg > 0 ? "+" : "") + sol.brg : "—") + "°"; Paint(solBrg, valInk); }
         Show(solBrgDegree, false);
         if (solSpd) { solSpd.text = sol.set ? sol.spd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "—"; Paint(solSpd, valInk); }
-        rngKnob.Set(sol.set ? (sol.rangeKm / 100f * 12f) % 360f : 0f);
+        rngKnob.Set(sol.set ? (sol.rangeUnits / 100f * 12f) % 360f : 0f);
         brgKnob.Set(sol.set ? sol.brg * 6f : 0f);
         spdKnob.Set(sol.set ? (ShipState.JsRound(sol.spd / s.weapons.stats.spdStep) * 12) % 360 : 0f);
 

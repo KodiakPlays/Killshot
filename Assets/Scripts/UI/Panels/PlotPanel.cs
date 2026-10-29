@@ -51,13 +51,13 @@ public class PlotPanel : Panel
     [Tune("Sensors")] [SerializeField] private Eased sensorRingMotion = new Eased(0.5f, CssEase.Ease);
     [Tooltip("senEdge / senGlow: the ring and the fill inside it; white grid ink.data .26 / .04, amber grid alarm .3 / .05.")]
     [SerializeField] private float senEdgeAlpha = 0.26f, senGlowAlpha = 0.04f, senEdgeAlphaAmber = 0.3f, senGlowAlphaAmber = 0.05f;
-    private float sensorKm;
-    private System.Action<float> setSensorKm;
+    private float sensorUnits;
+    private System.Action<float> setSensorUnits;
     [Tooltip("Owner 2026-10-26: the active scan cone, while DRADIS and ACTIVE are on: bright edges and a faint fill, from the small circle round our ship out to the scan's range.")]
     [Tune("Sensors")] [SerializeField] private float coneEdgeAlpha = 0.6f, coneFillAlpha = 0.07f;
-    private float coneKm;
+    private float coneUnits;
     private Eased coneMotion; // eases like the sensor circle
-    private System.Action<float> setConeKm;
+    private System.Action<float> setConeUnits;
 
     [Header("Radar sweep (Step 43): turns inside the sensor circle while DRADIS is on")]
     [SerializeField] private SweepGraphic sweep;
@@ -69,12 +69,12 @@ public class PlotPanel : Panel
     /// <summary>The inner circle's radius on screen: half our ship's drawn length plus the margin.</summary>
     float InnerRingPx => ShipPx(shipView) / 2f + innerRingMarginPx;
     /// <summary>Owner 2026-10-29: a ship's length on screen, px: its length (units) at the plot's scale and zoom, within the min and max.</summary>
-    float ShipPx(ShipView v) => Mathf.Clamp((v && v.Ship ? v.Ship.Stats.length : 0f) / (float)KmPerPx * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx);
+    float ShipPx(ShipView v) => Mathf.Clamp((v && v.Ship ? v.Ship.Stats.length : 0f) / (float)UnitsPerPx * (float)Controls.ZoomExact, ownShipMinPx, ownShipMaxPx);
     /// <summary>The sweep's bearing now, degrees clockwise from north; and whether it shows.</summary>
     public float SweepDeg => sweepDeg;
     public bool SweepShown => sweep && sweep.isActiveAndEnabled;
-    /// <summary>The sensor circle's radius now, km (it eases), or 0 while DRADIS is off or SEN has no power.</summary>
-    public float SensorRingKm => State != null && State.sensors.Listening ? sensorKm : 0f;
+    /// <summary>The sensor circle's radius now, units (it eases), or 0 while DRADIS is off or SEN has no power.</summary>
+    public float SensorRingUnits => State != null && State.sensors.Listening ? sensorUnits : 0f;
 
     [Header("Passive bearings (Step 44): contacts DRADIS hears but has not identified")]
     [SerializeField] private MarksGraphic passiveLines;
@@ -90,7 +90,7 @@ public class PlotPanel : Panel
     [Tooltip("Stand-in art until Claude Design's contact glyphs arrive (CLAUDE_DESIGN_NEEDS 1.2).")]
     [SerializeField] private MarksGraphic contactMarks;
     [SerializeField] private TMP_Text contactLabelTemplate;
-    [Tooltip("Owner 2026-10-26 (Step 75): a contact in sight (visualRangeKm) shows as its own 3D model seen from above, in "
+    [Tooltip("Owner 2026-10-26 (Step 75): a contact in sight (visualRangeUnits) shows as its own 3D model seen from above, in "
            + "place of its dot (a ShipView camera on the contact's model): red identified, amber unknown, grey a wreck.")]
     [SerializeField] private RawImage contactShipImage;
     Color wreckInk => Palette.secondary;
@@ -121,7 +121,7 @@ public class PlotPanel : Panel
     private Vector2 panPress;
     /// <summary>Owner 2026-10-29: the plot follows our ship as it moves, until you pan it; C follows again.</summary>
     private bool following = true;
-    /// <summary>The world point at the plot centre, km.</summary>
+    /// <summary>The world point at the plot centre, units.</summary>
     public Vector2 View => new Vector2((float)viewX, (float)viewY);
     /// <summary>C, and a level's start point (Step 73): the view jumps to our ship, and follows it again. Before the
     /// board is up there is nothing to do: its first refresh centres on our ship anyway.</summary>
@@ -167,7 +167,7 @@ public class PlotPanel : Panel
     [SerializeField] private MarksGraphic weaponRing;
     [Tooltip("A PDC arc's curved edge is drawn in steps this many degrees long (Step 55).")]
     [SerializeField] private float pdcArcStepDeg = 2f;
-    [Tooltip("Owner 2026-10-29: a thin ring round our ship at the visual range (the ship's stats file, 10,000 km), always on. "
+    [Tooltip("Owner 2026-10-29: a thin ring round our ship at the visual range (the ship's stats file, 10,000 units), always on. "
            + "Inside it you see ships with your eyes. Its strength, 0 to 1; 0 hides it.")]
     [Tune("Sensors")] [SerializeField] private float visualRingAlpha = 0.35f;
 
@@ -200,16 +200,16 @@ public class PlotPanel : Panel
     int LayerX(float bx) => ShipState.JsRound((bx - plotCentre.x) / pressZoom);
     int LayerY(float by) => ShipState.JsRound((by - plotCentre.y) / pressZoom);
 
-    // Step 36: marks live in world km (x east, y north) so they stay put when our ship moves.
+    // Step 36: marks live in world units (x east, y north) so they stay put when our ship moves.
     // The pointer is still rounded to whole layer px first, as the board's plotPt does.
-    double KmPerPx => 1000.0 / grid.PxPer1000Units;
-    double SnapKm => rulerSnapPx * KmPerPx / Controls.ZoomExact;
-    double WorldX(float bx) => viewX + LayerX(bx) * KmPerPx;
-    double WorldY(float by) => viewY - LayerY(by) * KmPerPx;
-    /// <summary>A world point (km) in board px.</summary>
+    double UnitsPerPx => 1000.0 / grid.PxPer1000Units;
+    double SnapUnits => rulerSnapPx * UnitsPerPx / Controls.ZoomExact;
+    double WorldX(float bx) => viewX + LayerX(bx) * UnitsPerPx;
+    double WorldY(float by) => viewY - LayerY(by) * UnitsPerPx;
+    /// <summary>A world point (units) in board px.</summary>
     public Vector2 Screen(double wx, double wy)
     {
-        double z = Controls.ZoomExact / KmPerPx;
+        double z = Controls.ZoomExact / UnitsPerPx;
         return plotCentre + new Vector2((float)((wx - viewX) * z), (float)(-(wy - viewY) * z));
     }
     /// <summary>Step 75: our ship where it is drawn now (it glides between ticks), in board px.</summary>
@@ -253,7 +253,7 @@ public class PlotPanel : Panel
         float y = (Input.GetKey(panUpKey) ? 1f : 0f) - (Input.GetKey(panDownKey) ? 1f : 0f);
         if (x == 0f && y == 0f) return;
         following = false;
-        double km = panKeysPxPerS * Time.unscaledDeltaTime * KmPerPx / Controls.ZoomExact;
+        double km = panKeysPxPerS * Time.unscaledDeltaTime * UnitsPerPx / Controls.ZoomExact;
         viewX += x * km;
         viewY += y * km;
         Refresh();
@@ -276,7 +276,7 @@ public class PlotPanel : Panel
         if (action != "plot" || !Capturing) return false;
         pressZoom = Controls.ZoomExact;
         double wx = WorldX(board.x), wy = WorldY(board.y);
-        var snap = Controls.Tool == "RULER" ? State.PointNear(wx, wy, SnapKm) : null; // Step 46
+        var snap = Controls.Tool == "RULER" ? State.PointNear(wx, wy, SnapUnits) : null; // Step 46
         if (snap != null) { wx = snap.x; wy = snap.y; }
         State.MarkDown(Controls.Tool, wx, wy, Controls.MissionSeconds);
         if (snap != null && State.draft != null) State.draft.ptA = snap.id;
@@ -289,7 +289,7 @@ public class PlotPanel : Panel
         {
             // the world follows the pointer: drag right and the view centre moves west
             if (board != panPress) following = false; // a click on the grid that doesn't move it keeps following
-            double k = KmPerPx / Controls.ZoomExact;
+            double k = UnitsPerPx / Controls.ZoomExact;
             viewX = panX0 - (board.x - panPress.x) * k;
             viewY = panY0 + (board.y - panPress.y) * k;
             return true;
@@ -297,7 +297,7 @@ public class PlotPanel : Panel
         if (action != "plot" || State.draft == null) return false;
         double wx = WorldX(board.x), wy = WorldY(board.y);
         var d = State.draft;
-        var snap = d.kind == "ruler" ? State.PointNear(wx, wy, SnapKm) : null; // Step 46
+        var snap = d.kind == "ruler" ? State.PointNear(wx, wy, SnapUnits) : null; // Step 46
         if (snap != null && snap.id != d.ptA) { wx = snap.x; wy = snap.y; d.ptB = snap.id; }
         else d.ptB = 0;
         State.MarkMove(wx, wy);
@@ -308,7 +308,7 @@ public class PlotPanel : Panel
     {
         if (action == "plot.pan") { panning = false; return true; }
         if (action != "plot" || State.draft == null) return false;
-        State.MarkUp(State.markMinLen * KmPerPx);
+        State.MarkUp(State.markMinLen * UnitsPerPx);
         return true;
     }
 
@@ -322,15 +322,15 @@ public class PlotPanel : Panel
             // Step 65: the view stays inside the battle space, so the plot never shows black past its edge,
             // unless our ship has left it: then the view may follow the ship out
             Rect r = grid.rectTransform.rect;
-            double k = KmPerPx / Controls.ZoomExact;
+            double k = UnitsPerPx / Controls.ZoomExact;
             double lx = System.Math.Max(0, s.ArenaHalfW - r.width / 2 * k), ly = System.Math.Max(0, s.ArenaHalfH - r.height / 2 * k);
             if (s.OutsideArena) { lx = System.Math.Max(lx, System.Math.Abs(s.nav.x)); ly = System.Math.Max(ly, System.Math.Abs(s.nav.y)); }
             viewX = System.Math.Max(-lx, System.Math.Min(lx, viewX));
             viewY = System.Math.Max(-ly, System.Math.Min(ly, viewY));
             // the lines move with the world: the view's offset from the world origin, in board px
-            double z = Controls.ZoomExact / KmPerPx;
+            double z = Controls.ZoomExact / UnitsPerPx;
             grid.OffsetPx = new Vector2((float)(-viewX * z), (float)(viewY * z));
-            grid.ArenaHalfKm = new Vector2((float)s.ArenaHalfW, (float)s.ArenaHalfH); // Step 65: the grid is the battle space
+            grid.ArenaHalfUnits = new Vector2((float)s.ArenaHalfW, (float)s.ArenaHalfH); // Step 65: the grid is the battle space
             ShowAxes();
             ShowRuins(r.size, z);
         }
@@ -355,7 +355,7 @@ public class PlotPanel : Panel
             if (m.kind == "point") { label.text = Clock(m.t); label.alignment = TextAlignmentOptions.Left; at = a + pointLabelOffset; }
             else
             {
-                double dx = m.x2 - s.MarkX(m), dy = m.y2 - s.MarkY(m); // km, y north
+                double dx = m.x2 - s.MarkX(m), dy = m.y2 - s.MarkY(m); // units, y north
                 string km = ShipState.JsRound(s.MarkLen(m)).ToString("#,0", System.Globalization.CultureInfo.InvariantCulture) + " km";
                 label.text = m.kind == "ruler" ? km : km + " · BRG " + Brg(dx, dy) + "°"; // owner 2026-10-27: the ruler shows the distance only
                 if (m.kind == "ring") Grade(shapes, a, (b - a).magnitude, alpha, ref graded);
@@ -373,10 +373,10 @@ public class PlotPanel : Panel
                         shapes.Add(new MarksGraphic.Shape { kind = "dash", a = Screen(toPt.x, toPt.y),
                             b = Screen(toPt.x + System.Math.Sin(rc) * ahead, toPt.y + System.Math.Cos(rc) * ahead), alpha = alpha });
                     }
-                    // the board rounds the label's spot to whole layer px from the plot centre. km→px
+                    // the board rounds the label's spot to whole layer px from the plot centre. units→px
                     // leaves float dust (250.49999999999997 for 250.5), so trim it before rounding
-                    double mx = ShipState.JsRound(System.Math.Round((m.x + dx / 2.0 - viewX) / KmPerPx, 6));
-                    double my = ShipState.JsRound(System.Math.Round(-(m.y + dy / 2.0 - viewY) / KmPerPx, 6));
+                    double mx = ShipState.JsRound(System.Math.Round((m.x + dx / 2.0 - viewX) / UnitsPerPx, 6));
+                    double my = ShipState.JsRound(System.Math.Round(-(m.y + dy / 2.0 - viewY) / UnitsPerPx, 6));
                     at = plotCentre + new Vector2((float)mx, (float)my) * (float)Controls.ZoomExact + rulerLabelOffset;
                 }
                 else { label.alignment = TextAlignmentOptions.Left; at = b + ringLabelOffset; }
@@ -452,19 +452,19 @@ public class PlotPanel : Panel
         FightersShown = nf;
         // a squadron takes off with its whole V (rows behind the leader, half a craft) outside the small circle round
         // our ship, and lands when its leader's nose reaches the circle
-        double kmPx = KmPerPx / Controls.ZoomExact;
-        s.hangar.landClearKm = (InnerRingPx + fighterPx / 2f) * kmPx;
-        s.hangar.launchClearKm = s.hangar.landClearKm + s.hangar.SquadReady(s.hangar.CurrentSquad) / 2 * fighterGapPx * kmPx;
+        double kmPx = UnitsPerPx / Controls.ZoomExact;
+        s.hangar.landClearUnits = (InnerRingPx + fighterPx / 2f) * kmPx;
+        s.hangar.launchClearUnits = s.hangar.landClearUnits + s.hangar.SquadReady(s.hangar.CurrentSquad) / 2 * fighterGapPx * kmPx;
 
         // the selected weapon's reach while Fire Control is open (Step 46)
         if (weaponRing)
         {
             var reachShapes = new List<MarksGraphic.Shape>();
             var mount = s.weapons.MountOf(s.weapons.mount);
-            if (Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && mount != null && mount.rangeKm > 0f)
+            if (Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && mount != null && mount.rangeUnits > 0f)
             {
                 Vector2 c = OwnAt;
-                reachShapes.Add(new MarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeKm / KmPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
+                reachShapes.Add(new MarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeUnits / UnitsPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
             }
             // Step 55: each PDC group on AUTO shows its arc, a dashed sector off our hull (the design's PDC arc, accent.caution at .45)
             var pdGroups = System.Array.Find(s.weapons.systems, y => y.id == "PD").mounts;
@@ -473,7 +473,7 @@ public class PlotPanel : Panel
                 var pm = s.weapons.MountOf(pdGroups[g]);
                 if (!s.weapons.pdcAuto[g] || pm == null) continue;
                 Vector2 c = OwnAt;
-                float r = (float)(pm.rangeKm / KmPerPx * Controls.ZoomExact);
+                float r = (float)(pm.rangeUnits / UnitsPerPx * Controls.ZoomExact);
                 System.Func<float, Vector2> at = deg => c + new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)) * r; // board y is down
                 float hdg = (float)s.nav.DrawnHeading, from = hdg + pm.arc - pm.halfArc, to = hdg + pm.arc + pm.halfArc;
                 reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = c, b = at(from), alpha = 0.45f });
@@ -484,7 +484,7 @@ public class PlotPanel : Panel
             if (visualRingAlpha > 0f)
             {
                 Vector2 own = OwnAt;
-                reachShapes.Add(new MarksGraphic.Shape { kind = "circle", a = own, b = own + new Vector2((float)(s.sensors.stats.visualRangeKm / KmPerPx * Controls.ZoomExact), 0f),
+                reachShapes.Add(new MarksGraphic.Shape { kind = "circle", a = own, b = own + new Vector2((float)(s.sensors.stats.visualRangeUnits / UnitsPerPx * Controls.ZoomExact), 0f),
                                                          alpha = visualRingAlpha, ink = data.gamma });
             }
             Paint(weaponRing, caution);
@@ -493,18 +493,18 @@ public class PlotPanel : Panel
 
         if (sensorRing)
         {
-            if (setSensorKm == null) setSensorKm = km => { sensorKm = km; DrawSensorRing(); };
-            sensorRingMotion.Set(s.sensors.PassiveRangeKm, setSensorKm);
+            if (setSensorUnits == null) setSensorUnits = km => { sensorUnits = km; DrawSensorRing(); };
+            sensorRingMotion.Set(s.sensors.PassiveRangeUnits, setSensorUnits);
             // the cone reaches the scan's range, which in UV is past the hearing circle (ConeCovers)
-            if (coneMotion == null) { coneMotion = new Eased(sensorRingMotion.seconds, sensorRingMotion.ease); setConeKm = km => { coneKm = km; DrawSensorRing(); }; }
-            coneMotion.Set(s.sensors.SenRangeKm, setConeKm);
+            if (coneMotion == null) { coneMotion = new Eased(sensorRingMotion.seconds, sensorRingMotion.ease); setConeUnits = km => { coneUnits = km; DrawSensorRing(); }; }
+            coneMotion.Set(s.sensors.SenRangeUnits, setConeUnits);
             DrawSensorRing();
         }
 
-        // Step 75 (owner 2026-10-26): in sight (visualRangeKm) a ship shows as its own model from above, gliding: red
+        // Step 75 (owner 2026-10-26): in sight (visualRangeUnits) a ship shows as its own model from above, gliding: red
         // once identified; amber and nameless if not (you see its shape, not who it is, and can't target it); grey
         // once a wreck, drifting on. Out of sight an identified hostile is a dot where the sweep last touched it
-        // (res_* in the board: a mark only once identified). km to plot px at 1x: 60.9 px per 1000 km, then the zoom.
+        // (res_* in the board: a mark only once identified). units to plot px at 1x: 60.9 px per 1000 units, then the zoom.
         var dots = new List<MarksGraphic.Shape>();
         int n = 0;
         string pictured = null; // the one contact picture's track
@@ -522,7 +522,7 @@ public class PlotPanel : Panel
             }
             else
             {
-                double b = t.bearing * System.Math.PI / 180.0, px = t.rangeKm / KmPerPx * Controls.ZoomExact;
+                double b = t.bearing * System.Math.PI / 180.0, px = t.rangeUnits / UnitsPerPx * Controls.ZoomExact;
                 at = OwnAt + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
             }
             Color ink = t.wreck ? wreckInk : known ? alarm : caution;
@@ -546,7 +546,7 @@ public class PlotPanel : Panel
             var cl = ContactLabel(n++);
             Paint(cl, ink);
             cl.raycastTarget = false; // owner 2026-10-29: clicking a contact does nothing; the periscope picks the target
-            float rng = inSight ? t.rangeKm : t.seenRangeKm;
+            float rng = inSight ? t.rangeUnits : t.seenRangeUnits;
             cl.text = (known ? t.name : "BOGEY " + t.key.ToUpperInvariant()) + "\nRNG " + ShipState.JsRound(rng).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
             Place(cl.rectTransform, at + contactLabelOffset + new Vector2(labelPush, 0f), 0f);
         }
@@ -567,7 +567,7 @@ public class PlotPanel : Panel
         var bearings = new List<MarksGraphic.Shape>();
         int np = 0;
         Vector2 ownAt = OwnAt;
-        float reach = (float)(s.sensors.PassiveRangeKm / KmPerPx * Controls.ZoomExact);
+        float reach = (float)(s.sensors.PassiveRangeUnits / UnitsPerPx * Controls.ZoomExact);
         // the bearing trail (Step 45): each line from where our ship was, fading over bearingTrailSeconds
         s.sensors.PruneBearings(Controls.MissionSeconds);
         foreach (var f in s.sensors.BearingFixes)
@@ -612,24 +612,24 @@ public class PlotPanel : Panel
         }
     }
 
-    // The hearing range: Heard() takes a contact inside it while DRADIS is listening (PassiveRangeKm).
+    // The hearing range: Heard() takes a contact inside it while DRADIS is listening (PassiveRangeUnits).
     void DrawSensorRing()
     {
         var s = State;
         var shapes = new List<MarksGraphic.Shape>();
-        if (s.sensors.Listening && sensorKm > 0f)
+        if (s.sensors.Listening && sensorUnits > 0f)
         {
             bool amber = Controls.GridAmber;
             Paint(sensorRing, amber ? alarm : data);
-            Vector2 c = OwnAt, e = c + new Vector2((float)(sensorKm / KmPerPx * Controls.ZoomExact), 0f);
+            Vector2 c = OwnAt, e = c + new Vector2((float)(sensorUnits / UnitsPerPx * Controls.ZoomExact), 0f);
             shapes.Add(new MarksGraphic.Shape { kind = "disc", a = c, b = e, alpha = amber ? senGlowAlphaAmber : senGlowAlpha });
             shapes.Add(new MarksGraphic.Shape { kind = "circle", a = c, b = e, alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
             // owner 2026-10-24: a small circle just outside our ship; the sweep runs from it to the rim
             shapes.Add(new MarksGraphic.Shape { kind = "circle", a = c, b = c + new Vector2(InnerRingPx, 0f), alpha = amber ? senEdgeAlphaAmber : senEdgeAlpha });
             // owner 2026-10-26: the active scan cone starts at that small circle too
-            if (s.sensors.active && coneKm > 0f)
+            if (s.sensors.active && coneUnits > 0f)
             {
-                float r = (float)(coneKm / KmPerPx * Controls.ZoomExact), inner = InnerRingPx;
+                float r = (float)(coneUnits / UnitsPerPx * Controls.ZoomExact), inner = InnerRingPx;
                 System.Func<float, Vector2> at = deg => new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)); // board y is down
                 shapes.Add(new MarksGraphic.Shape { kind = "sector", a = c, b = c + at(s.sensors.coneBrg) * r, inner = inner, half = s.sensors.coneArc, alpha = coneFillAlpha });
                 foreach (int side in new[] { -1, 1 })
@@ -642,25 +642,25 @@ public class PlotPanel : Panel
         sensorRing.Set(shapes);
 
         if (!sweep) return;
-        bool on = s.sensors.Listening && sensorKm > 0f;
+        bool on = s.sensors.Listening && sensorUnits > 0f;
         if (sweep.gameObject.activeSelf != on) sweep.gameObject.SetActive(on);
         if (!on) return;
         bool red = Controls.GridAmber;
         Paint(sweep, red ? sweepInkAmber : data);
         sweep.SetAlphas(red ? 0.75f : 0.7f, red ? 0.11f : 0.09f); // sweepEdge, sweepTail
         sweep.SetInner(InnerRingPx);
-        float d = 2f * (float)(sensorKm / KmPerPx * Controls.ZoomExact);
+        float d = 2f * (float)(sensorUnits / UnitsPerPx * Controls.ZoomExact);
         if (sweep.rectTransform.sizeDelta != new Vector2(d, d)) sweep.rectTransform.sizeDelta = new Vector2(d, d);
         Put(sweep.rectTransform, OwnAt, -sweepDeg);
     }
 
-    /// <summary>The selected weapon's reach drawn now, km, or 0 (the playtest reads it).</summary>
-    public float WeaponRingKm
+    /// <summary>The selected weapon's reach drawn now, units, or 0 (the playtest reads it).</summary>
+    public float WeaponRingUnits
     {
         get
         {
             var m = State != null ? State.weapons.MountOf(State.weapons.mount) : null;
-            return Controls && Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && m != null ? m.rangeKm : 0f;
+            return Controls && Controls.Motion && Controls.Motion.OpenDrawerName == "fire control" && m != null ? m.rangeUnits : 0f;
         }
     }
 
@@ -759,7 +759,7 @@ public class PlotPanel : Panel
         if (open)
         {
             var at = Screen(quest.ExitAt.x, quest.ExitAt.y);
-            float r = Mathf.Max(6f, (float)(quest.ExitReachKm / KmPerPx * Controls.ZoomExact));
+            float r = Mathf.Max(6f, (float)(quest.ExitReachUnits / UnitsPerPx * Controls.ZoomExact));
             var ink = Palette.nominal.gamma;
             shapes.Add(new MarksGraphic.Shape { kind = "circle", a = at, b = at + new Vector2(r, 0f), alpha = 1f, ink = ink });
             shapes.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = ink });
@@ -804,7 +804,7 @@ public class PlotPanel : Panel
         return hits[i];
     }
 
-    // Step 76 (owner 2026-10-26): the axis numbers are distances from our ship, in km, along the top and left edges.
+    // Step 76 (owner 2026-10-26): the axis numbers are distances from our ship, in units, along the top and left edges.
     // 0 is level with our ship, then one number per big square: they slide as the ship moves and spread as you zoom.
     // No titles. The design's bottom row stays gone: the ORDERS panel covers that edge's left end. The look is on the inspector.
     private readonly List<TextMeshProUGUI> axisLabels = new List<TextMeshProUGUI>();
@@ -816,7 +816,7 @@ public class PlotPanel : Panel
         Rect r = grid.rectTransform.rect;
         var o = marks ? marks.origin : Vector2.zero;
         float cellPx;
-        double major = grid.CellKm(out cellPx) * grid.MajorEvery;
+        double major = grid.CellUnits(out cellPx) * grid.MajorEvery;
         float step = cellPx * grid.MajorEvery; // px per big square
         if (step < 1f) return;
         Vector2 own = OwnAt;
@@ -855,7 +855,7 @@ public class PlotPanel : Panel
 
     // Children of a plot-sized rect anchored top-left at the plot origin (104,100).
     // Ruins (see ruinsImage): a camera looking straight down at the found terrain, framed as the plot is
-    // (the view's centre at plotCentre, z board px per km), into a picture the size of the plot
+    // (the view's centre at plotCentre, z board px per units), into a picture the size of the plot
     void ShowRuins(Vector2 size, double z)
     {
         if (!ruinsImage) return;

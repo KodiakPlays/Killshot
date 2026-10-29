@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// The mission: what wins it and what loses it. Soham Aradhye's quest system from the GDD ("Quests"), on
@@ -39,10 +40,10 @@ public class QuestSystem : MonoBehaviour
     [SerializeField] private string targetKey = "t07";
 
     [Header("The exit (owner 2026-10-27)")]
-    [Tooltip("At the kill or capture, a jump point appears this far in from the battle space's edge, on the side farthest from our ship, km.")]
-    [Tune("Mission")] [SerializeField] private float exitInsetKm = 5000f;
-    [Tooltip("Our ship within this distance of the jump point jumps out and wins, km.")]
-    [Tune("Mission")] [SerializeField] private float exitReachKm = 2000f;
+    [Tooltip("At the kill or capture, a jump point appears this far in from the battle space's edge, on the side farthest from our ship, units.")]
+    [FormerlySerializedAs("exitInsetKm")] [Tune("Mission")] [SerializeField] private float exitInsetUnits = 5000f;
+    [Tooltip("Our ship within this distance of the jump point jumps out and wins, units.")]
+    [FormerlySerializedAs("exitReachKm")] [Tune("Mission")] [SerializeField] private float exitReachUnits = 2000f;
 
     [Header("Reinforcements (owner 2026-10-27)")]
     [Tooltip("Game seconds from the Garuda's alarm (it has found us) to the first enemy ships.")]
@@ -51,10 +52,10 @@ public class QuestSystem : MonoBehaviour
     [Tune("Mission")] [SerializeField] private int firstWave = 2;
     [Tooltip("After the first wave, one more ship this often, game seconds, until we jump out.")]
     [Tune("Mission")] [SerializeField] private float reinforceEverySeconds = 120f;
-    [Tooltip("They arrive this far in from a random edge of the battle space, km.")]
-    [Tune("Mission")] [SerializeField] private float arriveInsetKm = 2000f;
-    [Tooltip("They are told where we are, off by up to this, km. Then they hunt by their own sensors.")]
-    [Tune("Mission")] [SerializeField] private float briefErrorKm = 5000f;
+    [Tooltip("They arrive this far in from a random edge of the battle space, units.")]
+    [FormerlySerializedAs("arriveInsetKm")] [Tune("Mission")] [SerializeField] private float arriveInsetUnits = 2000f;
+    [Tooltip("They are told where we are, off by up to this, units. Then they hunt by their own sensors.")]
+    [FormerlySerializedAs("briefErrorKm")] [Tune("Mission")] [SerializeField] private float briefErrorUnits = 5000f;
     [Tooltip("The ship that arrives: a switched-off contact under World, copied for each arrival (a frigate).")]
     [SerializeField] private WorldContact reinforcement;
 
@@ -62,11 +63,11 @@ public class QuestSystem : MonoBehaviour
     public MissionFailReason FailReason { get; private set; }
     public string TargetKey => targetKey;
     public bool Over => Stage == QuestStage.MissionComplete || Stage == QuestStage.MissionFailed;
-    /// <summary>The jump point is open: the target is down. Where it is, world km.</summary>
+    /// <summary>The jump point is open: the target is down. Where it is, world units.</summary>
     public bool ExitOpen => Stage == QuestStage.ExitRegion || (Stage == QuestStage.MissionComplete && exitSet);
     public Vector2 ExitAt { get; private set; }
-    /// <summary>Our ship within this distance of the jump point wins, km.</summary>
-    public float ExitReachKm => exitReachKm;
+    /// <summary>Our ship within this distance of the jump point wins, units.</summary>
+    public float ExitReachUnits => exitReachUnits;
     /// <summary>The board's mission clock when the mission started, game seconds.</summary>
     public float StartedAt { get; private set; }
     /// <summary>Real time when it ended. The end screen waits a moment after it.</summary>
@@ -114,7 +115,7 @@ public class QuestSystem : MonoBehaviour
                                + Mathf.RoundToInt(d.magnitude).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " KM";
             board.missionCount = "!";
             if (first) board.Alert(); // the alert tone as the jump point opens, with its line already on the strip
-            if (d.magnitude <= exitReachKm) End(QuestStage.MissionComplete, MissionFailReason.None);
+            if (d.magnitude <= exitReachUnits) End(QuestStage.MissionComplete, MissionFailReason.None);
         }
     }
 
@@ -149,10 +150,10 @@ public class QuestSystem : MonoBehaviour
     // one ship at a random point on a random edge, facing in, told roughly where we are
     void Arrive(ShipState us, float now)
     {
-        float hw = (float)us.ArenaHalfW - arriveInsetKm, hh = (float)us.ArenaHalfH - arriveInsetKm;
+        float hw = (float)us.ArenaHalfW - arriveInsetUnits, hh = (float)us.ArenaHalfH - arriveInsetUnits;
         var ours = new Vector2((float)us.nav.x, (float)us.nav.y);
         Vector2 at = Vector2.zero;
-        for (int tries = 0; tries < 8; tries++) // not on top of us: at least 25,000 km away if it can
+        for (int tries = 0; tries < 8; tries++) // not on top of us: at least 25,000 units away if it can
         {
             float r = Random.Range(-1f, 1f);
             int edge = Random.Range(0, 4);
@@ -160,13 +161,13 @@ public class QuestSystem : MonoBehaviour
             if ((at - ours).magnitude >= 25000f) break;
         }
         Arrived++;
-        world.AddContact(reinforcement, "r" + Arrived, at, TacticalWorld.Bearing(-at), ours + Random.insideUnitCircle * briefErrorKm, now);
+        world.AddContact(reinforcement, "r" + Arrived, at, TacticalWorld.Bearing(-at), ours + Random.insideUnitCircle * briefErrorUnits, now);
     }
 
     // the middle of the battle space's edge farthest from our ship, inset
     Vector2 FarEdge(ShipState us)
     {
-        float hw = (float)us.ArenaHalfW - exitInsetKm, hh = (float)us.ArenaHalfH - exitInsetKm;
+        float hw = (float)us.ArenaHalfW - exitInsetUnits, hh = (float)us.ArenaHalfH - exitInsetUnits;
         var ours = new Vector2((float)us.nav.x, (float)us.nav.y);
         Vector2 best = Vector2.zero;
         foreach (var p in new[] { new Vector2(0f, hh), new Vector2(0f, -hh), new Vector2(hw, 0f), new Vector2(-hw, 0f) })

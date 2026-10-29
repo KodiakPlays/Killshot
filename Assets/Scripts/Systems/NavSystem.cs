@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Navigation: one ship's movement. It holds the ship's position, velocity, heading, ordered heading and
@@ -9,9 +10,9 @@ using UnityEngine;
 /// </summary>
 public class NavSystem : MonoBehaviour
 {
-    [Header("Where the ship is, km (x east, y north)")]
+    [Header("Where the ship is, units (x east, y north)")]
     public double x, y;
-    [System.NonSerialized] public double vx, vy; // km/s
+    [System.NonSerialized] public double vx, vy; // units/s
 
     [Header("Heading and throttle")]
     [Tooltip("Heading at load. Owner 2026-10-24: 000, bow straight up (the design's demo had 083).")]
@@ -27,7 +28,7 @@ public class NavSystem : MonoBehaviour
     public string approachMode = "DIRECT";
     [Tooltip("Index into the approach ranges.")]
     public int approachRange = 2;
-    [Tooltip("Approach hold ranges, km.")]
+    [Tooltip("Approach hold ranges, units.")]
     public int[] approachRanges = { 2000, 4000, 8000, 12000, 18000, 24000 };
 
     /// <summary>The ship this belongs to. Navigation reads its ENG bus and its engine room.</summary>
@@ -45,16 +46,16 @@ public class NavSystem : MonoBehaviour
         public float turnRate = 20f;
         // Step 41 (owner 2026-10-18): actual chases commanded at capped rates; the hull turns, the velocity
         // follows, and the sideways part bleeds off (the ship slides). The prototype's numbers (MAX_SPEED 240,
-        // ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988, SPACE_DRAG .9992 per 1/60 s) were slowed to a 2.5 km/s
+        // ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988, SPACE_DRAG .9992 per 1/60 s) were slowed to a 2.5 units/s
         // top speed. Step 63 (owner 2026-10-24, measured with docs/scale-sim): speeds and turns x5, acceleration
         // x25 and the keep rates to the 5th power. A fight then takes about 7 minutes at x1 instead of 35.
         [Header("Movement (Step 41; 5x in Step 63)")]
-        [Tooltip("Speed at 100% throttle, km/s (Step 63: 5x the design's 2.5).")]
-        public double topSpeedKms = 12.5;
-        [Tooltip("Speeding up, km/s per mission second (Step 63: 25x, so full speed comes 5x sooner).")]
-        public double accelKms2 = 0.2175;
-        [Tooltip("Slowing down, km/s per mission second (Step 63: 25x).")]
-        public double brakeKms2 = 0.4075;
+        [Tooltip("Speed at 100% throttle, units/s (Step 63: 5x the design's 2.5).")]
+        [FormerlySerializedAs("topSpeedKms")] public double topSpeedUnits = 12.5;
+        [Tooltip("Speeding up, units/s per mission second (Step 63: 25x, so full speed comes 5x sooner).")]
+        [FormerlySerializedAs("accelKms2")] public double accelUnits = 0.2175;
+        [Tooltip("Slowing down, units/s per mission second (Step 63: 25x).")]
+        [FormerlySerializedAs("brakeKms2")] public double brakeUnits = 0.4075;
         [Tooltip("Share of sideways speed kept each mission second: after a turn the ship slides, then lines up (Step 63: 0.9925^5).")]
         public double driftKeepPerS = 0.96307;
         [Tooltip("Share of all speed kept each mission second (Step 63: 0.9995^5).")]
@@ -72,7 +73,7 @@ public class NavSystem : MonoBehaviour
     // along its velocity, its bow still swinging, so a ship in view moves smoothly. Only the drawing; x and y stay true.
     // ponytail: straight-line guess, so a speeding-up or turning ship settles back a little each tick; predict the next tick if that shows
     double Ahead => board ? board.SinceTick : 0;
-    /// <summary>Where the ship is drawn now, km: its true spot, carried on by the time since the last tick.</summary>
+    /// <summary>Where the ship is drawn now, units: its true spot, carried on by the time since the last tick.</summary>
     public double DrawnX => x + vx * Ahead;
     public double DrawnY => y + vy * Ahead;
     /// <summary>The bow as drawn now, degrees: still swinging toward the ordered heading.</summary>
@@ -86,7 +87,7 @@ public class NavSystem : MonoBehaviour
         }
     }
 
-    public double SpeedKms => System.Math.Sqrt(vx * vx + vy * vy);
+    public double SpeedUnits => System.Math.Sqrt(vx * vx + vy * vy);
     /// <summary>Course over ground, degrees clockwise from north (the way the ship is actually going).</summary>
     public double CourseDeg => (System.Math.Atan2(vx, vy) * 180 / System.Math.PI + 360) % 360;
     /// <summary>Ordered heading minus heading, -180..179.</summary>
@@ -156,8 +157,8 @@ public class NavSystem : MonoBehaviour
         double keep = System.Math.Pow(stats.dragKeepPerS, dt);
         fwd *= keep;
         side *= keep * System.Math.Pow(stats.driftKeepPerS, dt);
-        double target = throttle / 100.0 * stats.topSpeedKms; // the throttle is already held to what ENG power allows (Steer)
-        double step = (fwd < target ? stats.accelKms2 : stats.brakeKms2) * dt;
+        double target = throttle / 100.0 * stats.topSpeedUnits; // the throttle is already held to what ENG power allows (Steer)
+        double step = (fwd < target ? stats.accelUnits : stats.brakeUnits) * dt;
         fwd = System.Math.Abs(target - fwd) <= step ? target : fwd + System.Math.Sign(target - fwd) * step;
         vx = fwd * nx + side * ny;
         vy = fwd * ny - side * nx;

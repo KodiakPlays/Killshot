@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// The handoff board's own state and rules, ported from reference/board-logic.js — what the
@@ -14,11 +15,12 @@ public class ShipState
     {
         public string key, name, klass;
         public int bearing;
-        public float rangeKm, speed;
+        [FormerlySerializedAs("rangeKm")] public float rangeUnits;
+        public float speed;
         public bool hostile, own;
         [Tooltip("Bands it emits in: THERM, RAD, UV, EM.")]
         public string[] sig;
-        [Tooltip("Exact world position (km), written by TacticalWorld. The plot draws the contact here; "
+        [Tooltip("Exact world position (units), written by TacticalWorld. The plot draws the contact here; "
                + "bearing and range above are the rounded readout values.")]
         [System.NonSerialized] public bool hasWorld;
         [Tooltip("Step 60: taken by our marines (SECURE).")]
@@ -33,7 +35,7 @@ public class ShipState
         [Tooltip("Step 75: where the sweep last touched it (See). Out of sight, the plot shows it here.")]
         [System.NonSerialized] public bool seen;
         [System.NonSerialized] public double seenX, seenY, seenBrg;
-        [System.NonSerialized] public float seenRangeKm;
+        [System.NonSerialized] public float seenRangeUnits;
         [Tooltip("Step 75: its navigation, written by TacticalWorld; in sight, the plot draws it where its model glides.")]
         [System.NonSerialized] public NavSystem nav;
     }
@@ -41,11 +43,11 @@ public class ShipState
     [Header("Contacts — TRACKS and CLASSES (the board's fixed mock-up contacts)")]
     public Track[] tracks =
     {
-        new Track { key = "t07", name = "GARUDA", klass = "CRUISER", bearing = 48, rangeKm = 24300, speed = 1.10f, hostile = true, sig = new[] { "THERM", "RAD" } },
-        new Track { key = "c17", name = "CONTACT 17", klass = "CORVETTE", bearing = 325, rangeKm = 31000, speed = 0.82f, hostile = true, sig = new[] { "RAD", "EM" } },
-        new Track { key = "c22", name = "CONTACT 22", klass = "FRIGATE", bearing = 149, rangeKm = 16800, speed = 1.44f, hostile = true, sig = new[] { "THERM", "EM" } },
-        new Track { key = "ftr", name = "FTR-2", klass = "FIGHTER", bearing = 241, rangeKm = 12200, speed = 2.60f, own = true, sig = new[] { "THERM", "UV" } },
-        new Track { key = "bc1", name = "BC-01", klass = "BOAT", bearing = 71, rangeKm = 9500, speed = 0.41f, own = true, sig = new[] { "UV", "EM" } },
+        new Track { key = "t07", name = "GARUDA", klass = "CRUISER", bearing = 48, rangeUnits = 24300, speed = 1.10f, hostile = true, sig = new[] { "THERM", "RAD" } },
+        new Track { key = "c17", name = "CONTACT 17", klass = "CORVETTE", bearing = 325, rangeUnits = 31000, speed = 0.82f, hostile = true, sig = new[] { "RAD", "EM" } },
+        new Track { key = "c22", name = "CONTACT 22", klass = "FRIGATE", bearing = 149, rangeUnits = 16800, speed = 1.44f, hostile = true, sig = new[] { "THERM", "EM" } },
+        new Track { key = "ftr", name = "FTR-2", klass = "FIGHTER", bearing = 241, rangeUnits = 12200, speed = 2.60f, own = true, sig = new[] { "THERM", "UV" } },
+        new Track { key = "bc1", name = "BC-01", klass = "BOAT", bearing = 71, rangeUnits = 9500, speed = 0.41f, own = true, sig = new[] { "UV", "EM" } },
     };
 
     [Tooltip("Classified by the periscope (cls). Identified is on the SensorSystem.")]
@@ -72,9 +74,9 @@ public class ShipState
     [Tooltip("px of MAG knob drag per 1x of zoom (magDown).")]
     [Tune("Periscope & fire control")]
     public double magPxPerX = 40;
-    [Tooltip("Step 109: at 1x a ship this far away (km) fills the brackets; at 2x, one twice as far.")]
+    [Tooltip("Step 109: at 1x a ship this far away (units) fills the brackets; at 2x, one twice as far.")]
     [Tune("Periscope & fire control")]
-    public float scopeFitKm = 3750f;
+    [FormerlySerializedAs("scopeFitKm")] public float scopeFitUnits = 3750f;
     [Tooltip("Step 109: CLASS works while the ship is within this share of the brackets' size, bigger or smaller.")]
     [Tune("Periscope & fire control")]
     public float scopeFitSlack = 0.15f;
@@ -142,7 +144,7 @@ public class ShipState
         public int id;
         [Tooltip("point, ruler or ring.")]
         public string kind;
-        [Tooltip("World km, x east, y north (Step 36: marks stay put in space). A ring is centred on our "
+        [Tooltip("World units, x east, y north (Step 36: marks stay put in space). A ring is centred on our "
                + "ship wherever it is, so its x, y are unused; x2, y2 is its far point.")]
         public double x, y, x2, y2;
         [Tooltip("Mission clock at placement (points).")]
@@ -152,26 +154,26 @@ public class ShipState
     }
 
     // ---- the battle space (Step 65, owner 2026-10-25) --------------------------------------------
-    // A rectangle centred on the world origin, 100,000 x 100,000 km to start (20 x 20 big squares of 5,000 km at x1).
+    // A rectangle centred on the world origin, 100,000 x 100,000 units to start (20 x 20 big squares of 5,000 units at x1).
     // Near the edge a warning; past it, a countdown to get back inside, or the ship is lost (the GDD's desertion rule;
     // Assets/Scripts/WorldBoundary.cs in the old build). Crossing drops the time rate to x1 (BoardManager).
     [Header("Battle space (Step 65)")]
-    [Tooltip("East to west, km, centred on the world origin. Zooming out stops when it fills the plot's width. A multiple of 50,000 keeps the edge on a grid line at every zoom.")]
-    [Tune("Arena")] public double arenaWidthKm = 100000;
-    [Tooltip("North to south, km. Less than about half the width (the plot's shape) leaves black above and below it at full zoom-out. A multiple of 50,000 keeps the edge on a grid line.")]
-    [Tune("Arena")] public double arenaHeightKm = 100000;
-    public double ArenaHalfW => arenaWidthKm / 2;
-    public double ArenaHalfH => arenaHeightKm / 2;
-    [Tooltip("The edge warning shows this far inside the edge, km (half a big square).")]
-    [Tune("Arena")] public double arenaWarnKm = 2500;
-    [Tooltip("Game seconds to get back inside once out (owner: 30). Straight out at full speed the fastest return takes about 75 (brake, then turn); 30 is enough below about 4.4 km/s or at a shallow crossing. The warning is the time to turn.")]
+    [Tooltip("East to west, units, centred on the world origin. Zooming out stops when it fills the plot's width. A multiple of 50,000 keeps the edge on a grid line at every zoom.")]
+    [FormerlySerializedAs("arenaWidthKm")] [Tune("Arena")] public double arenaWidthUnits = 100000;
+    [Tooltip("North to south, units. Less than about half the width (the plot's shape) leaves black above and below it at full zoom-out. A multiple of 50,000 keeps the edge on a grid line.")]
+    [FormerlySerializedAs("arenaHeightKm")] [Tune("Arena")] public double arenaHeightUnits = 100000;
+    public double ArenaHalfW => arenaWidthUnits / 2;
+    public double ArenaHalfH => arenaHeightUnits / 2;
+    [Tooltip("The edge warning shows this far inside the edge, units (half a big square).")]
+    [FormerlySerializedAs("arenaWarnKm")] [Tune("Arena")] public double arenaWarnUnits = 2500;
+    [Tooltip("Game seconds to get back inside once out (owner: 30). Straight out at full speed the fastest return takes about 75 (brake, then turn); 30 is enough below about 4.4 units/s or at a shallow crossing. The warning is the time to turn.")]
     [Tune("Arena")] public float arenaReturnSeconds = 30f;
     /// <summary>Game seconds spent outside the battle space, or -1 while inside.</summary>
     [System.NonSerialized] public float outsideFor = -1f;
     /// <summary>Lost for leaving the battle space and not coming back in time.</summary>
     [System.NonSerialized] public bool deserted;
     public bool OutsideArena => System.Math.Abs(ownX) > ArenaHalfW || System.Math.Abs(ownY) > ArenaHalfH;
-    public bool NearArenaEdge => !OutsideArena && System.Math.Min(ArenaHalfW - System.Math.Abs(ownX), ArenaHalfH - System.Math.Abs(ownY)) <= arenaWarnKm;
+    public bool NearArenaEdge => !OutsideArena && System.Math.Min(ArenaHalfW - System.Math.Abs(ownX), ArenaHalfH - System.Math.Abs(ownY)) <= arenaWarnUnits;
 
     /// <summary>Each tick, after we move: count the time outside, and lose the ship when it runs out.
     /// True on the tick we cross out.</summary>
@@ -203,28 +205,28 @@ public class ShipState
         return true;
     }
     public void MarkMove(double x, double y) { if (draft != null) { draft.x2 = x; draft.y2 = y; } }
-    /// <summary>plotUp: a draft shorter than 4 layer px (given in km by the plot) is dropped; otherwise it becomes a mark.</summary>
-    public void MarkUp(double minLenKm)
+    /// <summary>plotUp: a draft shorter than 4 layer px (given in units by the plot) is dropped; otherwise it becomes a mark.</summary>
+    public void MarkUp(double minLenUnits)
     {
         var d = draft;
         draft = null;
-        if (d == null || MarkLen(d) < minLenKm - 1e-6) return; // tolerance: the km conversion can land a hair under an exact 4 px (Step 36 verification)
+        if (d == null || MarkLen(d) < minLenUnits - 1e-6) return; // tolerance: the units conversion can land a hair under an exact 4 px (Step 36 verification)
         d.id = ++markSeq;
         marks.Add(d);
         if (weapons.Sol.set && weapons.Sol.manual) weapons.ApplyTrack(weapons.Sol); // Step 52: a new track feeds the hand-dialled solution
     }
-    /// <summary>A mark's start in world km: a ring starts at our ship, wherever it is now.</summary>
+    /// <summary>A mark's start in world units: a ring starts at our ship, wherever it is now.</summary>
     public double MarkX(Mark m) => m.kind == "ring" ? ownX : m.x;
     public double MarkY(Mark m) => m.kind == "ring" ? ownY : m.y;
-    /// <summary>Length in km.</summary>
+    /// <summary>Length in units.</summary>
     public double MarkLen(Mark m) { double dx = m.x2 - MarkX(m), dy = m.y2 - MarkY(m); return System.Math.Sqrt(dx * dx + dy * dy); }
     public void EraseMark(int id) => marks.RemoveAll(m => m.id == id);
 
-    /// <summary>Step 46: the nearest POINT within reach of a spot (km), or null — a RULER snaps to it.</summary>
-    public Mark PointNear(double x, double y, double withinKm)
+    /// <summary>Step 46: the nearest POINT within reach of a spot (units), or null — a RULER snaps to it.</summary>
+    public Mark PointNear(double x, double y, double withinUnits)
     {
         Mark best = null;
-        double bestD = withinKm;
+        double bestD = withinUnits;
         foreach (var m in marks)
         {
             if (m.kind != "point") continue;
@@ -236,9 +238,9 @@ public class ShipState
 
     /// <summary>Step 46 (owner 2026-10-23): a RULER from one POINT to another, with different times, is a
     /// target's track. Course runs from the earlier POINT to the later; speed is distance over time.</summary>
-    public bool TrackLeg(Mark m, out Mark from, out Mark to, out double courseDeg, out double speedKms)
+    public bool TrackLeg(Mark m, out Mark from, out Mark to, out double courseDeg, out double speedUnits)
     {
-        from = to = null; courseDeg = speedKms = 0;
+        from = to = null; courseDeg = speedUnits = 0;
         if (m.kind != "ruler" || m.ptA == 0 || m.ptB == 0) return false;
         var a = marks.Find(k => k.id == m.ptA);
         var b = marks.Find(k => k.id == m.ptB);
@@ -247,7 +249,7 @@ public class ShipState
         double dx = b.x - a.x, dy = b.y - a.y;
         from = a; to = b;
         courseDeg = (System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360;
-        speedKms = System.Math.Sqrt(dx * dx + dy * dy) / (b.t - a.t);
+        speedUnits = System.Math.Sqrt(dx * dx + dy * dy) / (b.t - a.t);
         return true;
     }
 
@@ -282,7 +284,7 @@ public class ShipState
     /// <summary>scopeSubject: the first heard contact in the sight.</summary>
     public Track ScopeSubject(bool scopeDown) { foreach (var t in tracks) if (Heard(t) && ScopeOn(t, scopeDown)) return t; return null; }
     /// <summary>Step 109: how big a ship looks in the sight against the brackets (1 fills them). Zoom in, or close in, to grow it.</summary>
-    public double ScopeFill(Track t) => scopeZoom * scopeFitKm / System.Math.Max(1.0, t.rangeKm);
+    public double ScopeFill(Track t) => scopeZoom * scopeFitUnits / System.Math.Max(1.0, t.rangeUnits);
     /// <summary>Step 109 (owner 2026-10-29): CLASS needs the ship to fill the brackets. At 1x a close ship may spill out: the MAG goes no lower.</summary>
     public bool ScopeFits(Track t) { double f = ScopeFill(t); return f >= 1 - scopeFitSlack && (f <= 1 + scopeFitSlack || scopeZoom <= 1); }
     public void Classify(bool scopeDown) { var t = ScopeSubject(scopeDown); if (t != null && ScopeFits(t) && !classified.Contains(t.key)) classified.Add(t.key); }

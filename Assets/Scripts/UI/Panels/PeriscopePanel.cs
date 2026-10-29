@@ -170,7 +170,7 @@ public class PeriscopePanel : Panel
         // convergence: 100 - range / mount range, 6..96 %, 0 with no target
         if (convBar)
         {
-            float pct = tgt != null ? Mathf.Max(6, Mathf.Min(96, ShipState.JsRound(100 - (tgt.rangeKm / (double)m.rangeKm) * 100))) : 0;
+            float pct = tgt != null ? Mathf.Max(6, Mathf.Min(96, ShipState.JsRound(100 - (tgt.rangeUnits / (double)m.rangeUnits) * 100))) : 0;
             float w = convWidth * pct / 100f;
             convBar.sizeDelta = new Vector2(w, convBar.sizeDelta.y);
             convBar.anchoredPosition = new Vector2(convLeft - parentLeft + w / 2f, convBar.anchoredPosition.y);

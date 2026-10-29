@@ -47,13 +47,13 @@ public class DebrisFieldEditor : Editor
             go.transform.SetParent(f.transform, false);
             go.transform.localPosition = new Vector3(p.at.x, p.at.y, 0f);
             go.transform.localRotation = Quaternion.Euler(0f, 0f, p.turnDeg) * p.prefab.transform.localRotation;
-            go.transform.localScale = p.prefab.transform.localScale * (p.sizeKm / w);
+            go.transform.localScale = p.prefab.transform.localScale * (p.sizeUnits / w);
         }
         Undo.CollapseUndoOperations(group);
         EditorSceneManager.MarkSceneDirty(f.gameObject.scene);
     }
 
-    // How wide a prefab is at its own scale, km, across x and y (the plane seen from above), from its meshes.
+    // How wide a prefab is at its own scale, units, across x and y (the plane seen from above), from its meshes.
     static float Across(GameObject prefab)
     {
         bool any = false;
@@ -95,7 +95,7 @@ public class DebrisFieldEditor : Editor
                     if (!f.Inside(a[i].at)) return what + ": a piece outside the shape";
                     if (a[i].at != b[i].at) return what + ": the same seed gave another layout";
                     for (int j = 0; j < i; j++)
-                        if ((a[i].at - a[j].at).magnitude < f.gapKm) return what + ": two pieces closer than the gap";
+                        if ((a[i].at - a[j].at).magnitude < f.gapUnits) return what + ": two pieces closer than the gap";
                 }
             }
             return "ok";

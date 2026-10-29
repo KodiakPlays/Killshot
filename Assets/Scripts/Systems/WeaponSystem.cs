@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Weapons: one ship's fire control and what it has in flight. It holds the weapon groups (railgun, PDC,
@@ -21,39 +22,39 @@ public class WeaponSystem : MonoBehaviour
     public class Stats
     {
         [Header("Mounts: reach, arcs and ammunition at the start")]
-        // Owner 2026-10-26: each weapon has its own reach. Railguns 25,000 km (a slug takes about 100 s; at that range even a
-        // good aim can just miss a cruiser), missiles 35,000 km (slower, but they home), PDCs 10,000 km. Was 30,000 for railguns
+        // Owner 2026-10-26: each weapon has its own reach. Railguns 25,000 units (a slug takes about 100 s; at that range even a
+        // good aim can just miss a cruiser), missiles 35,000 units (slower, but they home), PDCs 10,000 units. Was 30,000 for railguns
         // and missiles (the DRADIS at full gain) and 4,000 for PDCs. You can dumb-fire that far; a lock still needs a scan.
         // Owner 2026-10-27: every mount starts full (the design had RG-B at 19 and PDC-B at 2180). The ammunition here is what
         // each mount has at the start; the running game counts down its own copy, never the file.
         public Mount[] mounts =
         {
-            new Mount { id = "RGA", arc = 42, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET A", shortName = "RG-A", ammo = 22 },
-            new Mount { id = "RGB", arc = 250, halfArc = 80, rangeKm = 25000, label = "RAILGUN TURRET B", shortName = "RG-B", ammo = 22 },
+            new Mount { id = "RGA", arc = 42, halfArc = 80, rangeUnits = 25000, label = "RAILGUN TURRET A", shortName = "RG-A", ammo = 22 },
+            new Mount { id = "RGB", arc = 250, halfArc = 80, rangeUnits = 25000, label = "RAILGUN TURRET B", shortName = "RG-B", ammo = 22 },
             // owner 2026-10-29: two halves, "keep it simple": PDC-A the starboard side (000–180), PDC-B the port side (180–360)
-            new Mount { id = "PDA", arc = 90, halfArc = 90, rangeKm = 10000, label = "PDC GROUP A", shortName = "PDC-A", ammo = 2400 },
-            new Mount { id = "PDB", arc = 270, halfArc = 90, rangeKm = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
-            new Mount { id = "VLS", arc = 0, halfArc = 180, rangeKm = 35000, label = "MISSILE VLS", shortName = "VLS", ammo = 8 },
+            new Mount { id = "PDA", arc = 90, halfArc = 90, rangeUnits = 10000, label = "PDC GROUP A", shortName = "PDC-A", ammo = 2400 },
+            new Mount { id = "PDB", arc = 270, halfArc = 90, rangeUnits = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
+            new Mount { id = "VLS", arc = 0, halfArc = 180, rangeUnits = 35000, label = "MISSILE VLS", shortName = "VLS", ammo = 8 },
         };
         [Tooltip("A knob turned with no solution starts one here, on the periscope's bearing at speed 0 (owner 2026-10-23).")]
-        public float manualStartRangeKm = 10000f;
+        [FormerlySerializedAs("manualStartRangeKm")] public float manualStartRangeUnits = 10000f;
         [Tooltip("Missiles launched together (owner 2026-10-23: set here until the design's salvo stepper has art).")]
         [Range(1, 8)] public int salvo = 2;
         [Tooltip("PDC autoloaders. Step 55: engaged at load (the design starts them off) and set here until the design's LOADERS pushbutton has art (HANDOFF_GAPS row 73); without them PDCs cannot arm.")]
         public bool loaders = true;
         public float wepFeedPerUnit = 5f, wepBleed = 3f;
-        [Tooltip("Railgun slug speed, km/s (owner 2026-10-27: the fastest thing on the board, about 10 s across its 25,000 km range).")]
-        public double slugSpeedKms = 2500;
-        [Tooltip("Missile speed, km/s (owner 2026-10-23: slower than a slug, but it homes; Step 63: x5). About 2 minutes to 12,000 km.")]
-        public double missileSpeedKms = 100;
+        [Tooltip("Railgun slug speed, units/s (owner 2026-10-27: the fastest thing on the board, about 10 s across its 25,000 units range).")]
+        [FormerlySerializedAs("slugSpeedKms")] public double slugSpeedUnits = 2500;
+        [Tooltip("Missile speed, units/s (owner 2026-10-23: slower than a slug, but it homes; Step 63: x5). About 2 minutes to 12,000 units.")]
+        [FormerlySerializedAs("missileSpeedKms")] public double missileSpeedUnits = 100;
         [Tooltip("How fast a missile can turn toward its target, degrees per mission second (Step 63: x5).")]
         public double missileTurnDegPerS = 6.5;
         [Tooltip("A salvo leaves the launcher fanned this many degrees apart.")]
         public double missileSpreadDeg = 3;
         [Tooltip("Rounds one PDC group spends on each go at an enemy missile (owner 2026-10-27).")]
         public int pdcRoundsPerGo = 100;
-        [Tooltip("A shot from this ship, slug or missile, hits a ship it passes within this distance of, km (owner 2026-10-27: 100 km, any ship).")]
-        public float hitRadiusKm = 100f;
+        [Tooltip("A shot from this ship, slug or missile, hits a ship it passes within this distance of, units (owner 2026-10-27: 100 units, any ship).")]
+        [FormerlySerializedAs("hitRadiusKm")] public float hitRadiusUnits = 100f;
         [Tooltip("Armour one of this ship's slugs takes off the side it hits.")]
         public float slugArmourDamage = 50f;
         [Tooltip("Integrity one of this ship's slugs, or a warhead through an open side, takes off the room behind it (owner: 2 of 5).")]
@@ -68,7 +69,7 @@ public class WeaponSystem : MonoBehaviour
         [Range(0f, 1f)] public float breachChanceSlug = 0.5f;
         [Tooltip("Firing the railgun spikes our signal by this much (GDD p.42); it falls back at the usual rate.")]
         public float fireSignalSpike = 25f;
-        [Tooltip("The SPD knob's step, km/s (the design's 0.05, x5 with the speeds in Step 63).")]
+        [Tooltip("The SPD knob's step, units/s (the design's 0.05, x5 with the speeds in Step 63).")]
         public float spdStep = 0.25f;
         [Tooltip("The chance a PDC group on AUTO shoots down an enemy missile that enters its arc (owner: a chance per missile).")]
         [Range(0f, 1f)] public float pdcKillChance = 0.7f;
@@ -84,7 +85,7 @@ public class WeaponSystem : MonoBehaviour
     [System.Serializable]
     public class Mount
     {
-        public string id, label, shortName; public int arc, halfArc; public float rangeKm;
+        public string id, label, shortName; public int arc, halfArc; [FormerlySerializedAs("rangeKm")] public float rangeUnits;
         [Tooltip("What it has left: slugs, PDC rounds or missile cells. Owner 2026-10-27: a real count; it only goes down.")]
         public int ammo;
     }
@@ -95,7 +96,7 @@ public class WeaponSystem : MonoBehaviour
     [System.Serializable]
     public class Solution
     {
-        public bool set; public float rangeKm; public int brg; public float spd;
+        public bool set; [FormerlySerializedAs("rangeKm")] public float rangeUnits; public int brg; public float spd;
         [Tooltip("Step 47: dialled by hand from the plot, not by TRACK. It aims at a point in space, not a locked contact.")]
         public bool manual;
         [Tooltip("Owner 2026-10-29: TRACK made it from the plot (the newest POINT, and the newest POINT-to-POINT RULER).")]
@@ -103,7 +104,7 @@ public class WeaponSystem : MonoBehaviour
         [Tooltip("Step 52: the target's course is known (from a plotted track, or TRACK's lock), so the shot is led.")]
         public bool hasCourse;
         public float course;
-        [Tooltip("Where the target was (world km) and when (mission seconds) as the solution was set; the fire computer reckons it forward.")]
+        [Tooltip("Where the target was (world units) and when (mission seconds) as the solution was set; the fire computer reckons it forward.")]
         public double wx, wy;
         public float t;
     }
@@ -139,7 +140,7 @@ public class WeaponSystem : MonoBehaviour
     [System.Serializable]
     public class Round
     {
-        public double x, y, dx, dy, travelled, maxKm;
+        public double x, y, dx, dy, travelled, maxUnits;
         public double speed = 50;
         [Tooltip("Step 53: a missile homes on its target and carries a warhead (an index into warheads).")]
         public bool missile;
@@ -238,7 +239,7 @@ public class WeaponSystem : MonoBehaviour
             if (target != t.key) Retarget(t.key); // the other weapons' solutions were worked out on the old target
             int rel = ((t.bearing - ship.nav.heading + 540) % 360) - 180;
             // Step 52: an active lock knows its true course and speed, and where it is now, so TRACK's shot is led
-            sol[SysIndex] = new Solution { set = true, rangeKm = t.rangeKm, brg = rel, spd = t.speed,
+            sol[SysIndex] = new Solution { set = true, rangeUnits = t.rangeUnits, brg = rel, spd = t.speed,
                 hasCourse = t.speed > 0.01f, course = (float)t.course, wx = t.worldX, wy = t.worldY, t = ship.missionNow };
             ClearSwitches(); fired = false;
             return;
@@ -255,7 +256,7 @@ public class WeaponSystem : MonoBehaviour
             px += System.Math.Sin(c) * cur.spd * dt; py += System.Math.Cos(c) * cur.spd * dt;
         }
         double dx = px - ship.nav.x, dy = py - ship.nav.y;
-        cur.rangeKm = (float)System.Math.Sqrt(dx * dx + dy * dy);
+        cur.rangeUnits = (float)System.Math.Sqrt(dx * dx + dy * dy);
         cur.brg = (ShipState.JsRound((System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360) - ship.nav.heading + 540) % 360 - 180;
         cur.wx = px; cur.wy = py; cur.t = ship.missionNow;
         sol[SysIndex] = cur;
@@ -276,7 +277,7 @@ public class WeaponSystem : MonoBehaviour
         return best;
     }
 
-    /// <summary>nudgeSol: RNG ±100 km, BRG ±1° (±180), SPD ±stats.spdStep (2 dp; the design had 0.05, x5 in Step 63); clears the ladder.</summary>
+    /// <summary>nudgeSol: RNG ±100 units, BRG ±1° (±180), SPD ±stats.spdStep (2 dp; the design had 0.05, x5 in Step 63); clears the ladder.</summary>
     public void NudgeSol(string field, int d)
     {
         var cur = Sol;
@@ -284,12 +285,12 @@ public class WeaponSystem : MonoBehaviour
         {
             // Step 47 (owner 2026-10-23): a knob starts a hand-dialled solution, from the plot
             cur.set = true; cur.manual = true;
-            cur.rangeKm = stats.manualStartRangeKm;
+            cur.rangeUnits = stats.manualStartRangeUnits;
             cur.brg = (ShipState.JsRound(ship.scopeBrg) - ship.nav.heading + 540) % 360 - 180; // relative, as TRACK stores it
             cur.spd = 0f;
             ApplyTrack(cur);
         }
-        if (field == "rng") cur.rangeKm = Mathf.Max(0f, cur.rangeKm + d * 100f);
+        if (field == "rng") cur.rangeUnits = Mathf.Max(0f, cur.rangeUnits + d * 100f);
         if (field == "brg") cur.brg = Mathf.Max(-180, Mathf.Min(180, cur.brg + d));
         if (field == "spd") cur.spd = Mathf.Max(0f, (float)System.Math.Round(cur.spd + d * stats.spdStep, 2, System.MidpointRounding.AwayFromZero));
         // the dialled point is where the target is now; on TRACK's solution RNG and BRG move its point too (owner 2026-10-29)
@@ -342,7 +343,7 @@ public class WeaponSystem : MonoBehaviour
         if (sys == "RG" && m != null)
         {
             double b = LeadBearing() * System.Math.PI / 180;
-            Rounds.Add(new Round { x = ship.nav.x, y = ship.nav.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm, speed = stats.slugSpeedKms });
+            Rounds.Add(new Round { x = ship.nav.x, y = ship.nav.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = m.rangeUnits, speed = stats.slugSpeedUnits });
             m.ammo--;
             shotReport = null;
             ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + stats.fireSignalSpike);
@@ -355,8 +356,8 @@ public class WeaponSystem : MonoBehaviour
             for (int i = 0; i < n; i++)
             {
                 double b = (tgt.bearing + (i - (n - 1) / 2.0) * stats.missileSpreadDeg) * System.Math.PI / 180;
-                Rounds.Add(new Round { x = ship.nav.x, y = ship.nav.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = m.rangeKm,
-                                       speed = stats.missileSpeedKms, missile = true, targetKey = tgt.key, warhead = warhead });
+                Rounds.Add(new Round { x = ship.nav.x, y = ship.nav.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = m.rangeUnits,
+                                       speed = stats.missileSpeedUnits, missile = true, targetKey = tgt.key, warhead = warhead });
             }
             vlsCells -= n;
             shotReport = null;
@@ -388,8 +389,8 @@ public class WeaponSystem : MonoBehaviour
     void Fix(Solution cur)
     {
         double b = (ship.nav.heading + cur.brg) * System.Math.PI / 180;
-        cur.wx = ship.nav.x + System.Math.Sin(b) * cur.rangeKm;
-        cur.wy = ship.nav.y + System.Math.Cos(b) * cur.rangeKm;
+        cur.wx = ship.nav.x + System.Math.Sin(b) * cur.rangeUnits;
+        cur.wy = ship.nav.y + System.Math.Cos(b) * cur.rangeUnits;
         cur.t = ship.missionNow;
     }
 
@@ -407,7 +408,7 @@ public class WeaponSystem : MonoBehaviour
     {
         double x, y; Reckon(cur, out x, out y);
         double dx = x - ship.nav.x, dy = y - ship.nav.y;
-        cur.rangeKm = (float)System.Math.Sqrt(dx * dx + dy * dy);
+        cur.rangeUnits = (float)System.Math.Sqrt(dx * dx + dy * dy);
         cur.brg = (ShipState.JsRound((System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360) - ship.nav.heading + 540) % 360 - 180;
     }
 
@@ -422,7 +423,7 @@ public class WeaponSystem : MonoBehaviour
         double straight = (System.Math.Atan2(tx, ty) * 180 / System.Math.PI + 360) % 360;
         if (!cur.hasCourse || cur.spd <= 0.001f) return straight;
         double c = cur.course * System.Math.PI / 180, vx = cur.spd * System.Math.Sin(c), vy = cur.spd * System.Math.Cos(c);
-        double a = vx * vx + vy * vy - stats.slugSpeedKms * stats.slugSpeedKms, bq = 2 * (tx * vx + ty * vy), cq = tx * tx + ty * ty;
+        double a = vx * vx + vy * vy - stats.slugSpeedUnits * stats.slugSpeedUnits, bq = 2 * (tx * vx + ty * vy), cq = tx * tx + ty * ty;
         double disc = bq * bq - 4 * a * cq;
         if (a >= 0 || disc < 0) return straight; // can't catch it
         double tHit = (-bq - System.Math.Sqrt(disc)) / (2 * a);
@@ -452,7 +453,7 @@ public class WeaponSystem : MonoBehaviour
         {
             var r = list[i];
             if (r.missile) Steer(r, dt);
-            double step = System.Math.Min(r.speed * dt, r.maxKm - r.travelled);
+            double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
             double flight = r.speed > 0 ? step / r.speed : 0; // seconds of this tick the round is flying
             ShipState.Track struck = null;
             double first = double.MaxValue;
@@ -464,7 +465,7 @@ public class WeaponSystem : MonoBehaviour
                 double wx = t.speed * System.Math.Sin(c) - r.dx * r.speed, wy = t.speed * System.Math.Cos(c) - r.dy * r.speed;
                 double px = t.worldX - r.x, py = t.worldY - r.y, ww = wx * wx + wy * wy;
                 double s = ww > 0 ? System.Math.Max(0, System.Math.Min(flight, -(px * wx + py * wy) / ww)) : 0; // closest moment
-                double cx = px + wx * s, cy = py + wy * s, rad = stats.hitRadiusKm;
+                double cx = px + wx * s, cy = py + wy * s, rad = stats.hitRadiusUnits;
                 if (cx * cx + cy * cy <= rad * rad && s < first) { struck = t; first = s; }
             }
             if (struck != null)
@@ -479,7 +480,7 @@ public class WeaponSystem : MonoBehaviour
                 continue;
             }
             r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
-            if (r.travelled >= r.maxKm - 1e-6) { shotReport = "MISS"; lastShotHit = false; shotResults++; list.RemoveAt(i); }
+            if (r.travelled >= r.maxUnits - 1e-6) { shotReport = "MISS"; lastShotHit = false; shotResults++; list.RemoveAt(i); }
         }
     }
 
@@ -514,27 +515,27 @@ public class WeaponSystem : MonoBehaviour
 
     /// <summary>An enemy at (x, y) launches n missiles at us, fanned, each homing on our ship. by: the
     /// enemy's numbers, which its missiles fly and hit by.</summary>
-    public void LaunchAt(Stats by, double x, double y, int n, int warheadIndex, double maxKm)
+    public void LaunchAt(Stats by, double x, double y, int n, int warheadIndex, double maxUnits)
     {
         double brg = System.Math.Atan2(ship.nav.x - x, ship.nav.y - y) * 180 / System.Math.PI;
         for (int i = 0; i < n; i++)
         {
             double b = (brg + (i - (n - 1) / 2.0) * by.missileSpreadDeg) * System.Math.PI / 180;
-            Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = maxKm,
-                                     speed = by.missileSpeedKms, missile = true, warhead = warheadIndex, by = by });
+            Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = maxUnits,
+                                     speed = by.missileSpeedUnits, missile = true, warhead = warheadIndex, by = by });
         }
     }
 
     /// <summary>Wolf Hunt (Step 97): an enemy at (x, y) fires a railgun slug at us on this true bearing. It flies
     /// straight at its ship's slug speed. PDCs cannot stop a slug.</summary>
-    public void ShootAt(Stats by, double x, double y, double brgDeg, double maxKm)
+    public void ShootAt(Stats by, double x, double y, double brgDeg, double maxUnits)
     {
         double b = brgDeg * System.Math.PI / 180;
-        Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxKm = maxKm, speed = by.slugSpeedKms, by = by });
+        Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = maxUnits, speed = by.slugSpeedUnits, by = by });
     }
 
     /// <summary>Each tick: our PDCs take their chances, then every enemy missile homes on us and every enemy
-    /// slug flies straight; one that passes within its firing ship's hitRadiusKm strikes the side facing it.</summary>
+    /// slug flies straight; one that passes within its firing ship's hitRadiusUnits strikes the side facing it.</summary>
     public void TickIncoming(double dt)
     {
         var list = Incoming;
@@ -543,7 +544,7 @@ public class WeaponSystem : MonoBehaviour
             var r = list[i];
             if (r.missile && PdcStops(r)) { list.RemoveAt(i); continue; }
             if (r.missile) SteerAt(r, ship.nav.x, ship.nav.y, dt);
-            double step = System.Math.Min(r.speed * dt, r.maxKm - r.travelled), cx, cy;
+            double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled), cx, cy;
             if (r.missile)
             {
                 double px = ship.nav.x - r.x, py = ship.nav.y - r.y;
@@ -558,7 +559,7 @@ public class WeaponSystem : MonoBehaviour
                 double ww = wx * wx + wy * wy, tau = ww > 0 ? System.Math.Max(0, System.Math.Min(step / r.speed, -(ox * wx + oy * wy) / ww)) : 0;
                 cx = ox + wx * tau; cy = oy + wy * tau;
             }
-            if (cx * cx + cy * cy <= r.by.hitRadiusKm * r.by.hitRadiusKm)
+            if (cx * cx + cy * cy <= r.by.hitRadiusUnits * r.by.hitRadiusUnits)
             {
                 string side = ShipState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, ship.nav.heading);
                 incomingReport = r.missile ? "MISSILE HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead], r.by)
@@ -568,7 +569,7 @@ public class WeaponSystem : MonoBehaviour
                 continue;
             }
             r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
-            if (r.travelled >= r.maxKm - 1e-6) list.RemoveAt(i);
+            if (r.travelled >= r.maxUnits - 1e-6) list.RemoveAt(i);
         }
     }
 
@@ -584,7 +585,7 @@ public class WeaponSystem : MonoBehaviour
         {
             var m = MountOf(groups[g]);
             if (!pdcAuto[g] || m == null || (r.pdcTried & (1 << g)) != 0) continue;
-            if (dx * dx + dy * dy > (double)m.rangeKm * m.rangeKm || ShipState.AngDiff(rel, m.arc) > m.halfArc) continue;
+            if (dx * dx + dy * dy > (double)m.rangeUnits * m.rangeUnits || ShipState.AngDiff(rel, m.arc) > m.halfArc) continue;
             r.pdcTried |= 1 << g;
             m.ammo -= stats.pdcRoundsPerGo;
             if (m.ammo < stats.pdcRoundsPerGo) { pdcAuto[g] = false; if (g == PdcGroup) ClearSwitches(); }
@@ -612,7 +613,7 @@ public class WeaponSystem : MonoBehaviour
     {
         var m = MountOf(mount);
         var t = ship.TrackOf(key);
-        return m != null && t != null && t.hostile && t.rangeKm <= m.rangeKm && ShipState.AngDiff(t.bearing, m.arc) <= m.halfArc;
+        return m != null && t != null && t.hostile && t.rangeUnits <= m.rangeUnits && ShipState.AngDiff(t.bearing, m.arc) <= m.halfArc;
     }
     /// <summary>Step 99: a new target, whatever its range or arc (TRACK on the ship the periscope is on): the ladder,
     /// the lever, fired and the solutions reset (a solution was worked out on the old target).</summary>

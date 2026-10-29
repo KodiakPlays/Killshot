@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Hangar: one ship's squadrons and what they do once launched. It holds the squadrons and their craft,
@@ -19,10 +20,10 @@ public class HangarSystem : MonoBehaviour
     [System.Serializable]
     public class Stats
     {
-        [Tooltip("Fighter speed, km/s (owner: three times our top speed; Step 63: x5).")]
-        public double fighterSpeedKms = 40;
-        [Tooltip("Inside this distance of the target the squadron makes its attack runs, km.")]
-        public double fighterAttackKm = 200;
+        [Tooltip("Fighter speed, units/s (owner: three times our top speed; Step 63: x5).")]
+        [FormerlySerializedAs("fighterSpeedKms")] public double fighterSpeedUnits = 40;
+        [Tooltip("Inside this distance of the target the squadron makes its attack runs, units.")]
+        [FormerlySerializedAs("fighterAttackKm")] public double fighterAttackUnits = 200;
         [Tooltip("One attack run by every fighter this often, mission seconds.")]
         public float fighterRunSeconds = 30f;
         [Tooltip("Armour each fighter takes off the side it attacks, per run.")]
@@ -30,25 +31,25 @@ public class HangarSystem : MonoBehaviour
         [Tooltip("Integrity each fighter takes off a compartment through an open side, per run.")]
         public int fighterCompartmentDamage = 1;
         [Header("Assault boats (Step 60, BOARDING_README.md)")]
-        [Tooltip("Assault boat speed, km/s (Step 63: x5).")]
-        public double boatSpeedKms = 30;
+        [Tooltip("Assault boat speed, units/s (Step 63: x5).")]
+        [FormerlySerializedAs("boatSpeedKms")] public double boatSpeedUnits = 30;
         [Tooltip("Marines aboard our ship, carried by the assault boats; those lost aboard an enemy are gone.")]
         public int marines = 18;
         [Tooltip("Marines each assault boat carries.")]
         public int marinesPerBoat = 6;
-        [Tooltip("Boats dock inside this distance of the target, km.")]
-        public double dockKm = 50;
-        [Tooltip("A ship can be boarded only with a face open and slower than this, km/s (owner: fight it down first).")]
-        public float boardMaxSpeedKms = 0.5f;
+        [Tooltip("Boats dock inside this distance of the target, units.")]
+        [FormerlySerializedAs("dockKm")] public double dockUnits = 50;
+        [Tooltip("A ship can be boarded only with a face open and slower than this, units/s (owner: fight it down first).")]
+        [FormerlySerializedAs("boardMaxSpeedKms")] public float boardMaxSpeedUnits = 0.5f;
         [Tooltip("How long the marines fight aboard, game seconds.")]
         public float boardSeconds = 60f;
         [Tooltip("Share of the enemy's crew that fights the boarders. The odds are marines ÷ (marines + defenders).")]
         [Range(0f, 1f)] public float defenderShare = 0.25f;
         [Tooltip("Marines lost per defender, when they win.")]
         public float marineLossPerDefender = 0.5f;
-        [Tooltip("Assault boats go no further than this from our ship, km (owner 2026-10-27). Outbound past it, they turn home; "
+        [Tooltip("Assault boats go no further than this from our ship, units (owner 2026-10-27). Outbound past it, they turn home; "
                + "coming home past it, their clock runs.")]
-        public double boatRangeKm = 15000;
+        [FormerlySerializedAs("boatRangeKm")] public double boatRangeUnits = 15000;
         [Tooltip("Game seconds the boats last out of range on the way home; then they and their marines are lost (owner 2026-10-27). "
                + "The clock stops while we are in range, but does not go back.")]
         public float boatStrandSeconds = 120f;
@@ -129,10 +130,10 @@ public class HangarSystem : MonoBehaviour
     }
     [System.NonSerialized] private System.Collections.Generic.List<Flight> flights;
     public System.Collections.Generic.List<Flight> Flights => flights ?? (flights = new System.Collections.Generic.List<Flight>());
-    /// <summary>How far out a squadron takes off, and lands, km: the plot sets both each frame from the small circle
+    /// <summary>How far out a squadron takes off, and lands, units: the plot sets both each frame from the small circle
     /// round our ship at the current zoom, so the whole V takes off clear of it and lands as its leader reaches it.</summary>
-    [System.NonSerialized] public double launchClearKm, landClearKm;
-    double LandKm => System.Math.Max(50, landClearKm);
+    [System.NonSerialized] public double launchClearUnits, landClearUnits;
+    double LandUnits => System.Math.Max(50, landClearUnits);
     [System.NonSerialized] public int boardings;
     /// <summary>Goes up when boats are stranded and when they are lost: each sounds the alert tone.</summary>
     [System.NonSerialized] public int boatWarnings;
@@ -143,7 +144,7 @@ public class HangarSystem : MonoBehaviour
         var f = Flights.Find(k => k.squad == squadKey);
         if (f == null) return null;
         if (f.stranded) return (f.outcome != null ? f.outcome + " · " : "") + "STRANDED · CLOSE IN · " + Mathf.CeilToInt(stats.boatStrandSeconds - f.strandT) + " S";
-        if (f.returning) return (f.outcome != null ? f.outcome + " · " : "") + "RETURNING · " + ShipState.JsRound(System.Math.Max(0, System.Math.Sqrt((f.x - ship.nav.x) * (f.x - ship.nav.x) + (f.y - ship.nav.y) * (f.y - ship.nav.y)) - LandKm)).ToString("N0") + " KM"; // to the circle, where they land
+        if (f.returning) return (f.outcome != null ? f.outcome + " · " : "") + "RETURNING · " + ShipState.JsRound(System.Math.Max(0, System.Math.Sqrt((f.x - ship.nav.x) * (f.x - ship.nav.x) + (f.y - ship.nav.y) * (f.y - ship.nav.y)) - LandUnits)).ToString("N0") + " KM"; // to the circle, where they land
         if (f.order == "escort") return "ESCORTING";
         var t = ship.TrackOf(f.targetKey);
         string name = t != null ? ship.NameOf(t) : "TARGET";
@@ -156,10 +157,10 @@ public class HangarSystem : MonoBehaviour
     [System.NonSerialized] public string flightReport;
     [System.NonSerialized] public int flightRuns;
 
-    /// <summary>Step 101 (owner 2026-10-27): fighters scout. A flight sees within this distance of itself, km.</summary>
-    public bool Sees(double x, double y, double withinKm)
+    /// <summary>Step 101 (owner 2026-10-27): fighters scout. A flight sees within this distance of itself, units.</summary>
+    public bool Sees(double x, double y, double withinUnits)
     {
-        foreach (var f in Flights) { double dx = x - f.x, dy = y - f.y; if (dx * dx + dy * dy <= withinKm * withinKm) return true; }
+        foreach (var f in Flights) { double dx = x - f.x, dy = y - f.y; if (dx * dx + dy * dy <= withinUnits * withinUnits) return true; }
         return false;
     }
 
@@ -175,18 +176,18 @@ public class HangarSystem : MonoBehaviour
             var t = f.returning || f.order == "escort" ? null : ship.TrackOf(f.targetKey);
             if (!f.returning && f.order != "escort" && (t == null || !t.hasWorld || t.wreck || t.captured)) { f.returning = true; f.attacking = false; f.aboard = false; t = null; }
             // owner 2026-10-27: boats chase only while the target is in their range of our ship; marines aboard fight on
-            if (boats && t != null && !f.aboard && System.Math.Sqrt((t.worldX - ship.nav.x) * (t.worldX - ship.nav.x) + (t.worldY - ship.nav.y) * (t.worldY - ship.nav.y)) > stats.boatRangeKm)
+            if (boats && t != null && !f.aboard && System.Math.Sqrt((t.worldX - ship.nav.x) * (t.worldX - ship.nav.x) + (t.worldY - ship.nav.y) * (t.worldY - ship.nav.y)) > stats.boatRangeUnits)
             { f.returning = true; f.holding = null; f.outcome = "OUT OF RANGE"; t = null; }
             double gx = t != null ? t.worldX : ship.nav.x, gy = t != null ? t.worldY : ship.nav.y;
             // an escort holds where it took off, outside the small circle round our ship (owner 2026-10-26), not on the hull
-            double reach = f.returning ? LandKm : f.order == "escort" ? System.Math.Max(300, launchClearKm) : boats ? stats.dockKm : stats.fighterAttackKm;
+            double reach = f.returning ? LandUnits : f.order == "escort" ? System.Math.Max(300, launchClearUnits) : boats ? stats.dockUnits : stats.fighterAttackUnits;
             double dx = gx - f.x, dy = gy - f.y, d = System.Math.Sqrt(dx * dx + dy * dy);
             // coming home with our ship out of their range, the boats' clock runs; at its end they and their marines are lost
             bool lost = false;
             if (boats && f.returning)
             {
-                if (d > stats.boatRangeKm && !f.stranded) boatWarnings++;
-                f.stranded = d > stats.boatRangeKm;
+                if (d > stats.boatRangeUnits && !f.stranded) boatWarnings++;
+                f.stranded = d > stats.boatRangeUnits;
                 if (f.stranded) f.strandT += (float)dt;
                 lost = f.strandT >= stats.boatStrandSeconds;
                 if (lost)
@@ -199,7 +200,7 @@ public class HangarSystem : MonoBehaviour
             }
             if (d > reach && !lost)
             {
-                double step = System.Math.Min((boats ? stats.boatSpeedKms : stats.fighterSpeedKms) * dt, d - reach * 0.9);
+                double step = System.Math.Min((boats ? stats.boatSpeedUnits : stats.fighterSpeedUnits) * dt, d - reach * 0.9);
                 f.x += dx / d * step; f.y += dy / d * step;
                 f.hdg = (System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360;
                 f.holding = null;
@@ -243,7 +244,7 @@ public class HangarSystem : MonoBehaviour
         {
             bool open = false;
             foreach (var a in enemy.damage.SideArmour) if (a <= 0f) open = true;
-            f.holding = !open ? "NO OPEN SIDE" : t.speed > stats.boardMaxSpeedKms ? "TARGET UNDER WAY" : null;
+            f.holding = !open ? "NO OPEN SIDE" : t.speed > stats.boardMaxSpeedUnits ? "TARGET UNDER WAY" : null;
             if (f.holding != null) return;
             f.aboard = true; f.boardT = 0;
         }
@@ -349,7 +350,7 @@ public class HangarSystem : MonoBehaviour
         // owner 2026-10-26: on the launch bearing, just outside the small circle round our ship, never on the hull
         double lb = lbrg * System.Math.PI / 180.0;
         var f = new Flight { squad = q.key, order = order, targetKey = ship.weapons.target, craft = SquadReady(q),
-                             x = ship.nav.x + System.Math.Sin(lb) * launchClearKm, y = ship.nav.y + System.Math.Cos(lb) * launchClearKm, hdg = lbrg };
+                             x = ship.nav.x + System.Math.Sin(lb) * launchClearUnits, y = ship.nav.y + System.Math.Cos(lb) * launchClearUnits, hdg = lbrg };
         if (q.key == "ih") { f.marines = Mathf.Min(marines, f.craft * stats.marinesPerBoat); marines -= f.marines; } // Step 60: the boats take marines
         Flights.Add(f);
     }

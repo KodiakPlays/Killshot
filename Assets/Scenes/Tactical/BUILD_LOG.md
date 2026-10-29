@@ -160,8 +160,9 @@ Do not run ahead. Do one step, show it, wait.
 | 110 | The plot zooms out to x0.1; the grid carries on past the battle space, with a heavier line at its edge | **Done**. Compiled clean; checked in play mode at x0.1, white and amber (`Logs/GridCheck`); playtest section 25b updated, not run |
 | 111 | Units: at x1.0 a small square is 50 units and our ship (100 units) is two squares long; the Garuda is 150; the plot zooms out to x0.01 | **Done**. Compiled clean; checked in play mode at x1.0 and x0.01 (`Logs/UnitsCheck`); playtest 218/218 (2026-10-29_021252) |
 | 112 | Turning after TRACK no longer spoils the aim: the firing solution is a point in space; RNG and BRG follow the bow; ANGLE drops if the turn takes the target out of arc | **Done**. Compiled clean; checked in play mode (a still and a crossing target, both hit after a turn; the old way missed); full playtest not run |
+| 113 | Everything in the game's workings is in units: every km name in the code is now units (range, speed, battle space and the rest); the numbers are the same; the screen still shows km | **Done**. Compiled clean; every saved value carried over (94 checked); playtest 213/218 (2026-10-29_100527): #205–206 the zoom was moved off x1.0 during the run (rechecked in play mode, holds), #89 and #111 follow Step 112's new aim, #56 the old RECALL timing |
 
-Steps 6 to 28 and Steps 34 to 112 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+Steps 6 to 28 and Steps 34 to 113 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
 bottom of this file. Read that before you pick up any work.
 
 **Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
@@ -526,7 +527,8 @@ These are settled. Do not reopen them.
 12. **Grid tint toggles white and amber**, not white and red. Something to tune.
 13. **Distances are kilometres. One world unit is one kilometre.** Replaced in Step 111: the owner
     thinks in units now (a small square at x1.0 is 50 units, our ship 100). The game's numbers did not
-    change, so one old km is one unit. Code names still say km.
+    change, so one old km is one unit. Step 113 renamed the code to units too. The screen still shows
+    km; what the player reads is decided later.
 14. **The handoff is built in order:** static board first, then movement, then interactions with
     no game wiring, then the wiring.
 15. **The board loads undamaged** (all green, rooms sealed) **and is gamma-space only.** See
@@ -4489,6 +4491,52 @@ Full playtest not run. It should run after KM to Units' km-to-units rename.
 **Found for the owner.** The helm shows "AUTO — DIRECT" at the start, but no autopilot is built.
 Nothing steers the ship. The attitude key NOSE starts lit.
 
+### Step 113 — Everything in the game's workings is in units
+
+The owner, 2026-10-29 (passed on by the hotkeys chat): "speed and range should also be changed to
+[units]. Everything should be [units] so that then we can build back from there. This is all backend,
+okay? Visually, we can decide if we still want to show kilometres." Built by KM to Units.
+
+**What the player sees.** Nothing new. The board still shows KM.
+
+**What the owner sees.** The Tuning and Level windows say units where they said km: Range Units, Top
+Speed Units, Visual Range Units, Width, units, and so on. Tooltips say units and units/s.
+
+**What changed.**
+
+- Every km name in the code is now units, 74 names in 21 files. `rangeKm` is `rangeUnits`,
+  `topSpeedKms` is `topSpeedUnits`, `accelKms2` is `accelUnits`, `KmPerPx` is `UnitsPerPx`, and so on.
+  Comments and tooltips say units. On-screen text is unchanged.
+- No number changed. One old km is one unit.
+- Values saved in the ship files, `02.1_Grid`, `Level_01` and the plot prefab keep working: each renamed
+  value that is saved somewhere has a tag with its old name (`FormerlySerializedAs`). The files are not
+  rewritten. Unity writes the new names the next time each one is saved.
+- The rename was done by a script and checked by hand. Two lines that declared two values at once
+  were split, so each tag sits on the right value.
+
+**Checked.** Compiled clean, no warnings. All 94 saved values read back the same under their new
+names: the three ship files, and every piece of the board scene. That includes values that differ
+from the code's defaults (the Garuda's arrive distance 300, the frigate's guns 18,000 and 25,000).
+Level_01's battle space came through too: in the playtest the jump point opened at
+-25,000, 5,000 in from its 30,000 edge.
+
+Full playtest 213/218 (2026-10-29_100527). None of the five failures is the rename:
+
+- #205 and #206 (square and ship size at x1.0): the shot shows SCALE x0.19. The zoom was moved during
+  the run (the owner was in Unity then). No code zooms out by itself. Rechecked in play mode: at x1.0
+  the zoom holds, a square is 50 units and 38 px, and our ship is 76 px.
+- #89 (the RNG knob's hand-dialled solution: RNG 10,994, REL BRG -28°) and #111 (the unled shot,
+  44 off): these checks expect the old aim. Step 112 makes a solution a point in space, with RNG and
+  BRG following the bow, so the checks need updating for Step 112. Passed to killshot-fb.
+- #56 RECALL: the old frame-timing failure (Step 109).
+
+**Calls made on the fly.** Names end in Units, speeds too (`topSpeedUnits`, units a second). The Level
+window's labels and the battle space's label in the Scene view say units, since they are the owner's
+tools. The playtest's report text is unchanged.
+
+**Next.** What zooming out means, then speeds, then ranges. The docs checklist under "Distances in
+units" in section 8 is still to do in one go.
+
 ### Board refactor, 2026-10-26 to 27 (moved from section 8)
 
 - **Navigation (2026-10-26).** All ship movement is in `Systems/NavSystem.cs`: position, heading,
@@ -4954,8 +5002,9 @@ the owner's call.
 
 ### Distances in units, not km (owner, 2026-10-29). Sizes built in Step 111; the rest still to do
 
-From KM to Units. The sizes step and the zoom-out to x0.01 are built (Step 111). Next: what zooming
-out means, then speeds, then ranges.
+From KM to Units. The sizes step and the zoom-out to x0.01 are built (Step 111). The code's names are
+all units (Step 113, the owner: "Everything should be [units]… This is all backend"). Next: what
+zooming out means, then speeds, then ranges.
 
 - At x1.0, one small plot square is 50 units. Our ship is drawn 76 px long, as now, and is 2 squares
   long: 100 units. The squares shrink to fit the ship: 38 px each, down from 61. The ship art stays the
@@ -4966,8 +5015,8 @@ out means, then speeds, then ranges.
   reads (km or anything else) comes last.
 - Build the sizes step together with the plot zoom-out below. On its own, the plot at x1.0 shows only
   about 2,250 units, and zoom-out stops at x0.35. DRADIS and the Garuda would be off screen.
-- Once built, this replaces decision 13 ("one world unit is one kilometre"). `scopeFitKm` (periscope,
-  3,750) converts with the rest.
+- This replaces decision 13 ("one world unit is one kilometre"). `scopeFitKm` (periscope, 3,750) is
+  `scopeFitUnits` since Step 113.
 - **Checklist for the docs** (left as they were in the 2026-10-29 hygiene pass, to update in one go):
   - This log: decisions 13, 26, 28, 29, 40, 42, 44, 46, 47 and 50; section 2's Garuda position, model
     lengths and `Level_01` sizes; section 3's terrain sizes; Board follow-ups 5 (ranges, `scalesim.py`,

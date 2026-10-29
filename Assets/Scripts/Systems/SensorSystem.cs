@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Sensors: one ship's DRADIS and active scan. It holds the gain, the band, the scan cone, the ship's own
@@ -40,12 +41,13 @@ public class SensorSystem : MonoBehaviour
     [System.Serializable]
     public class Stats
     {
-        [Tooltip("Sensor range = base + per step x gain (senRangeKm). Owner 2026-10-26: 30,000 km at full gain (was 47,000).")]
-        public float senRangeBaseKm = 12000f, senRangePerStepKm = 3600f;
+        [Tooltip("Sensor range = base + per step x gain (senRangeUnits). Owner 2026-10-26: 30,000 units at full gain (was 47,000).")]
+        [FormerlySerializedAs("senRangeBaseKm")] public float senRangeBaseUnits = 12000f;
+        [FormerlySerializedAs("senRangePerStepKm")] public float senRangePerStepUnits = 3600f;
         [Tooltip("Owner 2026-10-26: inside this range a contact is in sight: its model shows and glides. Outside it, "
                + "the plot shows it only where the sweep last touched it.")]
-        public float visualRangeKm = 10000f;
-        [Tooltip("UV hears to this fraction of the range (passiveRangeKm).")]
+        [FormerlySerializedAs("visualRangeKm")] public float visualRangeUnits = 10000f;
+        [Tooltip("UV hears to this fraction of the range (passiveRangeUnits).")]
         public float uvRangeFactor = 0.55f;
         public int coneArcMin = 15, coneArcMax = 90, coneArcStep = 10;
         [Tooltip("Signal climbs this much per game second toward its target.")]
@@ -64,25 +66,25 @@ public class SensorSystem : MonoBehaviour
     public Stats stats => shipStats ? shipStats.Stats.sensors : (shipStats = GetComponent<Ship>()).Stats.sensors;
     [System.NonSerialized] Ship shipStats;
 
-    public float SenRangeKm => stats.senRangeBaseKm + senBoost * stats.senRangePerStepKm;
-    public float PassiveRangeKm => spectrum == "UV" ? SenRangeKm * stats.uvRangeFactor : SenRangeKm;
+    public float SenRangeUnits => stats.senRangeBaseUnits + senBoost * stats.senRangePerStepUnits;
+    public float PassiveRangeUnits => spectrum == "UV" ? SenRangeUnits * stats.uvRangeFactor : SenRangeUnits;
     public int GainCap => Mathf.Max(1, ship.power.BusUnits("sen"));
 
     /// <summary>DRADIS on, with at least 1 unit on the SEN bus (Step 82, owner: no power, no hearing).</summary>
     public bool Listening => dradis && ship.power.BusUnits("sen") >= 1;
 
     /// <summary>heard: DRADIS listening, the contact emits in the chosen band, and it is in range.</summary>
-    public bool Heard(ShipState.Track t) => !t.own && !t.wreck && Listening && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeKm <= PassiveRangeKm;
+    public bool Heard(ShipState.Track t) => !t.own && !t.wreck && Listening && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeUnits <= PassiveRangeUnits;
 
     /// <summary>coneCovers: active scan on, inside the cone, inside sensor range.</summary>
-    public bool ConeCovers(ShipState.Track t) => active && ShipState.AngDiff(t.bearing, coneBrg) <= coneArc && t.rangeKm <= SenRangeKm;
+    public bool ConeCovers(ShipState.Track t) => active && ShipState.AngDiff(t.bearing, coneBrg) <= coneArc && t.rangeUnits <= SenRangeUnits;
 
     /// <summary>Contacts in band and range for a spectrum key (spectra[].count).</summary>
     public int CountIn(string band)
     {
-        float range = band == "UV" ? SenRangeKm * stats.uvRangeFactor : SenRangeKm;
+        float range = band == "UV" ? SenRangeUnits * stats.uvRangeFactor : SenRangeUnits;
         int n = 0;
-        foreach (var t in ship.tracks) if (!t.own && System.Array.IndexOf(t.sig, band) >= 0 && t.rangeKm <= range) n++;
+        foreach (var t in ship.tracks) if (!t.own && System.Array.IndexOf(t.sig, band) >= 0 && t.rangeUnits <= range) n++;
         return n;
     }
 
@@ -147,13 +149,13 @@ public class SensorSystem : MonoBehaviour
     public void LayBearing(ShipState.Track t, float now) { BearingFixes.Add(new BearingFix { key = t.key, x = ship.nav.x, y = ship.nav.y, brg = ExactBearing(t), t = now }); }
 
     /// <summary>Step 75 (owner 2026-10-26): the sweep touches a contact. Out of sight, the plot shows it here until the next pass.</summary>
-    public void See(ShipState.Track t) { t.seen = true; t.seenX = t.worldX; t.seenY = t.worldY; t.seenBrg = ExactBearing(t); t.seenRangeKm = t.rangeKm; }
+    public void See(ShipState.Track t) { t.seen = true; t.seenX = t.worldX; t.seenY = t.worldY; t.seenBrg = ExactBearing(t); t.seenRangeUnits = t.rangeUnits; }
     /// <summary>Step 75: close enough to see with the eye.</summary>
     public bool InSight(ShipState.Track t)
     {
         if (!t.hasWorld) return false;
-        if (t.rangeKm <= stats.visualRangeKm) return true;
-        return ship.hangar && ship.hangar.Sees(t.worldX, t.worldY, stats.visualRangeKm); // Step 101: our fighters scout
+        if (t.rangeUnits <= stats.visualRangeUnits) return true;
+        return ship.hangar && ship.hangar.Sees(t.worldX, t.worldY, stats.visualRangeUnits); // Step 101: our fighters scout
     }
 
     public void PruneBearings(float now) { BearingFixes.RemoveAll(f => now - f.t >= stats.bearingTrailSeconds); }

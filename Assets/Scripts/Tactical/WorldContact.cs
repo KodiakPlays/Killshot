@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Step 34. A contact in the tactical world: where it is (this transform, in km) and which board
+/// Step 34. A contact in the tactical world: where it is (this transform, in units) and which board
 /// track it drives (ShipState.tracks, by key). TacticalWorld reads it once per board tick.
 /// Its NavSystem, on the same object, moves it; its PowerSystem powers it; its SensorSystem hears and scans; its CommsSystem listens; its WeaponSystem fights; its HangarSystem launches; its DamageSystem takes the hits; its OrdersSystem sets the alert.
 /// </summary>

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// The enemy's mind (Step 51; Wolf Hunt, Step 97, owner 2026-10-27). It only writes orders into its own
@@ -23,16 +24,16 @@ public class EnemyBrain : MonoBehaviour
     [Tune("Enemy")] public bool hunts = true;
 
     [Header("Moving")]
-    [Tooltip("Cruising speed while it hunts the map, km/s.")]
-    [Tune("Enemy")] [SerializeField] private float cruiseKms = 5.5f;
-    [Tooltip("A point counts as reached inside this distance, km.")]
-    [Tune("Enemy")] [SerializeField] private float arriveKm = 1500f;
+    [Tooltip("Cruising speed while it hunts the map, units/s.")]
+    [FormerlySerializedAs("cruiseKms")] [Tune("Enemy")] [SerializeField] private float cruiseUnits = 5.5f;
+    [Tooltip("A point counts as reached inside this distance, units.")]
+    [FormerlySerializedAs("arriveKm")] [Tune("Enemy")] [SerializeField] private float arriveUnits = 1500f;
     [Tooltip("Game seconds for its hunt to drift from its own half of the map to ours.")]
     [Tune("Enemy")] [SerializeField] private float driftSeconds = 900f;
-    [Tooltip("Its next hunting point is at least this far from where it is, km.")]
-    [Tune("Enemy")] [SerializeField] private float legMinKm = 12000f;
-    [Tooltip("SEARCHING: it searches inside this distance of where it last heard us, km.")]
-    [Tune("Enemy")] [SerializeField] private float searchKm = 6000f;
+    [Tooltip("Its next hunting point is at least this far from where it is, units.")]
+    [FormerlySerializedAs("legMinKm")] [Tune("Enemy")] [SerializeField] private float legMinUnits = 12000f;
+    [Tooltip("SEARCHING: it searches inside this distance of where it last heard us, units.")]
+    [FormerlySerializedAs("searchKm")] [Tune("Enemy")] [SerializeField] private float searchUnits = 6000f;
 
     [Header("Hearing")]
     [Tooltip("Its DRADIS gain (1–5) while COLD, UNEASY, SEARCHING and ALERT: more gain, further reach.")]
@@ -71,9 +72,9 @@ public class EnemyBrain : MonoBehaviour
     public Awareness Level { get; private set; }
     /// <summary>Its last thought heard or saw our ship (not our fighters): our sensors' "HOSTILE SET HAS YOUR RANGE".</summary>
     public bool HearsUs { get; private set; }
-    /// <summary>Where it is heading now, world km.</summary>
+    /// <summary>Where it is heading now, world units.</summary>
     public Vector2 Waypoint => waypoint;
-    /// <summary>Where it last heard or saw us (or our fighters), world km; and when, game seconds.</summary>
+    /// <summary>Where it last heard or saw us (or our fighters), world units; and when, game seconds.</summary>
     public Vector2 LastKnown => lastKnown;
     public float LastHeardAt => lastHeardAt;
     /// <summary>It has a good fix on us: it fires.</summary>
@@ -110,10 +111,10 @@ public class EnemyBrain : MonoBehaviour
         {
             // missiles: when hit (Step 55), and every salvoSeconds once ALERT with a fix
             var vls = ship.weapons.MountOf("VLS");
-            if ((hit || fix) && now >= nextSalvo && vls != null && vls.ammo > 0 && dist <= vls.rangeKm)
+            if ((hit || fix) && now >= nextSalvo && vls != null && vls.ammo > 0 && dist <= vls.rangeUnits)
             {
                 int n = Mathf.Min(fireBackSalvo, vls.ammo);
-                us.weapons.LaunchAt(ship.weapons.stats, ship.nav.x, ship.nav.y, n, 0, vls.rangeKm); // HE
+                us.weapons.LaunchAt(ship.weapons.stats, ship.nav.x, ship.nav.y, n, 0, vls.rangeUnits); // HE
                 vls.ammo -= n;
                 nextSalvo = now + (fix ? salvoSeconds : fireBackSeconds);
             }
@@ -133,9 +134,9 @@ public class EnemyBrain : MonoBehaviour
     {
         var st = ship.sensors.stats;
         int gain = gainByAwareness[Mathf.Clamp((int)Level, 0, gainByAwareness.Length - 1)];
-        float reach = st.senRangeBaseKm + gain * st.senRangePerStepKm; // its DRADIS at this gain
+        float reach = st.senRangeBaseUnits + gain * st.senRangePerStepUnits; // its DRADIS at this gain
 
-        if (dist <= st.visualRangeKm)
+        if (dist <= st.visualRangeUnits)
         {
             Raise(Awareness.Alert);
             Heard(ours, now, true);
@@ -162,7 +163,7 @@ public class EnemyBrain : MonoBehaviour
         }
     }
 
-    static float Clarity(float dist, float hearKm) => hearKm <= 0f || dist > hearKm ? 0f : 1f - dist / hearKm;
+    static float Clarity(float dist, float hearUnits) => hearUnits <= 0f || dist > hearUnits ? 0f : 1f - dist / hearUnits;
     void Raise(Awareness to) { if (to > Level) Level = to; }
     void Heard(Vector2 where, float now, bool isFix) { lastKnown = where; lastHeardAt = now; if (isFix) lastFixAt = now; }
     static Vector2 Off(ShipState ship, float km)
@@ -175,11 +176,11 @@ public class EnemyBrain : MonoBehaviour
     void Shoot(ShipState ship, ShipState us, string id, ref float next, float dist, float now)
     {
         var m = ship.weapons.MountOf(id);
-        if (m == null || m.ammo <= 0 || now < next || dist > m.rangeKm) return;
+        if (m == null || m.ammo <= 0 || now < next || dist > m.rangeUnits) return;
         double lead = LeadOn(ship, us);
         int rel = ShipState.JsRound(((lead - ship.nav.heading) % 360 + 360) % 360) % 360;
         if (ShipState.AngDiff(rel, m.arc) > m.halfArc) return;
-        us.weapons.ShootAt(ship.weapons.stats, ship.nav.x, ship.nav.y, lead + (ship.NextDie() * 2 - 1) * aimErrorDeg, m.rangeKm);
+        us.weapons.ShootAt(ship.weapons.stats, ship.nav.x, ship.nav.y, lead + (ship.NextDie() * 2 - 1) * aimErrorDeg, m.rangeUnits);
         m.ammo--;
         next = now + railgunReloadSeconds + (float)ship.NextDie() * railgunJitterSeconds;
     }
@@ -189,7 +190,7 @@ public class EnemyBrain : MonoBehaviour
     {
         double tx = us.nav.x - ship.nav.x, ty = us.nav.y - ship.nav.y, vx = us.nav.vx, vy = us.nav.vy;
         double straight = (System.Math.Atan2(tx, ty) * 180 / System.Math.PI + 360) % 360;
-        double s = ship.weapons.stats.slugSpeedKms, a = vx * vx + vy * vy - s * s, b = 2 * (tx * vx + ty * vy), c = tx * tx + ty * ty;
+        double s = ship.weapons.stats.slugSpeedUnits, a = vx * vx + vy * vy - s * s, b = 2 * (tx * vx + ty * vy), c = tx * tx + ty * ty;
         double disc = b * b - 4 * a * c;
         if (a >= 0 || disc < 0) return straight;
         double t = (-b - System.Math.Sqrt(disc)) / (2 * a);
@@ -199,7 +200,7 @@ public class EnemyBrain : MonoBehaviour
 
     void Steer(ShipState ship, ShipState us, Vector2 at, Vector2 ours, float dist, float now, bool fix)
     {
-        float top = (float)ship.nav.stats.topSpeedKms, speed = cruiseKms;
+        float top = (float)ship.nav.stats.topSpeedUnits, speed = cruiseUnits;
         int heading;
         if (fix)
         {
@@ -212,14 +213,14 @@ public class EnemyBrain : MonoBehaviour
         {
             bool newNews = Level >= Awareness.Uneasy && lastHeardAt > waypointAt;
             if (newNews) { waypoint = lastKnown; waypointAt = now; }
-            else if ((waypoint - at).magnitude <= arriveKm)
+            else if ((waypoint - at).magnitude <= arriveUnits)
             {
-                if (Level >= Awareness.Searching) waypoint = lastKnown + Off(ship, searchKm);
+                if (Level >= Awareness.Searching) waypoint = lastKnown + Off(ship, searchUnits);
                 else NewHuntPoint(ship, us, at);
                 waypointAt = now;
             }
             heading = TacticalWorld.Bearing(waypoint - at);
-            speed = Level == Awareness.Alert ? top : Level == Awareness.Searching ? top * 0.8f : cruiseKms;
+            speed = Level == Awareness.Alert ? top : Level == Awareness.Searching ? top * 0.8f : cruiseUnits;
         }
         ship.nav.orderedHeading = heading;
         // a damaged engine room holds it back, as our lever is; wrecked, it drifts (DISABLE, BOARDING_README)
@@ -229,7 +230,7 @@ public class EnemyBrain : MonoBehaviour
     static float Reach(ShipState ship)
     {
         float r = 0f;
-        foreach (var id in new[] { "RGA", "RGB" }) { var m = ship.weapons.MountOf(id); if (m != null && m.ammo > 0) r = Mathf.Max(r, m.rangeKm); }
+        foreach (var id in new[] { "RGA", "RGB" }) { var m = ship.weapons.MountOf(id); if (m != null && m.ammo > 0) r = Mathf.Max(r, m.rangeUnits); }
         return r > 0f ? r : 10000f;
     }
 
@@ -247,7 +248,7 @@ public class EnemyBrain : MonoBehaviour
         return best;
     }
 
-    // COLD: a point across the battle space, at least legMinKm away. Its band drifts from its own half (where it
+    // COLD: a point across the battle space, at least legMinUnits away. Its band drifts from its own half (where it
     // started) toward ours over driftSeconds.
     void NewHuntPoint(ShipState ship, ShipState us, Vector2 at)
     {
@@ -258,7 +259,7 @@ public class EnemyBrain : MonoBehaviour
         for (int i = 0; i < 8; i++)
         {
             waypoint = new Vector2((float)(ship.NextDie() * 2 - 1) * hw, Mathf.Clamp(centre + (float)(ship.NextDie() * 2 - 1) * hh * 0.5f, -hh, hh));
-            if ((waypoint - at).magnitude >= legMinKm) break;
+            if ((waypoint - at).magnitude >= legMinUnits) break;
         }
     }
 }

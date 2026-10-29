@@ -18,7 +18,7 @@ public class PlotGrid : MaskableGraphic
     [Tooltip("Board px per 1,000 units at x1: 50 units is 38 px, half our ship's 76 px picture.")]
     [SerializeField] private float pxPer1000Units = 760f;
     [SerializeField, Range(0.01f, 1f)] private float zoom = 1f;
-    [SerializeField] private float[] stepsKm = { 5000, 2000, 1000, 500, 200, 100, 50, 20 };
+    [SerializeField] private float[] stepsUnits = { 5000, 2000, 1000, 500, 200, 100, 50, 20 };
     [Tooltip("A small square at x1, units. Zoomed out, the square is the step nearest this size on screen.")]
     [SerializeField] private float squareAtFullZoom = 50f;
     [SerializeField] private int majorEvery = 5;
@@ -49,17 +49,17 @@ public class PlotGrid : MaskableGraphic
     /// stays fixed in the world when the plot view is panned.</summary>
     public Vector2 OffsetPx { get { return offsetPx; } set { if (value != offsetPx) { offsetPx = value; SetVerticesDirty(); } } }
     private Vector2 offsetPx;
-    /// <summary>Half the battle space's width (x) and height (y), km (the plot panel sets it from ShipState).</summary>
-    public Vector2 ArenaHalfKm { get { return arenaHalfKm; } set { if (value != arenaHalfKm) { arenaHalfKm = value; SetVerticesDirty(); } } }
-    private Vector2 arenaHalfKm = new Vector2(50000f, 50000f);
+    /// <summary>Half the battle space's width (x) and height (y), units (the plot panel sets it from ShipState).</summary>
+    public Vector2 ArenaHalfUnits { get { return arenaHalfUnits; } set { if (value != arenaHalfUnits) { arenaHalfUnits = value; SetVerticesDirty(); } } }
+    private Vector2 arenaHalfUnits = new Vector2(50000f, 50000f);
 
-    /// <summary>The minor step in km, and its width on screen.</summary>
-    public float CellKm(out float cellPx)
+    /// <summary>The minor step in units, and its width on screen.</summary>
+    public float CellUnits(out float cellPx)
     {
-        float best = stepsKm[0];
+        float best = stepsUnits[0];
         float bestErr = float.MaxValue;
         float targetPx = pxPer1000Units / 1000f * squareAtFullZoom;
-        foreach (float km in stepsKm)
+        foreach (float km in stepsUnits)
         {
             float px = pxPer1000Units * zoom / 1000f * km;
             float err = Mathf.Abs(px - targetPx);
@@ -73,12 +73,12 @@ public class PlotGrid : MaskableGraphic
     {
         vh.Clear();
         float cell;
-        CellKm(out cell);
+        CellUnits(out cell);
         if (cell < 2f) return;
         Rect r = rectTransform.rect;
         // the world origin on this rect (x right, y down from its top-left), and the battle space's edges
         float ox = r.width / 2f + offsetPx.x, oy = r.height / 2f + offsetPx.y;
-        float hw = arenaHalfKm.x * pxPer1000Units * zoom / 1000f, hh = arenaHalfKm.y * pxPer1000Units * zoom / 1000f;
+        float hw = arenaHalfUnits.x * pxPer1000Units * zoom / 1000f, hh = arenaHalfUnits.y * pxPer1000Units * zoom / 1000f;
         float x0 = ox - hw, x1 = ox + hw, y0 = oy - hh, y1 = oy + hh;
         bool white = tint == Tint.White;
         // across the whole plot, from the battle space's top-left corner, so its edges fall on lines

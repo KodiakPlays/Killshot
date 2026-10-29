@@ -191,7 +191,7 @@ public class SensorsPanel : Panel
         Show(glow, s.sensors.signal > 0);
         if (note)
         {
-            // owner 2026-10-28 (the play-through): only enemy ships that really hear us. It said 1 with the Garuda 88,000 km off.
+            // owner 2026-10-28 (the play-through): only enemy ships that really hear us. It said 1 with the Garuda 88,000 units off.
             if (!world) world = FindAnyObjectByType<TacticalWorld>();
             int n = world ? world.HearingUs : 0;
             note.text = n > 0 ? n + " HOSTILE " + (n == 1 ? "SET HAS" : "SETS HAVE") + " YOUR RANGE"
@@ -216,7 +216,7 @@ public class SensorsPanel : Panel
         if (sigLamp) sigLampAlpha = 1f;
 
         // array gain
-        string range = s.sensors.SenRangeKm.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " KM";
+        string range = s.sensors.SenRangeUnits.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " KM";
         if (rangeHeader) rangeHeader.text = range;
         if (rangeEnvelope) rangeEnvelope.text = range;
         if (envelopeRange) envelopeRange.text = range; // senRangeLabel
@@ -277,7 +277,7 @@ public class SensorsPanel : Panel
             bool lit = s.sensors.ConeCovers(t) && audible;
             row.name.text = pinged ? t.name : "BOGEY " + t.key.ToUpperInvariant();
             row.brg.text = t.bearing.ToString("000");
-            row.rng.text = pinged ? ShipState.JsRound(t.rangeKm / 1000f) + "k" : "—";
+            row.rng.text = pinged ? ShipState.JsRound(t.rangeUnits / 1000f) + "k" : "—";
             row.klass.text = seen ? t.klass : lit ? "RESOLVING" : "—";
             Paint(row.klass, seen ? (t.hostile ? alarm : nominal) : lit ? caution : stencil);
             Color dot = pinged ? (t.hostile ? alarm : nominal) : audible ? caution : stencilDim;

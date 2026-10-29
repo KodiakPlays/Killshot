@@ -12,12 +12,12 @@ using UnityEngine.SceneManagement;
 /// 2026-10-27): the battle space's edge, every piece of debris as a dot, the spawn boxes. Pick a debris field
 /// (click it on the map, or in the list) and its settings show under the map; the map shows, in amber, how
 /// Scatter would lay it out with those settings, before you press it. Add parts with the buttons at the bottom.
-/// Units are km: x east, y north.
+/// World units: x east, y north.
 /// </summary>
 public class LevelWindow : EditorWindow
 {
     const string Board = "Assets/Scenes/Tactical/02.1_Grid.unity";
-    const float WholeMapKm = 45000f; // the Scene view's size when a level opens: the whole battle space, top to bottom
+    const float WholeMapUnits = 45000f; // the Scene view's size when a level opens: the whole battle space, top to bottom
 
     static readonly Color Ground = new Color(0.04f, 0.05f, 0.06f), Edge = new Color(0.55f, 0.6f, 0.65f),
         Debris = new Color(0.6f, 0.63f, 0.66f), Preview = new Color(0.91f, 0.64f, 0.24f),
@@ -92,7 +92,7 @@ public class LevelWindow : EditorWindow
     {
         float w = EditorGUIUtility.currentViewWidth - 30, h = Mathf.Clamp(w * 0.8f, 200, 520);
         var r = GUILayoutUtility.GetRect(w, h, GUILayout.ExpandWidth(true));
-        var half = ArenaHalfKm(level);
+        var half = ArenaHalfUnits(level);
         float kmPerPx = Mathf.Max(half.x * 2 / r.width, half.y * 2 / r.height) * 1.04f; // the whole battle space, a little margin
         System.Func<Vector3, Vector2> px = p => new Vector2(r.width / 2 + p.x / kmPerPx, r.height / 2 - p.y / kmPerPx); // inside the map's clip
 
@@ -153,21 +153,21 @@ public class LevelWindow : EditorWindow
         {
             case DebrisField.Shape.Circle:
             case DebrisField.Shape.Ring:
-                for (int i = 0; i <= 64; i++) { float a = i / 64f * Mathf.PI * 2; pts.Add(new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * f.radiusKm); }
+                for (int i = 0; i <= 64; i++) { float a = i / 64f * Mathf.PI * 2; pts.Add(new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * f.radiusUnits); }
                 break;
             case DebrisField.Shape.Band:
-                float x = f.lengthKm / 2, y = f.widthKm / 2;
+                float x = f.lengthUnits / 2, y = f.widthUnits / 2;
                 pts.AddRange(new[] { new Vector3(-x, -y), new Vector3(x, -y), new Vector3(x, y), new Vector3(-x, y), new Vector3(-x, -y) });
                 break;
             default:
-                pts.Add(new Vector3(-f.lengthKm / 2, 0)); pts.Add(new Vector3(f.lengthKm / 2, 0));
+                pts.Add(new Vector3(-f.lengthUnits / 2, 0)); pts.Add(new Vector3(f.lengthUnits / 2, 0));
                 break;
         }
         Handles.color = Preview;
         Handles.DrawPolyLine(pts.Select(p => (Vector3)px(f.transform.TransformPoint(p))).ToArray());
         if (f.shape == DebrisField.Shape.Ring)
         {
-            float inner = Mathf.Min(f.innerRadiusKm, f.radiusKm);
+            float inner = Mathf.Min(f.innerRadiusUnits, f.radiusUnits);
             Handles.DrawPolyLine(Enumerable.Range(0, 65).Select(i => { float a = i / 64f * Mathf.PI * 2; return (Vector3)px(f.transform.TransformPoint(new Vector3(Mathf.Cos(a), Mathf.Sin(a)) * inner)); }).ToArray());
         }
     }
@@ -189,17 +189,17 @@ public class LevelWindow : EditorWindow
         GUI.Label(new Rect(c.x + 6, c.y - 8, 20, 16), letter, style);
     }
 
-    // the battle space's half width and height, km: the level's Battle Space (decision 50), else the
+    // the battle space's half width and height, units: the level's Battle Space (decision 50), else the
     // board's (Step 65); 50,000 if no board is open
-    static Vector2 ArenaHalfKm(Scene level)
+    static Vector2 ArenaHalfUnits(Scene level)
     {
         var space = Find<BattleSpace>(level).FirstOrDefault();
-        if (space) return new Vector2(space.widthKm / 2, space.heightKm / 2);
+        if (space) return new Vector2(space.widthUnits / 2, space.heightUnits / 2);
         var board = FindAnyObjectByType<BoardManager>();
         if (!board) return new Vector2(50000, 50000);
         var so = new SerializedObject(board);
-        var w = so.FindProperty("state.arenaWidthKm");
-        var h = so.FindProperty("state.arenaHeightKm");
+        var w = so.FindProperty("state.arenaWidthUnits");
+        var h = so.FindProperty("state.arenaHeightUnits");
         return w != null && h != null ? new Vector2((float)w.doubleValue / 2, (float)h.doubleValue / 2) : new Vector2(50000, 50000);
     }
 
@@ -213,22 +213,22 @@ public class LevelWindow : EditorWindow
         var space = Find<BattleSpace>(level).FirstOrDefault();
         if (!space)
         {
-            var half = ArenaHalfKm(level);
-            EditorGUILayout.HelpBox("This level uses the board's battle space, " + (half.x * 2).ToString("N0") + " × " + (half.y * 2).ToString("N0") + " km. Press Battle space below to give it its own size.", MessageType.None);
+            var half = ArenaHalfUnits(level);
+            EditorGUILayout.HelpBox("This level uses the board's battle space, " + (half.x * 2).ToString("N0") + " × " + (half.y * 2).ToString("N0") + " units. Press Battle space below to give it its own size.", MessageType.None);
             return;
         }
         var so = new SerializedObject(space);
-        EditorGUILayout.PropertyField(so.FindProperty("widthKm"), new GUIContent("Width, km"));
-        EditorGUILayout.PropertyField(so.FindProperty("heightKm"), new GUIContent("Height, km"));
+        EditorGUILayout.PropertyField(so.FindProperty("widthUnits"), new GUIContent("Width, units"));
+        EditorGUILayout.PropertyField(so.FindProperty("heightUnits"), new GUIContent("Height, units"));
         so.ApplyModifiedProperties();
     }
 
     // Spawns always start inside the battle space (owner, 2026-10-27): one outside, or in the turn-back
     // warning's band, moves to just inside the edge
-    const float SpawnInsetKm = 3000f; // past the board's warning band (arenaWarnKm, 2,500)
+    const float SpawnInsetUnits = 3000f; // past the board's warning band (arenaWarnUnits, 2,500)
     static void KeepSpawnsInside(Scene level)
     {
-        var half = Vector2.Max(Vector2.zero, ArenaHalfKm(level) - Vector2.one * SpawnInsetKm);
+        var half = Vector2.Max(Vector2.zero, ArenaHalfUnits(level) - Vector2.one * SpawnInsetUnits);
         foreach (var t in Find<EnemySpawn>(level).Select(s => s.transform).Concat(Find<PlayerSpawn>(level).Select(s => s.transform)))
         {
             var p = t.position;
@@ -299,7 +299,7 @@ public class LevelWindow : EditorWindow
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
         EditorSceneManager.OpenScene(Board, OpenSceneMode.Single);
         EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
-        Look(Vector3.zero, WholeMapKm);
+        Look(Vector3.zero, WholeMapUnits);
     }
 
     static void NewLevel()
@@ -315,7 +315,7 @@ public class LevelWindow : EditorWindow
         // a level has to be in Build Settings to load at play
         EditorBuildSettings.scenes = EditorBuildSettings.scenes.Append(new EditorBuildSettingsScene(path, true)).ToArray();
         AssetDatabase.SaveAssets();
-        Look(Vector3.zero, WholeMapKm);
+        Look(Vector3.zero, WholeMapUnits);
     }
 
     // where the Scene view is looking, so it lands on screen; drag it from there
@@ -356,11 +356,11 @@ public class LevelWindow : EditorWindow
     }
 
     // seen from above, north up
-    static void Look(Vector3 at, float sizeKm)
+    static void Look(Vector3 at, float sizeUnits)
     {
         var view = SceneView.lastActiveSceneView;
         if (!view) return;
         view.in2DMode = true;
-        view.LookAt(at, Quaternion.identity, sizeKm);
+        view.LookAt(at, Quaternion.identity, sizeUnits);
     }
 }
