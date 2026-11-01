@@ -56,6 +56,11 @@ public class CommsPanel : Panel
     [SerializeField] private KeyDial[] keyDials;
     [Tooltip("The dial just stepped stays highlighted this long (stepDial timeout).")]
     [SerializeField] private float activeDialSeconds = 1.1f;
+    [Tooltip("Real messages: the first letter's place on the board, then the step across and down.")]
+    [SerializeField] private Vector2 letterStart = new Vector2(1479.75f, -591.75f), letterStep = new Vector2(14.9f, 18.5f);
+    [Tooltip("Real messages: letters to a line. A word that won't fit goes to the next line.")]
+    [SerializeField] private int letterColumns = 21;
+    private string laidOut;
 
     Color nominal => Palette.nominal;
     Color caution => Palette.caution;
@@ -131,12 +136,15 @@ public class CommsPanel : Panel
     {
         var s = State;
         double off = s.comms.TuneOff;
-        bool solved = s.comms.Solved;
+        var air = s.comms.air;
+        bool onAir = air == CommsSystem.Air.OnAir;
+        bool solved = air == CommsSystem.Air.Read || (s.comms.locked && s.comms.Solved);
 
         if (commsState)
         {
-            commsState.text = s.comms.locked ? (solved ? "MESSAGE READ" : "DECIPHERING") : "INCOMING SIGNAL";
-            Paint(commsState, s.comms.locked ? (solved ? nominal : caution) : ownForce);
+            commsState.text = solved ? "MESSAGE READ" : air == CommsSystem.Air.Quiet ? "NO TRAFFIC" : air == CommsSystem.Air.Lost ? "SIGNAL LOST"
+                            : s.comms.locked ? "DECIPHERING" : "INCOMING SIGNAL";
+            Paint(commsState, solved ? nominal : !onAir ? stencil : s.comms.locked ? caution : ownForce);
         }
 
         // band selector: chanAngle = (chan - 2) x 40
@@ -160,7 +168,7 @@ public class CommsPanel : Panel
             // in double, as the browser does (Step 33d verification)
             double f = 1.0 + k / 55.0 * 99.0;
             double hgtD = 8 + (k * 137) % 23;
-            if (s.comms.chan == s.comms.signalChan) hgtD += System.Math.Max(0.0, 62.0 - System.Math.Abs(f - s.comms.signalFreq) * 7.0);
+            if (onAir && s.comms.chan == s.comms.signalChan) hgtD += System.Math.Max(0.0, 62.0 - System.Math.Abs(f - s.comms.signalFreq) * 7.0);
             float hgt = (float)hgtD;
             float h = Mathf.Min(98f, hgt);
             float len = barBase + h / 98f * barSpan;
@@ -192,26 +200,27 @@ public class CommsPanel : Panel
         Paint(sigLamp, sigInk); Paint(sigGlow, sigInk); Show(sigGlow, off < 12.0);
         if (tuneNote)
         {
-            tuneNote.text = s.comms.locked ? "CARRIER LOCKED — TRAFFIC IS ENCIPHERED"
-                : s.comms.chan != s.comms.signalChan ? "NO CARRIER ON THIS BAND" : off <= s.comms.lockWindow ? "CARRIER FOUND" : "SEEKING";
+            tuneNote.text = air == CommsSystem.Air.Read ? "CARRIER CLOSED" : s.comms.locked ? "CARRIER LOCKED — TRAFFIC IS ENCIPHERED"
+                : !onAir || s.comms.chan != s.comms.signalChan ? "NO CARRIER ON THIS BAND" : off <= s.comms.lockWindow ? "CARRIER FOUND" : "SEEKING";
             Paint(tuneNote, s.comms.locked ? nominal : off <= s.comms.lockWindow ? caution : stencil);
         }
 
         // decrypt
         if (solvedLabel)
         {
-            solvedLabel.text = s.comms.locked ? (solved ? "PLAIN" : "CIPHER") : "NO CARRIER";
-            Paint(solvedLabel, s.comms.locked && solved ? nominal : stencil);
+            solvedLabel.text = solved ? "PLAIN" : s.comms.locked ? "CIPHER" : "NO CARRIER";
+            Paint(solvedLabel, solved ? nominal : stencil);
         }
+        if (s.comms.realSignals && laidOut != s.comms.message) LayOut(s.comms.message);
         string txt = s.comms.Plaintext.Replace(" ", "");
-        for (int i = 0; i < letters.Length && i < txt.Length; i++)
+        for (int i = 0; i < letters.Length; i++)
         {
             var t = letters[i];
             if (!t) continue;
-            t.text = txt[i].ToString();
+            t.text = i < txt.Length ? txt[i].ToString() : "";
             bool live = s.comms.activeDial >= 0 && i % s.comms.cipherKey.Length == s.comms.activeDial;
             var c = (live ? alarm : data).gamma;
-            c.a = live || s.comms.locked ? 1f : 0.42f;
+            c.a = live || s.comms.locked || solved ? 1f : 0.42f;
             t.color = c;
         }
         for (int i = 0; i < keyDials.Length && i < s.comms.dials.Length; i++)
@@ -232,6 +241,20 @@ public class CommsPanel : Panel
                 c.a = s.comms.locked ? 0.05f : 0.4f;
                 kd.box.color = c;
             }
+        }
+    }
+
+    // Owner 2026-10-29: every real message is different, so its letters go on the drawer's grid, whole words to a line.
+    void LayOut(string text)
+    {
+        laidOut = text;
+        int n = 0, row = 0, col = 0;
+        foreach (string word in text.Split(' '))
+        {
+            if (col > 0 && col + word.Length > letterColumns) { row++; col = 0; }
+            for (int i = 0; i < word.Length && n < letters.Length; i++, n++, col++)
+                if (letters[n]) ((RectTransform)letters[n].transform).anchoredPosition = letterStart + new Vector2(col * letterStep.x, -row * letterStep.y);
+            col++; // the gap between words
         }
     }
 

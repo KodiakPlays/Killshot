@@ -16,6 +16,14 @@ public class EnemySpawn : MonoBehaviour
     [Tooltip("On: it listens for us, hunts us and fights (Wolf Hunt). Off: it cruises the map, never listens for us and "
            + "never fires (the training levels, owner 2026-10-29).")]
     public bool hunts = true;
+    [Tooltip("Its cruising speed in this level, units/s. -1 keeps the Enemy tab's value. 0: it stays where it starts (Step 130: for levels where the player has no engines and the railgun reaches 2,000).")]
+    public float cruiseUnits = -1f;
+    [Tooltip("It sends a radio message this often, game seconds, counted from when the last one was read or lost. 0: it sends none, and comms keeps its old fixed signal (owner 2026-10-29).")]
+    public float signalSeconds;
+    [Tooltip("Game seconds from the start of the level to its first radio message.")]
+    public float firstSignalSeconds = 15f;
+    [Tooltip("Game seconds a radio message stays on the air. If it isn't locked by then, it is lost.")]
+    public float onAirSeconds = 60f;
 
     // Start, not Awake: TacticalWorld has set its ships up by now, whether this level was open with
     // the board or loaded on top of it
@@ -23,7 +31,8 @@ public class EnemySpawn : MonoBehaviour
     {
         var world = FindAnyObjectByType<TacticalWorld>();
         if (!world) return;
-        world.Hunts(trackKey, hunts);
+        world.Hunts(trackKey, hunts, cruiseUnits);
+        if (signalSeconds > 0f) world.Signals(trackKey, firstSignalSeconds, signalSeconds, onAirSeconds);
         if (sizeUnits.x <= 0f || sizeUnits.y <= 0f) { world.Spawn(trackKey, transform.position, transform.eulerAngles.z); return; }
         var at = transform.position + new Vector3(Random.Range(-0.5f, 0.5f) * sizeUnits.x, Random.Range(-0.5f, 0.5f) * sizeUnits.y, 0f);
         var space = FindAnyObjectByType<BattleSpace>(); // never outside the battle space

@@ -412,10 +412,23 @@ public class TacticalWorld : MonoBehaviour
     }
 
     /// <summary>A level's spawn sets whether this contact's brain hunts us and fires (owner 2026-10-29: in the training
-    /// levels it does neither; hit, it no longer answers with missiles).</summary>
-    public void Hunts(string key, bool on)
+    /// levels it does neither; hit, it no longer answers with missiles) and, at 0 or more, its cruising speed.</summary>
+    public void Hunts(string key, bool on, float cruiseUnits)
     {
-        for (int i = 0; i < contacts.Length; i++) if (contacts[i] && contacts[i].trackKey == key && brains[i]) brains[i].hunts = brains[i].firesBack = on;
+        for (int i = 0; i < contacts.Length; i++)
+            if (contacts[i] && contacts[i].trackKey == key && brains[i])
+            {
+                brains[i].hunts = brains[i].firesBack = on;
+                if (cruiseUnits >= 0f) brains[i].CruiseUnits = cruiseUnits;
+            }
+    }
+
+    /// <summary>A level's spawn makes this contact's ship send radio messages (owner 2026-10-29).</summary>
+    public void Signals(string key, float first, float every, float onAir)
+    {
+        board.State.comms.UseRealSignals();
+        for (int i = 0; i < contacts.Length; i++)
+            if (contacts[i] && contacts[i].trackKey == key && brains[i]) brains[i].SendSignals(first, every, onAir);
     }
 
     /// <summary>Step 73: a level's Player Spawn (PlayerSpawn). The player's ship starts there, facing the

@@ -26,5 +26,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Levels/Prize.unity
     guid: 32de13e69d45b428184941e82e37df0e
+  - enabled: 1
+    path: Assets/Scenes/Levels/Intercept.unity
+    guid: d5a257d6a5fd342c895b7ae05b7bdaa2
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

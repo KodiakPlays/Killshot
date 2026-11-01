@@ -83,6 +83,11 @@ public class EnemyBrain : MonoBehaviour
     /// <summary>It has a good fix on us: it fires.</summary>
     public bool HasFix(float now) => now - lastFixAt <= fixSeconds;
 
+    /// <summary>A level's spawn can set this (Step 130).</summary>
+    public float CruiseUnits { set { cruiseUnits = value; } }
+    /// <summary>A level's spawn makes it send radio messages (owner 2026-10-29).</summary>
+    public void SendSignals(float first, float every, float onAir) { firstSignalSeconds = first; signalSeconds = every; onAirSeconds = onAir; }
+    private float firstSignalSeconds, signalSeconds, onAirSeconds, nextSignal, nextCourse;
     private Vector2 home, waypoint, lastKnown;
     private bool started;
     private float startedAt, waypointAt = -1e9f, lastHeardAt = -1e9f, lastFixAt = -1e9f;
@@ -98,7 +103,8 @@ public class EnemyBrain : MonoBehaviour
         var at = new Vector2((float)ship.nav.x, (float)ship.nav.y);
         var ours = new Vector2((float)us.nav.x, (float)us.nav.y);
         float now = ship.missionNow, dist = (ours - at).magnitude;
-        if (!started) { started = true; home = at; startedAt = now; NewHuntPoint(ship, us, at); }
+        if (!started) { started = true; home = at; startedAt = now; nextSignal = now + firstSignalSeconds; NewHuntPoint(ship, us, at); }
+        if (signalSeconds > 0f) Send(ship, us, at, ours, now);
 
         // hit since the last tick: its armour or a compartment went down
         float hp = 0f;
@@ -129,6 +135,18 @@ public class EnemyBrain : MonoBehaviour
         }
 
         Steer(ship, us, at, ours, dist, now, fix);
+    }
+
+    // Owner 2026-10-29: it sends a radio message every so often, and our comms hears it anywhere on the map. One at a
+    // time: the wait for the next starts once the last has been read or lost.
+    void Send(ShipState ship, ShipState us, Vector2 at, Vector2 ours, float now)
+    {
+        if (us.comms.Waiting(now)) { nextSignal = now + signalSeconds; return; }
+        if (now < nextSignal) return;
+        double speed = System.Math.Sqrt(ship.nav.vx * ship.nav.vx + ship.nav.vy * ship.nav.vy);
+        us.comms.Receive(CommsSystem.Report("GARUDA", TacticalWorld.Bearing(at - ours), ship.nav.heading, speed), now + onAirSeconds);
+        nextSignal = now + signalSeconds;
+        nextCourse = now + signalSeconds / 2f; // owner 2026-11-01: the direction keeps changing. Halfway, so a message's heading is true when it is sent
     }
 
     // Our signal (0–100) sets how far it hears us: silent, not at all. Within visual range it sees us. A hit
@@ -208,6 +226,7 @@ public class EnemyBrain : MonoBehaviour
 
     void Steer(ShipState ship, ShipState us, Vector2 at, Vector2 ours, float dist, float now, bool fix)
     {
+        if (!hunts && cruiseUnits <= 0f) { ship.nav.throttle = 0; return; } // Step 130: a level's still target stays as it spawned, the side it shows included
         float top = (float)ship.nav.stats.topSpeedUnits, speed = cruiseUnits;
         int heading;
         if (fix)
@@ -220,12 +239,14 @@ public class EnemyBrain : MonoBehaviour
         else
         {
             bool newNews = Level >= Awareness.Uneasy && lastHeardAt > waypointAt;
+            bool newCourse = Level == Awareness.Cold && nextCourse > 0f && now >= nextCourse;
             if (newNews) { waypoint = lastKnown; waypointAt = now; }
-            else if ((waypoint - at).magnitude <= arriveUnits)
+            else if ((waypoint - at).magnitude <= arriveUnits || newCourse)
             {
                 if (Level >= Awareness.Searching) waypoint = lastKnown + Off(ship, searchUnits);
                 else NewHuntPoint(ship, us, at);
                 waypointAt = now;
+                nextCourse = 0f;
             }
             heading = TacticalWorld.Bearing(waypoint - at);
             speed = Level == Awareness.Alert ? top : Level == Awareness.Searching ? top * 0.8f : cruiseUnits;

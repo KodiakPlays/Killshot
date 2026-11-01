@@ -40,8 +40,8 @@ public enum MissionFailReason
 
 /// <summary>What a level asks for (its Mission). WolfHunt: find the target, destroy or capture it, reach the jump
 /// point. Destroy: destroy or capture it. HitUnseen: hit it once without scanning it; a scan loses. Capture: take it
-/// with the marines; destroying it loses.</summary>
-public enum MissionGoal { WolfHunt, Destroy, HitUnseen, Capture }
+/// with the marines; destroying it loses. Flight: finish a flight drill's steps, in order.</summary>
+public enum MissionGoal { WolfHunt, Destroy, HitUnseen, Capture, FindBySignal, Flight }
 
 public class QuestSystem : MonoBehaviour
 {
@@ -154,6 +154,12 @@ public class QuestSystem : MonoBehaviour
     // A training level's goal, met or lost at once (FTUE_PLAN §0)
     void Train(ShipState us, ShipState target, bool scanned)
     {
+        if (Goal == MissionGoal.FindBySignal) // owner 2026-10-29: comms tells you where to go; DRADIS finds it
+        {
+            var track = us.TrackOf(targetKey);
+            if (us.comms.messagesRead > 0 && track != null && us.sensors.Heard(track)) End(QuestStage.MissionComplete, MissionFailReason.None);
+            return;
+        }
         if (Goal == MissionGoal.HitUnseen)
         {
             if (scanned || us.weapons.Locked) End(QuestStage.MissionFailed, MissionFailReason.Scanned); // owner 2026-11-01: a lock is as loud as a scan

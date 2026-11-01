@@ -257,7 +257,7 @@ public class BoardManager : MonoBehaviour
     private float nextTick;
     private Panel[] panels = new Panel[0];
     private Rockers rockers;
-    private int shotsHeard, resultsHeard, killsHeard, hitsTakenHeard, boatWarningsHeard;
+    private int shotsHeard, resultsHeard, killsHeard, hitsTakenHeard, boatWarningsHeard, signalsHeard;
     private bool edgeWarned, trackedWarned;
 
     private void Awake()
@@ -320,6 +320,7 @@ public class BoardManager : MonoBehaviour
         }
         if (state.weapons.hitsTaken != hitsTakenHeard) { hitsTakenHeard = state.weapons.hitsTaken; Struck(state.weapons.incomingReport); } // Step 55: an enemy missile or slug hit us
         if (state.hangar.boatWarnings != boatWarningsHeard) { boatWarningsHeard = state.hangar.boatWarnings; Play(alertSound, "alert"); } // owner 2026-10-27: boats stranded, or lost
+        if (state.comms.signalsIn != signalsHeard) { signalsHeard = state.comms.signalsIn; Play(signalSound, "signal"); } // a radio message has come in
         Eased.TickAll(); // control transitions (Step 33j)
         // setInterval drops ticks it missed during a stall; do the same rather than bursting
         if (Time.unscaledTime - nextTick > tickSeconds) nextTick = Time.unscaledTime;
@@ -355,6 +356,7 @@ public class BoardManager : MonoBehaviour
                 state.weapons.TickLock(TickGameSeconds, motion && motion.ScopeDown);
                 state.weapons.TickGuns(TickGameSeconds);
                 state.sensors.Tick(TickGameSeconds);
+                state.comms.Waiting(state.missionNow); // a message not locked in time goes off the air, even if its sender is dead
                 // Step 68 (owner 2026-10-25): the alert tone once as our signal crosses the tracked line
                 bool tracked = state.sensors.signal >= state.sensors.stats.signalTrackedAt;
                 if (tracked && !trackedWarned) Play(alertSound, "alert");
@@ -527,13 +529,16 @@ public class BoardManager : MonoBehaviour
         var inc = state.weapons.Incoming;
         string incoming = inc.Count == 0 ? null
             : (inc.TrueForAll(r => r.missile) ? (inc.Count == 1 ? "INCOMING MISSILE" : "INCOMING MISSILES") : "INCOMING FIRE") + " · BRG " + IncomingBearing();
-        bool on = edge != null || hit != null || incoming != null || missionAlarm != null || state.sensors.newContacts > 0;
+        // a radio message waiting to be locked, under everything else, with the seconds left to lock it
+        string signal = state.comms.realSignals && state.comms.air == CommsSystem.Air.OnAir && !state.comms.locked ? "INCOMING SIGNAL" : null;
+        bool on = edge != null || hit != null || rockAlarm != null || incoming != null || missionAlarm != null || state.sensors.newContacts > 0 || signal != null;
         foreach (var p in alarmParts) if (p && p.activeSelf != on) p.SetActive(on);
         if (!on) return;
         if (alarmCount) alarmCount.text = edge != null ? (state.outsideFor >= 0f && !state.deserted ? Mathf.CeilToInt(state.arenaReturnSeconds - state.outsideFor).ToString() : "!")
-            : hit != null ? "!" : incoming != null ? inc.Count.ToString()
-            : missionAlarm != null ? missionCount ?? "!" : state.sensors.newContacts.ToString();
-        if (alarmText) alarmText.text = edge ?? hit ?? incoming ?? missionAlarm ?? (state.sensors.newContacts == 1 ? "NEW CONTACT SINCE COMMIT" : "NEW CONTACTS SINCE COMMIT");
+            : hit != null || rockAlarm != null ? "!" : incoming != null ? inc.Count.ToString()
+            : missionAlarm != null ? missionCount ?? "!" : state.sensors.newContacts > 0 ? state.sensors.newContacts.ToString()
+            : Mathf.Max(0, Mathf.CeilToInt((float)(state.comms.offAirAt - state.missionNow))).ToString();
+        if (alarmText) alarmText.text = edge ?? hit ?? rockAlarm ?? incoming ?? missionAlarm ?? (state.sensors.newContacts == 1 ? "NEW CONTACT" : state.sensors.newContacts > 1 ? "NEW CONTACTS" : signal);
     }
 
     // The bearing from our ship to the nearest enemy round, "000".
