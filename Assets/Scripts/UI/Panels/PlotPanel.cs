@@ -130,6 +130,18 @@ public class PlotPanel : Panel
     private double viewX, viewY, panX0, panY0;
     private bool viewSet, panning;
     private Vector2 panPress;
+
+    [Header("The grid forms as the board appears (Step 120)")]
+    [Tooltip("Owner 2026-10-26, slowed 2026-11-01: how long the grid's lines take to glide in, real seconds: big squares first, then small.")]
+    [Tune("Plot & our ship")] [SerializeField] private float gridFormSeconds = 4f;
+    [Tooltip("How long our ship, the axis numbers and the rest of the plot then take to fade in, real seconds.")]
+    [Tune("Plot & our ship")] [SerializeField] private float plotFadeSeconds = 1.5f;
+    private const float FormLongestStep = 0.1f; // a stall while the level loads doesn't use up the forming time
+    private float formClock;
+    private List<CanvasGroup> fading;
+    /// <summary>The grid has formed and the plot has faded in.</summary>
+    public bool GridFormed => formClock > 0f && fading == null;
+
     /// <summary>Owner 2026-10-29: the plot follows our ship as it moves, until you pan it; C follows again.</summary>
     private bool following = true;
     /// <summary>The world point at the plot centre, units.</summary>
@@ -152,6 +164,10 @@ public class PlotPanel : Panel
     [SerializeField] private Material axisMaterial;
     [SerializeField] private float axisFontSize = 11f;
     [SerializeField] private Color axisColour = new Color(0.7314692f, 0.759380937f, 0.7812595f, 1f);
+    [Tooltip("Owner 2026-11-01: the edge numbers follow the square sizes. A size whose squares are at least this wide, board px, has a number on every line.")]
+    [Tune("Plot & our ship")] [SerializeField] private float axisAllNumbersPx = 60f;
+    [Tooltip("A size whose squares are this wide or narrower, board px, has no numbers: the next size up takes over.")]
+    [Tune("Plot & our ship")] [SerializeField] private float axisHalfNumbersPx = 40f;
 
     [Header("Labels — offsets have no value in the package (HANDOFF_GAPS)")]
     [Tune("Plot tools")]
@@ -249,10 +265,35 @@ public class PlotPanel : Panel
         return Screen(State.nav.DrawnX + off.x, State.nav.DrawnY + off.y);
     }
 
+    // Step 120: the plot starts empty. Every layer from the axis numbers to the marks waits for the grid.
+    private void Start()
+    {
+        if (!grid) grid = FindAnyObjectByType<PlotGrid>();
+        grid.Formed = 0f;
+        fading = new List<CanvasGroup>();
+        for (int i = axisLayer.GetSiblingIndex(); i <= hitLayer.GetSiblingIndex(); i++)
+        {
+            var layer = axisLayer.parent.GetChild(i).gameObject.AddComponent<CanvasGroup>();
+            layer.alpha = 0f;
+            fading.Add(layer);
+        }
+    }
+
+    void FormGrid()
+    {
+        formClock += Mathf.Min(Time.unscaledDeltaTime, FormLongestStep);
+        grid.Formed = Mathf.Clamp01(formClock / Mathf.Max(gridFormSeconds, 0.01f));
+        float alpha = Mathf.Clamp01((formClock - gridFormSeconds) / Mathf.Max(plotFadeSeconds, 0.01f));
+        foreach (var layer in fading) layer.alpha = alpha;
+        if (alpha < 1f) return;
+        foreach (var layer in fading) Destroy(layer);
+        fading = null;
+    }
 
     private void Update()
     {
         if (Controls == null) return;
+        if (fading != null) FormGrid();
         if (sweep && State.sensors.Listening && !Controls.Paused)
         {
             float turn = Mathf.Max(0.5f, sweepSecondsBase - State.sensors.senBoost * sweepSecondsPerGain);
@@ -899,7 +940,8 @@ public class PlotPanel : Panel
     }
 
     // Step 76 (owner 2026-10-26): the axis numbers are distances from our ship, in units, along the top and left edges.
-    // 0 is level with our ship, then one number per big square: they slide as the ship moves and spread as you zoom.
+    // 0 is level with our ship: they slide as the ship moves and spread as you zoom.
+    // Owner 2026-11-01: they follow the grid's sizes. As one size's numbers close up they fade, and the next takes over.
     // No titles. The design's bottom row stays gone: the ORDERS panel covers that edge's left end. The look is on the inspector.
     private readonly List<TextMeshProUGUI> axisLabels = new List<TextMeshProUGUI>();
     const float AxisTopPx = 38f, AxisLeftPx = 23f, AxisEdgePx = 20f; // the design's top row and left column, plot px
@@ -909,20 +951,27 @@ public class PlotPanel : Panel
         if (!axisLayer || !axisFont) return;
         Rect r = grid.rectTransform.rect;
         var o = marks ? marks.origin : Vector2.zero;
-        float cellPx;
-        double major = grid.CellUnits(out cellPx) * grid.MajorEvery;
-        float step = cellPx * grid.MajorEvery; // px per big square
+        double unit = grid.SmallestUnits;
+        float step = (float)unit * grid.PxPerUnit;
         if (step < 1f) return;
         Vector2 own = OwnAt;
         int used = 0;
         for (int k = Mathf.CeilToInt((o.x + AxisEdgePx - own.x) / step); own.x + k * step <= o.x + r.width - AxisEdgePx; k++)
-            AxisLabel(used++, System.Math.Abs(k) * major, new Vector2(own.x + k * step, o.y + AxisTopPx));
+        {
+            double units = System.Math.Abs(k) * unit;
+            float share = grid.LineShare(units, axisAllNumbersPx, axisHalfNumbersPx);
+            if (share > 0f) AxisLabel(used++, units, new Vector2(own.x + k * step, o.y + AxisTopPx), share);
+        }
         for (int k = Mathf.CeilToInt((o.y + AxisEdgePx - own.y) / step); own.y + k * step <= o.y + r.height - AxisEdgePx; k++)
-            AxisLabel(used++, System.Math.Abs(k) * major, new Vector2(o.x + AxisLeftPx, own.y + k * step));
+        {
+            double units = System.Math.Abs(k) * unit;
+            float share = grid.LineShare(units, axisAllNumbersPx, axisHalfNumbersPx);
+            if (share > 0f) AxisLabel(used++, units, new Vector2(o.x + AxisLeftPx, own.y + k * step), share);
+        }
         for (int i = used; i < axisLabels.Count; i++) if (axisLabels[i].gameObject.activeSelf) axisLabels[i].gameObject.SetActive(false);
     }
 
-    void AxisLabel(int i, double km, Vector2 board)
+    void AxisLabel(int i, double km, Vector2 board, float alpha)
     {
         while (axisLabels.Count <= i)
         {
@@ -943,6 +992,7 @@ public class PlotPanel : Panel
         }
         var l = axisLabels[i];
         l.text = km.ToString("#,0", System.Globalization.CultureInfo.InvariantCulture);
+        l.alpha = axisColour.a * alpha;
         if (!l.gameObject.activeSelf) l.gameObject.SetActive(true);
         Put(l.rectTransform, board, 0f);
     }

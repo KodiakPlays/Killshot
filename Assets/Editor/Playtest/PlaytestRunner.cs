@@ -1632,11 +1632,11 @@ public static class PlaytestRunner
         board.SetZoom(1.0);
         yield return 0.6f;
         float cellPx;
-        double smallUnits = plotGrid.CellUnits(out cellPx), bigUnits = smallUnits * plotGrid.MajorEvery;
+        double smallUnits = plotGrid.CellUnits(out cellPx);
         var shown = axisNums.FindAll(lbl => lbl.gameObject.activeSelf).ConvertAll(lbl => lbl.text);
-        Check("At x1 a small square is 50 units; the axis numbers: 0 level with our ship, then whole big squares of 250 (owner 2026-10-29)",
-              smallUnits == 50 && AxisWhole(shown, bigUnits) && System.Math.Abs(bigUnits - 250) < 1e-6,
-              "small square " + smallUnits.ToString("N0") + ", big " + bigUnits.ToString("N0") + ": " + string.Join(" ", shown.ToArray()));
+        Check("At x1 a square is 50 units; the axis numbers: 0 level with our ship, then every 100 units (owner 2026-11-01)",
+              smallUnits == 50 && AxisWhole(shown, 100),
+              "square " + smallUnits.ToString("N0") + ": " + string.Join(" ", shown.ToArray()));
         var ownView = ShipView.Own();
         float ownLenPx = ((RectTransform)GameObject.Find("Own ship (3D view)").transform).sizeDelta.x * ownView.ShipFill;
         Check("At x1 our ship (100 units) is drawn two small squares long", ownView.Ship.Stats.length == 100f && Mathf.Abs(ownLenPx - 2f * cellPx) < 0.5f,
@@ -1651,10 +1651,9 @@ public static class PlaytestRunner
               "x" + board.ZoomExact.ToString("0.000") + ", limit x" + board.MinZoom.ToString("0.000"));
         Shot("25b_zoomed_out"); // the grid carries on past the battle space's heavier edge
         double cellUnits = plotGrid.CellUnits(out cellPx);
-        bigUnits = cellUnits * plotGrid.MajorEvery;
         shown = axisNums.FindAll(lbl => lbl.gameObject.activeSelf).ConvertAll(lbl => lbl.text);
-        Check("The axis numbers at x0.01: 0 level with our ship, then whole big squares of 25,000", AxisWhole(shown, bigUnits) && System.Math.Abs(bigUnits - 25000) < 1e-6,
-              "big square " + bigUnits.ToString("N0") + ": " + string.Join(" ", shown.ToArray()));
+        Check("At x0.1 a square is 500 units; the axis numbers: 0 level with our ship, then every 1,000 units", AxisWhole(shown, 1000) && cellUnits == 500,
+              "square " + cellUnits.ToString("N0") + ": " + string.Join(" ", shown.ToArray()));
         board.SetZoom(0.5 * X1); // in again, where the battle space is bigger than the plot
         yield return 0.6f;
         cellUnits = plotGrid.CellUnits(out cellPx);

@@ -157,17 +157,17 @@ public class ShipState
     }
 
     // ---- the battle space (Step 65, owner 2026-10-25) --------------------------------------------
-    // A rectangle centred on the world origin, 100,000 x 100,000 units to start (20 x 20 big squares of 5,000 units at x1).
+    // A rectangle centred on the world origin, 100,000 x 100,000 units to start (200 x 200 big squares of 500 units).
     // Near the edge a warning; past it, a countdown to get back inside, or the ship is lost (the GDD's desertion rule;
     // Assets/Scripts/WorldBoundary.cs in the old build). Crossing drops the time rate to x1 (BoardManager).
     [Header("Battle space (Step 65)")]
-    [Tooltip("East to west, units, centred on the world origin. Zooming out stops when it fills the plot's width. A multiple of 50,000 keeps the edge on a grid line at every zoom.")]
+    [Tooltip("East to west, units, centred on the world origin. A multiple of 1,000 keeps the edge on a big grid line.")]
     [FormerlySerializedAs("arenaWidthKm")] [Tune("Arena")] public double arenaWidthUnits = 100000;
-    [Tooltip("North to south, units. Less than about half the width (the plot's shape) leaves black above and below it at full zoom-out. A multiple of 50,000 keeps the edge on a grid line.")]
+    [Tooltip("North to south, units. A multiple of 1,000 keeps the edge on a big grid line.")]
     [FormerlySerializedAs("arenaHeightKm")] [Tune("Arena")] public double arenaHeightUnits = 100000;
     public double ArenaHalfW => arenaWidthUnits / 2;
     public double ArenaHalfH => arenaHeightUnits / 2;
-    [Tooltip("The edge warning shows this far inside the edge, units (half a big square).")]
+    [Tooltip("The edge warning shows this far inside the edge, units.")]
     [FormerlySerializedAs("arenaWarnKm")] [Tune("Arena")] public double arenaWarnUnits = 2500;
     [Tooltip("Game seconds to get back inside once out (owner: 30). Straight out at full speed the fastest return takes about 75 (brake, then turn); 30 is enough below about 4.4 units/s or at a shallow crossing. The warning is the time to turn.")]
     [Tune("Arena")] public float arenaReturnSeconds = 30f;
