@@ -449,7 +449,7 @@ public class TacticalWorld : MonoBehaviour
         get { foreach (var b in brains) if (b && b.enabled && b.hunts && b.Level == EnemyBrain.Awareness.Alert) return true; return false; }
     }
 
-    /// <summary>Enemy ships, still alive, that hear or see our ship now: our sensors' "n HOSTILE SETS HAVE YOUR RANGE".</summary>
+    /// <summary>Enemy ships, still alive, that hear or see our ship now: our sensors' "DETECTED BY n HOSTILES".</summary>
     public int HearingUs
     {
         get { int n = 0; for (int i = 0; i < brains.Length; i++) if (brains[i] && brains[i].enabled && brains[i].HearsUs && !contacts[i].Ship.destroyed) n++; return n; }

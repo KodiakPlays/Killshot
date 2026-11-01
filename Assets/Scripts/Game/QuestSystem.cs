@@ -98,14 +98,30 @@ public class QuestSystem : MonoBehaviour
     [Tooltip("The bubble on the board. Hidden until a level's Mission gives it text; a click on it hides it.")]
     [SerializeField] private GameObject helpBubble;
     [SerializeField] private TMPro.TMP_Text helpText;
+    [Tooltip("The small icon that opens the bubble again (owner 2026-11-01). It stays on the board once the bubble has shown.")]
+    [SerializeField] private GameObject helpIcon;
 
     /// <summary>A level's Mission shows what to do in it. Empty text: no bubble.</summary>
     public void ShowHelp(string text)
     {
         if (!helpBubble || !helpText) return;
         helpText.text = text;
-        helpBubble.SetActive(!string.IsNullOrEmpty(text));
+        helpBubble.SetActive(false);
+        if (helpIcon) helpIcon.SetActive(false);
+        if (!string.IsNullOrEmpty(text)) StartCoroutine(HelpOnceGridFormed());
     }
+
+    // Step 120: the bubble covers the plot, so it waits until the grid has formed.
+    System.Collections.IEnumerator HelpOnceGridFormed()
+    {
+        var plot = FindAnyObjectByType<PlotPanel>();
+        while (plot && !plot.GridFormed) yield return null;
+        helpBubble.SetActive(true);
+        if (helpIcon) helpIcon.SetActive(true);
+    }
+
+    /// <summary>The icon: opens the bubble, or closes it if it is open.</summary>
+    public void ToggleHelp() { if (helpBubble) helpBubble.SetActive(!helpBubble.activeSelf); }
 
     private void Awake()
     {

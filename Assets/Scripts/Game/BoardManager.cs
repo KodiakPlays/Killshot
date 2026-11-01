@@ -157,7 +157,7 @@ public class BoardManager : MonoBehaviour
 
     [Header("Alarm strip — new contacts since the last acknowledgement (Step 44)")]
     [SerializeField] private GameObject[] alarmParts;
-    [Tooltip("The strip's count (\"3\") and its words (\"NEW CONTACTS SINCE COMMIT\").")]
+    [Tooltip("The strip's count (\"3\") and its words (\"NEW CONTACTS\").")]
     [SerializeField] private TMP_Text alarmCount, alarmText;
     [Tooltip("Owner 2026-10-28 (the Wolf Hunt play-through): what just hit us (a slug, a missile, debris) stays on the "
            + "strip this long, real seconds.")]
@@ -386,6 +386,7 @@ public class BoardManager : MonoBehaviour
             case "pause": paused = !paused; ShowTime(); break;
             case "rate": rate = float.Parse(arg, System.Globalization.CultureInfo.InvariantCulture); paused = false; ShowTime(); break;
             case "ack": state.sensors.AckContacts(); ShowAlarm(); break;
+            case "briefing": FindAnyObjectByType<QuestSystem>().ToggleHelp(); break;
             case "tint": grid.GridTint = grid.GridTint == PlotGrid.Tint.White ? PlotGrid.Tint.Amber : PlotGrid.Tint.White; ShowTint(); RefreshPanels(); break;
             default:
                 owned = false;

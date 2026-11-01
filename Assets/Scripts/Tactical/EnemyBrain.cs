@@ -73,7 +73,7 @@ public class EnemyBrain : MonoBehaviour
 
     /// <summary>How aware it is of us. It never goes down.</summary>
     public Awareness Level { get; private set; }
-    /// <summary>Its last thought heard or saw our ship (not our fighters): our sensors' "HOSTILE SET HAS YOUR RANGE".</summary>
+    /// <summary>Its last thought heard or saw our ship (not our fighters): our sensors' "DETECTED BY 1 HOSTILE".</summary>
     public bool HearsUs { get; private set; }
     /// <summary>Where it is heading now, world units.</summary>
     public Vector2 Waypoint => waypoint;

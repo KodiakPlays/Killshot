@@ -194,11 +194,12 @@ public class SensorsPanel : Panel
             // owner 2026-10-28 (the play-through): only enemy ships that really hear us. It said 1 with the Garuda 88,000 units off.
             if (!world) world = FindAnyObjectByType<TacticalWorld>();
             int n = world ? world.HearingUs : 0;
-            note.text = n > 0 ? n + " HOSTILE " + (n == 1 ? "SET HAS" : "SETS HAVE") + " YOUR RANGE"
-                : s.sensors.signal >= s.sensors.stats.signalTrackedAt ? "NO HOSTILE SET HAS YOUR RANGE"
+            note.text = n > 0 ? "DETECTED BY " + n + " HOSTILE" + (n == 1 ? "" : "S")
+                : s.sensors.inCloud ? "IN GAS CLOUD"
+                : s.sensors.signal >= s.sensors.stats.signalTrackedAt ? "UNDETECTED"
                 : s.sensors.signal <= 0 ? "RUNNING SILENT"
-                : s.sensors.signal > s.sensors.SignalTarget ? "EMISSIONS DECAYING — NOT YET RESOLVED"
-                : "POWER SIGNATURE — NOT YET RESOLVED"; // stand-in: the design has no line for power-driven signal below the line (Step 35)
+                : s.sensors.signal > s.sensors.SignalTarget ? "EMISSIONS DECAYING"
+                : "EMISSIONS LOW"; // stand-in: the design has no line for power-driven signal below the line (Step 35)
         }
     }
 

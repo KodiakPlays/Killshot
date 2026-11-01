@@ -237,7 +237,7 @@ public class FireControlPanel : Panel
         if (capNote)
         {
             capNote.text = s.power.BusUnits("wep") < 1 ? "WEP BUS DEAD — CAPACITOR BLEEDING OFF"
-                : s.weapons.wepCharge >= cost ? "CHARGED — GATE WILL ARM" : "CHARGING AT +" + (s.power.BusUnits("wep") * 5) + "/S — GATE LOCKED";
+                : s.weapons.wepCharge >= cost ? "CAPACITOR CHARGED" : "CAPACITOR CHARGING +" + (s.power.BusUnits("wep") * 5) + "/S";
             Paint(capNote, capInk);
         }
 
@@ -254,12 +254,13 @@ public class FireControlPanel : Panel
             Paint(r.lamp, lamp); Paint(r.glow, lamp); Show(r.glow, on || open);
             if (r.hint)
             {
-                r.hint.text = on ? "SET" : open ? new[] { "ROUND IN RAIL", "ELEV SET", "ON AXIS", "GATE LIVE" }[i]
+                r.hint.text = on ? "SET" : open ? new[] { "ROUND IN RAIL", "ELEV SET", "ON AXIS", "ARM READY" }[i]
+                    : i == 0 && !s.weapons.OnDot(s.weapons.mount) ? "NO HARD POINT"
                     : i == 0 && !s.orders.WeaponsReleased ? "NOT RELEASED"
                     : i == 0 && !s.damage.MagOk ? "MAGAZINE HIT"
                     : i == 0 && !s.weapons.WepReady ? "NO WEP BUS"
                     : i == 3 && prevOk && s.weapons.wepCharge < cost ? "CHARGING"
-                    : i == 1 && prevOk && !s.weapons.InArc ? "OUT OF ARC" : "LOCKED"; // Step 48: turn to bring the turret to bear
+                    : i == 1 && prevOk && !s.weapons.InArc ? "OUT OF ARC" : "INTERLOCK"; // Step 48: turn to bring the turret to bear
                 Paint(r.hint, on ? caution : open ? label : wellStencil);
             }
         }
