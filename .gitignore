@@ -20,6 +20,14 @@
 # Recordings can get excessive in size
 /[Rr]ecordings/
 
+# No videos in git, wherever they are (owner)
+*.[Mm][Pp]4
+*.[Mm][Oo][Vv]
+*.[Mm]4[Vv]
+*.[Aa][Vv][Ii]
+*.[Mm][Kk][Vv]
+*.[Ww][Ee][Bb][Mm]
+
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # /[Aa]ssets/AssetStoreTools*
 
