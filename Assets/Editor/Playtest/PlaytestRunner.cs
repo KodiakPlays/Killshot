@@ -17,7 +17,7 @@ using UnityEngine.UI;
 /// The standing end-of-feature playtest (owner, 2026-10-17): plays the real user flow — intro, menu
 /// NEW GAME, briefing, board — then sets up the ship, checking each step, and films the run with
 /// Unity Recorder. Output: Logs/Playtests/&lt;time&gt;/ — playtest.mp4, report.md, shots/*.png. Each run
-/// deletes every earlier run's video; screenshots stay for the newest KeepRunsWithShots runs; every report stays.
+/// keeps video and shots for the newest KeepRunsWithMedia runs only; every report stays.
 /// Board controls are clicked where they are on screen, through the EventSystem, after checking the
 /// control is the topmost thing there (so a blocked control fails). The intro menu and the
 /// briefing's Enter are read through the old Input class, which a script cannot press, so the run
@@ -98,23 +98,21 @@ public static class PlaytestRunner
 
     // ---- run --------------------------------------------------------------------------------
 
-    // A run's video is about 120 MB and is not watched again once the run is checked (owner, 2026-10-26): every
-    // earlier run's video goes when a new run starts. Screenshots stay for the newest few runs (owner, 2026-10-24).
-    // Every report.md stays: BUILD_LOG cites runs as evidence.
-    const int KeepRunsWithShots = 3;
+    // Owner: only the newest two runs keep their video and shots. Every report.md stays: BUILD_LOG cites runs as evidence.
+    const int KeepRunsWithMedia = 2;
 
     static void PruneOldRuns(string playtests)
     {
         if (!Directory.Exists(playtests)) return;
         var runs = Directory.GetDirectories(playtests);
         Array.Sort(runs, StringComparer.Ordinal); // folder names are timestamps, so oldest first
-        for (int i = 0; i < runs.Length; i++)
+        for (int i = 0; i < runs.Length - (KeepRunsWithMedia - 1); i++) // this run makes the last one
         {
             try
             {
                 File.Delete(Path.Combine(runs[i], "playtest.mp4"));
                 string shots = Path.Combine(runs[i], "shots");
-                if (i < runs.Length - (KeepRunsWithShots - 1) && Directory.Exists(shots)) Directory.Delete(shots, true); // this run makes the last one
+                if (Directory.Exists(shots)) Directory.Delete(shots, true);
             }
             catch (Exception e) { Debug.LogWarning("[Playtest] could not clear " + runs[i] + ": " + e.Message); }
         }
@@ -135,22 +133,24 @@ public static class PlaytestRunner
         EditorApplication.update += Tick;
     }
 
+    // Every wait goes by the game's own clock (Time.unscaledTime). The recorder steps the game a video frame at a time, so
+    // on a big Game view the game runs behind real time, and a real-time wait can end with a drawer still sliding.
     static void Tick()
     {
         if (routine == null) return;
         if (waiting is Func<bool> cond)
         {
-            if (!cond() && Time.realtimeSinceStartup < waitUntil) return;
+            if (!cond() && Time.unscaledTime < waitUntil) return;
         }
-        else if (waiting != null && Time.realtimeSinceStartup < waitUntil) return;
+        else if (waiting != null && Time.unscaledTime < waitUntil) return;
         waiting = null;
         bool more;
         try { more = routine.MoveNext(); }
         catch (Exception e) { Check("run", false, "exception: " + e.Message); Finish("crashed"); return; }
         if (!more) { Finish("complete"); return; }
         waiting = routine.Current;
-        if (waiting is float secs) waitUntil = Time.realtimeSinceStartup + secs;
-        else if (waiting is Func<bool>) waitUntil = Time.realtimeSinceStartup + 15f; // timeout
+        if (waiting is float secs) waitUntil = Time.unscaledTime + secs;
+        else if (waiting is Func<bool>) waitUntil = Time.unscaledTime + 15f; // timeout
     }
 
     static void Finish(string how)
@@ -164,14 +164,14 @@ public static class PlaytestRunner
         File.WriteAllText(Path.Combine(runDir, "report.md"), report.ToString());
         Debug.Log("[Playtest] " + (failed == 0 ? "PASS" : "FAIL") + " (" + passed + " passed, " + failed + " failed). Report: " + runDir + "/report.md");
         // the recorder finishes writing the MP4 after it stops; leave play mode only once it has
-        exitAt = Time.realtimeSinceStartup + 2f;
+        exitAt = Time.unscaledTime + 2f;
         EditorApplication.update += ExitWhenDone;
     }
 
     static float exitAt;
     static void ExitWhenDone()
     {
-        if (Time.realtimeSinceStartup < exitAt) return;
+        if (Time.unscaledTime < exitAt) return;
         EditorApplication.update -= ExitWhenDone;
         if (EditorApplication.isPlaying) EditorApplication.isPlaying = false;
     }
@@ -244,14 +244,23 @@ public static class PlaytestRunner
         bool wolfFound = wolfRow; // read now: the row is gone once the board loads
         if (wolfFound) wolfRow.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "02.1_Grid");
-        Check("The level list has its four levels; picking WOLF HUNT opens the board on Level_01",
-              rows.Length == 4 && wolfFound && SceneManager.GetActiveScene().name == "02.1_Grid" && TacticalWorld.chosenLevel == "Level_01",
+        Check("The level list has its six levels; picking WOLF HUNT opens the board on Level_01",
+              rows.Length == 6 && wolfFound && SceneManager.GetActiveScene().name == "02.1_Grid" && TacticalWorld.chosenLevel == "Level_01",
               string.Join(", ", rows) + "; called the WOLF HUNT row's onClick, as a click or Enter does");
         yield return 1.5f;
         var board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
         Check("The board is running", board != null, "");
+        UnityEngine.Object.FindAnyObjectByType<TacticalWorld>().Signals("t07", 0f, 0f, 0f); // radio tones would upset the run's sound checks; 25d checks messages on a spare radio
         if (board == null) yield break;
         var s = board.State;
+        WrittenNumbers();
+        //     Owner 2026-11-01: the plot forms, and then the briefing box comes up over it
+        var forming = board.GetComponentInChildren<PlotPanel>(true);
+        Check("The plot starts empty and the grid forms; the briefing box waits for it", !forming.GridFormed && !BubbleUp(), "");
+        yield return (Func<bool>)(() => forming.GridFormed);
+        yield return 0.3f;
+        Check("The grid has formed, and the briefing box is up", UnityEngine.Object.FindAnyObjectByType<PlotGrid>().Formed == 1f && BubbleUp(), "");
+        CloseBubble();
         var quest = UnityEngine.Object.FindAnyObjectByType<QuestSystem>();
         Check("The mission is on the board, at its start", quest && quest.Stage == QuestStage.LocateTarget, quest ? quest.Stage.ToString() : "no QuestSystem");
         if (!quest) yield break;
@@ -346,6 +355,9 @@ public static class PlaytestRunner
         s.weapons.stats.fireChanceHE = s.weapons.stats.fireChancePEN = s.weapons.stats.breachChanceSlug = s.damage.stats.radChanceReactor = 0f;
         // stand-in: the run flies through Level_01's debris, and a collision (Step 93) would dent the armour the checks expect
         s.damage.stats.collisionArmourDamage = 0f; s.damage.stats.collisionCompartmentDamage = 0;
+        s.weapons.stats.lockHoldSeconds = 1000f; // stand-in: the checks below take their time; the short lock has its own checks in 21b
+        var worldBox = UnityEngine.Object.FindAnyObjectByType<TacticalWorld>();
+        worldBox.solid = false; // stand-in: the checks place ships by hand, and a rock in the way would move them
         var t07Ship = brain ? brain.GetComponent<WorldContact>().Ship : null;
         // the Garuda has its own stats file (Step 80), no longer a copy of ours: its hits start no condition either
         if (t07Ship != null) t07Ship.weapons.stats.fireChanceHE = t07Ship.weapons.stats.fireChancePEN = t07Ship.weapons.stats.breachChanceSlug = t07Ship.damage.stats.radChanceReactor = 0f;
@@ -353,7 +365,7 @@ public static class PlaytestRunner
         if (!brain) yield break;
         double ex0 = t07Ship.nav.x, ey0 = t07Ship.nav.y;
         s.nav.throttle = 0; // stand-in: our helm at zero throttle, so our own ship holds still while TRACK 07 moves
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10"); // no x10 key since the owner's x5 top rate (2026-11-01): the run still uses x10, set directly, to save time
         yield return 3f;
         if (!Click("rate", "1", "x1 rate key")) yield break;
         yield return 0.1f; // Step 75: the models are drawn at the new rate from the next frame
@@ -365,7 +377,7 @@ public static class PlaytestRunner
               movedUnits.ToString("0") + " km, " + t07Ship.nav.SpeedUnits.ToString("0.00") + " km/s, ordered " + t07Ship.nav.orderedHeading.ToString("000") + "°, heading " + t07Ship.nav.heading.ToString("000") + "°");
         var dummyT = brain.transform;
         //     Step 75: the model glides on between ticks, never more than one tick's travel ahead.
-        float glideUnits = (float)(t07Ship.nav.SpeedUnits * board.Rate) + 0.05f;
+        float glideUnits = (float)(t07Ship.nav.SpeedUnits * board.TickGameSeconds) + 0.05f;
         Check("Its 3D model follows it", Mathf.Abs(dummyT.position.x - (float)t07Ship.nav.x) < glideUnits && Mathf.Abs(dummyT.position.y - (float)t07Ship.nav.y) < glideUnits,
               "model " + new Vector2(dummyT.position.x - (float)t07Ship.nav.x, dummyT.position.y - (float)t07Ship.nav.y).magnitude.ToString("0.00") + " km off (one tick's glide " + glideUnits.ToString("0.00") + ")");
         Check("The board's track reads its real speed", Mathf.Abs(s.TrackOf("t07").speed - (float)t07Ship.nav.SpeedUnits) < 0.01f, s.TrackOf("t07").speed.ToString("0.00") + " km/s");
@@ -390,7 +402,7 @@ public static class PlaytestRunner
         yield return 0.2f;
         yield return (Func<bool>)(() => s.sensors.signal >= target);
         Check("The signal climbs to its target", s.sensors.signal >= target, s.sensors.signal.ToString("0.0") + ", \"" + SigNote(board) + "\"");
-        Check("Loud enough to be tracked", s.sensors.signal < s.sensors.stats.signalTrackedAt || SigNote(board).Contains("YOUR RANGE"), "\"" + SigNote(board) + "\"");
+        Check("Loud enough to be tracked", s.sensors.signal < s.sensors.stats.signalTrackedAt || SigNote(board).Contains("DETECTED"), "\"" + SigNote(board) + "\"");
         Shot("08_signal_loud");
         yield return 0.2f;
 
@@ -403,8 +415,8 @@ public static class PlaytestRunner
         if (!Click("power.shed", null, "EMERGENCY LOAD SHED")) yield break;
         Check("LOAD SHED vents every bus", BusesAreMode(s, PowerSystem.BusMode.Vent), Buses(s));
         bool slid = false;
-        float until = Time.realtimeSinceStartup + 0.6f;
-        yield return (Func<bool>)(() => (slid |= rockers.Moving("power.shed", null)) || Time.realtimeSinceStartup > until);
+        float until = Time.unscaledTime + 0.6f;
+        yield return (Func<bool>)(() => (slid |= rockers.Moving("power.shed", null)) || Time.unscaledTime > until);
         yield return (Func<bool>)(() => !rockers.Moving("power.shed", null));
         Check("The LOAD SHED pad slides down (Step 40)", slid && shed.sprite != shed0 && shed.sprite.name.EndsWith("_thrown") && !shed.transform.Find("Pad cover").GetComponent<Image>().enabled,
               shed0.name + " → " + shed.sprite.name + (slid ? ", slide seen, now at rest" : ", no slide seen"));
@@ -490,8 +502,8 @@ public static class PlaytestRunner
         snd = board.Sounds;
         if (!Click("fc.flip", "0", "arming rocker 1 (locked)")) yield break;
         bool nudged = false;
-        until = Time.realtimeSinceStartup + 0.6f;
-        yield return (Func<bool>)(() => (nudged |= rockers.Moving("fc.flip", "0")) || Time.realtimeSinceStartup > until);
+        until = Time.unscaledTime + 0.6f;
+        yield return (Func<bool>)(() => (nudged |= rockers.Moving("fc.flip", "0")) || Time.unscaledTime > until);
         Check("A locked rocker refuses: the pad nudges and the refused cue sounds", !s.weapons.sw[0] && nudged && board.LastSound == "refused" && board.Sounds == snd + 1,
               "thrown " + s.weapons.sw[0] + ", nudge " + (nudged ? "seen" : "not seen") + ", last cue \"" + board.LastSound + "\"");
         yield return (Func<bool>)(() => !rockers.Moving("fc.flip", "0"));
@@ -535,7 +547,7 @@ public static class PlaytestRunner
         if (!Click("power.bus", "2", "SEN selector")) yield break; // Step 82: DRADIS hears only with SEN power
         Check("ENG and SEN back on DRAW after the shed", !s.power.shed && s.power.buses[0].mode == PowerSystem.BusMode.Draw && s.power.buses[2].mode == PowerSystem.BusMode.Draw, Buses(s));
         yield return (Func<bool>)(() => s.nav.ThrottleCap >= 60);
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         if (!Click("helm", null, "HELM header")) yield break;
         yield return 0.8f;
         if (!Click("helm.thr", null, "throttle (press mid-well)")) yield break;
@@ -630,7 +642,7 @@ public static class PlaytestRunner
         string plText = pl ? pl.GetComponent<TMPro.TMP_Text>().text : "none";
         Check("When the sweep touches it, a bearing line and label point at it", pl && plText == "BRG " + (ShipState.JsRound(t07.seenBrg) % 360).ToString("000") && Mathf.Abs(Mathf.DeltaAngle((float)t07.seenBrg, t07.bearing)) <= 1f,
               "\"" + plText + "\", bearing now " + t07.bearing.ToString("000"));
-        Check("The alarm strip raises: 1 NEW CONTACT, with the alert tone", s.sensors.newContacts == 1 && alarmWords.gameObject.activeInHierarchy && alarmWords.text == "NEW CONTACT SINCE COMMIT",
+        Check("The alarm strip raises: 1 NEW CONTACT, with the alert tone", s.sensors.newContacts == 1 && alarmWords.gameObject.activeInHierarchy && alarmWords.text == "NEW CONTACT",
               "\"" + alarmWords.text + "\", last cue \"" + board.LastSound + "\"");
         Shot("22_heard");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
@@ -641,20 +653,20 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.sensors.signal >= s.sensors.stats.signalTrackedAt);
         var shipRaw = GameObject.Find("Own ship (3D view)").GetComponent<UnityEngine.UI.RawImage>();
         bool dim = false;
-        float blinkUntil = Time.realtimeSinceStartup + 1.3f;
-        yield return (Func<bool>)(() => { if (shipRaw.color.a < 0.9f) dim = true; return Time.realtimeSinceStartup > blinkUntil; });
+        float blinkUntil = Time.unscaledTime + 1.3f;
+        yield return (Func<bool>)(() => { if (shipRaw.color.a < 0.9f) dim = true; return Time.unscaledTime > blinkUntil; });
         Check("Tracked, our ship does not blink", !dim, "signal " + s.sensors.signal.ToString("0") + "%");
         //     Step 68: the signal box in the frame's top-right shows it too, with the Sensors drawer shut.
         var sigBox = GameObject.Find("Board/Tactical Board/SignalBox").transform;
         var boxPct = sigBox.Find("Signal · percent").GetComponent<TMPro.TMP_Text>();
         var boxNote = sigBox.Find("Signal · note").GetComponent<TMPro.TMP_Text>();
         yield return (Func<bool>)(() => boxPct.text == ShipState.JsRound(s.sensors.signal) + "%");
-        Check("Tracked, the top-right signal box reads the signal and the trackers", boxPct.text == ShipState.JsRound(s.sensors.signal) + "%" && boxNote.text.EndsWith("YOUR RANGE"),
+        Check("Tracked, the top-right signal box reads the signal and the trackers", boxPct.text == ShipState.JsRound(s.sensors.signal) + "%" && boxNote.text.Contains("DETECTED"),
               "\"" + boxPct.text + "\", \"" + boxNote.text + "\"");
 
         // 18. The bearing trail (Step 45): each sweep leaves TRACK 07's bearing where we were. As we
         //     move, the lines cross at it. They fade out over two minutes of mission time.
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         s.sensors.BearingFixes.Clear();
         yield return (Func<bool>)(() => s.sensors.BearingFixes.FindAll(f => f.key == "t07").Count >= 2);
         var fixes = s.sensors.BearingFixes.FindAll(f => f.key == "t07");
@@ -686,7 +698,7 @@ public static class PlaytestRunner
         //     Two timed POINTs, and a RULER between them, make a track: course, speed, projection.
         if (!Click("tool", "POINT", "POINT tool")) yield break;
         if (!PlotDrag(board, new Vector2(1300, 300), new Vector2(1300, 300), "POINT A")) yield break;
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         yield return 1.5f;
         if (!Click("rate", "1", "x1 rate key")) yield break;
         if (!PlotDrag(board, new Vector2(1340, 280), new Vector2(1340, 280), "POINT B")) yield break;
@@ -790,6 +802,7 @@ public static class PlaytestRunner
         //     A fresh hand-dialled solution on the periscope's bearing (one RNG step starts it).
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
+        s.nav.heading = s.nav.orderedHeading = (t07.bearing + 90) % 360; // stand-in for the helm: its left side to the target, in turret B's cone (owner 2026-11-01: 90° out of each side)
         s.weapons.sol[s.weapons.SysIndex] = new WeaponSystem.Solution(); // stand-in: clear the old solution (the board has no clear)
         if (!PlotDrag(board, knobAt, knobAt + new Vector2(8, 0), "turn the RNG knob (1 step)", "fc.knob")) yield break;
         yield return 0.3f;
@@ -821,6 +834,8 @@ public static class PlaytestRunner
         float sig0 = s.sensors.signal;
         var rgb = s.weapons.MountOf("RGB");
         int slugs0 = rgb.ammo;
+        yield return (Func<bool>)(() => s.weapons.GunSettled); // owner 2026-11-01: the bar turns slowly; a shot flies down it
+        Check("The selected gun's bar turned onto the solution", Mathf.Abs(rgb.aimDeg) > 0.01f || Mathf.Abs(Mathf.DeltaAngle(s.nav.heading + rgb.arc, (float)s.weapons.LeadBearing())) < 0.01f, rgb.aimDeg.ToString("0.0") + "° from the cone's middle");
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever", "fc.lever")) yield break;
         Check("The lever fires one slug and releases ARM", s.weapons.Rounds.Count == 1 && !s.weapons.sw[3], s.weapons.Rounds.Count + " in flight");
         Check("Firing spikes our signal", Mathf.Approximately(s.sensors.signal, sig0 + s.weapons.stats.fireSignalSpike), sig0.ToString("0") + " → " + s.sensors.signal.ToString("0"));
@@ -838,6 +853,14 @@ public static class PlaytestRunner
         yield return 0.6f;
         Check("Paused, the slug holds still", s.weapons.Rounds.Count == 1 && s.weapons.Rounds[0].travelled == rx, (rx >= 0 ? rx.ToString("N0") + " km flown" : "none"));
         if (!Click("pause", null, "RUN key")) yield break;
+        //     Owner 2026-11-01: the dot slides on the plot between ticks; the rules still step.
+        if (s.weapons.Rounds.Count == 1)
+        {
+            var slugDot = s.weapons.Rounds[0];
+            double slugDrawnFrom = slugDot.drawn.y;
+            yield return 0.1f;
+            Check("The slug's dot slides between ticks", slugDot.drawn.y != slugDrawnFrom, slugDrawnFrom.ToString("N0") + " → " + slugDot.drawn.y.ToString("N0"));
+        }
         if (board.Motion && board.Motion.ScopeDown) board.Motion.SetScopeDown(false); // the periscope covers the plot's middle
         board.SetZoom(0.4 * X1);
         yield return 0.8f;
@@ -860,6 +883,7 @@ public static class PlaytestRunner
         s.SlewTo(); // stand-in for the periscope's SLEW TO key: onto the new dialled bearing
         yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
         for (int i = 0; i < 4; i++) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (again)")) yield break; yield return 0.2f; }
+        yield return (Func<bool>)(() => s.weapons.GunSettled);
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever (again)", "fc.lever")) yield break;
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
@@ -882,7 +906,7 @@ public static class PlaytestRunner
 
         // 21b. Leading a moving target (Step 52). TRACK 07 gets under way on its patrol again.
         brain.enabled = true;
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         yield return (Func<bool>)(() => t07Ship.nav.SpeedUnits > 1.0);
         yield return (Func<bool>)(() => t07Ship.nav.heading == t07Ship.nav.orderedHeading); // steady on its leg before we plot it
         if (!Click("rate", "1", "x1 rate key")) yield break;
@@ -903,7 +927,7 @@ public static class PlaytestRunner
         s.weapons.Sol.rangeUnits = (float)System.Math.Sqrt((t07Ship.nav.x - s.nav.x) * (t07Ship.nav.x - s.nav.x) + (t07Ship.nav.y - s.nav.y) * (t07Ship.nav.y - s.nav.y));
         s.weapons.NudgeSol("rng", 0);
         Check("Without a track the solution has no course", s.weapons.Sol.set && s.weapons.Sol.manual && !s.weapons.Sol.hasCourse, "");
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         yield return (Func<bool>)(() => board.MissionSeconds - trackA.t >= 120f);
         if (!Click("rate", "1", "x1 rate key")) yield break;
         var trackB = new ShipState.Mark { id = ++s.markSeq, kind = "point", x = t07Ship.nav.x, y = t07Ship.nav.y, t = board.MissionSeconds };
@@ -926,8 +950,9 @@ public static class PlaytestRunner
         double unled = PassUnits(s.nav.x, s.nav.y, (System.Math.Atan2(s.weapons.Sol.wx - s.nav.x, s.weapons.Sol.wy - s.nav.y) * 180 / System.Math.PI + 360) % 360,
                                  s.weapons.stats.slugSpeedUnits, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
         double led = PassUnits(s.nav.x, s.nav.y, s.weapons.LeadBearing(), s.weapons.stats.slugSpeedUnits, t07Ship.nav.x, t07Ship.nav.y, tvx, tvy, 600);
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         int landedLed = s.weapons.shotResults;
+        yield return (Func<bool>)(() => s.weapons.GunSettled);
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (led)", "fc.lever")) yield break;
         yield return (Func<bool>)(() => s.weapons.shotResults > landedLed);
         Check("Led from the track, it hits the moving GARUDA (unscanned: a bare HIT)", s.weapons.lastShotHit && s.weapons.shotReport == "HIT · BOGEY T07",
@@ -947,19 +972,44 @@ public static class PlaytestRunner
         if (!Click("sensors.active", null, "ACTIVE SCAN rocker (off)")) yield break;
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
-        if (!Click("fc.track", null, "TRACK (locked)")) yield break;
-        Check("TRACK's solution carries the target's course", s.weapons.Sol.set && !s.weapons.Sol.manual && s.weapons.Sol.hasCourse, "CRS " + s.weapons.Sol.course.ToString("000") + "°, SPD " + s.weapons.Sol.spd.ToString("0.00"));
+        //     Owner 2026-11-01: the targeting computer's lock gives the solution: the ship in the sights at the right zoom until the bar fills
+        if (board.Motion) board.Motion.SetScopeDown(true);
+        yield return (Func<bool>)(() => { s.LookAt("t07"); s.scopeZoom = FitZoom(s, t07); return s.weapons.Locked; });
+        if (board.Motion) board.Motion.SetScopeDown(false);
+        Check("The lock's solution carries the target's course", s.weapons.Sol.set && s.weapons.Sol.locked && s.weapons.Sol.hasCourse, "CRS " + s.weapons.Sol.course.ToString("000") + "°, SPD " + s.weapons.Sol.spd.ToString("0.00"));
         s.LookAt("t07");
         yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
-        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (TRACK shot)")) yield break; yield return 0.15f; }
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (lock shot)")) yield break; yield return 0.15f; }
+        board.Click("rate", "10");
         int landedTrack = s.weapons.shotResults;
-        if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (TRACK)", "fc.lever")) yield break;
+        yield return (Func<bool>)(() => s.weapons.GunSettled);
+        if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (lock)", "fc.lever")) yield break;
         yield return (Func<bool>)(() => s.weapons.shotResults > landedTrack);
-        Check("TRACK's led shot hits", s.weapons.shotReport != null && s.weapons.shotReport.StartsWith("HIT · GARUDA"), "\"" + s.weapons.shotReport + "\"");
+        Check("The lock's led shot hits", s.weapons.shotReport != null && s.weapons.shotReport.StartsWith("HIT · GARUDA"), "\"" + s.weapons.shotReport + "\"");
         if (!Click("rate", "1", "x1 rate key")) yield break;
+        //     Owner 2026-11-01: a lock knows where the ship is, not where it is going, and it runs out
+        s.weapons.DropLock(); s.marks.Clear(); s.sensors.identified.Remove("t07");
+        if (board.Motion) board.Motion.SetScopeDown(true);
+        yield return (Func<bool>)(() => { s.LookAt("t07"); s.scopeZoom = FitZoom(s, t07); return s.weapons.Locked; });
+        Check("With no scan and no plot a lock has no course", s.weapons.Sol.locked && !s.weapons.Sol.hasCourse && s.weapons.LockSource.EndsWith("NO COURSE"), "\"" + s.weapons.LockSource + "\"");
+        s.sensors.identified.Add("t07"); s.sensors.ScanFixes["t07"] = new SensorSystem.ScanFix { course = 123f, speed = 7f, t = s.missionNow };
+        yield return 0.6f;
+        Check("The lock takes the course and speed the scan read, not the ship's true ones", s.weapons.Sol.hasCourse && s.weapons.Sol.course == 123f && s.weapons.Sol.spd == 7f && s.weapons.LockSource.EndsWith("SCAN COURSE"), "\"" + s.weapons.LockSource + "\"");
+        var legA = new ShipState.Mark { id = 9001, kind = "point", x = 0, y = 0, t = s.missionNow };
+        var legB = new ShipState.Mark { id = 9002, kind = "point", x = 100, y = 0, t = s.missionNow + 10f };
+        s.marks.Add(legA); s.marks.Add(legB); s.marks.Add(new ShipState.Mark { id = 9003, kind = "ruler", ptA = 9001, ptB = 9002 });
+        yield return 0.6f;
+        Check("A newer plotted track takes over from the scan", s.weapons.Sol.spd == 10f && s.weapons.LockSource.EndsWith("PLOT COURSE"), "\"" + s.weapons.LockSource + "\", SPD " + s.weapons.Sol.spd);
+        s.marks.Clear();
+        s.weapons.Flip(0); s.weapons.lockLeft = 1f; // stand-in: LOAD thrown, and a lock about to run out
+        yield return (Func<bool>)(() => !s.weapons.Locked);
+        Check("A lock runs out: its solution and the switches go", !s.weapons.Sol.set && !s.weapons.sw[0], "set " + s.weapons.Sol.set + ", LOAD " + s.weapons.sw[0]);
+        yield return 0.1f;
+        Check("A lock running out sounds", board.LastSound == "lost", "last cue \"" + board.LastSound + "\"");
+        if (board.Motion) board.Motion.SetScopeDown(false);
         //     Hold it still again for the fight below; clear the plot.
         brain.enabled = false; t07Ship.nav.vx = t07Ship.nav.vy = 0; s.marks.Clear(); s.sensors.identified.Remove("t07");
+        s.weapons.DropLock();
 
         // 21c. Missiles (Step 53): a lock, the launcher, three warheads, homing on the moving TRACK 07.
         brain.enabled = true;
@@ -967,14 +1017,15 @@ public static class PlaytestRunner
         for (int k = 0; k < 3 && s.weapons.sys != "MS"; k++) { if (!Click("fc.system", null, "weapon selector")) yield break; yield return 0.2f; }
         s.weapons.salvo = 2; // stand-in for the Tuning window (its default is 2)
         Check("MISSILE selected: the launcher, HE", s.weapons.sys == "MS" && s.weapons.mount == "VLS" && s.weapons.warheads[s.weapons.warhead] == "HE", s.weapons.sys + " " + s.weapons.mount + " " + s.weapons.warheads[s.weapons.warhead]);
-        if (!Click("fc.track", null, "TRACK (locked)")) yield break;
-        s.LookAt("t07");
+        if (board.Motion) board.Motion.SetScopeDown(true);
+        yield return (Func<bool>)(() => { s.LookAt("t07"); s.scopeZoom = FitZoom(s, t07); return s.weapons.Locked; });
+        if (board.Motion) board.Motion.SetScopeDown(false);
         yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
         for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (missiles)")) yield break; yield return 0.15f; }
         Func<ShipState, float> hull = sh => { float h = 0; foreach (var a in sh.damage.SideArmour) h += a; foreach (var c in sh.damage.compartments) h += c.integ; return h; };
         int cells0 = s.weapons.vlsCells, landed0 = s.weapons.shotResults;
         float hull0 = hull(dummyShip);
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "launch (HE salvo of 2)", "fc.lever")) yield break;
         Check("A salvo of two leaves the launcher", s.weapons.Rounds.FindAll(r => r.missile).Count == 2 && s.weapons.vlsCells == cells0 - 2, s.weapons.vlsCells + " cells left");
         yield return (Func<bool>)(() => s.weapons.shotResults >= landed0 + 2);
@@ -1087,7 +1138,7 @@ public static class PlaytestRunner
         double fx0 = flight.x, fy0 = flight.y; float ft0 = board.MissionSeconds;
         yield return 1f; // at x1: a few game seconds, well before they arrive
         double flown = System.Math.Sqrt((flight.x - fx0) * (flight.x - fx0) + (flight.y - fy0) * (flight.y - fy0)), took = board.MissionSeconds - ft0;
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         Check("They fly toward GARUDA at " + s.hangar.stats.fighterSpeedUnits + " km/s", took > 0 && System.Math.Abs(flown / took - s.hangar.stats.fighterSpeedUnits) < 0.5 && interlockText().StartsWith("OUTBOUND TO GARUDA"),
               (flown / took).ToString("0.00") + " km/s; \"" + interlockText() + "\"");
         yield return (Func<bool>)(() => System.Math.Sqrt((flight.x - s.nav.x) * (flight.x - s.nav.x) + (flight.y - s.nav.y) * (flight.y - s.nav.y)) > 1000); // clear of our ship's picture
@@ -1140,9 +1191,9 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.weapons.Incoming.Count > 0);
         float salvo1At = board.MissionSeconds;
         Check("Hit, GARUDA fires a salvo of two back at us", s.weapons.Incoming.Count == 2 && dummyShip.weapons.vlsCells == enemyCells - 2, s.weapons.Incoming.Count + " incoming, its cells " + enemyCells + " → " + dummyShip.weapons.vlsCells);
-        yield return 0.5f;
+        yield return (Func<bool>)(() => alarmWords.gameObject.activeInHierarchy && alarmWords.text.StartsWith("INCOMING")); // PDCs on AUTO can shoot them down soon after
         Check("The alarm strip warns of them, with their bearing (owner 2026-10-28)", alarmWords.gameObject.activeInHierarchy && alarmWords.text.StartsWith("INCOMING MISSILES · BRG "), "\"" + alarmWords.text + "\"");
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0 || System.Math.Sqrt((s.weapons.Incoming[0].x - s.nav.x) * (s.weapons.Incoming[0].x - s.nav.x) + (s.weapons.Incoming[0].y - s.nav.y) * (s.weapons.Incoming[0].y - s.nav.y)) < 4600);
         Shot("28e_incoming_pdc_arc");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
@@ -1164,7 +1215,7 @@ public static class PlaytestRunner
         Check("Dropping ARM takes PDC-A off AUTO", !s.weapons.sw[3] && !s.weapons.pdcAuto[0], "");
         var ourArmour = (float[])s.damage.SideArmour.Clone();
         var ourInteg = System.Array.ConvertAll(s.damage.compartments, c => c.integ);
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         yield return (Func<bool>)(() => board.MissionSeconds - salvo1At > 125f); // its 120 s between salvos
         dummyShip.damage.TakeSlug("PROW", s.weapons.stats); // stand-in for another railgun hit
         yield return (Func<bool>)(() => s.weapons.Incoming.Count > 0);
@@ -1189,7 +1240,7 @@ public static class PlaytestRunner
         Check("PDC-B arms and goes on AUTO", s.weapons.mount == "PDB" && s.weapons.pdcAuto[1] && !s.weapons.pdcAuto[0], s.weapons.mount + ", AUTO " + s.weapons.pdcAuto[0] + "/" + s.weapons.pdcAuto[1]);
         int killsB = s.weapons.pdcKills, takenB = s.weapons.hitsTaken;
         s.weapons.LaunchAt(dummyShip.weapons.stats, t07.worldX, t07.worldY, 2, 0, 35000); // stand-in for GARUDA's salvo (its own firing is checked above)
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0);
         yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0);
         yield return 0.4f;
@@ -1229,6 +1280,9 @@ public static class PlaytestRunner
         if (s.hangar.CurrentSquad.key != "ih" && !Click("hangar.squad", null, "squadron selector (ASSAULT BOAT)")) yield break;
         for (int k = 0; k < 3 && s.hangar.order != "disable"; k++) if (!Click("hangar.order", null, "order knob")) yield break;
         Check("The assault boats are selected, on DISABLE", s.hangar.CurrentSquad.key == "ih" && s.hangar.order == "disable" && s.hangar.SquadReady(s.hangar.CurrentSquad) == 3, s.hangar.CurrentSquad.key + " " + s.hangar.order + ", " + s.hangar.SquadReady(s.hangar.CurrentSquad) + " ready");
+        s.sensors.identified.Remove("t07");
+        Check("No scan, no boarding: the hangar refuses an unscanned target", s.hangar.LaunchBlock() == "TARGET NOT SCANNED", "\"" + s.hangar.LaunchBlock() + "\"");
+        s.sensors.identified.Add("t07");
         s.hangar.SetLbrg(s.nav.heading.ToString()); // stand-in for typing the launch bearing
         float defenders = s.hangar.stats.defenderShare;
         s.hangar.stats.defenderShare = 0f; // stand-in: an undefended ship, so the marines win for certain (the odds are in the Tuning window)
@@ -1247,7 +1301,7 @@ public static class PlaytestRunner
         Check("Three boats launch with 18 marines", boats != null && boats.craft == 3 && boats.marines == 18 && s.hangar.marines == marinesBefore - 18,
               boats != null ? boats.craft + " boats, " + boats.marines + " marines, " + s.hangar.marines + " left aboard" : "no flight");
         if (boats == null) yield break;
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         yield return (Func<bool>)(() => boats.holding != null);
         yield return (Func<bool>)(() => boats.holding != null);
         Check("No face open: they hold off", interlockText() == "HOLDING OFF GARUDA · NO OPEN SIDE", "\"" + interlockText() + "\"");
@@ -1266,7 +1320,7 @@ public static class PlaytestRunner
         // the ship moves after the boats in a tick, so they trail it by up to one tick of its way
         double boatGap = System.Math.Sqrt((boats.x - t07.worldX) * (boats.x - t07.worldX) + (boats.y - t07.worldY) * (boats.y - t07.worldY));
         Check("Under way, the marines fight on and the boats ride with it", boats.aboard && t07Ship.nav.SpeedUnits > s.hangar.stats.boardMaxSpeedUnits
-              && boats.boardT - boardT0 >= board.MissionSeconds - boardAt - 0.01f && boatGap <= s.hangar.stats.dockUnits + t07Ship.nav.stats.topSpeedUnits * board.Rate
+              && boats.boardT - boardT0 >= board.MissionSeconds - boardAt - 0.01f && boatGap <= s.hangar.stats.dockUnits + t07Ship.nav.stats.topSpeedUnits * board.TickGameSeconds
               && interlockText().StartsWith("BOARDING GARUDA · "),
               "its speed " + t07Ship.nav.SpeedUnits.ToString("0.0") + " km/s, fight clock +" + (boats.boardT - boardT0).ToString("0") + " s in " + (board.MissionSeconds - boardAt).ToString("0") + " s, boats "
               + boatGap.ToString("0") + " km off, \"" + interlockText() + "\"");
@@ -1330,7 +1384,7 @@ public static class PlaytestRunner
         yield return 1f;
         Check("Back in range, the clock stops and they come home", !boats.stranded && boats.strandT == strandAt && interlockText().StartsWith("OUT OF RANGE · RETURNING · "),
               "clock " + boats.strandT.ToString("0.0") + " s, \"" + interlockText() + "\"");
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         yield return (Func<bool>)(() => s.hangar.Flights.Count == 0);
         yield return (Func<bool>)(() => s.hangar.Flights.Count == 0); // 15 s each; 10,000 units is about 14 s at x10
         Check("They land: every marine back", s.hangar.Flights.Count == 0 && s.hangar.marines == marinesBefore, s.hangar.marines + " marines aboard");
@@ -1395,9 +1449,7 @@ public static class PlaytestRunner
         yield return 1f;
         Check("The sight shows the Garuda; zoomed in too far it spills out of the brackets, and the lock bar stays empty", shipPic && shipPic.enabled && shipPic.texture && s.weapons.lockFill == 0f,
               "picture " + (shipPic && shipPic.enabled) + ", fill " + s.ScopeFill(t07).ToString("0.00") + ", " + t07.rangeUnits.ToString("N0") + " km");
-        s.scopeZoom = System.Math.Max(1, System.Math.Min(8, System.Math.Round(t07.rangeUnits / s.scopeFitUnits, 1))); // stand-in: the MAG knob to fill the brackets
-        yield return 0.3f;
-        if (!Click("scope.classify", null, "CLASS key")) yield break;
+        yield return (Func<bool>)(() => { s.scopeZoom = FitZoom(s, t07); return s.weapons.Locked; }); // stand-in: the MAG knob to fill the brackets
         yield return 0.6f;
         Check("Locked and in sight: GARUDA shows on the plot as its own ship model, in place of its dot", s.weapons.Locked && s.sensors.InSight(t07) && plotPanel.ContactShipShown && subjName.text == "GARUDA · CRUISER",
               "\"" + subjName.text + "\", " + t07.rangeUnits.ToString("N0") + " km, picture " + plotPanel.ContactShipShown);
@@ -1416,7 +1468,7 @@ public static class PlaytestRunner
         if (board.Motion) board.Motion.SetScopeDown(false);
         yield return 0.6f;
         if (s.weapons.mount != "RGB" && !Click("fc.mount", null, "turret selector (RG-B)")) yield break;
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         var reports = new List<string>();
         for (int shot = 0; shot < 10 && !t07.wreck; shot++)
         {
@@ -1424,6 +1476,7 @@ public static class PlaytestRunner
             for (int i = 0; i < 4; i++)
                 if (!s.weapons.sw[i]) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (shot " + (shot + 1) + ")")) yield break; yield return 0.15f; }
             int landed = s.weapons.shotResults;
+            yield return (Func<bool>)(() => s.weapons.GunSettled);
             if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (shot " + (shot + 1) + ")", "fc.lever")) yield break;
             yield return (Func<bool>)(() => s.weapons.shotResults > landed);
             reports.Add(s.weapons.shotReport);
@@ -1503,7 +1556,7 @@ public static class PlaytestRunner
         Check("It spreads to the rooms next to it (bridge, reactor, hangar), not the others", s.damage.Comp("bri").fire && s.damage.Comp("rct").fire && s.damage.Comp("hgr").fire && !s.damage.Comp("eng").fire && !s.damage.Comp("hab").fire,
               "BRI " + s.damage.Comp("bri").fire + ", RCT " + s.damage.Comp("rct").fire + ", HGR " + s.damage.Comp("hgr").fire + ", ENG " + s.damage.Comp("eng").fire + ", HAB " + s.damage.Comp("hab").fire);
         //     A fire burns its room down.
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         int magBurn = s.damage.Comp("mag").integ; float burnFrom = board.MissionSeconds;
         yield return (Func<bool>)(() => board.MissionSeconds - burnFrom >= s.damage.stats.fireDamageSeconds + 1);
         if (!Click("rate", "1", "x1 rate key")) yield break;
@@ -1563,7 +1616,7 @@ public static class PlaytestRunner
         s.damage.stats.radSpreadPerSecond = 0f;
         Check("The reactor leaks radiation into the rooms next to it", radHit.Contains("RADIATION") && s.damage.Comp("rct").rad && s.damage.Comp("mag").rad && s.damage.Comp("bri").rad && !s.damage.Comp("hgr").rad,
               "\"" + radHit + "\", RCT " + s.damage.Comp("rct").integ);
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         int magCrew = s.damage.Comp("mag").crew; float radFrom = board.MissionSeconds;
         yield return (Func<bool>)(() => board.MissionSeconds - radFrom >= s.damage.stats.radCrewLossSeconds + 1);
         Check("Radiation kills crew while they stay", s.damage.Comp("mag").crew < magCrew, "MAG crew " + magCrew + " → " + s.damage.Comp("mag").crew);
@@ -1614,6 +1667,11 @@ public static class PlaytestRunner
         yield return 1.5f; // the level loads on top a frame later
         board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
         s = board.State;
+        WrittenNumbers(); // a fresh board: fresh copies of the stats files
+        UnityEngine.Object.FindAnyObjectByType<TacticalWorld>().solid = false;
+        yield return (Func<bool>)(() => board.GetComponentInChildren<PlotPanel>(true).GridFormed);
+        yield return 0.3f;
+        CloseBubble();
         quest = UnityEngine.Object.FindAnyObjectByType<QuestSystem>();
         endPanel = board.GetComponentInChildren<EndScreenPanel>(true);
         var garuda = s.ShipOf != null ? s.ShipOf("t07") : null;
@@ -1639,15 +1697,15 @@ public static class PlaytestRunner
               "square " + smallUnits.ToString("N0") + ": " + string.Join(" ", shown.ToArray()));
         var ownView = ShipView.Own();
         float ownLenPx = ((RectTransform)GameObject.Find("Own ship (3D view)").transform).sizeDelta.x * ownView.ShipFill;
-        Check("At x1 our ship (100 units) is drawn two small squares long", ownView.Ship.Stats.length == 100f && Mathf.Abs(ownLenPx - 2f * cellPx) < 0.5f,
+        Check("At x1 our ship (200 units) is drawn four small squares long", ownView.Ship.Stats.length == 200f && Mathf.Abs(ownLenPx - 4f * cellPx) < 0.5f,
               ownLenPx.ToString("0.0") + " px; a square is " + cellPx.ToString("0.0") + " px");
         var garudaShip = GameObject.Find("World").GetComponentInChildren<EnemyBrain>().GetComponent<Ship>();
-        Check("The Garuda is 1.5 times our ship's length (150 units)", garudaShip && garudaShip.Stats.length == 150f, garudaShip ? garudaShip.Stats.length + " units" : "no Garuda");
+        Check("The Garuda is 350 units (owner 2026-11-01)", garudaShip && garudaShip.Stats.length == 350f, garudaShip ? garudaShip.Stats.length + " units" : "no Garuda");
         Shot("25b_x1");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         for (int n = 0; n < 60; n++) board.Scroll("plot", null, -1f); // the mouse wheel, out past the limit
         yield return 0.6f;
-        Check("Zoomed out past the limit, the zoom stops at x0.01 (owner 2026-10-29)", board.ZoomExact == board.MinZoom && System.Math.Abs(board.MinZoom - 0.01) < 1e-6,
+        Check("Zoomed out past the limit, the zoom stops at x0.1 (owner 2026-11-01)", board.ZoomExact == board.MinZoom && System.Math.Abs(board.MinZoom - 0.1) < 1e-6,
               "x" + board.ZoomExact.ToString("0.000") + ", limit x" + board.MinZoom.ToString("0.000"));
         Shot("25b_zoomed_out"); // the grid carries on past the battle space's heavier edge
         double cellUnits = plotGrid.CellUnits(out cellPx);
@@ -1658,7 +1716,7 @@ public static class PlaytestRunner
         yield return 0.6f;
         cellUnits = plotGrid.CellUnits(out cellPx);
         if (!Click("tool", "CURSOR", "CURSOR tool")) yield break;
-        if (!PlotDrag(board, new Vector2(700, 300), new Vector2(2700, 2300), "drag the grid far past a corner", "plot.pan")) yield break;
+        if (!PlotDrag(board, new Vector2(700, 300), new Vector2(6700, 6300), "drag the grid far past a corner", "plot.pan")) yield break;
         yield return 0.6f;
         Rect gridRect = plotGrid.rectTransform.rect;
         double edgeX = System.Math.Max(0, s.ArenaHalfW - gridRect.width / 2 * (cellUnits / cellPx)), edgeY = System.Math.Max(0, s.ArenaHalfH - gridRect.height / 2 * (cellUnits / cellPx));
@@ -1669,7 +1727,69 @@ public static class PlaytestRunner
         yield return 0.6f;
         Check("C brings the view back to our ship", System.Math.Abs(plotP.View.x - s.nav.x) < 1 && System.Math.Abs(plotP.View.y - s.nav.y) < 1,
               "view " + plotP.View.x.ToString("N0") + ", " + plotP.View.y.ToString("N0") + " km");
-        var edgeWords = GameObject.Find("Board").transform.Find("Tactical Board/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
+        // 25c. Gas clouds (owner 2026-11-01): how much of a ship's box is in a cloud, and what a cloud does to our signal.
+        var levelClouds = UnityEngine.Object.FindAnyObjectByType<TacticalWorld>().Clouds;
+        Check("Wolf Hunt has three gas clouds", levelClouds.Count == 3, levelClouds.Count + " clouds");
+        if (levelClouds.Count > 0)
+        {
+            var cloud = levelClouds[0];
+            var boxHalf = s.nav.BoxHalf;
+            var cloudEdge = cloud.At + new Vector2(cloud.widthUnits / 2, 0);
+            float allIn = cloud.ShareInside(cloud.At, 0, boxHalf), halfIn = cloud.ShareInside(cloudEdge, 0, boxHalf), mostIn = cloud.ShareInside(cloudEdge - new Vector2(boxHalf.x * 0.8f, 0), 0, boxHalf);
+            Check("A ship's box in a gas cloud: all in 100%, half over the edge 50%, a tenth over the edge 90%",
+                  allIn == 1f && halfIn == 0.5f && mostIn >= s.sensors.stats.cloudInsideShare,
+                  allIn + " / " + halfIn + " / " + mostIn);
+            int busWas = s.power.buses[0].fill;
+            s.power.buses[0].fill = 3; // our signal comes from power; with none, 30% of 0 would pass whatever the cloud does
+            float outside = s.sensors.SignalTarget;
+            s.sensors.inCloud = true;
+            float inside = s.sensors.SignalTarget;
+            s.sensors.inCloud = false;
+            s.power.buses[0].fill = busWas;
+            Check("In a gas cloud our signal heads for 30% of what it would be", outside > 0f && Mathf.Approximately(inside, outside * s.sensors.stats.cloudSignalShare), outside + " to " + inside);
+        }
+        // 25e. More ENG, more of everything, and the side thrusters (owner 2026-11-01): our ship stepped by hand, then put back.
+        var drive = s.nav.stats;
+        double accelWas = drive.baseAccelUnits, shipX = s.nav.x, shipY = s.nav.y, shipVx = s.nav.vx, shipVy = s.nav.vy;
+        float turnWas = drive.baseTurnRate;
+        int fillWas = s.power.buses[0].fill, hdgWas = s.nav.heading, orderWas = s.nav.orderedHeading, thrWas = s.nav.throttle;
+        drive.baseAccelUnits = drive.accelUnits / 2; drive.baseTurnRate = drive.turnRate / 2; // the run's numbers don't change with ENG
+        Func<int, double[]> oneSecond = units =>
+        {
+            s.power.buses[0].fill = units;
+            s.nav.PlaceAt(0, 0, 0); s.nav.vx = s.nav.vy = 0;
+            s.nav.orderedHeading = 90;
+            s.nav.throttle = s.nav.ThrottleCap;
+            s.nav.Tick(1);
+            return new[] { s.nav.SpeedUnits, s.nav.heading };
+        };
+        double[] engOne = oneSecond(1), engFull = oneSecond(s.power.stats.busMax);
+        Check("Full ENG gives twice ENG 1's acceleration and turn rate", Math.Abs(engFull[0] / engOne[0] - 2) < 0.05 && engFull[1] == engOne[1] * 2,
+              "speed after 1 s " + engOne[0].ToString("0.00") + " to " + engFull[0].ToString("0.00") + ", heading " + engOne[1] + " to " + engFull[1]);
+        s.nav.PlaceAt(0, 0, 0); s.nav.vx = s.nav.vy = 0; s.nav.slide = -1;
+        for (int i = 0; i < 100; i++) s.nav.Tick(0.1);
+        double sideways = s.nav.vx; int slidHdg = s.nav.heading;
+        s.nav.slide = 0;
+        for (int i = 0; i < 100; i++) s.nav.Tick(0.1);
+        Check("Q slides the ship to port with its nose still; let go, and the slide stops", Math.Abs(sideways + drive.sideSpeedUnits) < 0.01 && slidHdg == 0 && s.nav.vx == 0,
+              "at " + sideways.ToString("0.0") + " units/s, heading " + slidHdg + ", then " + s.nav.vx.ToString("0.0"));
+        drive.baseAccelUnits = accelWas; drive.baseTurnRate = turnWas;
+        s.power.buses[0].fill = fillWas;
+        s.nav.PlaceAt(shipX, shipY, hdgWas); s.nav.orderedHeading = orderWas; s.nav.vx = shipVx; s.nav.vy = shipVy; s.nav.throttle = thrWas;
+        // 25d. Real radio messages (owner 2026-10-29), on a spare radio: all words, lost if not locked in time, read with the dials.
+        var radio = new GameObject("Playtest radio").AddComponent<CommsSystem>();
+        radio.UseRealSignals();
+        string report = CommsSystem.Report("GARUDA", 45, 225, 24);
+        Check("A radio message is all words", report == "GARUDA HEADING SOUTHWEST SPEED TWENTY FIVE BEARING NORTHEAST", report);
+        radio.Receive(report, 100);
+        Check("A message not locked in time is lost", !radio.Waiting(100) && radio.air == CommsSystem.Air.Lost, radio.air.ToString());
+        radio.Receive(report, 100);
+        radio.chan = radio.signalChan; radio.SetFreq(radio.signalFreq); radio.LockSignal();
+        bool heldByLock = radio.Waiting(999);
+        for (int i = 0; i < radio.dials.Length; i++) while (radio.air != CommsSystem.Air.Read && radio.dials[i] != radio.cipherKey[i]) radio.StepDial(i, false);
+        Check("Locked, it stays on the air; the four dials decode it", heldByLock && radio.air == CommsSystem.Air.Read && radio.messagesRead == 1 && radio.Plaintext == report, radio.Plaintext);
+        UnityEngine.Object.Destroy(radio.gameObject);
+        var edgeWords =GameObject.Find("Board").transform.Find("Tactical Board/AlarmStrip/Words").GetComponent<TMPro.TMP_Text>();
         var edgeCount = GameObject.Find("Board").transform.Find("Tactical Board/AlarmStrip/Count").GetComponent<TMPro.TMP_Text>();
         s.nav.PlaceAt(s.ArenaHalfW - 1250, 0, 90); s.nav.vx = s.nav.vy = 0;
         if (!Click("pause", null, "PAUSE/RUN key")) yield break;
@@ -1677,7 +1797,7 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => board.MissionSeconds > edgeAt);
         Check("1,250 km inside the east edge: APPROACHING THE EDGE OF THE BATTLE SPACE", edgeWords.gameObject.activeInHierarchy && edgeWords.text == "APPROACHING THE EDGE OF THE BATTLE SPACE",
               "\"" + (edgeWords.gameObject.activeInHierarchy ? edgeWords.text : "") + "\"");
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         s.nav.PlaceAt(s.ArenaHalfW + 100, 0, 90); s.nav.vx = s.nav.vy = 0; // just outside, at x10
         yield return (Func<bool>)(() => s.outsideFor >= 0f);
         Check("Just outside at x10: the rate drops to x1; EXITING THE BATTLE SPACE — TURN BACK, the count at 30",
@@ -1687,7 +1807,7 @@ public static class PlaytestRunner
         Check("The count goes down", edgeCount.text == Mathf.CeilToInt(s.arenaReturnSeconds - s.outsideFor).ToString() && int.Parse(edgeCount.text) < 30, "count " + edgeCount.text);
 
         //     x10 again: at 0 our ship is lost. SHIP LOST, LEFT THE BATTLE SPACE.
-        if (!Click("rate", "10", "x10 rate key")) yield break;
+        board.Click("rate", "10");
         yield return (Func<bool>)(() => quest.Over);
         yield return (Func<bool>)(() => endPanel.Showing);
         Check("Lost at the edge: SHIP LOST, LEFT THE BATTLE SPACE, our ship LOST",
@@ -1704,6 +1824,11 @@ public static class PlaytestRunner
         yield return 1.5f;
         board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
         s = board.State;
+        WrittenNumbers(); // a fresh board: fresh copies of the stats files
+        UnityEngine.Object.FindAnyObjectByType<TacticalWorld>().solid = false;
+        yield return (Func<bool>)(() => board.GetComponentInChildren<PlotPanel>(true).GridFormed);
+        yield return 0.3f;
+        CloseBubble();
         quest = UnityEngine.Object.FindAnyObjectByType<QuestSystem>();
         endPanel = board.GetComponentInChildren<EndScreenPanel>(true);
         freshBrain = GameObject.Find("World").GetComponentInChildren<EnemyBrain>();
@@ -1768,6 +1893,76 @@ public static class PlaytestRunner
     /// The plot's capture surface must be on top there.</summary>
     // The plot's scale, board px per 1,000 units at x1. Owner 2026-10-29: x1 now shows 50-unit squares, 12.5 times
     // closer than the x1 most checks were written at (60.9 px per 1,000); X1 is the zoom that shows what that x1 did.
+    // The checks were written for these numbers. The owner tunes the ships' files freely, so a run plays by these on the
+    // ships' running copies (Ship.Stats); the files are not touched.
+    // Step 130: the checks were written for the old clock, speeds, reaches and map, so a run still plays by those.
+    static void WrittenNumbers()
+    {
+        foreach (var ship in UnityEngine.Object.FindObjectsByType<Ship>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            var standard = new WeaponSystem.Stats();
+            var standardHangar = new HangarSystem.Stats();
+            var standardNav = new NavSystem.Stats();
+            var st = ship.Stats;
+            st.weapons.mounts = standard.mounts;
+            st.weapons.hardPoints = standard.hardPoints;
+            st.weapons.slugSpeedUnits = standard.slugSpeedUnits;
+            st.weapons.missileSpeedUnits = standard.missileSpeedUnits;
+            st.weapons.missileTurnDegPerS = standard.missileTurnDegPerS;
+            st.weapons.manualStartRangeUnits = standard.manualStartRangeUnits;
+            st.weapons.spdStep = standard.spdStep;
+            st.sensors.senRangeBaseUnits = 12000f; st.sensors.senRangePerStepUnits = 3600f; st.sensors.visualRangeUnits = 10000f;
+            st.hangar.fighterSpeedUnits = standardHangar.fighterSpeedUnits;
+            st.hangar.boatSpeedUnits = standardHangar.boatSpeedUnits;
+            st.hangar.boatRangeUnits = standardHangar.boatRangeUnits;
+            double top = st.shipClass.StartsWith("Garuda") ? 8.75 : st.shipClass.StartsWith("Naga") ? 15 : 12.5;
+            st.navigation.topSpeedUnits = top;
+            st.navigation.baseSpeedUnits = top / 5;
+            st.navigation.accelUnits = top * 0.0174;
+            st.navigation.brakeUnits = top * 0.0326;
+            st.navigation.baseAccelUnits = st.navigation.accelUnits; // the run's numbers don't change with ENG; section 25e tests that
+            st.navigation.baseTurnRate = st.navigation.turnRate;
+            st.navigation.driftKeepPerS = standardNav.driftKeepPerS;
+            st.navigation.dragKeepPerS = standardNav.dragKeepPerS;
+            ship.GetComponent<WeaponSystem>().KeepSelection();
+        }
+        var board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
+        Written(board, "gameSecondsAtX1", 1f / 0.42f);
+        Written(board, "zoomOutLimit", 0.1f);
+        var s = board.State;
+        s.arenaWidthUnits = s.arenaHeightUnits = 60000;
+        s.arenaWarnUnits = 2500;
+        s.scopeFitUnits = 3750f;
+        foreach (var brain in UnityEngine.Object.FindObjectsByType<EnemyBrain>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            Written(brain, "cruiseUnits", 5.5f);
+            Written(brain, "legMinUnits", 12000f);
+            Written(brain, "searchUnits", 6000f);
+            Written(brain, "driftSeconds", 900f);
+            Written(brain, "aimErrorDeg", 0.4f);
+            Written(brain, "avoidLookUnits", 600f);
+        }
+        var quest = UnityEngine.Object.FindAnyObjectByType<QuestSystem>();
+        if (!quest) return;
+        Written(quest, "exitInsetUnits", 5000f);
+        Written(quest, "exitReachUnits", 2000f);
+        Written(quest, "arriveInsetUnits", 2000f);
+        Written(quest, "briefErrorUnits", 5000f);
+    }
+
+    static void Written(object on, string field, float value) => on.GetType().GetField(field, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(on, value);
+
+    static GameObject Bubble()
+    {
+        var quest = UnityEngine.Object.FindAnyObjectByType<QuestSystem>();
+        return quest ? typeof(QuestSystem).GetField("helpBubble", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(quest) as GameObject : null;
+    }
+    static bool BubbleUp() { var b = Bubble(); return b && b.activeSelf; }
+    static void CloseBubble() { var b = Bubble(); if (b) b.SetActive(false); }
+
+    // The MAG setting that makes this ship fit the targeting computer's brackets.
+    static double FitZoom(ShipState s, ShipState.Track t) => System.Math.Max(1, System.Math.Min(8, System.Math.Round(t.rangeUnits / s.scopeFitUnits, 1)));
+
     static float PlotScale => UnityEngine.Object.FindAnyObjectByType<PlotGrid>().PxPer1000Units;
     static double X1 => 60.9 / PlotScale;
 
