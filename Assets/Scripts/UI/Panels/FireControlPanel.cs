@@ -205,7 +205,7 @@ public class FireControlPanel : Panel
         Paint(solLamp, solInk); Paint(solGlow, solInk); Show(solGlow, sol.set || tid != null);
         bool manual = sol.set && sol.manual; // Step 47: dialled by hand from the plot
         if (trackId) { trackId.text = manual ? (sol.fromPlot ? "PLOT" : "MANUAL") : tid ?? "NO TRACK"; Paint(trackId, manual || tid != null ? data : stencil); }
-        if (trackSrc) trackSrc.text = manual ? (sol.fromPlot ? "FROM YOUR PLOT" : "DIALLED BY HAND") : tid != null ? "FROM SENSOR LOCK" : "NOT IDENTIFIED ON SENSORS";
+        if (trackSrc) trackSrc.text = manual ? (sol.fromPlot ? "FROM YOUR PLOT" : "DIALLED BY HAND") : s.weapons.LockedOn(s.weapons.target) ? s.weapons.LockSource : tid != null ? "SCANNED, NOT LOCKED" : "NOT IDENTIFIED ON SENSORS";
         Color valInk = sol.set ? data : wellStencil;
         if (solRange) { solRange.text = sol.set ? sol.rangeUnits.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) : "—"; Paint(solRange, valInk); }
         if (solBrg) { solBrg.text = (sol.set ? (sol.brg > 0 ? "+" : "") + sol.brg : "—") + "°"; Paint(solBrg, valInk); }
@@ -283,9 +283,9 @@ public class FireControlPanel : Panel
             else if (s.weapons.fired) t = s.weapons.Rounds.Count > 0 || s.weapons.shotReport == null ? "ROUNDS AWAY" : s.weapons.shotReport; // Step 48: then HIT · … or MISS
             else if (s.weapons.AllSet) t = "SOLUTION LOCKED — MOUNT READY";
             else if (tgt == null && !manual) t = "NO TARGET DESIGNATED";
-            else if (tid == null && !manual) t = "NO TRACKING ID — NOT IDENTIFIED";
+            else if (tid == null && !manual) t = "NO LOCK — USE THE TARGETING COMPUTER";
             else if (!s.damage.BriOk) t = "BRIDGE DAMAGED — PLOT COMPUTER OFFLINE";
-            else if (!sol.set) t = "NO FIRING SOLUTION";
+            else if (!sol.set) t = "NO LOCK — USE THE TARGETING COMPUTER";
             else if (!s.orders.WeaponsReleased) t = "WEAPONS NOT RELEASED — CONDITION 2 REQUIRED";
             else if (!s.damage.MagOk) t = "MAGAZINE DAMAGED — NO ROUNDS STRUCK UP";
             else if (s.weapons.sys == "PD" && !s.weapons.loaders) t = "PDC AUTOLOADERS OFF";

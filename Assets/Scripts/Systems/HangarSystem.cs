@@ -294,6 +294,7 @@ public class HangarSystem : MonoBehaviour
         if (!ship.damage.HgrOk) return "HANGAR BAY DAMAGED \u2014 CANNOT SPOT CRAFT";
         if (SquadReady(q) == 0) return "NO CRAFT READY";
         if (q.key == "ih" && marines < 1) return "NO MARINES ABOARD"; // Step 60
+        if (q.key == "ih" && !ship.Scanned(ship.TrackOf(ship.weapons.target))) return "TARGET NOT SCANNED"; // owner 2026-11-01: no scan, no boarding
         if (LaunchDev > launchConeDeg) return "BEARING OUTSIDE LAUNCH CONE";
         return null;
     }

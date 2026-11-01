@@ -51,7 +51,6 @@ public class ShipState
     };
 
     [Tooltip("Classified by the periscope (cls). Identified is on the SensorSystem.")]
-    public System.Collections.Generic.List<string> classified = new System.Collections.Generic.List<string> { "bc1" };
 
     /// <summary>JS Math.round: halves round up. Mathf.RoundToInt rounds halves to even
     /// (4.5 → 4), which differs from the board at exact halves (Step 33c verification).</summary>
@@ -271,7 +270,6 @@ public class ShipState
     {
         tracks = System.Array.FindAll(tracks, t => keys.Contains(t.key));
         identified.RemoveAll(k => !keys.Contains(k));
-        classified.RemoveAll(k => !keys.Contains(k));
     }
     // ---- periscope -----------------------------------------------------------------------
 
@@ -285,9 +283,8 @@ public class ShipState
     public Track ScopeSubject(bool scopeDown) { foreach (var t in tracks) if (Heard(t) && ScopeOn(t, scopeDown)) return t; return null; }
     /// <summary>Step 109: how big a ship looks in the sight against the brackets (1 fills them). Zoom in, or close in, to grow it.</summary>
     public double ScopeFill(Track t) => scopeZoom * scopeFitUnits / System.Math.Max(1.0, t.rangeUnits);
-    /// <summary>Step 109 (owner 2026-10-29): CLASS needs the ship to fill the brackets. At 1x a close ship may spill out: the MAG goes no lower.</summary>
+    /// <summary>Step 109 (owner 2026-10-29): a lock needs the ship to fill the brackets. At 1x a close ship may spill out: the MAG goes no lower.</summary>
     public bool ScopeFits(Track t) { double f = ScopeFill(t); return f >= 1 - scopeFitSlack && (f <= 1 + scopeFitSlack || scopeZoom <= 1); }
-    public void Classify(bool scopeDown) { var t = ScopeSubject(scopeDown); if (t != null && ScopeFits(t) && !classified.Contains(t.key)) classified.Add(t.key); }
 
     /// <summary>moveSlew: bearing = start + dx x 0.34, wrapped; ignores the first 3 px. Any slew
     /// releases BEARING and ARM (not the rungs after them), rests the lever and clears fired.</summary>
@@ -296,6 +293,7 @@ public class ShipState
         if (System.Math.Abs(dx) < slewDeadPx) return;
         scopeBrg = ((brg0 + dx * slewDegPerPx) % 360 + 360) % 360;
         slewDx = dx;
+        if (weapons.Locked) return; // owner 2026-11-01: a lock stays on while the periscope moves
         weapons.sw[2] = false; weapons.sw[3] = false;
         weapons.fireLever = 0f;
         weapons.fired = false;

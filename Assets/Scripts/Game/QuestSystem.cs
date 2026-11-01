@@ -156,7 +156,7 @@ public class QuestSystem : MonoBehaviour
     {
         if (Goal == MissionGoal.HitUnseen)
         {
-            if (scanned) End(QuestStage.MissionFailed, MissionFailReason.Scanned);
+            if (scanned || us.weapons.Locked) End(QuestStage.MissionFailed, MissionFailReason.Scanned); // owner 2026-11-01: a lock is as loud as a scan
             else if (us.weapons.lastShotHit) End(QuestStage.MissionComplete, MissionFailReason.None);
             return;
         }

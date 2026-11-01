@@ -240,7 +240,7 @@ public class PlotPanel : Panel
                 if (past <= 0f || past > step) continue;
                 bool scanned = State.sensors.identified.Contains(t.key);
                 if (State.sensors.Heard(t) || State.sensors.ConeCovers(t)) State.sensors.See(t); // Step 75: out of sight, the plot shows it here until the next pass
-                if (State.sensors.ConeCovers(t)) { Controls.SweepTag(); if (!scanned) { State.sensors.identified.Add(t.key); Refresh(); } continue; }
+                if (State.sensors.ConeCovers(t)) { Controls.SweepTag(); State.sensors.NoteScan(t); if (!scanned) Refresh(); continue; }
                 if (!scanned && State.sensors.Heard(t)) { State.sensors.LayBearing(t, Controls.MissionSeconds); Refresh(); }
             }
             sweep.rectTransform.localEulerAngles = new Vector3(0f, 0f, -sweepDeg); // clockwise on screen

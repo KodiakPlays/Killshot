@@ -1387,15 +1387,15 @@ public static class PlaytestRunner
         //     Step 109 (owner 2026-10-29): the sight shows the Garuda's model; CLASS works only once it fills the brackets.
         var shipPic = typeof(PeriscopePanel).GetField("shipPicture", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(scope) as UnityEngine.UI.RawImage;
         s.scopeZoom = 8; // stand-in for the MAG knob: zoomed right in, the ship spills out of the brackets
-        if (!Click("scope.classify", null, "CLASS key, zoomed in too far")) yield break;
-        yield return 0.3f;
-        Check("The sight shows the Garuda; zoomed in too far it spills out of the brackets, and CLASS does nothing", shipPic && shipPic.enabled && shipPic.texture && !s.classified.Contains("t07"),
+        s.weapons.DropLock();
+        yield return 1f;
+        Check("The sight shows the Garuda; zoomed in too far it spills out of the brackets, and the lock bar stays empty", shipPic && shipPic.enabled && shipPic.texture && s.weapons.lockFill == 0f,
               "picture " + (shipPic && shipPic.enabled) + ", fill " + s.ScopeFill(t07).ToString("0.00") + ", " + t07.rangeUnits.ToString("N0") + " km");
         s.scopeZoom = System.Math.Max(1, System.Math.Min(8, System.Math.Round(t07.rangeUnits / s.scopeFitUnits, 1))); // stand-in: the MAG knob to fill the brackets
         yield return 0.3f;
         if (!Click("scope.classify", null, "CLASS key")) yield break;
         yield return 0.6f;
-        Check("Classified and in sight: GARUDA shows on the plot as its own ship model, in place of its dot", s.classified.Contains("t07") && s.sensors.InSight(t07) && plotPanel.ContactShipShown && subjName.text == "GARUDA · CRUISER",
+        Check("Locked and in sight: GARUDA shows on the plot as its own ship model, in place of its dot", s.weapons.Locked && s.sensors.InSight(t07) && plotPanel.ContactShipShown && subjName.text == "GARUDA · CRUISER",
               "\"" + subjName.text + "\", " + t07.rangeUnits.ToString("N0") + " km, picture " + plotPanel.ContactShipShown);
         float sightWas = s.sensors.stats.visualRangeUnits;
         s.sensors.stats.visualRangeUnits = t07.rangeUnits - 1000f; // stand-in for drawing off out of sight

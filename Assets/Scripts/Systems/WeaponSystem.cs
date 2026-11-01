@@ -36,6 +36,12 @@ public class WeaponSystem : MonoBehaviour
             new Mount { id = "PDB", arc = 270, halfArc = 90, rangeUnits = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
             new Mount { id = "VLS", arc = 0, halfArc = 180, rangeUnits = 35000, label = "MISSILE VLS", shortName = "VLS", ammo = 8 },
         };
+        [Tooltip("Game seconds the targeting computer takes to lock on a ship kept in its sights at the right zoom (owner 2026-11-01).")]
+        public float lockSeconds = 10f;
+        [Tooltip("Game seconds a part-filled lock bar takes to fall back to nothing once the ship leaves the sights.")]
+        public float lockFallSeconds = 5f;
+        [Tooltip("Game seconds a lock stays on once the bar is full. Then it drops, with its firing solution and the switches, and the bar starts again (owner 2026-11-01: locks are short).")]
+        public float lockHoldSeconds = 10f;
         [Tooltip("A knob turned with no solution starts one here, on the periscope's bearing at speed 0 (owner 2026-10-23).")]
         [FormerlySerializedAs("manualStartRangeKm")] public float manualStartRangeUnits = 10000f;
         [Tooltip("Missiles launched together (owner 2026-10-23: set here until the design's salvo stepper has art).")]
@@ -101,9 +107,13 @@ public class WeaponSystem : MonoBehaviour
         public bool manual;
         [Tooltip("Owner 2026-10-29: TRACK made it from the plot (the newest POINT, and the newest POINT-to-POINT RULER).")]
         public bool fromPlot;
-        [Tooltip("Step 52: the target's course is known (from a plotted track, or TRACK's lock), so the shot is led.")]
+        [Tooltip("Owner 2026-11-01: the targeting computer's lock made it, and keeps it up to date.")]
+        public bool locked;
+        [Tooltip("Step 52: the target's course is known (from a plotted track or a scan), so the shot is led.")]
         public bool hasCourse;
         public float course;
+        [Tooltip("Owner 2026-11-01: on a lock, where its course came from: SCAN, PLOT, or empty with none.")]
+        public string courseFrom;
         [Tooltip("Where the target was (world units) and when (mission seconds) as the solution was set; the fire computer reckons it forward.")]
         public double wx, wy;
         public float t;
@@ -172,7 +182,7 @@ public class WeaponSystem : MonoBehaviour
     public string TrackIdFor()
     {
         var t = ship.TrackOf(target);
-        if (t == null || !ship.sensors.identified.Contains(t.key)) return null;
+        if (t == null || !(ship.sensors.identified.Contains(t.key) || LockedOn(t.key))) return null;
         return "TK-" + t.bearing.ToString("000") + "-" + t.key.ToUpperInvariant();
     }
     /// <summary>offBearing: target bearing minus periscope bearing, wrapped to ±180.</summary>
@@ -181,6 +191,7 @@ public class WeaponSystem : MonoBehaviour
     {
         get
         {
+            if (LockedOn(target)) return true; // owner 2026-11-01: the lock is still on
             // a hand-dialled solution aims at a point: BEARING wants the periscope on the dialled bearing
             if (Sol.set && Sol.manual) return ShipState.AngDiffD(ship.nav.heading + Sol.brg, ship.scopeBrg) <= ship.onBearingDeg;
             var o = OffBearing(); return o.HasValue && System.Math.Abs(o.Value) <= ship.onBearingDeg;
@@ -232,18 +243,7 @@ public class WeaponSystem : MonoBehaviour
     /// was, the newest POINT-to-POINT RULER its course and speed, reckoned forward to now. Clears the ladder.</summary>
     public void ComputeSol()
     {
-        if (!ship.damage.BriOk) return;
-        var t = ScopeTarget() ?? ship.TrackOf(target);
-        if (t != null && !t.wreck && ship.sensors.identified.Contains(t.key))
-        {
-            if (target != t.key) Retarget(t.key); // the other weapons' solutions were worked out on the old target
-            int rel = ((t.bearing - ship.nav.heading + 540) % 360) - 180;
-            // Step 52: an active lock knows its true course and speed, and where it is now, so TRACK's shot is led
-            sol[SysIndex] = new Solution { set = true, rangeUnits = t.rangeUnits, brg = rel, spd = t.speed,
-                hasCourse = t.speed > 0.01f, course = (float)t.course, wx = t.worldX, wy = t.worldY, t = ship.missionNow };
-            ClearSwitches(); fired = false;
-            return;
-        }
+        if (!ship.damage.BriOk || Locked) return; // owner 2026-11-01: a lock keeps its own solution; TRACK is for a shot from the plot
         ShipState.Mark p = null;
         foreach (var m in ship.marks) if (m.kind == "point" && (p == null || m.id > p.id)) p = m;
         if (p == null) return;
@@ -263,23 +263,82 @@ public class WeaponSystem : MonoBehaviour
         ClearSwitches(); fired = false;
     }
 
-    // The scanned enemy the periscope is on (within onBearingDeg), nearest its axis, or null.
-    ShipState.Track ScopeTarget()
+    // ---- the targeting computer's lock (owner 2026-11-01) ---------------------------------------
+
+    /// <summary>The ship being locked on, or locked; and how full the lock bar is, 0 to 1. While it is set our signal
+    /// rises as ACTIVE SCAN's does.</summary>
+    [System.NonSerialized] public string lockKey;
+    [System.NonSerialized] public float lockFill;
+    /// <summary>Game seconds left on the lock (owner 2026-11-01: locks are short).</summary>
+    [System.NonSerialized] public float lockLeft;
+    public bool Locked => lockKey != null && lockFill >= 1f;
+    public bool LockedOn(string key) => Locked && lockKey == key;
+    /// <summary>The lock bar as the sight shows it: filling as the lock comes on, then running down as it runs out.</summary>
+    public float LockBar => Locked ? Mathf.Clamp01(lockLeft / Mathf.Max(0.01f, stats.lockHoldSeconds)) : lockFill;
+    /// <summary>What fire control says of a lock: the seconds left, and where the shot's course comes from.</summary>
+    public string LockSource => "LOCK " + Mathf.CeilToInt(lockLeft) + " S · " + (Sol.courseFrom != null ? Sol.courseFrom + " COURSE" : "NO COURSE");
+
+    /// <summary>Each tick. With a ship in the sights at the right zoom the bar fills; out of them it falls back. Once
+    /// full the ship is locked: the target, tracked on the plot, its firing solution kept up to date, for
+    /// lockHoldSeconds, or until DRADIS and our eyes lose it or another ship is locked. A lock works on an unscanned
+    /// ship, but it knows only where the ship is (<see cref="KeepSolution"/>).</summary>
+    public void TickLock(double dt, bool scopeDown)
     {
-        ShipState.Track best = null;
-        double bestOff = ship.onBearingDeg;
-        foreach (var t in ship.tracks)
+        var seen = ship.ScopeSubject(scopeDown);
+        bool fits = seen != null && ship.ScopeFits(seen);
+        if (Locked && !(fits && seen.key != lockKey))
         {
-            if (t.own || !t.hostile || t.wreck || !ship.sensors.identified.Contains(t.key)) continue;
-            double off = ShipState.AngDiffD(t.bearing, ship.scopeBrg);
-            if (off <= bestOff) { bestOff = off; best = t; }
+            var held = ship.TrackOf(lockKey);
+            lockLeft -= (float)dt;
+            if (lockLeft <= 0f || held == null || held.wreck || !(ship.sensors.Heard(held) || ship.sensors.InSight(held))) DropLock();
+            else KeepSolution(held);
+            return;
         }
-        return best;
+        if (fits)
+        {
+            if (lockKey != seen.key) { DropLock(); lockKey = seen.key; }
+            lockFill = Mathf.Min(1f, lockFill + (float)dt / Mathf.Max(0.01f, stats.lockSeconds));
+            if (!Locked) return;
+            lockLeft = stats.lockHoldSeconds;
+            if (target != seen.key) Retarget(seen.key);
+            KeepSolution(seen);
+            return;
+        }
+        if (lockKey == null) return;
+        lockFill = Mathf.Max(0f, lockFill - (float)dt / Mathf.Max(0.01f, stats.lockFallSeconds));
+        if (lockFill <= 0f) lockKey = null;
+    }
+
+    /// <summary>The lock is gone: its solutions and the switches go with it.</summary>
+    public void DropLock()
+    {
+        bool had = Locked;
+        lockKey = null; lockFill = 0f; lockLeft = 0f;
+        if (!had) return;
+        for (int i = 0; i < sol.Length; i++) if (sol[i].locked) sol[i] = new Solution();
+        ClearSwitches();
+    }
+
+    // The railgun and missile solutions, from the locked ship as it is now. A lock knows where it is. Where it is going is
+    // the newest of a scan and a plotted track (owner 2026-11-01); with neither the shot goes where the ship is now
+    void KeepSolution(ShipState.Track t)
+    {
+        int rel = ((t.bearing - ship.nav.heading + 540) % 360) - 180;
+        var plotted = new Solution();
+        float plotAt = ApplyTrack(plotted);
+        var scan = ship.sensors.ScanOf(t.key);
+        bool scanned = scan != null && scan.t >= plotAt;
+        for (int i = 0; i < systems.Length && i < sol.Length; i++)
+            if (systems[i].id != "PD")
+                sol[i] = new Solution { set = true, locked = true, rangeUnits = t.rangeUnits, brg = rel, wx = t.worldX, wy = t.worldY, t = ship.missionNow,
+                    spd = scanned ? scan.speed : plotted.spd, hasCourse = scanned ? scan.speed > 0.01f : plotted.hasCourse,
+                    course = scanned ? scan.course : plotted.course, courseFrom = scanned ? "SCAN" : plotted.hasCourse ? "PLOT" : null };
     }
 
     /// <summary>nudgeSol: RNG ±100 units, BRG ±1° (±180), SPD ±stats.spdStep (2 dp; the design had 0.05, x5 in Step 63); clears the ladder.</summary>
     public void NudgeSol(string field, int d)
     {
+        if (Locked) return; // the lock keeps the dials
         var cur = Sol;
         double abs; // the bearing to the point now, degrees from north: exact, as BRG shows it rounded to a degree
         if (!cur.set)
@@ -370,22 +429,23 @@ public class WeaponSystem : MonoBehaviour
     }
 
     /// <summary>Step 53 (GDD p.45): missiles need a locked target — identified by an active scan — and a cell left.</summary>
-    public bool MissileReady { get { var t = ship.TrackOf(target); return t != null && !t.wreck && ship.sensors.identified.Contains(t.key) && vlsCells > 0; } }
+    public bool MissileReady { get { var t = ship.TrackOf(target); return t != null && !t.wreck && (ship.sensors.identified.Contains(t.key) || LockedOn(t.key)) && vlsCells > 0; } }
 
     // ---- leading a moving target (Step 52, owner 2026-10-23) ---------------------------------
 
     /// <summary>The latest plotted track (a RULER from one POINT to another) gives the solution its course,
-    /// and its speed into SPD.</summary>
-    public void ApplyTrack(Solution cur)
+    /// and its speed into SPD. Returns when that track ends, mission seconds; -1 with no track.</summary>
+    public float ApplyTrack(Solution cur)
     {
         ShipState.Mark latest = null;
         ShipState.Mark f, g; double crs, spd;
         foreach (var m in ship.marks) if (m.kind == "ruler" && (latest == null || m.id > latest.id) && ship.TrackLeg(m, out f, out g, out crs, out spd)) latest = m;
-        if (latest == null) return;
+        if (latest == null) return -1f;
         ship.TrackLeg(latest, out f, out g, out crs, out spd);
         cur.hasCourse = true;
         cur.course = (float)crs;
         cur.spd = (float)System.Math.Round(spd, 2, System.MidpointRounding.AwayFromZero);
+        return (float)g.t;
     }
 
     // the dialled range, at a bearing from north, as a world point, now. The bearing is exact: built from the rounded

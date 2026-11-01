@@ -99,17 +99,32 @@ public class SensorSystem : MonoBehaviour
     public void ConeWiden() { coneArc = Mathf.Min(stats.coneArcMax, coneArc + stats.coneArcStep); }
     public void ConeNarrow() { coneArc = Mathf.Max(stats.coneArcMin, coneArc - stats.coneArcStep); }
 
-    /// <summary>resolveLit: on releasing the cone dial, every contact inside the cone is identified.</summary>
+    /// <summary>resolveLit: on releasing the cone dial, every contact inside the cone is scanned.</summary>
     public void ResolveLit()
     {
-        foreach (var t in ship.tracks) if (ConeCovers(t) && !identified.Contains(t.key)) identified.Add(t.key);
+        foreach (var t in ship.tracks) if (ConeCovers(t)) NoteScan(t);
     }
 
-    /// <summary>identify: a contact-board row identifies its contact if the cone covers it and it is heard.</summary>
+    /// <summary>identify: a contact-board row scans its contact if the cone covers it and it is heard.</summary>
     public void Identify(string key)
     {
         foreach (var t in ship.tracks)
-            if (t.key == key && ConeCovers(t) && Heard(t) && !identified.Contains(key)) identified.Add(key);
+            if (t.key == key && ConeCovers(t) && Heard(t)) NoteScan(t);
+    }
+
+    /// <summary>What a scan read (owner 2026-11-01: a scan helps the shot): a ship's course and speed at that moment, and
+    /// when. It goes out of date if the ship turns.</summary>
+    public class ScanFix { public float course, speed, t; }
+    [System.NonSerialized] private Dictionary<string, ScanFix> scanFixes;
+    public Dictionary<string, ScanFix> ScanFixes => scanFixes ?? (scanFixes = new Dictionary<string, ScanFix>());
+    /// <summary>The last scan of a contact still identified, or null.</summary>
+    public ScanFix ScanOf(string key) { ScanFix f; return identified.Contains(key) && ScanFixes.TryGetValue(key, out f) ? f : null; }
+
+    /// <summary>A scan reaches a contact: it is identified, and its course and speed now are noted.</summary>
+    public void NoteScan(ShipState.Track t)
+    {
+        if (!identified.Contains(t.key)) identified.Add(t.key);
+        ScanFixes[t.key] = new ScanFix { course = (float)t.course, speed = t.speed, t = ship.missionNow };
     }
 
     /// <summary>Contacts first heard or identified since the alarm strip was last acknowledged
@@ -177,7 +192,8 @@ public class SensorSystem : MonoBehaviour
     {
         get
         {
-            float t = active ? stats.activeScanSignal : 0f;
+            // owner 2026-11-01: a lock is as loud as ACTIVE SCAN: quick, but it can be heard; plotting is slow and silent
+            float t = active || (ship.weapons != null && ship.weapons.lockKey != null) ? stats.activeScanSignal : 0f;
             for (int i = 0; i < ship.power.buses.Length; i++) t += ship.power.buses[i].fill * ship.power.stats.busSignalPerUnit[i];
             return Mathf.Clamp(t, 0f, 100f);
         }

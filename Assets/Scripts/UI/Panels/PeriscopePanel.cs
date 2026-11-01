@@ -23,11 +23,13 @@ public class PeriscopePanel : Panel
     [SerializeField] private TMP_Text offAxis, zoomLabel, bearing, slewLabel, subjectName, subjectClass;
     [SerializeField] private BoardManager.Dial magPointer;
 
-    [Header("Target brackets — move with tgtX = centre + clamp(off x 5.2, ±150) px")]
+    [Header("Target brackets (owner 2026-11-01): a box at the sight's centre; zoom until the ship fits it")]
     [SerializeField] private RectTransform[] brackets;
-    [Tooltip("The name under the brackets (renderVals targetName).")]
+    [Tooltip("The name under the brackets: the ship in the sight.")]
     [SerializeField] private TMP_Text targetName;
-    [SerializeField] private float bracketHomeX = 887.2f, sightCentreX = 960f, pxPerDeg = 5.2f, maxShift = 150f, visibleDeg = 27f;
+    [Tooltip("Under the name, what to do: SLEW LEFT, ZOOM IN, ZOOM OUT, LOCKING, LOCKED (owner 2026-11-01).")]
+    [SerializeField] private TMP_Text lockHint;
+    [SerializeField] private float pxPerDeg = 5.2f, maxShift = 150f, visibleDeg = 27f;
 
     [Header("The ship in the sight (Step 109): the plot's top-down picture of a contact, turned so up is away from us")]
     [Tooltip("Under the sight's mask, anchored at its centre. Needs the BoardLinearImage material, as the plot's: the line art comes on black, and the material keys the black out.")]
@@ -37,15 +39,15 @@ public class PeriscopePanel : Panel
     [SerializeField] private Color shipInk = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
     private ShipView[] views;
 
-    [Header("Convergence bar (scopeConv), left-anchored")]
+    [Header("The lock bar (owner 2026-11-01; was the design's convergence bar, which only showed range), left-anchored")]
     [SerializeField] private RectTransform convBar;
     [SerializeField] private float convLeft = 777f, convWidth = 366f;
     [Tooltip("The periscope group's origin in board x.")]
     [SerializeField] private float parentLeft = 750f;
 
     [Header("Lamps")]
-    [SerializeField] private Image slewLamp, classLamp;
-    [SerializeField] private Graphic slewGlow, classGlow;
+    [SerializeField] private Image slewLamp;
+    [SerializeField] private Graphic slewGlow;
 
     Color nominal => Palette.nominal;
     Color caution => Palette.caution;
@@ -54,7 +56,9 @@ public class PeriscopePanel : Panel
     Color lampOffPanel => Palette.lampOffPanel;
 
     private double slewBrg0, slewX0, magZ0, magX0;
-    private float[] bracketX;
+    private Graphic[] bracketInk;
+    private Image lockBarInk;
+    private bool fitWas, lockedWas;
 
     bool ScopeDown => Controls.Motion && Controls.Motion.ScopeDown;
 
@@ -63,7 +67,6 @@ public class PeriscopePanel : Panel
         switch (action)
         {
             case "scope.slewTo": State.SlewTo(); return true;
-            case "scope.classify": State.Classify(ScopeDown); return true;
         }
         return false;
     }
@@ -96,6 +99,17 @@ public class PeriscopePanel : Panel
         return true;
     }
 
+    // What the sight tells you to do (owner 2026-11-01).
+    static string Hint(ShipState s, ShipState.Track seen, double off, bool fits)
+    {
+        if (s.weapons.Locked) { var t = s.TrackOf(s.weapons.lockKey); return (t != null ? "LOCKED · " + s.NameOf(t) : "LOCKED") + " · " + Mathf.CeilToInt(s.weapons.lockLeft) + " S"; }
+        if (seen == null) return "";
+        if (!s.ScopeOn(seen, true)) return off > 0 ? "SLEW RIGHT" : "SLEW LEFT";
+        if (fits) return "LOCKING " + ShipState.JsRound(s.weapons.lockFill * 100f) + "%";
+        if (s.ScopeFill(seen) >= 1) return "ZOOM OUT";
+        return s.scopeZoom >= 8 ? "TOO FAR" : "ZOOM IN";
+    }
+
     public override void Refresh()
     {
         var s = State;
@@ -123,37 +137,42 @@ public class PeriscopePanel : Panel
             Paint(slewLabel, s.slewing ? caution : railLegend);
         }
 
-        // target brackets
-        if (bracketX == null || bracketX.Length != brackets.Length)
-        {
-            bracketX = new float[brackets.Length];
-            for (int i = 0; i < brackets.Length; i++) bracketX[i] = brackets[i] ? brackets[i].anchoredPosition.x : 0f;
-        }
-        if (targetName) targetName.text = tgt != null ? s.NameOf(tgt) : "\u2014"; // Step 61: BOGEY until scanned
-        bool visible = off.HasValue && System.Math.Abs(off.Value) < visibleDeg;
-        float x = off.HasValue ? sightCentreX + Mathf.Clamp((float)off.Value * pxPerDeg, -maxShift, maxShift) : sightCentreX - 300f;
+        // the ship in the sight (Step 109, owner 2026-10-29): the heard contact nearest the sight's centre
+        ShipState.Track seen = null; double seenOff = 0;
+        if (down)
+            foreach (var t in s.tracks)
+            {
+                double o = ((t.bearing - s.scopeBrg + 540) % 360) - 180;
+                if (System.Math.Abs(o) >= visibleDeg || (seen != null && System.Math.Abs(o) >= System.Math.Abs(seenOff)) || !s.sensors.Heard(t)) continue;
+                seen = t; seenOff = o;
+            }
+        bool fits = seen != null && s.ScopeOn(seen, down) && s.ScopeFits(seen), locked = s.weapons.Locked;
+
+        // owner 2026-11-01: a box at the sight's centre; the ship fits it at the right zoom, and the lock fills
+        if (bracketInk == null) bracketInk = System.Array.ConvertAll(brackets, b => b ? b.GetComponent<Graphic>() : null);
         for (int i = 0; i < brackets.Length; i++)
         {
-            var b = brackets[i];
-            if (!b) continue;
-            b.gameObject.SetActive(visible);
-            b.anchoredPosition = new Vector2(bracketX[i] + (x - bracketHomeX), b.anchoredPosition.y);
+            if (!brackets[i]) continue;
+            brackets[i].gameObject.SetActive(seen != null);
+            if (bracketInk[i]) Paint(bracketInk[i], seen != null && s.weapons.LockedOn(seen.key) ? nominal : fits ? caution : data);
         }
+        if (targetName) targetName.text = seen != null ? s.NameOf(seen) : "\u2014"; // Step 61: BOGEY until scanned
+        if (lockHint)
+        {
+            lockHint.text = Hint(s, seen, seenOff, fits);
+            Paint(lockHint, locked ? nominal : fits ? caution : data);
+        }
+        if (fits && !fitWas) Controls.LockCue(false);
+        if (locked && !lockedWas) Controls.LockCue(true);
+        if (!locked && lockedWas) Controls.LockLost();
+        fitWas = fits; lockedWas = locked;
 
-        // the ship in the sight (Step 109, owner 2026-10-29): the heard contact nearest the sight's centre, where it is,
-        // as big as zoom and range make it. It fills the brackets when CLASS will work. Seen from above, always level
+        // as big as zoom and range make it. It fills the brackets when the lock can start. Seen from above, always level
         // (owner 2026-10-29): bow to the right if it heads to our right, else to the left.
         if (shipPicture)
         {
-            ShipView view = null; ShipState.Track seen = null; double seenOff = 0;
-            if (down)
-                foreach (var t in s.tracks)
-                {
-                    double o = ((t.bearing - s.scopeBrg + 540) % 360) - 180;
-                    if (System.Math.Abs(o) >= visibleDeg || (seen != null && System.Math.Abs(o) >= System.Math.Abs(seenOff)) || !s.sensors.Heard(t)) continue;
-                    var v = ViewOf(t.key);
-                    if (v && v.Texture) { view = v; seen = t; seenOff = o; }
-                }
+            var view = seen != null ? ViewOf(seen.key) : null;
+            if (view && !view.Texture) view = null;
             shipPicture.enabled = view;
             if (view)
             {
@@ -167,18 +186,19 @@ public class PeriscopePanel : Panel
             }
         }
 
-        // convergence: 100 - range / mount range, 6..96 %, 0 with no target
+        // the lock bar fills as the targeting computer locks on, then runs down as the lock runs out
         if (convBar)
         {
-            float pct = tgt != null ? Mathf.Max(6, Mathf.Min(96, ShipState.JsRound(100 - (tgt.rangeUnits / (double)m.rangeUnits) * 100))) : 0;
-            float w = convWidth * pct / 100f;
+            float w = convWidth * s.weapons.LockBar;
             convBar.sizeDelta = new Vector2(w, convBar.sizeDelta.y);
             convBar.anchoredPosition = new Vector2(convLeft - parentLeft + w / 2f, convBar.anchoredPosition.y);
+            if (!lockBarInk) lockBarInk = convBar.GetComponent<Image>();
+            if (lockBarInk) Paint(lockBarInk, locked ? nominal : caution);
         }
 
-        // subject and lamps
+        // subject and lamp
         var subj = s.ScopeSubject(down);
-        bool cls = subj != null && s.classified.Contains(subj.key);
+        bool cls = subj != null && s.Scanned(subj); // owner 2026-11-01: a scan gives the class
         string klass = subj == null || string.IsNullOrEmpty(subj.klass) ? "UNKN" : subj.klass;
         // Step 61 (owner 2026-10-24: the periscope is the targeting computer): a scanned subject shows its hull in the
         // SUBJECT box's own two lines — name and class, then each face and, through an open one, the room behind it
@@ -190,11 +210,9 @@ public class PeriscopePanel : Panel
         }
         else
         {
-            if (subjectName) subjectName.text = subj == null ? "—" : s.NameOf(subj); // classified or not, BOGEY until scanned
-            if (subjectClass) subjectClass.text = subj == null ? "NO SUBJECT ON BEARING" : cls ? klass + " HULL" : "HULL UNCLASSIFIED";
+            if (subjectName) subjectName.text = subj == null ? "—" : s.NameOf(subj); // BOGEY until scanned
+            if (subjectClass) subjectClass.text = subj == null ? "NO SUBJECT ON BEARING" : cls ? klass + " HULL" : "NOT SCANNED";
         }
-        Color classInk = subj == null ? lampOffPanel : cls ? nominal : caution;
-        Paint(classLamp, classInk); Paint(classGlow, classInk); Show(classGlow, subj != null && (cls || s.ScopeFits(subj))); // Step 109: lit when CLASS will work
         Color slewInk = s.ScopeOnAxis ? nominal : caution;
         Paint(slewLamp, slewInk); Paint(slewGlow, slewInk);
     }

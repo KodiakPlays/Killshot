@@ -39,7 +39,7 @@ public class EndScreenPanel : Panel
         Paint(title, won ? Palette.nominal : Palette.alarm);
         reason.text = won ? name + " " + (quest.Goal == MissionGoal.HitUnseen ? "HIT · NEVER SCANNED" : fate) + (quest.ExitOpen ? " · JUMPED OUT" : "")
                     : quest.FailReason == MissionFailReason.Desertion ? "LEFT THE BATTLE SPACE"
-                    : quest.FailReason == MissionFailReason.Scanned ? name + " SCANNED · THIS LEVEL ALLOWS NO SCANS"
+                    : quest.FailReason == MissionFailReason.Scanned ? name + " SCANNED OR LOCKED · THIS LEVEL ALLOWS NEITHER"
                     : quest.FailReason == MissionFailReason.PrizeDestroyed ? name + " DESTROYED · IT WAS TO BE CAPTURED"
                     : "REACTOR DESTROYED";
         float armour = 0f, most = 0f;

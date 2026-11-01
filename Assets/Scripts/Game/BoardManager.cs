@@ -178,6 +178,12 @@ public class BoardManager : MonoBehaviour
     [Tune("Sound")] [SerializeField] private Tone killSound = new Tone(120f, 0.28f, 0.04f, true);
     [Tooltip("The DRADIS sweep tags a ship: with ACTIVE on, every pass over it (owner 2026-10-25, Step 69).")]
     [Tune("Sound")] [SerializeField] private Tone tagSound = new Tone(880f, 0.05f, 0.02f, false);
+    [Tooltip("A ship comes to fit the targeting computer's brackets (owner 2026-11-01).")]
+    [Tune("Sound")] [SerializeField] private Tone lockFitSound = new Tone(660f, 0.06f, 0.02f, false);
+    [Tooltip("The lock comes on.")]
+    [Tune("Sound")] [SerializeField] private Tone lockedSound = new Tone(990f, 0.2f, 0.03f, false);
+    [Tooltip("A radio message has come in.")]
+    [Tune("Sound")] [SerializeField] private Tone signalSound = new Tone(1320f, 0.3f, 0.025f, false);
     [SerializeField] private AudioSource voice;
     // the prototype's "tab" cue is a view change: the rails, the latches and the station headers
     static readonly string[] TabActions = { "tool", "drawer", "helm", "orders", "scope" };
@@ -341,6 +347,7 @@ public class BoardManager : MonoBehaviour
                 state.damage.TickConditions(TickGameSeconds); // Step 59: fire, vacuum and radiation burn, kill and spread
                 state.hangar.TickLaunch(TickGameSeconds);
                 state.weapons.TickCharge(TickGameSeconds);
+                state.weapons.TickLock(TickGameSeconds, motion && motion.ScopeDown);
                 state.sensors.Tick(TickGameSeconds);
                 // Step 68 (owner 2026-10-25): the alert tone once as our signal crosses the tracked line
                 bool tracked = state.sensors.signal >= state.sensors.stats.signalTrackedAt;
@@ -387,6 +394,10 @@ public class BoardManager : MonoBehaviour
     /// <summary>Step 69: sweep tags so far. Counted apart from <see cref="Sounds"/>, so a tag never stands in for
     /// the click cue a check waits on. The playtest reads it.</summary>
     public int Tags { get; private set; }
+    /// <summary>Owner 2026-11-01: a beep as a ship comes to fit the targeting computer, and another as the lock comes on.</summary>
+    public void LockCue(bool locked) => Play(locked ? lockedSound : lockFitSound, locked ? "locked" : "fit");
+    /// <summary>Owner 2026-11-01: locks are short, and the player hears one drop.</summary>
+    public void LockLost() => Play(refusedSound, "lost");
     public void SweepTag() { Tags++; if (voice) voice.PlayOneShot(tagSound.Clip("tag")); }
 
     void Play(Tone t, string name)

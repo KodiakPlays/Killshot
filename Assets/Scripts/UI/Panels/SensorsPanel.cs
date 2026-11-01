@@ -150,7 +150,7 @@ public class SensorsPanel : Panel
         var s = State;
         var list = new System.Collections.Generic.List<ShipState.Track>();
         foreach (var t in s.tracks)
-            if (!t.own && (s.sensors.Heard(t) || s.sensors.identified.Contains(t.key) || s.classified.Contains(t.key))) list.Add(t);
+            if (!t.own && (s.sensors.Heard(t) || s.sensors.identified.Contains(t.key))) list.Add(t);
         return list;
     }
 
@@ -273,7 +273,7 @@ public class SensorsPanel : Panel
             if (row.bg) row.bg.gameObject.SetActive(used);
             if (!used) { Show(row.dotGlow, false); continue; }
             var t = list[i];
-            bool pinged = s.sensors.identified.Contains(t.key), seen = s.classified.Contains(t.key), audible = s.sensors.Heard(t);
+            bool pinged = s.sensors.identified.Contains(t.key), seen = pinged, audible = s.sensors.Heard(t); // owner 2026-11-01: a scan gives the class
             bool lit = s.sensors.ConeCovers(t) && audible;
             row.name.text = pinged ? t.name : "BOGEY " + t.key.ToUpperInvariant();
             row.brg.text = t.bearing.ToString("000");
