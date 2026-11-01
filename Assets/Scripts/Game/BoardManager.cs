@@ -121,7 +121,7 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private string[] systemDrawers = { "fire control", "sensors", "power", "hangar", "engineering", "comms" };
     [SerializeField] private Image[] systemLamps;
     [Tooltip("Owner 2026-10-29: each key opens its drawer, or closes it if it is out, as its systems key does. "
-           + "Change them in Starwolf → Keys.")]
+           + "Change them on the Keys tab of Starwolf → Tuning.")]
     [Tune("Keys")] [SerializeField] private KeyCode fireControlKey = KeyCode.Alpha1, sensorsKey = KeyCode.Alpha2, powerKey = KeyCode.Alpha3,
         hangarKey = KeyCode.Alpha4, engineeringKey = KeyCode.Alpha5, commsKey = KeyCode.Alpha6;
     [Tooltip("Owner 2026-10-29: pauses and runs, as the PAUSE key does.")]
@@ -348,6 +348,7 @@ public class BoardManager : MonoBehaviour
                 state.hangar.TickLaunch(TickGameSeconds);
                 state.weapons.TickCharge(TickGameSeconds);
                 state.weapons.TickLock(TickGameSeconds, motion && motion.ScopeDown);
+                state.weapons.TickGuns(TickGameSeconds);
                 state.sensors.Tick(TickGameSeconds);
                 // Step 68 (owner 2026-10-25): the alert tone once as our signal crosses the tracked line
                 bool tracked = state.sensors.signal >= state.sensors.stats.signalTrackedAt;

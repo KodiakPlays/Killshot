@@ -117,7 +117,7 @@ public class PlotPanel : Panel
     [SerializeField] private PlotGrid grid;
     [Tooltip("Arrow keys pan the plot this fast, screen px per second.")]
     [Tune("Plot & our ship")] [SerializeField] private float panKeysPxPerS = 600f;
-    [Tooltip("Owner 2026-10-29: the plot's keys. Change them in Starwolf → Keys.")]
+    [Tooltip("Owner 2026-10-29: the plot's keys. Change them on the Keys tab of Starwolf → Tuning.")]
     [Tune("Keys")] [SerializeField] private KeyCode centreOnShipKey = KeyCode.C, panLeftKey = KeyCode.LeftArrow, panRightKey = KeyCode.RightArrow, panUpKey = KeyCode.UpArrow, panDownKey = KeyCode.DownArrow;
     private double viewX, viewY, panX0, panY0;
     private bool viewSet, panning;
@@ -170,8 +170,10 @@ public class PlotPanel : Panel
     [SerializeField] private MarksGraphic weaponRing;
     [Tooltip("A PDC arc's curved edge is drawn in steps this many degrees long (Step 55).")]
     [SerializeField] private float pdcArcStepDeg = 2f;
-    [Tooltip("Owner 2026-10-29: each railgun turret's cone shows while Fire Control is open; the selected turret this bright, the other dimmer.")]
-    [Tune("Periscope & fire control")] [Range(0f, 1f)] [SerializeField] private float railArcAlpha = 1f, railArcAlphaOther = 0.45f;
+    [Tooltip("Owner 2026-11-01: each railgun's firing arc is a soft dotted cone while Fire Control is open; the selected turret this strong, the other less.")]
+    [Tune("Periscope & fire control")] [Range(0f, 1f)] [SerializeField] private float railArcAlpha = 0.6f, railArcAlphaOther = 0.3f;
+    [Tooltip("Owner 2026-11-01: inside the cone, the gun itself: a solid bar that turns slowly onto the target. Shots fly straight down it.")]
+    [Tune("Periscope & fire control")] [Range(0f, 1f)] [SerializeField] private float gunBarAlpha = 1f, gunBarAlphaOther = 0.4f;
     [Tooltip("Owner 2026-10-29: a thin ring round our ship at the visual range (the ship's stats file, 10,000 units), always on. "
            + "Inside it you see ships with your eyes. Its strength, 0 to 1; 0 hides it.")]
     [Tune("Sensors")] [SerializeField] private float visualRingAlpha = 0.35f;
@@ -219,6 +221,13 @@ public class PlotPanel : Panel
     }
     /// <summary>Step 75: our ship where it is drawn now (it glides between ticks), in board px.</summary>
     Vector2 OwnAt => Screen(State.nav.DrawnX, State.nav.DrawnY);
+    /// <summary>A mount where it is drawn: on its hard point, or at our ship's centre without one.</summary>
+    Vector2 MountAt(WeaponSystem.Mount m)
+    {
+        Vector2 off = State.weapons.HardPointOffset(m.id, State.nav.DrawnHeading);
+        return Screen(State.nav.DrawnX + off.x, State.nav.DrawnY + off.y);
+    }
+
 
     private void Update()
     {
@@ -473,30 +482,37 @@ public class PlotPanel : Panel
                 reachShapes.Add(new MarksGraphic.Shape { kind = "dashring", a = c, b = c + new Vector2((float)(mount.rangeUnits / UnitsPerPx * Controls.ZoomExact), 0f), alpha = 0.7f });
             }
             // a mount's arc: a dashed sector off our hull, out to its reach (Step 55's PDC arc)
-            System.Action<WeaponSystem.Mount, float> sector = (pm, alpha) =>
+            System.Action<WeaponSystem.Mount, float, string> sector = (pm, alpha, line) =>
             {
-                Vector2 c = OwnAt;
+                Vector2 c = MountAt(pm);
                 float r = (float)(pm.rangeUnits / UnitsPerPx * Controls.ZoomExact);
                 System.Func<float, Vector2> at = deg => c + new Vector2(Mathf.Sin(deg * Mathf.Deg2Rad), -Mathf.Cos(deg * Mathf.Deg2Rad)) * r; // board y is down
                 float hdg = (float)s.nav.DrawnHeading, from = hdg + pm.arc - pm.halfArc, to = hdg + pm.arc + pm.halfArc;
-                reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = c, b = at(from), alpha = alpha });
-                reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = c, b = at(to), alpha = alpha });
+                reachShapes.Add(new MarksGraphic.Shape { kind = line, a = c, b = at(from), alpha = alpha });
+                reachShapes.Add(new MarksGraphic.Shape { kind = line, a = c, b = at(to), alpha = alpha });
                 for (float d = from; d < to; d += pdcArcStepDeg)
-                    reachShapes.Add(new MarksGraphic.Shape { kind = "dash", a = at(d), b = at(Mathf.Min(to, d + pdcArcStepDeg)), alpha = alpha });
+                    reachShapes.Add(new MarksGraphic.Shape { kind = line, a = at(d), b = at(Mathf.Min(to, d + pdcArcStepDeg)), alpha = alpha });
             };
-            // owner 2026-10-29: the railgun turrets' cones while Fire Control is open, the selected turret brighter
+            // owner 2026-11-01: while Fire Control is open each railgun shows its soft dotted firing arc from its
+            // hard point, and the gun itself, a solid bar; the selected turret is the stronger
             if (fcOpen)
-                foreach (var id in System.Array.Find(s.weapons.systems, y => y.id == "RG").mounts)
+                foreach (var id in s.weapons.MountIds("RG"))
                 {
                     var rm = s.weapons.MountOf(id);
-                    if (rm != null) sector(rm, id == s.weapons.mount ? railArcAlpha : railArcAlphaOther);
+                    if (rm == null) continue;
+                    bool selected = id == s.weapons.mount;
+                    sector(rm, selected ? railArcAlpha : railArcAlphaOther, "dots");
+                    float aim = Mathf.Lerp(rm.aimWas, rm.aimDeg, Controls.Paused ? 1f : Controls.SinceTick / Controls.TickGameSeconds); // it glides between ticks
+                    float deg = ((float)s.nav.DrawnHeading + rm.arc + aim) * Mathf.Deg2Rad, barPx = (float)(rm.rangeUnits / UnitsPerPx * Controls.ZoomExact);
+                    Vector2 gun = MountAt(rm);
+                    reachShapes.Add(new MarksGraphic.Shape { kind = "line", a = gun, b = gun + new Vector2(Mathf.Sin(deg), -Mathf.Cos(deg)) * barPx, alpha = selected ? gunBarAlpha : gunBarAlphaOther });
                 }
             // Step 55: each PDC group on AUTO shows its arc (the design's PDC arc, accent.caution at .45)
-            var pdGroups = System.Array.Find(s.weapons.systems, y => y.id == "PD").mounts;
+            var pdGroups = s.weapons.MountIds("PD");
             for (int g = 0; g < pdGroups.Length && g < s.weapons.pdcAuto.Length; g++)
             {
                 var pm = s.weapons.MountOf(pdGroups[g]);
-                if (s.weapons.pdcAuto[g] && pm != null) sector(pm, 0.45f);
+                if (s.weapons.pdcAuto[g] && pm != null) sector(pm, 0.45f, "dash");
             }
             if (visualRingAlpha > 0f)
             {

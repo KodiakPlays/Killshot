@@ -113,7 +113,7 @@ public class PeriscopePanel : Panel
     public override void Refresh()
     {
         var s = State;
-        var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.stats.mounts[1];
+        var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.stats.mounts[0];
         var tgt = s.TrackOf(s.weapons.target);
         bool down = ScopeDown;
 

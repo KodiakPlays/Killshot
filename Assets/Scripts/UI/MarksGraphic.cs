@@ -26,6 +26,9 @@ public class MarksGraphic : MaskableGraphic
     [Tooltip("Dashed ring: dash and gap along the ring (px), from asset-map.csv mark_dash (3 px dash, 2 px gap).")]
     [Tune("Plot tools")]
     [SerializeField] private float dash = 3f, dashGap = 2f;
+    [Tooltip("Dotted line: dot and gap along the line (px). Owner 2026-11-01: a railgun's soft firing arc.")]
+    [Tune("Plot tools")]
+    [SerializeField] private float dot = 2f, dotGap = 8f;
     [Tooltip("Board px of this rect's top-left (the plot sits at 104,100).")]
     public Vector2 origin = new Vector2(104, 100);
 
@@ -51,7 +54,8 @@ public class MarksGraphic : MaskableGraphic
             // Step 44: a passive bearing, fading out from our ship
             else if (s.kind == "fade") { var end = c; end.a = 0f; Line(s.a, s.b, c, end); }
             // Step 46: a track's projected course (dashed line) and a weapon's reach (dashed ring, no radius)
-            else if (s.kind == "dash") DashedLine(s.a, s.b, c);
+            else if (s.kind == "dash") DashedLine(s.a, s.b, c, dash, dashGap);
+            else if (s.kind == "dots") DashedLine(s.a, s.b, c, dot, dotGap);
             else if (s.kind == "dashring") Ring(s.a, (s.b - s.a).magnitude, c);
             // owner 2026-10-26: the active scan cone — a faint slice of ring round a, and its two edge lines
             else if (s.kind == "sector") Sector(s.a, s.b, s.inner, s.half, c);
@@ -83,14 +87,14 @@ public class MarksGraphic : MaskableGraphic
         return Rect.MinMaxRect(r.xMin - m, r.yMin - m, r.xMax + m, r.yMax + m);
     }
 
-    void DashedLine(Vector2 a, Vector2 b, Color c)
+    void DashedLine(Vector2 a, Vector2 b, Color c, float on, float off)
     {
-        float len = (b - a).magnitude, period = dash + dashGap;
+        float len = (b - a).magnitude, period = on + off;
         if (len < 1e-3f || period <= 0f) return;
         Vector2 d = (b - a) / len;
         Rect seen = Seen();
         for (float s = 0f; s < len; s += period)
-            if (seen.Contains(L(a + d * s))) Line(a + d * s, a + d * Mathf.Min(len, s + dash), c);
+            if (seen.Contains(L(a + d * s))) Line(a + d * s, a + d * Mathf.Min(len, s + on), c);
     }
 
     void Dot(Vector2 at, float r, Color c)

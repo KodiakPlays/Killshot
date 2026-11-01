@@ -149,7 +149,7 @@ public class FireControlPanel : Panel
     {
         var s = State;
         var y = s.weapons.Sys;
-        var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.stats.mounts[1];
+        var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.stats.mounts[0];
         var tgt = s.TrackOf(s.weapons.target);
         bool scopeDown = Controls.Motion && Controls.Motion.ScopeDown;
 
@@ -169,22 +169,25 @@ public class FireControlPanel : Panel
         {
             var sy = s.weapons.systems[i];
             bool on = sy.id == s.weapons.sys;
-            bool armed = System.Array.IndexOf(sy.mounts, s.weapons.mount) >= 0 && s.weapons.sw[3];
+            bool armed = System.Array.IndexOf(s.weapons.MountIds(sy.id), s.weapons.mount) >= 0 && s.weapons.sw[3];
             Color lamp = armed ? alarm : on ? data : lampOffSelector;
             Paint(systemPositions[i].lamp, lamp); Paint(systemPositions[i].glow, lamp); Show(systemPositions[i].glow, armed || on);
             Paint(systemPositions[i].label, on ? data : stencil);
         }
-        int mi = System.Array.IndexOf(y.mounts, s.weapons.mount);
-        mountSelector.Set(y.mounts.Length == 1 ? 90f : new[] { 60f, 120f }[Mathf.Max(0, mi)]);
+        // owner 2026-11-01: a ship can have more weapons of a kind than the knob has places: its places show the pair the selected one is in
+        var ids = s.weapons.MountIds(y.id);
+        int mi = Mathf.Max(0, System.Array.IndexOf(ids, s.weapons.mount));
+        int firstShown = Mathf.Min(mi, Mathf.Max(0, ids.Length - mountPositions.Length));
+        mountSelector.Set(ids.Length <= 1 ? 90f : new[] { 60f, 120f }[mi - firstShown]);
         for (int i = 0; i < mountPositions.Length; i++)
         {
             var pos = mountPositions[i];
-            bool used = i < y.mounts.Length;
+            bool used = firstShown + i < ids.Length;
             Show(pos.lamp, used); Show(pos.label, used);
             if (!used) { Show(pos.glow, false); continue; }
-            var mm = s.weapons.MountOf(y.mounts[i]);
-            bool on = y.mounts[i] == s.weapons.mount;
-            if (pos.label) { pos.label.text = mm != null ? mm.shortName : y.mounts[i]; Paint(pos.label, on ? data : stencil); }
+            var mm = s.weapons.MountOf(ids[firstShown + i]);
+            bool on = ids[firstShown + i] == s.weapons.mount;
+            if (pos.label) { pos.label.text = mm != null ? mm.shortName : ids[firstShown + i]; Paint(pos.label, on ? data : stencil); }
             Paint(pos.lamp, on ? data : lampOffSelector); Paint(pos.glow, data); Show(pos.glow, on);
         }
         if (mountLabel) mountLabel.text = m.label;
@@ -282,6 +285,7 @@ public class FireControlPanel : Panel
             if (s.weapons.sys == "PD" && s.weapons.sw[3]) t = m.shortName + " AUTO" + (s.weapons.pdcReport != null ? " · LAST: " + s.weapons.pdcReport : " — WATCHING ITS ARC"); // Step 55
             else if (s.weapons.fired) t = s.weapons.Rounds.Count > 0 || s.weapons.shotReport == null ? "ROUNDS AWAY" : s.weapons.shotReport; // Step 48: then HIT · … or MISS
             else if (s.weapons.AllSet) t = "SOLUTION LOCKED — MOUNT READY";
+            else if (!s.weapons.OnDot(s.weapons.mount)) t = "NOT ON A HARD POINT — CAN'T FIRE";
             else if (tgt == null && !manual) t = "NO TARGET DESIGNATED";
             else if (tid == null && !manual) t = "NO LOCK — USE THE TARGETING COMPUTER";
             else if (!s.damage.BriOk) t = "BRIDGE DAMAGED — PLOT COMPUTER OFFLINE";

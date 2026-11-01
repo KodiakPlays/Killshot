@@ -76,7 +76,7 @@ public class HelmPanel : Panel
     [SerializeField] private float repeatDelay = 0.5f, repeatInterval = 0.033f;
     [Tooltip("Owner 2026-10-29: W and S step the throttle this many percent, up to what the ENG bus allows.")]
     [Tune("Helm")] [SerializeField] private int throttleKeyStep = 10;
-    [Tooltip("Owner 2026-10-29: the helm's keys. Change them in Starwolf → Keys.")]
+    [Tooltip("Owner 2026-10-29: the helm's keys. Change them on the Keys tab of Starwolf → Tuning.")]
     [Tune("Keys")] [SerializeField] private KeyCode turnPortKey = KeyCode.A, turnStarboardKey = KeyCode.D, throttleUpKey = KeyCode.W, throttleDownKey = KeyCode.S;
 
     Color nominal => Palette.nominal;

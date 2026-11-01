@@ -83,7 +83,8 @@ public class EnemyBrain : MonoBehaviour
     private Vector2 home, waypoint, lastKnown;
     private bool started;
     private float startedAt, waypointAt = -1e9f, lastHeardAt = -1e9f, lastFixAt = -1e9f;
-    private float health = -1f, nextSalvo, nextShotA, nextShotB;
+    private float health = -1f, nextSalvo;
+    private readonly System.Collections.Generic.Dictionary<string, float> nextShot = new System.Collections.Generic.Dictionary<string, float>();
 
     /// <summary>Step 99: a ship that arrives is told roughly where we are. It starts SEARCHING there.</summary>
     public void Brief(Vector2 where, float now) { Raise(Awareness.Searching); Heard(where, now, false); }
@@ -110,19 +111,18 @@ public class EnemyBrain : MonoBehaviour
         if (firesBack && !us.destroyed && ship.damage.MagOk && now >= ship.empUntil)
         {
             // missiles: when hit (Step 55), and every salvoSeconds once ALERT with a fix
-            var vls = ship.weapons.MountOf("VLS");
-            if ((hit || fix) && now >= nextSalvo && vls != null && vls.ammo > 0 && dist <= vls.rangeUnits)
+            WeaponSystem.Mount vls = null;
+            foreach (var m in ship.weapons.stats.mounts)
+                if (vls == null && m.kind == "MS" && m.ammo > 0 && dist <= m.rangeUnits && ship.weapons.OnDot(m.id)) vls = m;
+            if ((hit || fix) && now >= nextSalvo && vls != null)
             {
                 int n = Mathf.Min(fireBackSalvo, vls.ammo);
-                us.weapons.LaunchAt(ship.weapons.stats, ship.nav.x, ship.nav.y, n, 0, vls.rangeUnits); // HE
+                Vector2 tube = ship.weapons.HardPointOffset(vls.id, ship.nav.heading);
+                us.weapons.LaunchAt(ship.weapons.stats, ship.nav.x + tube.x, ship.nav.y + tube.y, n, 0, vls.rangeUnits); // HE
                 vls.ammo -= n;
                 nextSalvo = now + (fix ? salvoSeconds : fireBackSeconds);
             }
-            if (fix)
-            {
-                Shoot(ship, us, "RGA", ref nextShotA, dist, now);
-                Shoot(ship, us, "RGB", ref nextShotB, dist, now);
-            }
+            if (fix) foreach (var id in ship.weapons.MountIds("RG")) Shoot(ship, us, id, dist, now);
         }
 
         Steer(ship, us, at, ours, dist, now, fix);
@@ -173,16 +173,19 @@ public class EnemyBrain : MonoBehaviour
     }
 
     // One turret: in reach, ammunition left, reloaded, and we are inside its arc. It leads us, a little off.
-    void Shoot(ShipState ship, ShipState us, string id, ref float next, float dist, float now)
+    void Shoot(ShipState ship, ShipState us, string id, float dist, float now)
     {
         var m = ship.weapons.MountOf(id);
-        if (m == null || m.ammo <= 0 || now < next || dist > m.rangeUnits) return;
+        float next;
+        nextShot.TryGetValue(id, out next);
+        if (m == null || m.ammo <= 0 || now < next || dist > m.rangeUnits || !ship.weapons.OnDot(id)) return;
         double lead = LeadOn(ship, us);
         int rel = ShipState.JsRound(((lead - ship.nav.heading) % 360 + 360) % 360) % 360;
         if (ShipState.AngDiff(rel, m.arc) > m.halfArc) return;
-        us.weapons.ShootAt(ship.weapons.stats, ship.nav.x, ship.nav.y, lead + (ship.NextDie() * 2 - 1) * aimErrorDeg, m.rangeUnits);
+        Vector2 gun = ship.weapons.HardPointOffset(id, ship.nav.heading);
+        us.weapons.ShootAt(ship.weapons.stats, ship.nav.x + gun.x, ship.nav.y + gun.y, lead + (ship.NextDie() * 2 - 1) * aimErrorDeg, m.rangeUnits);
         m.ammo--;
-        next = now + railgunReloadSeconds + (float)ship.NextDie() * railgunJitterSeconds;
+        nextShot[id] = now + railgunReloadSeconds + (float)ship.NextDie() * railgunJitterSeconds;
     }
 
     // Where to aim so its slug meets us, from our position and velocity (WeaponSystem.LeadBearing, from its side).
@@ -230,7 +233,7 @@ public class EnemyBrain : MonoBehaviour
     static float Reach(ShipState ship)
     {
         float r = 0f;
-        foreach (var id in new[] { "RGA", "RGB" }) { var m = ship.weapons.MountOf(id); if (m != null && m.ammo > 0) r = Mathf.Max(r, m.rangeUnits); }
+        foreach (var id in ship.weapons.MountIds("RG")) { var m = ship.weapons.MountOf(id); if (m != null && m.ammo > 0) r = Mathf.Max(r, m.rangeUnits); }
         return r > 0f ? r : 10000f;
     }
 
@@ -238,7 +241,7 @@ public class EnemyBrain : MonoBehaviour
     static int SideOn(ShipState ship, int brg)
     {
         int best = brg, turn = 999;
-        foreach (var id in new[] { "RGA", "RGB" })
+        foreach (var id in ship.weapons.MountIds("RG"))
         {
             var m = ship.weapons.MountOf(id);
             if (m == null || m.ammo <= 0) continue;

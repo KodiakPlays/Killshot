@@ -29,13 +29,26 @@ public class WeaponSystem : MonoBehaviour
         // each mount has at the start; the running game counts down its own copy, never the file.
         public Mount[] mounts =
         {
-            new Mount { id = "RGA", arc = 42, halfArc = 80, rangeUnits = 25000, label = "RAILGUN TURRET A", shortName = "RG-A", ammo = 22 },
-            new Mount { id = "RGB", arc = 250, halfArc = 80, rangeUnits = 25000, label = "RAILGUN TURRET B", shortName = "RG-B", ammo = 22 },
+            // owner 2026-11-01: a 90° firing arc straight out of each side (was 160°, skewed forward)
+            new Mount { id = "RGA", kind = "RG", arc = 90, halfArc = 45, rangeUnits = 25000, label = "RAILGUN TURRET A", shortName = "RG-A", ammo = 22 },
+            new Mount { id = "RGB", kind = "RG", arc = 270, halfArc = 45, rangeUnits = 25000, label = "RAILGUN TURRET B", shortName = "RG-B", ammo = 22 },
             // owner 2026-10-29: two halves, "keep it simple": PDC-A the starboard side (000–180), PDC-B the port side (180–360)
-            new Mount { id = "PDA", arc = 90, halfArc = 90, rangeUnits = 10000, label = "PDC GROUP A", shortName = "PDC-A", ammo = 2400 },
-            new Mount { id = "PDB", arc = 270, halfArc = 90, rangeUnits = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
-            new Mount { id = "VLS", arc = 0, halfArc = 180, rangeUnits = 35000, label = "MISSILE VLS", shortName = "VLS", ammo = 8 },
+            new Mount { id = "PDA", kind = "PD", arc = 90, halfArc = 90, rangeUnits = 10000, label = "PDC GROUP A", shortName = "PDC-A", ammo = 2400 },
+            new Mount { id = "PDB", kind = "PD", arc = 270, halfArc = 90, rangeUnits = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
+            new Mount { id = "VLS", kind = "MS", arc = 0, halfArc = 180, rangeUnits = 35000, label = "MISSILE VLS", shortName = "VLS", ammo = 8 },
         };
+        [Tooltip("Owner 2026-11-01: the places on the hull a weapon can stand. The Hard Points tab of Starwolf → Tuning drags them round the ship. A weapon fires from its dot; with no dot it can't fire.")]
+        public HardPoint[] hardPoints =
+        {
+            new HardPoint { at = new Vector2(0f, 50f) },
+            new HardPoint { at = new Vector2(32f, 0f), mount = "RGA" },
+            new HardPoint { at = new Vector2(-32f, 0f), mount = "RGB" },
+            new HardPoint { at = new Vector2(32f, -25f), mount = "PDA" },
+            new HardPoint { at = new Vector2(-32f, -25f), mount = "PDB" },
+            new HardPoint { at = new Vector2(0f, -50f), mount = "VLS" },
+        };
+        [Tooltip("How fast a railgun's bar turns inside its cone, degrees per game second (owner 2026-11-01: slowly, as the lock builds).")]
+        public float gunTurnDegPerSecond = 3f;
         [Tooltip("Game seconds the targeting computer takes to lock on a ship kept in its sights at the right zoom (owner 2026-11-01).")]
         public float lockSeconds = 10f;
         [Tooltip("Game seconds a part-filled lock bar takes to fall back to nothing once the ship leaves the sights.")]
@@ -91,13 +104,28 @@ public class WeaponSystem : MonoBehaviour
     [System.Serializable]
     public class Mount
     {
-        public string id, label, shortName; public int arc, halfArc; [FormerlySerializedAs("rangeKm")] public float rangeUnits;
+        public string id, label, shortName;
+        [Tooltip("RG railgun, PD point defence or MS missile launcher (owner 2026-11-01: a ship has as many of each as its stats file lists).")]
+        public string kind;
+        public int arc, halfArc; [FormerlySerializedAs("rangeKm")] public float rangeUnits;
         [Tooltip("What it has left: slugs, PDC rounds or missile cells. Owner 2026-10-27: a real count; it only goes down.")]
         public int ammo;
+        /// <summary>A railgun's bar: its angle from the cone's middle, degrees, now and at the last tick.</summary>
+        [System.NonSerialized] public float aimDeg, aimWas;
+    }
+
+    /// <summary>A place on the hull. Owner 2026-11-01: the ship is a rectangle, short end forward.</summary>
+    [System.Serializable]
+    public class HardPoint
+    {
+        [Tooltip("Where it is, units from the ship's centre: x right, y forward.")]
+        public Vector2 at;
+        [Tooltip("The gun on it, by id. Empty: nothing.")]
+        public string mount;
     }
 
     [System.Serializable]
-    public class Group { public string id, label; public string[] mounts; public float shot; }
+    public class Group { public string id, label; public float shot; }
 
     [System.Serializable]
     public class Solution
@@ -122,9 +150,9 @@ public class WeaponSystem : MonoBehaviour
     [Header("Fire control — MOUNTS, SYSTEMS, WARHEADS, SWITCHES and the board's initial state")]
     public Group[] systems =
     {
-        new Group { id = "RG", label = "RAILGUN", mounts = new[] { "RGA", "RGB" }, shot = 70 },
-        new Group { id = "PD", label = "PDC", mounts = new[] { "PDA", "PDB" }, shot = 25 },
-        new Group { id = "MS", label = "MISSILE", mounts = new[] { "VLS" }, shot = 40 },
+        new Group { id = "RG", label = "RAILGUN", shot = 70 },
+        new Group { id = "PD", label = "PDC", shot = 25 },
+        new Group { id = "MS", label = "MISSILE", shot = 40 },
     };
     public string[] warheads = { "HE", "EMP", "PENETRATOR" };
     public string[] switches = { "load", "angle", "bearing", "arm" };
@@ -138,7 +166,7 @@ public class WeaponSystem : MonoBehaviour
     public int warhead;
     [Tooltip("PDC quadrants FWD, STBD, AFT, PORT (quads).")]
     public bool[] quads = { true, true, false, false };
-    [Tooltip("Step 55: PDC groups on AUTO (PDC-A, PDC-B). Arming the ladder with a group selected puts it on AUTO; it then shoots by itself at enemy missiles in its arc.")]
+    [Tooltip("Step 55: PDC groups on AUTO, in the order the stats file lists them. Arming the ladder with a group selected puts it on AUTO; it then shoots by itself at enemy missiles in its arc.")]
     public bool[] pdcAuto = new bool[2];
     public bool fired;
     [Range(0f, 100f)] public float wepCharge;
@@ -163,8 +191,18 @@ public class WeaponSystem : MonoBehaviour
 
     [System.NonSerialized] private System.Collections.Generic.List<Round> rounds;
     public System.Collections.Generic.List<Round> Rounds => rounds ?? (rounds = new System.Collections.Generic.List<Round>());
-    /// <summary>VLS cells left: the launcher's count.</summary>
-    public int vlsCells { get { return MountOf("VLS").ammo; } set { MountOf("VLS").ammo = value; } }
+    /// <summary>Cells left in the selected launcher, or in the first one while another weapon is selected.</summary>
+    public int vlsCells { get { var m = Launcher; return m != null ? m.ammo : 0; } set { var m = Launcher; if (m != null) m.ammo = value; } }
+    Mount Launcher
+    {
+        get
+        {
+            var m = MountOf(mount);
+            if (m != null && m.kind == "MS") return m;
+            foreach (var l in stats.mounts) if (l.kind == "MS") return l;
+            return null;
+        }
+    }
     /// <summary>The selected mount can't fire again: no slug or cell left, or too few rounds for a PDC go.</summary>
     public bool Empty { get { var m = MountOf(mount); return m == null || m.ammo < (sys == "PD" ? stats.pdcRoundsPerGo : 1); } }
     /// <summary>The last shot's outcome: "HIT · GARUDA · STBD", "MISS", or null while none has landed.</summary>
@@ -175,6 +213,25 @@ public class WeaponSystem : MonoBehaviour
     public Group Sys { get { foreach (var y in systems) if (y.id == sys) return y; return systems[0]; } }
     public int SysIndex { get { for (int i = 0; i < systems.Length; i++) if (systems[i].id == sys) return i; return 0; } }
     public Mount MountOf(string id) { foreach (var m in stats.mounts) if (m.id == id) return m; return null; }
+    /// <summary>The ids of this ship's weapons of one kind, in the stats file's order.</summary>
+    public string[] MountIds(string kind) => System.Array.ConvertAll(System.Array.FindAll(stats.mounts, m => m.kind == kind), m => m.id);
+    /// <summary>Owner 2026-11-01: a weapon fires from its hard point. With none, it can't fire.</summary>
+    public bool OnDot(string id) { foreach (var h in stats.hardPoints) if (h.mount == id) return true; return false; }
+
+    private void Start() => KeepSelection();
+
+    /// <summary>The stats file says which weapons the ship has: keep the selection on one it has, and an AUTO switch for each PDC group.</summary>
+    public void KeepSelection()
+    {
+        foreach (var y in systems)
+        {
+            if (MountIds(sys).Length > 0) break;
+            sys = y.id;
+        }
+        var ids = MountIds(sys);
+        if (ids.Length > 0 && System.Array.IndexOf(ids, mount) < 0) mount = ids[0];
+        System.Array.Resize(ref pdcAuto, MountIds("PD").Length);
+    }
 
     public Solution Sol => sol[SysIndex];
     public float ShotCost => Sys != null ? Sys.shot : 50f;
@@ -211,30 +268,35 @@ public class WeaponSystem : MonoBehaviour
 
     // Step 55: a PDC group on AUTO keeps its ladder armed whenever it is the one selected
     void ClearSwitches() { bool auto = PdcGroup >= 0 && pdcAuto[PdcGroup]; for (int i = 0; i < sw.Length; i++) sw[i] = auto; }
-    /// <summary>The selected PDC group (0 = PDC-A, 1 = PDC-B), or -1 when PDC is not selected.</summary>
-    int PdcGroup => sys == "PD" ? System.Array.IndexOf(Sys.mounts, mount) : -1;
+    /// <summary>The selected PDC group, or -1 when PDC is not selected.</summary>
+    int PdcGroup => sys == "PD" ? System.Array.IndexOf(MountIds("PD"), mount) : -1;
 
     /// <summary>pickSystem via cycleSystem: next system; keep the mount if it belongs, else its first.</summary>
     public void CycleSystem()
     {
-        var next = systems[(SysIndex + 1) % systems.Length];
-        sys = next.id;
-        if (System.Array.IndexOf(next.mounts, mount) < 0) mount = next.mounts[0];
+        int from = SysIndex;
+        for (int i = 1; i <= systems.Length; i++) // past a system this ship has no weapon for
+        {
+            var ids = MountIds(systems[(from + i) % systems.Length].id);
+            if (ids.Length == 0) continue;
+            sys = systems[(from + i) % systems.Length].id;
+            if (System.Array.IndexOf(ids, mount) < 0) mount = System.Array.Find(ids, OnDot) ?? ids[0]; // the first that can fire: a weapon on no dot can't
+            break;
+        }
         ClearSwitches(); fired = false;
     }
 
     public void CycleMount()
     {
-        var y = Sys;
-        if (y.mounts.Length < 2) return;
-        int i = System.Array.IndexOf(y.mounts, mount);
-        mount = y.mounts[(i + 1) % y.mounts.Length];
+        var ids = MountIds(sys);
+        if (ids.Length < 2) return;
+        mount = ids[(System.Array.IndexOf(ids, mount) + 1) % ids.Length];
         ClearSwitches(); fired = false;
     }
 
     public void CycleWarhead() { warhead = (warhead + 1) % warheads.Length; ClearSwitches(); }
     public void StepSalvo(int d) { salvo = Mathf.Max(1, Mathf.Min(8, salvo + d)); }
-    public void ToggleLoaders() { loaders = !loaders; if (!loaders) pdcAuto[0] = pdcAuto[1] = false; ClearSwitches(); }
+    public void ToggleLoaders() { loaders = !loaders; if (!loaders) System.Array.Clear(pdcAuto, 0, pdcAuto.Length); ClearSwitches(); }
     public void ToggleQuad(int i) { quads[i] = !quads[i]; }
 
     /// <summary>TRACK (computeSol), with the bridge. A scanned ship the periscope is on, else the target if it is
@@ -383,7 +445,7 @@ public class WeaponSystem : MonoBehaviour
     public bool RungGated(int i)
     {
         bool pd = sys == "PD";
-        return (i == 0 && (!WepReady || Empty || (pd ? !loaders : !Sol.set)))
+        return (i == 0 && (!WepReady || Empty || !OnDot(mount) || (pd ? !loaders : !Sol.set)))
             || (i == 1 && !pd && !InArc) || (i == 2 && !pd && !OnBearing) || (i == 3 && wepCharge < ShotCost);
     }
 
@@ -404,8 +466,10 @@ public class WeaponSystem : MonoBehaviour
         var m = MountOf(mount);
         if (sys == "RG" && m != null)
         {
-            double b = LeadBearing() * System.Math.PI / 180;
-            Rounds.Add(new Round { x = ship.nav.x, y = ship.nav.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = m.rangeUnits, speed = stats.slugSpeedUnits });
+            // owner 2026-11-01: the slug flies straight down the gun's bar, from its hard point. Fired before the bar is on the target, it misses
+            double b = (ship.nav.heading + m.arc + m.aimDeg) * System.Math.PI / 180;
+            Vector2 gun = HardPointOffset(m.id, ship.nav.heading);
+            Rounds.Add(new Round { x = ship.nav.x + gun.x, y = ship.nav.y + gun.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = m.rangeUnits, speed = stats.slugSpeedUnits });
             m.ammo--;
             shotReport = null;
             ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + stats.fireSignalSpike);
@@ -415,10 +479,11 @@ public class WeaponSystem : MonoBehaviour
             // a salvo, spread a little either side of the target's bearing; each missile then homes on it
             var tgt = ship.TrackOf(target);
             int n = Mathf.Min(salvo, vlsCells);
+            Vector2 tube = HardPointOffset(m.id, ship.nav.heading);
             for (int i = 0; i < n; i++)
             {
                 double b = (tgt.bearing + (i - (n - 1) / 2.0) * stats.missileSpreadDeg) * System.Math.PI / 180;
-                Rounds.Add(new Round { x = ship.nav.x, y = ship.nav.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = m.rangeUnits,
+                Rounds.Add(new Round { x = ship.nav.x + tube.x, y = ship.nav.y + tube.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = m.rangeUnits,
                                        speed = stats.missileSpeedUnits, missile = true, targetKey = tgt.key, warhead = warhead });
             }
             vlsCells -= n;
@@ -494,6 +559,44 @@ public class WeaponSystem : MonoBehaviour
         if (tHit <= 0) return straight;
         return (System.Math.Atan2(tx + vx * tHit, ty + vy * tHit) * 180 / System.Math.PI + 360) % 360;
     }
+
+    /// <summary>A mount's hard point from the ship's centre at this heading, units (x east, y north). No hard point: zero.</summary>
+    public Vector2 HardPointOffset(string id, double heading)
+    {
+        foreach (var h in stats.hardPoints)
+        {
+            if (h.mount != id) continue;
+            float rad = (float)heading * Mathf.Deg2Rad, sin = Mathf.Sin(rad), cos = Mathf.Cos(rad);
+            return new Vector2(h.at.x * cos + h.at.y * sin, h.at.y * cos - h.at.x * sin);
+        }
+        return Vector2.zero;
+    }
+
+    // Where a railgun's bar wants to be, as far as the cone allows: for the selected gun, on the solution, or on the
+    // ship being locked as the bar fills; else the middle.
+    float WantedAim(Mount m)
+    {
+        if (m.id != mount) return 0f;
+        var locking = lockKey != null ? ship.TrackOf(lockKey) : null;
+        if (!Sol.set && locking == null) return 0f;
+        float want = Sol.set ? (float)LeadBearing() : (float)ship.sensors.ExactBearing(locking);
+        return Mathf.Clamp(Mathf.DeltaAngle((float)ship.nav.heading + m.arc, want), -m.halfArc, m.halfArc);
+    }
+
+    /// <summary>Owner 2026-11-01: inside its soft cone a railgun is a bar. It turns slowly toward the solution.</summary>
+    public void TickGuns(double dt)
+    {
+        foreach (var id in MountIds("RG"))
+        {
+            var m = MountOf(id);
+            if (m == null) continue;
+            m.aimWas = m.aimDeg;
+            m.aimDeg = Mathf.MoveTowards(m.aimDeg, WantedAim(m), stats.gunTurnDegPerSecond * (float)dt);
+        }
+    }
+
+    /// <summary>The selected gun's bar has reached where it is going (the playtest waits for it).</summary>
+    public bool GunSettled { get { var m = MountOf(mount); return m == null || Mathf.Abs(m.aimDeg - WantedAim(m)) < 0.01f; } }
 
     /// <summary>Hull-fixed arcs (spec 8.7.a): the solution's bearing from our bow must lie in the mount's arc.</summary>
     public bool InArc
@@ -606,7 +709,7 @@ public class WeaponSystem : MonoBehaviour
         for (int i = list.Count - 1; i >= 0; i--)
         {
             var r = list[i];
-            if (r.missile && PdcStops(r)) { list.RemoveAt(i); continue; }
+            if (r.missile && PdcStops(r, r.speed * dt)) { list.RemoveAt(i); continue; }
             if (r.missile) SteerAt(r, ship.nav.x, ship.nav.y, dt);
             double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled), cx, cy;
             if (r.missile)
@@ -639,16 +742,20 @@ public class WeaponSystem : MonoBehaviour
 
     // A PDC group on AUTO, loaded and powered, gets one chance at each enemy missile inside its arc and range.
     // Each go spends stats.pdcRoundsPerGo; a group too low for another go drops off AUTO (owner 2026-10-27).
-    bool PdcStops(Round r)
+    bool PdcStops(Round r, double step)
     {
         if (!loaders || !WepReady) return false;
-        double dx = r.x - ship.nav.x, dy = r.y - ship.nav.y;
-        int rel = ShipState.JsRound(((System.Math.Atan2(dx, dy) * 180 / System.Math.PI - ship.nav.heading) % 360 + 360) % 360) % 360;
-        var groups = System.Array.Find(systems, y => y.id == "PD").mounts;
+        // the point of this tick's flight closest to our ship: at x5 a missile can cross the PDCs' reach inside one tick
+        double along = System.Math.Max(0, System.Math.Min(step, (ship.nav.x - r.x) * r.dx + (ship.nav.y - r.y) * r.dy));
+        double px = r.x + r.dx * along, py = r.y + r.dy * along;
+        var groups = MountIds("PD");
         for (int g = 0; g < groups.Length && g < pdcAuto.Length; g++)
         {
             var m = MountOf(groups[g]);
-            if (!pdcAuto[g] || m == null || (r.pdcTried & (1 << g)) != 0) continue;
+            if (!pdcAuto[g] || m == null || !OnDot(m.id) || (r.pdcTried & (1 << g)) != 0) continue;
+            Vector2 gun = HardPointOffset(m.id, ship.nav.heading);
+            double dx = px - ship.nav.x - gun.x, dy = py - ship.nav.y - gun.y;
+            int rel = ShipState.JsRound(((System.Math.Atan2(dx, dy) * 180 / System.Math.PI - ship.nav.heading) % 360 + 360) % 360) % 360;
             if (dx * dx + dy * dy > (double)m.rangeUnits * m.rangeUnits || ShipState.AngDiff(rel, m.arc) > m.halfArc) continue;
             r.pdcTried |= 1 << g;
             m.ammo -= stats.pdcRoundsPerGo;

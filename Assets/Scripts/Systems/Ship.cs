@@ -16,7 +16,13 @@ public class Ship : MonoBehaviour
     public ShipStats Stats => !Application.isPlaying ? statsFile : live ? live : (live = Instantiate(statsFile));
 
     /// <summary>Copy the file's numbers into the running copy (the Tuning window calls this after an edit in play).</summary>
-    public void PullFromFile() { if (live) JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(statsFile), live); }
+    public void PullFromFile()
+    {
+        if (!live) return;
+        JsonUtility.FromJsonOverwrite(JsonUtility.ToJson(statsFile), live);
+        var w = GetComponent<WeaponSystem>();
+        if (w) w.KeepSelection();
+    }
 
     // Values the ship changes as it plays start from the file: the salvo, the PDC loaders, the marines aboard,
     // the crew in each room.
