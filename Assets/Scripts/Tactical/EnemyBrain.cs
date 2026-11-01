@@ -50,6 +50,9 @@ public class EnemyBrain : MonoBehaviour
     [Header("Fighting")]
     [Tooltip("ALERT: it closes until we are inside this share of its railguns' reach, then turns a side to us.")]
     [Tune("Enemy")] [SerializeField] private float fightAtShare = 0.8f;
+    [Tooltip("It looks this far ahead for rocks and ships, units, and steers round them (owner 2026-11-01).")]
+    [Tune("Enemy")] [SerializeField] private float avoidLookUnits = 600f;
+    private TacticalWorld world;
     [Tooltip("Side-on, its throttle as a share of its top speed.")]
     [Tune("Enemy")] [SerializeField] private float fightSpeedShare = 0.4f;
     [Tooltip("Game seconds between shots from one turret, plus up to the jitter below.")]
@@ -225,7 +228,9 @@ public class EnemyBrain : MonoBehaviour
             heading = TacticalWorld.Bearing(waypoint - at);
             speed = Level == Awareness.Alert ? top : Level == Awareness.Searching ? top * 0.8f : cruiseUnits;
         }
-        ship.nav.orderedHeading = heading;
+        // owner 2026-11-01: rocks and ships are solid: it steers round them
+        if (!world) world = FindAnyObjectByType<TacticalWorld>();
+        ship.nav.orderedHeading = world ? world.ClearHeading(ship.nav, heading, avoidLookUnits) : heading;
         // a damaged engine room holds it back, as our lever is; wrecked, it drifts (DISABLE, BOARDING_README)
         ship.nav.throttle = Mathf.Clamp(Mathf.RoundToInt(speed / top * 100f), 0, ship.nav.ThrottleCap);
     }

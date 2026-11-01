@@ -72,8 +72,10 @@ public class WeaponSystem : MonoBehaviour
         public double missileSpreadDeg = 3;
         [Tooltip("Rounds one PDC group spends on each go at an enemy missile (owner 2026-10-27).")]
         public int pdcRoundsPerGo = 100;
-        [Tooltip("A shot from this ship, slug or missile, hits a ship it passes within this distance of, units (owner 2026-10-27: 100 units, any ship).")]
-        [FormerlySerializedAs("hitRadiusKm")] public float hitRadiusUnits = 100f;
+        [Tooltip("A shot from this ship, slug or missile, hits a ship if it touches the ship's box made this much bigger, percent (owner 2026-11-01; was a 100-unit circle round the ship's centre).")]
+        public float hitMarginPercent = 25f;
+        /// <summary>The half size of the box a shot from this ship must touch, from a ship's own box half.</summary>
+        public Vector2 HitHalf(Vector2 half) => half * (1f + hitMarginPercent / 100f);
         [Tooltip("Armour one of this ship's slugs takes off the side it hits.")]
         public float slugArmourDamage = 50f;
         [Tooltip("Integrity one of this ship's slugs, or a warhead through an open side, takes off the room behind it (owner: 2 of 5).")]
@@ -610,9 +612,8 @@ public class WeaponSystem : MonoBehaviour
     }
 
     /// <summary>Fly every round dt mission seconds. Its whole path this tick is tested, so a fast slug
-    /// cannot skip past a ship: the first ship it passes within that ship's hit radius is hit. Step 63: the
-    /// test follows the ship's own motion through the tick too (at 5x speeds and x10 a ship moves further
-    /// in a tick than its hit radius).</summary>
+    /// cannot skip past a ship: the first ship's box it reaches is hit, on the side it reaches. The test
+    /// follows the ship's own motion through the tick too (Step 63).</summary>
     public void TickRounds(double dt)
     {
         var list = Rounds;
@@ -622,26 +623,15 @@ public class WeaponSystem : MonoBehaviour
             if (r.missile) Steer(r, dt);
             double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
             double flight = r.speed > 0 ? step / r.speed : 0; // seconds of this tick the round is flying
-            ShipState.Track struck = null;
-            double first = double.MaxValue;
-            foreach (var t in ship.tracks)
-            {
-                if (t.own || !t.hasWorld || t.wreck) continue;
-                // the ship relative to the round, and how that changes: its velocity less the round's
-                double c = t.course * System.Math.PI / 180;
-                double wx = t.speed * System.Math.Sin(c) - r.dx * r.speed, wy = t.speed * System.Math.Cos(c) - r.dy * r.speed;
-                double px = t.worldX - r.x, py = t.worldY - r.y, ww = wx * wx + wy * wy;
-                double s = ww > 0 ? System.Math.Max(0, System.Math.Min(flight, -(px * wx + py * wy) / ww)) : 0; // closest moment
-                double cx = px + wx * s, cy = py + wy * s, rad = stats.hitRadiusUnits;
-                if (cx * cx + cy * cy <= rad * rad && s < first) { struck = t; first = s; }
-            }
+            string side;
+            float breakAt; // where along the ship it struck, 0 the stern to 1 the nose
+            var struck = FirstStruck(r, flight, out side, out _, out breakAt);
             if (struck != null)
             {
                 // Step 49: the struck ship takes the hit on its own model (its side, then what is behind it)
-                string side = SideStruck(struck, r);
                 var victim = ship.ShipOf != null ? ship.ShipOf(struck.key) : null;
                 string damage = victim == null ? "" : r.missile ? victim.damage.TakeWarhead(side, warheads[r.warhead], stats) : victim.damage.TakeSlug(side, stats);
-                if (victim != null && victim.destroyed) ship.Kill(struck);
+                if (victim != null && victim.destroyed) ship.Kill(struck, breakAt);
                 else { shotReport = "HIT · " + ship.NameOf(struck) + (ship.Scanned(struck) ? " · " + side + damage : ""); lastShotHit = true; shotResults++; } // Step 61: detail once scanned
                 list.RemoveAt(i);
                 continue;
@@ -649,6 +639,42 @@ public class WeaponSystem : MonoBehaviour
             r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
             if (r.travelled >= r.maxUnits - 1e-6) { shotReport = "MISS"; lastShotHit = false; shotResults++; list.RemoveAt(i); }
         }
+    }
+
+    // The first ship's box round r reaches in `flight` seconds, the side it comes through, and how far along that flight
+    ShipState.Track FirstStruck(Round r, double flight, out string side, out double first, out float breakAt)
+    {
+        ShipState.Track struck = null;
+        side = null;
+        first = double.MaxValue;
+        breakAt = 0.5f;
+        foreach (var t in ship.tracks)
+        {
+            if (t.own || !t.hasWorld || t.wreck) continue;
+            // the round's path as seen from the ship: its velocity less the ship's
+            double c = t.course * System.Math.PI / 180;
+            double fx = r.x - t.worldX, fy = r.y - t.worldY;
+            double mx = (r.dx * r.speed - t.speed * System.Math.Sin(c)) * flight, my = (r.dy * r.speed - t.speed * System.Math.Cos(c)) * flight;
+            var hull = ship.ShipOf != null ? ship.ShipOf(t.key) : null;
+            Vector2 half = hull != null ? stats.HitHalf(hull.nav.BoxHalf) : new Vector2(25f, 25f); // no ship behind the track: a small box
+            double at; string through;
+            if (ShipState.EntersBox(fx, fy, fx + mx, fy + my, t.worldHdg, half.x, half.y, out at, out through) && at < first)
+            {
+                struck = t; side = through; first = at;
+                double bow = t.worldHdg * System.Math.PI / 180;
+                breakAt = 0.5f + (float)(((fx + mx * at) * System.Math.Sin(bow) + (fy + my * at) * System.Math.Cos(bow)) / (2 * half.y));
+            }
+        }
+        return struck;
+    }
+
+    /// <summary>Owner 2026-11-01: how far round r flies by the next tick, dt game seconds away: a whole step, or only as far
+    /// as the box it reaches first, so the plot's dot touches the ship as the hit lands. Drawing only.</summary>
+    public double StepAhead(Round r, double dt)
+    {
+        double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled), at;
+        bool hits = r.by != null ? ReachesUs(r, step, 0, out at, out _) : FirstStruck(r, step / r.speed, out _, out at, out _) != null;
+        return hits ? step * at : step;
     }
 
     // A missile turns toward its target, no faster than stats.missileTurnDegPerS. With no target left it flies on.
@@ -667,9 +693,6 @@ public class WeaponSystem : MonoBehaviour
         double head = (now + System.Math.Max(-most, System.Math.Min(most, turn))) * System.Math.PI / 180;
         r.dx = System.Math.Sin(head); r.dy = System.Math.Cos(head);
     }
-
-    // The side facing the shot (reference sim sideFacing): where it came from, against the ship's bow.
-    static string SideStruck(ShipState.Track t, Round r) => ShipState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, t.worldHdg);
 
     // ---- enemy missiles and our point defence (Step 55, owner 2026-10-24) -----------------------
 
@@ -702,7 +725,7 @@ public class WeaponSystem : MonoBehaviour
     }
 
     /// <summary>Each tick: our PDCs take their chances, then every enemy missile homes on us and every enemy
-    /// slug flies straight; one that passes within its firing ship's hitRadiusUnits strikes the side facing it.</summary>
+    /// slug flies straight; one that reaches our box, made bigger by its firing ship's hitMarginPercent, strikes the side it reaches.</summary>
     public void TickIncoming(double dt)
     {
         var list = Incoming;
@@ -711,24 +734,10 @@ public class WeaponSystem : MonoBehaviour
             var r = list[i];
             if (r.missile && PdcStops(r, r.speed * dt)) { list.RemoveAt(i); continue; }
             if (r.missile) SteerAt(r, ship.nav.x, ship.nav.y, dt);
-            double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled), cx, cy;
-            if (r.missile)
+            double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
+            string side;
+            if (ReachesUs(r, step, dt, out _, out side))
             {
-                double px = ship.nav.x - r.x, py = ship.nav.y - r.y;
-                double u = System.Math.Max(0, System.Math.Min(step, px * r.dx + py * r.dy)); // closest point along the path
-                cx = px - r.dx * u; cy = py - r.dy * u;
-            }
-            else
-            {
-                // a slug against our own motion through the tick: our ship has already moved this tick
-                double wx = r.dx * r.speed - ship.nav.vx, wy = r.dy * r.speed - ship.nav.vy;
-                double ox = r.x - (ship.nav.x - ship.nav.vx * dt), oy = r.y - (ship.nav.y - ship.nav.vy * dt);
-                double ww = wx * wx + wy * wy, tau = ww > 0 ? System.Math.Max(0, System.Math.Min(step / r.speed, -(ox * wx + oy * wy) / ww)) : 0;
-                cx = ox + wx * tau; cy = oy + wy * tau;
-            }
-            if (cx * cx + cy * cy <= r.by.hitRadiusUnits * r.by.hitRadiusUnits)
-            {
-                string side = ShipState.SideAt(System.Math.Atan2(-r.dx, -r.dy) * 180 / System.Math.PI, ship.nav.heading);
                 incomingReport = r.missile ? "MISSILE HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead], r.by)
                                            : "SLUG HIT · " + side + ship.damage.TakeSlug(side, r.by);
                 hitsTaken++;
@@ -738,6 +747,22 @@ public class WeaponSystem : MonoBehaviour
             r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
             if (r.travelled >= r.maxUnits - 1e-6) list.RemoveAt(i);
         }
+    }
+
+    // Does enemy round r reach our box on a step of `step` units? `ago`: game seconds our ship has already moved of it
+    bool ReachesUs(Round r, double step, double ago, out double at, out string side)
+    {
+        double fx, fy, mx, my;
+        if (r.missile) { fx = r.x - ship.nav.x; fy = r.y - ship.nav.y; mx = r.dx * step; my = r.dy * step; }
+        else
+        {
+            // a slug against our own motion through the tick
+            double flight = step / r.speed;
+            fx = r.x - (ship.nav.x - ship.nav.vx * ago); fy = r.y - (ship.nav.y - ship.nav.vy * ago);
+            mx = (r.dx * r.speed - ship.nav.vx) * flight; my = (r.dy * r.speed - ship.nav.vy) * flight;
+        }
+        Vector2 half = r.by.HitHalf(ship.nav.BoxHalf);
+        return ShipState.EntersBox(fx, fy, fx + mx, fy + my, ship.nav.heading, half.x, half.y, out at, out side);
     }
 
     // A PDC group on AUTO, loaded and powered, gets one chance at each enemy missile inside its arc and range.

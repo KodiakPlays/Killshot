@@ -32,6 +32,10 @@ public class ShipState
         [System.NonSerialized] public double course;
         [Tooltip("Step 49: destroyed; cold, no longer hostile or heard, a wreck where it died.")]
         [System.NonSerialized] public bool wreck;
+        [Tooltip("Owner 2026-11-01: when it was destroyed, and when it was last in sight as a wreck, game seconds. Out of sight, its dot fades from then.")]
+        [System.NonSerialized] public float wreckAt, wreckSeenAt;
+        [Tooltip("Owner 2026-11-01: where it broke in two, 0 its stern to 1 its nose.")]
+        [System.NonSerialized] public float breakAt;
         [Tooltip("Step 75: where the sweep last touched it (See). Out of sight, the plot shows it here.")]
         [System.NonSerialized] public bool seen;
         [System.NonSerialized] public double seenX, seenY, seenBrg;
@@ -347,6 +351,41 @@ public class ShipState
         }
     }
 
+    /// <summary>Owner 2026-11-01: a straight path against a ship's box. The path's two ends are given from the box's
+    /// centre, and the box is turned to bowDeg, hw and hl across its half width and half length. Does the path reach
+    /// the box? If so: how far along (0 to 1), and through which side.</summary>
+    public static bool EntersBox(double fromX, double fromY, double toX, double toY, double bowDeg, double hw, double hl, out double at, out string side)
+    {
+        double b = bowDeg * System.Math.PI / 180, sin = System.Math.Sin(b), cos = System.Math.Cos(b);
+        // on the box's own axes: x to starboard, y to the bow
+        double ax = fromX * cos - fromY * sin, ay = fromX * sin + fromY * cos;
+        double bx = toX * cos - toY * sin, by = toX * sin + toY * cos;
+        double inX, outX, inY, outY;
+        Slab(ax, bx - ax, hw, out inX, out outX);
+        Slab(ay, by - ay, hl, out inY, out outY);
+        at = System.Math.Max(0, System.Math.Max(inX, inY));
+        side = null;
+        if (at > System.Math.Min(1, System.Math.Min(outX, outY))) return false;
+        // the last of the two pairs of sides it crossed is the one it came through; started inside, the side it is nearest
+        bool beam = inX > 0 || inY > 0 ? inX >= inY : System.Math.Abs(ax) / hw >= System.Math.Abs(ay) / hl;
+        side = beam ? (ax > 0 ? "STBD" : "PORT") : (ay > 0 ? "PROW" : "AFT");
+        return true;
+    }
+
+    // When a point moving along one axis is between -half and half: from `enter` to `leave`, as shares of its move
+    static void Slab(double start, double move, double half, out double enter, out double leave)
+    {
+        if (System.Math.Abs(move) < 1e-9)
+        {
+            bool inside = System.Math.Abs(start) <= half;
+            enter = inside ? double.NegativeInfinity : double.PositiveInfinity;
+            leave = inside ? double.PositiveInfinity : double.NegativeInfinity;
+            return;
+        }
+        double a = (-half - start) / move, b = (half - start) / move;
+        enter = System.Math.Min(a, b); leave = System.Math.Max(a, b);
+    }
+
     public static string SideAt(double fromDeg, double bowDeg)
     {
         double rel = ((fromDeg - bowDeg) % 360 + 360) % 360;
@@ -357,9 +396,11 @@ public class ShipState
     public string NameOf(Track t) => Scanned(t) ? t.name : "BOGEY " + t.key.ToUpperInvariant();
     public bool Scanned(Track t) => t != null && identified.Contains(t.key);
 
-    public void Kill(Track t)
+    public void Kill(Track t, float breakAt = 0.5f)
     {
         t.wreck = true; t.hostile = false;
+        t.wreckAt = t.wreckSeenAt = missionNow;
+        t.breakAt = Mathf.Clamp(breakAt, 0.3f, 0.7f); // never a sliver
         weapons.shotReport = NameOf(t) + " DESTROYED";
         kills++; weapons.shotResults++; weapons.lastShotHit = true;
     }

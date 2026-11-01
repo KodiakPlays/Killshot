@@ -12,6 +12,8 @@ public class ShipStats : ScriptableObject
     public string shipClass = "Asura-class destroyer";
     [Tooltip("Length, units (owner 2026-10-29). At x1 a small plot square is 50 units; the plot draws the ship this long.")]
     public float length = 100f;
+    [Tooltip("Width, units (owner 2026-11-01). The ship is a solid rectangle, this long and this wide, round its model: shots and crashes hit it. The Hard Points tab of Starwolf → Tuning draws it.")]
+    public float width = 64f;
     public NavSystem.Stats navigation = new NavSystem.Stats();
     public PowerSystem.Stats power = new PowerSystem.Stats();
     public SensorSystem.Stats sensors = new SensorSystem.Stats();

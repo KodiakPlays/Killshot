@@ -27,10 +27,14 @@ public class DamageSystem : MonoBehaviour
         [Tooltip("Crew in each room at the start: MAG, BRI, HAB, HGR, RCT, ENG (owner 2026-10-29: a tuning number, per ship). "
                + "Breaches, VENT and radiation kill them.")]
         public int[] crew = { 4, 9, 18, 7, 6, 8 };
-        [Tooltip("Running into a piece of debris (owner 2026-10-26: it hurts; the ship is not pushed out): armour off the side facing it.")]
+        [Tooltip("A crash into debris or another ship at Crash Full Speed: armour off the side that touched.")]
         public float collisionArmourDamage = 25f;
-        [Tooltip("Running into debris with that side open: integrity off the room behind it.")]
+        [Tooltip("The same crash with that side open: integrity off the room behind it.")]
         public int collisionCompartmentDamage = 1;
+        [Tooltip("A crash at this speed, units/s, does the full damage above. Slower does less, faster does more (owner 2026-11-01).")]
+        public float crashFullSpeed = 12.5f;
+        [Tooltip("Slower than this, units/s, a crash is a nudge: no damage.")]
+        public float crashNudgeSpeed = 0.5f;
         [Header("Conditions (Step 59, DAMAGE_README.md): every rate per game second")]
         [Tooltip("Chance a hit on the reactor room (not a fighter's) leaks radiation. The fire and breach chances are the shooter's (Weapons).")]
         [Range(0f, 1f)] public float radChanceReactor = 0.5f;
@@ -207,9 +211,14 @@ public class DamageSystem : MonoBehaviour
         return " " + Sides[i] + Behind(i, compartmentDamage, "fighter", null);
     }
 
-    /// <summary>The ship runs into a piece of debris (TacticalWorld): the side facing it, then the room behind,
-    /// as a fighter's run does. Starts no fire, breach or radiation.</summary>
-    public string TakeCollision(string side) => TakeFighterRun(side, false, stats.collisionArmourDamage, stats.collisionCompartmentDamage);
+    /// <summary>The ship crashes into debris or another ship (TacticalWorld) at this speed: the side that touched, then
+    /// the room behind, as a fighter's run does. Starts no fire, breach or radiation.</summary>
+    public string TakeCollision(string side, double speed)
+    {
+        if (speed < stats.crashNudgeSpeed) return "";
+        float share = (float)speed / Mathf.Max(0.01f, stats.crashFullSpeed);
+        return TakeFighterRun(side, false, stats.collisionArmourDamage * share, Mathf.CeilToInt(stats.collisionCompartmentDamage * share));
+    }
 
     // The room behind side i loses the damage given. A wrecked room takes no more, but the hit can still start
     // a condition there (Step 59). The ship is destroyed when its reactor's structure reaches 0 (any ship, ours

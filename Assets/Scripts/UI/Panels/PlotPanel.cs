@@ -28,11 +28,11 @@ public class PlotPanel : Panel
 
     [Header("Our ship on the plot (Step 37): the 3D model seen from above (ShipView)")]
     [SerializeField] private RawImage ownShipImage;
-    [Tooltip("A ship is drawn at its length (its stats file) at the plot's scale: ours, 100 units, is 76 px at x1. "
+    [Tooltip("A ship is drawn at its length (its stats file) at the plot's scale: ours, 200 units, is 152 px at x1. "
            + "It shrinks with zoom like the design's glyph, but never below this (older handoff: legible at 30 px) "
            + "and never above the maximum (owner 2026-10-17).")]
     [Tune("Plot & our ship")]
-    [SerializeField] private float ownShipMinPx = 30f, ownShipMaxPx = 120f;
+    [SerializeField] private float ownShipMinPx = 30f, ownShipMaxPx = 300f;
     Color ownShipColor => Palette.ownShip;
     private ShipView shipView;
 
@@ -96,6 +96,14 @@ public class PlotPanel : Panel
     [Tooltip("Owner 2026-10-26 (Step 75): a contact in sight (visualRangeUnits) shows as its own 3D model seen from above, in "
            + "place of its dot (a ShipView camera on the contact's model): red identified, amber unknown, grey a wreck.")]
     [SerializeField] private RawImage contactShipImage;
+    [Tooltip("Owner 2026-11-01: a killed ship breaks in two. How fast the halves drift apart, each, units a game second.")]
+    [Tune("Plot & our ship")] [SerializeField] private float wreckDriftUnits = 5f;
+    [Tooltip("How fast the halves turn, degrees a game second.")]
+    [Tune("Plot & our ship")] [SerializeField] private float wreckSpinDeg = 3f;
+    [Tooltip("Out of sight, a wreck's dot fades away over this many game seconds.")]
+    [Tune("Plot & our ship")] [SerializeField] private float wreckDotFadeSeconds = 120f;
+    private RawImage wreckBackHalf; // a copy of contactShipImage, made at the first break
+    private bool wreckPictured;
     Color wreckInk => Palette.secondary;
     private ShipView[] shipViews;
     /// <summary>A contact's ship picture is on the plot (the playtest reads it).</summary>
@@ -172,6 +180,8 @@ public class PlotPanel : Panel
     [SerializeField] private float pdcArcStepDeg = 2f;
     [Tooltip("Owner 2026-11-01: each railgun's firing arc is a soft dotted cone while Fire Control is open; the selected turret this strong, the other less.")]
     [Tune("Periscope & fire control")] [Range(0f, 1f)] [SerializeField] private float railArcAlpha = 0.6f, railArcAlphaOther = 0.3f;
+    [Tooltip("Owner 2026-11-01: draws each ship's collision box on the plot, to see that it fits round the model.")]
+    [Tune("Plot & our ship")] [SerializeField] private bool showShipBoxes = false;
     [Tooltip("Owner 2026-11-01: inside the cone, the gun itself: a solid bar that turns slowly onto the target. Shots fly straight down it.")]
     [Tune("Periscope & fire control")] [Range(0f, 1f)] [SerializeField] private float gunBarAlpha = 1f, gunBarAlphaOther = 0.4f;
     [Tooltip("Owner 2026-10-29: a thin ring round our ship at the visual range (the ship's stats file, 10,000 units), always on. "
@@ -221,6 +231,17 @@ public class PlotPanel : Panel
     }
     /// <summary>Step 75: our ship where it is drawn now (it glides between ticks), in board px.</summary>
     Vector2 OwnAt => Screen(State.nav.DrawnX, State.nav.DrawnY);
+    // A ship's collision box as drawn now.
+    void AddBox(List<MarksGraphic.Shape> shapes, NavSystem nav)
+    {
+        float rad = (float)nav.DrawnHeading * Mathf.Deg2Rad;
+        Vector2 half = nav.BoxHalf, fore = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad)) * half.y, right = new Vector2(Mathf.Cos(rad), -Mathf.Sin(rad)) * half.x;
+        var at = new Vector2((float)nav.DrawnX, (float)nav.DrawnY);
+        var corners = new[] { at + fore + right, at + fore - right, at - fore - right, at - fore + right };
+        for (int i = 0; i < 4; i++)
+            shapes.Add(new MarksGraphic.Shape { kind = "line", a = Screen(corners[i].x, corners[i].y), b = Screen(corners[(i + 1) % 4].x, corners[(i + 1) % 4].y), alpha = 1f, ink = data.gamma });
+    }
+
     /// <summary>A mount where it is drawn: on its hard point, or at our ship's centre without one.</summary>
     Vector2 MountAt(WeaponSystem.Mount m)
     {
@@ -520,6 +541,11 @@ public class PlotPanel : Panel
                 reachShapes.Add(new MarksGraphic.Shape { kind = "circle", a = own, b = own + new Vector2((float)(s.sensors.stats.visualRangeUnits / UnitsPerPx * Controls.ZoomExact), 0f),
                                                          alpha = visualRingAlpha, ink = data.gamma });
             }
+            if (showShipBoxes)
+            {
+                AddBox(reachShapes, s.nav);
+                foreach (var t in s.tracks) if (t.nav) AddBox(reachShapes, t.nav);
+            }
             Paint(weaponRing, caution);
             weaponRing.Set(reachShapes);
         }
@@ -541,6 +567,7 @@ public class PlotPanel : Panel
         var dots = new List<MarksGraphic.Shape>();
         int n = 0;
         string pictured = null; // the one contact picture's track
+        wreckPictured = false;
         foreach (var t in s.tracks)
         {
             if (t.own || t.captured) continue;
@@ -567,8 +594,13 @@ public class PlotPanel : Panel
                 contactShipImage.texture = view.Texture;
                 contactShipImage.color = ink.gamma;
                 float px = ShipPx(view) / view.ShipFill;
-                contactShipImage.rectTransform.sizeDelta = new Vector2(px, px);
-                Put(contactShipImage.rectTransform, at, 0f);
+                if (t.wreck) ShowBroken(t, view, at, px, ink);
+                else
+                {
+                    contactShipImage.uvRect = new Rect(0f, 0f, 1f, 1f);
+                    contactShipImage.rectTransform.sizeDelta = new Vector2(px, px);
+                    Put(contactShipImage.rectTransform, at, 0f);
+                }
                 contactShipImage.enabled = true;
                 pictured = t.key;
                 labelPush = px * view.ShipFill / 2f;
@@ -585,6 +617,7 @@ public class PlotPanel : Panel
         }
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
         if (contactShipImage && pictured == null) contactShipImage.enabled = false;
+        if (wreckBackHalf) wreckBackHalf.enabled = wreckPictured;
         // enemy missiles coming at us (Step 55): a red dot with a short trail, like our own rounds, no label
         foreach (var r in s.weapons.Incoming)
         {
@@ -629,8 +662,10 @@ public class PlotPanel : Panel
         foreach (var t in s.tracks)
             if (t.wreck && t.hasWorld && t.key != pictured)
             {
+                float left = 1f - (s.missionNow - t.wreckSeenAt) / Mathf.Max(wreckDotFadeSeconds, 0.01f); // owner 2026-11-01: out of sight, the dot fades away
+                if (left <= 0f) continue;
                 var w = t.nav ? Screen(t.nav.DrawnX, t.nav.DrawnY) : Screen(t.worldX, t.worldY);
-                bearings.Add(new MarksGraphic.Shape { kind = "point", a = w, b = w, alpha = 0.45f });
+                bearings.Add(new MarksGraphic.Shape { kind = "point", a = w, b = w, alpha = 0.45f * left });
             }
         if (passiveLines) { Paint(passiveLines, Controls.GridAmber ? alarm : data); passiveLines.Set(bearings); }
 
@@ -715,6 +750,32 @@ public class PlotPanel : Panel
         }
         passiveLabels[i].gameObject.SetActive(true);
         return passiveLabels[i];
+    }
+
+    // Owner 2026-11-01: a killed ship's picture, cut in two across the ship where the shot struck. The halves drift
+    // apart along the ship's line and turn slowly, in game time.
+    void ShowBroken(ShipState.Track t, ShipView view, Vector2 at, float px, Color ink)
+    {
+        if (!wreckBackHalf) wreckBackHalf = Instantiate(contactShipImage, contactShipImage.transform.parent);
+        wreckBackHalf.texture = view.Texture;
+        wreckBackHalf.color = ink.gamma;
+        wreckPictured = true;
+        t.wreckSeenAt = State.missionNow;
+        float hdg = (float)(t.nav ? t.nav.DrawnHeading : t.worldHdg), age = State.missionNow - t.wreckAt;
+        view.WreckHeading = hdg;
+        float cut = 0.5f + (t.breakAt - 0.5f) * view.ShipFill; // up the picture
+        float apart = wreckDriftUnits * age / (float)UnitsPerPx * (float)Controls.ZoomExact;
+        Half(contactShipImage, new Rect(0f, cut, 1f, 1f - cut), at, hdg, cut * px / 2f + apart, px, wreckSpinDeg * age);
+        Half(wreckBackHalf, new Rect(0f, 0f, 1f, cut), at, hdg, cut * px / 2f - px / 2f - apart, px, -wreckSpinDeg * 0.7f * age);
+    }
+
+    // One half of a wreck's picture, `along` px toward the ship's nose from its centre.
+    void Half(RawImage image, Rect part, Vector2 at, float hdg, float along, float px, float spin)
+    {
+        image.uvRect = part;
+        image.rectTransform.sizeDelta = new Vector2(px, px * part.height);
+        float rad = hdg * Mathf.Deg2Rad;
+        Put(image.rectTransform, at + new Vector2(Mathf.Sin(rad), -Mathf.Cos(rad)) * along, spin - hdg);
     }
 
     // The ShipView watching a contact's model, if there is one.

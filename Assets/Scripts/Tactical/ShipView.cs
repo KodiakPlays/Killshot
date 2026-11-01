@@ -68,10 +68,14 @@ public class ShipView : MonoBehaviour
 
     private void LateUpdate() => Follow();
 
+    /// <summary>Owner 2026-11-01: a wreck's heading, or null. The plot cuts a wreck's picture across the ship, so the
+    /// camera turns with it: the ship's nose is up in the picture, and the plot turns the picture instead.</summary>
+    public float? WreckHeading { get; set; }
+
     void Follow()
     {
         if (!target) return;
-        transform.SetPositionAndRotation(target.position + new Vector3(0, 0, -height), Quaternion.identity); // look along +z, north up
+        transform.SetPositionAndRotation(target.position + new Vector3(0, 0, -height), Quaternion.Euler(0, 0, -(WreckHeading ?? 0f))); // look along +z, north up
     }
 
     private void OnDestroy()

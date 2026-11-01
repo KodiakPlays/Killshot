@@ -162,6 +162,10 @@ public class BoardManager : MonoBehaviour
     [Tooltip("Owner 2026-10-28 (the Wolf Hunt play-through): what just hit us (a slug, a missile, debris) stays on the "
            + "strip this long, real seconds.")]
     [SerializeField] private float hitLineSeconds = 4f;
+    [Tooltip("Owner 2026-11-01: a crash or a hit on us shakes the plot this long, real seconds.")]
+    [Tune("Board & time")] [SerializeField] private float shakeSeconds = 0.5f;
+    [Tooltip("How far the hardest shake moves the plot, board px. A slow crash shakes less.")]
+    [Tune("Board & time")] [SerializeField] private float shakePx = 7f;
 
     [Header("Sound — the prototype's click cues (audioCue tab, power, auxfail)")]
     [Tune("Sound")] [SerializeField] private Tone tabSound = new Tone(560f, 0.035f, 0.018f, false);
@@ -293,6 +297,7 @@ public class BoardManager : MonoBehaviour
     private void Update()
     {
         // The board's single timer (tickPower). Only the mission clock is board-local so far.
+        Shake();
         // thrown repair and order rockers fall back after 400 ms (flickBack)
         if (state.orders.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
         if (Input.GetKeyDown(quitKey)) Application.Quit(); // owner 2026-10-29: quit at any time (does nothing in the editor)
@@ -482,13 +487,31 @@ public class BoardManager : MonoBehaviour
     /// <summary>Wolf Hunt: the mission's own line on the alarm strip (JUMP POINT …, REINFORCEMENTS INBOUND) and its
     /// count, set by QuestSystem. Null: none. The battle space's warnings come first.</summary>
     [System.NonSerialized] public string missionAlarm, missionCount;
+    /// <summary>Owner 2026-11-01: "ROCK AHEAD · 18 S" while our ship is on course to hit one (TacticalWorld), else null.</summary>
+    [System.NonSerialized] public string rockAlarm;
 
     /// <summary>The alert tone, and the strip redrawn now (QuestSystem: the mission changed).</summary>
     public void Alert() { ShowAlarm(); Play(alertSound, "alert"); }
 
     /// <summary>Something hit us (WeaponSystem's report, or TacticalWorld's debris): the tone, and the line on the strip
     /// for <see cref="hitLineSeconds"/>.</summary>
-    public void Struck(string line) { hitLine = line; hitLineUntil = Time.unscaledTime + hitLineSeconds; Alert(); }
+    public void Struck(string line, float hard = 1f)
+    {
+        hitLine = line; hitLineUntil = Time.unscaledTime + hitLineSeconds; Alert();
+        shakeHard = Time.unscaledTime < shakeUntil ? Mathf.Max(shakeHard, hard) : hard;
+        shakeUntil = Time.unscaledTime + shakeSeconds;
+    }
+    private RectTransform shakenPlot;
+    private Vector2 plotAt;
+    private float shakeUntil, shakeHard;
+
+    // As the old UI's ShipShake: random jolts that die away. The plot moves behind the board's metal frame.
+    void Shake()
+    {
+        if (!shakenPlot) { var p = GetComponentInChildren<PlotPanel>(true); if (!p) return; shakenPlot = (RectTransform)p.transform; plotAt = shakenPlot.anchoredPosition; }
+        float left = (shakeUntil - Time.unscaledTime) / Mathf.Max(shakeSeconds, 0.01f);
+        shakenPlot.anchoredPosition = left > 0f ? plotAt + Random.insideUnitCircle * shakePx * shakeHard * left : plotAt;
+    }
     private string hitLine;
     private float hitLineUntil;
     private bool incomingWarned;

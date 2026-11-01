@@ -89,6 +89,12 @@ public class NavSystem : MonoBehaviour
         }
     }
 
+    /// <summary>Owner 2026-11-01: the ship's collision box, a rectangle round its model: half its width (x) and half
+    /// its length (y), units. It turns with the ship.</summary>
+    public Vector2 BoxHalf { get { var s = (shipStats ? shipStats : (shipStats = GetComponent<Ship>())).Stats; return new Vector2(s.width / 2f, s.length / 2f); } }
+    /// <summary>Where TacticalWorld last had this ship: it checks the whole way from there, so a fast ship can't skip through.</summary>
+    [System.NonSerialized] public double wasX, wasY;
+
     public double SpeedUnits => System.Math.Sqrt(vx * vx + vy * vy);
     /// <summary>Course over ground, degrees clockwise from north (the way the ship is actually going).</summary>
     public double CourseDeg => (System.Math.Atan2(vx, vy) * 180 / System.Math.PI + 360) % 360;

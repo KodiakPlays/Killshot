@@ -802,7 +802,11 @@ public static class PlaytestRunner
         if (best != 0 && !PlotDrag(board, brgAt, brgAt + new Vector2(6 * best, 0), "turn the BRG knob to the nearest degree", "fc.knob")) yield break;
         s.SlewTo(); // stand-in for the periscope's SLEW TO key: onto the dialled bearing
         double predicted = MissUnits(s, t07, s.nav.heading + s.weapons.Sol.brg);
-        bool expectHit = predicted <= s.weapons.stats.hitRadiusUnits;
+        // owner 2026-11-01: a shot hits its box, so how close it must pass depends how the ship lies: sure inside the box's narrow half, never outside its long half
+        var t07Half = t07Ship.nav.BoxHalf;
+        var t07Hit = s.weapons.stats.HitHalf(t07Half);
+        float nearSure = t07Hit.x, nearNever = t07Hit.magnitude;
+        bool expectHit = predicted <= nearSure;
         Check("Turret A can't bear on it: ANGLE is out of arc", s.weapons.mount == "RGA" && !s.weapons.InArc, "REL BRG " + s.weapons.Sol.brg + "°, heading " + s.nav.heading + "°");
         if (!Click("fc.mount", null, "turret selector (RG-B)")) yield break;
         Check("Turret B bears", s.weapons.mount == "RGB" && s.weapons.InArc, "");
@@ -842,11 +846,11 @@ public static class PlaytestRunner
         board.SetZoom(X1);
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0); // 15 s each; the flight is about 2 s at x1
-        bool marginal = System.Math.Abs(predicted - s.weapons.stats.hitRadiusUnits) < 0.05 * s.weapons.stats.hitRadiusUnits; // either way is right this close
+        bool marginal = predicted > nearSure && predicted < nearNever; // either way is right this close
         if (marginal) expectHit = s.weapons.shotReport == "HIT · BOGEY T07";
         Check("The slug lands as the aim says: " + (expectHit ? "a HIT, no detail on a ship we have not scanned" : "a MISS") + (marginal ? " (a marginal aim)" : ""),
               expectHit ? s.weapons.shotReport == "HIT · BOGEY T07" : s.weapons.shotReport == "MISS",
-              "\"" + s.weapons.shotReport + "\"; the aim passes " + predicted.ToString("N0") + " km from it (hit radius " + s.weapons.stats.hitRadiusUnits + " km)");
+              "\"" + s.weapons.shotReport + "\"; the aim passes " + predicted.ToString("N0") + " units from its centre (box half " + t07Half + ", hit area " + s.weapons.stats.hitMarginPercent + "% bigger)");
         yield return 0.3f;
         Check("Fire control reports it, with its cue", board.LastSound == (expectHit ? "hit" : "miss"), "last cue \"" + board.LastSound + "\"");
         Shot("28_hit");
@@ -927,8 +931,8 @@ public static class PlaytestRunner
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "fire (led)", "fc.lever")) yield break;
         yield return (Func<bool>)(() => s.weapons.shotResults > landedLed);
         Check("Led from the track, it hits the moving GARUDA (unscanned: a bare HIT)", s.weapons.lastShotHit && s.weapons.shotReport == "HIT · BOGEY T07",
-              "\"" + s.weapons.shotReport + "\"; aimed at the first POINT it would pass " + unled.ToString("N0") + " km off, led " + led.ToString("N0") + " km (hit radius " + s.weapons.stats.hitRadiusUnits + ")");
-        Check("Unled, the same shot would have missed", unled > s.weapons.stats.hitRadiusUnits, unled.ToString("N0") + " km");
+              "\"" + s.weapons.shotReport + "\"; aimed at the first POINT it would pass " + unled.ToString("N0") + " km off, led " + led.ToString("N0") + " km");
+        Check("Unled, the same shot would have missed", unled > nearNever, unled.ToString("N0") + " km");
         if (!Click("rate", "1", "x1 rate key")) yield break;
         //     An active-scan lock: TRACK knows its true course and speed and leads exactly.
         //     A real active scan (owner 2026-10-29: it was faked here): ACTIVE on, the cone dial onto GARUDA, let go.

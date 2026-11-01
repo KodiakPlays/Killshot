@@ -29,11 +29,25 @@ public class TacticalWorld : MonoBehaviour
     // Ruins (owner 2026-10-27): a piece of the level's terrain shows only while it is in range of our ship
     // (its centre within range plus half its size): inside the DRADIS circle while DRADIS listens, else
     // within visual range. Out of range it hides again.
-    // Our ship running into a piece takes damage, once each time it goes in; it is not pushed out
-    // (owner 2026-10-26).
-    struct Ruin { public Renderer r; public Vector2 at; public float half; }
+    // Owner 2026-11-01: every ship is a solid box round its model, and every piece is solid too. Nothing passes
+    // through anything: a ship that touches a piece or another ship bounces off and takes damage by its speed.
+    struct Ruin { public Renderer r; public Vector2 at; public float half; public Vector2[] outline; public float reach; }
     private readonly List<Ruin> ruins = new List<Ruin>();
-    private readonly HashSet<Renderer> inside = new HashSet<Renderer>();
+    private readonly Dictionary<NavSystem, float> nextCrash = new Dictionary<NavSystem, float>();
+    private readonly List<ShipState> bodies = new List<ShipState>();
+    private readonly List<Ruin> nearby = new List<Ruin>();
+    private readonly Vector2[] boxA = new Vector2[4], boxB = new Vector2[4];
+    [Header("Crashes (owner 2026-11-01)")]
+    [Tooltip("Share of its speed a ship keeps after it bounces off something.")]
+    [Tune("Crashes")] [Range(0f, 1f)] [SerializeField] private float crashKeepSpeed = 0.3f;
+    [Tooltip("A ship takes crash damage at most once in this many game seconds, however long it grinds against something.")]
+    [Tune("Crashes")] [SerializeField] private float crashRepeatSeconds = 3f;
+    [Tooltip("Owner 2026-11-01: our ship on course to hit a rock within this many game seconds raises the warning on the alarm strip, with the alert tone.")]
+    [Tune("Crashes")] [SerializeField] private float rockWarnSeconds = 30f;
+    [Tooltip("A moving ship is checked every this many units along its way this tick, so it can't skip through at x10.")]
+    [Tune("Crashes")] [SerializeField] private float crashCheckUnits = 20f;
+    /// <summary>Off: ships pass through everything (the playtest's stand-in for flying through debris).</summary>
+    [System.NonSerialized] public bool solid = true;
     /// <summary>How many pieces of the level's terrain show now (within visual range).</summary>
     public int RuinsInSight { get; private set; }
     /// <summary>The last time our ship ran into a piece ("COLLISION · PROW ARMOUR 75%"), and how many times.</summary>
@@ -88,7 +102,10 @@ public class TacticalWorld : MonoBehaviour
             {
                 if (r.gameObject.layer != terrain || !r.enabled) continue;
                 var b = r.bounds;
-                ruins.Add(new Ruin { r = r, at = b.center, half = Mathf.Max(b.extents.x, b.extents.y) });
+                var outline = Outline(r);
+                float reach = 0f;
+                foreach (var p in outline) reach = Mathf.Max(reach, (p - (Vector2)b.center).magnitude);
+                ruins.Add(new Ruin { r = r, at = b.center, half = Mathf.Max(b.extents.x, b.extents.y), outline = outline, reach = reach });
                 r.enabled = false;
             }
     }
@@ -112,27 +129,241 @@ public class TacticalWorld : MonoBehaviour
         RuinsInSight = n;
     }
 
-    // Our ship's centre inside a piece (the piece's box, level with the piece): the side facing it takes
-    // the damage, once per time in. Our ship's real size (100 to 500 m) is too small to count.
+    // A piece's box seen from above: the outline of its eight corners on the plot's plane (some pieces are tilted).
+    static Vector2[] Outline(Renderer r)
+    {
+        var b = r.localBounds;
+        var points = new List<Vector2>();
+        for (int i = 0; i < 8; i++)
+        {
+            var c = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+            points.Add(r.transform.TransformPoint(c));
+        }
+        points.Sort((p, q) => p.x != q.x ? p.x.CompareTo(q.x) : p.y.CompareTo(q.y));
+        // round the points: the lower side left to right, then the upper side back
+        var hull = new List<Vector2>();
+        for (int pass = 0; pass < 2; pass++)
+        {
+            int start = hull.Count;
+            for (int k = 0; k < points.Count; k++)
+            {
+                var p = points[pass == 0 ? k : points.Count - 1 - k];
+                while (hull.Count >= start + 2 && Cross(hull[hull.Count - 2], hull[hull.Count - 1], p) <= 0f) hull.RemoveAt(hull.Count - 1);
+                hull.Add(p);
+            }
+            hull.RemoveAt(hull.Count - 1);
+        }
+        return hull.ToArray();
+    }
+
+    static float Cross(Vector2 o, Vector2 a, Vector2 b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+
+    // A ship's box at a spot, its corners in turn.
+    static void Corners(Vector2 at, double heading, Vector2 half, Vector2[] into)
+    {
+        float rad = (float)heading * Mathf.Deg2Rad;
+        Vector2 fore = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad)) * half.y, right = new Vector2(Mathf.Cos(rad), -Mathf.Sin(rad)) * half.x;
+        into[0] = at + fore + right; into[1] = at + fore - right; into[2] = at - fore - right; into[3] = at - fore + right;
+    }
+
+    static void Span(Vector2[] shape, Vector2 axis, out float min, out float max)
+    {
+        min = max = Vector2.Dot(shape[0], axis);
+        for (int i = 1; i < shape.Length; i++) { float d = Vector2.Dot(shape[i], axis); min = Mathf.Min(min, d); max = Mathf.Max(max, d); }
+    }
+
+    // Do two outlines overlap? If so: the shortest way to push a clear of b. A gap along any edge's square means no.
+    static bool Overlap(Vector2[] a, Vector2[] b, out Vector2 way, out float depth)
+    {
+        way = Vector2.zero; depth = float.MaxValue;
+        for (int pass = 0; pass < 2; pass++)
+        {
+            var shape = pass == 0 ? a : b;
+            for (int i = 0; i < shape.Length; i++)
+            {
+                Vector2 edge = shape[(i + 1) % shape.Length] - shape[i];
+                if (edge.sqrMagnitude < 1e-6f) continue;
+                Vector2 axis = new Vector2(-edge.y, edge.x).normalized;
+                float minA, maxA, minB, maxB;
+                Span(a, axis, out minA, out maxA); Span(b, axis, out minB, out maxB);
+                float up = maxB - minA, down = maxA - minB;
+                if (up <= 0f || down <= 0f) return false;
+                if (Mathf.Min(up, down) < depth) { depth = Mathf.Min(up, down); way = up < down ? axis : -axis; }
+            }
+        }
+        return true;
+    }
+
+    // Every tick, after everything has moved: each ship against the pieces, then against each other.
     void Collide()
     {
+        var us = board.State;
+        bodies.Clear();
+        if (!us.destroyed) bodies.Add(us);
+        foreach (var c in contacts) if (c) bodies.Add(c.Ship);
+        if (solid)
+        {
+            foreach (var ship in bodies) AgainstPieces(ship);
+            for (int i = 0; i < bodies.Count; i++)
+                for (int j = i + 1; j < bodies.Count; j++) AgainstShip(bodies[i], bodies[j]);
+        }
+        foreach (var ship in bodies) { ship.nav.wasX = ship.nav.x; ship.nav.wasY = ship.nav.y; }
+    }
+
+    // Owner 2026-11-01: rocks are solid and x10 is fast, so our ship's way ahead is watched. On course to hit one soon: a
+    // line on the alarm strip, and the alert tone as it starts.
+    void WarnRocks()
+    {
         var s = board.State;
-        if (s.destroyed || !s.damage) return;
+        float seconds = solid && !s.destroyed ? SecondsToRock(s.nav) : -1f;
+        bool warned = board.rockAlarm != null, warn = seconds >= 0f && seconds <= rockWarnSeconds;
+        board.rockAlarm = warn ? "ROCK AHEAD · " + Mathf.CeilToInt(seconds) + " S" : null;
+        if (warn && !warned) board.Alert();
+    }
+
+    // Game seconds until our box reaches the nearest rock on its way, or -1 if it reaches none it is looking for.
+    float SecondsToRock(NavSystem nav)
+    {
+        float speed = (float)nav.SpeedUnits;
+        if (speed <= 0.5f) return -1f;
+        Vector2 at = new Vector2((float)nav.x, (float)nav.y), half = nav.BoxHalf;
+        Vector2 ahead = new Vector2((float)nav.vx, (float)nav.vy) / speed, side = new Vector2(ahead.y, -ahead.x);
+        float rad = nav.heading * Mathf.Deg2Rad;
+        Vector2 fore = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad)) * half.y, right = new Vector2(Mathf.Cos(rad), -Mathf.Sin(rad)) * half.x;
+        // how far the box reaches sideways of its way, and forward along it
+        float wide = Mathf.Abs(Vector2.Dot(fore, side)) + Mathf.Abs(Vector2.Dot(right, side));
+        float front = Mathf.Abs(Vector2.Dot(fore, ahead)) + Mathf.Abs(Vector2.Dot(right, ahead));
+        float look = speed * rockWarnSeconds, across = Vector2.Dot(at, side), along = Vector2.Dot(at, ahead), nearest = float.MaxValue;
         foreach (var p in ruins)
         {
-            if (!p.r) continue;
-            if ((p.at - new Vector2((float)s.nav.x, (float)s.nav.y)).magnitude > p.half * 1.8f) { inside.Remove(p.r); continue; } // nowhere near (a box's corner is at most ~1.7 half-widths out)
-            var local = p.r.transform.InverseTransformPoint(new Vector3((float)s.nav.x, (float)s.nav.y, p.r.bounds.center.z));
-            var lb = p.r.localBounds;
-            var d = local - lb.center;
-            bool hit = Mathf.Abs(d.x) <= lb.extents.x && Mathf.Abs(d.y) <= lb.extents.y && Mathf.Abs(d.z) <= lb.extents.z;
-            if (!hit) { inside.Remove(p.r); continue; }
-            if (!inside.Add(p.r)) continue; // still inside from before
-            string side = ShipState.SideAt(Bearing(p.at - new Vector2((float)s.nav.x, (float)s.nav.y)), s.nav.heading);
-            collisionReport = "COLLISION ·" + s.damage.TakeCollision(side); // " PROW ARMOUR 75%"
-            collisions++;
-            board.Struck(collisionReport); // owner 2026-10-28: running into debris must not go unnoticed
+            if (!p.r || (p.at - at).magnitude > look + p.reach + front) continue;
+            float minS, maxS, minA, maxA;
+            Span(p.outline, side, out minS, out maxS);
+            if (minS > across + wide || maxS < across - wide) continue; // clear to one side
+            Span(p.outline, ahead, out minA, out maxA);
+            if (maxA < along) continue; // behind us
+            nearest = Mathf.Min(nearest, Mathf.Max(0f, minA - along - front));
         }
+        return nearest == float.MaxValue ? -1f : nearest / speed;
+    }
+
+    // Where a ship was at the last check, or where it is now if it jumped there (a level's spawn point).
+    Vector2 Was(NavSystem nav)
+    {
+        var now = new Vector2((float)nav.x, (float)nav.y);
+        var was = new Vector2((float)nav.wasX, (float)nav.wasY);
+        return (now - was).magnitude > nav.stats.topSpeedUnits * board.TickGameSeconds * 2.0 ? now : was;
+    }
+
+    void AgainstPieces(ShipState ship)
+    {
+        var nav = ship.nav;
+        Vector2 half = nav.BoxHalf, to = new Vector2((float)nav.x, (float)nav.y), from = Was(nav);
+        float moved = (to - from).magnitude, size = half.magnitude;
+        nearby.Clear();
+        foreach (var p in ruins) if (p.r && (p.at - to).magnitude <= p.reach + size + moved) nearby.Add(p);
+        if (nearby.Count == 0) return;
+        int steps = Mathf.Max(1, Mathf.CeilToInt(moved / Mathf.Max(1f, crashCheckUnits)));
+        for (int i = 1; i <= steps; i++)
+        {
+            var at = Vector2.Lerp(from, to, (float)i / steps);
+            Corners(at, nav.heading, half, boxA);
+            foreach (var p in nearby)
+            {
+                Vector2 way; float depth;
+                if (!Overlap(boxA, p.outline, out way, out depth)) continue;
+                nav.x = at.x + way.x * depth; nav.y = at.y + way.y * depth;
+                double into = nav.vx * way.x + nav.vy * way.y; // less than 0: coming at it
+                if (into < 0)
+                {
+                    nav.vx = (nav.vx - 2 * into * way.x) * crashKeepSpeed;
+                    nav.vy = (nav.vy - 2 * into * way.y) * crashKeepSpeed;
+                    Crash(ship, -way, -into);
+                }
+                nav.PlaceModel();
+                return;
+            }
+        }
+    }
+
+    void AgainstShip(ShipState a, ShipState b)
+    {
+        NavSystem na = a.nav, nb = b.nav;
+        Vector2 halfA = na.BoxHalf, halfB = nb.BoxHalf;
+        Vector2 toA = new Vector2((float)na.x, (float)na.y), toB = new Vector2((float)nb.x, (float)nb.y), fromA = Was(na), fromB = Was(nb);
+        float moved = Mathf.Max((toA - fromA).magnitude, (toB - fromB).magnitude);
+        if ((toA - toB).magnitude > halfA.magnitude + halfB.magnitude + 2f * moved) return;
+        int steps = Mathf.Max(1, Mathf.CeilToInt(moved / Mathf.Max(1f, crashCheckUnits)));
+        for (int i = 1; i <= steps; i++)
+        {
+            Vector2 atA = Vector2.Lerp(fromA, toA, (float)i / steps), atB = Vector2.Lerp(fromB, toB, (float)i / steps);
+            Corners(atA, na.heading, halfA, boxA);
+            Corners(atB, nb.heading, halfB, boxB);
+            Vector2 way; float depth;
+            if (!Overlap(boxA, boxB, out way, out depth)) continue;
+            // each pushed half the way clear, and the two bounce off each other
+            na.x = atA.x + way.x * depth / 2f; na.y = atA.y + way.y * depth / 2f;
+            nb.x = atB.x - way.x * depth / 2f; nb.y = atB.y - way.y * depth / 2f;
+            double into = (na.vx - nb.vx) * way.x + (na.vy - nb.vy) * way.y; // less than 0: coming together
+            if (into < 0)
+            {
+                na.vx = (na.vx - into * way.x) * crashKeepSpeed; na.vy = (na.vy - into * way.y) * crashKeepSpeed;
+                nb.vx = (nb.vx + into * way.x) * crashKeepSpeed; nb.vy = (nb.vy + into * way.y) * crashKeepSpeed;
+                Crash(a, -way, -into);
+                Crash(b, way, -into);
+            }
+            na.PlaceModel(); nb.PlaceModel();
+            return;
+        }
+    }
+
+    // A ship takes a crash on the side of its box toward what it hit, by the speed it hit at.
+    void Crash(ShipState ship, Vector2 toward, double speed)
+    {
+        float now, again;
+        now = board.State.missionNow;
+        if (nextCrash.TryGetValue(ship.nav, out again) && now < again) return;
+        nextCrash[ship.nav] = now + crashRepeatSeconds;
+        string tail = ship.damage.TakeCollision(ShipState.SideAt(Bearing(toward), ship.nav.heading), speed);
+        if (ship != board.State || tail == "") return;
+        collisionReport = "COLLISION ·" + tail; // " PROW ARMOUR 75%"
+        collisions++;
+        board.Struck(collisionReport, Mathf.Clamp((float)speed / Mathf.Max(0.01f, ship.damage.stats.crashFullSpeed), 0.3f, 1f)); // owner 2026-10-28: a crash must not go unnoticed
+    }
+
+    /// <summary>Owner 2026-11-01: rocks and ships are solid, so an enemy steers round them. The heading nearest the one
+    /// it wants with its way clear for `look` units. All blocked: the one it wants.</summary>
+    public int ClearHeading(NavSystem nav, int wanted, float look)
+    {
+        var at = new Vector2((float)nav.x, (float)nav.y);
+        float clear = nav.BoxHalf.magnitude;
+        // try the side it is already turning to first, or it dithers between the two
+        int first = Mathf.DeltaAngle(wanted, nav.heading) >= 0f ? 1 : -1;
+        for (int off = 0; off <= 150; off += 30)
+            foreach (int side in new[] { first, -first })
+            {
+                int heading = ((wanted + side * off) % 360 + 360) % 360;
+                float rad = heading * Mathf.Deg2Rad;
+                var ahead = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad));
+                if (WayClear(nav, at, ahead, look, clear)) return heading;
+            }
+        return wanted;
+    }
+
+    bool WayClear(NavSystem nav, Vector2 at, Vector2 ahead, float look, float clear)
+    {
+        foreach (var p in ruins)
+            if (p.r && InTheWay(p.at - at, ahead, look, p.reach + clear)) return false;
+        foreach (var ship in bodies)
+            if (ship.nav != nav && InTheWay(new Vector2((float)ship.nav.x, (float)ship.nav.y) - at, ahead, look, ship.nav.BoxHalf.magnitude + clear)) return false;
+        return true;
+    }
+
+    // Is something this far off, this wide, in a corridor straight ahead?
+    static bool InTheWay(Vector2 off, Vector2 ahead, float look, float width)
+    {
+        float along = Vector2.Dot(off, ahead);
+        return along > -width && along < look + width && Mathf.Abs(off.x * ahead.y - off.y * ahead.x) < width;
     }
 
     static bool LevelOpen()
@@ -239,9 +470,10 @@ public class TacticalWorld : MonoBehaviour
             else brain.Think(ship, board.State);
             ship.nav.Tick(board.TickGameSeconds); // it steers, moves, and puts its model where it is
         }
+        Collide();
+        WarnRocks();
         Sync();
         SeeRuins();
-        Collide();
     }
 
     /// <summary>Write each contact's true bearing and range from our ship into its board track.
