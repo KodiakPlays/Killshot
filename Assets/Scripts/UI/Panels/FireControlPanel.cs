@@ -291,7 +291,7 @@ public class FireControlPanel : Panel
             else if (tid == null && !manual) t = "NO LOCK — USE THE TARGETING COMPUTER";
             else if (!s.damage.BriOk) t = "BRIDGE DAMAGED — PLOT COMPUTER OFFLINE";
             else if (!sol.set) t = "NO LOCK — USE THE TARGETING COMPUTER";
-            else if (!s.orders.WeaponsReleased) t = "WEAPONS NOT RELEASED — CONDITION 2 REQUIRED";
+            else if (!s.orders.WeaponsReleased) t = s.orders.weaponsHold ? "WEAPONS HOLD" : "WEAPONS NOT RELEASED — CONDITION 2 REQUIRED";
             else if (!s.damage.MagOk) t = "MAGAZINE DAMAGED — NO ROUNDS STRUCK UP";
             else if (s.weapons.sys == "PD" && !s.weapons.loaders) t = "PDC AUTOLOADERS OFF";
             else t = "ARMING SEQUENCE INCOMPLETE";

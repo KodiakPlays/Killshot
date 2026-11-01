@@ -41,7 +41,7 @@ public enum MissionFailReason
 /// <summary>What a level asks for (its Mission). WolfHunt: find the target, destroy or capture it, reach the jump
 /// point. Destroy: destroy or capture it. HitUnseen: hit it once without scanning it; a scan loses. Capture: take it
 /// with the marines; destroying it loses. Flight: finish a flight drill's steps, in order.</summary>
-public enum MissionGoal { WolfHunt, Destroy, HitUnseen, Capture, FindBySignal, Flight }
+public enum MissionGoal { WolfHunt, Destroy, HitUnseen, Capture, FindBySignal, Flight, JumpPoint }
 
 public class QuestSystem : MonoBehaviour
 {
@@ -76,7 +76,7 @@ public class QuestSystem : MonoBehaviour
     public string TargetKey => targetKey;
     public bool Over => Stage == QuestStage.MissionComplete || Stage == QuestStage.MissionFailed;
     /// <summary>The jump point is open: the target is down. Where it is, world units.</summary>
-    public bool ExitOpen => Ring != null || Stage == QuestStage.ExitRegion || (Stage == QuestStage.MissionComplete && exitSet);
+    public bool ExitOpen => Ring != null || exitPlaced || Stage == QuestStage.ExitRegion || (Stage == QuestStage.MissionComplete && exitSet);
     public Vector2 ExitAt { get { return Ring != null ? Ring.ringAt : exitAt; } private set { exitAt = value; } }
     /// <summary>Our ship within this distance of the jump point wins, units.</summary>
     public float ExitReachUnits => Ring != null ? Ring.ringUnits : exitReachUnits;
@@ -92,7 +92,7 @@ public class QuestSystem : MonoBehaviour
     /// <summary>Enemy ships that have arrived so far.</summary>
     public int Arrived { get; private set; }
 
-    private bool exitSet;
+    private bool exitSet, exitPlaced;
     private Vector2 exitAt;
     private float nextArrival;
     private TacticalWorld world;
@@ -168,6 +168,9 @@ public class QuestSystem : MonoBehaviour
         }
     }
 
+    /// <summary>A level's Mission puts the jump point on the map from the start (owner 2026-11-01).</summary>
+    public void PlaceJumpPoint(Vector2 at) { ExitAt = at; exitPlaced = exitSet = true; }
+
     // the alarm strip's line to the ring on the plot
     void Point(Vector2 d)
     {
@@ -240,6 +243,13 @@ public class QuestSystem : MonoBehaviour
         {
             var track = us.TrackOf(targetKey);
             if (us.comms.messagesRead > 0 && track != null && us.sensors.Heard(track)) End(QuestStage.MissionComplete, MissionFailReason.None);
+            return;
+        }
+        if (Goal == MissionGoal.JumpPoint) // owner 2026-11-01: get past the enemy to the jump point
+        {
+            var d = ExitAt - new Vector2((float)us.nav.x, (float)us.nav.y);
+            if (us.comms.Waiting(us.missionNow)) board.missionAlarm = board.missionCount = null; else Point(d); // INCOMING SIGNAL needs the strip
+            if (d.magnitude <= exitReachUnits) End(QuestStage.MissionComplete, MissionFailReason.None);
             return;
         }
         if (Goal == MissionGoal.HitUnseen)

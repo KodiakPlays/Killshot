@@ -352,6 +352,8 @@ public class PlotPanel : Panel
                 if (State.sensors.ConeCovers(t)) { Controls.SweepTag(); State.sensors.NoteScan(t); if (!scanned) Refresh(); continue; }
                 if (!scanned && State.sensors.Heard(t)) { State.sensors.LayBearing(t, Controls.MissionSeconds); Refresh(); }
             }
+            if (!world) world = FindAnyObjectByType<TacticalWorld>();
+            if (world) world.SweepRocks(before, step); // owner 2026-11-02: rocks throw false dots
             sweep.rectTransform.localEulerAngles = new Vector3(0f, 0f, -sweepDeg); // clockwise on screen
         }
         // Step 75: ships glide between ticks, so while time runs the plot redraws every frame
@@ -718,6 +720,9 @@ public class PlotPanel : Panel
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
         if (contactShipImage && pictured == null) contactShipImage.enabled = false;
         if (wreckBackHalf) wreckBackHalf.enabled = wreckPictured;
+        if (world && s.sensors.Listening)
+            foreach (var d in world.FalseDots) // owner 2026-11-02: rocks' false contacts; they look like any faint dot, and fade
+                dots.Add(new MarksGraphic.Shape { kind = "point", a = Screen(d.at.x, d.at.y), b = Screen(d.at.x, d.at.y), alpha = 1f - (Controls.MissionSeconds - d.bornAt) / Mathf.Max(1f, world.FalseDotSeconds) });
         // enemy missiles coming at us (Step 55): a red dot with a short trail, like our own rounds, no label
         foreach (var r in s.weapons.Incoming)
         {

@@ -29,12 +29,17 @@ public class Mission : MonoBehaviour
 {
     [Tooltip("WOLF HUNT: find the Garuda, destroy or capture it, then reach the jump point. DESTROY: destroy or capture it. "
            + "HIT UNSEEN: hit it once without scanning it; a scan loses. CAPTURE: take it with the marines; destroying it loses. "
-           + "FIND BY SIGNAL: decode one of its radio messages, then hear it on DRADIS. FLIGHT: finish the drill's steps, in order.")]
+           + "FIND BY SIGNAL: decode one of its radio messages, then hear it on DRADIS. FLIGHT: finish the drill's steps, in order. "
+           + "JUMP POINT: reach the jump point.")]
     public MissionGoal goal = MissionGoal.Destroy;
     [Tooltip("What the help bubble on the board says at the start: what to do in this level (owner 2026-10-29: a placeholder). Empty: no bubble.")]
     [TextArea(4, 16)] public string help;
     [Tooltip("FLIGHT only: the drill, in order. The help text above is not used.")]
     public DrillStep[] drill;
+    [Tooltip("JUMP POINT only: the Jump Point prefab placed in this level (Assets/Prefabs/JumpPoint.prefab). It shows from the start.")]
+    public Transform jumpPoint;
+    [Tooltip("On: our ship has no guns, torpedoes, PDCs or flight ops in this level.")]
+    public bool weaponsOff;
 
     // Start, not Awake: the board is set up by now, whether this level was open with the board or loaded on top of it
     private void Start()
@@ -42,6 +47,8 @@ public class Mission : MonoBehaviour
         var quest = FindAnyObjectByType<QuestSystem>();
         if (!quest) return;
         quest.Goal = goal;
+        if (goal == MissionGoal.JumpPoint && jumpPoint) { quest.PlaceJumpPoint(jumpPoint.position); jumpPoint.gameObject.SetActive(false); } // seen only in the Scene view, like the spawns: the plot draws the ring
+        FindAnyObjectByType<BoardManager>().State.orders.weaponsHold = weaponsOff;
         if (goal == MissionGoal.Flight) quest.StartDrill(drill); else quest.ShowHelp(help);
     }
 }

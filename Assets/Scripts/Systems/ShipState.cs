@@ -26,6 +26,10 @@ public class ShipState
         [Tooltip("Step 60: taken by our marines (SECURE).")]
         [System.NonSerialized] public bool captured;
         [System.NonSerialized] public double worldX, worldY;
+        [Tooltip("Owner 2026-11-02: units the level's rocks take off our DRADIS and scan reach to this ship (TacticalWorld.Interference).")]
+        [System.NonSerialized] public float interference;
+        [Tooltip("Owner 2026-11-02: a rock is on the straight line to this ship, so eyes can't see it.")]
+        [System.NonSerialized] public bool rockOnLine;
         [Tooltip("Step 48: which way the contact's bow points, degrees (from its model), for the side a slug strikes.")]
         [System.NonSerialized] public double worldHdg;
         [Tooltip("Step 52: which way it is actually going, degrees (its course over the ground).")]
@@ -315,6 +319,8 @@ public class ShipState
     public void SetZoom(double z0, double dx) => scopeZoom = JsRound(System.Math.Max(1, System.Math.Min(8, z0 + dx / magPxPerX)) * 10) / 10.0;
     /// <summary>The damage model of the ship behind a track (TacticalWorld supplies it), or null.</summary>
     [System.NonSerialized] public System.Func<string, ShipState> ShipOf;
+    /// <summary>TacticalWorld.RockOnLine, for eyes that aren't our ship's (owner 2026-11-02).</summary>
+    [System.NonSerialized] public System.Func<Vector2, Vector2, bool> RockOnLine;
     [System.NonSerialized] public int kills;
 
     /// <summary>Destroyed: its reactor is at zero (the kill condition, FTUE §4.4), or it stayed

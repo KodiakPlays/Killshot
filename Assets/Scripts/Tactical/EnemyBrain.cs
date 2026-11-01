@@ -38,6 +38,12 @@ public class EnemyBrain : MonoBehaviour
     [Header("Hearing")]
     [Tooltip("Its DRADIS gain (1–5) while COLD, UNEASY, SEARCHING and ALERT: more gain, further reach.")]
     [Tune("Enemy")] [SerializeField] private int[] gainByAwareness = { 3, 3, 4, 5 };
+    [Tooltip("This many game seconds without hearing us and it gives up, calm, and goes back to its patrol (owner 2026-11-02).")]
+    [Tune("Enemy")] [SerializeField] private float giveUpSeconds = 90f;
+    [Tooltip("On a patrol route, the chance at each point that it turns back the way it came, 0 to 1. Above 0 its route can't be timed from the last pass.")]
+    [Tune("Enemy")] [Range(0f, 1f)] [SerializeField] private float turnBackChance = 0.25f;
+    [Tooltip("Rocks throw false dots at its DRADIS too (owner 2026-11-02). While calm or uneasy and hearing nothing, about this often, game seconds, it goes to look at one.")]
+    [Tune("Enemy")] [SerializeField] private float falseLookSeconds = 120f;
     [Tooltip("How loud our fighters are to it, 0–100, like our signal.")]
     [Tune("Enemy")] [SerializeField] private float fighterSignal = 60f;
     [Tooltip("Heard this clearly (0 at the edge of its hearing, 1 right on top of it): SEARCHING. Heard again 20 to 60 game seconds after it last heard us counts too.")]
@@ -71,7 +77,7 @@ public class EnemyBrain : MonoBehaviour
     [Tooltip("When we hit it before it is ALERT: at most one salvo this often, game seconds.")]
     [Tune("Enemy")] [SerializeField] private float fireBackSeconds = 120f;
 
-    /// <summary>How aware it is of us. It never goes down.</summary>
+    /// <summary>How aware it is of us. It goes back down only when it gives up.</summary>
     public Awareness Level { get; private set; }
     /// <summary>Its last thought heard or saw our ship (not our fighters): our sensors' "DETECTED BY 1 HOSTILE".</summary>
     public bool HearsUs { get; private set; }
@@ -87,7 +93,12 @@ public class EnemyBrain : MonoBehaviour
     public float CruiseUnits { set { cruiseUnits = value; } }
     /// <summary>A level's spawn makes it send radio messages (owner 2026-10-29).</summary>
     public void SendSignals(float first, float every, float onAir) { firstSignalSeconds = first; signalSeconds = every; onAirSeconds = onAir; }
-    private float firstSignalSeconds, signalSeconds, onAirSeconds, nextSignal, nextCourse;
+    private float firstSignalSeconds, signalSeconds, onAirSeconds, nextSignal, nextCourse, nextFalseLook;
+    /// <summary>A level's spawn gives it a patrol route (owner 2026-11-02).</summary>
+    public void Patrol(Vector2[] points) { route = points; }
+    private Vector2[] route;
+    private int routeAt, routeWay = 1;
+    bool OnRoute => route != null && route.Length > 1;
     private Vector2 home, waypoint, lastKnown;
     private bool started;
     private float startedAt, waypointAt = -1e9f, lastHeardAt = -1e9f, lastFixAt = -1e9f;
@@ -103,7 +114,7 @@ public class EnemyBrain : MonoBehaviour
         var at = new Vector2((float)ship.nav.x, (float)ship.nav.y);
         var ours = new Vector2((float)us.nav.x, (float)us.nav.y);
         float now = ship.missionNow, dist = (ours - at).magnitude;
-        if (!started) { started = true; home = at; startedAt = now; nextSignal = now + firstSignalSeconds; NewHuntPoint(ship, us, at); }
+        if (!started) { started = true; home = at; startedAt = now; nextSignal = now + firstSignalSeconds; nextFalseLook = now + falseLookSeconds; NewHuntPoint(ship, us, at); }
         if (signalSeconds > 0f) Send(ship, us, at, ours, now);
 
         // hit since the last tick: its armour or a compartment went down
@@ -157,8 +168,11 @@ public class EnemyBrain : MonoBehaviour
         int gain = gainByAwareness[Mathf.Clamp((int)Level, 0, gainByAwareness.Length - 1)];
         float reach = st.senRangeBaseUnits + gain * st.senRangePerStepUnits; // its DRADIS at this gain
 
+        if (!world) world = FindAnyObjectByType<TacticalWorld>();
+        bool rockOnLine = false, rockToFighter = false;
+        float interference = world ? world.Interference(at, ours, out rockOnLine) : 0f; // owner 2026-11-02: rocks: the same rule as our sensors
         // owner 2026-11-01: a gas cloud blocks its eyes too
-        float eyes = us.sensors.inCloud ? Mathf.Min(st.visualRangeUnits, us.sensors.stats.cloudSeenUnits) : st.visualRangeUnits;
+        float eyes = rockOnLine ? 0f : us.sensors.inCloud ? Mathf.Min(st.visualRangeUnits, us.sensors.stats.cloudSeenUnits) : st.visualRangeUnits;
         if (dist <= eyes)
         {
             Raise(Awareness.Alert);
@@ -166,7 +180,7 @@ public class EnemyBrain : MonoBehaviour
             HearsUs = true;
             return;
         }
-        float clear = Clarity(dist, reach * us.sensors.signal / 100f);
+        float clear = Clarity(dist, Mathf.Max(0f, reach - interference) * us.sensors.signal / 100f);
         HearsUs = clear > 0f;
         if (hit) Raise(Awareness.Alert); // hit, it is alert whether it heard us or not (the play-through: a faint hearing kept it UNEASY)
         if (clear > 0f)
@@ -176,10 +190,16 @@ public class EnemyBrain : MonoBehaviour
             Heard(ours + Off(ship, dist * (1f - clear) * 0.25f), now, Level == Awareness.Alert);
         }
         else if (hit) Heard(ours + Off(ship, dist * 0.15f), now, false); // it knows the way the shot came, not the range
+        else if (Level < Awareness.Searching && now >= nextFalseLook)
+        {
+            nextFalseLook = now + falseLookSeconds * (0.5f + (float)ship.NextDie());
+            Vector2 spot;
+            if (world && world.FalseContact(at, reach, out spot)) { Raise(Awareness.Uneasy); Heard(spot, now, false); }
+        }
         foreach (var f in us.hangar.Flights)
         {
             var p = new Vector2((float)f.x, (float)f.y);
-            float c = Clarity((p - at).magnitude, reach * fighterSignal / 100f);
+            float c = Clarity((p - at).magnitude, Mathf.Max(0f, reach - (world ? world.Interference(at, p, out rockToFighter) : 0f)) * fighterSignal / 100f);
             if (c <= 0f || clear > 0f) continue; // the ship itself, heard, comes first
             Raise(c >= searchingAt ? Awareness.Searching : Awareness.Uneasy);
             Heard(p, now, false);
@@ -228,6 +248,11 @@ public class EnemyBrain : MonoBehaviour
     {
         if (!hunts && cruiseUnits <= 0f) { ship.nav.throttle = 0; return; } // Step 130: a level's still target stays as it spawned, the side it shows included
         float top = (float)ship.nav.stats.topSpeedUnits, speed = cruiseUnits;
+        if (Level > Awareness.Cold && now - lastHeardAt > giveUpSeconds)
+        {
+            Level = Awareness.Cold; fix = false; waypointAt = now;
+            if (OnRoute) BackToRoute(at); else NewHuntPoint(ship, us, at);
+        }
         int heading;
         if (fix)
         {
@@ -239,7 +264,7 @@ public class EnemyBrain : MonoBehaviour
         else
         {
             bool newNews = Level >= Awareness.Uneasy && lastHeardAt > waypointAt;
-            bool newCourse = Level == Awareness.Cold && nextCourse > 0f && now >= nextCourse;
+            bool newCourse = !OnRoute && Level == Awareness.Cold && nextCourse > 0f && now >= nextCourse;
             if (newNews) { waypoint = lastKnown; waypointAt = now; }
             else if ((waypoint - at).magnitude <= arriveUnits || newCourse)
             {
@@ -256,6 +281,21 @@ public class EnemyBrain : MonoBehaviour
         ship.nav.orderedHeading = world ? world.ClearHeading(ship.nav, heading, avoidLookUnits) : heading;
         // a damaged engine room holds it back, as our lever is; wrecked, it drifts (DISABLE, BOARDING_README)
         ship.nav.throttle = Mathf.Clamp(Mathf.RoundToInt(speed / top * 100f), 0, ship.nav.ThrottleCap);
+    }
+
+    // Point to point, back at each end, and it may turn back at any point.
+    void NextOnRoute(ShipState ship)
+    {
+        if (ship.NextDie() < turnBackChance) routeWay = -routeWay;
+        if (routeAt + routeWay < 0 || routeAt + routeWay >= route.Length) routeWay = -routeWay;
+        routeAt += routeWay;
+        waypoint = route[routeAt];
+    }
+
+    void BackToRoute(Vector2 at)
+    {
+        for (int i = 0; i < route.Length; i++) if ((route[i] - at).sqrMagnitude < (route[routeAt] - at).sqrMagnitude) routeAt = i;
+        waypoint = route[routeAt];
     }
 
     static float Reach(ShipState ship)
@@ -283,6 +323,7 @@ public class EnemyBrain : MonoBehaviour
     // started) toward ours over driftSeconds.
     void NewHuntPoint(ShipState ship, ShipState us, Vector2 at)
     {
+        if (OnRoute) { NextOnRoute(ship); return; }
         float hw = (float)us.ArenaHalfW * 0.85f, hh = (float)us.ArenaHalfH * 0.85f;
         float drift = driftSeconds > 0f ? Mathf.Clamp01((ship.missionNow - startedAt) / driftSeconds) : 1f;
         float side = home.y >= 0f ? 1f : -1f;

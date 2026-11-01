@@ -244,8 +244,8 @@ public static class PlaytestRunner
         bool wolfFound = wolfRow; // read now: the row is gone once the board loads
         if (wolfFound) wolfRow.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "02.1_Grid");
-        Check("The level list has its six levels; picking WOLF HUNT opens the board on Level_01",
-              rows.Length == 6 && wolfFound && SceneManager.GetActiveScene().name == "02.1_Grid" && TacticalWorld.chosenLevel == "Level_01",
+        Check("The level list has its seven levels; picking WOLF HUNT opens the board on Level_01",
+              rows.Length == 7 && wolfFound && SceneManager.GetActiveScene().name == "02.1_Grid" && TacticalWorld.chosenLevel == "Level_01",
               string.Join(", ", rows) + "; called the WOLF HUNT row's onClick, as a click or Enter does");
         yield return 1.5f;
         var board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
@@ -1727,6 +1727,23 @@ public static class PlaytestRunner
         yield return 0.6f;
         Check("C brings the view back to our ship", System.Math.Abs(plotP.View.x - s.nav.x) < 1 && System.Math.Abs(plotP.View.y - s.nav.y) < 1,
               "view " + plotP.View.x.ToString("N0") + ", " + plotP.View.y.ToString("N0") + " km");
+        // 25b2. Rocks and sensors (owner 2026-11-02): one rule, both ways.
+        var rockWorld = UnityEngine.Object.FindAnyObjectByType<TacticalWorld>();
+        Renderer rock = null;
+        foreach (var r in UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+            if (r.gameObject.layer == LayerMask.NameToLayer("WorldTerrain") && (rock == null || r.bounds.size.x > rock.bounds.size.x)) rock = r;
+        Vector2 rockAt = rock.bounds.center, rockSide = new Vector2(rock.bounds.extents.magnitude + 100f, 0f);
+        bool eyesOne, eyesTwo, eyesClear;
+        float offOne = rockWorld.Interference(rockAt - rockSide, rockAt + rockSide, out eyesOne), offTwo = rockWorld.Interference(rockAt + rockSide, rockAt - rockSide, out eyesTwo);
+        Check("A rock on the line makes interference and blocks eyes, from either side", offOne > 0f && offTwo > 0f && eyesOne && eyesTwo, offOne + ", " + offTwo);
+        float offNear = rockWorld.Interference(rockAt + rockSide * 1.1f, rockAt + rockSide, out eyesClear);
+        Check("A ship close to a rock is harder for DRADIS, but eyes still see it", offNear > 0f && !eyesClear, offNear + " units off");
+        var rockTrack = s.TrackOf("t07");
+        float offWas = rockTrack.interference;
+        rockTrack.interference = s.sensors.PassiveRangeUnits - rockTrack.rangeUnits + 1f;
+        bool lostByOne = !s.sensors.Heard(rockTrack);
+        rockTrack.interference = offWas;
+        Check("Interference takes units off DRADIS reach", lostByOne, lostByOne.ToString());
         // 25c. Gas clouds (owner 2026-11-01): how much of a ship's box is in a cloud, and what a cloud does to our signal.
         var levelClouds = UnityEngine.Object.FindAnyObjectByType<TacticalWorld>().Clouds;
         Check("Wolf Hunt has three gas clouds", levelClouds.Count == 3, levelClouds.Count + " clouds");

@@ -165,6 +165,18 @@ public class HangarSystem : MonoBehaviour
         return false;
     }
 
+    /// <summary>A fighter sees a ship by the same rule as our ship's eyes: a rock on the line blocks it (owner 2026-11-02).</summary>
+    public bool SeesShip(double x, double y, double withinUnits)
+    {
+        var at = new Vector2((float)x, (float)y);
+        foreach (var f in Flights)
+        {
+            var from = new Vector2((float)f.x, (float)f.y);
+            if ((at - from).magnitude <= withinUnits && (ship.RockOnLine == null || !ship.RockOnLine(from, at))) return true;
+        }
+        return false;
+    }
+
     /// <summary>Each tick: fly to the target (or home, or with us on ESCORT); inside attack range, every fighter
     /// makes a run every stats.fighterRunSeconds; home and close, they land and the squadron is ready again.</summary>
     public void TickFlights(double dt)

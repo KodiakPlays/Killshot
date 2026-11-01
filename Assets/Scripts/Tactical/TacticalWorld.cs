@@ -36,9 +36,23 @@ public class TacticalWorld : MonoBehaviour
     private readonly Dictionary<NavSystem, float> nextCrash = new Dictionary<NavSystem, float>();
     private readonly List<ShipState> bodies = new List<ShipState>();
     private readonly List<Ruin> nearby = new List<Ruin>();
-    private readonly Vector2[] boxA = new Vector2[4], boxB = new Vector2[4];
+    private readonly Vector2[] boxA = new Vector2[4], boxB = new Vector2[4], sightLine = new Vector2[2];
     /// <summary>The level's gas clouds (owner 2026-11-01). They have no collider, so Collide never sees them.</summary>
     public readonly List<GasCloud> Clouds = new List<GasCloud>();
+
+    [Header("Rocks and sensors (owner 2026-11-02)")]
+    [Tooltip("Rocks make interference. Each rock on the line between DRADIS or a scan and a ship, and each rock close round the ship, takes this many units off the reach, ours and the enemy's alike. More power reaches further through it. Comms is not touched.")]
+    [Tune("Sensors")] [SerializeField] private float rockInterferenceUnits = 500f;
+    [Tooltip("A rock this close to a ship counts against DRADIS and scans, units.")]
+    [Tune("Sensors")] [SerializeField] private float rockCloseUnits = 500f;
+    [Tooltip("As the DRADIS sweep passes a rock in reach, the chance it throws a false dot, at gain 1. More power clears them fast: this is divided by the gain squared.")]
+    [Tune("Sensors")] [Range(0f, 1f)] [SerializeField] private float falseDotChance = 0.15f;
+    [Tooltip("How long a false dot stays on the plot, game seconds.")]
+    [Tune("Sensors")] [SerializeField] private float falseDotSeconds = 8f;
+    /// <summary>False dots on DRADIS (owner 2026-11-02): where, and the game second each appeared.</summary>
+    public struct FalseDot { public Vector2 at; public float bornAt; }
+    public readonly List<FalseDot> FalseDots = new List<FalseDot>();
+    public float FalseDotSeconds => falseDotSeconds;
 
     [Header("Crashes (owner 2026-11-01)")]
     [Tooltip("Share of its speed a ship keeps after it bounces off something.")]
@@ -74,6 +88,7 @@ public class TacticalWorld : MonoBehaviour
         var us = board.State.nav;
         if (us) { us.x = us.transform.position.x; us.y = us.transform.position.y; us.PlaceModel(); }
         // Step 49: each contact's ship takes our hits; its damage numbers follow ours from the tuning window
+        board.State.RockOnLine = RockOnLine;
         board.State.ShipOf = key =>
         {
             foreach (var c in contacts)
@@ -209,6 +224,55 @@ public class TacticalWorld : MonoBehaviour
             }
         }
         return true;
+    }
+
+    /// <summary>Owner 2026-11-02: one rule for every ship and every level. Rocks make interference for DRADIS and scans: the
+    /// units they take off the reach from `from` to a ship at `to`. A rock on the line also blocks eyes.</summary>
+    public float Interference(Vector2 from, Vector2 to, out bool rockOnLine)
+    {
+        sightLine[0] = from; sightLine[1] = to;
+        Vector2 middle = (from + to) / 2f, way;
+        float half = (to - from).magnitude / 2f, depth;
+        int online = 0, close = 0;
+        foreach (var p in ruins)
+        {
+            if (!p.r) continue;
+            if ((p.at - to).magnitude <= p.reach + rockCloseUnits) close++;
+            if ((p.at - middle).magnitude <= half + p.reach && Overlap(sightLine, p.outline, out way, out depth)) online++;
+        }
+        rockOnLine = online > 0;
+        return (online + close) * rockInterferenceUnits;
+    }
+
+    public bool RockOnLine(Vector2 from, Vector2 to) { bool rock; Interference(from, to, out rock); return rock; }
+
+    /// <summary>A false contact for an enemy's DRADIS at `from`: beside a rock in reach, with a clear line to it. False: it found none.</summary>
+    public bool FalseContact(Vector2 from, float reach, out Vector2 at)
+    {
+        at = from;
+        for (int tries = 0; tries < 8 && ruins.Count > 0; tries++)
+        {
+            var p = ruins[Random.Range(0, ruins.Count)];
+            if (!p.r || (p.at - from).magnitude > reach) continue;
+            at = p.at + (from - p.at).normalized * (p.reach + rockCloseUnits);
+            if (!RockOnLine(from, at)) return true;
+        }
+        return false;
+    }
+
+    /// <summary>The DRADIS sweep turned from `before` through `step` degrees: each rock in reach that it passed may throw a false dot.</summary>
+    public void SweepRocks(float before, float step)
+    {
+        var s = board.State;
+        var us = new Vector2((float)s.nav.x, (float)s.nav.y);
+        FalseDots.RemoveAll(d => s.missionNow - d.bornAt >= falseDotSeconds);
+        foreach (var p in ruins)
+        {
+            if (!p.r || (p.at - us).magnitude > s.sensors.PassiveRangeUnits) continue;
+            float past = Mathf.Repeat(Bearing(p.at - us) - before, 360f);
+            if (past <= 0f || past > step || Random.value >= falseDotChance / (s.sensors.senBoost * s.sensors.senBoost)) continue;
+            FalseDots.Add(new FalseDot { at = p.at + Random.insideUnitCircle * (p.reach + rockCloseUnits), bornAt = s.missionNow });
+        }
     }
 
     // Every tick, after everything has moved: each ship against the pieces, then against each other.
@@ -423,6 +487,13 @@ public class TacticalWorld : MonoBehaviour
             }
     }
 
+    /// <summary>A level's spawn gives this contact's brain a patrol route (owner 2026-11-02).</summary>
+    public void Patrols(string key, Vector2[] route)
+    {
+        for (int i = 0; i < contacts.Length; i++)
+            if (contacts[i] && contacts[i].trackKey == key && brains[i]) brains[i].Patrol(route);
+    }
+
     /// <summary>A level's spawn makes this contact's ship send radio messages (owner 2026-10-29).</summary>
     public void Signals(string key, float first, float every, float onAir)
     {
@@ -529,6 +600,7 @@ public class TacticalWorld : MonoBehaviour
             var d = new Vector2((float)(t.worldX - s.nav.x), (float)(t.worldY - s.nav.y));
             t.bearing = Bearing(d);
             t.rangeUnits = ShipState.JsRound(d.magnitude); // the board's tracks hold whole units
+            t.interference = Interference(new Vector2((float)s.nav.x, (float)s.nav.y), new Vector2((float)t.worldX, (float)t.worldY), out t.rockOnLine);
         }
     }
 

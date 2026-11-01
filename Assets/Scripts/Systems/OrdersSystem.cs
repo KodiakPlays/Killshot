@@ -91,6 +91,8 @@ public class OrdersSystem : MonoBehaviour
         if (rate > 0 && auxCharge < 100) auxCharge = System.Math.Min(100, auxCharge + rate);
     }
 
-    public bool FlightOpsReleased => alert >= 1;
-    public bool WeaponsReleased => alert >= 1;
+    /// <summary>A level with its weapons off (owner 2026-11-01): no guns, torpedoes, PDCs or flight ops, at any alert.</summary>
+    [System.NonSerialized] public bool weaponsHold;
+    public bool FlightOpsReleased => alert >= 1 && !weaponsHold;
+    public bool WeaponsReleased => alert >= 1 && !weaponsHold;
 }

@@ -56,7 +56,7 @@ public class LevelWindow : EditorWindow
             var part = go.GetComponentInParent(kind);
             if (part) return part;
         }
-        return go.layer == LayerMask.NameToLayer("WorldTerrain") ? go.transform : null;
+        return go.layer == LayerMask.NameToLayer("WorldTerrain") || go.GetComponent<SpriteRenderer>() ? go.transform : null; // a sprite: the jump point
     }
     // the Save button follows changes made in the Inspector or the Scene view too
     void OnInspectorUpdate() { if (OpenLevelScene().isDirty != savedLook) Repaint(); }
@@ -93,7 +93,7 @@ public class LevelWindow : EditorWindow
             EditorGUILayout.LabelField(level.name + " from above", EditorStyles.boldLabel);
             if (Event.current.type == EventType.Layout) KeepSpawnsInside(level);
             DrawMap(level);
-            EditorGUILayout.LabelField("Click to pick, drag to move, drag a white square to resize. Option-click picks one piece of debris instead of its group. Grey: debris.  Amber: what you picked, and a debris field as Scatter would lay it.  Red: enemy spawn.  White: player spawn.  Blue box: gas cloud.  Line: the battle space's edge.  Numbers: units from the centre, as on the plot.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Click to pick, drag to move, drag a white square to resize. Option-click picks one piece of debris instead of its group. Grey: debris.  Amber: what you picked, and a debris field as Scatter would lay it.  Red: enemy spawn.  White: player spawn.  Blue box: gas cloud.  J: the jump point.  Red line: the enemy's route; click the enemy, then drag the route's white squares.  Line: the battle space's edge.  Numbers: units from the centre, as on the plot.", EditorStyles.wordWrappedMiniLabel);
             DrawBattleSpace(level);
             DrawParts(level);
         }
@@ -139,7 +139,13 @@ public class LevelWindow : EditorWindow
             EditorGUI.DrawRect(Rect.MinMaxRect(a.x, a.y, b.x, b.y), new Color(Cloud.r, Cloud.g, Cloud.b, 0.15f));
             Frame(a, b, Cloud);
         }
-        foreach (var s in Find<EnemySpawn>(level)) Marker(px(s.transform.position), Enemy, "E");
+        foreach (var s in Find<EnemySpawn>(level))
+        {
+            for (int i = 1; i < s.route.Length; i++) { Handles.color = Enemy; Handles.DrawLine(px(s.route[i - 1]), px(s.route[i])); }
+            foreach (var p in s.route) Dot(px(p), 5f, Enemy);
+            Marker(px(s.transform.position), Enemy, "E");
+        }
+        foreach (var m in Find<Mission>(level)) if (m.jumpPoint) Marker(px(m.jumpPoint.position), Player, "J");
         foreach (var s in Find<PlayerSpawn>(level)) Marker(px(s.transform.position), Player, "P");
         if (picked && picked.gameObject.scene == level)
         {
@@ -253,6 +259,7 @@ public class LevelWindow : EditorWindow
     {
         foreach (var s in Find<EnemySpawn>(level)) if ((px(s.transform.position) - mouse).magnitude <= MarkerGrabPx) return s;
         foreach (var s in Find<PlayerSpawn>(level)) if ((px(s.transform.position) - mouse).magnitude <= MarkerGrabPx) return s;
+        foreach (var m in Find<Mission>(level)) if (m.jumpPoint && (px(m.jumpPoint.position) - mouse).magnitude <= MarkerGrabPx) return m.jumpPoint;
         foreach (var piece in Pieces(level))
         {
             var b = piece.bounds;
@@ -282,12 +289,21 @@ public class LevelWindow : EditorWindow
 
     static Vector2[] Corners(float w, float h) => new[] { new Vector2(w, h) / 2, new Vector2(-w, h) / 2, new Vector2(-w, -h) / 2, new Vector2(w, -h) / 2 };
 
-    // the white squares for what is picked, in its own space
+    // the white squares for what is picked, in its own space: an enemy spawn's box, then its route's points
     static Vector2[] Grips(Component c)
     {
-        if (c is Transform t) { var b = BoundsOf(t); return Corners(b.size.x, b.size.y); }
+        if (c is Transform t)
+        {
+            if (t.GetComponent<SpriteRenderer>()) return new Vector2[0]; // the jump point: its size on the plot is QuestSystem's reach
+            var b = BoundsOf(t);
+            return Corners(b.size.x, b.size.y);
+        }
         if (c is GasCloud cloud) return Corners(cloud.widthUnits, cloud.heightUnits);
-        if (c is EnemySpawn spawn) return spawn.sizeUnits.x > 0f && spawn.sizeUnits.y > 0f ? Corners(spawn.sizeUnits.x, spawn.sizeUnits.y) : new Vector2[0]; // 0 x 0: it always starts at the centre
+        if (c is EnemySpawn spawn)
+        {
+            var box = spawn.sizeUnits.x > 0f && spawn.sizeUnits.y > 0f ? Corners(spawn.sizeUnits.x, spawn.sizeUnits.y) : new Vector2[0]; // 0 x 0: it always starts at the centre
+            return box.Concat(spawn.route.Select(p => p - (Vector2)CentreOf(c))).ToArray();
+        }
         if (!(c is DebrisField f)) return new Vector2[0];
         switch (f.shape)
         {
@@ -305,7 +321,12 @@ public class LevelWindow : EditorWindow
         Undo.RecordObject(c, "Resize " + c.name);
         Vector2 size = new Vector2(Mathf.Abs(at.x), Mathf.Abs(at.y)) * 2;
         if (c is GasCloud cloud) { cloud.widthUnits = Mathf.Max(100f, size.x); cloud.heightUnits = Mathf.Max(100f, size.y); }
-        else if (c is EnemySpawn spawn) spawn.sizeUnits = size;
+        else if (c is EnemySpawn spawn)
+        {
+            int route = grip - (Grips(c).Length - spawn.route.Length);
+            if (route >= 0) spawn.route[route] = (Vector2)CentreOf(c) + at;
+            else spawn.sizeUnits = size;
+        }
         else if (c is DebrisField f)
         {
             if (f.shape == DebrisField.Shape.Band) { f.lengthUnits = Mathf.Max(1f, size.x); f.widthUnits = size.y; }
@@ -459,7 +480,7 @@ public class LevelWindow : EditorWindow
     // ---- what is in the level -----------------------------------------------------------------
 
     static IEnumerable<Component> Parts(Scene level) =>
-        Find<PlayerSpawn>(level).Cast<Component>().Concat(Find<EnemySpawn>(level)).Concat(Find<GasCloud>(level)).Concat(Find<DebrisField>(level))
+        Find<PlayerSpawn>(level).Cast<Component>().Concat(Find<EnemySpawn>(level)).Concat(Find<Mission>(level).Where(m => m.jumpPoint).Select(m => m.jumpPoint)).Concat(Find<GasCloud>(level)).Concat(Find<DebrisField>(level))
             .Concat(Pieces(level).Select(p => GroupOf(p.transform))).Distinct();
 
     // Everything that can be picked, then the picked thing's position, its settings and Delete.
@@ -471,7 +492,7 @@ public class LevelWindow : EditorWindow
         {
             bool on = c == picked;
             string label = c is DebrisField f ? f.name + "  (" + f.shape + ", " + f.transform.childCount + " pieces)"
-                : c is Transform ? c.name + "  (" + c.transform.childCount + " pieces)" : c.name;
+                : c is Transform && c.transform.childCount > 0 ? c.name + "  (" + c.transform.childCount + " pieces)" : c.name;
             if (GUILayout.Toggle(on, label, EditorStyles.radioButton) && !on) Pick(c);
         }
         if (!picked || picked.gameObject.scene != level) return;

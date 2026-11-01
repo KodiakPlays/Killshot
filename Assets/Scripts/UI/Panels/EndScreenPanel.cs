@@ -38,7 +38,7 @@ public class EndScreenPanel : Panel
         title.text = won ? "MISSION COMPLETE" : shipLost ? "SHIP LOST" : "MISSION FAILED";
         Paint(title, won ? Palette.nominal : Palette.alarm);
         bool flight = quest.Goal == MissionGoal.Flight;
-        reason.text = won && flight ? "FLIGHT DRILL PASSED" : won ? name + " " + (quest.Goal == MissionGoal.HitUnseen ? "HIT · NEVER SCANNED" : quest.Goal == MissionGoal.FindBySignal ? "FOUND BY SIGNAL" : fate) + (quest.ExitOpen ? " · JUMPED OUT" : "")
+        reason.text = won && flight ? "FLIGHT DRILL PASSED" : won ? name + " " + (quest.Goal == MissionGoal.HitUnseen ? "HIT · NEVER SCANNED" : quest.Goal == MissionGoal.FindBySignal ? "FOUND BY SIGNAL" : quest.Goal == MissionGoal.JumpPoint ? "EVADED" : fate) + (quest.ExitOpen ? " · JUMPED OUT" : "")
                     : quest.FailReason == MissionFailReason.Desertion ? "LEFT THE BATTLE SPACE"
                     : quest.FailReason == MissionFailReason.Scanned ? name + " SCANNED OR LOCKED · THIS LEVEL ALLOWS NEITHER"
                     : quest.FailReason == MissionFailReason.PrizeDestroyed ? name + " DESTROYED · IT WAS TO BE CAPTURED"

@@ -83,17 +83,17 @@ public class SensorSystem : MonoBehaviour
     public bool Listening => dradis && ship.power.BusUnits("sen") >= 1;
 
     /// <summary>heard: DRADIS listening, the contact emits in the chosen band, and it is in range.</summary>
-    public bool Heard(ShipState.Track t) => !t.own && !t.wreck && Listening && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeUnits <= PassiveRangeUnits;
+    public bool Heard(ShipState.Track t) => !t.own && !t.wreck && Listening && System.Array.IndexOf(t.sig, spectrum) >= 0 && t.rangeUnits <= PassiveRangeUnits - t.interference;
 
     /// <summary>coneCovers: active scan on, inside the cone, inside sensor range.</summary>
-    public bool ConeCovers(ShipState.Track t) => active && ShipState.AngDiff(t.bearing, coneBrg) <= coneArc && t.rangeUnits <= SenRangeUnits;
+    public bool ConeCovers(ShipState.Track t) => active && ShipState.AngDiff(t.bearing, coneBrg) <= coneArc && t.rangeUnits <= SenRangeUnits - t.interference;
 
     /// <summary>Contacts in band and range for a spectrum key (spectra[].count).</summary>
     public int CountIn(string band)
     {
         float range = band == "UV" ? SenRangeUnits * stats.uvRangeFactor : SenRangeUnits;
         int n = 0;
-        foreach (var t in ship.tracks) if (!t.own && System.Array.IndexOf(t.sig, band) >= 0 && t.rangeUnits <= range) n++;
+        foreach (var t in ship.tracks) if (!t.own && System.Array.IndexOf(t.sig, band) >= 0 && t.rangeUnits <= range - t.interference) n++;
         return n;
     }
 
@@ -178,8 +178,8 @@ public class SensorSystem : MonoBehaviour
     public bool InSight(ShipState.Track t)
     {
         if (!t.hasWorld) return false;
-        if (t.rangeUnits <= stats.visualRangeUnits) return true;
-        return ship.hangar && ship.hangar.Sees(t.worldX, t.worldY, stats.visualRangeUnits); // Step 101: our fighters scout
+        if (!t.rockOnLine && t.rangeUnits <= stats.visualRangeUnits) return true;
+        return ship.hangar && ship.hangar.SeesShip(t.worldX, t.worldY, stats.visualRangeUnits); // Step 101: our fighters scout
     }
 
     public void PruneBearings(float now) { BearingFixes.RemoveAll(f => now - f.t >= stats.bearingTrailSeconds); }
