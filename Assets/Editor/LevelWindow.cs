@@ -9,9 +9,11 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// Starwolf → Level (owner, 2026-10-25). Each level is a small scene in Assets/Scenes/Levels, loaded
 /// on top of the board at play (TacticalWorld). Open one here and the window shows it from above (owner,
-/// 2026-10-27): the battle space's edge, every piece of debris as a dot, the spawn boxes. Pick a debris field
-/// (click it on the map, or in the list) and its settings show under the map; the map shows, in amber, how
-/// Scatter would lay it out with those settings, before you press it. Add parts with the buttons at the bottom.
+/// 2026-10-27): the battle space's edge, every piece of debris as a dot, the spawn boxes, the gas clouds, and a grid
+/// with the plot's numbers. Click anything on the map, or in the list, and its settings show under the map. Drag it to
+/// move it; drag a white square to resize it (owner, 2026-11-01). A click on a piece of debris picks its group;
+/// Option-click picks that one piece. The map shows a picked debris field in amber, as Scatter would lay it out
+/// with those settings. Add parts with the buttons at the bottom. Save is at the top.
 /// World units: x east, y north.
 /// </summary>
 public class LevelWindow : EditorWindow
@@ -21,11 +23,18 @@ public class LevelWindow : EditorWindow
 
     static readonly Color Ground = new Color(0.04f, 0.05f, 0.06f), Edge = new Color(0.55f, 0.6f, 0.65f),
         Debris = new Color(0.6f, 0.63f, 0.66f), Preview = new Color(0.91f, 0.64f, 0.24f),
-        Enemy = new Color(1f, 0.35f, 0.25f), Player = new Color(0.91f, 0.93f, 0.94f);
+        Enemy = new Color(1f, 0.35f, 0.25f), Player = new Color(0.91f, 0.93f, 0.94f), Cloud = new Color(0.45f, 0.72f, 0.85f),
+        GridLine = new Color(1f, 1f, 1f, 0.07f);
+
+    const float MarkerGrabPx = 10f, GripPx = 9f, GridGapPx = 60f;
 
     Vector2 scroll;
-    DebrisField picked;
+    Component picked; // a debris field, a gas cloud, a spawn, or a Transform: a group of debris or one piece
     Editor pickedEditor;
+    Vector3 dragOffset; // from the mouse to the picked thing's centre, world units
+    int dragGrip = -1; // the white square being dragged; -1: the whole thing
+    bool resized; // the white square really moved: a click on one changes nothing
+    bool savedLook; // what the Save button last showed
     string previewKey;
     readonly List<Vector3> preview = new List<Vector3>(); // the picked field's layout as Scatter would make it now, its own space
 
@@ -36,10 +45,21 @@ public class LevelWindow : EditorWindow
     void OnHierarchyChange() => Repaint();
     void OnSelectionChange()
     {
-        var f = Selection.activeGameObject ? Selection.activeGameObject.GetComponentInParent<DebrisField>() : null;
-        if (f) picked = f;
+        var part = Selection.activeGameObject ? PartOf(Selection.activeGameObject) : null;
+        if (part) picked = part;
         Repaint();
     }
+    static Component PartOf(GameObject go)
+    {
+        foreach (var kind in new[] { typeof(DebrisField), typeof(GasCloud), typeof(EnemySpawn), typeof(PlayerSpawn) })
+        {
+            var part = go.GetComponentInParent(kind);
+            if (part) return part;
+        }
+        return go.layer == LayerMask.NameToLayer("WorldTerrain") ? go.transform : null;
+    }
+    // the Save button follows changes made in the Inspector or the Scene view too
+    void OnInspectorUpdate() { if (OpenLevelScene().isDirty != savedLook) Repaint(); }
 
     void OnGUI()
     {
@@ -49,6 +69,11 @@ public class LevelWindow : EditorWindow
             EditorGUILayout.HelpBox("Stop the game to open or edit a level.", MessageType.Info);
             return;
         }
+        var level = OpenLevelScene();
+        savedLook = level.isDirty;
+        using (new EditorGUI.DisabledScope(!level.isDirty))
+            if (GUILayout.Button(!level.IsValid() ? "Save" : level.isDirty ? "Save " + level.name : level.name + " saved", GUILayout.Height(28)))
+                EditorSceneManager.SaveScene(level);
         scroll = EditorGUILayout.BeginScrollView(scroll);
         EditorGUILayout.LabelField("Levels", EditorStyles.boldLabel);
         foreach (var path in Levels())
@@ -62,16 +87,15 @@ public class LevelWindow : EditorWindow
         }
         if (GUILayout.Button("New level")) NewLevel();
 
-        var level = OpenLevelScene();
         if (level.IsValid())
         {
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField(level.name + " from above", EditorStyles.boldLabel);
             if (Event.current.type == EventType.Layout) KeepSpawnsInside(level);
             DrawMap(level);
-            EditorGUILayout.LabelField("Grey: debris.  Amber: the picked field, as Scatter would lay it.  Red: enemy spawn.  White: player spawn.  Line: the battle space's edge.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Click to pick, drag to move, drag a white square to resize. Option-click picks one piece of debris instead of its group. Grey: debris.  Amber: what you picked, and a debris field as Scatter would lay it.  Red: enemy spawn.  White: player spawn.  Blue box: gas cloud.  Line: the battle space's edge.  Numbers: units from the centre, as on the plot.", EditorStyles.wordWrappedMiniLabel);
             DrawBattleSpace(level);
-            DrawFields(level);
+            DrawParts(level);
         }
 
         EditorGUILayout.Space(10);
@@ -81,7 +105,8 @@ public class LevelWindow : EditorWindow
             if (GUILayout.Button("Enemy spawn")) Add<EnemySpawn>(level, "Enemy Spawn");
             if (GUILayout.Button("Player spawn")) AddPlayerSpawn(level);
             if (GUILayout.Button("Battle space")) AddBattleSpace(level);
-            if (GUILayout.Button("Debris field")) { AddDebrisField(level); picked = Selection.activeGameObject.GetComponent<DebrisField>(); }
+            if (GUILayout.Button("Debris field")) AddDebrisField(level);
+            if (GUILayout.Button("Gas cloud")) Add<GasCloud>(level, "Gas Cloud");
             if (GUILayout.Button("Mission")) Add<Mission>(level, "Mission"); // its goal; without one the level plays Wolf Hunt
         }
         EditorGUILayout.EndScrollView();
@@ -94,45 +119,200 @@ public class LevelWindow : EditorWindow
         float w = EditorGUIUtility.currentViewWidth - 30, h = Mathf.Clamp(w * 0.8f, 200, 520);
         var r = GUILayoutUtility.GetRect(w, h, GUILayout.ExpandWidth(true));
         var half = ArenaHalfUnits(level);
-        float kmPerPx = Mathf.Max(half.x * 2 / r.width, half.y * 2 / r.height) * 1.04f; // the whole battle space, a little margin
-        System.Func<Vector3, Vector2> px = p => new Vector2(r.width / 2 + p.x / kmPerPx, r.height / 2 - p.y / kmPerPx); // inside the map's clip
-
-        // a click on a debris field picks it
-        var e = Event.current;
-        if (e.type == EventType.MouseDown && e.button == 0 && r.Contains(e.mousePosition))
-        {
-            var world = new Vector3((e.mousePosition.x - r.center.x) * kmPerPx, (r.center.y - e.mousePosition.y) * kmPerPx, 0f);
-            foreach (var f in Find<DebrisField>(level))
-            {
-                var local = f.transform.InverseTransformPoint(world);
-                if (!f.Inside(new Vector2(local.x, local.y))) continue;
-                picked = f;
-                Selection.activeGameObject = f.gameObject;
-                e.Use();
-                break;
-            }
-        }
-        if (e.type != EventType.Repaint) return;
+        float unitsPerPx = Mathf.Max(half.x * 2 / r.width, half.y * 2 / r.height) * 1.04f; // the whole battle space, a little margin
+        System.Func<Vector3, Vector2> px = p => new Vector2(r.width / 2 + p.x / unitsPerPx, r.height / 2 - p.y / unitsPerPx); // inside the map's clip
+        MapMouse(level, r, unitsPerPx, px);
+        if (Event.current.type != EventType.Repaint) return;
 
         GUI.BeginClip(r); // anything outside the battle space stays inside the map's frame
         EditorGUI.DrawRect(new Rect(0, 0, r.width, r.height), Ground);
+        DrawGrid(r, unitsPerPx, px);
         Frame(px(new Vector3(-half.x, half.y)), px(new Vector3(half.x, -half.y)), Edge);
-        int terrain = LayerMask.NameToLayer("WorldTerrain");
-        foreach (var root in level.GetRootGameObjects())
-            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
-            {
-                if (rend.gameObject.layer != terrain) continue;
-                var b = rend.bounds;
-                Dot(px(b.center), Mathf.Max(2f, Mathf.Max(b.size.x, b.size.y) / kmPerPx), Debris);
-            }
-        if (picked && picked.gameObject.scene == level)
+        foreach (var piece in Pieces(level))
         {
-            Outline(picked, px);
-            foreach (var p in LaidOut(picked)) Dot(px(picked.transform.TransformPoint(p)), 2.5f, Preview);
+            var b = piece.bounds;
+            Dot(px(b.center), Mathf.Max(2f, Mathf.Max(b.size.x, b.size.y) / unitsPerPx), Debris);
+        }
+        foreach (var c in Find<GasCloud>(level))
+        {
+            Vector2 a = px(c.At + new Vector2(-c.widthUnits, c.heightUnits) / 2), b = px(c.At + new Vector2(c.widthUnits, -c.heightUnits) / 2);
+            EditorGUI.DrawRect(Rect.MinMaxRect(a.x, a.y, b.x, b.y), new Color(Cloud.r, Cloud.g, Cloud.b, 0.15f));
+            Frame(a, b, Cloud);
         }
         foreach (var s in Find<EnemySpawn>(level)) Marker(px(s.transform.position), Enemy, "E");
         foreach (var s in Find<PlayerSpawn>(level)) Marker(px(s.transform.position), Player, "P");
+        if (picked && picked.gameObject.scene == level)
+        {
+            var field = picked as DebrisField;
+            if (field) foreach (var p in LaidOut(field)) Dot(px(field.transform.TransformPoint(p)), 2.5f, Preview);
+            if (field) Outline(field, px);
+            else if (picked is GasCloud c) Frame(px(c.At + new Vector2(-c.widthUnits, c.heightUnits) / 2), px(c.At + new Vector2(c.widthUnits, -c.heightUnits) / 2), Preview);
+            else if (picked is EnemySpawn s) Frame(px(s.transform.position + new Vector3(-s.sizeUnits.x, s.sizeUnits.y) / 2), px(s.transform.position + new Vector3(s.sizeUnits.x, -s.sizeUnits.y) / 2), Preview);
+            else if (picked is Transform t)
+            {
+                var b = BoundsOf(t);
+                Frame(px(b.center + new Vector3(-b.extents.x, b.extents.y)), px(b.center + new Vector3(b.extents.x, -b.extents.y)), Preview);
+            }
+            else Frame(px(picked.transform.position) - Vector2.one * 8, px(picked.transform.position) + Vector2.one * 8, Preview);
+            foreach (var g in Grips(picked)) Dot(px(FromOwnSpace(picked, g)), GripPx, Color.white);
+        }
         GUI.EndClip();
+    }
+
+    // Lines every 500 units or a doubling of that, at least GridGapPx apart, counted from the centre as the plot's are, with its numbers.
+    static void DrawGrid(Rect r, float unitsPerPx, System.Func<Vector3, Vector2> px)
+    {
+        float step = 500f;
+        while (step / unitsPerPx < GridGapPx) step *= 2f;
+        int across = Mathf.CeilToInt(r.width / 2 * unitsPerPx / step), down = Mathf.CeilToInt(r.height / 2 * unitsPerPx / step);
+        for (int i = -across; i <= across; i++)
+        {
+            float x = px(new Vector3(i * step, 0f)).x;
+            EditorGUI.DrawRect(new Rect(x, 0, 1, r.height), GridLine);
+            GUI.Label(new Rect(x + 2, 0, 60, 14), (i * step).ToString("N0"), EditorStyles.miniLabel);
+        }
+        for (int i = -down; i <= down; i++)
+        {
+            float y = px(new Vector3(0f, i * step)).y;
+            EditorGUI.DrawRect(new Rect(0, y, r.width, 1), GridLine);
+            GUI.Label(new Rect(2, y, 60, 14), (i * step).ToString("N0"), EditorStyles.miniLabel);
+        }
+    }
+
+    // Owner 2026-11-01: click picks, drag moves, a white square resizes. A resized debris field scatters again on letting go.
+    void MapMouse(Scene level, Rect r, float unitsPerPx, System.Func<Vector3, Vector2> px)
+    {
+        var e = Event.current;
+        int id = GUIUtility.GetControlID(FocusType.Passive);
+        var world = new Vector3((e.mousePosition.x - r.center.x) * unitsPerPx, (r.center.y - e.mousePosition.y) * unitsPerPx, 0f);
+        switch (e.GetTypeForControl(id))
+        {
+            case EventType.MouseDown:
+                if (e.button != 0 || !r.Contains(e.mousePosition)) return;
+                dragGrip = GripAt(e.mousePosition - r.position, px);
+                if (dragGrip < 0) Pick(PartAt(level, world, e.mousePosition - r.position, unitsPerPx, e.alt, px));
+                if (picked) { dragOffset = CentreOf(picked) - world; GUIUtility.hotControl = id; }
+                e.Use();
+                break;
+            case EventType.MouseDrag:
+                if (GUIUtility.hotControl != id || !picked) return;
+                if (dragGrip >= 0) { SetSize(picked, dragGrip, OwnSpace(picked, world)); resized = true; }
+                else Move(picked, world + dragOffset);
+                EditorSceneManager.MarkSceneDirty(level);
+                e.Use();
+                break;
+            case EventType.MouseUp:
+                if (GUIUtility.hotControl != id) return;
+                GUIUtility.hotControl = 0;
+                if (resized && picked is DebrisField field) DebrisFieldEditor.Scatter(field);
+                dragGrip = -1;
+                resized = false;
+                e.Use();
+                break;
+        }
+    }
+
+    void Pick(Component part)
+    {
+        picked = part;
+        Selection.activeGameObject = part ? part.gameObject : null;
+    }
+
+    static void Move(Component c, Vector2 to)
+    {
+        Undo.RecordObject(c.transform, "Move " + c.name);
+        var from = CentreOf(c);
+        c.transform.position += new Vector3(to.x - from.x, to.y - from.y, 0f);
+    }
+
+    static IEnumerable<Renderer> Pieces(Scene level) => Find<Renderer>(level).Where(r => r.gameObject.layer == LayerMask.NameToLayer("WorldTerrain"));
+
+    // A piece's group: its debris field, or the group it is under in the level (Terrain/Asteroid field 1).
+    static Component GroupOf(Transform piece)
+    {
+        var field = piece.GetComponentInParent<DebrisField>();
+        if (field) return field;
+        while (piece.parent && piece.parent.parent) piece = piece.parent;
+        return piece;
+    }
+
+    // What a group's or a piece's meshes cover, seen from above.
+    static Bounds BoundsOf(Transform t)
+    {
+        var meshes = t.GetComponentsInChildren<Renderer>(true);
+        if (meshes.Length == 0) return new Bounds(t.position, Vector3.zero);
+        var b = meshes[0].bounds;
+        foreach (var m in meshes) b.Encapsulate(m.bounds);
+        return b;
+    }
+
+    static Vector3 CentreOf(Component c) => c is Transform t ? BoundsOf(t).center : c.transform.position;
+
+    // What is under the mouse: a spawn's marker, a piece of debris, a gas cloud, then a debris field. `onePiece`: the piece, not its group.
+    static Component PartAt(Scene level, Vector3 world, Vector2 mouse, float unitsPerPx, bool onePiece, System.Func<Vector3, Vector2> px)
+    {
+        foreach (var s in Find<EnemySpawn>(level)) if ((px(s.transform.position) - mouse).magnitude <= MarkerGrabPx) return s;
+        foreach (var s in Find<PlayerSpawn>(level)) if ((px(s.transform.position) - mouse).magnitude <= MarkerGrabPx) return s;
+        foreach (var piece in Pieces(level))
+        {
+            var b = piece.bounds;
+            var off = px(b.center) - mouse;
+            if (Mathf.Max(Mathf.Abs(off.x), Mathf.Abs(off.y)) > Mathf.Max(5f, Mathf.Max(b.size.x, b.size.y) / 2 / unitsPerPx)) continue;
+            if (!onePiece) return GroupOf(piece.transform);
+            var whole = PrefabUtility.GetOutermostPrefabInstanceRoot(piece.gameObject);
+            return whole ? whole.transform : piece.transform;
+        }
+        foreach (var c in Find<GasCloud>(level)) if (c.Inside(world)) return c;
+        foreach (var f in Find<DebrisField>(level)) if (f.Inside(OwnSpace(f, world))) return f;
+        return null;
+    }
+
+    int GripAt(Vector2 mouse, System.Func<Vector3, Vector2> px)
+    {
+        if (!picked) return -1;
+        var grips = Grips(picked);
+        for (int i = 0; i < grips.Length; i++)
+            if ((px(FromOwnSpace(picked, grips[i])) - mouse).magnitude <= GripPx) return i;
+        return -1;
+    }
+
+    // Debris fields turn with their object; everything else lies square to the grid.
+    static Vector2 OwnSpace(Component c, Vector3 world) => c is DebrisField ? c.transform.InverseTransformPoint(world) : world - CentreOf(c);
+    static Vector3 FromOwnSpace(Component c, Vector2 p) => c is DebrisField ? c.transform.TransformPoint(p) : CentreOf(c) + (Vector3)p;
+
+    static Vector2[] Corners(float w, float h) => new[] { new Vector2(w, h) / 2, new Vector2(-w, h) / 2, new Vector2(-w, -h) / 2, new Vector2(w, -h) / 2 };
+
+    // the white squares for what is picked, in its own space
+    static Vector2[] Grips(Component c)
+    {
+        if (c is Transform t) { var b = BoundsOf(t); return Corners(b.size.x, b.size.y); }
+        if (c is GasCloud cloud) return Corners(cloud.widthUnits, cloud.heightUnits);
+        if (c is EnemySpawn spawn) return spawn.sizeUnits.x > 0f && spawn.sizeUnits.y > 0f ? Corners(spawn.sizeUnits.x, spawn.sizeUnits.y) : new Vector2[0]; // 0 x 0: it always starts at the centre
+        if (!(c is DebrisField f)) return new Vector2[0];
+        switch (f.shape)
+        {
+            case DebrisField.Shape.Circle: return new[] { new Vector2(f.radiusUnits, 0f) };
+            case DebrisField.Shape.Ring: return new[] { new Vector2(f.radiusUnits, 0f), new Vector2(f.innerRadiusUnits, 0f) };
+            case DebrisField.Shape.Band: return Corners(f.lengthUnits, f.widthUnits);
+            default: return new[] { new Vector2(f.lengthUnits / 2, 0f), new Vector2(-f.lengthUnits / 2, 0f) };
+        }
+    }
+
+    // A white square dragged to `at`, in its own space: the size comes from how far it is from the centre, and the centre stays put.
+    static void SetSize(Component c, int grip, Vector2 at)
+    {
+        if (c is Transform t) { Stretch(t, at); return; }
+        Undo.RecordObject(c, "Resize " + c.name);
+        Vector2 size = new Vector2(Mathf.Abs(at.x), Mathf.Abs(at.y)) * 2;
+        if (c is GasCloud cloud) { cloud.widthUnits = Mathf.Max(100f, size.x); cloud.heightUnits = Mathf.Max(100f, size.y); }
+        else if (c is EnemySpawn spawn) spawn.sizeUnits = size;
+        else if (c is DebrisField f)
+        {
+            if (f.shape == DebrisField.Shape.Band) { f.lengthUnits = Mathf.Max(1f, size.x); f.widthUnits = size.y; }
+            else if (f.shape == DebrisField.Shape.Line) f.lengthUnits = Mathf.Max(1f, size.x);
+            else if (grip == 1) f.innerRadiusUnits = Mathf.Min(at.magnitude, f.radiusUnits);
+            else f.radiusUnits = Mathf.Max(1f, at.magnitude, f.shape == DebrisField.Shape.Ring ? f.innerRadiusUnits : 0f);
+        }
     }
 
     // the picked field's pieces as Scatter would lay them now; worked out again only when a setting changes
@@ -226,10 +406,17 @@ public class LevelWindow : EditorWindow
 
     // Spawns always start inside the battle space (owner, 2026-10-27): one outside, or in the turn-back
     // warning's band, moves to just inside the edge
-    const float SpawnInsetUnits = 3000f; // past the board's warning band (arenaWarnUnits, 2,500)
+    const float SpawnPastWarningUnits = 500f; // this far inside the board's warning band (arenaWarnUnits)
+    static float SpawnInsetUnits()
+    {
+        var board = FindAnyObjectByType<BoardManager>();
+        var warn = board ? new SerializedObject(board).FindProperty("state.arenaWarnUnits") : null;
+        return (warn != null ? (float)warn.doubleValue : 1000f) + SpawnPastWarningUnits;
+    }
+
     static void KeepSpawnsInside(Scene level)
     {
-        var half = Vector2.Max(Vector2.zero, ArenaHalfUnits(level) - Vector2.one * SpawnInsetUnits);
+        var half = Vector2.Max(Vector2.zero, ArenaHalfUnits(level) - Vector2.one * SpawnInsetUnits());
         foreach (var t in Find<EnemySpawn>(level).Select(s => s.transform).Concat(Find<PlayerSpawn>(level).Select(s => s.transform)))
         {
             var p = t.position;
@@ -250,28 +437,67 @@ public class LevelWindow : EditorWindow
         Selection.activeGameObject.transform.position = Vector3.zero; // its edge is always round the grid's centre
     }
 
-    // ---- the debris fields -----------------------------------------------------------------
-
-    void DrawFields(Scene level)
+    // One piece grows or shrinks. A group's pieces spread out or draw in round its centre, each keeping its own size.
+    static void Stretch(Transform t, Vector2 at)
     {
-        var fields = Find<DebrisField>(level).ToList();
-        if (fields.Count == 0) { EditorGUILayout.HelpBox("No debris fields in this level yet. Add one with the Debris field button below.", MessageType.None); return; }
-        EditorGUILayout.LabelField("Debris fields", EditorStyles.boldLabel);
-        foreach (var f in fields)
+        var b = BoundsOf(t);
+        float byX = Mathf.Max(0.05f, Mathf.Abs(at.x) / Mathf.Max(b.extents.x, 1f)), byY = Mathf.Max(0.05f, Mathf.Abs(at.y) / Mathf.Max(b.extents.y, 1f));
+        if (t.GetComponent<Renderer>() || PrefabUtility.IsAnyPrefabInstanceRoot(t.gameObject))
         {
-            bool on = f == picked;
-            if (GUILayout.Toggle(on, f.name + "  (" + f.shape + ", " + f.transform.childCount + " pieces)", EditorStyles.radioButton) && !on)
-            {
-                picked = f;
-                Selection.activeGameObject = f.gameObject;
-            }
+            Undo.RecordObject(t, "Resize " + t.name);
+            t.localScale *= Mathf.Max(byX, byY);
+            return;
+        }
+        foreach (Transform piece in t)
+        {
+            Undo.RecordObject(piece, "Resize " + t.name);
+            var off = piece.position - b.center;
+            piece.position = new Vector3(b.center.x + off.x * byX, b.center.y + off.y * byY, piece.position.z);
+        }
+    }
+
+    // ---- what is in the level -----------------------------------------------------------------
+
+    static IEnumerable<Component> Parts(Scene level) =>
+        Find<PlayerSpawn>(level).Cast<Component>().Concat(Find<EnemySpawn>(level)).Concat(Find<GasCloud>(level)).Concat(Find<DebrisField>(level))
+            .Concat(Pieces(level).Select(p => GroupOf(p.transform))).Distinct();
+
+    // Everything that can be picked, then the picked thing's position, its settings and Delete.
+    void DrawParts(Scene level)
+    {
+        EditorGUILayout.Space(6);
+        EditorGUILayout.LabelField("In this level", EditorStyles.boldLabel);
+        foreach (var c in Parts(level).ToList())
+        {
+            bool on = c == picked;
+            string label = c is DebrisField f ? f.name + "  (" + f.shape + ", " + f.transform.childCount + " pieces)"
+                : c is Transform ? c.name + "  (" + c.transform.childCount + " pieces)" : c.name;
+            if (GUILayout.Toggle(on, label, EditorStyles.radioButton) && !on) Pick(c);
         }
         if (!picked || picked.gameObject.scene != level) return;
         EditorGUILayout.Space(4);
         using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
-            Editor.CreateCachedEditor(picked, typeof(DebrisFieldEditor), ref pickedEditor);
-            pickedEditor.OnInspectorGUI();
+            EditorGUILayout.LabelField(picked.name, EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+            var at = EditorGUILayout.Vector2Field("Position, units (x east, y north)", CentreOf(picked));
+            if (EditorGUI.EndChangeCheck())
+            {
+                Move(picked, at);
+                EditorSceneManager.MarkSceneDirty(level);
+            }
+            if (!(picked is Transform))
+            {
+                Editor.CreateCachedEditor(picked, null, ref pickedEditor);
+                pickedEditor.OnInspectorGUI();
+            }
+            if (GUILayout.Button("Delete " + picked.name))
+            {
+                Undo.DestroyObjectImmediate(picked.gameObject);
+                picked = null;
+                EditorSceneManager.MarkSceneDirty(level);
+                GUIUtility.ExitGUI();
+            }
         }
     }
 
