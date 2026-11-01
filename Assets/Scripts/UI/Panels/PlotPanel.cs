@@ -44,6 +44,14 @@ public class PlotPanel : Panel
     private Camera ruinsCamera;
     private RenderTexture ruinsTexture;
 
+    [Header("Gas clouds on the plot (owner 2026-11-01): each cloud in sight, behind the ruins and the marks")]
+    [Tooltip("The picture for one cloud. It stays switched off and is copied for each cloud. Its sprite is on this panel's Art list.")]
+    [SerializeField] private Image cloudImage;
+    [Tooltip("How strongly a cloud shows on the grid, 0 to 1. It is drawn in the ruins' colour.")]
+    [Tune("Plot & our ship")] [Range(0f, 1f)] [SerializeField] private float cloudAlpha = 0.16f;
+    private readonly List<Image> cloudImages = new List<Image>();
+    private TacticalWorld world;
+
     [Header("Sensor circle (Step 42): what DRADIS can hear, around our ship")]
     [Tooltip("Owner 2026-10-18: while DRADIS is on, a circle around our ship at the sensor (hearing) range.")]
     [SerializeField] private MarksGraphic sensorRing;
@@ -409,6 +417,7 @@ public class PlotPanel : Panel
             grid.ArenaHalfUnits = new Vector2((float)s.ArenaHalfW, (float)s.ArenaHalfH); // Step 65: the grid is the battle space
             ShowAxes();
             ShowRuins(r.size, z);
+            ShowClouds(z);
         }
         if (capture) capture.raycastTarget = Capturing;
         bool erasing = Controls.Tool == "ERASE";
@@ -1028,6 +1037,33 @@ public class PlotPanel : Panel
         ruinsImage.rectTransform.sizeDelta = size;
         Put(ruinsImage.rectTransform, plotCentre, 0f);
         ruinsImage.color = ruinsColor.gamma; // the board canvas linearises vertex colours; pre-encode
+    }
+
+    // Gas clouds (see cloudImage): a copy of the picture for each cloud in sight, at the plot's pan and zoom
+    void ShowClouds(double z)
+    {
+        if (!cloudImage) return;
+        if (!world) world = FindAnyObjectByType<TacticalWorld>();
+        if (!world) return;
+        while (cloudImages.Count < world.Clouds.Count)
+        {
+            var copy = Instantiate(cloudImage, cloudImage.transform.parent);
+            copy.transform.SetSiblingIndex(cloudImage.transform.GetSiblingIndex());
+            if (fading != null) fading.Add(copy.GetComponent<CanvasGroup>()); // Step 120: the copy fades in with the layer it was copied from
+            cloudImages.Add(copy);
+        }
+        var ink = ruinsColor.gamma;
+        ink.a = cloudAlpha;
+        for (int i = 0; i < cloudImages.Count; i++)
+        {
+            var c = i < world.Clouds.Count ? world.Clouds[i] : null;
+            bool show = c && c.seen;
+            Show(cloudImages[i], show);
+            if (!show) continue;
+            cloudImages[i].rectTransform.sizeDelta = new Vector2((float)(c.widthUnits * z), (float)(c.heightUnits * z));
+            Put(cloudImages[i].rectTransform, Screen(c.At.x, c.At.y), 0f);
+            cloudImages[i].color = ink;
+        }
     }
 
     private void OnDestroy()

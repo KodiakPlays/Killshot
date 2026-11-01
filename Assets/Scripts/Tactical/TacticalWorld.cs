@@ -37,6 +37,9 @@ public class TacticalWorld : MonoBehaviour
     private readonly List<ShipState> bodies = new List<ShipState>();
     private readonly List<Ruin> nearby = new List<Ruin>();
     private readonly Vector2[] boxA = new Vector2[4], boxB = new Vector2[4];
+    /// <summary>The level's gas clouds (owner 2026-11-01). They have no collider, so Collide never sees them.</summary>
+    public readonly List<GasCloud> Clouds = new List<GasCloud>();
+
     [Header("Crashes (owner 2026-11-01)")]
     [Tooltip("Share of its speed a ship keeps after it bounces off something.")]
     [Tune("Crashes")] [Range(0f, 1f)] [SerializeField] private float crashKeepSpeed = 0.3f;
@@ -108,6 +111,8 @@ public class TacticalWorld : MonoBehaviour
                 ruins.Add(new Ruin { r = r, at = b.center, half = Mathf.Max(b.extents.x, b.extents.y), outline = outline, reach = reach });
                 r.enabled = false;
             }
+        Clouds.Clear();
+        Clouds.AddRange(FindObjectsByType<GasCloud>(FindObjectsSortMode.None));
     }
 
     // each piece in range shows; the rest hide (see ruins)
@@ -117,16 +122,28 @@ public class TacticalWorld : MonoBehaviour
         if (!s.sensors) return;
         var us = new Vector2((float)s.nav.x, (float)s.nav.y);
         float sight = Mathf.Max(s.sensors.stats.visualRangeUnits, s.sensors.Listening ? s.sensors.PassiveRangeUnits : 0f); // the plot's DRADIS circle is PassiveRangeUnits
+        bool InSight(Vector2 at, float half) => (at - us).magnitude <= sight + half
+            || (s.hangar && s.hangar.Sees(at.x, at.y, s.sensors.stats.visualRangeUnits + half)); // Step 101: what our fighters see
         int n = 0;
         foreach (var p in ruins)
         {
             if (!p.r) continue;
-            bool show = (p.at - us).magnitude <= sight + p.half
-                     || (s.hangar && s.hangar.Sees(p.at.x, p.at.y, s.sensors.stats.visualRangeUnits + p.half)); // Step 101: what our fighters see
+            bool show = InSight(p.at, p.half);
             if (p.r.enabled != show) p.r.enabled = show;
             if (show) n++;
         }
         RuinsInSight = n;
+        foreach (var c in Clouds) if (c) c.seen = InSight(c.At, Mathf.Max(c.widthUnits, c.heightUnits) / 2);
+    }
+
+    // Our ship is in a gas cloud when enough of its box is in one (owner 2026-11-01). Enemies don't hide in clouds yet.
+    void InClouds()
+    {
+        var us = board.State;
+        var at = new Vector2((float)us.nav.x, (float)us.nav.y);
+        us.sensors.inCloud = false;
+        foreach (var c in Clouds)
+            if (c && c.ShareInside(at, us.nav.heading, us.nav.BoxHalf) >= us.sensors.stats.cloudInsideShare) us.sensors.inCloud = true;
     }
 
     // A piece's box seen from above: the outline of its eight corners on the plot's plane (some pieces are tilted).
@@ -472,6 +489,7 @@ public class TacticalWorld : MonoBehaviour
         }
         Collide();
         WarnRocks();
+        InClouds();
         Sync();
         SeeRuins();
     }

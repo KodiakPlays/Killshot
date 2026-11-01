@@ -139,7 +139,9 @@ public class EnemyBrain : MonoBehaviour
         int gain = gainByAwareness[Mathf.Clamp((int)Level, 0, gainByAwareness.Length - 1)];
         float reach = st.senRangeBaseUnits + gain * st.senRangePerStepUnits; // its DRADIS at this gain
 
-        if (dist <= st.visualRangeUnits)
+        // owner 2026-11-01: a gas cloud blocks its eyes too
+        float eyes = us.sensors.inCloud ? Mathf.Min(st.visualRangeUnits, us.sensors.stats.cloudSeenUnits) : st.visualRangeUnits;
+        if (dist <= eyes)
         {
             Raise(Awareness.Alert);
             Heard(ours, now, true);

@@ -30,6 +30,9 @@ public class SensorSystem : MonoBehaviour
            + "EMISSIONS meter, the cells and the alert. It climbs and falls gradually toward SignalTarget.")]
     [Range(0, 100)] public float signal;
 
+    /// <summary>Owner 2026-11-01: this ship is in a gas cloud (TacticalWorld sets it each tick).</summary>
+    [System.NonSerialized] public bool inCloud;
+
     [Tooltip("Identified by sensors (idd).")]
     public List<string> identified = new List<string> { "bc1" };
 
@@ -59,6 +62,12 @@ public class SensorSystem : MonoBehaviour
         [Tooltip("At or above this our signal shows red and the alert tone sounds once. Whether an enemy hears us is its own "
                + "brain's call (EnemyBrain.HearsUs, owner 2026-10-28).")]
         public float signalTrackedAt = 45f;
+        [Tooltip("Gas clouds (owner 2026-11-01): this share of the ship's box must be in a cloud for it to count as inside.")]
+        [Range(0f, 1f)] public float cloudInsideShare = 0.9f;
+        [Tooltip("Inside a gas cloud the ship keeps this share of its signal.")]
+        [Range(0f, 1f)] public float cloudSignalShare = 0.3f;
+        [Tooltip("Inside a gas cloud an enemy sees the ship only from this close, units.")]
+        public float cloudSeenUnits = 400f;
         [Tooltip("A bearing line fades out over this much mission time (owner 2026-10-23: 2 minutes).")]
         public float bearingTrailSeconds = 120f;
     }
@@ -195,7 +204,8 @@ public class SensorSystem : MonoBehaviour
             // owner 2026-11-01: a lock is as loud as ACTIVE SCAN: quick, but it can be heard; plotting is slow and silent
             float t = active || (ship.weapons != null && ship.weapons.lockKey != null) ? stats.activeScanSignal : 0f;
             for (int i = 0; i < ship.power.buses.Length; i++) t += ship.power.buses[i].fill * ship.power.stats.busSignalPerUnit[i];
-            return Mathf.Clamp(t, 0f, 100f);
+            t = Mathf.Clamp(t, 0f, 100f);
+            return inCloud ? t * stats.cloudSignalShare : t; // owner 2026-11-01: a gas cloud cools the ship; a shot's spike still goes on in full
         }
     }
 }
