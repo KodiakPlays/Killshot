@@ -959,7 +959,7 @@ public class PlotPanel : Panel
             shapes.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = ink });
             if (!jumpLabel) { jumpLabel = Instantiate(labelTemplate, labelTemplate.transform.parent); jumpLabel.name = "Jump point label"; }
             Paint(jumpLabel, Palette.nominal);
-            jumpLabel.text = "JUMP POINT";
+            jumpLabel.text = quest.ExitName;
             jumpLabel.alignment = TextAlignmentOptions.Left;
             Place(jumpLabel.rectTransform, at + new Vector2(r + 6f, 0f), 0f);
         }

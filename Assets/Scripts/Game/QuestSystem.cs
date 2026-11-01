@@ -76,10 +76,12 @@ public class QuestSystem : MonoBehaviour
     public string TargetKey => targetKey;
     public bool Over => Stage == QuestStage.MissionComplete || Stage == QuestStage.MissionFailed;
     /// <summary>The jump point is open: the target is down. Where it is, world units.</summary>
-    public bool ExitOpen => Stage == QuestStage.ExitRegion || (Stage == QuestStage.MissionComplete && exitSet);
-    public Vector2 ExitAt { get; private set; }
+    public bool ExitOpen => Ring != null || Stage == QuestStage.ExitRegion || (Stage == QuestStage.MissionComplete && exitSet);
+    public Vector2 ExitAt { get { return Ring != null ? Ring.ringAt : exitAt; } private set { exitAt = value; } }
     /// <summary>Our ship within this distance of the jump point wins, units.</summary>
-    public float ExitReachUnits => exitReachUnits;
+    public float ExitReachUnits => Ring != null ? Ring.ringUnits : exitReachUnits;
+    /// <summary>What the plot calls the ring.</summary>
+    public string ExitName => Goal == MissionGoal.Flight ? "CHECKPOINT" : "JUMP POINT";
     /// <summary>The board's mission clock when the mission started, game seconds.</summary>
     public float StartedAt { get; private set; }
     /// <summary>Real time when it ended. The end screen waits a moment after it.</summary>
@@ -91,6 +93,7 @@ public class QuestSystem : MonoBehaviour
     public int Arrived { get; private set; }
 
     private bool exitSet;
+    private Vector2 exitAt;
     private float nextArrival;
     private TacticalWorld world;
 
@@ -159,17 +162,80 @@ public class QuestSystem : MonoBehaviour
         {
             bool first = board.missionAlarm == null || !board.missionAlarm.StartsWith("JUMP POINT");
             var d = ExitAt - new Vector2((float)us.nav.x, (float)us.nav.y);
-            board.missionAlarm = "JUMP POINT · BRG " + TacticalWorld.Bearing(d).ToString("000") + "° · "
-                               + Mathf.RoundToInt(d.magnitude).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " KM";
-            board.missionCount = "!";
+            Point(d);
             if (first) board.Alert(); // the alert tone as the jump point opens, with its line already on the strip
             if (d.magnitude <= exitReachUnits) End(QuestStage.MissionComplete, MissionFailReason.None);
         }
     }
 
+    // the alarm strip's line to the ring on the plot
+    void Point(Vector2 d)
+    {
+        board.missionAlarm = ExitName + " · BRG " + TacticalWorld.Bearing(d).ToString("000") + "° · "
+                           + Mathf.RoundToInt(d.magnitude).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " KM";
+        board.missionCount = "!";
+    }
+
+    // The flight drill (owner 2026-11-01): one step at a time; each step's note replaces the last
+    [Tooltip("In a flight drill the briefing box is this tall, board px.")]
+    [Tune("Mission")] [SerializeField] private float drillNoteHeight = 230f;
+    private DrillStep[] drill;
+    private float slideHeld;
+    /// <summary>The drill's step now, counted from 0.</summary>
+    public int DrillAt { get; private set; }
+    DrillStep Ring => drill != null && !Over && drill[DrillAt].ringUnits > 0f ? drill[DrillAt] : null;
+
+    public void StartDrill(DrillStep[] steps)
+    {
+        drill = steps != null && steps.Length > 0 ? steps : null;
+        DrillAt = 0;
+        if (drill == null) return;
+        // the notes are short and stay up while you fly: a lower box, on the same bottom edge
+        var box = (RectTransform)helpBubble.transform;
+        box.anchoredPosition += Vector2.down * (box.sizeDelta.y - drillNoteHeight);
+        helpText.rectTransform.sizeDelta -= Vector2.up * (box.sizeDelta.y - drillNoteHeight);
+        box.sizeDelta = new Vector2(box.sizeDelta.x, drillNoteHeight);
+        ShowHelp(drill[0].note);
+    }
+
+    void Drill(ShipState us)
+    {
+        if (drill == null) return;
+        var step = drill[DrillAt];
+        var d = step.ringAt - new Vector2((float)us.nav.x, (float)us.nav.y);
+        if (step.ringUnits > 0f) Point(d); else board.missionAlarm = board.missionCount = null;
+        if (!Passed(step, us, d.magnitude)) return;
+        if (DrillAt + 1 >= drill.Length) { End(QuestStage.MissionComplete, MissionFailReason.None); return; }
+        slideHeld = 0f;
+        ShowHelp(drill[++DrillAt].note);
+        board.Chime();
+    }
+
+    bool Passed(DrillStep s, ShipState us, float toRing)
+    {
+        var eng = us.power.buses[0];
+        switch (s.check)
+        {
+            case DrillCheck.EngHeld: return eng.fill > 0 && eng.fill <= s.amount && eng.mode == PowerSystem.BusMode.Standby;
+            case DrillCheck.EngAt: return eng.fill >= s.amount;
+            case DrillCheck.Reach: return toRing <= s.ringUnits;
+            case DrillCheck.SpeedAt: return us.nav.SpeedUnits >= s.amount;
+            case DrillCheck.SlideLeft:
+            case DrillCheck.SlideRight:
+                if (eng.fill > 0 && us.nav.slide == (s.check == DrillCheck.SlideLeft ? -1 : 1)) slideHeld += board.TickGameSeconds;
+                return slideHeld >= s.amount;
+            case DrillCheck.ZoomOutTo: return (float)board.ZoomExact <= s.amount;
+            case DrillCheck.ZoomInTo: return (float)board.ZoomExact >= s.amount;
+            case DrillCheck.DradisOn: return us.sensors.Listening;
+            case DrillCheck.StopAt: return toRing <= s.ringUnits && us.nav.SpeedUnits <= s.amount;
+        }
+        return false;
+    }
+
     // A training level's goal, met or lost at once (FTUE_PLAN §0)
     void Train(ShipState us, ShipState target, bool scanned)
     {
+        if (Goal == MissionGoal.Flight) { Drill(us); return; }
         if (Goal == MissionGoal.FindBySignal) // owner 2026-10-29: comms tells you where to go; DRADIS finds it
         {
             var track = us.TrackOf(targetKey);

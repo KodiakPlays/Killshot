@@ -78,6 +78,8 @@ public class HelmPanel : Panel
     [Tune("Helm")] [SerializeField] private int throttleKeyStep = 10;
     [Tooltip("Owner 2026-10-29: the helm's keys. Change them on the Keys tab of Starwolf → Tuning.")]
     [Tune("Keys")] [SerializeField] private KeyCode turnPortKey = KeyCode.A, turnStarboardKey = KeyCode.D, throttleUpKey = KeyCode.W, throttleDownKey = KeyCode.S;
+    [Tooltip("Owner 2026-11-01: held, these slide the ship sideways. The nose stays where it is.")]
+    [Tune("Keys")] [SerializeField] private KeyCode slideLeftKey = KeyCode.Q, slideRightKey = KeyCode.E;
 
     Color nominal => Palette.nominal;
     Color caution => Palette.caution;
@@ -128,7 +130,8 @@ public class HelmPanel : Panel
         if (Controls == null) return;
         // onKey ignores keys while a text field has focus
         var sel = EventSystem.current ? EventSystem.current.currentSelectedGameObject : null;
-        if (sel && sel.GetComponent<TMP_InputField>()) { heldKey = KeyCode.None; return; }
+        if (sel && sel.GetComponent<TMP_InputField>()) { heldKey = KeyCode.None; State.nav.slide = 0; return; }
+        State.nav.slide = (Input.GetKey(slideRightKey) ? 1 : 0) - (Input.GetKey(slideLeftKey) ? 1 : 0);
         foreach (var k in new[] { turnPortKey, turnStarboardKey, throttleUpKey, throttleDownKey })
             if (Input.GetKeyDown(k)) { heldKey = k; nextRepeat = Time.unscaledTime + repeatDelay; Press(k); return; }
         if (heldKey != KeyCode.None && !Input.GetKey(heldKey)) heldKey = KeyCode.None;

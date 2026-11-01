@@ -42,8 +42,10 @@ public class NavSystem : MonoBehaviour
         [Header("Turning")]
         [Tooltip("Ordered heading step for the A and D keys, degrees.")]
         public int headingKeyStep = 3;
-        [Tooltip("Degrees the bow swings per game second at full engine-room integrity (the design: 4 per tick at x1; Step 63: x5).")]
+        [Tooltip("Degrees the bow swings per game second at full ENG and full engine-room integrity (the design: 4 per tick at x1; Step 63: x5).")]
         public float turnRate = 20f;
+        [Tooltip("The swing at ENG 1, degrees per game second (owner 2026-11-01: more power, tighter turns). Full ENG gives Turn Rate, in equal steps.")]
+        public float baseTurnRate = 10f;
         // Step 41 (owner 2026-10-18): actual chases commanded at capped rates; the hull turns, the velocity
         // follows, and the sideways part bleeds off (the ship slides). The prototype's numbers (MAX_SPEED 240,
         // ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988, SPACE_DRAG .9992 per 1/60 s) were slowed to a 2.5 units/s
@@ -56,18 +58,29 @@ public class NavSystem : MonoBehaviour
         public double baseSpeedUnits = 2.5;
         [Tooltip("Speeding up at full ENG, units/s per mission second (Step 63: 25x, so full speed comes 5x sooner).")]
         [FormerlySerializedAs("accelKms2")] public double accelUnits = 0.2175;
-        [Tooltip("Slowing down, units/s per mission second (Step 63: 25x).")]
+        [Tooltip("Speeding up at ENG 1, units/s per mission second (owner 2026-11-01: more power, more acceleration). Full ENG gives Accel Units, in equal steps. Slowing down and the side thrusters rise by the same share.")]
+        public double baseAccelUnits = 0.10875;
+        [Tooltip("Slowing down at full ENG, units/s per mission second (Step 63: 25x).")]
         [FormerlySerializedAs("brakeKms2")] public double brakeUnits = 0.4075;
         [Tooltip("Share of sideways speed kept each mission second: after a turn the ship slides, then lines up (Step 63: 0.9925^5).")]
         public double driftKeepPerS = 0.96307;
         [Tooltip("Share of all speed kept each mission second (Step 63: 0.9995^5).")]
         public double dragKeepPerS = 0.997502;
+        [Header("Side thrusters (owner 2026-11-01: Q and E)")]
+        [Tooltip("Sideways speed with the key held, units/s, at full ENG. The nose stays where it is.")]
+        public double sideSpeedUnits = 5;
+        [Tooltip("How fast the side thrusters reach that speed, and stop the slide when the key is let go, units/s per mission second, at full ENG.")]
+        public double sideAccelUnits = 1;
     }
     /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
     public Stats stats => shipStats ? shipStats.Stats.navigation : (shipStats = GetComponent<Ship>()).Stats.navigation;
     [System.NonSerialized] Ship shipStats;
     // the bow turns whole degrees; fractions of a degree bank here so x0.25 turns at the right speed too
     [System.NonSerialized] private double turnBank;
+    /// <summary>The side thrusters, from the Q and E keys: -1 slides to port, 1 to starboard, 0 neither.</summary>
+    [System.NonSerialized] public int slide;
+    // still stopping a slide after the key is let go
+    [System.NonSerialized] private bool sliding;
     // the board's clock, for drawing between ticks (Step 75)
     private BoardManager board;
 
@@ -102,8 +115,14 @@ public class NavSystem : MonoBehaviour
     public int TurnLeft => ((orderedHeading - heading + 540) % 360) - 180;
 
     double EngineRoom => ship.damage.CompHealth("eng") / 5.0;
+    /// <summary>How far ENG is up its range: 0 at ENG 1 or less, 1 at full (owner 2026-11-01: more power, more of everything).</summary>
+    double EngStep => System.Math.Max(0, ship.power.BusUnits("eng") - 1) / (double)System.Math.Max(1, ship.power.stats.busMax - 1);
+    /// <summary>Speeding up now, units/s per second.</summary>
+    double Accel => stats.baseAccelUnits + (stats.accelUnits - stats.baseAccelUnits) * EngStep;
+    /// <summary>The share of full thrust ENG gives now. Slowing down and the side thrusters use it.</summary>
+    double Thrust => stats.accelUnits > 0 ? Accel / stats.accelUnits : 1;
     /// <summary>Degrees the bow swings per game second now (the design's per-tick swing at x1).</summary>
-    double TurnPerS => System.Math.Max(1, ShipState.JsRound(stats.turnRate * EngineRoom));
+    double TurnPerS => System.Math.Max(1, ShipState.JsRound((stats.baseTurnRate + (stats.turnRate - stats.baseTurnRate) * EngStep) * EngineRoom));
     /// <summary>The share of top speed the ENG bus allows: ENG 1 gives baseSpeedUnits, full ENG topSpeedUnits, in equal steps; ENG 0 nothing.</summary>
     double EngShare
     {
@@ -168,7 +187,7 @@ public class NavSystem : MonoBehaviour
     {
         if (dt <= 0) return;
         // owner 2026-10-29: with no power on the ENG bus there is no thrust and no braking: the ship drifts on
-        if (ship.power.BusUnits("eng") == 0) { x += vx * dt; y += vy * dt; return; }
+        if (ship.power.BusUnits("eng") == 0) { sliding = false; x += vx * dt; y += vy * dt; return; }
         double h = heading * System.Math.PI / 180;
         double nx = System.Math.Sin(h), ny = System.Math.Cos(h); // the nose
         double fwd = vx * nx + vy * ny, side = vx * ny - vy * nx; // side: to starboard
@@ -176,13 +195,21 @@ public class NavSystem : MonoBehaviour
         fwd *= keep;
         side *= keep * System.Math.Pow(stats.driftKeepPerS, dt);
         double target = throttle / 100.0 * stats.topSpeedUnits; // the throttle is already held to what ENG power allows (Steer)
-        double step = (fwd < target ? stats.accelUnits : stats.brakeUnits) * dt;
-        fwd = System.Math.Abs(target - fwd) <= step ? target : fwd + System.Math.Sign(target - fwd) * step;
+        fwd = Toward(fwd, target, (fwd < target ? Accel : stats.brakeUnits * Thrust) * dt);
+        // owner 2026-11-01: Q and E push the ship sideways, slowly, with the nose where it is; let go, and they stop the slide
+        sliding |= slide != 0;
+        if (sliding)
+        {
+            side = Toward(side, slide * stats.sideSpeedUnits * Thrust, stats.sideAccelUnits * Thrust * dt);
+            sliding = slide != 0 || side != 0;
+        }
         vx = fwd * nx + side * ny;
         vy = fwd * ny - side * nx;
         x += vx * dt;
         y += vy * dt;
     }
+
+    static double Toward(double v, double target, double step) => System.Math.Abs(target - v) <= step ? target : v + System.Math.Sign(target - v) * step;
 
     private void Awake() => board = FindAnyObjectByType<BoardManager>();
 

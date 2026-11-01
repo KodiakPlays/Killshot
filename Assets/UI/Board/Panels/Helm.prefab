@@ -8414,6 +8414,13 @@ MonoBehaviour:
   gLoad: {fileID: 5231458811530564588}
   repeatDelay: 0.5
   repeatInterval: 0.033
+  throttleKeyStep: 10
+  turnPortKey: 97
+  turnStarboardKey: 100
+  throttleUpKey: 119
+  throttleDownKey: 115
+  slideLeftKey: 113
+  slideRightKey: 101
 --- !u!1 &4926145802052254777
 GameObject:
   m_ObjectHideFlags: 0

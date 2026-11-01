@@ -37,7 +37,8 @@ public class EndScreenPanel : Panel
         bool shipLost = quest.FailReason != MissionFailReason.Scanned && quest.FailReason != MissionFailReason.PrizeDestroyed;
         title.text = won ? "MISSION COMPLETE" : shipLost ? "SHIP LOST" : "MISSION FAILED";
         Paint(title, won ? Palette.nominal : Palette.alarm);
-        reason.text = won ? name + " " + (quest.Goal == MissionGoal.HitUnseen ? "HIT · NEVER SCANNED" : fate) + (quest.ExitOpen ? " · JUMPED OUT" : "")
+        bool flight = quest.Goal == MissionGoal.Flight;
+        reason.text = won && flight ? "FLIGHT DRILL PASSED" : won ? name + " " + (quest.Goal == MissionGoal.HitUnseen ? "HIT · NEVER SCANNED" : quest.Goal == MissionGoal.FindBySignal ? "FOUND BY SIGNAL" : fate) + (quest.ExitOpen ? " · JUMPED OUT" : "")
                     : quest.FailReason == MissionFailReason.Desertion ? "LEFT THE BATTLE SPACE"
                     : quest.FailReason == MissionFailReason.Scanned ? name + " SCANNED OR LOCKED · THIS LEVEL ALLOWS NEITHER"
                     : quest.FailReason == MissionFailReason.PrizeDestroyed ? name + " DESTROYED · IT WAS TO BE CAPTURED"
@@ -45,7 +46,7 @@ public class EndScreenPanel : Panel
         float armour = 0f, most = 0f;
         for (int i = 0; i < s.damage.SideArmour.Length; i++) { armour += s.damage.SideArmour[i]; most += s.damage.stats.sideArmourMax[i]; }
         int secs = Mathf.FloorToInt(Controls.MissionSeconds - quest.StartedAt);
-        values.text = name + " · " + fate + "\n"
+        values.text = (flight ? "NONE" : name + " · " + fate) + "\n"
                     + (s.destroyed ? "LOST" : Mathf.RoundToInt(100f * armour / Mathf.Max(1f, most)) + "% ARMOUR") + "\n"
                     + (secs / 3600).ToString("00") + ":" + (secs / 60 % 60).ToString("00") + ":" + (secs % 60).ToString("00");
     }

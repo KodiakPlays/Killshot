@@ -495,6 +495,8 @@ public class BoardManager : MonoBehaviour
 
     /// <summary>The alert tone, and the strip redrawn now (QuestSystem: the mission changed).</summary>
     public void Alert() { ShowAlarm(); Play(alertSound, "alert"); }
+    /// <summary>The soft tone: a flight drill's step is done.</summary>
+    public void Chime() => Play(signalSound, "signal");
 
     /// <summary>Something hit us (WeaponSystem's report, or TacticalWorld's debris): the tone, and the line on the strip
     /// for <see cref="hitLineSeconds"/>.</summary>
