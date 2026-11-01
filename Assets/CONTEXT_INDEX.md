@@ -240,8 +240,8 @@ document, and do not quietly design around them.
 | **Real time with optional pause** | Pause is a convenience, not the core verb. The handoff's paused-time framing is wrong for this game. |
 | **No broadside cannon, no spinal railgun** | The board has neither. There is no gun that fires down the length of the ship. Soham's old `Weapons/BroadsideCannon.cs` and `Weapons/Railgun.cs` are kept as old code. The board does not use them. |
 | **Two railgun turrets** | RG-A covers 090° ±45° from the bow, RG-B 270° ±45°. One in the middle of each long side, on hard points you drag on the Hard Points tab of Starwolf → Tuning. A solid bar turns slowly onto the target inside each cone, and the shot flies down the bar. Reach 2,000 units, 22 rounds each. One shot per arming. The slug flies at 300 units/s, so it takes about 7 s to reach 2,000 units. |
-| **Two PDC groups** | PDC-A covers the starboard half, 090° ±90° from the bow. PDC-B covers the port half, 270° ±90° (Step 106). Reach 600 units, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy missiles entering its arc, with a 70% chance to kill each one. They are the only answer to a missile salvo. |
-| **Missiles** | Fire in any direction, no arc. Fired from the VLS on the Fire Control panel, two to a salvo. Reach 3,000 units at 400 units/s, 8 missiles. |
+| **Four PDC groups** | One at each corner of the ship, each covering 270°, so three cover any bearing. Reach 600 units, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy torpedoes entering its arc, with a 70% chance to kill each one. They are the only answer to a torpedo salvo. |
+| **Torpedoes** | Two launchers, VLS-A and VLS-B, one on each side, 8 torpedoes each. They fire in any direction, two to a salvo. The launcher on the target's side fires. A torpedo leaves the ship's side tilted 15° toward the stern and slows. It curves onto the target, then its motor lights and it zips to full speed. Reach 3,000 units, top speed 250 units/s: always slower than a slug. |
 | **A volley is a consequence, not a mode** | There is no salvo button, no spread control, no fire pattern menu. Arm several turrets on the same bearing and they converge. Arm them on different bearings and you get a fan. The width of the fan is the difference between the numbers you typed. |
 | **Density over time compression** | The empty-board problem is solved with a smaller, debris-dense arena, not by fast-forwarding. Modest play-rate range only. Collision is gameplay, not an error. |
 | **Ten reactor units, four buses** | ENG · WEP · SEN · AUX, five units each at most. Ten units means **you can fully run two.** A bus on DRAW gains one unit per game second. A bus on VENT loses one. Every unit on a bus makes you louder. |
@@ -251,8 +251,7 @@ document, and do not quietly design around them.
 | **The plot glyph never shows damage** | It stays a symbol. The periscope shows a target's damage. The Engineering panel shows ours on a picture of the hull. |
 | **Everything runs in units and game seconds** | Ranges, speeds and the battle space are in units. At x1 a game second is a real second (Step 130). Every rate runs per game second, so x10 runs everything ten times as fast. |
 
-The weapon, power and armour rows above match the ship stats files in `Assets/Ships/`, with one
-difference. `Asura.asset` also has PDC-C, PDC-D, VLS-A and VLS-B, and its PDC arcs are wider.
+The weapon, power and armour rows above match the ship stats files in `Assets/Ships/`.
 The owner's rulings since 2026-10-04 are in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 4.
 
 ---
@@ -317,7 +316,7 @@ Do not treat any of these as decided. Ask the owner.
 
 1. **Enemy AI beyond Wolf Hunt.** `Assets/Scripts/Tactical/EnemyBrain.cs` drives the Garuda. It
    hunts the map, hears us by our signal, searches, then turns a side to us and fires railguns and
-   missiles (Step 97). Anything past that one brain is still unspecified in every document, including
+   torpedoes (Step 97). Anything past that one brain is still unspecified in every document, including
    the GDD.
 2. **What happens when stability reaches zero.** Four sections spend numbers on it; none says what it
    is for. On the board, stability is a meter on the helm, and nothing else reads it.
@@ -338,8 +337,8 @@ Do not treat any of these as decided. Ask the owner.
 - A bus on DRAW takes units the reactor has spare. With all ten units placed, it waits until another
   bus vents.
 - The plot shows 760 px per 1,000 units at zoom 1 (`PlotGrid.cs`, `pxPer1000Units`).
-- PDC groups have fixed arcs and fire by themselves on AUTO. Missiles fire from the VLS on the Fire
-  Control panel.
+- PDC groups have fixed arcs and fire by themselves on AUTO. Torpedoes fire from the Fire Control
+  panel, and the launcher on the target's side picks itself.
 - Each level sets its battle space with a Battle Space box (Starwolf → Level, Step 91). Every level is 20,000 × 20,000 units (Step 130). Without one it is 100,000 × 100,000 units (`ShipState.arenaWidthUnits`).
 - Ammunition is a real count in the ship stats files.
 - The aft armour is 50.

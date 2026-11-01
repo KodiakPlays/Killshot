@@ -1,7 +1,7 @@
 """Scale study: whole fights on the board's own rules, at different speed scales.
 
 Run: python3 docs/scale-sim/scalesim.py   (no dependencies). README.md next to this file says what it measures.
-BASE holds the game's numbers as of Step 130 (the designer's table, owner 2026-11-01); scale k multiplies them.
+BASE holds the game's numbers: the designer's table of Step 130, with the missile at 250 (Step 145); scale k multiplies them.
 Keep BASE in step with the ship files (Assets/Ships) whenever a number changes.
 
 Mirrors: TickMove / TickHelm physics, EnemyBrain's patrol, DRADIS hearing range, the side

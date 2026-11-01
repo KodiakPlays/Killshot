@@ -88,7 +88,7 @@ get there, through whatever you stirred up (§15).
 | **Everything you do makes you heard** | Every unit of power makes you louder. So do an active scan and every shot. |
 | **You drift** | Turning points the ship. It does not change where you are going. |
 | **Your armour is a direction** | No shields. A bow, a stern and two sides, each with its own armour. |
-| **Shots take time** | A railgun slug takes about 7 seconds to reach 2,000 units. A missile takes about 8 seconds to reach 3,000. You aim where the target will be. |
+| **Shots take time** | A railgun slug takes about 7 seconds to reach 2,000 units. A torpedo takes 15 to 18 seconds to reach 3,000. Its motor lights 3 to 7 seconds in, once it has curved onto the target. You aim where the target will be. |
 
 ---
 
@@ -106,7 +106,7 @@ Everything below breaks down system by system. Read in order for the whole pictu
 | 5 | Being seen | Our signal; how the enemy hears us; reinforcements; the disguise (not built yet) |
 | 6 | Auxiliary | The orders station, its AUX pool and the alert condition |
 | 7 | Reflex | The cloak (not built yet) |
-| 8 | Weapons | Two railgun turrets, two PDC groups, the missile launcher, damage |
+| 8 | Weapons | Two railgun turrets, four PDC groups, two torpedo launchers, damage |
 | 9 | Sensing | DRADIS, the sweep, the active scan, what the plot shows of a ship |
 | 10 | Comms | Tuning and the cipher |
 | 11 | The board | Layout, plot, rails, colour, type, the periscope |
@@ -201,7 +201,7 @@ Distances are **units**. Speeds are units per second. Times are game seconds. At
 | DRADIS reach | 5,000 units at gain 1, 7,500 at gain 5 |
 | Visual range | 2,000 units |
 | Railgun reach | 2,000 units |
-| Missile reach | 3,000 units |
+| Torpedo reach | 3,000 units |
 | PDC reach | 600 units |
 | Speed limit | 25 units/s at ENG 1, 50 at ENG 5 |
 | Plot scale at zoom 1 | 760 px per 1,000 units |
@@ -214,7 +214,7 @@ The board steps every 0.42 s of real time. Each step moves the game on by 0.42 g
 the rate: x0.25, x1 or x5 (§2). At x1 the game clock keeps real time.
 
 One step runs in this order: the mission clock, power, the AUX pool, our ship's movement, the
-battle space check, slugs and missiles, fighters and boats, enemy missiles and our PDCs, damage
+battle space check, slugs and torpedoes, fighters and boats, enemy torpedoes and our PDCs, damage
 control, fire, vacuum and radiation, the launch stages, the weapons capacitor, sensors and signal.
 Then each enemy thinks and moves.
 
@@ -378,7 +378,8 @@ Every ship has ordered state (heading, throttle) and actual state (heading, velo
 Actual moves toward ordered at capped rates whenever the clock runs.
 
 > **Rule 4.1.a** Our ship and the enemy move by the same rules. The enemy is our ship with other
-> stats. Fighters and assault boats fly straight to where they are going at a fixed speed (§12).
+> stats. Fighters and assault boats fly at a fixed speed and turn gradually onto where they are
+> going (§12.3).
 
 ### 4.2 Throttle
 
@@ -526,7 +527,7 @@ signal target = 10 per unit on any bus + 35 while ACTIVE is on        (at most 1
 ```
 
 The signal climbs toward its target at 9 per game second and falls at 6. Each railgun shot or
-missile salvo adds 25 at once. As the signal crosses 45, the alert tone plays once. The numbers are
+torpedo salvo adds 25 at once. As the signal crosses 45, the alert tone plays once. The numbers are
 in each ship's stats file, under sensors and power.
 
 The signal box says who can hear you. While an enemy ship hears or sees our ship, it reads
@@ -611,7 +612,7 @@ its visual range it sees us, whatever our signal. Our fighters are loud to it to
 | COLD | At the start | Hunts the map. It picks points across the battle space, moving from its own half toward ours. With a patrol route, it flies the route (Rule 5.3.b) |
 | UNEASY | It hears us faintly, or a false dot sends it to a rock (Rule 5.1.e) | Turns for where it heard us |
 | SEARCHING | It hears us more clearly, or hears us again after a gap | Speeds up and searches round that spot |
-| ALERT | It hears us loud and close, sees us, or we hit it | Closes to its railguns' reach, turns a turret's side to us, and fires railgun slugs and missile salvos while it knows where we are. The reinforcements' countdown starts (§5.4) |
+| ALERT | It hears us loud and close, sees us, or we hit it | Closes to its railguns' reach, turns a turret's side to us, and fires railgun slugs and torpedo salvos while it knows where we are. The reinforcements' countdown starts (§5.4) |
 
 The code is `EnemyBrain`. Its numbers are on the Board tab of **Starwolf → Tuning**, under Enemy.
 
@@ -735,15 +736,16 @@ picked up again are marked stale and dropped after `staleTrackTimeout` (`TBD`).
 
 ## 8 · Weapons
 
-**What it is.** Three weapon types: two railgun turrets, two PDC groups and one missile launcher
-(the VLS).
+**What it is.** Three weapon types: two railgun turrets, four PDC groups and two torpedo launchers
+(VLS-A and VLS-B). The slug is the fastest thing on the board. A torpedo is slower, reaches further
+and hits harder.
 
 **How it plays.** Which way you face decides what the railguns can reach. PDCs are the only answer
-to a missile, and each group covers a fixed arc. Every shot spends charge from the weapons
-capacitor, and every slug and missile is counted.
+to a torpedo, and each group covers a fixed arc. Every shot spends charge from the weapons
+capacitor, and every slug and torpedo is counted.
 
 **How it's built.** Fire control works one mount at a time. A shot needs a firing solution, the
-arming ladder and enough charge (§20). Slugs and missiles fly across the plot. They hit a ship
+arming ladder and enough charge (§20). Slugs and torpedoes fly across the plot. They hit a ship
 they pass close enough to. The numbers are in each ship's stats file, under weapons.
 
 ### 8.1 Damage
@@ -754,30 +756,30 @@ fighters (owner, 2026-10-27; BUILD_LOG decision 49).
 | Weapon | Against armour | Through an open side |
 |---|---|---|
 | Railgun slug | Takes 50 armour off the side it hits | Takes 2 integrity off the room behind; 50% chance to breach it |
-| HE missile | Takes 100 armour | Takes 2 integrity off the room behind; 60% chance of fire |
-| PENETRATOR missile | Goes straight through | Takes 2 integrity off the room behind; 40% chance of fire |
-| EMP missile | No damage | No damage. The ship's power goes out for 60 game seconds, and it drifts (§4.3) |
+| HE torpedo | Takes 100 armour | Takes 2 integrity off the room behind; 60% chance of fire |
+| PENETRATOR torpedo | Goes straight through | Takes 2 integrity off the room behind; 40% chance of fire |
+| EMP torpedo | No damage | No damage. The ship's power goes out for 60 game seconds, and it drifts (§4.3) |
 | Fighter run | Takes 10 armour per fighter | Takes 1 integrity per fighter off the room behind |
 
-These are our ship's numbers. The Garuda's slugs and HE missiles hit 1.5 times as hard: a slug takes
-75 armour and 3 integrity, an HE missile 150 armour.
+These are our ship's numbers. The Garuda's slugs and HE torpedoes hit 1.5 times as hard: a slug takes
+75 armour and 3 integrity, an HE torpedo 150 armour.
 
 Any hit on the reactor room, except a fighter's, has a 50% chance to leak radiation. That chance
 is in the Damage group of the ship being hit. What damage does to a ship is in §13.
 
 > **Rule 8.1.a** On our ship, two of our slugs open the prow, starboard or port side, and one opens
 > the aft. The Garuda's armour is 1.5 times ours (§13.2), so our slugs need three hits on its prow,
-> starboard or port side, and two on its aft. One HE missile opens any of our sides. Our HE
-> missiles need two hits on the Garuda's prow, starboard or port side, and one on its aft.
+> starboard or port side, and two on its aft. One HE torpedo opens any of our sides. Our HE
+> torpedoes need two hits on the Garuda's prow, starboard or port side, and one on its aft.
 
 ### 8.1a Warheads
 
-The missile launcher fires one of three warheads: HE, EMP or PENETRATOR. The board starts on HE.
+The torpedo launchers fire one of three warheads: HE, EMP or PENETRATOR. The board starts on HE.
 The warhead selector is not drawn on the Fire Control drawer yet.
 
 ### 8.2 Terrain
 
-Not built yet. Slugs and missiles pass through ruins and debris. Whether terrain should stop a
+Not built yet. Slugs and torpedoes pass through ruins and debris. Whether terrain should stop a
 shot is not decided.
 
 ### 8.3 What you have
@@ -788,16 +790,18 @@ There are no broadside guns. Arcs are measured from the bow, clockwise.
 |---|---|---|---|---|
 | RG-A, railgun turret A | 090° ±45° | 045° → 135° | 2,000 units | 22 slugs |
 | RG-B, railgun turret B | 270° ±45° | 225° → 315° | 2,000 units | 22 slugs |
-| PDC-A, PDC group A | 090° ±90° | 000° → 180°, the starboard half | 600 units | 2,400 rounds |
-| PDC-B, PDC group B | 270° ±90° | 180° → 360°, the port half | 600 units | 2,400 rounds |
-| VLS, missile launcher | All round | All round | 3,000 units | 8 cells |
+| PDC-A, PDC group A, bow right | 045° ±135° | 270° → 180° | 600 units | 2,400 rounds |
+| PDC-B, PDC group B, bow left | 315° ±135° | 180° → 090° | 600 units | 2,400 rounds |
+| PDC-C, PDC group C, stern left | 225° ±135° | 090° → 000° | 600 units | 2,400 rounds |
+| PDC-D, PDC group D, stern right | 135° ±135° | 000° → 270° | 600 units | 2,400 rounds |
+| VLS-A, torpedo launcher, left side | All round | All round | 3,000 units | 8 cells |
+| VLS-B, torpedo launcher, right side | All round | All round | 3,000 units | 8 cells |
 
-`Asura.asset` differs from this table today. It also has PDC-C, PDC-D, VLS-A and VLS-B, added on the
-Hard Points tab of Starwolf → Tuning. Its PDC arcs are ±135°. The VLS has no hard point, and fire
-control has no way to pick VLS-A or VLS-B yet.
+This is our ship's file, `Asura.asset`, as the owner set it on 2026-11-01. Each weapon stands on a
+hard point on the Hard Points tab of Starwolf → Tuning.
 
 > **Rule 8.3.a** Fire control works one mount at a time. You pick the system (RAILGUN, PDC or
-> MISSILE), then the mount.
+> TORPEDO), then the mount. Torpedoes are the exception: the launcher picks itself (§8.5).
 
 > **Rule 8.3.b** **Ammunition is a real count** (owner, 2026-10-27). It only goes down. There is no
 > reload. With nothing left, LOAD refuses.
@@ -805,13 +809,12 @@ control has no way to pick VLS-A or VLS-B yet.
 > **Rule 8.3.c** Each railgun covers one side of the ship, 90° wide (owner, 2026-11-01). Nothing
 > covers the bow or the stern. Turning the ship brings a turret to bear.
 
-> **Rule 8.3.d** The two PDC groups cover a half each, so together they cover all round (owner,
-> 2026-10-29: "keep it simple").
+> **Rule 8.3.d** Each of the four PDC groups covers 270°. Any bearing is covered by three of them.
 
 The armour is PROW 100, STBD 100, AFT 50, PORT 100 (§13.2). The aft is the weakest side.
 
-The Garuda has the same mounts and the same reach. It has 4 missile cells, and its PDC-B has no
-rounds. A Naga frigate has one railgun, RG-A, with 12 slugs, and no PDCs or missiles. Their
+The Garuda has two railgun turrets, two PDC groups and one launcher on its centre line, with the
+same reach. It has 4 torpedo cells, and its PDC-B has no rounds. A Naga frigate has one railgun, RG-A, with 12 slugs, and no PDCs or torpedoes. Their
 numbers are in `Assets/Ships/Garuda.asset` and `Assets/Ships/Frigate.asset`.
 
 ### 8.4 Railgun
@@ -819,7 +822,7 @@ numbers are in `Assets/Ships/Garuda.asset` and `Assets/Ships/Frigate.asset`.
 A slug flies at **300 units/s**, out to 2,000 units. It takes about 7 s to reach full range (Step 130).
 
 - A shot hits if it touches the target's box made **25% longer and 25% wider** (owner, 2026-11-01;
-  Step 128). That is 437.5 × 125 on the Garuda. It is the same rule for missiles.
+  Step 128). That is 437.5 × 125 on the Garuda. It is the same rule for torpedoes.
 - A slug that reaches 2,000 units without a hit counts as a miss.
 - Each shot spends 70 charge from the weapons capacitor and adds 25 to our signal.
 - A hand-dialled bearing is in whole degrees. At 2,000 units one degree is about 35 units sideways.
@@ -836,7 +839,7 @@ with no WEP units: charge − 3 per game second
 | Shot | Charge |
 |---|---|
 | Railgun | 70 |
-| Missile salvo | 40 |
+| Torpedo salvo | 40 |
 | PDC (to put a group on AUTO) | 25 |
 
 > **Rule 8.4.a** The capacitor sets the rate of fire. At 5 WEP units it refills a railgun shot in
@@ -845,32 +848,55 @@ with no WEP units: charge − 3 per game second
 > **Rule 8.4.b** **One shot per arming.** Firing releases ARM. Throw ARM again to fire again, once
 > the capacitor has the charge.
 
-### 8.5 Missile
+### 8.5 Torpedo
 
-The launcher fires a salvo of 2 missiles, fanned 3° apart. Each flies at 400 units/s and turns toward
-its target at up to 120° per game second. Each flies at most 3,000 units.
+Owner, 2026-11-01: a torpedo is always slower than a slug. It leaves the ship slowly, then goes.
+Owner, 2026-11-02: it leaves like the fighters (§12.3).
 
-- A missile needs a target identified by an active scan (§9.4).
-- Each missile uses one cell. The salvo size is set in the stats file. The salvo knob is not drawn
+1. It leaves the launcher out of the ship's side at 80 units/s, tilted 15° toward the stern.
+2. It flies straight for 2.5 game seconds, slowing to 15 units/s.
+3. It curves onto the target at 15 units/s. The turn takes 0.5 game seconds to build up to its
+   sharpest, 32° per game second, and 0.5 game seconds to ease off as it lines up.
+4. Its motor lights once it is within 3° of lined up. It gains 300 units/s each game second up to
+   its full speed of 250 units/s, and turns toward its target at up to 120° per game second.
+
+If its target is gone, its motor lights anyway and it flies on. It flies in short steps of 0.05
+game seconds. The curve is the same at every game speed.
+
+Each flies at most 3,000 units. That takes 15 to 18 game seconds. The further it has to turn, the
+longer it takes. Enemy torpedoes follow the same rules.
+
+- The launchers reach all round, so nothing picks one (owner, 2026-11-01). The one on the target's
+  side fires. With none left there, the other fires.
+- A salvo is 2 torpedoes out of one launcher. They fan 20° apart, one either side of the tilted
+  line. With our ship facing 000, a salvo from the right side leaves on headings 095 and 115. A
+  launcher on the centre line, as on the Garuda, sends them out of each side by turns.
+- A torpedo needs a target identified by an active scan (§9.4).
+- Each torpedo uses one cell. The salvo size is set in the stats file. The salvo knob is not drawn
   yet.
 - A salvo spends 40 charge and adds 25 to our signal.
-- A missile hits by the same rule as a slug (§8.4), ours and the enemy's.
+- A torpedo hits by the same rule as a slug (§8.4), ours and the enemy's.
+
+The numbers are in each ship's stats file, under Weapons: `torpedoLaunchSpeedUnits` 80,
+`torpedoTiltBackDeg` 15, `torpedoCoastSeconds` 2.5, `torpedoCoastSpeedUnits` 15,
+`torpedoCurveDegPerS` 32, `torpedoTurnBuildSeconds` 0.5, `torpedoBurnUnits` 300,
+`torpedoSpeedUnits` 250, `torpedoTurnDegPerS` 120 and `torpedoSpreadDeg` 20.
 
 ### 8.6 PDC
 
-A PDC group shoots at enemy missiles by itself once it is on **AUTO**. You never fire it.
+A PDC group shoots at enemy torpedoes by itself once it is on **AUTO**. You never fire it.
 
 - Select the group on Fire Control and throw the arming ladder. ARM puts the group on AUTO.
   Releasing the ladder takes it off. Both groups can be on AUTO at once.
-- A group on AUTO gets one go at each enemy missile inside its arc and 600 units. Each go has a
-  70% chance to shoot the missile down, and spends 100 rounds.
+- A group on AUTO gets one go at each enemy torpedo inside its arc and 600 units. Each go has a
+  70% chance to shoot the torpedo down, and spends 100 rounds.
 - A group with fewer than 100 rounds left drops off AUTO.
 - PDCs need their autoloaders on. They also need what every weapon needs: at least 2 WEP units,
   the magazine at integrity 3 or more, and weapons released (§6.1). The LOADERS button is not drawn
   yet. The autoloaders are on at load.
 - Each group on AUTO shows its arc on the plot as a dashed sector.
 
-> **Rule 8.6.a** PDCs are the only defence against a missile. Nothing soaks the damage.
+> **Rule 8.6.a** PDCs are the only defence against a torpedo. Nothing soaks the damage.
 
 ### 8.7 Arc validity
 
@@ -966,7 +992,7 @@ in every band.
 - The plot shows the cone: two bright edges and a faint fill.
 
 > **Rule 9.4.a** A scan identifies a ship and reads its course and speed at that moment (owner,
-> 2026-11-01). An identified ship shows its name. You can fire missiles at it, board it, and read
+> 2026-11-01). An identified ship shows its name. You can fire torpedoes at it, board it, and read
 > what your hits do to it (§20, §13.5). A lock takes the scan's course and speed for its shot
 > (§18.4).
 
@@ -1002,13 +1028,15 @@ destroyed                     → no label on the plot; it stays as a wreck
 - **Destroyed:** inside visual range its model turns grey, breaks in two where the shot struck, and
   the halves drift apart (Step 131). Outside visual range it is a dim dot, which fades away over 120
   game seconds. Back in visual range it shows again.
-- **Shots, missiles and fighters** always slide across the plot (owner, 2026-11-01). Just after
-  firing, a shot's dot can go up to twice its true speed. It can slow in the last tick before a hit.
+- **Shots, torpedoes and fighters** always slide across the plot (owner, 2026-11-01). Just after
+  firing, a shot's dot can go up to twice its true speed. It doesn't slow for a hit: it goes on at
+  full speed to the hit and stops there, and its trail runs on into it.
 
 > **Rule 9.6.a** The rules step once per board tick. Between ticks, a ship drawn smoothly moves on
 > along its velocity, up to one tick ahead. Rules use the position from the last tick.
-> Shots and missiles slide across the plot toward where they will be at the next tick, so a dot
-> reaches a ship as the hit lands. Fighters slide up to one tick behind (owner, 2026-11-01).
+> Shots and torpedoes slide across the plot toward where they will be at the next tick. A dot can
+> reach a ship up to one tick before the hit lands. Fighters slide up to one tick behind (owner,
+> 2026-11-01), on a smooth curve (owner, 2026-11-02).
 
 > **Rule 9.6.b** Seeing a ship does not identify it. Only identification gives its name and lets you
 > target it.
@@ -1016,7 +1044,7 @@ destroyed                     → no label on the plot; it stays as a wreck
 > **Rule 9.6.c** A wreck stays where it is in space, and shows again when it is back in sight.
 
 > **Rule 9.6.d** The numbers on the board (Step 130): visual range 2,000 units. DRADIS reaches 5,000
-> units at gain 1 and 7,500 units at gain 5. Railguns reach 2,000 units, missiles 3,000 and PDCs 600.
+> units at gain 1 and 7,500 units at gain 5. Railguns reach 2,000 units, torpedoes 3,000 and PDCs 600.
 
 ---
 
@@ -1106,7 +1134,7 @@ Design resolution 1920 × 1080.
   icon is next to it.
 - The **console** has a power lamp, the SCALE knob and the grid tint knob.
 - The **alarm strip** shows one line, only when there is one. First a battle space warning, then
-  what just hit us, then ROCK AHEAD, then enemy fire in flight (INCOMING MISSILES), then the mission's
+  what just hit us, then ROCK AHEAD, then enemy fire in flight (INCOMING TORPEDOES), then the mission's
   line (REINFORCEMENTS INBOUND, JUMP POINT), then a new contact, then INCOMING SIGNAL.
 - The **signal box**, in the frame's top-right, shows our signal.
 
@@ -1151,9 +1179,9 @@ The tool rail: CURSOR, POINT, RULER, COMPASS and ERASE (§18). The systems rail:
 |---|---|
 | Our ship | Its 3D model seen from above, in white. It glides and never blinks (owner, 2026-10-25). |
 | A contact | A bearing line, a dot with its range, or its model (§9.6) |
-| Our fighters | White wedges in a V, with no labels |
-| Our slugs and missiles | A white dot with a short trail |
-| Enemy missiles | A red dot with a short trail |
+| Our fighters | White wedges in a V, with no labels. The V opens as they leave our ship and closes as they land (owner, 2026-11-02) |
+| Our slugs and torpedoes | A white dot with a fading trail: 120 px on a slug, less on anything slower, so a torpedo's grows as its motor lights |
+| Enemy torpedoes | A red dot with a short trail |
 | A ship our marines secured | A dot |
 | DRADIS | The hearing circle and the sweep; with ACTIVE on, the scan cone |
 | Visual range | A thin ring round our ship, always on. Inside it you see ships with your eyes (§9.3) |
@@ -1227,20 +1255,29 @@ everything through the hangar instead.
 and gets on with it. Boarding comes last: fight a ship down first, then send the marines.
 
 **How it's built.** Two squadrons. A launch runs six stages in order, then the launch lever. Craft
-fly straight to their goal at a fixed speed. The numbers are in each ship's stats file, under
-hangar.
+fly at a fixed speed and turn gradually onto their goal. The numbers are in each ship's stats file,
+under hangar.
 
 > **Rule 12.a** Nothing in the hangar is flown by hand. Pick the squadron and its order, then
 > launch. The squadron goes for fire control's target.
 
+Every fighter and assault boat starts the game at 100% and READY, on our ship and on every enemy
+ship (owner, 2026-11-02). Each craft has one bar on the Hangar panel. The bar shows one number. The
+code calls it fuel, and the owner calls it health.
+
+Craft will gain damage from PDCs and ships firing. This is still to be built. Nothing damages a
+fighter yet, and nothing in the game changes these bars yet.
+
 ### 12.1 Interceptors
 
-Six starfighters. Their orders are DESTROY, DISABLE and ESCORT. Only craft marked READY launch.
+Six starfighters. Their orders are DESTROY, DISABLE and ESCORT. Only craft marked READY launch. The
+Hangar panel reads 6 OF 6 READY, and a launch sends all six.
 
 - They fly at 100 units/s.
 - Within 200 units of the target, every fighter makes an attack run every 30 game seconds.
 - Each run takes 10 armour off the side facing the fighter. Once that side is open, each run takes
   1 integrity off the room behind it.
+- Each fighter does its own run. With all six out, one attack run takes 60 armour off a side.
 - DISABLE always attacks the stern, and so the engine room.
 - ESCORT stays with our ship.
 - Fighters scout. Any ship or ruin within visual range of a flight shows on our plot while they are
@@ -1249,8 +1286,9 @@ Six starfighters. Their orders are DESTROY, DISABLE and ESCORT. Only craft marke
 
 ### 12.2 Assault boats — marines
 
-Four boats. Our ship has 18 marines aboard, and each boat takes 6. The boats' orders are DESTROY,
-DISABLE and SECURE.
+Four boats. The Hangar panel reads 4 OF 4 READY, and a launch sends all four. Our ship has 18
+marines aboard. The four boats share them, and a boat takes at most 6. The boats' orders are
+DESTROY, DISABLE and SECURE.
 
 | Order | If the marines win |
 |---|---|
@@ -1317,10 +1355,32 @@ every stage after it.
 | DOORS | The bay doors are shut |
 | CATAPULT | There are no AUX units |
 
-Then pull the launch lever. The launch is refused if flight operations are not released, the bay is
-below integrity 3, no craft is ready, there are no marines for the boats, or the launch bearing is
-more than 60° from our heading. The squadron takes off on the launch bearing, just outside the
-small circle round our ship. RECALL turns it back. It lands when it reaches our ship.
+Then pull the launch lever. Nothing launches if flight operations are not released, the bay is
+below integrity 3, no craft is ready, or there are no marines for the boats.
+
+The small number box on the Hangar panel can't stop a launch or change where the squadron goes. The
+box and its red number are still on the panel and do nothing else (owner, 2026-11-02).
+
+A squadron, fighters or assault boats, then flies like this (owner, 2026-11-02):
+
+1. It starts at the hull, on the side of our ship facing fire control's target. With no target, or
+   a target with no position, it starts on the starboard side.
+2. It flies straight out, tilted 15° toward the stern, for 200 units, at every zoom. Only an ESCORT
+   can fly further: if the small circle round our ship is bigger at the current zoom, the ESCORT
+   flies out past that circle. A squadron always flies its full distance, even after RECALL or with
+   its target in reach.
+3. It turns onto where it is going. The turn builds up, reaches at most 90° a game second, and
+   eases off as it lines up.
+4. It lands, docks or attacks as soon as it is within reach, at every game speed.
+
+All its flying uses these turns, on the way back too. RECALL turns it back. It lands when it
+reaches the small circle round our ship.
+
+On the plot, the V opens as the squadron leaves our ship and closes as it lands. The plot draws a
+smooth curve between ticks. The rules still step on the tick (Rule 9.6.a).
+
+The numbers are in each ship's stats file, under hangar: `launchTiltBackDeg` 15, `launchRunUnits`
+200, `turnDegPerS` 90 and `turnEase` 180. Boats use the same numbers.
 
 ---
 
@@ -1437,6 +1497,10 @@ room's own reason, from the table below, shows first.
 
 The orders station gives PARTY, SEAL and VENT for the same AUX charge, under the same rules (§6).
 
+An enemy ship with its magazine below integrity 3 can't fire, and sends its party there by itself,
+at no AUX cost (owner, 2026-11-01). The party works as ours does. A fire comes first, and a hit on the
+room can kill the party, so the magazine may not come back.
+
 ---
 
 ## 14 · Failure
@@ -1538,7 +1602,7 @@ abandoned dock, a comms tower. They must be scanned or approached to confirm.
 **Not built yet.** These are the prototype's loadouts, in its own numbers. The board's sweep time
 and weapons are different (§8, §9.1).
 
-| Loadout | railgun | missile | hull/side | sensors | DRADIS sweep | aux start |
+| Loadout | railgun | torpedo | hull/side | sensors | DRADIS sweep | aux start |
 |---|---|---|---|---|---|---|
 | STANDARD KILL | 3 | 4 | +0 | +0 | 3.0 s | 0 |
 | GHOST KILL | 5 | 2 | +0 | +1 | 2.4 s | 20 |
@@ -1744,7 +1808,7 @@ Turn the ship.
 > the slug arrives.
 
 > **Rule 18.3.b** A hand-dialled or plotted solution aims at a point in space. It needs no
-> identified target. Missiles still need one (§8.5).
+> identified target. Torpedoes still need one (§8.5).
 
 ### 18.4 The targeting computer
 
@@ -1822,9 +1886,9 @@ The slug flies at 300 units/s (Step 130). The Garuda cruises at 22 units/s, and 
 | 1,000 units | 3.3 s | 73 units | 117 units |
 | 2,000 units | 6.7 s | 147 units | 233 units |
 
-A missile at 400 units/s takes 7.5 s to cover 3,000 units.
+A torpedo takes 15 to 18 s to cover 3,000 units (§8.5).
 
-> **Rule 18.6.a** Slugs and missiles have separate speeds (owner, 2026-11-01). In a slug's 7 s
+> **Rule 18.6.a** Slugs and torpedoes have separate speeds (owner, 2026-11-01). In a slug's 7 s
 > flight the Garuda moves up to 233 units. Its hit area is 437.5 units long (§8.4). By the sums, a
 > slug aimed straight at it misses only past 2,980 units at cruise and past 1,875 at top speed
 > (Step 141). The gun reaches 2,000.
@@ -1900,7 +1964,7 @@ The drawer is where you work the system. The plot is where you read it.
 | **Fire Control** | Pick a weapon and mount, set the solution, arm, fire | §8, §18, §20 |
 | **Sensors** | DRADIS and ACTIVE on or off, gain, band, the scan cone, the contact board, our signal | §9 |
 | **Power** | Each bus's selector, the emergency load shed, the reactor | §3 |
-| **Hangar** | Bay doors, squadron and order, launch bearing, the six launch stages, the lever, RECALL | §12 |
+| **Hangar** | Bay doors, squadron and order, the small number box, the six launch stages, the lever, RECALL | §12 |
 | **Engineering** | The ship picture, the six rooms, repairs | §13 |
 | **Comms** | Band, frequency, LOCK, the cipher dials | §10 |
 
@@ -1944,7 +2008,7 @@ and fine-tune it by hand, or you lock the target with the targeting computer (§
 arming ladder one rocker at a time. A locked rocker tells you why it is locked. Then you pull the
 lever.
 
-**How it's built.** Fire control has a system (RAILGUN, PDC or MISSILE), a mount, one solution per
+**How it's built.** Fire control has a system (RAILGUN, PDC or TORPEDO), a mount, one solution per
 system, the four-rocker arming ladder, the capacitor and the fire lever. All of it stays when the
 drawer closes. Fire control's target starts as the Garuda. TRACK on a scanned enemy under the
 periscope makes that ship the target, and clears the ladder and every solution (owner, 2026-10-29).
@@ -1963,10 +2027,10 @@ much.
 
 | Control | Shows |
 |---|---|
-| System selector | RAILGUN, PDC or MISSILE |
+| System selector | RAILGUN, PDC or TORPEDO |
 | Mount selector | A or B, for the railgun and the PDCs |
 | Mount readout | Its name, its arc (`ARC 042° ±80°`, or `ALL ROUND`) and its reach |
-| State | `SLUGS 22`; or the PDC rounds and the loaders; or the missile cells |
+| State | `SLUGS 22`; or the PDC rounds and the loaders; or the torpedo cells |
 
 #### 02 Firing solution
 
@@ -1994,7 +2058,7 @@ Four rockers, thrown in order:
 | LOAD | At least 2 WEP units, the magazine at 3 or more, weapons released (CONDITION 2 or 1), ammunition left, and a solution. For a PDC group: its autoloaders on, in place of a solution |
 | ANGLE | The solution's bearing is inside the mount's arc (§8.7). Free for PDCs |
 | BEARING | The periscope is within 4° of the target's bearing, or of the dialled bearing. Free for PDCs |
-| ARM | The capacitor has the shot's charge: railgun 70, missile 40, PDC 25 |
+| ARM | The capacitor has the shot's charge: railgun 70, torpedo 40, PDC 25 |
 
 > **Rule 20.1.b** Each rocker needs the one before it. Releasing a rocker releases it and every one
 > after it.
@@ -2004,7 +2068,7 @@ Four rockers, thrown in order:
 
 #### 05 Fire lever
 
-Pull the lever past 90% with the ladder set. The railgun fires one slug. The missile launcher fires
+Pull the lever past 90% with the ladder set. The railgun fires one slug. The torpedo launcher fires
 a salvo. For a PDC group the lever does nothing.
 
 > **Rule 20.1.d** A status line says what is missing. It shows the first that applies, in this
@@ -2027,7 +2091,7 @@ Per §19.2.a, everything here draws on the plot too.
 | Fire Control open | The selected mount's reach, a dashed ring round our ship |
 | A PDC group on AUTO | Its arc, a dashed sector off our hull |
 | Shot fired | The slug in flight, at true speed: a white dot with a short trail, white like our ship and our fighters (owner 2026-10-26). The dot can go up to twice that speed just after firing, and it can slow before a hit (§9.6) |
-| Missile salvo fired | Each missile in flight, also a white dot with a short trail |
+| Torpedo salvo fired | Each torpedo in flight, also a white dot with a short trail |
 
 ### 20.3 State and persistence
 

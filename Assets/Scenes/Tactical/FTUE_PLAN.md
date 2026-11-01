@@ -13,7 +13,7 @@ order is in §9. Build one step, show it, wait. Do not run ahead (BUILD_LOG deci
 
 **What is built (checked 2026-11-01).** The seven levels on the MISSIONS list (§0), each with a
 briefing box that says what to do. The enemy half of this plan, as the mission Wolf Hunt (Steps 95
-to 99): the Garuda hunts us, hears us, searches, and fights back with railguns and missiles.
+to 99): the Garuda hunts us, hears us, searches, and fights back with railguns and torpedoes.
 
 **Not built:** the XO, the comms box, gating, the walkthrough and the derelicts.
 
@@ -126,7 +126,7 @@ powered, start at C2 and start locked. They would go in its Mission box.
 | What a scan shows | **The enemy's ship state, drawn as ours is.** Class, hull sides, compartments and integrity, power and signal. Our hits update it. Side-to-room map: `DAMAGE_README.md` (owner 2026-10-24). |
 | Which weapons | **The handoff's.** Two railgun turrets, one on either side of the ship, two PDC groups, the VLS, with the design's arcs, ranges and arming rules. The GDD's weapon list is dated. |
 | Where the FTUE ends | **At the kill.** The XO's last line is "let's get out of here." The escape to a jump point is a later addition. **Replaced (owner, 2026-10-27):** the jump point is built; reaching it wins. |
-| Does the enemy shoot back | **Yes** (§9, step J). **Built, Step 97:** railgun slugs and HE missile salvos once it is ALERT. **No reinforcements**, ever, in this mission. **Replaced (owner, 2026-10-27):** reinforcements are in. |
+| Does the enemy shoot back | **Yes** (§9, step J). **Built, Step 97:** railgun slugs and HE torpedo salvos once it is ALERT. **No reinforcements**, ever, in this mission. **Replaced (owner, 2026-10-27):** reinforcements are in. |
 | Strict or loose | **Strict.** You go through every station before you fight. A control you have not been shown is refused. |
 | What you fight first | **Derelicts** before the live enemy. |
 | Distance and length | Not decided. Ten minutes of travel is acceptable. Tune later. |
@@ -162,7 +162,7 @@ This plan is items 5 and 7, with the alert net removed. It needs:
 Everything goes under the `World` root in `02.1_Grid`, as `WorldContact`s, the way the Garuda
 (`Garuda · Cruiser`) is today. Where each one starts is set by a spawn point in the level scene
 (`Assets/Scenes/Levels/Level_01.unity`, for example `Enemy Spawn · Garuda`). The board's numbers are in units: DRADIS
-5,000 at gain 1 to 7,500 at gain 5, railguns 2,000, missiles 3,000, PDCs 600 (Step 130). The spec's
+5,000 at gain 1 to 7,500 at gain 5, railguns 2,000, torpedoes 3,000, PDCs 600 (Step 130). The spec's
 older distances need scaling to these.
 
 | Thing | Count | Where | What it does |
@@ -269,7 +269,7 @@ each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`):
 | RG-A | Railgun turret A | **starboard side**, arc centre 90° (owner, 2026-11-01) | ±45° | 2,000 |
 | RG-B | Railgun turret B | **port side**, arc centre 270° (owner, 2026-11-01) | ±45° | 2,000 |
 | PDC-A, PDC-B | Point defence groups | 090° and 270°: the starboard half and the port half (owner, 2026-10-29) | ±90° | 600 |
-| VLS | Missile cells | all round | ±180° | 3,000 |
+| VLS | Torpedo cells | all round | ±180° | 3,000 |
 
 **Two turrets, one on either side of the ship** (owner, 2026-10-18). Each sees a 90° cone straight out of
 its own side and nothing of the other. A gun can fire once the target is **anywhere inside its cone**:
@@ -327,7 +327,7 @@ dropping in the engineering drawer, and the side and room colours on engineering
 coming.
 
 **Defence.** Three things, all already in the design: turn a fresh side to it, open the range, and
-the PDCs. A PDC group on AUTO gets one chance at each incoming missile inside its arc and reach,
+the PDCs. A PDC group on AUTO gets one chance at each incoming torpedo inside its arc and reach,
 with a 70% kill chance (Step 55). That is the PDC's tutorial moment.
 
 ### 4.5 How it is built
@@ -495,7 +495,7 @@ Small steps, each shown to the owner before the next. Each has its own BUILD_LOG
 | **G** | The rest of the walkthrough, one station at a time as each gets wired: helm, plot, sensors, comms, orders, engineering (with the drill), hangar, periscope. | Each station. | Each row in §8 clears in play. |
 | **H** | Fire on the derelicts, hit, destroy, WRECK. Steps 19 to 22. | Fire, hit, damage from the wiring order. | Both derelicts can be killed. |
 | **I** | Fight the Garuda. Steps 23 to 27: scan it, the kill, the end card, back to the menu. Our hits on it update its readout live. | A to H. | NEW GAME to "let's get out of here" in one sitting. |
-| **J** | **Done, Steps 55 and 97.** The Garuda fights back. When we hit it, it fires an HE missile salvo of 2 at us, at most once every 120 s, if we are inside its VLS reach. Once ALERT it fires both turrets and a salvo every 90 s. Its turrets do not use our arming ladder (§4.4). | I. Our own fire and damage model. | It hurts. Engineering is now real. |
+| **J** | **Done, Steps 55 and 97.** The Garuda fights back. When we hit it, it fires an HE torpedo salvo of 2 at us, at most once every 120 s, if we are inside its VLS reach. Once ALERT it fires both turrets and a salvo every 90 s. Its turrets do not use our arming ladder (§4.4). | I. Our own fire and damage model. | It hurts. Engineering is now real. |
 
 A, B, C and J are done (A is now a hunt). D to I, the tutorial half, are not built. E can
 start today.

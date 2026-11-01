@@ -436,7 +436,7 @@ The RULER has a thicker line and white distance text: **Ruler Width** and **Rule
 Ships and shots move on the plot in two ways. Some move smoothly, on every frame. Others hop: they stop, then
 jump to a new spot each time the DRADIS sweep passes them.
 
-- Shots, missiles and fighters always move smoothly.
+- Shots, torpedoes and fighters always move smoothly.
 - Anything inside visual range moves smoothly. So does a locked ship.
 - A ship on DRADIS that has not been scanned is a bearing line. The line hops to a new bearing once per sweep.
 - A scanned ship moves smoothly while the ACTIVE SCAN cone covers it. When ACTIVE SCAN goes off or the cone
@@ -561,17 +561,45 @@ The prefab has these parts:
 - `Frame`, and `Header` with the latch, title, mount readout and `Sight` (the SIGHT key)
 - `Scope bearing`: the periscope's bearing and offset
 - `01 Weapon system`: `System selector`, `Mount selector` and the mount screen. The `RAILGUN`,
-  `PDC` and `MISSILE` labels are outside the selector's group. They draw over the mount knob.
+  `PDC` and `TORPEDO` labels are outside the selector's group. They draw over the mount knob.
 - `02 Firing solution`: `Track button`, `Range knob`, `Bearing knob`, `Speed knob` and the
   tracking ID
 - `03 Capacitor`: `Cells`, a lamp and the charge readouts
 - `04 Arming sequence`: `Housings`, and the `LOAD`, `ANGLE`, `BEARING` and `ARM` rockers
 - `Fire lever`: `Slot`, `Lit track` and `Cap`
 
-PDCs and missiles work through the same system selector, mount selector and arming rockers
-(Steps 53 and 55). With MISSILE selected, the mount selector picks the warhead. The design's own
-PDC controls (quadrants, LOADERS) and missile controls (warhead, SALVO) are not drawn yet. The
+PDCs and torpedoes work through the same system selector, mount selector and arming rockers
+(Steps 53 and 55). With TORPEDO selected, the mount selector picks the warhead, and its lamps show
+which launcher will fire. The launcher picks itself. The design's own
+PDC controls (quadrants, LOADERS) and torpedo controls (warhead, SALVO) are not drawn yet. The
 loaders and the salvo start from each ship's stats file.
+
+When a salvo is fired, this is what shows on the plot:
+
+1. Two torpedoes leave the launcher out of the ship's side, tilted a little toward the stern. They
+   fan out, one either side of that line.
+2. They fly straight and slow down.
+3. They curve onto the target. The turn starts gently, gets tighter, then eases off as they line
+   up.
+4. Their motors light and they zip to full speed.
+
+Enemy torpedoes do the same. The curve is the same at every game speed.
+
+To change this, use the Ship tab of **Starwolf → Tuning**, under Weapons. Each ship has its own
+numbers:
+- **Torpedo Launch Speed Units** (80): how fast it leaves the launcher.
+- **Torpedo Tilt Back Deg** (15): how far it tilts toward the stern as it leaves.
+- **Torpedo Spread Deg** (20): how far apart the two in a salvo fan.
+- **Torpedo Coast Seconds** (2.5): how long it flies straight out, slowing, in game seconds.
+- **Torpedo Coast Speed Units** (15): how slow it gets. It stays at this speed as it curves.
+- **Torpedo Curve Deg Per S** (32): the sharpest it curves before its motor lights, in degrees a
+  game second.
+- **Torpedo Turn Build Seconds** (0.5): how long a turn takes to build up and to ease off, in game
+  seconds.
+- **Torpedo Burn Units** (300): the speed its motor adds each game second.
+- **Torpedo Speed Units** (250): its full speed.
+- **Torpedo Turn Deg Per S** (120): the sharpest it turns with its motor on, in degrees a game
+  second.
 
 Its art files are in `Art/Fire Control` and the folders for each kind. The Art list has 19
 entries.
@@ -599,8 +627,7 @@ The prefab has these parts:
 - `Frame`, and `Header` with the latch, title and ready readout
 - `01 Bay status`: `Doors selector`, `Doors`, `Pressure`, `Catapult` and `Cat charge`
 - `02 Squadrons`: `Squadron 1`, `Squadron 2` and the selection bezel
-- `03 Launch order`: `Ship selector`, `Bearing` (a text field for the launch bearing) and
-  `Command selector`
+- `03 Launch order`: `Ship selector`, `Bearing` (the small number box) and `Command selector`
 - `04 Launch sequence`: `Housings`, the six stage rockers (`CREW`, `FUEL`, `ORDNANCE`, `EVAC`,
   `DOORS`, `CATAPULT`) and `Telemetry`
 - `Launch lever`
@@ -608,6 +635,39 @@ The prefab has these parts:
 
 Its art files are in `Art/Hangar` and the folders for each kind. The Art list has 19 entries.
 Two are stand-ins: the selection bezel and the knob cap.
+
+Every fighter and assault boat starts the game at 100% and READY. The panel reads 6 OF 6 READY and
+4 OF 4 READY. This is the same on our ship and on every enemy ship.
+
+A launch sends all 6 interceptors or all 4 assault boats. Each fighter does its own attack run.
+With all 6 out, one attack run takes 60 armour off a side. The 4 boats share the same 18 marines.
+
+Each craft has one bar on the panel. The bar shows one number. The code calls it fuel, and the
+owner calls it health. Craft will gain damage from PDCs and ships firing. This is still to be
+built. Nothing damages a fighter yet, and nothing in the game changes these bars yet.
+
+When the launch lever is pulled, this is what shows on the plot:
+
+1. The squadron starts at our ship's hull, on the side facing fire control's target. With no
+   target, it starts on the starboard side.
+2. It flies straight out, tilted a little toward the stern.
+3. It curves round onto where it is going. The turn starts gently, gets tighter, then eases off as
+   it lines up.
+
+Fighters and assault boats both do this. They turn the same way on all their flying, on the way
+back too. The V opens as they leave our ship and closes as they land.
+
+To change this, use the Ship tab of **Starwolf → Tuning**, under Hangar. Each ship has its own
+numbers:
+- **Launch Tilt Back Deg** (15): how far it tilts toward the stern as it leaves.
+- **Launch Run Units** (200): how far it flies straight out before it turns, at every zoom. Only
+  an ESCORT can fly further: if the small circle round our ship is bigger at that zoom, the ESCORT
+  flies out past that circle.
+- **Turn Deg Per S** (90): the sharpest it can turn, in degrees a game second.
+- **Turn Ease** (180): how fast a turn builds up and eases off. Lower is gentler.
+
+The small number box on the Hangar panel can't stop a launch or change where they go. The box and
+its red number are still on the panel and do nothing else.
 
 Ask a technical artist before you change these:
 - The code swaps the stage rockers' sprites: **Rocker Up**, **Rocker Locked** and
@@ -622,7 +682,7 @@ Ask a technical artist before you change these:
 - The code sizes each bar inside its well: the catapult charge (**Cat Fill**, **Cat Well**), the
   six stage bars (**Stages** → **Fill**, **Well**) and each craft's fuel (**Squad Rows** →
   **Fuel**, **Cells**).
-- The bearing box's two events call **Hangar Panel**. Keep those links.
+- The small number box's two events call **Hangar Panel**. Keep those links.
 - The code places the launch lever the same way as the fire lever: **Lever Slot**,
   **Lever Cap**, **Lever Fill**, **Cap Left Pct**, **Cap Travel Pct**, **Lever Travel Px**,
   **Slot Margin** and **Cap Margin**.

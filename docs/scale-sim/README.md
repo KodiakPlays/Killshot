@@ -10,13 +10,13 @@ weapons or the enemy, and compare the tables.
 ## What it copies from the game
 
 - **Ships:** our ship's movement and turning (`NavSystem.Tick`, which runs `Steer` and `Move`).
-- **The Garuda:** its patrol (`EnemyBrain`), and its fire-back: 2 HE missiles when hit, at most every
+- **The Garuda:** its patrol (`EnemyBrain`), and its fire-back: 2 HE torpedoes when hit, at most every
   120 s, 8 cells.
 - **Damage:** the side map: the reactor is behind the port face (`DAMAGE_README.md`). A slug
   takes 50 armour, then 2 off the reactor.
 - **Firing:** a slug at 300 units/s, the slug's path hit test against a 100-unit hit radius (a
   stand-in for each ship's box), and the TRACK button's exact lead.
-- **Defence:** PDC-A's 70% chance per missile, assumed to cover half the approaches.
+- **Defence:** PDC-A's 70% chance per torpedo, assumed to cover half the approaches.
 - **The person:** about 4 real seconds to arm each shot (rockers and lever).
 
 `BASE` and the numbers under it at the top of the script are copies of the game's numbers. The
@@ -29,7 +29,7 @@ is one real second (Step 130).
 
 1. **Fights.** For each scale and engagement range: time from detection to kill in real minutes at
    x1, x5 and x10; our shots fired, hits on the reactor face, and hits on other faces; their
-   missiles fired and landed. "n/a" means no kill: usually the Garuda won.
+   torpedoes fired and landed. "n/a" means no kill: usually the Garuda won.
 2. **Plot read.** With the fight framed on screen: the zoom needed, how far the Garuda moves between
    two marks 30 real seconds apart, how well that line reads its course, and how far apart two
    bearing lines laid 2 game minutes apart are.
@@ -43,7 +43,7 @@ Garuda can win.
 
 ## What it found (Step 130, the designer's table)
 
-Speed 50, DRADIS 6,250, railgun 2,000, slug 300, missile 400, map 20,000. From first contact to the
+Speed 50, DRADIS 6,250, railgun 2,000, slug 300, torpedo 250 (400 until 2026-11-01; re-run at 250 with the same results), map 20,000. From first contact to the
 kill takes about 2.5 minutes at x1, at any engagement range up to the railgun's reach. Reaching
 first contact takes about 4 minutes at top speed. The script leaves out the lock, the gun's slow
 turn and the enemy's railguns, so a real fight takes longer.
@@ -52,8 +52,8 @@ turn and the enemy's railguns, so a real fight takes longer.
 
 - **Our player is simple:** it flies at the Garuda at 60% throttle until it has a contact, keeps
   station off the Garuda's port beam and fires whenever the reactor face is turned to it. No
-  evasion, no missiles, no fighters.
-- **Missiles fly straight at us.**
+  evasion, no torpedoes, no fighters.
+- **Torpedoes fly straight at us.** Their slow start from the launcher is left out.
 - **It doesn't model** sensors beyond the DRADIS range, conditions, or engineering.
 - **It flies at full ENG only.** Since Step 144, ENG sets acceleration, braking and turn rate as well
   as top speed. At ENG 1 our ship has half of each. `BASE` has the full ENG numbers (2, 3.75 and 20),
