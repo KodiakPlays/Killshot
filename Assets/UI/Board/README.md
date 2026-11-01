@@ -308,7 +308,10 @@ Ask a technical artist before you change these:
   range. A lock builds only while the ship fits the brackets. **Ship Picture**, **Bracket Px** (120,
   the brackets' size) and **Ship Ink** (the colour) are on **Periscope Panel**. The picture is the
   plot's top-down view of the ship, from `World/Contact View Camera · Garuda`. It always lies
-  level: the ship points straight right if it heads to our right, else straight left. It uses the
+  level: the ship points straight right if it heads to our right, else straight left. It stays
+  flat during a turn too. The picture turns every frame, from the heading the model is drawn at
+  (`LateUpdate` in `PeriscopePanel.cs`, from `NavSystem.DrawnHeading`). `Refresh` picks left or
+  right once per update. The picture uses the
   `BoardLinearImage` material, as the plot's ship pictures do, which makes the black around the
   ship see-through. The round sight cuts it off at its edge. How far away a ship
   fills the brackets is **Scope Fit Units**, on the Board tab of **Starwolf → Tuning**, under

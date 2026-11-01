@@ -38,6 +38,8 @@ public class PeriscopePanel : Panel
     [SerializeField] private float bracketPx = 42f;
     [SerializeField] private Color shipInk = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
     private ShipView[] views;
+    private NavSystem pictured; // the ship in the picture, if any
+    private int bowTo;          // 90 or 270: its bow points right or left in the sight
 
     [Header("The lock bar (owner 2026-11-01; was the design's convergence bar, which only showed range), left-anchored")]
     [SerializeField] private RectTransform convBar;
@@ -174,6 +176,7 @@ public class PeriscopePanel : Panel
             var view = seen != null ? ViewOf(seen.key) : null;
             if (view && !view.Texture) view = null;
             shipPicture.enabled = view;
+            pictured = view ? seen.nav : null;
             if (view)
             {
                 shipPicture.texture = view.Texture;
@@ -182,7 +185,7 @@ public class PeriscopePanel : Panel
                 shipPicture.rectTransform.sizeDelta = new Vector2(side, side);
                 shipPicture.rectTransform.anchoredPosition = new Vector2(Mathf.Clamp((float)seenOff * pxPerDeg, -maxShift, maxShift), 0f);
                 double rel = ((seen.worldHdg - seen.bearing) % 360 + 360) % 360; // its heading, clockwise from our line of sight
-                shipPicture.rectTransform.localEulerAngles = new Vector3(0f, 0f, (float)(seen.worldHdg - (rel < 180 ? 90 : 270))); // north-up picture: bow to 090 or 270
+                bowTo = rel < 180 ? 90 : 270;
             }
         }
 
@@ -215,6 +218,13 @@ public class PeriscopePanel : Panel
         }
         Color slewInk = s.ScopeOnAxis ? nominal : caution;
         Paint(slewLamp, slewInk); Paint(slewGlow, slewInk);
+    }
+
+    // Owner 2026-10-29: the ship in the sight is always flat. The model turns every frame and Refresh runs once a tick,
+    // so the picture turns here, after the model has moved. North-up picture: bow to 090 or 270.
+    private void LateUpdate()
+    {
+        if (pictured) shipPicture.rectTransform.localEulerAngles = new Vector3(0f, 0f, (float)pictured.DrawnHeading - bowTo);
     }
 
     // The ShipView watching a contact's model (the plot's), if there is one.
