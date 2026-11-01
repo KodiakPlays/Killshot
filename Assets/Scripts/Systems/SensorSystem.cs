@@ -173,7 +173,7 @@ public class SensorSystem : MonoBehaviour
     public void LayBearing(ShipState.Track t, float now) { BearingFixes.Add(new BearingFix { key = t.key, x = ship.nav.x, y = ship.nav.y, brg = ExactBearing(t), t = now }); }
 
     /// <summary>Step 75 (owner 2026-10-26): the sweep touches a contact. Out of sight, the plot shows it here until the next pass.</summary>
-    public void See(ShipState.Track t) { t.seen = true; t.seenX = t.worldX; t.seenY = t.worldY; t.seenBrg = ExactBearing(t); t.seenRangeUnits = t.rangeUnits; }
+    public void See(ShipState.Track t) { t.seen = true; t.seenAt = ship.missionNow; t.seenX = t.worldX; t.seenY = t.worldY; t.seenBrg = ExactBearing(t); t.seenRangeUnits = t.rangeUnits; }
     /// <summary>Step 75: close enough to see with the eye.</summary>
     public bool InSight(ShipState.Track t)
     {

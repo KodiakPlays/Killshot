@@ -127,6 +127,7 @@ public class HangarSystem : MonoBehaviour
         [Tooltip("Owner 2026-10-27: boats coming home out of range of our ship, and for how many game seconds so far.")]
         public bool stranded;
         public float strandT;
+        [System.NonSerialized] public BoardManager.Glide drawn; // owner 2026-11-01: where the plot draws it, sliding behind x and y
     }
     [System.NonSerialized] private System.Collections.Generic.List<Flight> flights;
     public System.Collections.Generic.List<Flight> Flights => flights ?? (flights = new System.Collections.Generic.List<Flight>());

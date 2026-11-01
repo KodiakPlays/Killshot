@@ -516,7 +516,7 @@ public class BoardManager : MonoBehaviour
     private float hitLineUntil;
     private bool incomingWarned;
 
-    // Order: the battle space's edge, what just hit us, enemy fire in flight, the mission, new contacts.
+    // Order: the battle space's edge, what just hit us, a rock ahead, enemy fire in flight, the mission, new contacts.
     void ShowAlarm()
     {
         // Step 65: the battle space's warnings take the strip over; its count shows the seconds left

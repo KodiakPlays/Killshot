@@ -204,6 +204,16 @@ public class PlotPanel : Panel
     [SerializeField] private float pdcArcStepDeg = 2f;
     [Tooltip("Owner 2026-11-01: each railgun's firing arc is a soft dotted cone while Fire Control is open; the selected turret this strong, the other less.")]
     [Tune("Periscope & fire control")] [Range(0f, 1f)] [SerializeField] private float railArcAlpha = 0.6f, railArcAlphaOther = 0.3f;
+    [Tooltip("Owner 2026-11-01: a locked ship has the targeting computer's white corners on the plot, round its length: their smallest half-size, px.")]
+    [Tune("Periscope & fire control")] [SerializeField] private float lockCornersPx = 16f;
+    [Tooltip("How long each corner's arms are, as a share of that half-size.")]
+    [Tune("Periscope & fire control")] [Range(0.1f, 1f)] [SerializeField] private float lockCornerArm = 0.35f;
+    [Tooltip("Owner 2026-11-01: the plot is a command table, and a contact out of sight is a marker where it was last fixed. It fades over this many game seconds.")]
+    [Tune("Sensors")] [SerializeField] private float staleSeconds = 60f;
+    [Tooltip("How faint an old marker gets, 0 to 1.")]
+    [Tune("Sensors")] [Range(0f, 1f)] [SerializeField] private float staleAlpha = 0.35f;
+    [Tooltip("From this many game seconds after its last fix, a marker's label says how old it is.")]
+    [Tune("Sensors")] [SerializeField] private float staleLabelSeconds = 10f;
     [Tooltip("Owner 2026-11-01: draws each ship's collision box on the plot, to see that it fits round the model.")]
     [Tune("Plot & our ship")] [SerializeField] private bool showShipBoxes = false;
     [Tooltip("Owner 2026-11-01: inside the cone, the gun itself: a solid bar that turns slowly onto the target. Shots fly straight down it.")]
@@ -255,6 +265,26 @@ public class PlotPanel : Panel
     }
     /// <summary>Step 75: our ship where it is drawn now (it glides between ticks), in board px.</summary>
     Vector2 OwnAt => Screen(State.nav.DrawnX, State.nav.DrawnY);
+    /// <summary>Owner 2026-11-01: a shot where it is drawn now: sliding toward its spot at the next tick, at up to twice its speed.</summary>
+    Vector2 ShotAt(WeaponSystem.Round r)
+    {
+        double step = State.weapons.StepAhead(r, Controls.TickGameSeconds);
+        Controls.Slide(ref r.drawn, r.x, r.y, r.x + r.dx * step, r.y + r.dy * step, r.speed * 2);
+        return Screen(r.drawn.x, r.drawn.y);
+    }
+    // The targeting computer's white corners round a point on the plot.
+    void AddCorners(List<MarksGraphic.Shape> shapes, Vector2 c, float half)
+    {
+        float arm = half * lockCornerArm;
+        foreach (int sx in new[] { -1, 1 })
+            foreach (int sy in new[] { -1, 1 })
+            {
+                Vector2 corner = c + new Vector2(sx, sy) * half;
+                shapes.Add(new MarksGraphic.Shape { kind = "line", a = corner, b = corner - new Vector2(sx * arm, 0f), alpha = 1f, ink = data.gamma });
+                shapes.Add(new MarksGraphic.Shape { kind = "line", a = corner, b = corner - new Vector2(0f, sy * arm), alpha = 1f, ink = data.gamma });
+            }
+    }
+
     // A ship's collision box as drawn now.
     void AddBox(List<MarksGraphic.Shape> shapes, NavSystem nav)
     {
@@ -435,6 +465,7 @@ public class PlotPanel : Panel
             shapes.Add(new MarksGraphic.Shape { kind = m.kind, a = a, b = b, alpha = alpha });
 
             var label = Label(i);
+            Paint(label, m.kind == "ruler" ? data : ownForce); // owner 2026-11-01: the distance is the point of a ruler: white, to stand off the blue line
             label.alpha = alpha;
             Vector2 at;
             if (m.kind == "point") { label.text = Clock(m.t); label.alignment = TextAlignmentOptions.Left; at = a + pointLabelOffset; }
@@ -485,7 +516,7 @@ public class PlotPanel : Panel
         var slugInk = ownShipColor.gamma;
         foreach (var r in s.weapons.Rounds)
         {
-            Vector2 at = Screen(r.x, r.y), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
+            Vector2 at = ShotAt(r), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
             shapes.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = slugInk });
             shapes.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f, ink = slugInk });
         }
@@ -515,7 +546,8 @@ public class PlotPanel : Panel
             {
                 double h = f.hdg * System.Math.PI / 180.0;
                 Vector2 ahead = new Vector2((float)System.Math.Sin(h), (float)-System.Math.Cos(h)), right = new Vector2(-ahead.y, ahead.x); // board y is down
-                Vector2 lead = Screen(f.x, f.y);
+                Controls.Slide(ref f.drawn, f.x, f.y, f.x, f.y); // owner 2026-11-01: it slides after the flight, up to one tick behind
+                Vector2 lead = Screen(f.drawn.x, f.drawn.y);
                 if (f.order == "escort" && !f.returning)
                 {
                     // owner 2026-10-26: an escort holds outside the small circle, whole V clear, even after zooming out grows it
@@ -622,9 +654,18 @@ public class PlotPanel : Panel
         {
             if (t.own || t.captured) continue;
             bool known = t.hostile && s.sensors.identified.Contains(t.key), inSight = s.sensors.InSight(t);
-            if (!known && !inSight) continue;
+            bool locked = s.weapons.LockedOn(t.key); // owner 2026-11-01: a locked ship is tracked on the grid, where it is now
+            if (!known && !inSight && !locked) continue;
+            // owner 2026-11-01: a scanned ship under the ACTIVE SCAN cone moves smoothly too. ACTIVE off, it hops again from where it stopped
+            bool scanning = known && t.hasWorld && !t.wreck && s.sensors.Listening && s.sensors.ConeCovers(t);
+            if (scanning)
+            {
+                s.sensors.See(t);
+                if (t.nav) { t.seenX = t.nav.DrawnX; t.seenY = t.nav.DrawnY; }
+            }
+            bool current = inSight || locked || scanning;
             Vector2 at;
-            if (inSight) at = t.nav ? Screen(t.nav.DrawnX, t.nav.DrawnY) : Screen(t.worldX, t.worldY);
+            if (current) at = t.nav ? Screen(t.nav.DrawnX, t.nav.DrawnY) : Screen(t.worldX, t.worldY);
             else if (t.hasWorld)
             {
                 if (!t.seen) s.sensors.See(t); // identified another way: its first fix is now
@@ -635,7 +676,9 @@ public class PlotPanel : Panel
                 double b = t.bearing * System.Math.PI / 180.0, px = t.rangeUnits / UnitsPerPx * Controls.ZoomExact;
                 at = OwnAt + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
             }
-            Color ink = t.wreck ? wreckInk : known ? alarm : caution;
+            Color ink = t.wreck ? wreckInk : known || locked ? alarm : caution;
+            float age = current || !t.hasWorld ? 0f : Controls.MissionSeconds - t.seenAt;
+            float fresh = Mathf.Lerp(1f, staleAlpha, age / Mathf.Max(1f, staleSeconds));
             var view = inSight ? ViewOf(t.key) : null;
             float labelPush = 0f; // a pictured contact's label sits clear of its picture
             if (contactShipImage && pictured == null && view && view.Texture)
@@ -656,13 +699,20 @@ public class PlotPanel : Panel
                 labelPush = px * view.ShipFill / 2f;
             }
             else if (t.wreck) continue; // no picture: a wreck keeps its dim dot (below); an unknown in sight is an amber dot (Step 99)
-            else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
+            else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = fresh });
             if (t.wreck) continue; // a wreck carries no label (Step 49)
+            if (locked)
+            {
+                float half = Mathf.Max(lockCornersPx, labelPush, (t.nav ? t.nav.BoxHalf.y : 0f) / (float)UnitsPerPx * (float)Controls.ZoomExact);
+                AddCorners(dots, at, half);
+                labelPush = half;
+            }
             var cl = ContactLabel(n++);
             Paint(cl, ink);
+            cl.alpha = fresh;
             cl.raycastTarget = false; // owner 2026-10-29: clicking a contact does nothing; the periscope picks the target
-            float rng = inSight ? t.rangeUnits : t.seenRangeUnits;
-            cl.text = (known ? t.name : "BOGEY " + t.key.ToUpperInvariant()) + "\nRNG " + ShipState.JsRound(rng).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
+            float rng = current ? t.rangeUnits : t.seenRangeUnits;
+            cl.text = (known ? t.name : "BOGEY " + t.key.ToUpperInvariant()) + (locked ? " · LOCKED" : "") + "\nRNG " + ShipState.JsRound(rng).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km" + (age >= staleLabelSeconds ? " · " + Duration(age) + " AGO" : "");
             Place(cl.rectTransform, at + contactLabelOffset + new Vector2(labelPush, 0f), 0f);
         }
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
@@ -671,7 +721,7 @@ public class PlotPanel : Panel
         // enemy missiles coming at us (Step 55): a red dot with a short trail, like our own rounds, no label
         foreach (var r in s.weapons.Incoming)
         {
-            Vector2 at = Screen(r.x, r.y), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
+            Vector2 at = ShotAt(r), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
             dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
             dots.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f });
         }

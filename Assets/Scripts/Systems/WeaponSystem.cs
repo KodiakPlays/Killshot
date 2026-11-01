@@ -189,6 +189,7 @@ public class WeaponSystem : MonoBehaviour
         [Tooltip("Step 55: PDC groups that have had their one chance at this missile (bit 0 = PDC-A, bit 1 = PDC-B).")]
         public int pdcTried;
         [System.NonSerialized] public Stats by; // the firing ship's numbers: how close is a hit, and what the hit does
+        [System.NonSerialized] public BoardManager.Glide drawn; // owner 2026-11-01: where the plot draws it, sliding toward StepAhead
     }
 
     [System.NonSerialized] private System.Collections.Generic.List<Round> rounds;

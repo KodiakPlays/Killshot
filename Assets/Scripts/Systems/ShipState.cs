@@ -39,6 +39,8 @@ public class ShipState
         [Tooltip("Step 75: where the sweep last touched it (See). Out of sight, the plot shows it here.")]
         [System.NonSerialized] public bool seen;
         [System.NonSerialized] public double seenX, seenY, seenBrg;
+        [Tooltip("Owner 2026-11-01: when that fix was, game seconds. The plot fades its marker as it gets old.")]
+        [System.NonSerialized] public float seenAt;
         [System.NonSerialized] public float seenRangeUnits;
         [Tooltip("Step 75: its navigation, written by TacticalWorld; in sight, the plot draws it where its model glides.")]
         [System.NonSerialized] public NavSystem nav;

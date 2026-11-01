@@ -23,6 +23,9 @@ public class MarksGraphic : MaskableGraphic
     [SerializeField] private float pointDot = 7f, endDot = 6f;
     [Tune("Plot tools")]
     [SerializeField] private float lineWidth = 1.5f;
+    [Tooltip("The RULER's line and its end dots (px): thicker than the other marks (owner 2026-11-01).")]
+    [Tune("Plot tools")]
+    [SerializeField] private float rulerWidth = 3f, rulerDot = 10f;
     [Tooltip("Dashed ring: dash and gap along the ring (px), from asset-map.csv mark_dash (3 px dash, 2 px gap).")]
     [Tune("Plot tools")]
     [SerializeField] private float dash = 3f, dashGap = 2f;
@@ -47,7 +50,7 @@ public class MarksGraphic : MaskableGraphic
         {
             var c = s.ink.a > 0f ? s.ink : color; c.a *= s.alpha;
             if (s.kind == "point") Dot(s.a, pointDot / 2f, c);
-            else if (s.kind == "ruler") { Line(s.a, s.b, c); Dot(s.a, endDot / 2f, c); Dot(s.b, endDot / 2f, c); }
+            else if (s.kind == "ruler") { Line(s.a, s.b, c, c, rulerWidth); Dot(s.a, rulerDot / 2f, c); Dot(s.b, rulerDot / 2f, c); }
             // Step 42: the sensor circle — a solid ring, and the faint fill inside it
             else if (s.kind == "circle") Ring(s.a, (s.b - s.a).magnitude, c, false);
             else if (s.kind == "disc") Dot(s.a, (s.b - s.a).magnitude, c);
@@ -66,12 +69,14 @@ public class MarksGraphic : MaskableGraphic
 
     void Line(Vector2 a, Vector2 b, Color c) => Line(a, b, c, c);
 
-    void Line(Vector2 a, Vector2 b, Color c, Color cb)
+    void Line(Vector2 a, Vector2 b, Color c, Color cb) => Line(a, b, c, cb, lineWidth);
+
+    void Line(Vector2 a, Vector2 b, Color c, Color cb, float width)
     {
         Vector2 p = L(a), q = L(b);
         if ((q - p).sqrMagnitude < 1e-6f) return;
         Vector2 n = (q - p).normalized;
-        n = new Vector2(-n.y, n.x) * (lineWidth / 2f);
+        n = new Vector2(-n.y, n.x) * (width / 2f);
         int i = vh.currentVertCount;
         vh.AddVert(p + n, c, Vector2.zero); vh.AddVert(q + n, cb, Vector2.zero);
         vh.AddVert(q - n, cb, Vector2.zero); vh.AddVert(p - n, c, Vector2.zero);

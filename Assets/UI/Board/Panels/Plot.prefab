@@ -215,8 +215,12 @@ MonoBehaviour:
   pointDot: 7
   endDot: 6
   lineWidth: 1.5
+  rulerWidth: 3
+  rulerDot: 10
   dash: 3
   dashGap: 2
+  dot: 2
+  dotGap: 8
   origin: {x: 104, y: 100}
 --- !u!1 &1006541235170368718
 GameObject:
@@ -654,8 +658,12 @@ MonoBehaviour:
   pointDot: 7
   endDot: 6
   lineWidth: 1.5
+  rulerWidth: 3
+  rulerDot: 10
   dash: 3
   dashGap: 2
+  dot: 2
+  dotGap: 8
   origin: {x: 104, y: 100}
 --- !u!1 &2690995200569824019
 GameObject:
@@ -724,27 +732,30 @@ MonoBehaviour:
       m_Calls: []
   pxPer1000Units: 760
   zoom: 1
-  stepsUnits:
-  - 5000
-  - 2000
-  - 1000
-  - 500
-  - 200
-  - 100
+  stepUnits:
   - 50
-  - 20
-  squareAtFullZoom: 50
-  majorEvery: 5
+  - 100
+  - 200
+  - 500
+  - 1000
+  - 2000
+  - 5000
+  bigEvery: 5
   lineWidthPx: 1
   edgeWidthPx: 3
+  stepFullPx: 35
+  stepGonePx: 25
   tint: 0
-  whiteMinor: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 0.12941177}
-  whiteMajor: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 0.25882354}
-  amberMinor: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 0.34117648}
-  amberMajor: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 0.61960787}
+  whiteMinor: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 0.078431375}
+  whiteMajor: {r: 0.9098039, g: 0.92941177, b: 0.9411765, a: 0.23921569}
+  amberMinor: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 0.21176471}
+  amberMajor: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 0.49411765}
   whiteEdge: {r: 0.8784314, g: 0.627451, b: 0.1254902, a: 0.9019608}
   amberEdge: {r: 0.8784314, g: 0.29411766, b: 0.23529412, a: 0.9019608}
   gammaBoard: 1
+  bigLinesEnd: 0.5
+  smallLinesStart: 0.4
+  lineGlide: 0.55
 --- !u!1 &3052294170334661008
 GameObject:
   m_ObjectHideFlags: 0
@@ -1014,8 +1025,12 @@ MonoBehaviour:
   pointDot: 7
   endDot: 6
   lineWidth: 1.5
+  rulerWidth: 3
+  rulerDot: 10
   dash: 3
   dashGap: 2
+  dot: 2
+  dotGap: 8
   origin: {x: 104, y: 100}
 --- !u!1 &4166039548002167951
 GameObject:
@@ -1232,8 +1247,12 @@ MonoBehaviour:
   pointDot: 7
   endDot: 6
   lineWidth: 1.5
+  rulerWidth: 3
+  rulerDot: 10
   dash: 3
   dashGap: 2
+  dot: 2
+  dotGap: 8
   origin: {x: 104, y: 100}
 --- !u!1 &4932251868225322465
 GameObject:
@@ -2166,8 +2185,12 @@ MonoBehaviour:
   pointDot: 7
   endDot: 6
   lineWidth: 1.5
+  rulerWidth: 3
+  rulerDot: 10
   dash: 3
   dashGap: 2
+  dot: 2
+  dotGap: 8
   origin: {x: 104, y: 100}
 --- !u!1 &7586029089626687667
 GameObject:
@@ -2244,6 +2267,7 @@ RectTransform:
   - {fileID: 7637353865441020223}
   - {fileID: 9090793327661632145}
   - {fileID: 2948740589378378137}
+  - {fileID: 5574832613645055845}
   - {fileID: 2300893144006399549}
   - {fileID: 6195060077040273032}
   - {fileID: 500808379996741800}
@@ -2311,6 +2335,10 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 8d75e854ba9dd4e639ee84805a998178, type: 3}
     images:
     - {fileID: 1101328494384087217}
+  - name: Gas cloud
+    sprite: {fileID: 21300000, guid: a36d70e6b8bb4484ea20416bc98f7877, type: 3}
+    images:
+    - {fileID: 3679405572040343172}
   fonts:
   - name: Share Tech Mono, small
     font: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
@@ -2329,8 +2357,10 @@ MonoBehaviour:
   passives: []
   ownShipImage: {fileID: 8877151737208059728}
   ownShipMinPx: 30
-  ownShipMaxPx: 120
+  ownShipMaxPx: 300
   ruinsImage: {fileID: 6430628026388568314}
+  cloudImage: {fileID: 3679405572040343172}
+  cloudAlpha: 0.16
   sensorRing: {fileID: 2144010668163942632}
   sensorRingMotion:
     seconds: 0.5
@@ -2357,6 +2387,9 @@ MonoBehaviour:
   contactMarks: {fileID: 5058668370962062356}
   contactLabelTemplate: {fileID: 3845959635087170199}
   contactShipImage: {fileID: 594920036611219167}
+  wreckDriftUnits: 5
+  wreckSpinDeg: 3
+  wreckDotFadeSeconds: 120
   contactLabelOffset: {x: 10, y: 0}
   passiveVisibility: 1
   plotCentre: {x: 960, y: 545}
@@ -2367,15 +2400,19 @@ MonoBehaviour:
   panRightKey: 275
   panUpKey: 273
   panDownKey: 274
+  gridFormSeconds: 4
+  plotFadeSeconds: 1.5
   axisLayer: {fileID: 6784869637121717738}
   axisFont: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
   axisMaterial: {fileID: 2100000, guid: cb0bd2ec5e4244f009e5536b9e245560, type: 2}
   axisFontSize: 11
   axisColour: {r: 0.7314692, g: 0.75938094, b: 0.7812595, a: 1}
+  axisAllNumbersPx: 60
+  axisHalfNumbersPx: 40
   pointLabelOffset: {x: 10, y: 0}
-  rulerLabelOffset: {x: 0, y: -12}
+  rulerLabelOffset: {x: 0, y: -24}
   ringLabelOffset: {x: 8, y: 0}
-  markLabelSize: 14
+  markLabelSize: 17
   pointBox: 16
   rulerBox: 14
   draftAlpha: 0.75
@@ -2384,8 +2421,16 @@ MonoBehaviour:
   slugTrailPx: 24
   weaponRing: {fileID: 8019246136933200248}
   pdcArcStepDeg: 2
-  railArcAlpha: 1
-  railArcAlphaOther: 0.45
+  railArcAlpha: 0.6
+  railArcAlphaOther: 0.3
+  lockCornersPx: 16
+  lockCornerArm: 0.35
+  staleSeconds: 60
+  staleAlpha: 0.35
+  staleLabelSeconds: 10
+  showShipBoxes: 0
+  gunBarAlpha: 1
+  gunBarAlphaOther: 0.4
   visualRingAlpha: 0.35
   fighterTemplate: {fileID: 7922429107365735552}
   fighterPx: 16
@@ -2528,6 +2573,81 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1 &8677837424464198361
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5574832613645055845}
+  - component: {fileID: 2598966802938910048}
+  - component: {fileID: 3679405572040343172}
+  m_Layer: 5
+  m_Name: Gas cloud (copied for each cloud)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &5574832613645055845
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8677837424464198361}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1835869417445526209}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 500, y: 300}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &2598966802938910048
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8677837424464198361}
+  m_CullTransparentMesh: 1
+--- !u!114 &3679405572040343172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8677837424464198361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: a36d70e6b8bb4484ea20416bc98f7877, type: 3}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &9042742654466314706
 GameObject:
   m_ObjectHideFlags: 0
