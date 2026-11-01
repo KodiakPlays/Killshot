@@ -3,9 +3,9 @@ using UnityEngine.Serialization;
 
 /// <summary>
 /// Weapons: one ship's fire control and what it has in flight. It holds the weapon groups (railgun, PDC,
-/// missile), the mounts, warheads, the arming ladder, the firing solutions, the salvo, the PDC loaders and
-/// AUTO groups, the capacitor and the fire lever. It fires slugs and missiles, flies them, and its PDCs
-/// take their chances at enemy missiles coming in. Our ship and every enemy carry one (the enemy is our
+/// torpedo), the mounts, warheads, the arming ladder, the firing solutions, the salvo, the PDC loaders and
+/// AUTO groups, the capacitor and the fire lever. It fires slugs and torpedoes, flies them, and its PDCs
+/// take their chances at enemy torpedoes coming in. Our ship and every enemy carry one (the enemy is our
 /// ship with other stats). Owner 2026-10-26: weapons live in one place, here. The contact list, damage and
 /// kills stay on the ship state (ShipState); this reads them. Rules from board-logic.js (MOUNTS,
 /// SYSTEMS, WARHEADS, SWITCHES, computeSol, nudgeSol, flip, allSet, drawWep) and Steps 47–55.
@@ -23,8 +23,8 @@ public class WeaponSystem : MonoBehaviour
     {
         [Header("Mounts: reach, arcs and ammunition at the start")]
         // Owner 2026-10-26: each weapon has its own reach. Railguns 25,000 units (a slug takes about 100 s; at that range even a
-        // good aim can just miss a cruiser), missiles 35,000 units (slower, but they home), PDCs 10,000 units. Was 30,000 for railguns
-        // and missiles (the DRADIS at full gain) and 4,000 for PDCs. You can dumb-fire that far; a lock still needs a scan.
+        // good aim can just miss a cruiser), torpedoes 35,000 units (slower, but they home), PDCs 10,000 units. Was 30,000 for railguns
+        // and torpedoes (the DRADIS at full gain) and 4,000 for PDCs. You can dumb-fire that far; a lock still needs a scan.
         // Owner 2026-10-27: every mount starts full (the design had RG-B at 19 and PDC-B at 2180). The ammunition here is what
         // each mount has at the start; the running game counts down its own copy, never the file.
         public Mount[] mounts =
@@ -35,7 +35,7 @@ public class WeaponSystem : MonoBehaviour
             // owner 2026-10-29: two halves, "keep it simple": PDC-A the starboard side (000–180), PDC-B the port side (180–360)
             new Mount { id = "PDA", kind = "PD", arc = 90, halfArc = 90, rangeUnits = 10000, label = "PDC GROUP A", shortName = "PDC-A", ammo = 2400 },
             new Mount { id = "PDB", kind = "PD", arc = 270, halfArc = 90, rangeUnits = 10000, label = "PDC GROUP B", shortName = "PDC-B", ammo = 2400 },
-            new Mount { id = "VLS", kind = "MS", arc = 0, halfArc = 180, rangeUnits = 35000, label = "MISSILE VLS", shortName = "VLS", ammo = 8 },
+            new Mount { id = "VLS", kind = "MS", arc = 0, halfArc = 180, rangeUnits = 35000, label = "TORPEDO VLS", shortName = "VLS", ammo = 8 },
         };
         [Tooltip("Owner 2026-11-01: the places on the hull a weapon can stand. The Hard Points tab of Starwolf → Tuning drags them round the ship. A weapon fires from its dot; with no dot it can't fire.")]
         public HardPoint[] hardPoints =
@@ -57,22 +57,36 @@ public class WeaponSystem : MonoBehaviour
         public float lockHoldSeconds = 10f;
         [Tooltip("A knob turned with no solution starts one here, on the periscope's bearing at speed 0 (owner 2026-10-23).")]
         [FormerlySerializedAs("manualStartRangeKm")] public float manualStartRangeUnits = 10000f;
-        [Tooltip("Missiles launched together (owner 2026-10-23: set here until the design's salvo stepper has art).")]
+        [Tooltip("Torpedoes launched together (owner 2026-10-23: set here until the design's salvo stepper has art).")]
         [Range(1, 8)] public int salvo = 2;
         [Tooltip("PDC autoloaders. Step 55: engaged at load (the design starts them off) and set here until the design's LOADERS pushbutton has art (HANDOFF_GAPS row 73); without them PDCs cannot arm.")]
         public bool loaders = true;
         public float wepFeedPerUnit = 5f, wepBleed = 3f;
         [Tooltip("Railgun slug speed, units/s (owner 2026-10-27: the fastest thing on the board, about 10 s across its 25,000 units range).")]
         [FormerlySerializedAs("slugSpeedKms")] public double slugSpeedUnits = 2500;
-        [Tooltip("Missile speed, units/s (owner 2026-10-23: slower than a slug, but it homes; Step 63: x5). About 2 minutes to 12,000 units.")]
-        [FormerlySerializedAs("missileSpeedKms")] public double missileSpeedUnits = 100;
-        [Tooltip("How fast a missile can turn toward its target, degrees per mission second (Step 63: x5).")]
-        public double missileTurnDegPerS = 6.5;
+        [Tooltip("A torpedo's speed with its motor on, units/s (owner 2026-11-01: always slower than a slug; a torpedo reaches further and hits harder).")]
+        public double torpedoSpeedUnits = 100;
+        [Tooltip("Owner 2026-11-01: a torpedo leaves its launcher straight out of the ship's side at this speed, units/s.")]
+        public double torpedoLaunchSpeedUnits = 80;
+        [Tooltip("Game seconds it flies straight out, slowing.")]
+        public double torpedoCoastSeconds = 1.5;
+        [Tooltip("Its speed at the end of that, units/s. It stays at this speed as it curves onto the target.")]
+        public double torpedoCoastSpeedUnits = 30;
+        [Tooltip("Owner 2026-11-02: it leaves the ship's side tilted this many degrees toward the stern.")]
+        public double torpedoTiltBackDeg = 15;
+        [Tooltip("The sharpest it curves onto the target before its motor lights, degrees per game second.")]
+        public double torpedoCurveDegPerS = 60;
+        [Tooltip("Owner 2026-11-02: game seconds a turn takes to build up to its sharpest, and to ease off as it lines up.")]
+        public double torpedoTurnBuildSeconds = 0.5;
+        [Tooltip("How fast its motor takes it up to full speed, units/s gained each game second.")]
+        public double torpedoBurnUnits = 300;
+        [Tooltip("How fast a torpedo can turn toward its target with its motor on, degrees per mission second (Step 63: x5).")]
+        public double torpedoTurnDegPerS = 6.5;
         [Tooltip("A salvo leaves the launcher fanned this many degrees apart.")]
-        public double missileSpreadDeg = 3;
-        [Tooltip("Rounds one PDC group spends on each go at an enemy missile (owner 2026-10-27).")]
+        public double torpedoSpreadDeg = 3;
+        [Tooltip("Rounds one PDC group spends on each go at an enemy torpedo (owner 2026-10-27).")]
         public int pdcRoundsPerGo = 100;
-        [Tooltip("A shot from this ship, slug or missile, hits a ship if it touches the ship's box made this much bigger, percent (owner 2026-11-01; was a 100-unit circle round the ship's centre).")]
+        [Tooltip("A shot from this ship, slug or torpedo, hits a ship if it touches the ship's box made this much bigger, percent (owner 2026-11-01; was a 100-unit circle round the ship's centre).")]
         public float hitMarginPercent = 25f;
         /// <summary>The half size of the box a shot from this ship must touch, from a ship's own box half.</summary>
         public Vector2 HitHalf(Vector2 half) => half * (1f + hitMarginPercent / 100f);
@@ -92,7 +106,7 @@ public class WeaponSystem : MonoBehaviour
         public float fireSignalSpike = 25f;
         [Tooltip("The SPD knob's step, units/s (the design's 0.05, x5 with the speeds in Step 63).")]
         public float spdStep = 0.25f;
-        [Tooltip("The chance a PDC group on AUTO shoots down an enemy missile that enters its arc (owner: a chance per missile).")]
+        [Tooltip("The chance a PDC group on AUTO shoots down an enemy torpedo that enters its arc (owner: a chance per torpedo).")]
         [Range(0f, 1f)] public float pdcKillChance = 0.7f;
     }
     /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
@@ -107,10 +121,10 @@ public class WeaponSystem : MonoBehaviour
     public class Mount
     {
         public string id, label, shortName;
-        [Tooltip("RG railgun, PD point defence or MS missile launcher (owner 2026-11-01: a ship has as many of each as its stats file lists).")]
+        [Tooltip("RG railgun, PD point defence or MS torpedo launcher (owner 2026-11-01: a ship has as many of each as its stats file lists).")]
         public string kind;
         public int arc, halfArc; [FormerlySerializedAs("rangeKm")] public float rangeUnits;
-        [Tooltip("What it has left: slugs, PDC rounds or missile cells. Owner 2026-10-27: a real count; it only goes down.")]
+        [Tooltip("What it has left: slugs, PDC rounds or torpedo cells. Owner 2026-10-27: a real count; it only goes down.")]
         public int ammo;
         /// <summary>A railgun's bar: its angle from the cone's middle, degrees, now and at the last tick.</summary>
         [System.NonSerialized] public float aimDeg, aimWas;
@@ -154,7 +168,7 @@ public class WeaponSystem : MonoBehaviour
     {
         new Group { id = "RG", label = "RAILGUN", shot = 70 },
         new Group { id = "PD", label = "PDC", shot = 25 },
-        new Group { id = "MS", label = "MISSILE", shot = 40 },
+        new Group { id = "MS", label = "TORPEDO", shot = 40 },
     };
     public string[] warheads = { "HE", "EMP", "PENETRATOR" };
     public string[] switches = { "load", "angle", "bearing", "arm" };
@@ -168,7 +182,7 @@ public class WeaponSystem : MonoBehaviour
     public int warhead;
     [Tooltip("PDC quadrants FWD, STBD, AFT, PORT (quads).")]
     public bool[] quads = { true, true, false, false };
-    [Tooltip("Step 55: PDC groups on AUTO, in the order the stats file lists them. Arming the ladder with a group selected puts it on AUTO; it then shoots by itself at enemy missiles in its arc.")]
+    [Tooltip("Step 55: PDC groups on AUTO, in the order the stats file lists them. Arming the ladder with a group selected puts it on AUTO; it then shoots by itself at enemy torpedoes in its arc.")]
     public bool[] pdcAuto = new bool[2];
     public bool fired;
     [Range(0f, 100f)] public float wepCharge;
@@ -182,30 +196,25 @@ public class WeaponSystem : MonoBehaviour
     {
         public double x, y, dx, dy, travelled, maxUnits;
         public double speed = 50;
-        [Tooltip("Step 53: a missile homes on its target and carries a warhead (an index into warheads).")]
-        public bool missile;
+        [Tooltip("Step 53: a torpedo homes on its target and carries a warhead (an index into warheads).")]
+        public bool torpedo;
         public string targetKey;
         public int warhead;
-        [Tooltip("Step 55: PDC groups that have had their one chance at this missile (bit 0 = PDC-A, bit 1 = PDC-B).")]
+        [Tooltip("Step 55: PDC groups that have had their one chance at this torpedo (bit 0 = PDC-A, bit 1 = PDC-B).")]
         public int pdcTried;
+        [Tooltip("Owner 2026-11-01: game seconds a torpedo has flown straight out of the launcher, and whether its motor has lit.")]
+        public double coasted;
+        public bool motor;
+        [Tooltip("Owner 2026-11-02: how fast it is turning now, degrees per game second.")]
+        public double turn;
         [System.NonSerialized] public Stats by; // the firing ship's numbers: how close is a hit, and what the hit does
         [System.NonSerialized] public BoardManager.Glide drawn; // owner 2026-11-01: where the plot draws it, sliding toward StepAhead
     }
 
     [System.NonSerialized] private System.Collections.Generic.List<Round> rounds;
     public System.Collections.Generic.List<Round> Rounds => rounds ?? (rounds = new System.Collections.Generic.List<Round>());
-    /// <summary>Cells left in the selected launcher, or in the first one while another weapon is selected.</summary>
-    public int vlsCells { get { var m = Launcher; return m != null ? m.ammo : 0; } set { var m = Launcher; if (m != null) m.ammo = value; } }
-    Mount Launcher
-    {
-        get
-        {
-            var m = MountOf(mount);
-            if (m != null && m.kind == "MS") return m;
-            foreach (var l in stats.mounts) if (l.kind == "MS") return l;
-            return null;
-        }
-    }
+    /// <summary>Cells left in all this ship's launchers.</summary>
+    public int vlsCells { get { int n = 0; foreach (var l in stats.mounts) if (l.kind == "MS") n += l.ammo; return n; } }
     /// <summary>The selected mount can't fire again: no slug or cell left, or too few rounds for a PDC go.</summary>
     public bool Empty { get { var m = MountOf(mount); return m == null || m.ammo < (sys == "PD" ? stats.pdcRoundsPerGo : 1); } }
     /// <summary>The last shot's outcome: "HIT · GARUDA · STBD", "MISS", or null while none has landed.</summary>
@@ -286,7 +295,23 @@ public class WeaponSystem : MonoBehaviour
             if (System.Array.IndexOf(ids, mount) < 0) mount = System.Array.Find(ids, OnDot) ?? ids[0]; // the first that can fire: a weapon on no dot can't
             break;
         }
+        PickLauncher();
         ClearSwitches(); fired = false;
+    }
+
+    // Owner 2026-11-01: torpedoes reach all round, so nothing picks a launcher. The one on the target's side fires; with none left there, the other.
+    void PickLauncher()
+    {
+        if (sys != "MS") return;
+        var t = ship.TrackOf(target);
+        int rel = t != null ? t.bearing - ship.nav.heading : 0;
+        Mount best = null;
+        foreach (var id in MountIds("MS"))
+        {
+            var l = MountOf(id);
+            if (l.ammo > 0 && OnDot(id) && (best == null || ShipState.AngDiff(rel, l.arc) < ShipState.AngDiff(rel, best.arc))) best = l;
+        }
+        if (best != null) mount = best.id;
     }
 
     public void CycleMount()
@@ -384,7 +409,7 @@ public class WeaponSystem : MonoBehaviour
         ClearSwitches();
     }
 
-    // The railgun and missile solutions, from the locked ship as it is now. A lock knows where it is. Where it is going is
+    // The railgun and torpedo solutions, from the locked ship as it is now. A lock knows where it is. Where it is going is
     // the newest of a scan and a plotted track (owner 2026-11-01); with neither the shot goes where the ship is now
     void KeepSolution(ShipState.Track t)
     {
@@ -461,7 +486,7 @@ public class WeaponSystem : MonoBehaviour
         if (!AllSet) return; // moveSlew fires on every new pull while allSet() holds; the panel's per-pull latch stops repeats (Step 33g verification)
         if (RungGated(0) || RungGated(1)) return; // a gate failed since its rung was thrown (TickCharge drops it on the next tick)
         if (wepCharge < ShotCost || Empty) return;
-        if (sys == "MS" && !MissileReady) return;
+        if (sys == "MS" && !TorpedoReady) return;
         fired = true;
         wepCharge = Mathf.Max(0f, wepCharge - ShotCost);
         sw[3] = false;
@@ -479,25 +504,26 @@ public class WeaponSystem : MonoBehaviour
         }
         if (sys == "MS" && m != null)
         {
-            // a salvo, spread a little either side of the target's bearing; each missile then homes on it
+            // a salvo out of the launcher, fanned a little; each torpedo flies straight out, then homes on the target
             var tgt = ship.TrackOf(target);
-            int n = Mathf.Min(salvo, vlsCells);
+            int n = Mathf.Min(salvo, m.ammo);
             Vector2 tube = HardPointOffset(m.id, ship.nav.heading);
             for (int i = 0; i < n; i++)
             {
-                double b = (tgt.bearing + (i - (n - 1) / 2.0) * stats.missileSpreadDeg) * System.Math.PI / 180;
-                Rounds.Add(new Round { x = ship.nav.x + tube.x, y = ship.nav.y + tube.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = m.rangeUnits,
-                                       speed = stats.missileSpeedUnits, missile = true, targetKey = tgt.key, warhead = warhead });
+                var r = NewTorpedo(stats, ship.nav.x + tube.x, ship.nav.y + tube.y, ship.nav.heading, m.arc, i, n, m.rangeUnits, warhead);
+                r.targetKey = tgt.key;
+                Rounds.Add(r);
             }
-            vlsCells -= n;
+            m.ammo -= n;
             shotReport = null;
             ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + stats.fireSignalSpike);
         }
+        PickLauncher();
         if (Empty) ClearSwitches(); // the last one gone: nothing left to load
     }
 
-    /// <summary>Step 53 (GDD p.45): missiles need a locked target — identified by an active scan — and a cell left.</summary>
-    public bool MissileReady { get { var t = ship.TrackOf(target); return t != null && !t.wreck && (ship.sensors.identified.Contains(t.key) || LockedOn(t.key)) && vlsCells > 0; } }
+    /// <summary>Step 53 (GDD p.45): torpedoes need a locked target — identified by an active scan — and a cell left.</summary>
+    public bool TorpedoReady { get { var t = ship.TrackOf(target); return t != null && !t.wreck && (ship.sensors.identified.Contains(t.key) || LockedOn(t.key)) && vlsCells > 0; } }
 
     // ---- leading a moving target (Step 52, owner 2026-10-23) ---------------------------------
 
@@ -618,32 +644,51 @@ public class WeaponSystem : MonoBehaviour
     public void TickRounds(double dt)
     {
         var list = Rounds;
-        for (int i = list.Count - 1; i >= 0; i--)
-        {
-            var r = list[i];
-            if (r.missile) Steer(r, dt);
-            double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
-            double flight = r.speed > 0 ? step / r.speed : 0; // seconds of this tick the round is flying
-            string side;
-            float breakAt; // where along the ship it struck, 0 the stern to 1 the nose
-            var struck = FirstStruck(r, flight, out side, out _, out breakAt);
-            if (struck != null)
-            {
-                // Step 49: the struck ship takes the hit on its own model (its side, then what is behind it)
-                var victim = ship.ShipOf != null ? ship.ShipOf(struck.key) : null;
-                string damage = victim == null ? "" : r.missile ? victim.damage.TakeWarhead(side, warheads[r.warhead], stats) : victim.damage.TakeSlug(side, stats);
-                if (victim != null && victim.destroyed) ship.Kill(struck, breakAt);
-                else { shotReport = "HIT · " + ship.NameOf(struck) + (ship.Scanned(struck) ? " · " + side + damage : ""); lastShotHit = true; shotResults++; } // Step 61: detail once scanned
-                list.RemoveAt(i);
-                continue;
-            }
-            r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
-            if (r.travelled >= r.maxUnits - 1e-6) { shotReport = "MISS"; lastShotHit = false; shotResults++; list.RemoveAt(i); }
-        }
+        for (int i = list.Count - 1; i >= 0; i--) if (!InFlight(list[i], dt, RoundStep)) list.RemoveAt(i);
     }
 
-    // The first ship's box round r reaches in `flight` seconds, the side it comes through, and how far along that flight
-    ShipState.Track FirstStruck(Round r, double flight, out string side, out double first, out float breakAt)
+    const double TorpedoStepSeconds = 0.05;
+
+    // Owner 2026-11-02: a torpedo flies in short steps, which keeps its curve the same at every game speed; anything else flies
+    // the whole tick at once. step gets the round, the game seconds to fly, and the game seconds of this tick already gone. False once it has ended.
+    static bool InFlight(Round r, double dt, System.Func<Round, double, double, bool> step)
+    {
+        for (double gone = 0; gone < dt - 1e-9;)
+        {
+            double h = r.torpedo ? System.Math.Min(dt - gone, TorpedoStepSeconds) : dt;
+            if (!step(r, h, gone)) return false;
+            gone += h;
+        }
+        return true;
+    }
+
+    // One step of one of our rounds. False once it has hit or run out of range.
+    bool RoundStep(Round r, double dt, double gone)
+    {
+        if (r.torpedo && Clear(r, dt)) Steer(r, dt);
+        double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
+        double flight = r.speed > 0 ? step / r.speed : 0; // seconds of this tick the round is flying
+        string side;
+        float breakAt; // where along the ship it struck, 0 the stern to 1 the nose
+        var struck = FirstStruck(r, flight, out side, out _, out breakAt, gone);
+        if (struck != null)
+        {
+            // Step 49: the struck ship takes the hit on its own model (its side, then what is behind it)
+            var victim = ship.ShipOf != null ? ship.ShipOf(struck.key) : null;
+            string damage = victim == null ? "" : r.torpedo ? victim.damage.TakeWarhead(side, warheads[r.warhead], stats) : victim.damage.TakeSlug(side, stats);
+            if (victim != null && victim.destroyed) ship.Kill(struck, breakAt);
+            else { shotReport = "HIT · " + ship.NameOf(struck) + (ship.Scanned(struck) ? " · " + side + damage : ""); lastShotHit = true; shotResults++; } // Step 61: detail once scanned
+            return false;
+        }
+        r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
+        if (r.travelled < r.maxUnits - 1e-6) return true;
+        shotReport = "MISS"; lastShotHit = false; shotResults++;
+        return false;
+    }
+
+    // The first ship's box round r reaches in `flight` seconds, the side it comes through, and how far along that flight.
+    // gone: game seconds of this tick already flown, which ships have also moved through
+    ShipState.Track FirstStruck(Round r, double flight, out string side, out double first, out float breakAt, double gone = 0)
     {
         ShipState.Track struck = null;
         side = null;
@@ -654,7 +699,7 @@ public class WeaponSystem : MonoBehaviour
             if (t.own || !t.hasWorld || t.wreck) continue;
             // the round's path as seen from the ship: its velocity less the ship's
             double c = t.course * System.Math.PI / 180;
-            double fx = r.x - t.worldX, fy = r.y - t.worldY;
+            double fx = r.x - t.worldX - t.speed * System.Math.Sin(c) * gone, fy = r.y - t.worldY - t.speed * System.Math.Cos(c) * gone;
             double mx = (r.dx * r.speed - t.speed * System.Math.Sin(c)) * flight, my = (r.dy * r.speed - t.speed * System.Math.Cos(c)) * flight;
             var hull = ship.ShipOf != null ? ship.ShipOf(t.key) : null;
             Vector2 half = hull != null ? stats.HitHalf(hull.nav.BoxHalf) : new Vector2(25f, 25f); // no ship behind the track: a small box
@@ -678,42 +723,76 @@ public class WeaponSystem : MonoBehaviour
         return hits ? step * at : step;
     }
 
-    // A missile turns toward its target, no faster than stats.missileTurnDegPerS. With no target left it flies on.
+    // A torpedo leaving a launcher at (x, y) on a ship with this heading: straight out of the launcher's side, tilted a little
+    // toward the stern, or from one on the centre line out of each side by turns, the salvo fanned a little. by: the firing ship's numbers.
+    Round NewTorpedo(Stats by, double x, double y, double heading, int arc, int i, int n, double maxUnits, int warheadIndex)
+    {
+        int side = arc % 180 == 0 ? (i % 2 == 0 ? 1 : -1) : arc % 360 < 180 ? 1 : -1;
+        double b = (heading + side * (90 + by.torpedoTiltBackDeg) + (i - (n - 1) / 2.0) * by.torpedoSpreadDeg) * System.Math.PI / 180;
+        return new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = maxUnits, speed = by.torpedoLaunchSpeedUnits,
+                           torpedo = true, warhead = warheadIndex };
+    }
+
+    // Owner 2026-11-01: a torpedo flies straight out of its launcher, slowing. True once it is clear of that and can steer.
+    bool Clear(Round r, double dt)
+    {
+        var by = r.by ?? stats;
+        if (r.coasted >= by.torpedoCoastSeconds) return true;
+        r.coasted = System.Math.Min(by.torpedoCoastSeconds, r.coasted + dt);
+        r.speed = by.torpedoLaunchSpeedUnits + (by.torpedoCoastSpeedUnits - by.torpedoLaunchSpeedUnits) * r.coasted / by.torpedoCoastSeconds;
+        return false;
+    }
+
+    // Its motor lights, or stays on: it speeds up to full speed.
+    void Burn(Round r, double dt)
+    {
+        var by = r.by ?? stats;
+        r.motor = true;
+        r.speed = System.Math.Min(by.torpedoSpeedUnits, r.speed + by.torpedoBurnUnits * dt);
+    }
+
+    // A clear torpedo curves onto its target, and then its motor lights. With no target left its motor lights anyway and it flies on.
     void Steer(Round r, double dt)
     {
         var t = ship.TrackOf(r.targetKey);
-        if (t == null || !t.hasWorld || t.wreck) return;
-        SteerAt(r, t.worldX, t.worldY, dt);
+        if (t == null || !t.hasWorld || t.wreck) Burn(r, dt);
+        else SteerAt(r, t.worldX, t.worldY, dt);
     }
+
+    // Owner 2026-11-02: it turns as a fighter does. The turn builds up, then eases off as it lines up. Its motor lights once it is within this of lined up, degrees.
+    const double MotorLinedUpDeg = 3;
 
     void SteerAt(Round r, double x, double y, double dt)
     {
-        double want = System.Math.Atan2(x - r.x, y - r.y) * 180 / System.Math.PI;
+        var by = r.by ?? stats;
         double now = System.Math.Atan2(r.dx, r.dy) * 180 / System.Math.PI;
-        double turn = ((want - now) % 360 + 540) % 360 - 180, most = stats.missileTurnDegPerS * dt;
-        double head = (now + System.Math.Max(-most, System.Math.Min(most, turn))) * System.Math.PI / 180;
+        double off = ((System.Math.Atan2(x - r.x, y - r.y) * 180 / System.Math.PI - now) % 360 + 540) % 360 - 180;
+        double most = r.motor ? by.torpedoTurnDegPerS : by.torpedoCurveDegPerS, build = System.Math.Max(0.01, by.torpedoTurnBuildSeconds);
+        double want = System.Math.Max(-most, System.Math.Min(most, off / build)), change = most / build * dt;
+        r.turn += System.Math.Max(-change, System.Math.Min(change, want - r.turn));
+        double head = (now + r.turn * dt) * System.Math.PI / 180;
         r.dx = System.Math.Sin(head); r.dy = System.Math.Cos(head);
+        if (r.motor || System.Math.Abs(off) <= MotorLinedUpDeg) Burn(r, dt);
     }
 
-    // ---- enemy missiles and our point defence (Step 55, owner 2026-10-24) -----------------------
+    // ---- enemy torpedoes and our point defence (Step 55, owner 2026-10-24) -----------------------
 
     [System.NonSerialized] private System.Collections.Generic.List<Round> incoming;
-    /// <summary>Enemy missiles flying at our ship.</summary>
+    /// <summary>Enemy torpedoes flying at our ship.</summary>
     public System.Collections.Generic.List<Round> Incoming => incoming ?? (incoming = new System.Collections.Generic.List<Round>());
-    /// <summary>The PDCs' last result ("PDC-A · MISSILE DOWN"), and the last enemy missile to hit us.</summary>
+    /// <summary>The PDCs' last result ("PDC-A · TORPEDO DOWN"), and the last enemy torpedo to hit us.</summary>
     [System.NonSerialized] public string pdcReport, incomingReport;
     [System.NonSerialized] public int pdcKills, hitsTaken;
 
-    /// <summary>An enemy at (x, y) launches n missiles at us, fanned, each homing on our ship. by: the
-    /// enemy's numbers, which its missiles fly and hit by.</summary>
-    public void LaunchAt(Stats by, double x, double y, int n, int warheadIndex, double maxUnits)
+    /// <summary>An enemy at (x, y) launches n torpedoes from a launcher facing `arc` degrees round from its heading. Each
+    /// flies straight out, then homes on our ship. by: the enemy's numbers, which its torpedoes fly and hit by.</summary>
+    public void LaunchAt(Stats by, double x, double y, double heading, int arc, int n, int warheadIndex, double maxUnits)
     {
-        double brg = System.Math.Atan2(ship.nav.x - x, ship.nav.y - y) * 180 / System.Math.PI;
         for (int i = 0; i < n; i++)
         {
-            double b = (brg + (i - (n - 1) / 2.0) * by.missileSpreadDeg) * System.Math.PI / 180;
-            Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = maxUnits,
-                                     speed = by.missileSpeedUnits, missile = true, warhead = warheadIndex, by = by });
+            var r = NewTorpedo(by, x, y, heading, arc, i, n, maxUnits, warheadIndex);
+            r.by = by;
+            Incoming.Add(r);
         }
     }
 
@@ -725,7 +804,7 @@ public class WeaponSystem : MonoBehaviour
         Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = maxUnits, speed = by.slugSpeedUnits, by = by });
     }
 
-    /// <summary>Each tick: our PDCs take their chances, then every enemy missile homes on us and every enemy
+    /// <summary>Each tick: our PDCs take their chances, then every enemy torpedo homes on us and every enemy
     /// slug flies straight; one that reaches our box, made bigger by its firing ship's hitMarginPercent, strikes the side it reaches.</summary>
     public void TickIncoming(double dt)
     {
@@ -733,28 +812,32 @@ public class WeaponSystem : MonoBehaviour
         for (int i = list.Count - 1; i >= 0; i--)
         {
             var r = list[i];
-            if (r.missile && PdcStops(r, r.speed * dt)) { list.RemoveAt(i); continue; }
-            if (r.missile) SteerAt(r, ship.nav.x, ship.nav.y, dt);
-            double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
-            string side;
-            if (ReachesUs(r, step, dt, out _, out side))
-            {
-                incomingReport = r.missile ? "MISSILE HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead], r.by)
-                                           : "SLUG HIT · " + side + ship.damage.TakeSlug(side, r.by);
-                hitsTaken++;
-                list.RemoveAt(i);
-                continue;
-            }
-            r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
-            if (r.travelled >= r.maxUnits - 1e-6) list.RemoveAt(i);
+            if ((r.torpedo && PdcStops(r, r.speed * dt)) || !InFlight(r, dt, IncomingStep)) list.RemoveAt(i);
         }
+    }
+
+    // One step of an enemy round. False once it has hit us or run out of range.
+    bool IncomingStep(Round r, double dt, double gone)
+    {
+        if (r.torpedo && Clear(r, dt)) SteerAt(r, ship.nav.x, ship.nav.y, dt);
+        double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
+        string side;
+        if (ReachesUs(r, step, dt, out _, out side))
+        {
+            incomingReport = r.torpedo ? "TORPEDO HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead], r.by)
+                                       : "SLUG HIT · " + side + ship.damage.TakeSlug(side, r.by);
+            hitsTaken++;
+            return false;
+        }
+        r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
+        return r.travelled < r.maxUnits - 1e-6;
     }
 
     // Does enemy round r reach our box on a step of `step` units? `ago`: game seconds our ship has already moved of it
     bool ReachesUs(Round r, double step, double ago, out double at, out string side)
     {
         double fx, fy, mx, my;
-        if (r.missile) { fx = r.x - ship.nav.x; fy = r.y - ship.nav.y; mx = r.dx * step; my = r.dy * step; }
+        if (r.torpedo) { fx = r.x - ship.nav.x; fy = r.y - ship.nav.y; mx = r.dx * step; my = r.dy * step; }
         else
         {
             // a slug against our own motion through the tick
@@ -766,12 +849,12 @@ public class WeaponSystem : MonoBehaviour
         return ShipState.EntersBox(fx, fy, fx + mx, fy + my, ship.nav.heading, half.x, half.y, out at, out side);
     }
 
-    // A PDC group on AUTO, loaded and powered, gets one chance at each enemy missile inside its arc and range.
+    // A PDC group on AUTO, loaded and powered, gets one chance at each enemy torpedo inside its arc and range.
     // Each go spends stats.pdcRoundsPerGo; a group too low for another go drops off AUTO (owner 2026-10-27).
     bool PdcStops(Round r, double step)
     {
         if (!loaders || !WepReady) return false;
-        // the point of this tick's flight closest to our ship: at x5 a missile can cross the PDCs' reach inside one tick
+        // the point of this tick's flight closest to our ship: at x5 a torpedo can cross the PDCs' reach inside one tick
         double along = System.Math.Max(0, System.Math.Min(step, (ship.nav.x - r.x) * r.dx + (ship.nav.y - r.y) * r.dy));
         double px = r.x + r.dx * along, py = r.y + r.dy * along;
         var groups = MountIds("PD");
@@ -787,7 +870,7 @@ public class WeaponSystem : MonoBehaviour
             m.ammo -= stats.pdcRoundsPerGo;
             if (m.ammo < stats.pdcRoundsPerGo) { pdcAuto[g] = false; if (g == PdcGroup) ClearSwitches(); }
             bool down = ship.NextDie() < stats.pdcKillChance;
-            pdcReport = m.shortName + (down ? " · MISSILE DOWN" : " · MISSED");
+            pdcReport = m.shortName + (down ? " · TORPEDO DOWN" : " · MISSED");
             if (down) { pdcKills++; return true; }
         }
         return false;
@@ -800,6 +883,7 @@ public class WeaponSystem : MonoBehaviour
         float feed = ship.power.BusUnits("wep") * stats.wepFeedPerUnit * (float)dt;
         wepCharge = feed > 0f ? Mathf.Min(100f, wepCharge + feed) : Mathf.Max(0f, wepCharge - stats.wepBleed * (float)dt);
         foreach (var s in sol) if (s.set) Follow(s); // our turn or move since the last tick: the bow's new range and bearing to each point
+        PickLauncher();
         // Tooling's bugs 7 and 8: a thrown LOAD whose gate fails (WEP power, magazine, release, rounds) or a thrown ANGLE
         // out of arc drops, with every rung after it. BEARING is left alone: a moving target drifts off it slowly.
         for (int i = 0; i < 2; i++) if (sw[i] && RungGated(i)) { Flip(i); break; }

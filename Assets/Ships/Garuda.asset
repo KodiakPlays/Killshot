@@ -87,7 +87,7 @@ MonoBehaviour:
       rangeUnits: 600
       ammo: 0
     - id: VLS
-      label: MISSILE VLS
+      label: TORPEDO VLS
       shortName: VLS
       kind: MS
       arc: 0
@@ -117,9 +117,16 @@ MonoBehaviour:
     wepFeedPerUnit: 5
     wepBleed: 3
     slugSpeedUnits: 300
-    missileSpeedUnits: 400
-    missileTurnDegPerS: 120
-    missileSpreadDeg: 3
+    torpedoSpeedUnits: 250
+    torpedoLaunchSpeedUnits: 80
+    torpedoCoastSeconds: 2.5
+    torpedoCoastSpeedUnits: 15
+    torpedoTiltBackDeg: 15
+    torpedoCurveDegPerS: 32
+    torpedoTurnBuildSeconds: 0.5
+    torpedoBurnUnits: 300
+    torpedoTurnDegPerS: 120
+    torpedoSpreadDeg: 20
     pdcRoundsPerGo: 100
     hitMarginPercent: 25
     slugArmourDamage: 75
@@ -138,6 +145,10 @@ MonoBehaviour:
     fighterRunSeconds: 30
     fighterArmourDamage: 10
     fighterCompartmentDamage: 1
+    launchTiltBackDeg: 15
+    launchRunUnits: 200
+    turnDegPerS: 90
+    turnEase: 180
     boatSpeedUnits: 75
     marines: 0
     marinesPerBoat: 6

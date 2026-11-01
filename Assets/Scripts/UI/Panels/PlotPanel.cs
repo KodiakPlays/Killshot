@@ -196,8 +196,8 @@ public class PlotPanel : Panel
     [Tune("Plot tools")] [SerializeField] private float rulerSnapPx = 12f;
     [Tooltip("A track (a RULER from one POINT to another) projects its course this far ahead, mission seconds.")]
     [Tune("Plot tools")] [SerializeField] private float projectSeconds = 300f;
-    [Tooltip("A slug in flight trails this many screen px behind it (Step 48).")]
-    [Tune("Periscope & fire control")] [SerializeField] private float slugTrailPx = 24f;
+    [Tooltip("A slug in flight trails this many screen px behind it (Step 48). Any other shot trails this much for its share of a slug's speed.")]
+    [Tune("Periscope & fire control")] [SerializeField] private float slugTrailPx = 120f;
     [Tooltip("The selected weapon's reach, a dashed ring round our ship while Fire Control is open.")]
     [SerializeField] private MarksGraphic weaponRing;
     [Tooltip("A PDC arc's curved edge is drawn in steps this many degrees long (Step 55).")]
@@ -265,12 +265,17 @@ public class PlotPanel : Panel
     }
     /// <summary>Step 75: our ship where it is drawn now (it glides between ticks), in board px.</summary>
     Vector2 OwnAt => Screen(State.nav.DrawnX, State.nav.DrawnY);
-    /// <summary>Owner 2026-11-01: a shot where it is drawn now: sliding toward its spot at the next tick, at up to twice its speed.</summary>
-    Vector2 ShotAt(WeaponSystem.Round r)
+    /// <summary>Owner 2026-11-01: a shot where it is drawn now, and the far end of its trail. It slides toward its spot at the
+    /// next tick, at up to twice its speed. It doesn't slow for a hit: the dot stops there and the trail runs on into it.</summary>
+    Vector2 ShotAt(WeaponSystem.Round r, out Vector2 tail)
     {
-        double step = State.weapons.StepAhead(r, Controls.TickGameSeconds);
+        double dt = Controls.TickGameSeconds, step = r.speed * dt, pxPerUnit = Controls.ZoomExact / UnitsPerPx;
         Controls.Slide(ref r.drawn, r.x, r.y, r.x + r.dx * step, r.y + r.dy * step, r.speed * 2);
-        return Screen(r.drawn.x, r.drawn.y);
+        double along = (r.drawn.x - r.x) * r.dx + (r.drawn.y - r.y) * r.dy, past = System.Math.Max(0, along - State.weapons.StepAhead(r, dt));
+        Vector2 at = Screen(r.drawn.x - r.dx * past, r.drawn.y - r.dy * past);
+        double trail = System.Math.Min(slugTrailPx * r.speed / State.weapons.stats.slugSpeedUnits, (r.travelled + along) * pxPerUnit) - past * pxPerUnit;
+        tail = at + new Vector2((float)-r.dx, (float)r.dy) * (float)System.Math.Max(0, trail); // board y is down
+        return at;
     }
     // The targeting computer's white corners round a point on the plot.
     void AddCorners(List<MarksGraphic.Shape> shapes, Vector2 c, float half)
@@ -513,14 +518,14 @@ public class PlotPanel : Panel
         for (int i = graded; i < gradeLabels.Count; i++) gradeLabels[i].gameObject.SetActive(false);
         ShowJumpPoint(shapes);
         for (int i = all.Count; i < hits.Count; i++) hits[i].gameObject.SetActive(false);
-        // our slugs in flight (Step 48): a dot with a short trail fading behind it, no label;
+        // our slugs and torpedoes in flight (Step 48): a dot with a trail fading behind it, no label;
         // white like our ship, not the marks' blue (owner 2026-10-26)
         var slugInk = ownShipColor.gamma;
         foreach (var r in s.weapons.Rounds)
         {
-            Vector2 at = ShotAt(r), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
+            Vector2 tail, at = ShotAt(r, out tail);
             shapes.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = slugInk });
-            shapes.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f, ink = slugInk });
+            shapes.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = tail, alpha = 0.8f, ink = slugInk });
         }
         // a prize our marines hold (Step 60): an own-force dot where it lies, no label (placeholder until its glyph)
         foreach (var t in s.tracks)
@@ -546,31 +551,30 @@ public class PlotPanel : Panel
             var ink = ownShipColor.gamma; // owner 2026-10-26: white, like our ship
             foreach (var f in s.hangar.Flights)
             {
-                double h = f.hdg * System.Math.PI / 180.0;
-                Vector2 ahead = new Vector2((float)System.Math.Sin(h), (float)-System.Math.Cos(h)), right = new Vector2(-ahead.y, ahead.x); // board y is down
                 Controls.Slide(ref f.drawn, f.x, f.y, f.x, f.y); // owner 2026-11-01: it slides after the flight, up to one tick behind
-                Vector2 lead = Screen(f.drawn.x, f.drawn.y);
-                if (f.order == "escort" && !f.returning)
-                {
-                    // owner 2026-10-26: an escort holds outside the small circle, whole V clear, even after zooming out grows it
-                    Vector2 off = lead - OwnAt;
-                    float clear = InnerRingPx + f.craft / 2 * fighterGapPx + fighterPx / 2f;
-                    if (off.magnitude < clear) lead = OwnAt + (off.sqrMagnitude > 0f ? off.normalized : ahead) * clear;
-                }
+                double drawnX, drawnY;
+                float drawnHdg = FlightAt(f, out drawnX, out drawnY);
+                double h = drawnHdg * System.Math.PI / 180.0;
+                Vector2 ahead = new Vector2((float)System.Math.Sin(h), (float)-System.Math.Cos(h)), right = new Vector2(-ahead.y, ahead.x); // board y is down
+                Vector2 lead = Screen(drawnX, drawnY), off = lead - OwnAt;
+                float clear = InnerRingPx + f.craft / 2 * fighterGapPx + fighterPx / 2f;
+                // owner 2026-10-26: an escort holds outside the small circle, whole V clear, even after zooming out grows it
+                if (f.order == "escort" && !f.returning && f.runLeft <= 0 && off.magnitude < clear) lead = OwnAt + (off.sqrMagnitude > 0f ? off.normalized : ahead) * clear;
+                float open = Mathf.Clamp01((lead - OwnAt).magnitude / clear); // owner 2026-11-02: the V opens as it leaves the ship and closes as it lands
                 for (int c = 0; c < f.craft; c++)
                 {
                     int row = (c + 1) / 2;
                     var img = Fighter(nf++);
                     img.color = ink;
                     img.rectTransform.sizeDelta = new Vector2(fighterPx * 0.5f, fighterPx);
-                    Put(img.rectTransform, lead + (right * (c % 2 == 1 ? -row : row) - ahead * row) * fighterGapPx, -(float)f.hdg);
+                    Put(img.rectTransform, lead + (right * (c % 2 == 1 ? -row : row) - ahead * row) * fighterGapPx * open, -drawnHdg);
                 }
             }
             for (int i = nf; i < fighters.Count; i++) fighters[i].gameObject.SetActive(false);
         }
         FightersShown = nf;
-        // a squadron takes off with its whole V (rows behind the leader, half a craft) outside the small circle round
-        // our ship, and lands when its leader's nose reaches the circle
+        // an escort flies out until its whole V (rows behind the leader, half a craft) is outside the small circle round
+        // our ship, and a squadron lands when its leader's nose reaches the circle
         double kmPx = UnitsPerPx / Controls.ZoomExact;
         s.hangar.landClearUnits = (InnerRingPx + fighterPx / 2f) * kmPx;
         s.hangar.launchClearUnits = s.hangar.landClearUnits + s.hangar.SquadReady(s.hangar.CurrentSquad) / 2 * fighterGapPx * kmPx;
@@ -723,12 +727,12 @@ public class PlotPanel : Panel
         if (world && s.sensors.Listening)
             foreach (var d in world.FalseDots) // owner 2026-11-02: rocks' false contacts; they look like any faint dot, and fade
                 dots.Add(new MarksGraphic.Shape { kind = "point", a = Screen(d.at.x, d.at.y), b = Screen(d.at.x, d.at.y), alpha = 1f - (Controls.MissionSeconds - d.bornAt) / Mathf.Max(1f, world.FalseDotSeconds) });
-        // enemy missiles coming at us (Step 55): a red dot with a short trail, like our own rounds, no label
+        // enemy torpedoes coming at us (Step 55): a red dot with a trail, like our own rounds, no label
         foreach (var r in s.weapons.Incoming)
         {
-            Vector2 at = ShotAt(r), back = new Vector2((float)-r.dx, (float)r.dy) * slugTrailPx; // board y is down
+            Vector2 tail, at = ShotAt(r, out tail);
             dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
-            dots.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = at + back, alpha = 0.8f });
+            dots.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = tail, alpha = 0.8f });
         }
         if (contactMarks) contactMarks.Set(dots);
 
@@ -893,6 +897,20 @@ public class PlotPanel : Panel
             if (wc && wc.trackKey == key) return v;
         }
         return null;
+    }
+
+    // Owner 2026-11-02: where a flight is drawn now, on a curve from its last spot to its new one that follows its heading at each
+    // end, as far along as its slide has got. Returns the way it points there.
+    float FlightAt(HangarSystem.Flight f, out double x, out double y)
+    {
+        double cx = f.x - f.fromX, cy = f.y - f.fromY, chord = System.Math.Sqrt(cx * cx + cy * cy);
+        double lx = f.x - f.drawn.x, ly = f.y - f.drawn.y;
+        double k = chord > 0 ? System.Math.Max(0, 1 - System.Math.Sqrt(lx * lx + ly * ly) / chord) : 1;
+        double from = f.fromHdg * System.Math.PI / 180, to = f.hdg * System.Math.PI / 180;
+        double along = k * k * (3 - 2 * k), leave = k * (1 - k) * (1 - k) * chord, arrive = k * k * (1 - k) * chord;
+        x = f.fromX + cx * along + System.Math.Sin(from) * leave - System.Math.Sin(to) * arrive;
+        y = f.fromY + cy * along + System.Math.Cos(from) * leave - System.Math.Cos(to) * arrive;
+        return Mathf.LerpAngle((float)f.fromHdg, (float)f.hdg, (float)k);
     }
 
     Image Fighter(int i)

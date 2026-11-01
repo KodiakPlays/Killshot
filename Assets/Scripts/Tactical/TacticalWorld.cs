@@ -476,7 +476,7 @@ public class TacticalWorld : MonoBehaviour
     }
 
     /// <summary>A level's spawn sets whether this contact's brain hunts us and fires (owner 2026-10-29: in the training
-    /// levels it does neither; hit, it no longer answers with missiles) and, at 0 or more, its cruising speed.</summary>
+    /// levels it does neither; hit, it no longer answers with torpedoes) and, at 0 or more, its cruising speed.</summary>
     public void Hunts(string key, bool on, float cruiseUnits)
     {
         for (int i = 0; i < contacts.Length; i++)
@@ -565,6 +565,7 @@ public class TacticalWorld : MonoBehaviour
             ship.missionNow = board.State.missionNow;
             // EMP (Step 53): power is out until it wears off; then its engines come back
             if (ship.empUntil > 0f && ship.missionNow >= ship.empUntil) { ship.empUntil = 0f; ship.power.PowerEngines(); }
+            ship.damage.TickParty(board.TickGameSeconds);
             ship.damage.TickConditions(board.TickGameSeconds); // Step 59: its fires, vacuum and radiation, held still or not
             if (!brain || !brain.enabled) continue;
             if (ship.destroyed || ship.captured) ship.nav.throttle = 0; // a wreck, or a prize our marines hold (Step 60), makes no way of its own

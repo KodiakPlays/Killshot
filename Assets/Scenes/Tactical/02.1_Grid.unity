@@ -575,19 +575,19 @@ MonoBehaviour:
     - tag: 03
       pilot: IDE
       state: READY
-      fuel: 96
+      fuel: 100
     - tag: 04
       pilot: MARCHETTI
       state: READY
-      fuel: 88
+      fuel: 100
     - tag: 05
       pilot: REYES
-      state: REARM
-      fuel: 41
+      state: READY
+      fuel: 100
     - tag: 06
       pilot: OKONKWO
-      state: DOWN
-      fuel: 0
+      state: READY
+      fuel: 100
   - key: ih
     name: ASSAULT BOAT
     shortName: ASSLT
@@ -613,11 +613,11 @@ MonoBehaviour:
     - tag: 13
       pilot: ELLERY
       state: READY
-      fuel: 74
+      fuel: 100
     - tag: 14
       pilot: BRENNAN
-      state: REARM
-      fuel: 62
+      state: READY
+      fuel: 100
   squad: 0
   order: destroy
   launchedSquads: []
@@ -678,7 +678,7 @@ MonoBehaviour:
     label: PDC
     shot: 25
   - id: MS
-    label: MISSILE
+    label: TORPEDO
     shot: 40
   warheads:
   - HE
@@ -861,6 +861,8 @@ MonoBehaviour:
   legMinUnits: 4000
   searchUnits: 2000
   gainByAwareness: 03000000030000000400000005000000
+  giveUpSeconds: 90
+  turnBackChance: 0.25
   fighterSignal: 60
   searchingAt: 0.25
   alertAt: 0.5
@@ -1544,6 +1546,10 @@ MonoBehaviour:
   board: {fileID: 1765047281}
   dropTracksWithoutContact: 1
   levelScene: Level_01
+  rockInterferenceUnits: 500
+  rockCloseUnits: 500
+  falseDotChance: 0.15
+  falseDotSeconds: 8
   crashKeepSpeed: 0.3
   crashRepeatSeconds: 3
   rockWarnSeconds: 30
@@ -2217,6 +2223,8 @@ MonoBehaviour:
   legMinUnits: 4000
   searchUnits: 2000
   gainByAwareness: 03000000030000000400000005000000
+  giveUpSeconds: 90
+  turnBackChance: 0.25
   fighterSignal: 60
   searchingAt: 0.25
   alertAt: 0.5
@@ -2354,7 +2362,7 @@ MonoBehaviour:
     label: PDC
     shot: 25
   - id: MS
-    label: MISSILE
+    label: TORPEDO
     shot: 40
   warheads:
   - HE
@@ -2453,19 +2461,19 @@ MonoBehaviour:
     - tag: 03
       pilot: IDE
       state: READY
-      fuel: 96
+      fuel: 100
     - tag: 04
       pilot: MARCHETTI
       state: READY
-      fuel: 88
+      fuel: 100
     - tag: 05
       pilot: REYES
-      state: REARM
-      fuel: 41
+      state: READY
+      fuel: 100
     - tag: 06
       pilot: OKONKWO
-      state: DOWN
-      fuel: 0
+      state: READY
+      fuel: 100
   - key: ih
     name: ASSAULT BOAT
     shortName: ASSLT
@@ -2491,11 +2499,11 @@ MonoBehaviour:
     - tag: 13
       pilot: ELLERY
       state: READY
-      fuel: 74
+      fuel: 100
     - tag: 14
       pilot: BRENNAN
-      state: REARM
-      fuel: 62
+      state: READY
+      fuel: 100
   squad: 0
   order: destroy
   launchedSquads: []
@@ -3054,7 +3062,7 @@ MonoBehaviour:
     label: PDC
     shot: 25
   - id: MS
-    label: MISSILE
+    label: TORPEDO
     shot: 40
   warheads:
   - HE
@@ -3153,19 +3161,19 @@ MonoBehaviour:
     - tag: 03
       pilot: IDE
       state: READY
-      fuel: 96
+      fuel: 100
     - tag: 04
       pilot: MARCHETTI
       state: READY
-      fuel: 88
+      fuel: 100
     - tag: 05
       pilot: REYES
-      state: REARM
-      fuel: 41
+      state: READY
+      fuel: 100
     - tag: 06
       pilot: OKONKWO
-      state: DOWN
-      fuel: 0
+      state: READY
+      fuel: 100
   - key: ih
     name: ASSAULT BOAT
     shortName: ASSLT
@@ -3191,11 +3199,11 @@ MonoBehaviour:
     - tag: 13
       pilot: ELLERY
       state: READY
-      fuel: 74
+      fuel: 100
     - tag: 14
       pilot: BRENNAN
-      state: REARM
-      fuel: 62
+      state: READY
+      fuel: 100
   squad: 0
   order: destroy
   launchedSquads: []

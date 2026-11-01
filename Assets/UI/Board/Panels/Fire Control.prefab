@@ -14541,7 +14541,7 @@ GameObject:
   - component: {fileID: 6771125600673088496}
   - component: {fileID: 3617260388704056097}
   m_Layer: 5
-  m_Name: MISSILE label
+  m_Name: TORPEDO label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14594,7 +14594,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MISSILE
+  m_text: TORPEDO
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: cb0bd2ec5e4244f009e5536b9e245560, type: 2}

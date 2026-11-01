@@ -306,7 +306,7 @@ public class DamageSystem : MonoBehaviour
         SyncCond();
     }
 
-    /// <summary>A missile's warhead strikes this ship (Step 53, owner 2026-10-23). HE hits the armour hard,
+    /// <summary>A torpedo's warhead strikes this ship (Step 53, owner 2026-10-23). HE hits the armour hard,
     /// then what is behind it; PENETRATOR goes straight to a compartment behind the side; EMP does no
     /// hull damage but knocks the power out. by: the firing ship's numbers.</summary>
     public string TakeWarhead(string side, string warheadName, WeaponSystem.Stats by)

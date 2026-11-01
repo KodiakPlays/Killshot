@@ -30,6 +30,15 @@ public class HangarSystem : MonoBehaviour
         public float fighterArmourDamage = 10f;
         [Tooltip("Integrity each fighter takes off a compartment through an open side, per run.")]
         public int fighterCompartmentDamage = 1;
+        [Header("Leaving the ship and turning, fighters and boats (owner 2026-11-02)")]
+        [Tooltip("A squadron leaves straight out of the ship's side, tilted this many degrees toward the stern.")]
+        public double launchTiltBackDeg = 15;
+        [Tooltip("How far it flies straight out before it can turn, units.")]
+        public double launchRunUnits = 200;
+        [Tooltip("The sharpest it turns, degrees per game second.")]
+        public double turnDegPerS = 90;
+        [Tooltip("How fast a turn builds up and eases off, degrees per game second gained each game second. Lower is gentler.")]
+        public double turnEase = 180;
         [Header("Assault boats (Step 60, BOARDING_README.md)")]
         [Tooltip("Assault boat speed, units/s (Step 63: x5).")]
         [FormerlySerializedAs("boatSpeedKms")] public double boatSpeedUnits = 30;
@@ -81,13 +90,13 @@ public class HangarSystem : MonoBehaviour
             orders = new[] { "destroy", "disable", "escort" }, orderLabels = new[] { "DESTROY", "DISABLE", "ESCORT" },
             craft = new[] {
                 new Craft { tag = "01", pilot = "HALLORAN", fuel = 100, state = "READY" }, new Craft { tag = "02", pilot = "VOSS", fuel = 100, state = "READY" },
-                new Craft { tag = "03", pilot = "IDE", fuel = 96, state = "READY" }, new Craft { tag = "04", pilot = "MARCHETTI", fuel = 88, state = "READY" },
-                new Craft { tag = "05", pilot = "REYES", fuel = 41, state = "REARM" }, new Craft { tag = "06", pilot = "OKONKWO", fuel = 0, state = "DOWN" } } },
+                new Craft { tag = "03", pilot = "IDE", fuel = 100, state = "READY" }, new Craft { tag = "04", pilot = "MARCHETTI", fuel = 100, state = "READY" },
+                new Craft { tag = "05", pilot = "REYES", fuel = 100, state = "READY" }, new Craft { tag = "06", pilot = "OKONKWO", fuel = 100, state = "READY" } } },
         new Squad { key = "ih", name = "ASSAULT BOAT", shortName = "ASSLT", type = "ASSAULT BOAT", role = "BOARDING / SECURE",
             orders = new[] { "destroy", "disable", "secure" }, orderLabels = new[] { "DESTROY", "DISABLE", "SECURE" },
             craft = new[] {
                 new Craft { tag = "11", pilot = "DRAKOS", fuel = 100, state = "READY" }, new Craft { tag = "12", pilot = "SANTOS", fuel = 100, state = "READY" },
-                new Craft { tag = "13", pilot = "ELLERY", fuel = 74, state = "READY" }, new Craft { tag = "14", pilot = "BRENNAN", fuel = 62, state = "REARM" } } },
+                new Craft { tag = "13", pilot = "ELLERY", fuel = 100, state = "READY" }, new Craft { tag = "14", pilot = "BRENNAN", fuel = 100, state = "READY" } } },
     };
     public int squad;                 // index into squads ("gw")
     public string order = "destroy";
@@ -102,7 +111,7 @@ public class HangarSystem : MonoBehaviour
     };
     public bool doorsOpen;
     [Range(0, 359)] public int lbrg = 62;
-    [Tooltip("Launch refused while the launch bearing is more than this from the heading (launchBlock).")]
+    [Tooltip("The Hangar panel shows the launch bearing's number in red past this.")]
     public float launchConeDeg = 60f;
     [Tooltip("The launch lever (llever), 0..1; launches once past leverFireAt.")]
     [Range(0f, 1f)] public float launchLever;
@@ -128,11 +137,14 @@ public class HangarSystem : MonoBehaviour
         public bool stranded;
         public float strandT;
         [System.NonSerialized] public BoardManager.Glide drawn; // owner 2026-11-01: where the plot draws it, sliding behind x and y
+        [Tooltip("Owner 2026-11-02: how far it still flies straight out of the ship, units, and how fast it is turning now, degrees per game second.")]
+        public double runLeft, turn;
+        [System.NonSerialized] public double fromX, fromY, fromHdg; // where it was at the last tick: the plot draws the curve from there
     }
     [System.NonSerialized] private System.Collections.Generic.List<Flight> flights;
     public System.Collections.Generic.List<Flight> Flights => flights ?? (flights = new System.Collections.Generic.List<Flight>());
-    /// <summary>How far out a squadron takes off, and lands, units: the plot sets both each frame from the small circle
-    /// round our ship at the current zoom, so the whole V takes off clear of it and lands as its leader reaches it.</summary>
+    /// <summary>How far out an escort flies, and where a squadron lands, units: the plot sets both each frame from the small circle
+    /// round our ship at the current zoom, so an escort's whole V clears it, and a squadron lands as its leader reaches it.</summary>
     [System.NonSerialized] public double launchClearUnits, landClearUnits;
     double LandUnits => System.Math.Max(50, landClearUnits);
     [System.NonSerialized] public int boardings;
@@ -185,6 +197,7 @@ public class HangarSystem : MonoBehaviour
         for (int i = list.Count - 1; i >= 0; i--)
         {
             var f = list[i];
+            f.fromX = f.x; f.fromY = f.y; f.fromHdg = f.hdg;
             bool boats = f.squad == "ih"; // the assault boats carry marines (Step 60)
             var t = f.returning || f.order == "escort" ? null : ship.TrackOf(f.targetKey);
             if (!f.returning && f.order != "escort" && (t == null || !t.hasWorld || t.wreck || t.captured)) { f.returning = true; f.attacking = false; f.aboard = false; t = null; }
@@ -211,13 +224,11 @@ public class HangarSystem : MonoBehaviour
                     boatWarnings++;
                 }
             }
-            if (d > reach && !lost)
+            if ((d > reach || f.runLeft > 0) && !lost)
             {
-                double step = System.Math.Min((boats ? stats.boatSpeedUnits : stats.fighterSpeedUnits) * dt, d - reach * 0.9);
-                f.x += dx / d * step; f.y += dy / d * step;
-                f.hdg = (System.Math.Atan2(dx, dy) * 180 / System.Math.PI + 360) % 360;
+                bool there = Fly(f, gx, gy, boats ? stats.boatSpeedUnits : stats.fighterSpeedUnits, reach, dt);
                 f.holding = null;
-                if (!f.aboard) continue; // owner 2026-10-27: aboard, the boats ride with the ship and the fight goes on
+                if (!there && !f.aboard) continue; // owner 2026-10-27: aboard, the boats ride with the ship and the fight goes on
             }
             if (f.returning)
             {
@@ -247,6 +258,30 @@ public class HangarSystem : MonoBehaviour
             flightReport = result;
             if (enemy.destroyed && !t.wreck) ship.Kill(t);
         }
+    }
+
+    // Owner 2026-11-02: one tick of flight. It flies straight out of the ship first, then turns onto (gx, gy), the turn building
+    // and easing off. Short steps keep the curve the same at every game speed. True once it is within reach.
+    bool Fly(Flight f, double gx, double gy, double speed, double reach, double dt)
+    {
+        const double step = 0.05;
+        for (double left = dt; left > 0; left -= step)
+        {
+            double h = System.Math.Min(left, step), dx = gx - f.x, dy = gy - f.y;
+            if (f.runLeft > 0) f.runLeft -= speed * h;
+            else
+            {
+                if (dx * dx + dy * dy <= reach * reach) return true;
+                double off = ((System.Math.Atan2(dx, dy) * 180 / System.Math.PI - f.hdg) % 360 + 540) % 360 - 180;
+                double most = stats.turnDegPerS, ease = stats.turnEase;
+                double want = System.Math.Max(-most, System.Math.Min(most, off * ease / most));
+                f.turn += System.Math.Max(-ease * h, System.Math.Min(ease * h, want - f.turn));
+                f.hdg = (f.hdg + f.turn * h + 360) % 360;
+            }
+            double b = f.hdg * System.Math.PI / 180;
+            f.x += System.Math.Sin(b) * speed * h; f.y += System.Math.Cos(b) * speed * h;
+        }
+        return false;
     }
 
     // Step 60 (owner 2026-10-24, BOARDING_README.md): the boats hold off until a face is open and the ship is nearly
@@ -308,7 +343,6 @@ public class HangarSystem : MonoBehaviour
         if (SquadReady(q) == 0) return "NO CRAFT READY";
         if (q.key == "ih" && marines < 1) return "NO MARINES ABOARD"; // Step 60
         if (q.key == "ih" && !ship.Scanned(ship.TrackOf(ship.weapons.target))) return "TARGET NOT SCANNED"; // owner 2026-11-01: no scan, no boarding
-        if (LaunchDev > launchConeDeg) return "BEARING OUTSIDE LAUNCH CONE";
         return null;
     }
 
@@ -361,10 +395,14 @@ public class HangarSystem : MonoBehaviour
         launchedSquads.Add(q.key);
         launchedOrders.Add(order);
         // Step 54: the squadron's ready craft take off from our ship, for fire control's target;
-        // owner 2026-10-26: on the launch bearing, just outside the small circle round our ship, never on the hull
-        double lb = lbrg * System.Math.PI / 180.0;
-        var f = new Flight { squad = q.key, order = order, targetKey = ship.weapons.target, craft = SquadReady(q),
-                             x = ship.nav.x + System.Math.Sin(lb) * launchClearUnits, y = ship.nav.y + System.Math.Cos(lb) * launchClearUnits, hdg = lbrg };
+        // owner 2026-11-02: from the side facing it, tilted a little toward the stern, flying out clear of the ship before they turn
+        var aim = ship.TrackOf(ship.weapons.target);
+        double heading = ship.nav.heading;
+        int side = aim != null && aim.hasWorld && ((System.Math.Atan2(aim.worldX - ship.nav.x, aim.worldY - ship.nav.y) * 180 / System.Math.PI - heading) % 360 + 360) % 360 > 180 ? -1 : 1;
+        double lb = (heading + side * 90) * System.Math.PI / 180.0, hull = ship.nav.BoxHalf.x;
+        double x = ship.nav.x + System.Math.Sin(lb) * hull, y = ship.nav.y + System.Math.Cos(lb) * hull, hdg = (heading + side * (90 + stats.launchTiltBackDeg) + 360) % 360;
+        var f = new Flight { squad = q.key, order = order, targetKey = ship.weapons.target, craft = SquadReady(q), x = x, y = y, hdg = hdg,
+                             fromX = x, fromY = y, fromHdg = hdg, runLeft = order == "escort" ? System.Math.Max(stats.launchRunUnits, launchClearUnits) : stats.launchRunUnits };
         if (q.key == "ih") { f.marines = Mathf.Min(marines, f.craft * stats.marinesPerBoat); marines -= f.marines; } // Step 60: the boats take marines
         Flights.Add(f);
     }

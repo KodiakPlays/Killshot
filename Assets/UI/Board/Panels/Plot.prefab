@@ -2418,7 +2418,7 @@ MonoBehaviour:
   draftAlpha: 0.75
   rulerSnapPx: 12
   projectSeconds: 300
-  slugTrailPx: 24
+  slugTrailPx: 120
   weaponRing: {fileID: 8019246136933200248}
   pdcArcStepDeg: 2
   railArcAlpha: 0.6

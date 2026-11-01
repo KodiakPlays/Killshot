@@ -12,7 +12,7 @@ using TMPro;
 /// mountLabel, mountArc, mountRange, sysState/Ink, solLamp, trackId/Ink, trackSrc, solInk, solRange,
 /// solBrg, solSpd, rng/brg/spdAngle, capPct, capCells, capLabel, capInk, capLamp, capNote,
 /// interlocks, leverLeft, leverTrack, readyLabel/Ink) and UIStateSpec §8.2 and §11.
-/// The PDC (quadrants, LOADERS) and missile (warhead, SALVO) controls were never measured — the
+/// The PDC (quadrants, LOADERS) and torpedo (warhead, SALVO) controls were never measured — the
 /// drawer was measured on RAILGUN — so they are not drawn (HANDOFF_GAPS); their state still shows.
 /// </summary>
 public class FireControlPanel : Panel
@@ -86,7 +86,7 @@ public class FireControlPanel : Panel
         {
             case "fc.sight": if (Controls.Motion) Controls.Motion.ToggleScope(); return true;
             case "fc.system": s.weapons.CycleSystem(); return true;
-            case "fc.mount": if (s.weapons.sys == "MS") s.weapons.CycleWarhead(); else s.weapons.CycleMount(); return true; // Step 53: with one launcher, the knob picks the warhead
+            case "fc.mount": if (s.weapons.sys == "MS") s.weapons.CycleWarhead(); else s.weapons.CycleMount(); return true; // Step 53: the launcher picks itself, so the knob picks the warhead
             case "fc.track": s.weapons.ComputeSol(); return true;
             case "fc.flip": s.weapons.Flip(int.Parse(arg)); return true;
         }

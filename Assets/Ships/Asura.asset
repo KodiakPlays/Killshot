@@ -86,14 +86,6 @@ MonoBehaviour:
       halfArc: 135
       rangeUnits: 600
       ammo: 2400
-    - id: VLS
-      label: MISSILE VLS
-      shortName: VLS
-      kind: MS
-      arc: 0
-      halfArc: 180
-      rangeUnits: 3000
-      ammo: 8
     - id: PDC
       label: PDC GROUP C
       shortName: PDC-C
@@ -111,20 +103,20 @@ MonoBehaviour:
       rangeUnits: 600
       ammo: 2400
     - id: MSA
-      label: MISSILE VLS A
+      label: TORPEDO VLS A
       shortName: VLS-A
       kind: MS
       arc: 270
-      halfArc: 90
+      halfArc: 180
       rangeUnits: 3000
       ammo: 8
     - id: MSB
-      label: MISSILE VLS B
+      label: TORPEDO VLS B
       shortName: VLS-B
       kind: MS
       arc: 90
-      halfArc: 90
-      rangeUnits: 5000
+      halfArc: 180
+      rangeUnits: 3000
       ammo: 8
     hardPoints:
     - at: {x: 25, y: 50}
@@ -153,9 +145,16 @@ MonoBehaviour:
     wepFeedPerUnit: 5
     wepBleed: 3
     slugSpeedUnits: 300
-    missileSpeedUnits: 400
-    missileTurnDegPerS: 120
-    missileSpreadDeg: 3
+    torpedoSpeedUnits: 250
+    torpedoLaunchSpeedUnits: 80
+    torpedoCoastSeconds: 2.5
+    torpedoCoastSpeedUnits: 15
+    torpedoTiltBackDeg: 15
+    torpedoCurveDegPerS: 32
+    torpedoTurnBuildSeconds: 0.5
+    torpedoBurnUnits: 300
+    torpedoTurnDegPerS: 120
+    torpedoSpreadDeg: 20
     pdcRoundsPerGo: 100
     hitMarginPercent: 25
     slugArmourDamage: 50
@@ -174,6 +173,10 @@ MonoBehaviour:
     fighterRunSeconds: 30
     fighterArmourDamage: 10
     fighterCompartmentDamage: 1
+    launchTiltBackDeg: 15
+    launchRunUnits: 200
+    turnDegPerS: 90
+    turnEase: 180
     boatSpeedUnits: 75
     marines: 18
     marinesPerBoat: 6

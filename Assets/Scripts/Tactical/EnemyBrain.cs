@@ -13,7 +13,7 @@ using UnityEngine.Serialization;
 /// - UNEASY: heard faintly. It heads for where it heard us.
 /// - SEARCHING: heard clearly, or twice in a minute. It goes faster, then searches round that spot.
 /// - ALERT: heard loud and close, seen, or hit. QuestSystem starts the reinforcements' countdown. It closes
-///   to its railguns' reach, turns a side to us, and fires railguns and missile salvos while it has a fix.
+///   to its railguns' reach, turns a side to us, and fires railguns and torpedo salvos while it has a fix.
 /// </summary>
 [RequireComponent(typeof(WorldContact))]
 public class EnemyBrain : MonoBehaviour
@@ -66,13 +66,13 @@ public class EnemyBrain : MonoBehaviour
     [Tune("Enemy")] [SerializeField] private float railgunJitterSeconds = 5f;
     [Tooltip("Its aim is off by up to this, degrees, either way: a long shot misses more often.")]
     [Tune("Enemy")] [SerializeField] private float aimErrorDeg = 0.4f;
-    [Tooltip("ALERT with a fix: game seconds between missile salvos.")]
+    [Tooltip("ALERT with a fix: game seconds between torpedo salvos.")]
     [Tune("Enemy")] [SerializeField] private float salvoSeconds = 90f;
 
     [Header("Firing back (Step 55, owner 2026-10-24)")]
-    [Tooltip("It fires at all: railguns and missiles. Off, it holds its fire (a playtest stand-in).")]
+    [Tooltip("It fires at all: railguns and torpedoes. Off, it holds its fire (a playtest stand-in).")]
     [Tune("Enemy")] public bool firesBack = true;
-    [Tooltip("Missiles in a salvo (HE).")]
+    [Tooltip("Torpedoes in a salvo (HE).")]
     [Tune("Enemy")] [SerializeField] private int fireBackSalvo = 2;
     [Tooltip("When we hit it before it is ALERT: at most one salvo this often, game seconds.")]
     [Tune("Enemy")] [SerializeField] private float fireBackSeconds = 120f;
@@ -128,9 +128,12 @@ public class EnemyBrain : MonoBehaviour
         if (hunts && !us.destroyed) Listen(ship, us, at, ours, dist, now, hit);
         bool fix = Level == Awareness.Alert && HasFix(now);
 
+        // owner 2026-11-01: a hit magazine can't fire, so the crew go and repair it, by the same rules as ours
+        if (!ship.damage.MagOk && !ship.damage.PartyOut) { ship.damage.PickComp("mag"); ship.damage.ApplyOrder("party"); }
+
         if (firesBack && !us.destroyed && ship.damage.MagOk && now >= ship.empUntil)
         {
-            // missiles: when hit (Step 55), and every salvoSeconds once ALERT with a fix
+            // torpedoes: when hit (Step 55), and every salvoSeconds once ALERT with a fix
             WeaponSystem.Mount vls = null;
             foreach (var m in ship.weapons.stats.mounts)
                 if (vls == null && m.kind == "MS" && m.ammo > 0 && dist <= m.rangeUnits && ship.weapons.OnDot(m.id)) vls = m;
@@ -138,7 +141,7 @@ public class EnemyBrain : MonoBehaviour
             {
                 int n = Mathf.Min(fireBackSalvo, vls.ammo);
                 Vector2 tube = ship.weapons.HardPointOffset(vls.id, ship.nav.heading);
-                us.weapons.LaunchAt(ship.weapons.stats, ship.nav.x + tube.x, ship.nav.y + tube.y, n, 0, vls.rangeUnits); // HE
+                us.weapons.LaunchAt(ship.weapons.stats, ship.nav.x + tube.x, ship.nav.y + tube.y, ship.nav.heading, vls.arc, n, 0, vls.rangeUnits); // HE
                 vls.ammo -= n;
                 nextSalvo = now + (fix ? salvoSeconds : fireBackSeconds);
             }

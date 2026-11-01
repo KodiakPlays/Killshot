@@ -112,7 +112,7 @@ public class StarwolfTuningWindow : EditorWindow
     // ---- the Hard Points tab (owner, 2026-11-01) ---------------------------------------------------------------
 
     const float HullPx = 300f, ConePx = 150f, DotPx = 7f, GrabPx = 14f, HullPad = 20f;
-    static readonly Color Gun = new Color(0.88f, 0.63f, 0.13f), PdcInk = new Color(0.9f, 0.45f, 0.75f), MissileInk = new Color(0.88f, 0.3f, 0.24f), HullFill = new Color(0.22f, 0.25f, 0.28f), HullEdge = new Color(0.8f, 0.83f, 0.86f);
+    static readonly Color Gun = new Color(0.88f, 0.63f, 0.13f), PdcInk = new Color(0.9f, 0.45f, 0.75f), TorpedoInk = new Color(0.88f, 0.3f, 0.24f), HullFill = new Color(0.22f, 0.25f, 0.28f), HullEdge = new Color(0.8f, 0.83f, 0.86f);
     ShipStats[] hullFiles;
     [SerializeField] int hullFile, hullDot, hullMarks = 4;
 
@@ -246,7 +246,7 @@ public class StarwolfTuningWindow : EditorWindow
         string name = EditorGUILayout.TextField(new GUIContent("Name", "On the Fire Control drawer."), gun.label);
         string tag = EditorGUILayout.TextField(new GUIContent("Short name", "On the Fire Control knob."), gun.shortName);
         float reach = EditorGUILayout.Slider(new GUIContent("Reach", "Units."), gun.rangeUnits, 0f, MostRangeUnits);
-        int ammo = EditorGUILayout.IntField(new GUIContent("Ammunition", "Slugs, rounds or missile cells at the start."), gun.ammo);
+        int ammo = EditorGUILayout.IntField(new GUIContent("Ammunition", "Slugs, rounds or torpedo cells at the start."), gun.ammo);
         int arc = EditorGUILayout.IntSlider(new GUIContent("Direction", "Degrees round from the nose: 90 is straight out of the right side."), gun.arc, 0, 359);
         int cone = EditorGUILayout.IntSlider(new GUIContent("Cone width", "Degrees, edge to edge. 360: all round."), gun.halfArc * 2, 0, 360);
         if (EditorGUI.EndChangeCheck())
@@ -271,7 +271,7 @@ public class StarwolfTuningWindow : EditorWindow
         {
             if (GUILayout.Button("New railgun")) NewWeapon(file, "RG", "RAILGUN TURRET", "RG");
             if (GUILayout.Button("New PDC")) NewWeapon(file, "PD", "PDC GROUP", "PDC");
-            if (GUILayout.Button("New missile launcher")) NewWeapon(file, "MS", "MISSILE VLS", "VLS");
+            if (GUILayout.Button("New torpedo launcher")) NewWeapon(file, "MS", "TORPEDO VLS", "VLS");
         }
         var loose = file.weapons.mounts.Where(m => !file.weapons.hardPoints.Any(h => h.mount == m.id)).Select(m => m.shortName).ToArray();
         if (loose.Length > 0) EditorGUILayout.HelpBox("On no dot, so they can't fire: " + string.Join(", ", loose) + ". Pick a dot, then choose it under On this dot.", MessageType.Warning);
@@ -364,7 +364,7 @@ public class StarwolfTuningWindow : EditorWindow
     }
     static float KindRange(ShipStats f, string kind) { var m = f.weapons.mounts.FirstOrDefault(x => x.kind == kind); return m != null ? m.rangeUnits : 0f; }
     static void SetKind(ShipStats f, float units, string kind) { foreach (var m in f.weapons.mounts) if (m.kind == kind) m.rangeUnits = units; }
-    static Color Ink(string kind) => kind == "PD" ? PdcInk : kind == "MS" ? MissileInk : Gun;
+    static Color Ink(string kind) => kind == "PD" ? PdcInk : kind == "MS" ? TorpedoInk : Gun;
 
     static readonly Ring[] Rings =
     {
@@ -373,7 +373,7 @@ public class StarwolfTuningWindow : EditorWindow
         new Ring("DRADIS, dial at 5", new Color(0.3f, 0.5f, 1f), f => DialRange(f, DialTop), (f, u) => SetDial(f, DialRange(f, 1), u)),
         new Ring("Railguns", Gun, f => KindRange(f, "RG"), (f, u) => SetKind(f, u, "RG")),
         new Ring("PDCs", PdcInk, f => KindRange(f, "PD"), (f, u) => SetKind(f, u, "PD")),
-        new Ring("Missiles", MissileInk, f => KindRange(f, "MS"), (f, u) => SetKind(f, u, "MS")),
+        new Ring("Torpedoes", TorpedoInk, f => KindRange(f, "MS"), (f, u) => SetKind(f, u, "MS")),
         new Ring("Assault boats", new Color(0.4f, 0.85f, 0.5f), f => (float)f.hangar.boatRangeUnits, (f, u) => f.hangar.boatRangeUnits = u),
     };
 

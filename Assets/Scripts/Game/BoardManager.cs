@@ -159,7 +159,7 @@ public class BoardManager : MonoBehaviour
     [SerializeField] private GameObject[] alarmParts;
     [Tooltip("The strip's count (\"3\") and its words (\"NEW CONTACTS\").")]
     [SerializeField] private TMP_Text alarmCount, alarmText;
-    [Tooltip("Owner 2026-10-28 (the Wolf Hunt play-through): what just hit us (a slug, a missile, debris) stays on the "
+    [Tooltip("Owner 2026-10-28 (the Wolf Hunt play-through): what just hit us (a slug, a torpedo, debris) stays on the "
            + "strip this long, real seconds.")]
     [SerializeField] private float hitLineSeconds = 4f;
     [Tooltip("Owner 2026-11-01: a crash or a hit on us shakes the plot this long, real seconds.")]
@@ -318,7 +318,7 @@ public class BoardManager : MonoBehaviour
             if (state.kills != killsHeard) { killsHeard = state.kills; Play(killSound, "kill"); }
             else Play(state.weapons.lastShotHit ? hitSound : missSound, state.weapons.lastShotHit ? "hit" : "miss");
         }
-        if (state.weapons.hitsTaken != hitsTakenHeard) { hitsTakenHeard = state.weapons.hitsTaken; Struck(state.weapons.incomingReport); } // Step 55: an enemy missile or slug hit us
+        if (state.weapons.hitsTaken != hitsTakenHeard) { hitsTakenHeard = state.weapons.hitsTaken; Struck(state.weapons.incomingReport); } // Step 55: an enemy torpedo or slug hit us
         if (state.hangar.boatWarnings != boatWarningsHeard) { boatWarningsHeard = state.hangar.boatWarnings; Play(alertSound, "alert"); } // owner 2026-10-27: boats stranded, or lost
         if (state.comms.signalsIn != signalsHeard) { signalsHeard = state.comms.signalsIn; Play(signalSound, "signal"); } // a radio message has come in
         Eased.TickAll(); // control transitions (Step 33j)
@@ -348,7 +348,7 @@ public class BoardManager : MonoBehaviour
                 ShowAlarm();
                 state.weapons.TickRounds(TickGameSeconds); // Step 48: slugs fly, and hit or run out of range
                 state.hangar.TickFlights(TickGameSeconds); // Step 54: fighters fly, attack, come home
-                state.weapons.TickIncoming(TickGameSeconds); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
+                state.weapons.TickIncoming(TickGameSeconds); // Step 55: enemy torpedoes home on us; our PDCs on AUTO take their chances
                 state.damage.TickParty(TickGameSeconds);
                 state.damage.TickConditions(TickGameSeconds); // Step 59: fire, vacuum and radiation burn, kill and spread
                 state.hangar.TickLaunch(TickGameSeconds);
@@ -531,7 +531,7 @@ public class BoardManager : MonoBehaviour
         string hit = hitLine != null && Time.unscaledTime < hitLineUntil ? hitLine : null;
         var inc = state.weapons.Incoming;
         string incoming = inc.Count == 0 ? null
-            : (inc.TrueForAll(r => r.missile) ? (inc.Count == 1 ? "INCOMING MISSILE" : "INCOMING MISSILES") : "INCOMING FIRE") + " · BRG " + IncomingBearing();
+            : (inc.TrueForAll(r => r.torpedo) ? (inc.Count == 1 ? "INCOMING TORPEDO" : "INCOMING TORPEDOES") : "INCOMING FIRE") + " · BRG " + IncomingBearing();
         // a radio message waiting to be locked, under everything else, with the seconds left to lock it
         string signal = state.comms.realSignals && state.comms.air == CommsSystem.Air.OnAir && !state.comms.locked ? "INCOMING SIGNAL" : null;
         bool on = edge != null || hit != null || rockAlarm != null || incoming != null || missionAlarm != null || state.sensors.newContacts > 0 || signal != null;
