@@ -32,5 +32,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Levels/FlightDrill.unity
     guid: 64fcc2628baee492ca931c555bdaaa24
+  - enabled: 1
+    path: Assets/Scenes/Levels/ColdRun.unity
+    guid: 6d60a6452483448d18cadfac1e3253ac
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

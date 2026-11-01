@@ -367,10 +367,10 @@ Alpha**, on the Board tab of Starwolf → Tuning under Plot & our ship, sets how
 
 The jump point placeholder picture is `Assets/UI/Board/Art/Plot/JumpPoint.png`. It is a white ring
 with a dot in the middle, 256 x 256. The prefab is `Assets/Prefabs/JumpPoint.prefab`. It is one
-sprite, sized so the ring is 2,000 units from its centre (the distance that wins). It is on the
+sprite, sized so the ring is 700 units from its centre (the distance that wins). It is on the
 Default layer. It must stay off the WorldTerrain layer, because anything drawn on that layer in a
 level turns into a solid rock. To change the look, replace the PNG with one of the same name. It is
-not in any level yet. The game does not use it yet. The plot still draws its own JUMP POINT ring
+placed in COLD RUN. The Mission's Jump Point box points at it. At play the prefab is switched off, and it is seen only in the Scene view at edit time. The plot still draws its own JUMP POINT ring
 (`PlotPanel.ShowJumpPoint`).
 
 When the board appears, the plot starts empty. The grid's lines glide in, big squares first, then

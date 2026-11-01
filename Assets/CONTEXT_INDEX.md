@@ -24,7 +24,7 @@ you as friendly and **all of them are passive at the start**. The game is about 
 that lie going, and picking the moment to drop it. Detection is not failure. It is the rhythm: hide,
 gather, act, get found, break away, gather again.
 
-**What is built today** is six levels on a MISSIONS list: the training levels FLIGHT DRILL, WEAPONS
+**What is built today** is seven levels on a MISSIONS list: the training levels FLIGHT DRILL, COLD RUN, WEAPONS
 FREE, NO PEEKING and FINDERS KEEPERS, then INTERCEPT, then the full mission, **Wolf Hunt**. In Wolf Hunt a
 Garuda-class cruiser hunts you. You find it, destroy it or capture it, then fly to a jump point to
 win. What each level asks of you is in `Assets/TACTICAL_BOARD_SPEC.md` §15.5. How Wolf Hunt plays is
@@ -89,7 +89,7 @@ pages, and most of it has been overtaken.
 | Whether a change to speeds, ranges or weapons still gives a fight of the right length | `docs/scale-sim/README.md` |
 | How to turn the repo into NotebookLM sources | `Tools/notebooklm/README.md` |
 | How the green phosphor screen works (intro, welcome page, INITIALISING), and how to put it on a new screen | `Assets/StarwolfIntro/README.md` |
-| The six levels: what each one asks, and how to win or lose it | `Assets/TACTICAL_BOARD_SPEC.md` §15.5. Each level's numbers are in `BUILD_LOG.md`, section 2. |
+| The seven levels: what each one asks, and how to win or lose it | `Assets/TACTICAL_BOARD_SPEC.md` §15.5. Each level's numbers are in `BUILD_LOG.md`, section 2. |
 | FLIGHT DRILL: its 13 steps, and how to change one | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 2, `FlightDrill`. The notes, rings and amounts are in the Mission box in `Assets/Scenes/Levels/FlightDrill.unity`. |
 | What ENG does to the ship's movement, and the side thrusters | `Assets/TACTICAL_BOARD_SPEC.md` §4.2 and §4.3. The numbers are in each ship's stats file in `Assets/Ships`. |
 | The training levels and how they were built; the plan to split WEAPONS FREE | `Assets/Scenes/Tactical/FTUE_PLAN.md` §0 |
@@ -196,11 +196,12 @@ training levels keep their old scene names.
 | On the list | Scene |
 |---|---|
 | 1 FLIGHT DRILL | `FlightDrill.unity` |
-| 2 WEAPONS FREE | `FirstShot.unity` |
-| 3 NO PEEKING | `SilentShot.unity` |
-| 4 FINDERS KEEPERS | `Prize.unity` |
-| 5 INTERCEPT | `Intercept.unity` |
-| 6 WOLF HUNT | `Level_01.unity` |
+| 2 COLD RUN | `ColdRun.unity` |
+| 3 WEAPONS FREE | `FirstShot.unity` |
+| 4 NO PEEKING | `SilentShot.unity` |
+| 5 FINDERS KEEPERS | `Prize.unity` |
+| 6 INTERCEPT | `Intercept.unity` |
+| 7 WOLF HUNT | `Level_01.unity` |
 
 Each level has a Mission box with its goal and its briefing. The spawn points, debris and gas clouds
 are placed in the level. Since Step 107 `Level_01` has no broken starbase. Make and edit levels with the menu **Starwolf → Level** (`Assets/Editor/LevelWindow.cs`).
@@ -288,7 +289,7 @@ ceiling.
 
 The flow is `00_Start` → `01_Briefing` → `02.1_Grid`. The new Claude Design handoff is fully built
 into `02.1_Grid` and passed its final QA. Every control is clickable and shows its states. Wiring to
-game systems started in Step 34 and is ongoing. All six levels are playable, from the MISSIONS list
+game systems started in Step 34 and is ongoing. All seven levels are playable, from the MISSIONS list
 in `01_Briefing`. The Mac app is built at `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`. The older
 `02_Grid` board has been deleted. At play the board loads the picked level on top of itself, from `Assets/Scenes/Levels/`.
 For the current step, read section 1 of `BUILD_LOG.md`.
