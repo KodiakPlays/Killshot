@@ -53,9 +53,10 @@ Straight from the GDD:
 You drop in at one edge of a handcrafted region of space, with **old, unverified Imperial
 records** that mark a few landmarks. Everything else you have to find.
 
-Built so far: an intro, a menu and a briefing, then one mission, Wolf Hunt, in `Level_01`. The
-Garuda hunts you. Once it finds you, more enemy ships come. Kill or capture it, then reach the jump
-point to win (§15.2).
+Built so far: an intro, a menu and a MISSIONS list with six levels (§15.5). The first five are short,
+with one goal each. The sixth is the full mission, Wolf Hunt, in `Level_01`. The Garuda hunts you.
+Once it finds you, more enemy ships come. Kill or capture it, then reach the jump point to win
+(§15.2).
 
 ### Order of operations
 
@@ -87,7 +88,7 @@ get there, through whatever you stirred up (§15).
 | **Everything you do makes you heard** | Every unit of power makes you louder. So do an active scan and every shot. |
 | **You drift** | Turning points the ship. It does not change where you are going. |
 | **Your armour is a direction** | No shields. A bow, a stern and two sides, each with its own armour. |
-| **Shots take time** | A railgun slug takes about ten seconds to reach 25,000 km. A missile takes minutes. You aim where the target will be. |
+| **Shots take time** | A railgun slug takes about 7 seconds to reach 2,000 units. A missile takes about 8 seconds to reach 3,000. You aim where the target will be. |
 
 ---
 
@@ -101,7 +102,7 @@ Everything below breaks down system by system. Read in order for the whole pictu
 | 1 | Conventions | Bearings, kilometres, the board step |
 | 2 | Time | Pause, the four rates, game time |
 | 3 | Power | The reactor, four buses, draw and vent |
-| 4 | Movement | Throttle, drift, stability, the combat autopilot (not built yet) |
+| 4 | Movement | Throttle, drift, side thrusters, stability, the combat autopilot (not built yet) |
 | 5 | Being seen | Our signal; how the enemy hears us; reinforcements; the disguise (not built yet) |
 | 6 | Auxiliary | The orders station, its AUX pool and the alert condition |
 | 7 | Reflex | The cloak (not built yet) |
@@ -173,11 +174,11 @@ them.
 dial, ship picture and readout agrees with every other one.
 
 **How it's built.** One bearing value per object per frame feeds every heading visual. Distances are
-kilometres. The rules step once per board step, in a fixed order.
+units. The rules step once per board step, in a fixed order.
 
 ### 1.1 Bearing
 
-The battle space is a **2D plane**. Positions are `(x, y)` in km, x east and y north.
+The battle space is a **2D plane**. Positions are `(x, y)` in units, x east and y north.
 
 - `0°` is `+y`, increasing **clockwise**. `090°` is `+x`.
 - Shown zero-padded to three digits: `062°`.
@@ -192,25 +193,25 @@ angDiff(a, b) = ((a - b + 540) mod 360) - 180        // (-180, 180]
 
 ### 1.2 Units
 
-Distances are **kilometres**. Speeds are km/s. Times are game seconds.
+Distances are **units**. Speeds are units per second. Times are game seconds. At x1 a game second is a real second (Step 130).
 
 | Number | Value |
 |---|---|
-| Battle space | Set per level with a Battle Space box (Starwolf → Level); 100,000 × 100,000 km without one |
-| DRADIS reach | 15,600 km at gain 1, 30,000 km at gain 5 |
-| Visual range | 10,000 km |
-| Railgun reach | 25,000 km |
-| Missile reach | 35,000 km |
-| PDC reach | 10,000 km |
-| Top speed | 12.5 km/s |
-| Plot scale at zoom 1 | 60.9 px per 1,000 km |
+| Battle space | 20,000 × 20,000 units, set per level with a Battle Space box (Starwolf → Level) |
+| DRADIS reach | 5,000 units at gain 1, 7,500 at gain 5 |
+| Visual range | 2,000 units |
+| Railgun reach | 2,000 units |
+| Missile reach | 3,000 units |
+| PDC reach | 600 units |
+| Speed limit | 25 units/s at ENG 1, 50 at ENG 5 |
+| Plot scale at zoom 1 | 760 px per 1,000 units |
 
-> **Rule 1.2.a** One world unit is one kilometre (owner).
+> **Rule 1.2.a** Distances are units. A small plot square is 50 units (owner, 2026-10-29).
 
 ### 1.3 Loop
 
-The board steps every 0.42 s of real time. Each step moves the game on by the rate: 0.25, 1, 5 or
-10 game seconds (§2).
+The board steps every 0.42 s of real time. Each step moves the game on by 0.42 game seconds times
+the rate: x0.25, x1 or x5 (§2). At x1 the game clock keeps real time.
 
 One step runs in this order: the mission clock, power, the AUX pool, our ship's movement, the
 battle space check, slugs and missiles, fighters and boats, enemy missiles and our PDCs, damage
@@ -220,27 +221,27 @@ Then each enemy thinks and moves.
 > **Rule 1.3.a** A stalled frame never makes the board catch up in a burst. Missed steps are
 > dropped.
 
-Between steps, ships are drawn gliding on along their velocity (§9.6.a).
+Between steps, a ship drawn smoothly glides on along its velocity (§9.6.a).
 
 ---
 
 ## 2 · Time
 
-**What it is.** Two clock states, running and paused, plus four rates for how fast the running
+**What it is.** Two clock states, running and paused, plus three rates for how fast the running
 clock moves.
 
 **How it plays.** You can stop the world to think and run it fast when nothing is happening. There
 is no plan-then-execute step: orders take effect as you give them.
 
 **How it's built.** One board clock drives everything. Every rate in the game is per game second,
-so at x10 everything runs ten times as fast (owner, 2026-10-24).
+so at x5 everything runs five times as fast (owner, 2026-10-24).
 
 | State | Behaviour |
 |---|---|
 | **Running** | The game advances at the rate. |
 | **Paused** | Nothing real changes. Controls still work. |
 
-The rates are x0.25, x1, x5 and x10, on four keys on the time control. The board loads paused.
+The rates are x0.25, x1 and x5, on three keys on the time control. The board loads paused.
 Pressing a rate key also starts the clock. The pause key, or P on the keyboard, stops and starts
 it. Crossing out of the
 battle space drops the rate to x1 (§14).
@@ -346,7 +347,7 @@ on ENG, the ship drifts (§4.3).
 
 | Bus | What its units do |
 |---|---|
-| ENG | The throttle can go up to 20% per unit (§4.2). With no ENG units, the ship drifts. |
+| ENG | ENG 1 allows 25 units/s and ENG 5 allows 50, in equal steps. ENG 5 also gives twice ENG 1's acceleration, braking, turn rate and side thrust (§4.2, §4.3). With no ENG units, the ship drifts. |
 | WEP | Feeds the weapons capacitor, 5 per unit per game second (§8.4). Weapons need at least 2 units. |
 | SEN | Caps the DRADIS gain: up to the SEN units, never below 1 (§9.1). |
 | AUX | Fills the orders pool, 3.2 per unit per game second (§6). The hangar's catapult needs at least 1 unit (§12.3). |
@@ -363,7 +364,8 @@ on ENG, the ship drifts (§4.3).
 takes time to follow.
 
 **How it plays.** The ship slides. Turning changes where your guns and your armour point. Your path
-bends round slowly after it.
+bends round slowly after it. The side thrusters slide the ship sideways with the nose still. More ENG
+gives more of all of this: more speed, more thrust and tighter turns.
 
 **How it's built.** Every ship has an ordered heading and throttle, and an actual heading and
 velocity. Each board step, the bow swings toward the ordered heading, and speed along the nose
@@ -384,11 +386,15 @@ You drag the throttle on the helm, from 0 to 100%, or press W and S to step it 1
 loads at 0.
 
 ```
-throttle cap = ENG units × 20 × (engine room integrity ÷ 5)
-target speed = throttle ÷ 100 × 12.5 km/s
+speed limit = 25 + (ENG units − 1) × 6.25 units/s, with no thrust at ENG 0
+throttle cap = speed limit ÷ 50 × 100 × (engine room integrity ÷ 5)
+target speed = throttle ÷ 100 × 50 units/s
 ```
 
-Speed along the nose rises at 0.2175 km/s² and falls at 0.4075 km/s². There is no reverse.
+ENG also sets how fast speed changes (owner, 2026-11-01). On our ship, speed along the nose rises at
+1 unit/s each second at ENG 1 and at 2 at ENG 5, in equal steps. It falls at 1.875 at ENG 1 and at
+3.75 at ENG 5. Base Accel Units in the stats file gives the ENG 1 number. Enemies run at full ENG.
+There is no reverse.
 
 > **Rule 4.2.a** If the ENG bus can no longer support the throttle, the throttle drops to 0 (owner,
 > 2026-10-25). You set it again.
@@ -396,8 +402,10 @@ Speed along the nose rises at 0.2175 km/s² and falls at 0.4075 km/s². There is
 ### 4.3 Drift — the ship slides
 
 > **Rule 4.3.a** `A` and `D` step the ordered heading by 3° per press. The bow turns toward it at
-> 20° per game second, slower when the engine room is damaged (never below 1°). The velocity keeps
-> its old direction and bends round slowly. Pressing A or D also clears the helm's attitude key.
+> 10° per game second at ENG 1 and 20° at ENG 5, in equal steps (owner, 2026-11-01). ENG 0 turns at
+> the ENG 1 rate. Base Turn Rate in the stats file gives the ENG 1 number. It is slower when the
+> engine room is damaged (never below 1°). The velocity keeps its old direction and bends round
+> slowly. Pressing A or D also clears the helm's attitude key.
 
 Each game second, velocity splits into a part along the nose and a sideways part:
 
@@ -410,6 +418,13 @@ all speed      × 0.997502
 > at the same speed and direction (owner, 2026-10-29). This is true of every ship, so an EMP leaves
 > a ship drifting too.
 
+> **Rule 4.3.c** `Q` slides the ship to port and `E` to starboard while the key is down (owner,
+> 2026-11-01). The nose stays where it is. Let go, and the side thrusters stop the slide. On our ship
+> the slide reaches 20 units/s at ENG 5 and 10 at ENG 1, in equal steps. It gains 4 units/s each
+> second at ENG 5 and 2 at ENG 1, and it stops at the same rate. A slide adds no signal. Rule 4.3.b
+> covers ENG 0: no slide, and a slide already going doesn't stop. Side Speed Units and Side Accel
+> Units are in each ship's stats file. Change the keys on the Keys tab of **Starwolf → Tuning**.
+
 ### 4.4 Stability
 
 The helm shows G load and stability. Nothing uses them yet.
@@ -421,10 +436,12 @@ stability = 100 − 45 × (G load − 1), from 0 to 100
 
 ### 4.5 Collision
 
-Ships pass through each other. Our ship can fly into a ruin or a piece of debris, but each time it
-goes in it takes 25 armour off the side facing the piece. With that side open, the room behind it
-loses 1 integrity. The ship is not pushed back out. The alarm strip reads `COLLISION · PROW ARMOUR
-75%`. Only our ship is hit this way for now. The numbers are in each ship's stats file, under damage.
+Every ship is a solid box, length by width, turning with the ship (owner, 2026-11-01). Nothing passes
+through a ship or a piece of debris. A ship that touches something is pushed clear, bounces, and
+keeps 30% of its speed. It takes damage on the side that touched, by its speed. In a crash between
+ships, both take damage. Pressing against a rock with the throttle on gives one small hit every 3
+game seconds. The alarm strip reads `COLLISION · PROW ARMOUR 75%`. The numbers are in each ship's
+stats file, under damage.
 
 ### 4.6 Autopilot (combat)
 
@@ -438,7 +455,7 @@ attitude key is lit.
   autopilot cannot hold range on a ship you can't see.
 - **Facing:** NOSE, STBD, PORT or TAIL (the helm's attitude keys). That side is kept toward the
   target.
-- **Range:** the helm's approach range: 2,000, 4,000, 8,000, 12,000, 18,000 or 24,000 km. It tries
+- **Range:** the helm's approach range: 500, 1,000, 1,500, 2,000, 3,000 or 5,000 units. It tries
   to stay at that range.
 - **Speed:** the approach mode. DIRECT, FLANK and EVASIVE each set a throttle, which is still
   capped by the ENG bus. The numbers are in the inspector, and the owner tunes them.
@@ -513,8 +530,8 @@ missile salvo adds 25 at once. As the signal crosses 45, the alert tone plays on
 in each ship's stats file, under sensors and power.
 
 The signal box says who can hear you. While an enemy ship hears or sees our ship, it reads
-`1 HOSTILE SET HAS YOUR RANGE` (or `2 HOSTILE SETS HAVE YOUR RANGE`), at any signal. At 45 or more
-with nobody hearing, it reads `NO HOSTILE SET HAS YOUR RANGE`. At 0 it reads `RUNNING SILENT`.
+`DETECTED BY 1 HOSTILE` (or `DETECTED BY 2 HOSTILES`), at any signal. At 45 or more with nobody
+hearing, it reads `UNDETECTED`. At 0 it reads `RUNNING SILENT`.
 
 ### 5.1 The detection number
 
@@ -745,11 +762,15 @@ There are no broadside guns. Arcs are measured from the bow, clockwise.
 
 | Mount | Arc | Covers | Reach | At the start |
 |---|---|---|---|---|
-| RG-A, railgun turret A | 042° ±80° | 322° → 122° | 25,000 km | 22 slugs |
-| RG-B, railgun turret B | 250° ±80° | 170° → 330° | 25,000 km | 22 slugs |
-| PDC-A, PDC group A | 090° ±90° | 000° → 180°, the starboard half | 10,000 km | 2,400 rounds |
-| PDC-B, PDC group B | 270° ±90° | 180° → 360°, the port half | 10,000 km | 2,400 rounds |
-| VLS, missile launcher | All round | All round | 35,000 km | 8 cells |
+| RG-A, railgun turret A | 090° ±45° | 045° → 135° | 2,000 units | 22 slugs |
+| RG-B, railgun turret B | 270° ±45° | 225° → 315° | 2,000 units | 22 slugs |
+| PDC-A, PDC group A | 090° ±90° | 000° → 180°, the starboard half | 600 units | 2,400 rounds |
+| PDC-B, PDC group B | 270° ±90° | 180° → 360°, the port half | 600 units | 2,400 rounds |
+| VLS, missile launcher | All round | All round | 3,000 units | 8 cells |
+
+`Asura.asset` differs from this table today. It also has PDC-C, PDC-D, VLS-A and VLS-B, added on the
+Hard Points tab of Starwolf → Tuning. Its PDC arcs are ±135°. The VLS has no hard point, and fire
+control has no way to pick VLS-A or VLS-B yet.
 
 > **Rule 8.3.a** Fire control works one mount at a time. You pick the system (RAILGUN, PDC or
 > MISSILE), then the mount.
@@ -757,29 +778,27 @@ There are no broadside guns. Arcs are measured from the bow, clockwise.
 > **Rule 8.3.b** **Ammunition is a real count** (owner, 2026-10-27). It only goes down. There is no
 > reload. With nothing left, LOAD refuses.
 
-> **Rule 8.3.c** The railgun arcs leave a gap from 123° to 169°, on the starboard quarter. They
-> overlap from 322° to 330°, on the port bow. Turning the ship brings a turret to bear.
+> **Rule 8.3.c** Each railgun covers one side of the ship, 90° wide (owner, 2026-11-01). Nothing
+> covers the bow or the stern. Turning the ship brings a turret to bear.
 
 > **Rule 8.3.d** The two PDC groups cover a half each, so together they cover all round (owner,
 > 2026-10-29: "keep it simple").
 
 The armour is PROW 100, STBD 100, AFT 50, PORT 100 (§13.2). The aft is the weakest side.
 
-The Garuda has the same mounts. Its railguns reach less far, it has 4 missile cells, and its PDC-B
-has no rounds. A Naga frigate has one railgun, RG-A, with 12 slugs, and no PDCs or missiles. Their
+The Garuda has the same mounts and the same reach. It has 4 missile cells, and its PDC-B has no
+rounds. A Naga frigate has one railgun, RG-A, with 12 slugs, and no PDCs or missiles. Their
 numbers are in `Assets/Ships/Garuda.asset` and `Assets/Ships/Frigate.asset`.
 
 ### 8.4 Railgun
 
-A slug flies at **2,500 km/s**, out to 25,000 km. It takes about 10 s to reach full range (owner,
-2026-10-27).
+A slug flies at **300 units/s**, out to 2,000 units. It takes about 7 s to reach full range (Step 130).
 
-- A slug hits a ship it passes within **100 km** of. The distance is the same for every ship, and
-  for missiles (owner, 2026-10-27; BUILD_LOG decision 47).
-- A slug that reaches 25,000 km without a hit counts as a miss.
+- A shot hits if it touches the target's box made **25% longer and 25% wider** (owner, 2026-11-01;
+  Step 128). That is 437.5 × 125 on the Garuda. It is the same rule for missiles.
+- A slug that reaches 2,000 units without a hit counts as a miss.
 - Each shot spends 70 charge from the weapons capacitor and adds 25 to our signal.
-- A hand-dialled bearing is in whole degrees. At 25,000 km one degree is about 436 km sideways, so
-  a hand-dialled shot can just miss a cruiser.
+- A hand-dialled bearing is in whole degrees. At 2,000 units one degree is about 35 units sideways.
 - When the solution has a course, the shot is aimed where the target will be when the slug arrives
   (§18.3).
 
@@ -804,14 +823,14 @@ with no WEP units: charge − 3 per game second
 
 ### 8.5 Missile
 
-The launcher fires a salvo of 2 missiles, fanned 3° apart. Each flies at 100 km/s and turns toward
-its target at up to 6.5° per game second. Each flies at most 35,000 km.
+The launcher fires a salvo of 2 missiles, fanned 3° apart. Each flies at 400 units/s and turns toward
+its target at up to 120° per game second. Each flies at most 3,000 units.
 
 - A missile needs a target identified by an active scan (§9.4).
 - Each missile uses one cell. The salvo size is set in the stats file. The salvo knob is not drawn
   yet.
 - A salvo spends 40 charge and adds 25 to our signal.
-- A missile hits within the same 100 km (§8.4), ours and the enemy's.
+- A missile hits by the same rule as a slug (§8.4), ours and the enemy's.
 
 ### 8.6 PDC
 
@@ -819,7 +838,7 @@ A PDC group shoots at enemy missiles by itself once it is on **AUTO**. You never
 
 - Select the group on Fire Control and throw the arming ladder. ARM puts the group on AUTO.
   Releasing the ladder takes it off. Both groups can be on AUTO at once.
-- A group on AUTO gets one go at each enemy missile inside its arc and 10,000 km. Each go has a
+- A group on AUTO gets one go at each enemy missile inside its arc and 600 units. Each go has a
   70% chance to shoot the missile down, and spends 100 rounds.
 - A group with fewer than 100 rounds left drops off AUTO.
 - PDCs need their autoloaders on. They also need what every weapon needs: at least 2 WEP units,
@@ -855,8 +874,9 @@ Moving your ship and laying more bearing lines finds its range. An active scan n
 you target it, but makes you louder.
 
 **How it's built.** DRADIS hears a contact by band and range. Each pass of the sweep updates where
-each contact was last seen. With ACTIVE on, a contact inside the scan cone is identified as the
-sweep passes it. The numbers are in each ship's stats file, under sensors.
+each contact was last seen. The ACTIVE SCAN cone also updates a scanned ship, on every frame. With
+ACTIVE on, a contact inside the scan cone is identified as the sweep passes it. The numbers are in
+each ship's stats file, under sensors.
 
 ### 9.1 DRADIS and the sweep
 
@@ -869,7 +889,7 @@ DRADIS hears a contact when all four are true:
 - It is within range.
 
 ```
-range = 12,000 km + 3,600 km × gain        (gain 1 to 5)
+range = 4,375 units + 625 units × gain        (gain 1 to 5)
 UV hears to 0.55 of that range
 ```
 
@@ -878,8 +898,8 @@ You set the gain on the Sensors drawer. It can go up to the SEN units, never bel
 > **Rule 9.1.a** The sweep turns once every `5.4 − 0.5 × gain` game seconds: 4.9 s at gain 1,
 > 2.9 s at gain 5. It stops while paused, while DRADIS is off, and while the SEN bus is empty.
 
-> **Rule 9.1.b** Between passes, a contact out of sight stays where the sweep last touched it
-> (§9.6).
+> **Rule 9.1.b** Between passes, a contact out of sight stays where the sweep last touched it. A
+> locked ship and a scanned ship under the ACTIVE SCAN cone move smoothly instead (§9.6).
 
 > **Rule 9.1.c** Each pass over a heard contact that is not identified leaves a bearing line from
 > where our ship was. The lines fade out over 120 game seconds. As our ship moves, the lines cross
@@ -904,11 +924,8 @@ There is one plot. You zoom it in and out.
 
 ### 9.3 In sight
 
-A ship within 10,000 km is in sight. Its model shows on the plot, seen from above, and glides
-(§9.6). Seeing a ship does not identify it.
-
-The periscope's CLASS key puts a heard contact under its sight on the contact board. The contact's
-name stays BOGEY until an active scan.
+A ship within 2,000 units is in sight. Its model shows on the plot, seen from above, and glides
+(§9.6). Seeing a ship does not identify it. Its name stays BOGEY until an active scan.
 
 ### 9.4 Active scan
 
@@ -924,11 +941,13 @@ in every band.
 - ACTIVE adds 35 to our signal while it is on.
 - The plot shows the cone: two bright edges and a faint fill.
 
-> **Rule 9.4.a** Identification is what an active scan gives you. An identified ship shows its
-> name. You can lock TRACK on it, fire missiles at it, and read what your hits do to it (§20,
-> §13.5).
+> **Rule 9.4.a** A scan identifies a ship and reads its course and speed at that moment (owner,
+> 2026-11-01). An identified ship shows its name. You can fire missiles at it, board it, and read
+> what your hits do to it (§20, §13.5). A lock takes the scan's course and speed for its shot
+> (§18.4).
 
-> **Rule 9.4.b** Identification is kept. It never resets.
+> **Rule 9.4.b** Identification is kept. It never resets. The course and speed go out of date if the
+> ship turns, so you scan again. Each pass of the sweep over a ship in the cone is a new scan.
 
 ### 9.5 Contact names
 
@@ -949,24 +968,31 @@ destroyed                     → no label on the plot; it stays as a wreck
 - **Heard, not identified:** a bearing line from our ship. It appears when the sweep first touches
   the contact. It keeps that bearing until the sweep passes again.
 - **Identified, outside visual range:** a dot where the sweep last touched it, labelled with the
-  range at that moment. The dot moves when the sweep passes again.
+  range at that moment. The dot hops when the sweep passes again. While the ACTIVE SCAN cone covers
+  it, the dot moves smoothly and shows where the ship is now (owner, 2026-11-01). With ACTIVE SCAN
+  off, it stops there and hops again.
 - **Inside visual range:** the ship's own model, seen from above, gliding. It is red once
   identified. Until then it is amber and labelled BOGEY with its track number, and you cannot
   target it.
-- **Destroyed:** it stays on the plot. Inside visual range its model turns grey and drifts. Outside
-  visual range, a dim dot drifts.
+- **Locked:** the ship is drawn smoothly, where it is now (owner, 2026-11-01).
+- **Destroyed:** inside visual range its model turns grey, breaks in two where the shot struck, and
+  the halves drift apart (Step 131). Outside visual range it is a dim dot, which fades away over 120
+  game seconds. Back in visual range it shows again.
+- **Shots, missiles and fighters** always slide across the plot (owner, 2026-11-01). Just after
+  firing, a shot's dot can go up to twice its true speed. It can slow in the last tick before a hit.
 
-> **Rule 9.6.a** The rules step once per board tick. Between ticks, each ship is drawn moving on
+> **Rule 9.6.a** The rules step once per board tick. Between ticks, a ship drawn smoothly moves on
 > along its velocity, up to one tick ahead. Rules use the position from the last tick.
+> Shots and missiles slide across the plot toward where they will be at the next tick, so a dot
+> reaches a ship as the hit lands. Fighters slide up to one tick behind (owner, 2026-11-01).
 
 > **Rule 9.6.b** Seeing a ship does not identify it. Only identification gives its name and lets you
 > target it.
 
-> **Rule 9.6.c** A destroyed ship never leaves the plot.
+> **Rule 9.6.c** A wreck stays where it is in space, and shows again when it is back in sight.
 
-> **Rule 9.6.d** Starting numbers on the board, to be tuned: visual range 10,000 km. DRADIS reaches
-> 12,000 km plus 3,600 km per gain step: 15,600 km at gain 1, 30,000 km at gain 5. Railguns reach
-> 25,000 km, missiles 35,000 km and PDCs 10,000 km (owner, 2026-10-27).
+> **Rule 9.6.d** The numbers on the board (Step 130): visual range 2,000 units. DRADIS reaches 5,000
+> units at gain 1 and 7,500 units at gain 5. Railguns reach 2,000 units, missiles 3,000 and PDCs 600.
 
 ---
 
@@ -998,7 +1024,30 @@ locked. The message is:
 The status line reads INCOMING SIGNAL, then DECIPHERING once locked, then MESSAGE READ when the
 dials match the key.
 
-> **Rule 10.b** Not built yet: what a read message gives you. Today it changes nothing in the game.
+> **Rule 10.b** With the fixed signal, a read message changes nothing in the game.
+
+**Real messages (Steps 137 and 140).** A level turns these on with Signal Seconds on its Enemy Spawn.
+INTERCEPT and Wolf Hunt do, at 60 seconds. The fixed signal goes, and the radio starts quiet: NO TRAFFIC.
+
+The ship sends a message every so often. Each one is written from where the ship really is, all in
+words, so every part of it is in code:
+
+`GARUDA HEADING SOUTHWEST SPEED TWENTY BEARING NORTH`
+
+It is an intercepted message, so it doesn't speak to us. It gives which way the sender is heading,
+its speed to the nearest 5, and its bearing from our ship. Directions are one of eight words. The
+ship takes a new course halfway to its next message, so the heading keeps changing. A Garuda that has
+heard us stops doing this, and hunts us instead. Each message comes in on a new band and frequency, in a new code,
+and the dials go back to A. A soft tone plays. The alarm strip says INCOMING SIGNAL with the seconds
+left to lock it, as the last line on the strip. Comms hears the sender anywhere on the map.
+
+You find the peak, tune, lock, and turn the four dials until the message starts with the sender's
+name. Once it reads, it stays on the screen until the next one comes in. If it isn't locked before
+On Air Seconds run out, it is lost: SIGNAL LOST. Only one message is on the air at a time. The wait
+for the next starts when the last is read or lost.
+
+> **Rule 10.c** Comms draws nothing on the plot: no bearing line, no quadrants, no markings on the grid
+> (owner 2026-10-29). The player works out where the ship is from the words.
 
 ---
 
@@ -1023,11 +1072,12 @@ Design resolution 1920 × 1080.
 - The **systems rail** has one key per drawer: FIRE, SENS, PWR, HGR, ENGR and COMM (§19).
 - The **helm** and the **orders station** open and shut with a latch.
 - The **periscope** lowers into the board and goes back up.
-- The **time control** has the pause key, the four rate keys and the mission clock.
+- The **time control** has the pause key, the three rate keys and the mission clock. The briefing
+  icon is next to it.
 - The **console** has a power lamp, the SCALE knob and the grid tint knob.
 - The **alarm strip** shows one line, only when there is one. First a battle space warning, then
-  what just hit us, then enemy fire in flight (INCOMING MISSILES), then the mission's line
-  (REINFORCEMENTS INBOUND, JUMP POINT), then a new contact.
+  what just hit us, then ROCK AHEAD, then enemy fire in flight (INCOMING MISSILES), then the mission's
+  line (REINFORCEMENTS INBOUND, JUMP POINT), then a new contact, then INCOMING SIGNAL.
 - The **signal box**, in the frame's top-right, shows our signal.
 
 > **Rule 11.1.a** The plot is the subject. Everything else comes second.
@@ -1038,14 +1088,14 @@ Design resolution 1920 × 1080.
 
 The plot is a grid. Its tint is white or amber, set with the console's tint knob (WHT or R-O).
 
-- Scale: 60.9 px per 1,000 km at zoom 1.
+- Scale: 760 px per 1,000 units at zoom 1.
 - Zoom: drag the SCALE knob (×10 per 160 px) or turn the mouse wheel (×1.12 per notch). Zoom is
-  rounded to 0.01. Zoom 1 is the closest. Zooming out stops at 0.35, or sooner, where the battle
-  space's left and right edges reach the plot's sides (owner, 2026-10-25).
+  rounded to 0.01. Zoom 1 is the closest. Zooming out stops at x0.058, where a 20,000-unit map fits
+  the plot's height (Step 130).
 - The plot follows our ship as it moves (owner, 2026-10-29). Pan it, by dragging the grid or with
   the arrow keys, and it stops following. `C` centres it on our ship and follows again.
-- The numbers on the top and left edges measure from our ship: 0 level with it, then 5,000,
-  10,000 km and on. They move with the ship (owner, 2026-10-26).
+- The numbers on the top and left edges measure from our ship: 0 level with it, then every 100
+  units at x1, further apart as you zoom out (Step 135). They move with the ship (owner, 2026-10-26).
 
 > **Rule 11.2.a** Text keeps its size at every zoom. Ship pictures shrink with zoom, down to a
 > minimum size.
@@ -1104,8 +1154,8 @@ The board's colours are in one file, `Assets/UI/Board/Palette.asset`.
 
 The periscope looks along one bearing. Lower it to use it. Drag across it to slew it. Turn MAG to
 zoom, from 1× to 8×. Press SLEW TO to swing it onto a hand-dialled or plotted solution's bearing,
-or else onto the target. Press CLASS to classify what is in the sight (§9.3). It stays down until
-you raise it (owner, 2026-10-29).
+or else onto the target. It stays down until you raise it (owner, 2026-10-29). The CLASS key was
+removed in Step 125.
 
 The periscope picks the target. TRACK on a scanned enemy under the periscope, within 4°, makes it
 fire control's target (§20).
@@ -1123,7 +1173,7 @@ periscope within 4° of the target (§20).
 
 ### 11.8 Time control and console
 
-Pause key · four rate keys (×0.25, ×1, ×5, ×10) · mission clock · power lamp · SCALE knob · grid
+Pause key · three rate keys (×0.25, ×1, ×5) · mission clock · power lamp · SCALE knob · grid
 tint knob.
 
 > **Rule 11.8.c** There are no time-nudge keys. An earlier draft drew `−10s / −1s / +1s / +10s`;
@@ -1157,8 +1207,8 @@ hangar.
 
 Six starfighters. Their orders are DESTROY, DISABLE and ESCORT. Only craft marked READY launch.
 
-- They fly at 40 km/s.
-- Within 200 km of the target, every fighter makes an attack run every 30 game seconds.
+- They fly at 100 units/s.
+- Within 200 units of the target, every fighter makes an attack run every 30 game seconds.
 - Each run takes 10 armour off the side facing the fighter. Once that side is open, each run takes
   1 integrity off the room behind it.
 - DISABLE always attacks the stern, and so the engine room.
@@ -1178,22 +1228,23 @@ DISABLE and SECURE.
 | **DISABLE** | Its engine room and magazine go to 0. |
 | **SECURE** | The ship is captured. It stops moving and is no longer hostile. |
 
-- The boats fly at 30 km/s and dock within 50 km of the target.
-- They wait until the target has an open side and is slower than 0.5 km/s (owner: fight it down
+- The boats fly at 75 units/s and dock within 50 units of the target.
+- They wait until the target has an open side and is slower than 0.5 units/s (owner: fight it down
   first). The hangar reads HOLDING OFF, and why.
 - Aboard, the marines fight for 60 game seconds. The boats stay with the ship while it moves and
   fights (owner, 2026-10-27).
 - The defenders are a quarter of the target's crew, rounded up. The marines win with odds of
   `marines ÷ (marines + defenders)`. A win kills the defenders and costs half a marine per
   defender. A loss kills every marine aboard, and half as many of the enemy crew.
-- The boats go no further than 15,000 km from our ship (owner, 2026-10-27). Outbound past that,
+- The boats go no further than 4,000 units from our ship (Step 130). Outbound past that,
   they turn back. On the way back, out of range, a 120 game-second clock runs, with a warning. Close
   in to collect them. If the clock runs out, the boats and their marines are lost.
 
 > **Rule 12.2.c** **There are no boarding pods.** Boarding runs through the hangar. A boat launches,
 > flies to the target on its own, and its marines do the work.
 
-> **Rule 12.2.d** Boarding needs no scan. It needs an open side and a slow target.
+> **Rule 12.2.d** Boarding needs a scan (owner, 2026-11-01): the boats won't launch at a ship you
+> haven't scanned. The hangar says TARGET NOT SCANNED. It also needs an open side and a slow target.
 
 #### Body cam — not built yet
 
@@ -1371,7 +1422,7 @@ The orders station gives PARTY, SEAL and VENT for the same AUX charge, under the
 | **Destroyed** | Our reactor room's integrity reaches 0 |
 | **Left the battle space** | Our ship stays outside the battle space for 30 game seconds. The alarm strip reads SHIP LOST — LEFT THE BATTLE SPACE |
 
-> **Rule 14.a** Within 2,500 km of the edge, the alarm strip reads APPROACHING THE EDGE OF THE
+> **Rule 14.a** Within 1,000 units of the edge, the alarm strip reads APPROACHING THE EDGE OF THE
 > BATTLE SPACE. Outside, it reads EXITING THE BATTLE SPACE — TURN BACK and counts down the seconds
 > left. Crossing out drops the rate to x1 and plays the alert tone.
 
@@ -1382,9 +1433,10 @@ The orders station gives PARTY, SEAL and VENT for the same AUX charge, under the
 
 ## 15 · Mission
 
-**Built so far:** one mission, Wolf Hunt: the hunt, the win, the loss and the jump point (§15.2,
-Steps 85 to 99), and the level's ruins (§15.3). The rest of this section is the full design, not
-built yet.
+**Built so far:** six levels on the MISSIONS list (§15.5). The first five are short, with one goal
+each. The sixth is the full mission, Wolf Hunt: the hunt, the win, the loss and the jump point
+(§15.2, Steps 85 to 99), and the level's ruins (§15.3). The rest of this section is the full design,
+not built yet.
 
 **What it is.** One handcrafted region of space, one Traitor Lord's flagship hidden in it, one way
 out.
@@ -1437,10 +1489,10 @@ plan's "ends at the kill" (`FTUE_PLAN.md` §1) is replaced.
 > DRADIS returns, scan noise and where you can move.
 
 Built so far: each level is its own scene, loaded on top of the board. `Level_01` has a few small
-debris fields; its starbase husk was taken out in Step 107. Our ship starts at the bottom facing
-north. The Garuda starts at a random point in its spawn box at the top, facing a random way, every
-game (Step 95), 90,000 km away. The ruins do not stop ships, shots or sensors, but flying into one
-damages our ship (§4.5).
+groups of debris and three gas clouds; its starbase husk was taken out in Step 107. Our ship starts
+at the bottom facing north. The Garuda starts at a random point in its spawn box at the top, facing
+a random way, every game (Step 95), about 16,000 units away. The ruins do not stop shots or sensors.
+A ship that flies into one bounces and takes damage (§4.5).
 
 You arrive with **old, unverified Imperial records** marking a few landmarks — a listening post, an
 abandoned dock, a comms tower. They must be scanned or approached to confirm.
@@ -1461,6 +1513,48 @@ and weapons are different (§8, §9.1).
 | STANDARD KILL | 3 | 4 | +0 | +0 | 3.0 s | 0 |
 | GHOST KILL | 5 | 2 | +0 | +1 | 2.4 s | 20 |
 | BRAWLER | 2 | 5 | +12 | +0 | 3.4 s | 10 |
+
+### 15.5 The levels
+
+NEW GAME opens the MISSIONS list. All six levels are open from the start. A click, or the arrow keys
+and Enter, picks one. INITIALISING... shows, then the board loads that level.
+
+Every level is 20,000 × 20,000 units. Each has a Mission box with its goal and its briefing, which
+opens by itself and comes back with the briefing icon. Levels 1 to 5 end the moment the goal is won or
+lost, with no jump point. In levels 1 to 5 the Garuda does not hunt us, does not listen for us and
+does not fire. Any level is also lost as §14 says.
+
+| # | Level | Scene | You win when | You lose when | Where the Garuda is |
+|---|---|---|---|---|---|
+| 1 | FLIGHT DRILL | `FlightDrill` | All 13 steps are done, in order | §14 only | Parked at the far corner, (−9,000, 9,000), still and silent, out of DRADIS reach of the course |
+| 2 | WEAPONS FREE | `FirstShot` | It is destroyed or captured | §14 only | 1,500 units away, still, showing its reactor side |
+| 3 | NO PEEKING | `SilentShot` | A shot hits it | It is scanned, or a lock comes on | 4,000 units away, moving at 8 units/s |
+| 4 | FINDERS KEEPERS | `Prize` | It is captured | It is destroyed | 1,500 units away, still |
+| 5 | INTERCEPT | `Intercept` | One message is read, then DRADIS hears it | §14 only | At least 8,000 units away, on any side, cruising at 20 units/s. We start in the middle of the map |
+| 6 | WOLF HUNT | `Level_01` | It is destroyed or captured, and we reach the jump point (§15.2) | §14 only | At the top of the map, hunting us |
+
+INTERCEPT and Wolf Hunt send real radio messages. The other four have the one fixed signal (§10).
+The levels' numbers are in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 2.
+
+**FLIGHT DRILL** teaches flying only, with nothing to fight. A short note in the briefing box gives
+each step. When a step is done, a soft tone plays and the next note opens. The player:
+
+1. Puts ENG on DRAW, then on STANDBY with 1 to 3 units.
+2. Raises the throttle and flies into the CHECKPOINT ring ahead.
+3. Turns onto the next ring's bearing and flies into it.
+4. Keeps `Q` down for 3 game seconds.
+5. Keeps `E` down for 3 game seconds.
+6. Zooms the plot out to x0.20 or less.
+7. Zooms it back in to x0.80 or more.
+8. Takes ENG to 5.
+9. Raises the throttle until the speed reaches 45.
+10. Flies into the next ring.
+11. Puts SEN on DRAW and switches DRADIS on.
+12. Flies through a belt of 39 rocks to the next ring.
+13. Stops inside the last ring, at speed 2 or less.
+
+A checkpoint is the jump point's ring on the plot, labelled CHECKPOINT. Its bearing and distance are on
+the alarm strip. The end screen reads MISSION COMPLETE, FLIGHT DRILL PASSED.
 
 ## 16 · Prototype defects — do not reproduce
 
@@ -1493,7 +1587,7 @@ faithfully.
    Wolf Hunt is built (§15.2).
 2. **The combat autopilot** (§4.6). TAIL is not defined. TARGET LOST is only proposed.
 3. **The disguise** (§5.1, §5.2). The enemy hears our signal (§5.3), but there is no false ID and no
-   gas cloud or debris cover.
+   debris cover. Gas clouds are built for our ship (Step 129); enemies don't hide in them yet.
 4. **The enemy's mind, what is left.** It never retreats. It does not use engineering, comms or the
    hangar.
 5. **Picking a target** (§20). Built: the periscope picks it, with TRACK. Fire control has no
@@ -1515,8 +1609,9 @@ solution they help you build.
 
 **How it plays.** You work the target out yourself. Lay bearing lines, drop POINTs, wait, drop
 more, and run a RULER between them to read the target's course and speed. Press TRACK and it takes
-the solution from your plot. Then fine-tune it by hand. Once an active scan has identified the
-target, TRACK takes the solution from the sensor lock instead.
+the solution from your plot, and the gun and the sight go to where the target should be. Then
+fine-tune it by hand, or lock it with the targeting computer (§18.4). A lock lasts 10 seconds, so
+line up on where the target will be before you lock.
 
 **How it's built.** Marks are stored in world kilometres. Each POINT has a mission-time stamp.
 Exactly one tool is active. A RULER from one POINT to another, placed at different times, is a
@@ -1592,19 +1687,13 @@ bearing trail's lines cross at the contact.
 the contact later. Run a RULER from the first POINT to the second. It reads the course and speed
 (§18.2).
 
-**3 · Press TRACK.** TRACK needs the bridge (§13.3). It fills the solution from the first of these
-it finds (owner, 2026-10-29):
+**3 · Press TRACK.** TRACK needs the bridge (§13.3). It fills the solution from your plot. The
+newest POINT is where the target was. The newest POINT-to-POINT RULER gives its course and speed.
+TRACK works out where it is now. Fire control's ID reads PLOT. TRACK does nothing while a lock is on.
 
-- A scanned enemy under the periscope, within 4°. That ship becomes fire control's target.
-- The target, if an active scan has identified it.
-- Your plot. The newest POINT is where the target was. The newest POINT-to-POINT RULER gives its
-  course and speed. TRACK works out where it is now. Fire control's ID reads PLOT.
-
-From a scan, the solution is the target's true range, bearing, course and speed.
-
-**4 · Fine-tune it by hand.** Turn a solution knob on Fire Control: RNG (100 km a step), BRG (1° a
-step) or SPD (0.25 km/s a step). With no solution yet, the first turn starts a hand-dialled solution
-at 10,000 km, on the periscope's bearing, at speed 0. The latest track gives it a course and speed.
+**4 · Fine-tune it by hand.** Turn a solution knob on Fire Control: RNG (100 units a step), BRG (1° a
+step) or SPD (1 unit/s a step). With no solution yet, the first turn starts a hand-dialled solution
+at 2,000 units, on the periscope's bearing, at speed 0. The latest track gives it a course and speed.
 
 **5 · Check the arc.** If the solution's bearing is outside the mount's arc, ANGLE will not throw.
 Turn the ship.
@@ -1619,8 +1708,29 @@ Turn the ship.
 
 ### 18.4 The targeting computer
 
-**Not built yet.** Today TRACK gives an exact solution from the sensor lock, with no error cone.
-From the plot, it is as good as your POINTs and RULER.
+**The lock (owner, 2026-11-01).** Lower the targeting computer, get the ship in the sights and zoom
+until it fits the box. The bar fills over 10 game seconds. Then the ship is LOCKED: it is the target,
+it is tracked on the plot, and fire control has its exact range and bearing. A lock is as loud as
+ACTIVE SCAN.
+
+A lock is short. It lasts 10 game seconds (Lock Hold Seconds, in each ship's stats file). The bar runs
+down and the sight and fire control count the seconds. Then a tone sounds and the lock drops, with
+its firing solution and the switches. The bar starts again from empty.
+
+A lock knows where the ship is. It doesn't know where the ship is going:
+
+- A scan gives the course and speed at the moment of the scan (§9.4).
+- A plotted track gives them too, quietly (§18.3).
+- The lock takes the newer of the two. Fire control's source reads `LOCK 7 S · SCAN COURSE` or
+  `LOCK 7 S · PLOT COURSE`.
+- With neither it reads `LOCK 7 S · NO COURSE`. The shot goes where the ship is now, and misses if
+  the ship has moved far enough by the time the slug arrives.
+
+A slug takes about 7 seconds to reach 2,000 units, and the gun turns 3° a second. If you haven't
+lined up on where the target will be, the lock runs out first.
+
+**Not built yet.** An error cone. Today a lock's range and bearing are exact. From the plot, the
+solution is as good as your POINTs and RULER.
 
 You are a starship. The computer predicts. What it cannot do is predict from information you have
 not gathered.
@@ -1664,20 +1774,20 @@ Dropped. Fire control works one mount at a time, one shot per arming (§8.3.a, �
 
 ### 18.6 Flight time changes the weapon
 
-The slug flies at 2,500 km/s (owner, 2026-10-27). The Garuda cruises at 5.5 km/s; top speed is
-12.5 km/s.
+The slug flies at 300 units/s (Step 130). The Garuda cruises at 22 units/s, and its top speed is 35.
 
-| Range | Flight time | A ship at 5.5 km/s moves | A ship at 12.5 km/s moves |
+| Range | Flight time | A ship at 22 units/s moves | A ship at 35 units/s moves |
 |---|---|---|---|
-| 2,000 km | 0.8 s | 4 km | 10 km |
-| 10,000 km | 4 s | 22 km | 50 km |
-| 25,000 km | 10 s | 55 km | 125 km |
+| 500 units | 1.7 s | 37 units | 58 units |
+| 1,000 units | 3.3 s | 73 units | 117 units |
+| 2,000 units | 6.7 s | 147 units | 233 units |
 
-A missile at 100 km/s takes 100 s to cover 10,000 km.
+A missile at 400 units/s takes 7.5 s to cover 3,000 units.
 
-> **Rule 18.6.a** The slug is the fastest thing on the board (owner, 2026-10-27). You scanned the
-> target and did the maths, so you know where it is. A slug hits within 100 km (§8.4). In the 10 s
-> flight the Garuda moves up to 125 km, so a slug aimed straight at it can miss.
+> **Rule 18.6.a** Slugs and missiles have separate speeds (owner, 2026-11-01). In a slug's 7 s
+> flight the Garuda moves up to 233 units. Its hit area is 437.5 units long (§8.4). By the sums, a
+> slug aimed straight at it misses only past 2,980 units at cruise and past 1,875 at top speed
+> (Step 141). The gun reaches 2,000.
 
 ### 18.7 What the tools do not do
 
@@ -1721,7 +1831,7 @@ drawer closes. Each panel is a prefab (`Assets/UI/Board/README.md`).
 | Easing | `cubic-bezier(.2, .85, .25, 1)` — fast out, settles slowly |
 | Fade | 0.3 s |
 | Closes on | Its rail key again, its number key again, or its latch |
-| Number keys | 1 Fire Control, 2 Sensors, 3 Power, 4 Hangar, 5 Engineering, 6 Comms. Change them in **Starwolf → Keys** |
+| Number keys | 1 Fire Control, 2 Sensors, 3 Power, 4 Hangar, 5 Engineering, 6 Comms. Change them on the Keys tab of **Starwolf → Tuning** |
 
 > **Rule 19.1.d** **One drawer at a time.** Opening a second closes the first.
 
@@ -1758,7 +1868,7 @@ The drawer is where you work the system. The plot is where you read it.
 |---|---|---|
 | **Helm** | Throttle, heading, attitude keys, approach range and mode, stability | §4 |
 | **Orders** | The alert condition, the AUX pool, orders | §6 |
-| **Periscope** | Slew, MAG, SLEW, CLASS | §11.6 |
+| **Periscope** | Slew, MAG, SLEW TO | §11.6 |
 
 > **Rule 19.3.b** **The tool rail keys open nothing.** Clicking a tool key makes it the active tool.
 > You then work directly on the plot — click to place, drag to measure. Any readout a tool produces
@@ -1789,8 +1899,8 @@ Some things are too important to hide behind a click.
 **What it is.** The Fire Control drawer: pick a weapon, set a firing solution, arm and fire. The
 whole job is in one drawer, since only one drawer can be out at a time (§19.1.d).
 
-**How it plays.** You pick a weapon and a mount. You press TRACK to take a solution from your plot,
-or from the sensor lock once the target is identified, and fine-tune it by hand. You throw the
+**How it plays.** You pick a weapon and a mount. You press TRACK to take a solution from your plot
+and fine-tune it by hand, or you lock the target with the targeting computer (§18.4). You throw the
 arming ladder one rocker at a time. A locked rocker tells you why it is locked. Then you pull the
 lever.
 
@@ -1822,9 +1932,9 @@ much.
 
 | Control | Shows |
 |---|---|
-| TRACK key | Fills the solution from the sensor lock, or else from your plot (§18.3) |
-| Track ID | `TK-048-T07` from a lock, `PLOT` from your plot, `MANUAL` when dialled by hand, or `NO TRACK` |
-| Source | FROM SENSOR LOCK, FROM YOUR PLOT, DIALLED BY HAND, or NOT IDENTIFIED ON SENSORS |
+| TRACK key | Fills the solution from your plot (§18.3) |
+| Track ID | `TK-048-T07` from a scan or a lock, `PLOT` from your plot, `MANUAL` when dialled by hand, or `NO TRACK` |
+| Source | LOCK n S · SCAN COURSE, LOCK n S · PLOT COURSE, LOCK n S · NO COURSE, FROM YOUR PLOT, DIALLED BY HAND, SCANNED, NOT LOCKED, or NOT IDENTIFIED ON SENSORS |
 | RNG, BRG, SPD | The solution, with a knob each (§18.3) |
 
 > **Rule 20.1.a** TRACK needs the bridge at integrity 3 or more. It also needs an identified target,
@@ -1832,8 +1942,8 @@ much.
 
 #### 03 Capacitor
 
-Cells and a percent (§8.4). The note reads CHARGING AT +n/S — GATE LOCKED, or CHARGED — GATE WILL
-ARM, or WEP BUS DEAD — CAPACITOR BLEEDING OFF.
+Cells and a percent (§8.4). The note reads CAPACITOR CHARGING +n/S, or CAPACITOR CHARGED, or WEP BUS
+DEAD — CAPACITOR BLEEDING OFF.
 
 #### 04 Arming ladder
 
@@ -1850,7 +1960,7 @@ Four rockers, thrown in order:
 > after it.
 
 > **Rule 20.1.c** A locked rocker shows why: NOT RELEASED, MAGAZINE HIT, NO WEP BUS, OUT OF ARC,
-> CHARGING or LOCKED.
+> CHARGING or INTERLOCK.
 
 #### 05 Fire lever
 
@@ -1876,7 +1986,7 @@ Per §19.2.a, everything here draws on the plot too.
 |---|---|
 | Fire Control open | The selected mount's reach, a dashed ring round our ship |
 | A PDC group on AUTO | Its arc, a dashed sector off our hull |
-| Shot fired | The slug in flight, at true speed: a white dot with a short trail, white like our ship and our fighters (owner 2026-10-26) |
+| Shot fired | The slug in flight, at true speed: a white dot with a short trail, white like our ship and our fighters (owner 2026-10-26). The dot can go up to twice that speed just after firing, and it can slow before a hit (§9.6) |
 | Missile salvo fired | Each missile in flight, also a white dot with a short trail |
 
 ### 20.3 State and persistence
@@ -1930,6 +2040,6 @@ not use them. This list shows where they work differently from the board.
 | §4.2 Throttle | `W`/`S` set a continuous target while pressed | The throttle is dragged on the helm |
 | §8.7 Arcs | `WeaponBase.angleOfFire` is declared and set in two places but never checked. No arc centre exists | ANGLE checks the solution against the mount's arc |
 | §13.1 Shields | `Shields.cs` exists with recharge, colours and a renderer | There are no shields. Auxiliary is the recovery resource |
-| §9.1 DRADIS | `Radar.cs` places every registered target every frame | DRADIS updates a contact only when the sweep passes it |
+| §9.1 DRADIS | `Radar.cs` places every registered target every frame | DRADIS updates a contact only when the sweep passes it, or while the ACTIVE SCAN cone covers a scanned ship |
 
 ---

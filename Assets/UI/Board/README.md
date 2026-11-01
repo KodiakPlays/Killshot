@@ -67,6 +67,7 @@ Art/Frame/         the metal frame: the steel texture and the conduits
 Art/ToolRail/      the tool rail's icons and its selected-key frame
 Art/SystemsRail/   the systems rail's icons
 Art/TimeControl/   the time control's plate, pause key and rate keys
+Art/Briefing/      the briefing icon
 Art/Console/       the console's casting and lamp bezel
 Art/AlarmStrip/    the alarm strip
 Art/Rails/         the rail frame, for both rails
@@ -264,7 +265,7 @@ Ask a technical artist before you change these:
 ### Periscope
 
 `Panels/Periscope.prefab`. Script: **Periscope Panel**, on `Periscope`. The periscope
-looks along one bearing. You slew it, zoom it with the MAG knob, and classify what is in the
+looks along one bearing. You slew it, zoom it with the MAG knob, and lock onto what is in the
 sight.
 
 `Periscope` is a clip window. It shows only the part of the periscope that has come down. Housed,
@@ -304,18 +305,25 @@ Ask a technical artist before you change these:
   **Max Shift** and **Visible Deg**.
 - The code shows the enemy ship in `Sight/Mask/Ship picture` when DRADIS hears it and the sight
   is near its bearing. It moves the picture sideways like the brackets, and sizes it by zoom and
-  range. CLASS works only when the ship fills the brackets. **Ship Picture**, **Bracket Px** (42,
+  range. A lock builds only while the ship fits the brackets. **Ship Picture**, **Bracket Px** (120,
   the brackets' size) and **Ship Ink** (the colour) are on **Periscope Panel**. The picture is the
   plot's top-down view of the ship, from `World/Contact View Camera · Garuda`. It always lies
   level: the ship points straight right if it heads to our right, else straight left. It uses the
   `BoardLinearImage` material, as the plot's ship pictures do, which makes the black around the
   ship see-through. The round sight cuts it off at its edge. How far away a ship
-  fills the brackets is **Scope Fit Km**, on the Board tab of **Starwolf → Tuning**, under
+  fills the brackets is **Scope Fit Units**, on the Board tab of **Starwolf → Tuning**, under
   Periscope & fire control.
 - The code stretches `Convergence/Bar` from the left: **Conv Bar**, **Conv Left** (777),
   **Conv Width** (366) and **Parent Left** (750, the periscope's left edge).
 - The code turns the MAG knob's pointer (**Mag Pointer**).
 - The code sets the colours of the off-axis readout, the SLEW label, and the SLEW and CLASS lamps.
+
+The periscope is also the targeting computer. When a ship is in the sight, four white corners show the
+target box at the centre. The player zooms until the ship fits it, and the `Lock hint` text under the name says
+what to do. The bar in `Convergence` is the lock bar: it fills as the lock builds, then runs down over the 10
+seconds the lock lasts, and the hint counts the seconds. `Classify button` is switched
+off: CLASS was removed on 2026-11-01. Don't delete anything in it without asking. The red lines in the sight must
+not change.
 
 ### Plot
 
@@ -348,15 +356,90 @@ The prefab has these parts, from back to front:
 - `Marks capture` and `Mark hits (ERASE)`: click areas for the plot tools
 - `Scanlines`, `Vignette` and `Edge`: the screen effects and the four edges
 
-Its art files are in `Art/Plot`, with `Art/Shapes/round_6` for the ground. The Art list has 5
-entries: the ground, glow, fighter wedge, scanlines and vignette. The fighter wedge is
+Its art files are in `Art/Plot`, with `Art/Shapes/round_6` for the ground. The Art list has 6
+entries: the ground, glow, fighter wedge, scanlines, vignette and gas cloud. The fighter wedge is
 `Assets/Art/Hulls/hull_wedge_filled.png`.
+
+A gas cloud on the plot is a soft box, `Art/Plot/GasCloud.png`. It is placeholder art: a white
+square that fades out at the edges. To change it, swap the sprite on the Gas cloud entry of the Art
+list. The picture stretches to the cloud's size, and the outer 40 pixels keep their shape. **Cloud
+Alpha**, on the Board tab of Starwolf → Tuning under Plot & our ship, sets how strong it shows.
+
+When the board appears, the plot starts empty. The grid's lines glide in, big squares first, then
+small. Then every layer from `Scale` to `Mark hits (ERASE)` fades in. **Grid Form Seconds** and
+**Plot Fade Seconds** set the speed. They are on the Board tab of **Starwolf → Tuning**, under
+Plot & our ship.
+
+The squares on the plot change size as you zoom: 50 units at x1, then 100, 200, 500 and 1,000.
+Each size fades out as its squares close up, and the next size takes over. A line in both sizes stays
+solid. **Step Units** lists the sizes. **Step Full Px** (35) and **Step Gone Px** (25) set when a size
+fades. Your ship stays 200 x 50 units: four squares long at x1, two on the 100-unit squares.
+
+A big square is always 5 x 5 of the squares on screen, set by **Big Every**. Its lines are slightly
+whiter, and they move up as the squares change size: every 250 units at x1, then 500, 1,000, 2,500 and
+5,000. The lines are colours on the `PlotGrid` part of `Plot.prefab`: White Minor, White Major, Amber
+Minor and Amber Major.
+
+To make the grid lines brighter or fainter:
+
+1. Stop play mode.
+2. In the Project window, double-click `Assets/UI/Board/Panels/Plot.prefab`.
+3. In the Hierarchy, click **Grid**, which is under Plot.
+4. In the Inspector, find **Plot Grid**, then the **Tint** section.
+5. Click the colour bar you want and change **A**. Higher is brighter. The other numbers change the
+   colour itself. If the box runs from 0 to 1, divide the number by 255.
+6. Press Cmd+S, then click the back arrow at the top of the Hierarchy.
+
+| Colour | What it changes | A |
+|---|---|---|
+| White Major | big lines on the white grid | 61 |
+| White Minor | small lines on the white grid | 20 |
+| Amber Major | big lines on the amber grid | 126 |
+| Amber Minor | small lines on the amber grid | 54 |
+
+To compare numbers quickly, press Play, click **Grid** under Plot in the Hierarchy, and change the
+colour there. The plot updates straight away. That change is lost when you stop, so enter the number
+you like in the prefab afterwards. These colours are not in the Tuning window.
+
+The numbers along the top and left edges show the distance from our ship. They use the same sizes
+as the squares, with more room: every 100 units at x1, every 1,000 at x0.1. **Axis All Numbers Px**
+(60) and **Axis Half Numbers Px** (40) set when one size of number gives way to the next. All of these
+are under Plot & our ship. **Zoom Out Limit** sets how far you can zoom out, on the same tab under
+Board & time. It is x0.058, where a 20,000-unit battle space just fits the plot's height.
+
+A crash or a hit on us shakes the plot for half a second. **Shake Seconds** and **Shake Px** set it, under Board & time.
+
+A killed ship in sight breaks in two where the shot struck, and the halves drift apart and turn slowly. Out of sight it is a dim dot, and the dot fades away. **Wreck Drift Units**, **Wreck Spin Deg** and **Wreck Dot Fade Seconds** set this, under Plot & our ship. The break is the ship's picture cut in two by `PlotPanel`, so it needs no extra art.
+
+While Fire Control is open, each railgun shows a soft dotted cone and a solid bar on
+`Weapon ring (drawn)`. The bar is the gun. **Rail Arc Alpha** and **Gun Bar Alpha** set how strong
+they are. Where the guns are on the ship is set on the Hard Points tab of **Starwolf → Tuning**.
+
+A locked ship has white corners round it on the plot, the same as the targeting computer's box. A contact out of
+sight is a marker where it was last seen. It fades as it gets old, and its label says how old it is. **Stale
+Seconds**, **Stale Alpha** and **Stale Label Seconds** are on the Board tab of **Starwolf → Tuning**, under Sensors.
+The RULER has a thicker line and white distance text: **Ruler Width** and **Ruler Dot** are under Plot tools.
+
+Ships and shots move on the plot in two ways. Some move smoothly, on every frame. Others hop: they stop, then
+jump to a new spot each time the DRADIS sweep passes them.
+
+- Shots, missiles and fighters always move smoothly.
+- Anything inside visual range moves smoothly. So does a locked ship.
+- A ship on DRADIS that has not been scanned is a bearing line. The line hops to a new bearing once per sweep.
+- A scanned ship moves smoothly while the ACTIVE SCAN cone covers it. When ACTIVE SCAN goes off or the cone
+  moves away, the ship stops there and hops once per sweep.
+- A scanned ship that no sensor reaches stops at its last spot and fades.
+
+The game's rules still step every 0.42 s. Only the drawing is smooth. Hits and damage are the same. Just after
+firing, a shot's dot can go up to twice its true speed. It can slow in the last step before a hit, and it
+reaches the ship's hit box as the hit lands. `BoardManager.Slide` moves the drawn spot, `PlotPanel.ShotAt` draws
+shots, and `WeaponSystem.StepAhead` stops a drawn shot at the hit box.
 
 Ask a technical artist before you change these:
 - The code copies four templates in play: `Passive label template`, `Fighter (template)`,
   `Contact label (template)` and `Mark label (template)`. Keep them switched off.
 - Two fields place everything the code draws: **Plot Centre** (960, 545, in board pixels) and
-  **Px Per 1000 Km** (60.9). Moving or resizing the plot means changing them.
+  **Px Per 1000 Units** (760, on `PlotGrid`). Moving or resizing the plot means changing them.
 - The code sizes our ship's picture: **Own Ship Px At Full Zoom**, **Own Ship Min Px** and
   **Own Ship Max Px**.
 - The code sizes and spaces the fighters: **Fighter Px** and **Fighter Gap Px**.
@@ -431,6 +514,10 @@ The prefab has these parts:
   - `Tuned`: the frequency
   - `Lock`: the LOCK rocker and its lamps
 - `02 Decrypt`: `Message` (59 letters), `Key dial 1` to `Key dial 4`, and the solved readout
+
+In a level with real radio messages, the code moves the letters. Each message goes on a grid of 21
+letters across, with whole words to a line. **Letter Start**, **Letter Step** and **Letter Columns**
+on the Comms Panel set the grid. In other levels the letters stay where the prefab has them.
 
 Its art files are in `Art/Comms` and the folders for each kind. The Art list has 20 entries.
 Three are stand-ins: the band selector's face and knob, and the scope's rim.
@@ -605,6 +692,10 @@ The prefabs:
   `Art/SystemsRail` and `Art/Rails`. The Art list has 13 entries.
 - `TimeControl`: `Plate`, `Clock`, `Pause`, `Rate keys` and `Rate caption`. The art files are in
   `Art/TimeControl`. The Art list has 4 entries.
+- `Briefing Icon`: the small page next to the time control. It opens and closes `Help Bubble`, the
+  briefing box. Both are in the scene `02.1_Grid`, under `Tactical Board`; they are not prefabs. The
+  picture is `Art/Briefing/icon_briefing.png`. The box is 370 px tall. In FLIGHT DRILL it is 230 px, on
+  the same bottom edge: Drill Note Height, on the Board tab of Starwolf → Tuning, under Mission.
 - `Console`: `Casting`, two bolts, `Power` (a power lamp), `Scale` (the plot's SCALE knob and
   zoom readout) and `Tint` (the grid tint knob, with WHT and R-O lamps). The art files are in
   `Art/Console`. The Art list has 11 entries.
@@ -618,13 +709,14 @@ The rails have no groups. Each key overlaps the next by 3 px. Its plate and lamp
 the list. Keep the parts in their order.
 
 Ask a technical artist before you change these:
-- The pause key and the four rate keys are not in the Art list. The board script swaps their
-  sprites: **Pause Key Run**, **Pause Key Paused**, **Rate Key On** and **Rate Key Off**.
+- The pause key and the rate keys are not in the Art list. The board script swaps their sprites:
+  **Pause Key Run**, **Pause Key Paused**, **Rate Key On** and **Rate Key Off**. The board shows
+  three rate keys. `x10 key` and `x10 label` are switched off in the prefab (owner 2026-11-01).
 - The board script moves the tool rail's `Selected frame` and `Selected bar` to the chosen tool
   key (**Selected Frame**, **Selected Bar**, **Tool Keys**).
 - The board script turns the console's two pointers: **Scale Dial** and **Tint Dial**.
 - The board script shows and hides the alarm strip (**Alarm Parts**). It writes its words and
-  count.
+  count. The words start at the left, just after the count, and long lines run on to the right.
 - The sensors drawer fills the signal box.
 - The playtest finds `AlarmStrip/Words`, `SignalBox/Signal · percent` and
   `SignalBox/Signal · note` by name. The board script and the playtest find some frame pieces by name too. Don't rename

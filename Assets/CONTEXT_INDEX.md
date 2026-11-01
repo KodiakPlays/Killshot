@@ -24,9 +24,11 @@ you as friendly and **all of them are passive at the start**. The game is about 
 that lie going, and picking the moment to drop it. Detection is not failure. It is the rhythm: hide,
 gather, act, get found, break away, gather again.
 
-**What is built today** is the first mission, **Wolf Hunt**. A Garuda-class cruiser hunts you. You
-find it, destroy it or capture it, then fly to a jump point to win. How it plays is in
-`Assets/Scenes/Tactical/BUILD_LOG.md`, section 6, "Steps 94 to 101".
+**What is built today** is six levels on a MISSIONS list: the training levels FLIGHT DRILL, WEAPONS
+FREE, NO PEEKING and FINDERS KEEPERS, then INTERCEPT, then the full mission, **Wolf Hunt**. In Wolf Hunt a
+Garuda-class cruiser hunts you. You find it, destroy it or capture it, then fly to a jump point to
+win. What each level asks of you is in `Assets/TACTICAL_BOARD_SPEC.md` §15.5. How Wolf Hunt plays is
+in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 6, "Steps 94 to 101".
 
 ---
 
@@ -79,7 +81,7 @@ pages, and most of it has been overtaken.
 | What is built in the tactical scene, and the traps already hit | `Assets/Scenes/Tactical/BUILD_LOG.md`. The traps are in section 5. |
 | What is left to do, sorted | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 8, "Triage" |
 | A ship's numbers: speed, power, weapons, armour, crew per room | `Assets/Ships/Asura.asset` (our ship), `Assets/Ships/Garuda.asset` (the enemy cruiser) and `Assets/Ships/Frigate.asset` (the Naga-class frigates). Edit them in **Starwolf → Tuning**, on the Ship and Enemy tabs. |
-| The keys, and how to change them | `README.md`, Controls. Change them in **Starwolf → Keys**. |
+| The keys, and how to change them | `README.md`, Controls. Change them on the Keys tab of **Starwolf → Tuning**. |
 | How damage works: armour, rooms, fire, vacuum, radiation | `Assets/Scenes/Tactical/DAMAGE_README.md` |
 | How boarding works: the assault boats and their orders | `Assets/Scenes/Tactical/BOARDING_README.md` |
 | The design audit the damage model is built on | `References/Star Wolf - Design Audit.dc.html` |
@@ -87,7 +89,11 @@ pages, and most of it has been overtaken.
 | Whether a change to speeds, ranges or weapons still gives a fight of the right length | `docs/scale-sim/README.md` |
 | How to turn the repo into NotebookLM sources | `Tools/notebooklm/README.md` |
 | How the green phosphor screen works (intro, welcome page, INITIALISING), and how to put it on a new screen | `Assets/StarwolfIntro/README.md` |
-| The tutorial mission with the XO walking you through each station — the plan, not built (Wolf Hunt was built first) | `Assets/Scenes/Tactical/FTUE_PLAN.md` |
+| The six levels: what each one asks, and how to win or lose it | `Assets/TACTICAL_BOARD_SPEC.md` §15.5. Each level's numbers are in `BUILD_LOG.md`, section 2. |
+| FLIGHT DRILL: its 13 steps, and how to change one | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 2, `FlightDrill`. The notes, rings and amounts are in the Mission box in `Assets/Scenes/Levels/FlightDrill.unity`. |
+| What ENG does to the ship's movement, and the side thrusters | `Assets/TACTICAL_BOARD_SPEC.md` §4.2 and §4.3. The numbers are in each ship's stats file in `Assets/Ships`. |
+| The training levels and how they were built; the plan to split WEAPONS FREE | `Assets/Scenes/Tactical/FTUE_PLAN.md` §0 |
+| The later tutorial mission, with the XO walking you through each station. It is a plan only | `Assets/Scenes/Tactical/FTUE_PLAN.md` §1 to §9 |
 | Where a panel's prefab and art are, and how to swap its art | `Assets/UI/Board/README.md` |
 | Spoken orders, and how an outside program (or Claude) could drive the built game — an idea, not built | `docs/voice-command-exploration.md` |
 | Ship silhouettes, class size table, obstacle tiers | `References/Starwolf_ Art Spec.pdf` |
@@ -153,7 +159,7 @@ fonts and measurements. The art the board uses is in `Assets/UI/Board/Art/`. The
 
 **`CLAUDE.md`** (repo root) — how to work in this repo: Unity MCP rules, C# conventions, repo hygiene. Not design.
 
-**`Assets/TACTICAL_BOARD_SPEC.md`** — ~1,800 lines. **The specification.** What the game does, system
+**`Assets/TACTICAL_BOARD_SPEC.md`** — ~2,000 lines. **The specification.** What the game does, system
 by system, with numbered rules. Start at "Summary" and "How it plays"; jump to a system after that.
 *Not good for:* why. It deliberately omits reasoning.
 
@@ -183,9 +189,21 @@ enemy with an open face. If the marines win, they DESTROY, DISABLE or SECURE the
 
 ### Levels — `Assets/Scenes/Levels/`
 
-Each level is a small scene. The board loads one on top of itself at play (`TacticalWorld.cs`,
-`levelScene`). `Level_01.unity` is the first, and is Wolf Hunt's map. The spawn points and the debris
-fields are placed in the level. Since Step 107 it has no broken starbase. Make and edit levels with the menu **Starwolf → Level** (`Assets/Editor/LevelWindow.cs`).
+Each level is a small scene. The board loads one on top of itself at play: the level picked on the
+MISSIONS list (`TacticalWorld.chosenLevel`), or `Level_01` if the board was opened by itself. The
+training levels keep their old scene names.
+
+| On the list | Scene |
+|---|---|
+| 1 FLIGHT DRILL | `FlightDrill.unity` |
+| 2 WEAPONS FREE | `FirstShot.unity` |
+| 3 NO PEEKING | `SilentShot.unity` |
+| 4 FINDERS KEEPERS | `Prize.unity` |
+| 5 INTERCEPT | `Intercept.unity` |
+| 6 WOLF HUNT | `Level_01.unity` |
+
+Each level has a Mission box with its goal and its briefing. The spawn points, debris and gas clouds
+are placed in the level. Since Step 107 `Level_01` has no broken starbase. Make and edit levels with the menu **Starwolf → Level** (`Assets/Editor/LevelWindow.cs`).
 The Level tool is described in `BUILD_LOG.md` section 3.
 
 ### `docs/reference-sim/` — deleted (owner, 2026-10-29)
@@ -197,7 +215,7 @@ game's C#. Git has it: `git show 218acc8:docs/reference-sim/<file>` (`weapons.ts
 ### `docs/scale-sim/README.md`
 
 A small Python script that plays whole fights with the board's rules and numbers. It reports how long
-a win takes and how many shots are traded. It set the 5× speed scale in Step 63. Re-run it after any
+a win takes and how many shots are traded. It set the 5× speed scale in Step 63 and checked the designer's table in Step 130. Re-run it after any
 change to speeds, ranges, weapons or the enemy.
 
 ### `Tools/notebooklm/README.md`
@@ -220,9 +238,9 @@ document, and do not quietly design around them.
 | **No EXECUTE, no emergency abort** | The only time controls are **PAUSE** and **PLAY RATE**. There is no commit step and no order queue. Orders take effect as you give them. |
 | **Real time with optional pause** | Pause is a convenience, not the core verb. The handoff's paused-time framing is wrong for this game. |
 | **No broadside cannon, no spinal railgun** | The board has neither. There is no gun that fires down the length of the ship. Soham's old `Weapons/BroadsideCannon.cs` and `Weapons/Railgun.cs` are kept as old code. The board does not use them. |
-| **Two railgun turrets** | RG-A covers 042° ±80° from the bow. RG-B covers 250° ±80°. One each side. Reach 25,000 km, 22 rounds each. One shot per arming. The slug flies at 2,500 km/s, so it takes about 10 s to reach 25,000 km. |
-| **Two PDC groups** | PDC-A covers the starboard half, 090° ±90° from the bow. PDC-B covers the port half, 270° ±90° (Step 106). Reach 10,000 km, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy missiles entering its arc, with a 70% chance to kill each one. They are the only answer to a missile salvo. |
-| **Missiles** | Fire in any direction, no arc. Fired from the VLS on the Fire Control panel, two to a salvo. Reach 35,000 km, 8 missiles. |
+| **Two railgun turrets** | RG-A covers 090° ±45° from the bow, RG-B 270° ±45°. One in the middle of each long side, on hard points you drag on the Hard Points tab of Starwolf → Tuning. A solid bar turns slowly onto the target inside each cone, and the shot flies down the bar. Reach 2,000 units, 22 rounds each. One shot per arming. The slug flies at 300 units/s, so it takes about 7 s to reach 2,000 units. |
+| **Two PDC groups** | PDC-A covers the starboard half, 090° ±90° from the bow. PDC-B covers the port half, 270° ±90° (Step 106). Reach 600 units, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy missiles entering its arc, with a 70% chance to kill each one. They are the only answer to a missile salvo. |
+| **Missiles** | Fire in any direction, no arc. Fired from the VLS on the Fire Control panel, two to a salvo. Reach 3,000 units at 400 units/s, 8 missiles. |
 | **A volley is a consequence, not a mode** | There is no salvo button, no spread control, no fire pattern menu. Arm several turrets on the same bearing and they converge. Arm them on different bearings and you get a fan. The width of the fan is the difference between the numbers you typed. |
 | **Density over time compression** | The empty-board problem is solved with a smaller, debris-dense arena, not by fast-forwarding. Modest play-rate range only. Collision is gameplay, not an error. |
 | **Ten reactor units, four buses** | ENG · WEP · SEN · AUX, five units each at most. Ten units means **you can fully run two.** A bus on DRAW gains one unit per game second. A bus on VENT loses one. Every unit on a bus makes you louder. |
@@ -230,9 +248,10 @@ document, and do not quietly design around them.
 | **Colour is a code** | Shape says class, colour says allegiance, and a shape is never used for two sides. No new hues without extending the code. |
 | **Panels do not pause the game** | The clock is universal and keeps running while you work a panel. |
 | **The plot glyph never shows damage** | It stays a symbol. The periscope shows a target's damage. The Engineering panel shows ours on a picture of the hull. |
-| **Everything runs in kilometres and game seconds** | Ranges, speeds and the battle space are in km. Every rate runs per game second, so x10 runs everything ten times as fast. |
+| **Everything runs in units and game seconds** | Ranges, speeds and the battle space are in units. At x1 a game second is a real second (Step 130). Every rate runs per game second, so x10 runs everything ten times as fast. |
 
-The weapon, power and armour rows above match the code and the ship stats files in `Assets/Ships/`.
+The weapon, power and armour rows above match the ship stats files in `Assets/Ships/`, with one
+difference. `Asura.asset` also has PDC-C, PDC-D, VLS-A and VLS-B, and its PDC arcs are wider.
 The owner's rulings since 2026-10-04 are in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 4.
 
 ---
@@ -251,7 +270,7 @@ work the same way: swappable, nothing hard-wired. Each ship has one stats file i
 `Asura.asset` for our ship, `Garuda.asset` for the enemy cruiser and `Frigate.asset` for the Naga
 frigates (`ShipStats`, read through `Ship.cs`). Edit them in **Starwolf → Tuning**, on the Ship and
 Enemy tabs. The board's numbers are fields marked `[Tune]` on its scripts, on the Board tab. The keys
-are on the Keys tab (**Starwolf → Keys**). Each panel prefab has an **Art** list with its sprites (see
+are on the Keys tab of **Starwolf → Tuning**. Each panel prefab has an **Art** list with its sprites (see
 `Assets/UI/Board/README.md`).
 
 **Do not invent design to fill a gap.** If a document is silent, say it is open and stop. Mark it
@@ -269,9 +288,9 @@ ceiling.
 
 The flow is `00_Start` → `01_Briefing` → `02.1_Grid`. The new Claude Design handoff is fully built
 into `02.1_Grid` and passed its final QA. Every control is clickable and shows its states. Wiring to
-game systems started in Step 34 and is ongoing. The first mission, Wolf Hunt, is playable, and built
-as a Mac app at `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`. The older
-`02_Grid` board has been deleted. At play the board loads a level on top of itself, `Assets/Scenes/Levels/Level_01.unity`.
+game systems started in Step 34 and is ongoing. All six levels are playable, from the MISSIONS list
+in `01_Briefing`. The Mac app is built at `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`. The older
+`02_Grid` board has been deleted. At play the board loads the picked level on top of itself, from `Assets/Scenes/Levels/`.
 For the current step, read section 1 of `BUILD_LOG.md`.
 
 **Read `Assets/Scenes/Tactical/BUILD_LOG.md` before you touch that scene.** The owner builds one step
@@ -317,10 +336,10 @@ Do not treat any of these as decided. Ask the owner.
 - Firing a railgun spends 70 of the weapon charge and adds 25 to our signal. Nothing vents.
 - A bus on DRAW takes units the reactor has spare. With all ten units placed, it waits until another
   bus vents.
-- The plot shows 60.9 px per 1,000 km at zoom 1 (`PlotPanel.cs`, `pxPer1000Km`).
+- The plot shows 760 px per 1,000 units at zoom 1 (`PlotGrid.cs`, `pxPer1000Units`).
 - PDC groups have fixed arcs and fire by themselves on AUTO. Missiles fire from the VLS on the Fire
   Control panel.
-- Each level sets its battle space with a Battle Space box (Starwolf → Level, Step 91). Without one it is 100,000 × 100,000 km (`ShipState.arenaWidthKm`).
+- Each level sets its battle space with a Battle Space box (Starwolf → Level, Step 91). Every level is 20,000 × 20,000 units (Step 130). Without one it is 100,000 × 100,000 units (`ShipState.arenaWidthUnits`).
 - Ammunition is a real count in the ship stats files.
 - The aft armour is 50.
 - The Engineering panel is built (`Assets/Scripts/UI/Panels/EngineeringPanel.cs`).

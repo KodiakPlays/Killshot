@@ -13,10 +13,25 @@ and auxiliary (AUX). A bus takes at most five units, so you can fully run only
 two. More power to DRADIS means less power for the guns. Every unit you draw
 makes the ship louder. Every advantage is bought by giving something up.
 
-The first mission is **Wolf Hunt**. A Garuda-class cruiser hunts you through a
-field of debris. Find it, then destroy it or capture it. A jump point then opens
-at a far edge of the map. Reach it to win. Once the Garuda finds you, a
-countdown starts and Naga-class frigates come in from the edges.
+There are six levels. You pick one from the MISSIONS list. The enemy is the
+Garuda, a Garuda-class cruiser. In the first five levels it does not hunt you
+and does not fire.
+
+1. **FLIGHT DRILL.** Training. Learn to fly the ship, with nothing to fight. A
+   note gives you each of 13 steps: power, throttle, heading, the side
+   thrusters, zoom, DRADIS, a belt of rocks, and stopping inside a ring.
+2. **WEAPONS FREE.** Training. Scan the Garuda and destroy it with the railgun.
+   It stays still, 1,500 units away.
+3. **NO PEEKING.** Training. Hit the Garuda once with no scan and no lock. Use
+   POINT and RULER. A scan or a lock loses the level.
+4. **FINDERS KEEPERS.** Training. Capture the Garuda. Scan it, open one side,
+   stop it, then send the marines. Destroying it loses the level.
+5. **INTERCEPT.** The Garuda starts beyond DRADIS reach. Decode one of its radio
+   messages, fly the way it says, and hear it on DRADIS.
+6. **WOLF HUNT.** The full mission. The Garuda hunts you through a field of
+   debris. Find it, then destroy it or capture it. A jump point then
+   opens at a far edge of the map. Reach it to win. Once the Garuda finds you, a
+   countdown starts and Naga-class frigates come in from the edges.
 
 ## Running it
 
@@ -26,10 +41,10 @@ Open the project in **Unity 6000.5.10f1** and load:
 Assets/Scenes/Tactical/00_Start.unity
 ```
 
-Press play. The intro runs by itself to a menu. Pick NEW GAME. Two title cards
-show, MISSION ONE and then WOLF HUNT. Then INITIALISING... and the tactical
-board. The board loads the level, `Assets/Scenes/Levels/Level_01.unity`, on top
-of itself. To skip straight to the board, open `02.1_Grid.unity` instead.
+Press play. The intro runs by itself to a menu. Pick NEW GAME. The MISSIONS list
+opens. Pick a level. INITIALISING... shows, then the tactical board. The board
+loads your level from `Assets/Scenes/Levels/` on top of itself. To skip straight
+to the board, open `02.1_Grid.unity` instead. It plays Wolf Hunt.
 
 The Mac app is built outside the repo, at
 `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`.
@@ -41,13 +56,17 @@ does a few things.
 
 | Input | What it does |
 |---|---|
-| `Enter` | Skip ahead on the start screens. On the menu, the arrow keys or `Tab` move and `Enter` or `Space` picks. |
+| Menu | The arrow keys or `Tab` move. `Enter` or `Space` picks. A click works too. |
+| MISSIONS list | The arrow keys move. `Enter` picks. A click works too. |
+| `Esc` | Quit at once, on any screen. There is no confirm box. It does nothing in the Unity editor. |
 | `P`, or the PAUSE key | Stop or start time. The board opens paused. |
-| Rate keys | Run time at x0.25, x1, x5 or x10. |
+| Rate keys | Run time at x0.25, x1 or x5. |
+| Briefing icon, next to the rate keys | Open or close the briefing. |
 | Power panel, bus selectors | Click to step a bus between VENT, STANDBY and DRAW. A bus on DRAW gains one unit per game second. A bus on VENT loses one. |
 | Helm, throttle fader | Drag to set the throttle. |
 | `W` / `S` | Raise or lower the throttle 10% a press. Hold to repeat. |
 | `A` / `D` | Step the ordered heading 3° to port or starboard. Hold to repeat. The bow swings round to it. |
+| `Q` / `E` | Slide the ship to port or starboard while the key is down. The nose stays still. Let go, and the side thrusters stop the slide. They need ENG power. |
 | Scroll wheel over the plot | Zoom in and out. The SCALE knob does the same when dragged. |
 | Drag the empty grid, or the arrow keys | Pan the plot. With POINT, RULER or COMPASS picked, a drag draws a mark instead. |
 | `C` | Centre the plot on our ship. |
@@ -55,16 +74,18 @@ does a few things.
 | Click or drag on the plot | Use the tool you picked. |
 | Right rail, or `1` to `6` | Open or close a drawer: 1 fire control, 2 sensors, 3 power, 4 hangar, 5 engineering, 6 comms. |
 
-To change a key, open **Starwolf → Keys** in the Unity editor. The keys do
-nothing while you type in a text box.
+To change a board key, open the Keys tab of **Starwolf → Tuning** in the Unity editor. The keys do
+nothing while you type in a text box, except `Esc`, which still quits.
 
 What each panel's switches do is in `Assets/UI/Board/README.md`.
 
-**Engine power sets your top throttle.** Each unit on the ENG bus allows 20%
-throttle, so five units allow 100%. With no ENG power the ship has no thrust.
-Put the ENG bus on DRAW first and let it fill. If the ENG bus drops, the
-throttle goes back to zero and you set it again. Turning does not need power. A
-damaged engine room turns the ship more slowly and lowers the throttle limit.
+**Engine power sets your top speed, thrust and turn rate.** One unit on the ENG
+bus allows 25 units a second, and five units allow 50. Five units also give
+twice the acceleration, braking, turn rate and side thrust of one unit. With no
+ENG power the ship has no thrust and no side thrusters, and it still turns, at
+the one-unit rate. Put the ENG bus on DRAW first and let it fill. If the ENG bus
+drops, the throttle goes back to zero and you set it again. A damaged engine
+room turns the ship more slowly and lowers the throttle limit.
 
 **Stability** is shown on the helm. Throttle lowers it. The FLANK and EVASIVE
 approach modes lower it more. Nothing else in the game reads it so far.

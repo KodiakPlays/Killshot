@@ -1,7 +1,8 @@
 # The first mission (FTUE) and the first enemy — plan
 
-**Summary.** NEW GAME drops you straight into one mission, which is also the tutorial. The ship is
-already under way. Your XO talks to you through a small comms box on the plot and walks you through
+**Summary.** The tutorial's first version is built: short levels on a MISSIONS list (§0). The rest of
+this plan is the later version. In it, NEW GAME drops you straight into one mission, which is also
+the tutorial. The ship is already under way. Your XO talks to you through a small comms box on the plot and walks you through
 every station on the board, one at a time, in a fixed order. Nothing you have not been shown yet
 will work. You practise on derelicts first. Then one enemy, the Garuda-class cruiser, far away, that patrols, hears
 you, comes to look, sweeps, and fights. You kill it, the XO says "let's get out of here", and the
@@ -10,10 +11,11 @@ mission ends. No reinforcements.
 Planned with the owner on 2026-10-18. This is a pickup document for whoever builds it. The build
 order is in §9. Build one step, show it, wait. Do not run ahead (BUILD_LOG decision 17).
 
-**What is built (checked 2026-10-29).** The enemy half of this plan is built, as the mission Wolf
-Hunt (Steps 95 to 99). The Garuda hunts us, hears us, searches, and fights back with railguns and
-missiles. The tutorial half is not built: no XO, no comms box, no gating, no walkthrough, no
-derelicts.
+**What is built (checked 2026-11-01).** The six levels on the MISSIONS list (§0), each with a
+briefing box that says what to do. The enemy half of this plan, as the mission Wolf Hunt (Steps 95
+to 99): the Garuda hunts us, hears us, searches, and fights back with railguns and missiles.
+
+**Not built:** the XO, the comms box, gating, the walkthrough and the derelicts.
 
 **Changed by the owner since (2026-10-27).** Two rules in this plan are replaced:
 
@@ -48,21 +50,29 @@ later ones mix more of them. Each level is a small real job with a clear win at 
 - Two levels the owner named: board an enemy ship that is not hunting you; hit a target with POINT
   and RULER only, with no scans. The owner calls the passive shot "an ambush move".
 
-**Built, Step 114 (2026-10-29).** The owner said yes to the four levels below. NEW GAME opens the
-list, titled MISSIONS (the green screen's letters have no V). All four can be picked and played. Each
-goal's win and loss is checked; no level has been played through by hand yet. Details: `BUILD_LOG.md`
-Step 114.
+**Built, Steps 114, 115, 137 and 144.** The owner said yes to levels 2, 3, 4 and 6 below in Step 114.
+Step 115 named the first three of those. INTERCEPT came in Step 137 and FLIGHT DRILL in Step 144. NEW
+GAME opens the list, titled MISSIONS (the green screen's letters have no V). All six can be picked and
+played. Each goal's win and loss is
+checked. WEAPONS FREE, NO PEEKING, FINDERS KEEPERS and INTERCEPT have been won by script through the real
+controls, and FLIGHT DRILL has been played to the end by script. No person has played them since the
+last changes. Details: `BUILD_LOG.md` Steps 114, 115, 137, 141, 143 and 144.
 
-**The levels.** In each training level the Garuda
-does not hunt us. It cruises the map, never listens for us and never fires. That is the brain's
-`hunts` switch turned off, which is built.
+**The levels.** In levels 1 to 5 the Garuda does not hunt us, never listens for us and never fires.
+That is the brain's `hunts` switch turned off, which is built. In FLIGHT DRILL it is parked at the far
+corner, out of DRADIS reach of the course. In WEAPONS FREE and FINDERS KEEPERS it stays still, 1,500
+units away. In NO PEEKING it moves at 8 units/s, 4,000 units away. In INTERCEPT it cruises at 20
+units/s, at least 8,000 units away (Steps 130 and 142). The training levels from Step 114 keep their
+old scene names.
 
 | # | Level | Goal | Tools |
 |---|---|---|---|
-| 1 | FIRST SHOT | Destroy the Garuda. | ACTIVE scan, periscope, TRACK, the four railgun switches, the lever |
-| 2 | SILENT SHOT | Hit the Garuda once without scanning it. | Listening, bearing lines, POINT, RULER, TRACK from the plot, the railgun |
-| 3 | PRIZE | Capture the Garuda. | Railgun to break a side open, interceptors on DISABLE to stop it, assault boats on SECURE |
-| 4 | WOLF HUNT | As now. | Everything. It hunts us, fights back, and reinforcements come. |
+| 1 | FLIGHT DRILL (Step 144) | Finish 13 steps, in order. A note gives each step. | ENG on the power panel, the throttle, A and D, Q and E, plot zoom, DRADIS, flying through rocks, stopping in a ring |
+| 2 | WEAPONS FREE (scene `FirstShot`) | Destroy the Garuda. | ACTIVE scan, the targeting computer's lock, the four railgun switches, the lever |
+| 3 | NO PEEKING (scene `SilentShot`) | Hit the Garuda once with no scan and no lock. | Listening, bearing lines, POINT, RULER, TRACK from the plot, the railgun |
+| 4 | FINDERS KEEPERS (scene `Prize`) | Capture the Garuda. | A scan, the railgun to break a side open, interceptors on DISABLE to stop it, assault boats on SECURE |
+| 5 | INTERCEPT (Step 137) | Decode a radio message, fly the way it says, and hear the Garuda on DRADIS. | Comms: band, tuning, LOCK and the four dials. The helm. DRADIS. |
+| 6 | WOLF HUNT | As now. | Everything. It hunts us, fights back, and reinforcements come. |
 
 **How it is built (Step 114).**
 
@@ -80,10 +90,25 @@ Not needed for this version: the XO, the comms box, gating (§6 and §7).
 **Open questions.**
 
 1. Does Wolf Hunt stay on the list as the last level? (It is there now.)
-2. In SILENT SHOT a scan loses the level (a call made while building). Or should ACTIVE be switched
-   off instead?
+2. In NO PEEKING a scan loses the level (a call made while building), and so does a lock (Step 141).
+   Or should ACTIVE be switched off instead?
 3. Are all levels open from the start, or does each open when the one before is won? (All open now.)
-4. Should the board say the goal once a level has started? (It doesn't now.)
+4. Should the board say the goal once a level has started? **Owner 2026-11-01: a small icon opens the
+   briefing again. Built in Step 134.**
+
+**Splitting WEAPONS FREE (job agreed by the owner 2026-11-01; not built).** WEAPONS FREE takes about
+19 actions to reach the first shot. The plan is to make three levels from it. Their names are not
+decided.
+
+1. **Fire.** The ship starts powered, at C2, with the Garuda locked and inside a gun's cone. The
+   player sets the four switches and pulls the lever.
+2. **Lock.** The ship starts powered, at C2, with the Garuda in sight of the targeting computer. The
+   player turns until the Garuda is inside a gun's cone, uses SIGHT, SLEW TO and MAG, fills the bar
+   and fires inside the 10 seconds the lock lasts.
+3. **From cold.** This is today's WEAPONS FREE: power, alert, DRADIS, scan, turn, lock, fire.
+
+NO PEEKING, FINDERS KEEPERS and WOLF HUNT follow. A level needs three new settings for this: start
+powered, start at C2 and start locked. They would go in its Mission box.
 
 ---
 
@@ -132,10 +157,9 @@ This plan is items 5 and 7, with the alert net removed. It needs:
 
 Everything goes under the `World` root in `02.1_Grid`, as `WorldContact`s, the way the Garuda
 (`Garuda · Cruiser`) is today. Where each one starts is set by a spawn point in the level scene
-(`Assets/Scenes/Levels/Level_01.unity`, for example `Enemy Spawn · Garuda`). Units are the board's
-km (`TacticalWorld`: 1 unit = 1 km). The board's own numbers already use this scale: DRADIS range
-12,000 + 3,600 km per gain step, railguns 25,000 km, missiles 35,000 km, PDCs 10,000 km. So the
-spec's distances carry over as they are.
+(`Assets/Scenes/Levels/Level_01.unity`, for example `Enemy Spawn · Garuda`). The board's numbers are in units: DRADIS
+5,000 at gain 1 to 7,500 at gain 5, railguns 2,000, missiles 3,000, PDCs 600 (Step 130). The spec's
+older distances need scaling to these.
 
 | Thing | Count | Where | What it does |
 |---|---|---|---|
@@ -236,21 +260,22 @@ cannons and boarding pods, and not the prototype's broadside guns.
 The handoff's fit is ours and the Garuda's. The numbers are in `WeaponSystem.Stats.mounts`, in
 each ship's stats file (`Assets/Ships/Asura.asset`, `Garuda.asset`):
 
-| Mount | What | Where it points | Covers | Reach (km) |
+| Mount | What | Where it points | Covers | Reach (units) |
 |---|---|---|---|---|
-| RG-A | Railgun turret A | **starboard side**, arc centre 42° | ±80° | 25,000 |
-| RG-B | Railgun turret B | **port side**, arc centre 250° | ±80° | 25,000 |
-| PDC-A, PDC-B | Point defence groups | 090° and 270°: the starboard half and the port half (owner, 2026-10-29) | ±90° | 10,000 |
-| VLS | Missile cells | all round | ±180° | 35,000 |
+| RG-A | Railgun turret A | **starboard side**, arc centre 90° (owner, 2026-11-01) | ±45° | 2,000 |
+| RG-B | Railgun turret B | **port side**, arc centre 270° (owner, 2026-11-01) | ±45° | 2,000 |
+| PDC-A, PDC-B | Point defence groups | 090° and 270°: the starboard half and the port half (owner, 2026-10-29) | ±90° | 600 |
+| VLS | Missile cells | all round | ±180° | 3,000 |
 
-**Two turrets, one on either side of the ship** (owner, 2026-10-18). Each sees most of its own
-side and nothing of the other. So a ship fights **side-on**, and which side it shows is both its
-armour and its gun. The Garuda has the same layout. Its numbers differ (Step 96): see
+**Two turrets, one on either side of the ship** (owner, 2026-10-18). Each sees a 90° cone straight out of
+its own side and nothing of the other. A gun can fire once the target is **anywhere inside its cone**:
+the ship doesn't need to be side-on (owner, 2026-11-01). Which side it shows is both its armour and its
+gun. The Garuda has the same layout. Its numbers differ (Step 96): see
 `Assets/Ships/Garuda.asset`. The table gives ours.
 
 Rounds, flight, hits and damage are whatever the fire, hit and damage steps build for us, used from
-the other end. A railgun slug flies at 2,500 km/s, about 10 s to its 25,000 km reach (owner,
-2026-10-27). The Garuda uses the same code.
+the other end. A railgun slug flies at 300 units/s, about 7 s to its 2,000-unit reach (owner,
+2026-11-01). The Garuda uses the same code.
 
 The brain's tactic, from the prototype, fits this layout exactly:
 
@@ -423,8 +448,8 @@ The order follows the owner's wiring order, so each step can be built as its sta
 | 9 | Sensors | "Sensors. DRADIS on. We only hear what has power in it, and only inside our range. Boost the gain." | Opens SENSORS, DRADIS on, gain up | `sensors.dradis` and `sensors.senBoost` raised |
 | 10 | Sensors | "There. Something dead ahead, close. Point the cone at it and go active. Active is loud. Remember that." | Cone onto derelict 1, active scan | `sensors.ConeCovers(derelict1)` and `sensors.active` for one full tick cycle |
 | 11 | Sensors | "A derelict. Dead hull. Look at the readout: its sides, its compartments, what is left of them. A scan shows you a ship the way you see your own. Now listen: every time you go active, anyone out there hears you. Switch active off." | Opens the target readout, active off | derelict 1 scanned and its compartments shown; `!sensors.active` |
-| 12 | Comms | "Comms. There's chatter on the net. Find the channel, tune it, lock it, and work the dials. The key is our own callsign." | Tune, LOCK, decrypt | `comms.Solved` |
-| 13 | Comms | "That's a hostile patrol order. One cruiser, their side of the sector. So we know who's out here, and roughly where." | Talk line. Also drops a rough marker on the plot, the way the spec's comms payoff does. | next click |
+| 12 | Comms | "Comms. There's chatter on the net. Find the channel, tune it, lock it, and work the dials. Every message starts with the sender's name." | Tune, LOCK, decrypt | `comms.Solved` |
+| 13 | Comms | "That's the Garuda. The message gives its heading, its speed and which way it is from us. Work out the rest." | Talk line. Nothing is drawn on the plot (owner, 2026-10-29). | next click |
 | 14 | Orders | "Orders station, bottom left. Set CONDITION 2. Weapons and flight ops are released from Condition 2 up. AUX pays for orders; watch the pool." | `orders.alert` to 1 | `orders.alert >= 1` |
 | 15 | Engineering | "Engineering. I've staged a drill: the hangar bay reads INTEG 4. Select it and send a repair party. Six ticks and it lands." | Select HGR, PARTY | `damage.CompHealth("hgr") == 5` again |
 | 16 | Engineering | "REBOOT, SEAL and VENT live here too. You'll need them when we take a hit. Not today." | Talk line | next click |
@@ -434,7 +459,7 @@ The order follows the owner's wiring order, so each step can be built as its sta
 | 20 | Fire control | "Fire." | Fire lever | `weapons.fired` and a hit lands on derelict 1 |
 | 21 | Fire control | "Hit. Hull side matters: you hit what faces you. Finish it." | Fires until destroyed | derelict 1 destroyed |
 | 22 | — | "The second derelict is yours, Captain. Your choice of weapon. Take it when you like." | Any kill | derelict 2 destroyed |
-| 23 | Enemy | "That cruiser is still out there. Set a course. Go dark on the way in: power down what you don't need. It's listening. When you are close enough, scan it before it knows you are there. Know where its reactor sits before you shoot." | Steers toward the Garuda, scans it | range to the Garuda < 20,000 and the Garuda scanned (its compartments shown) |
+| 23 | Enemy | "That cruiser is still out there. Set a course. Go dark on the way in: power down what you don't need. It's listening. When you are close enough, scan it before it knows you are there. Know where its reactor sits before you shoot." | Steers toward the Garuda, scans it | range to the Garuda < 3,000 and the Garuda scanned (its compartments shown) |
 | 24 | Enemy | *(fires when the Garuda reaches SEARCHING)* "It heard something. It's turning toward where we were. Decide, Captain: go dark and wait, or go loud and fast." | Nothing | Garuda awareness ≥ 2 |
 | 25 | Enemy | *(fires on ALERT)* "Active sweep. They have us. No more hiding. Weapons free." | Fights | Garuda awareness == 3 |
 | 26 | Enemy | "Kill it." | Kills the Garuda | Garuda destroyed |
