@@ -933,7 +933,7 @@ public class PlotPanel : Panel
     // clk: hh:mm:ss from the mission clock; seconds print as JS prints a number (2.25 stays 2.25)
     static string Clock(float t)
     {
-        double s = t;
+        double s = System.Math.Floor(t); // the clock runs in fractions of a second since the spacing change: whole seconds here
         string P(double n) { var str = n.ToString("R", System.Globalization.CultureInfo.InvariantCulture); return str.Length < 2 ? "0" + str : str; }
         return P(System.Math.Floor(s / 3600) % 100) + ":" + P(System.Math.Floor(s / 60) % 60) + ":" + P(s % 60);
     }

@@ -200,12 +200,12 @@ public class QuestSystem : MonoBehaviour
         float hw = (float)us.ArenaHalfW - arriveInsetUnits, hh = (float)us.ArenaHalfH - arriveInsetUnits;
         var ours = new Vector2((float)us.nav.x, (float)us.nav.y);
         Vector2 at = Vector2.zero;
-        for (int tries = 0; tries < 8; tries++) // not on top of us: at least 25,000 units away if it can
+        for (int tries = 0; tries < 8; tries++) // not on top of us: at least 8,000 units away if it can
         {
             float r = Random.Range(-1f, 1f);
             int edge = Random.Range(0, 4);
             at = edge == 0 ? new Vector2(r * hw, hh) : edge == 1 ? new Vector2(r * hw, -hh) : edge == 2 ? new Vector2(hw, r * hh) : new Vector2(-hw, r * hh);
-            if ((at - ours).magnitude >= 25000f) break;
+            if ((at - ours).magnitude >= 8000f) break;
         }
         Arrived++;
         world.AddContact(reinforcement, "r" + Arrived, at, TacticalWorld.Bearing(-at), ours + Random.insideUnitCircle * briefErrorUnits, now);

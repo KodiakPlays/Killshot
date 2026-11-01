@@ -233,11 +233,11 @@ public class TacticalWorld : MonoBehaviour
             ship.missionNow = board.State.missionNow;
             // EMP (Step 53): power is out until it wears off; then its engines come back
             if (ship.empUntil > 0f && ship.missionNow >= ship.empUntil) { ship.empUntil = 0f; ship.power.PowerEngines(); }
-            ship.damage.TickConditions(board.Rate); // Step 59: its fires, vacuum and radiation, held still or not
+            ship.damage.TickConditions(board.TickGameSeconds); // Step 59: its fires, vacuum and radiation, held still or not
             if (!brain || !brain.enabled) continue;
             if (ship.destroyed || ship.captured) ship.nav.throttle = 0; // a wreck, or a prize our marines hold (Step 60), makes no way of its own
             else brain.Think(ship, board.State);
-            ship.nav.Tick(board.Rate); // it steers, moves, and puts its model where it is
+            ship.nav.Tick(board.TickGameSeconds); // it steers, moves, and puts its model where it is
         }
         Sync();
         SeeRuins();

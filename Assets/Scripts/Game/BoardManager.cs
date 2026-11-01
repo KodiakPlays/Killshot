@@ -132,9 +132,12 @@ public class BoardManager : MonoBehaviour
     [Header("Time control")]
     [SerializeField] private TMP_Text clock;
     [SerializeField] private float missionSeconds = 7412f;
-    [Tooltip("tickPower runs every 420 ms; the clock advances by the rate in seconds each tick while running.")]
+    [Tooltip("tickPower runs every 420 ms; each tick moves the game on by TickGameSeconds while running.")]
     [Tune("Board & time")]
     [SerializeField] private float tickSeconds = 0.42f;
+    [Tooltip("Game seconds per real second at x1. Owner 2026-11-01: 1, so a second on the clock is a real second and 50 units/s is 50 units a real second. It was 2.38 before Step 130.")]
+    [Tune("Board & time")]
+    [SerializeField] private float gameSecondsAtX1 = 1f;
     [SerializeField] private bool paused = true;
     [SerializeField] private float rate = 1f;
     [SerializeField] private Image pauseKey;
@@ -181,9 +184,9 @@ public class BoardManager : MonoBehaviour
 
     [Header("Console — SCALE knob and grid tint")]
     [SerializeField, Range(0.01f, 1f)] private float zoom = 1f;
-    [Tooltip("Full zoom-out (owner 2026-10-29: x0.01, where a big square is 25,000 units). Past the battle space the grid carries on.")]
+    [Tooltip("Full zoom-out (owner 2026-11-01, Step 130: x0.058, where a 20,000-unit battle space just fits the plot's height). Past the battle space the grid carries on.")]
     [Tune("Board & time")]
-    [SerializeField, Range(0.01f, 1f)] private float zoomOutLimit = 0.01f;
+    [SerializeField, Range(0.01f, 1f)] private float zoomOutLimit = 0.1f;
     [Tooltip("SCALE knob: zoom x10 per this many px of drag (UIStateSpec §8.2).")]
     [Tune("Board & time")]
     [SerializeField] private float zoomDragPxPerDecade = 160f;
@@ -212,7 +215,23 @@ public class BoardManager : MonoBehaviour
     public float Rate { get { return rate; } }
     /// <summary>Step 75: game seconds since the last tick, up to one tick's worth; 0 while paused. Ships are drawn this far
     /// along between ticks.</summary>
-    public float SinceTick => paused ? 0f : Mathf.Clamp01((Time.unscaledTime - (nextTick - tickSeconds)) / tickSeconds) * rate;
+    public float SinceTick => paused ? 0f : Mathf.Clamp01((Time.unscaledTime - (nextTick - tickSeconds)) / tickSeconds) * TickGameSeconds;
+    /// <summary>Game seconds in one board tick at this rate (Step 130). Every rule in the game runs on this.</summary>
+    public float TickGameSeconds => rate * tickSeconds * gameSecondsAtX1;
+    /// <summary>Owner 2026-11-01: where a shot or a fighter is drawn. It slides between ticks; the rules still read its x and y.</summary>
+    public struct Glide { public double x, y; public float at; }
+    /// <summary>Slide g toward (toX, toY), to get there as the next tick lands. New, it starts at (fromX, fromY). topSpeed, in units
+    /// per game second, stops a shot fired just before a tick from leaping a tick's flight in one frame. Paused, it holds still.</summary>
+    public void Slide(ref Glide g, double fromX, double fromY, double toX, double toY, double topSpeed = double.MaxValue)
+    {
+        float now = Time.unscaledTime, gone = now - g.at, left = nextTick - now;
+        if (g.at <= 0f) { g.x = fromX; g.y = fromY; g.at = now; return; }
+        g.at = now;
+        double dx = toX - g.x, dy = toY - g.y, d = System.Math.Sqrt(dx * dx + dy * dy);
+        if (paused || gone <= 0f || d < 1e-6) return;
+        double move = System.Math.Min(left > 0f ? d * gone / (left + gone) : d, topSpeed * rate * gameSecondsAtX1 * gone);
+        g.x += dx / d * move; g.y += dy / d * move;
+    }
     public float Zoom { get { return zoom; } }
     /// <summary>The zoom as the browser holds it (a double, rounded to 0.01).</summary>
     public double ZoomExact { get { return zoomExact; } }
@@ -301,13 +320,13 @@ public class BoardManager : MonoBehaviour
             // (UIStateSpec §11). Controls still click; panels still redraw.
             if (!paused)
             {
-                missionSeconds += rate; ShowClock();
+                missionSeconds += TickGameSeconds; ShowClock();
                 state.missionNow = missionSeconds; // the solution's clock (Step 52)
-                state.power.Tick(rate);
-                state.orders.TickAux(rate);
-                state.nav.Tick(rate); // the ship steers and moves; it reads the engine room before a repair lands this tick, as tickPower does
+                state.power.Tick(TickGameSeconds);
+                state.orders.TickAux(TickGameSeconds);
+                state.nav.Tick(TickGameSeconds); // the ship steers and moves; it reads the engine room before a repair lands this tick, as tickPower does
                 // Step 65: the battle space. Crossing out drops time to x1, so a fast rate can't kill you in a blink
-                if (state.TickArena(rate)) { rate = 1f; ShowTime(); Play(alertSound, "alert"); }
+                if (state.TickArena(TickGameSeconds)) { rate = 1f; ShowTime(); Play(alertSound, "alert"); }
                 bool nearEdge = state.NearArenaEdge || state.outsideFor >= 0f;
                 if (nearEdge && !edgeWarned) Play(alertSound, "alert");
                 edgeWarned = nearEdge;
@@ -315,14 +334,14 @@ public class BoardManager : MonoBehaviour
                 if (incoming && !incomingWarned) Play(alertSound, "alert");
                 incomingWarned = incoming;
                 ShowAlarm();
-                state.weapons.TickRounds(rate); // Step 48: slugs fly, and hit or run out of range
-                state.hangar.TickFlights(rate); // Step 54: fighters fly, attack, come home
-                state.weapons.TickIncoming(rate); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
-                state.damage.TickParty(rate);
-                state.damage.TickConditions(rate); // Step 59: fire, vacuum and radiation burn, kill and spread
-                state.hangar.TickLaunch(rate);
-                state.weapons.TickCharge(rate);
-                state.sensors.Tick(rate);
+                state.weapons.TickRounds(TickGameSeconds); // Step 48: slugs fly, and hit or run out of range
+                state.hangar.TickFlights(TickGameSeconds); // Step 54: fighters fly, attack, come home
+                state.weapons.TickIncoming(TickGameSeconds); // Step 55: enemy missiles home on us; our PDCs on AUTO take their chances
+                state.damage.TickParty(TickGameSeconds);
+                state.damage.TickConditions(TickGameSeconds); // Step 59: fire, vacuum and radiation burn, kill and spread
+                state.hangar.TickLaunch(TickGameSeconds);
+                state.weapons.TickCharge(TickGameSeconds);
+                state.sensors.Tick(TickGameSeconds);
                 // Step 68 (owner 2026-10-25): the alert tone once as our signal crosses the tracked line
                 bool tracked = state.sensors.signal >= state.sensors.stats.signalTrackedAt;
                 if (tracked && !trackedWarned) Play(alertSound, "alert");
@@ -534,7 +553,7 @@ public class BoardManager : MonoBehaviour
 
     // ---- console -------------------------------------------------------------------------
 
-    /// <summary>Owner 2026-10-29: zooming out stops at `zoomOutLimit`, x0.01, whatever the battle space's size. Past
+    /// <summary>Owner 2026-11-01: zooming out stops at `zoomOutLimit`, whatever the battle space's size. Past
     /// its edge the grid carries on (PlotGrid). Step 65 stopped sooner, where the map filled the plot's width, to keep
     /// black off the sides.</summary>
     public double MinZoom => zoomOutLimit;

@@ -29,7 +29,7 @@ public class NavSystem : MonoBehaviour
     [Tooltip("Index into the approach ranges.")]
     public int approachRange = 2;
     [Tooltip("Approach hold ranges, units.")]
-    public int[] approachRanges = { 2000, 4000, 8000, 12000, 18000, 24000 };
+    public int[] approachRanges = { 500, 1000, 1500, 2000, 3000, 5000 };
 
     /// <summary>The ship this belongs to. Navigation reads its ENG bus and its engine room.</summary>
     [System.NonSerialized] public ShipState ship;
@@ -50,9 +50,11 @@ public class NavSystem : MonoBehaviour
         // top speed. Step 63 (owner 2026-10-24, measured with docs/scale-sim): speeds and turns x5, acceleration
         // x25 and the keep rates to the 5th power. A fight then takes about 7 minutes at x1 instead of 35.
         [Header("Movement (Step 41; 5x in Step 63)")]
-        [Tooltip("Speed at 100% throttle, units/s (Step 63: 5x the design's 2.5).")]
+        [Tooltip("Speed at 100% throttle, units/s, with ENG full (owner 2026-11-01, Step 130: 50 on our ship).")]
         [FormerlySerializedAs("topSpeedKms")] public double topSpeedUnits = 12.5;
-        [Tooltip("Speeding up, units/s per mission second (Step 63: 25x, so full speed comes 5x sooner).")]
+        [Tooltip("The speed limit at ENG 1, units/s (owner 2026-11-01, Step 130: 25 on our ship). Full ENG gives the top speed, in equal steps. ENG 0: no thrust.")]
+        public double baseSpeedUnits = 2.5;
+        [Tooltip("Speeding up at full ENG, units/s per mission second (Step 63: 25x, so full speed comes 5x sooner).")]
         [FormerlySerializedAs("accelKms2")] public double accelUnits = 0.2175;
         [Tooltip("Slowing down, units/s per mission second (Step 63: 25x).")]
         [FormerlySerializedAs("brakeKms2")] public double brakeUnits = 0.4075;
@@ -96,8 +98,18 @@ public class NavSystem : MonoBehaviour
     double EngineRoom => ship.damage.CompHealth("eng") / 5.0;
     /// <summary>Degrees the bow swings per game second now (the design's per-tick swing at x1).</summary>
     double TurnPerS => System.Math.Max(1, ShipState.JsRound(stats.turnRate * EngineRoom));
-    /// <summary>thrCap: ENG units x 20 x the engine room's integrity.</summary>
-    public int ThrottleCap => ShipState.JsRound((double)ship.power.BusUnits("eng") * 20 * EngineRoom);
+    /// <summary>The share of top speed the ENG bus allows: ENG 1 gives baseSpeedUnits, full ENG topSpeedUnits, in equal steps; ENG 0 nothing.</summary>
+    double EngShare
+    {
+        get
+        {
+            int eng = ship.power.BusUnits("eng"), full = ship.power.stats.busMax;
+            if (eng <= 0) return 0;
+            return (stats.baseSpeedUnits + (stats.topSpeedUnits - stats.baseSpeedUnits) * (eng - 1) / System.Math.Max(1, full - 1)) / stats.topSpeedUnits;
+        }
+    }
+    /// <summary>thrCap: what ENG allows x the engine room's integrity.</summary>
+    public int ThrottleCap => ShipState.JsRound(EngShare * 100 * EngineRoom);
     /// <summary>gLoadNum: 1 G plus 1 G at full throttle, plus the approach mode's extra.</summary>
     public double GLoad => 1 + throttle / 100.0 + (approachMode == "FLANK" ? 0.5 : approachMode == "EVASIVE" ? 1.2 : 0);
     /// <summary>stabNum: 45 points lost per G over 1, 0..100.</summary>
@@ -129,11 +141,11 @@ public class NavSystem : MonoBehaviour
         PlaceModel();
     }
 
-    // The throttle falls to ENG units x 20 (no engine-room factor here, as the board does — HANDOFF_GAPS
+    // The throttle falls to what ENG allows (no engine-room factor here, as the board does — HANDOFF_GAPS
     // row 32); the bow swings toward the ordered heading.
     void Steer(double dt)
     {
-        int engCap = ship.power.BusUnits("eng") * 20;
+        int engCap = ShipState.JsRound(EngShare * 100);
         if (throttle > engCap) throttle = 0; // owner 2026-10-25: power lost, the throttle goes back to zero (the design held it at the cap); you set it again
         if (heading == orderedHeading) { turnBank = 0; return; }
         // banked so the bow turns whole degrees

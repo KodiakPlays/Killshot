@@ -1,26 +1,28 @@
 """Scale study: whole fights on the board's own rules, at different speed scales.
 
 Run: python3 docs/scale-sim/scalesim.py   (no dependencies). README.md next to this file says what it measures.
-BASE holds the game's numbers as of Step 63 (5x speeds); scale k multiplies them (k = 0.2 is the old 1x).
-Keep BASE in step with the ship files (Assets/Ships) whenever a number changes. Slug 2,500 km/s from Step 81.
+BASE holds the game's numbers as of Step 130 (the designer's table, owner 2026-11-01); scale k multiplies them.
+Keep BASE in step with the ship files (Assets/Ships) whenever a number changes.
 
-Mirrors (as of Step 63): TickMove / TickHelm physics, EnemyBrain's patrol, DRADIS hearing range, the side
+Mirrors: TickMove / TickHelm physics, EnemyBrain's patrol, DRADIS hearing range, the side
 map (port face -> reactor), slug and HE damage numbers, the slug path hit test, TRACK's exact lead,
-the enemy's fire-back (2 HE every 120 s while it has cells), PDC-A's 70 % roll.
+the enemy's fire-back (2 HE every 120 s while it has cells), PDC-A's 70 % roll. Left out: the lock, the gun's slow
+turn and the enemy's railguns, so a real fight takes longer than this one. Our ship goes looking at 60% throttle
+until it has a contact.
 Speed scale k: every speed x k (ships, slugs, missiles), turns x k, time to top speed / k (motion as
 if time ran k times faster); ranges, map, charge and fire-back interval unchanged.
-One board tick = 0.42 s real = `rate` game seconds. Arming a shot takes a human ~4 real seconds."""
+One game second is one real second at x1 (Step 130). Arming a shot takes a human ~4 real seconds."""
 import math, random
 
-TICK_REAL = 0.42
-BASE = dict(top=12.5, acc=0.2175, brk=0.4075, drift=0.96307, drag=0.997502, turn=20.0,
-            cruise=5.5, slug=2500.0, missile=100.0, mturn=6.5)
-HIT_R, OUR_HIT_R = 100.0, 100.0     # decision 47: any ship, any shot
-WEAPON_RANGE = 25000.0              # railgun reach (decision 42)
-DRADIS = 12000.0 + 2 * 3600.0      # gain 2 (senRangeBaseKm + gain x senRangePerStepKm)
-ENEMY_HOME = (18058.42, 16259.874)
-ROUTE = [(0, 0), (-6000, -4000), (0, -8000), (6000, -4000)]
-PX_PER_KM = 0.0609                  # plot px per km at zoom 1 (the plot's maximum)
+BASE = dict(top=50.0, acc=2.0, brk=3.75, drift=0.9143, drag=0.99406, turn=20.0,
+            cruise=22.0, slug=300.0, missile=250.0, mturn=120.0)
+HIT_R, OUR_HIT_R = 100.0, 100.0     # a stand-in for the box each ship really has
+WEAPON_RANGE = 2000.0               # railgun reach
+DRADIS = 4375.0 + 3 * 625.0         # gain 3 (senRangeBaseUnits + gain x senRangePerStepUnits)
+ENEMY_HOME = (0.0, 16000.0)         # our ship starts at 0,0: Level_01's spawns, 8,000 either side of the centre
+ROUTE = [(0, 0), (-2000, -1300), (0, -2600), (2000, -1300)]
+ARRIVE, STATION = 100.0, 150.0      # it has reached a point; we are on station
+PX_PER_KM = 0.76                    # plot px per unit at zoom 1 (the plot's maximum)
 PLOT_W = 1712
 ARM_REAL_S = 4.0                    # rockers + lever, per shot
 CHARGE_S = 70 / (3 * 5)             # WEP 3 units: 70 % in 4.7 game s
@@ -68,23 +70,25 @@ def params(k):
     P['drift'], P['drag'] = BASE['drift'] ** k, BASE['drag'] ** k
     return P
 
-def fight(k, rate, engage=15000.0, seed=1, cap_game_s=8 * 3600):
+def fight(k, rate, engage=1500.0, seed=1, cap_game_s=8 * 3600):
     P = params(k); rnd = random.Random(seed)
     us = Ship(P, 0, 0, 0); en = Ship(P, *ENEMY_HOME, 0); leg = 1
     dt = 1.0; t = 0.0   # fine steps; `rate` only changes the human's arming time in game seconds
     log = dict(detect=None, kill=None, fired=0, hits=0, wasted=0, salvos=0, missiles_in=0, missile_hits=0, our_rct=5)
     slugs, missiles = [], []; next_shot = 0.0; next_salvo = 0.0; cells = CELLS
-    arm_game = ARM_REAL_S / TICK_REAL * rate
+    arm_game = ARM_REAL_S * rate
     health0 = None
     while t < cap_game_s and not en.dead and not us.dead:
         # enemy patrol (EnemyBrain)
         wx, wy = ENEMY_HOME[0] + ROUTE[leg % 4][0], ENEMY_HOME[1] + ROUTE[leg % 4][1]
-        if math.hypot(wx - en.x, wy - en.y) <= 300: leg = (leg + 1) % 4
+        if math.hypot(wx - en.x, wy - en.y) <= ARRIVE: leg = (leg + 1) % 4
         wx, wy = ENEMY_HOME[0] + ROUTE[leg % 4][0], ENEMY_HOME[1] + ROUTE[leg % 4][1]
         en.ord = round(brg(wx - en.x, wy - en.y)) % 360
         en.thr = round(P['cruise'] / P['top'] * 100)
         r = math.hypot(en.x - us.x, en.y - us.y)
         if log['detect'] is None and r <= DRADIS: log['detect'] = t
+        if log['detect'] is None:
+            us.ord = round(brg(en.x - us.x, en.y - us.y)) % 360; us.thr = 60
         if log['detect'] is not None:
             # our helm: hold a station off its PORT beam at the engage range, matching its course
             course = math.atan2(en.vx, en.vy) if math.hypot(en.vx, en.vy) > 1e-6 else math.radians(en.hdg)
@@ -92,8 +96,8 @@ def fight(k, rate, engage=15000.0, seed=1, cap_game_s=8 * 3600):
             sx, sy = en.x + math.sin(port) * engage, en.y + math.cos(port) * engage
             d = math.hypot(sx - us.x, sy - us.y)
             us.ord = round(brg(sx - us.x, sy - us.y)) % 360
-            us.thr = 100 if d > 1500 else max(0, min(100, round(math.hypot(en.vx, en.vy) / P['top'] * 100)))
-            if d <= 1500: us.ord = en.hdg
+            us.thr = 100 if d > STATION else max(0, min(100, round(math.hypot(en.vx, en.vy) / P['top'] * 100)))
+            if d <= STATION: us.ord = en.hdg
             # fire when the reactor face is towards us, in reach, charged and armed (TRACK leads exactly)
             face = side_at(brg(us.x - en.x, us.y - en.y), en.hdg)
             if face == "PORT" and r <= WEAPON_RANGE and t >= next_shot:
@@ -133,13 +137,13 @@ def fight(k, rate, engage=15000.0, seed=1, cap_game_s=8 * 3600):
     log['our_rct'] = us.rct; log['we_died'] = us.dead
     return log
 
-def real_min(game_s, rate): return game_s / rate * TICK_REAL / 60
+def real_min(game_s, rate): return game_s / rate / 60
 
 def plot_read(k, engage, rate, interval_real_s=30):
     """The fight framed on screen: zoom to fit, and what two timestamps `interval` apart show."""
     zoom = min(1.0, 0.6 * PLOT_W / (engage * 2 * PX_PER_KM))   # both ships and the gap on 60 % of the plot
     v = BASE['cruise'] * k
-    game_s = interval_real_s / TICK_REAL * rate
+    game_s = interval_real_s * rate
     moved_px = v * game_s * PX_PER_KM * zoom
     course_err = math.degrees(math.atan2(1, moved_px)) if moved_px > 0 else 90
     # bearing lines 2 game-min apart from our ship crossing at our top speed
@@ -149,9 +153,9 @@ def plot_read(k, engage, rate, interval_real_s=30):
 
 if __name__ == "__main__":
     print("Fights (detect -> kill), engaging off TRACK 07's PORT beam; 3 seeds averaged")
-    print(f"{'scale':>5} {'engage km':>9} | {'x1 real':>7} | {'x5 real':>7} | {'x10 real':>8} | ours fired / hit / other face | their missiles in / landed")
+    print(f"{'scale':>5} {'engage':>9} | {'x1 real':>7} | {'x5 real':>7} | {'x10 real':>8} | ours fired / hit / other face | their missiles in / landed")
     for k in (0.2, 0.6, 1, 2):
-        for eng in (8000, 15000, 25000):
+        for eng in (1000, 1500, 1900):
             res = {}
             for rate in (1, 5, 10):
                 runs = [fight(k, rate, eng, seed) for seed in (1, 2, 3)]
@@ -164,8 +168,8 @@ if __name__ == "__main__":
             print(f"{k:>5} {eng:>9,} | {g(1):>7} | {g(5):>7} | {g(10):>8} |   {f:4.1f} / {h:3.1f} / {w:3.1f}          |   {mi:3.1f} / {ml:3.1f}")
     print()
     print("Plot read (fight framed to fit the screen; contact at cruise; two marks 30 real s apart)")
-    print(f"{'scale':>5} {'engage km':>9} | zoom | x1: moved / course err | x10: moved / course err | bearing lines 2 game-min apart")
+    print(f"{'scale':>5} {'engage':>9} | zoom | x1: moved / course err | x10: moved / course err | bearing lines 2 game-min apart")
     for k in (0.2, 0.6, 1, 2):
-        for eng in (8000, 15000, 25000):
+        for eng in (1000, 1500, 1900):
             z, m1, e1, ang = plot_read(k, eng, 1); _, m10, e10, _ = plot_read(k, eng, 10)
             print(f"{k:>5} {eng:>9,} | {z:4.2f} | {m1:6.1f} px / +-{e1:4.1f} deg | {m10:7.1f} px / +-{e10:4.1f} deg | {ang:5.1f} deg")
