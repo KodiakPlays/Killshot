@@ -1530,7 +1530,7 @@ does not fire. Any level is also lost as §14 says.
 | 2 | WEAPONS FREE | `FirstShot` | It is destroyed or captured | §14 only | 1,500 units away, still, showing its reactor side |
 | 3 | NO PEEKING | `SilentShot` | A shot hits it | It is scanned, or a lock comes on | 4,000 units away, moving at 8 units/s |
 | 4 | FINDERS KEEPERS | `Prize` | It is captured | It is destroyed | 1,500 units away, still |
-| 5 | INTERCEPT | `Intercept` | One message is read, then DRADIS hears it | §14 only | At least 8,000 units away, on any side, cruising at 20 units/s. We start in the middle of the map |
+| 5 | INTERCEPT | `Intercept` | One message is read, then DRADIS hears it | §14 only | At the top of the map with us at the bottom, as in Wolf Hunt, cruising at 20 units/s |
 | 6 | WOLF HUNT | `Level_01` | It is destroyed or captured, and we reach the jump point (§15.2) | §14 only | At the top of the map, hunting us |
 
 INTERCEPT and Wolf Hunt send real radio messages. The other four have the one fixed signal (§10).

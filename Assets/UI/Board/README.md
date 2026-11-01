@@ -365,6 +365,14 @@ square that fades out at the edges. To change it, swap the sprite on the Gas clo
 list. The picture stretches to the cloud's size, and the outer 40 pixels keep their shape. **Cloud
 Alpha**, on the Board tab of Starwolf → Tuning under Plot & our ship, sets how strong it shows.
 
+The jump point placeholder picture is `Assets/UI/Board/Art/Plot/JumpPoint.png`. It is a white ring
+with a dot in the middle, 256 x 256. The prefab is `Assets/Prefabs/JumpPoint.prefab`. It is one
+sprite, sized so the ring is 2,000 units from its centre (the distance that wins). It is on the
+Default layer. It must stay off the WorldTerrain layer, because anything drawn on that layer in a
+level turns into a solid rock. To change the look, replace the PNG with one of the same name. It is
+not in any level yet. The game does not use it yet. The plot still draws its own JUMP POINT ring
+(`PlotPanel.ShowJumpPoint`).
+
 When the board appears, the plot starts empty. The grid's lines glide in, big squares first, then
 small. Then every layer from `Scale` to `Mark hits (ERASE)` fades in. **Grid Form Seconds** and
 **Plot Fade Seconds** set the speed. They are on the Board tab of **Starwolf → Tuning**, under

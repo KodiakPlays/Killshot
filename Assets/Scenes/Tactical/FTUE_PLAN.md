@@ -49,6 +49,9 @@ later ones mix more of them. Each level is a small real job with a clear win at 
 - A new screen lists the levels. NEW GAME goes to it.
 - Two levels the owner named: board an enemy ship that is not hunting you; hit a target with POINT
   and RULER only, with no scans. The owner calls the passive shot "an ambush move".
+- **Each level tests and teaches one system, and not every level is a full fight** (owner, 2026-11-01).
+  Flying has its level, FLIGHT DRILL. Sending out fighters and bombers will have levels too. Not
+  built. The hangar has interceptors and assault boats, and the game has no bombers yet.
 
 **Built, Steps 114, 115, 137 and 144.** The owner said yes to levels 2, 3, 4 and 6 below in Step 114.
 Step 115 named the first three of those. INTERCEPT came in Step 137 and FLIGHT DRILL in Step 144. NEW
@@ -62,7 +65,7 @@ last changes. Details: `BUILD_LOG.md` Steps 114, 115, 137, 141, 143 and 144.
 That is the brain's `hunts` switch turned off, which is built. In FLIGHT DRILL it is parked at the far
 corner, out of DRADIS reach of the course. In WEAPONS FREE and FINDERS KEEPERS it stays still, 1,500
 units away. In NO PEEKING it moves at 8 units/s, 4,000 units away. In INTERCEPT it cruises at 20
-units/s, at least 8,000 units away (Steps 130 and 142). The training levels from Step 114 keep their
+units/s, starting at the top of the map with us at the bottom, as in Wolf Hunt (Steps 130 and 145). The training levels from Step 114 keep their
 old scene names.
 
 | # | Level | Goal | Tools |
