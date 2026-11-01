@@ -53,8 +53,8 @@ Straight from the GDD:
 You drop in at one edge of a handcrafted region of space, with **old, unverified Imperial
 records** that mark a few landmarks. Everything else you have to find.
 
-Built so far: an intro, a menu and a MISSIONS list with six levels (§15.5). The first five are short,
-with one goal each. The sixth is the full mission, Wolf Hunt, in `Level_01`. The Garuda hunts you.
+Built so far: an intro, a menu and a MISSIONS list with seven levels (§15.5). The first six are short,
+with one goal each. The seventh is the full mission, Wolf Hunt, in `Level_01`. The Garuda hunts you.
 Once it finds you, more enemy ships come. Kill or capture it, then reach the jump point to win
 (§15.2).
 
@@ -561,6 +561,25 @@ cloud (−20%):
 > **Rule 5.1.d** Your signal is always on screen (§19.4.a). Enemy signals appear on your DRADIS
 > the same way yours appears on theirs — it is one system, read from both ends.
 
+> **Rule 5.1.e** Rocks make interference (owner 2026-11-02). One rule, for every ship in every level,
+> ours and the enemy's alike.
+>
+> - Interference touches DRADIS and scans only. Comms is not touched.
+> - Each rock on the straight line between a sensor and a ship takes Rock Interference Units (500) off
+>   the reach. So does each rock close round that ship. Close means within Rock Close Units (500) of
+>   the rock's edge. A large cluster therefore makes a ship very hard to pick up.
+> - More power means more reach, so it pierces interference. It also makes the ship louder.
+> - A rock on the line also blocks eyes fully, for our ship, the enemy and fighters. Interference does
+>   nothing else to eyes.
+> - As the DRADIS sweep passes a rock in reach, it may throw a false dot near that rock. The chance is
+>   False Dot Chance (0.15) divided by the gain squared. A false dot lasts False Dot Seconds (8) and
+>   fades. False dots show on the plot only, as red dots with no label.
+> - The enemy is fooled by them too (owner 2026-11-02). While calm or uneasy and hearing nothing, about
+>   every False Look Seconds (120, Enemy section), it goes to look at a rock in reach with a clear line.
+>   Hearing nothing there, it gives up after Give Up Seconds (90) and goes back to its patrol.
+>
+> These four numbers are on the Board tab of **Starwolf → Tuning**, under Sensors.
+
 ### 5.2 The disguise
 
 > **Rule 5.2.a** **Our ship begins the level broadcasting a false ID.** Every enemy reads it as
@@ -581,7 +600,7 @@ how you get your costume.
 
 ### 5.3 Awareness
 
-Once provoked, an enemy climbs a ladder. **It does not come back down.**
+Once provoked, an enemy climbs a ladder. It comes back down only when it gives up (Rule 5.3.a).
 
 **Built (Step 97, owner 2026-10-27).** Every enemy ship listens with its own DRADIS. It hears our
 ship out to its DRADIS reach times our signal (0 to 100%), so a silent ship is never heard. Inside
@@ -589,8 +608,8 @@ its visual range it sees us, whatever our signal. Our fighters are loud to it to
 
 | Level | Raised when | What it does |
 |---|---|---|
-| COLD | At the start | Hunts the map. It picks points across the battle space, moving from its own half toward ours |
-| UNEASY | It hears us faintly | Turns for where it heard us |
+| COLD | At the start | Hunts the map. It picks points across the battle space, moving from its own half toward ours. With a patrol route, it flies the route (Rule 5.3.b) |
+| UNEASY | It hears us faintly, or a false dot sends it to a rock (Rule 5.1.e) | Turns for where it heard us |
 | SEARCHING | It hears us more clearly, or hears us again after a gap | Speeds up and searches round that spot |
 | ALERT | It hears us loud and close, sees us, or we hit it | Closes to its railguns' reach, turns a turret's side to us, and fires railgun slugs and missile salvos while it knows where we are. The reinforcements' countdown starts (§5.4) |
 
@@ -605,7 +624,12 @@ The prototype's ladder, in the prototype's own units, for reference:
 | `dist < 8500 && sig > 4.5` | 3 — ALERT |
 | Alert active, reinforcements away | 4 — GENERAL ALARM |
 
-> **Rule 5.3.a** Awareness never decreases. You can re-hide, but you cannot make them forget.
+> **Rule 5.3.a** An enemy gives up after Give Up Seconds (90) of hearing nothing, in every level
+> (owner 2026-11-02). It goes calm and back to its patrol.
+
+> **Rule 5.3.b** A patrol route is set on the level's Enemy Spawn, and its points can be dragged on the
+> Level map. At each point, Turn Back Chance (25%) is the chance that the ship turns back
+> (owner 2026-11-02).
 
 ### 5.4 The alert net
 
@@ -1003,11 +1027,11 @@ destroyed                     → no label on the plot; it stays as a wreck
 **How it plays.** You find the carrier signal on the right band and frequency, and lock it. The
 message comes through enciphered. You turn four dials until it reads in plain English.
 
-**How it's built.** The radio has a band, a frequency, a lock and four cipher dials. The signal is
-there from the start.
+**How it's built.** The radio has a band, a frequency, a lock and four cipher dials. It is the same
+in every level. It starts quiet: NO TRAFFIC.
 
-**Tuning.** Band 1 to 3; the signal is on band 2. Frequency 1 to 100, in steps of 0.1; the signal
-is at 72.2. LOCK takes only within 0.3 of the signal. Changing the band or the frequency drops the
+**Tuning.** Band 1 to 3. Frequency 1 to 100, in steps of 0.1. Each message has its own band and
+frequency. LOCK takes only within 0.3 of the signal. Changing the band or the frequency drops the
 lock.
 
 The receiver scope shows the band. Its bars peak near the signal. The signal lamp turns amber
@@ -1015,19 +1039,18 @@ within 12 of the signal, and green inside the lock window.
 
 > **Rule 10.a** Tuning is by eye. The scope and the signal lamp show how close you are.
 
-**Cipher.** A Vigenère cipher with the key `WOLF`, the ship's callsign. Four dials, A to Z. Click a
-dial to step it forward; Shift-click steps it back. The dials turn only while the signal is
-locked. The message is:
-
-`HOSTILE FLEET INBOUND VECTOR TWO SEVEN NINE HOLD STATION AWAIT RELIEF`
+**Cipher.** A Vigenère cipher with a four-letter key. Each message has a new key. Four dials, A to Z.
+Click a dial to step it forward; Shift-click steps it back. The dials turn only while the signal is
+locked.
 
 The status line reads INCOMING SIGNAL, then DECIPHERING once locked, then MESSAGE READ when the
 dials match the key.
 
-> **Rule 10.b** With the fixed signal, a read message changes nothing in the game.
+> **Rule 10.b** The old fixed signal is gone from play (owner 2026-11-02). Every level uses real
+> signals. A level whose Garuda sends none shows NO TRAFFIC.
 
-**Real messages (Steps 137 and 140).** A level turns these on with Signal Seconds on its Enemy Spawn.
-INTERCEPT and Wolf Hunt do, at 60 seconds. The fixed signal goes, and the radio starts quiet: NO TRAFFIC.
+**Real messages (Steps 137, 140 and 148).** Signal Seconds on a level's Enemy Spawn sets how often its
+ship sends one. INTERCEPT and Wolf Hunt use 60 seconds. At 0 the ship sends none.
 
 The ship sends a message every so often. Each one is written from where the ship really is, all in
 words, so every part of it is in code:
@@ -1036,18 +1059,25 @@ words, so every part of it is in code:
 
 It is an intercepted message, so it doesn't speak to us. It gives which way the sender is heading,
 its speed to the nearest 5, and its bearing from our ship. Directions are one of eight words. The
-ship takes a new course halfway to its next message, so the heading keeps changing. A Garuda that has
-heard us stops doing this, and hunts us instead. Each message comes in on a new band and frequency, in a new code,
+bearing is always a direction word such as NORTHWEST, never a number. A ship with no patrol route
+takes a new course halfway to its next message, so the heading keeps changing. A ship on a patrol
+route flies the route and may turn back at a point (Rule 5.3.b). A Garuda that has heard us stops
+doing this, and hunts us instead. Each message comes in on a new band and frequency, in a new code,
 and the dials go back to A. A soft tone plays. The alarm strip says INCOMING SIGNAL with the seconds
-left to lock it, as the last line on the strip. Comms hears the sender anywhere on the map.
+left to lock it, as the last line on the strip. Comms hears a ship from a very large distance, so
+anywhere on the 20,000 map for now. Rocks do not touch comms (Rule 5.1.e).
 
 You find the peak, tune, lock, and turn the four dials until the message starts with the sender's
-name. Once it reads, it stays on the screen until the next one comes in. If it isn't locked before
-On Air Seconds run out, it is lost: SIGNAL LOST. Only one message is on the air at a time. The wait
-for the next starts when the last is read or lost.
+name. Once it reads, it stays on the screen until the next one comes in. You have 60 seconds to lock
+it. 30 to 60 is good, and it is set as On Air Seconds on each level's Enemy Spawn. If it isn't locked
+in time, it is lost: SIGNAL LOST. Only one message is on the air at a time. The wait for the next
+starts when the last is read or lost.
 
 > **Rule 10.c** Comms draws nothing on the plot: no bearing line, no quadrants, no markings on the grid
 > (owner 2026-10-29). The player works out where the ship is from the words.
+
+> **Rule 10.d** A message is guidance (owner 2026-11-02). It gives the player a reason to move in a
+> direction and think. It doesn't have to be a real decision by the enemy ship in the story.
 
 ---
 
@@ -1433,8 +1463,8 @@ The orders station gives PARTY, SEAL and VENT for the same AUX charge, under the
 
 ## 15 · Mission
 
-**Built so far:** six levels on the MISSIONS list (§15.5). The first five are short, with one goal
-each. The sixth is the full mission, Wolf Hunt: the hunt, the win, the loss and the jump point
+**Built so far:** seven levels on the MISSIONS list (§15.5). The first six are short, with one goal
+each. The seventh is the full mission, Wolf Hunt: the hunt, the win, the loss and the jump point
 (§15.2, Steps 85 to 99), and the level's ruins (§15.3). The rest of this section is the full design,
 not built yet.
 
@@ -1491,7 +1521,7 @@ plan's "ends at the kill" (`FTUE_PLAN.md` §1) is replaced.
 Built so far: each level is its own scene, loaded on top of the board. `Level_01` has a few small
 groups of debris and three gas clouds; its starbase husk was taken out in Step 107. Our ship starts
 at the bottom facing north. The Garuda starts at a random point in its spawn box at the top, facing
-a random way, every game (Step 95), about 16,000 units away. The ruins do not stop shots or sensors.
+a random way, every game (Step 95), about 16,000 units away. The ruins do not stop shots. Rocks cut DRADIS and scans, and block eyes (Rule 5.1.e).
 A ship that flies into one bounces and takes damage (§4.5).
 
 You arrive with **old, unverified Imperial records** marking a few landmarks — a listening post, an
@@ -1516,25 +1546,35 @@ and weapons are different (§8, §9.1).
 
 ### 15.5 The levels
 
-NEW GAME opens the MISSIONS list. All six levels are open from the start. A click, or the arrow keys
+NEW GAME opens the MISSIONS list. All seven levels are open from the start. A click, or the arrow keys
 and Enter, picks one. INITIALISING... shows, then the board loads that level.
 
 Every level is 20,000 × 20,000 units. Each has a Mission box with its goal and its briefing, which
-opens by itself and comes back with the briefing icon. Levels 1 to 5 end the moment the goal is won or
-lost, with no jump point. In levels 1 to 5 the Garuda does not hunt us, does not listen for us and
-does not fire. Any level is also lost as §14 says.
+opens by itself and comes back with the briefing icon. Levels 1 to 6 end the moment the goal is won or
+lost. Only COLD RUN, INTERCEPT and Wolf Hunt have a jump point. In every other level the Garuda does not hunt us,
+does not listen for us and does not fire. Any level is also lost as §14 says.
 
 | # | Level | Scene | You win when | You lose when | Where the Garuda is |
 |---|---|---|---|---|---|
 | 1 | FLIGHT DRILL | `FlightDrill` | All 13 steps are done, in order | §14 only | Parked at the far corner, (−9,000, 9,000), still and silent, out of DRADIS reach of the course |
-| 2 | WEAPONS FREE | `FirstShot` | It is destroyed or captured | §14 only | 1,500 units away, still, showing its reactor side |
-| 3 | NO PEEKING | `SilentShot` | A shot hits it | It is scanned, or a lock comes on | 4,000 units away, moving at 8 units/s |
-| 4 | FINDERS KEEPERS | `Prize` | It is captured | It is destroyed | 1,500 units away, still |
-| 5 | INTERCEPT | `Intercept` | One message is read, then DRADIS hears it | §14 only | At the top of the map with us at the bottom, as in Wolf Hunt, cruising at 20 units/s |
-| 6 | WOLF HUNT | `Level_01` | It is destroyed or captured, and we reach the jump point (§15.2) | §14 only | At the top of the map, hunting us |
+| 2 | COLD RUN | `ColdRun` | We reach the jump point, shown from the start. Our weapons are off | §14 only | At the far end of an S-shaped corridor, patrolling it at 22 units/s. It hunts us if it finds us |
+| 3 | WEAPONS FREE | `FirstShot` | It is destroyed or captured | §14 only | 1,500 units away, still, showing its reactor side |
+| 4 | NO PEEKING | `SilentShot` | A shot hits it | It is scanned, or a lock comes on | 4,000 units away, moving at 8 units/s |
+| 5 | FINDERS KEEPERS | `Prize` | It is captured | It is destroyed | 1,500 units away, still |
+| 6 | INTERCEPT | `Intercept` | We reach the jump point, shown from the start. Our weapons are off | §14 only | At the far end of COLD RUN's S-shaped corridor, patrolling it and sending radio messages. It hunts us if it finds us |
+| 7 | WOLF HUNT | `Level_01` | It is destroyed or captured, and we reach the jump point (§15.2) | §14 only | At the top of the map, hunting us |
 
-INTERCEPT and Wolf Hunt send real radio messages. The other four have the one fixed signal (§10).
+INTERCEPT and Wolf Hunt send real radio messages. In the other five the radio shows NO TRAFFIC (§10).
 The levels' numbers are in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 2.
+
+**COLD RUN and INTERCEPT** have the mission goal JumpPoint. The jump point shows from the start, and
+reaching it wins. The end screen says GARUDA EVADED · JUMPED OUT. Weapons off (`Mission.weaponsOff`) is
+only a tutorial restriction. It stops guns, torpedoes, PDCs and flight ops.
+
+**INTERCEPT** is a copy of COLD RUN's map with the radio on. We start at (−7,500, −7,000). The jump
+point is at (7,500, 7,500). You sneak past the Garuda to the jump point and use the radio to work out
+where it is going. This replaced its first goal of finding the Garuda on DRADIS.
+`MissionGoal.FindBySignal` still exists, but no level uses it now.
 
 **FLIGHT DRILL** teaches flying only, with nothing to fight. A short note in the briefing box gives
 each step. When a step is done, a soft tone plays and the next note opens. The player:
@@ -1586,8 +1626,8 @@ faithfully.
 1. **The mission flow** (§15.1). The Traitor card, the pre-launch sequence, hyperspace and credits.
    Wolf Hunt is built (§15.2).
 2. **The combat autopilot** (§4.6). TAIL is not defined. TARGET LOST is only proposed.
-3. **The disguise** (§5.1, §5.2). The enemy hears our signal (§5.3), but there is no false ID and no
-   debris cover. Gas clouds are built for our ship (Step 129); enemies don't hide in them yet.
+3. **The disguise** (§5.1, §5.2). The enemy hears our signal (§5.3), but there is no false ID. Rocks
+   make interference, block eyes and throw false dots, at the enemy too (Rule 5.1.e). Gas clouds are built for our ship (Step 129); enemies don't hide in them yet.
 4. **The enemy's mind, what is left.** It never retreats. It does not use engineering, comms or the
    hangar.
 5. **Picking a target** (§20). Built: the periscope picks it, with TRACK. Fire control has no
@@ -1597,7 +1637,7 @@ faithfully.
 7. **Stability** (§4.4). It is shown, but nothing uses it.
 8. **Terrain** (§4.5, §8.2). Ships and shots pass through ruins and debris. Only our ship takes
    damage flying into one.
-9. **What comms gives you** (§10). A read message changes nothing.
+9. **What comms gives you** (§10). A read message is guidance for the player (Rule 10.d). It changes nothing else.
 10. **Reflex numbers** (§7): `E_floor`, `reflexSpeedMax`, `staleTrackTimeout`.
 
 ## 18 · Plotting tools and the firing solution

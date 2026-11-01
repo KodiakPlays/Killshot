@@ -419,6 +419,8 @@ A crash or a hit on us shakes the plot for half a second. **Shake Seconds** and 
 
 A killed ship in sight breaks in two where the shot struck, and the halves drift apart and turn slowly. Out of sight it is a dim dot, and the dot fades away. **Wreck Drift Units**, **Wreck Spin Deg** and **Wreck Dot Fade Seconds** set this, under Plot & our ship. The break is the ship's picture cut in two by `PlotPanel`, so it needs no extra art.
 
+Rocks can put false dots on the plot. As the DRADIS sweep passes a rock in reach, a red dot with no label may show near it, then fade. The code draws them, so they need no art. **False Dot Chance** and **False Dot Seconds** set this, under Sensors. The enemy is fooled by rocks too: about every **False Look Seconds** (120) it goes to look at one. That number is on the Board tab of **Starwolf → Tuning**, under Enemy.
+
 While Fire Control is open, each railgun shows a soft dotted cone and a solid bar on
 `Weapon ring (drawn)`. The bar is the gun. **Rail Arc Alpha** and **Gun Bar Alpha** set how strong
 they are. Where the guns are on the ship is set on the Hard Points tab of **Starwolf → Tuning**.
@@ -523,9 +525,13 @@ The prefab has these parts:
   - `Lock`: the LOCK rocker and its lamps
 - `02 Decrypt`: `Message` (59 letters), `Key dial 1` to `Key dial 4`, and the solved readout
 
-In a level with real radio messages, the code moves the letters. Each message goes on a grid of 21
-letters across, with whole words to a line. **Letter Start**, **Letter Step** and **Letter Columns**
-on the Comms Panel set the grid. In other levels the letters stay where the prefab has them.
+The radio is the same in every level. It starts on NO TRAFFIC. A level's Enemy Spawn sets how often
+its ship sends a message (**Signal Seconds**, 0 for none) and how long you have to lock it
+(**On Air Seconds**). A soft tone plays when one comes in. A missed message is lost. The bearing in a
+message is always a word such as NORTHWEST.
+
+The code moves the letters. Each message goes on a grid of 21 letters across, with whole words to a
+line. **Letter Start**, **Letter Step** and **Letter Columns** on the Comms Panel set the grid.
 
 Its art files are in `Art/Comms` and the folders for each kind. The Art list has 20 entries.
 Three are stand-ins: the band selector's face and knob, and the scope's rim.

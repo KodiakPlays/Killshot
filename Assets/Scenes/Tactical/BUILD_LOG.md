@@ -197,6 +197,8 @@ Do not run ahead. Do one step, show it, wait.
 | 143 | Hygiene pass (owner 2026-11-01: everything built must be done and checked before a new level). **Missiles fire again:** choosing MISSILE now picks the first launcher on a dot, VLS-A. It fires to the left side only, and no control picks VLS-B yet. **NO PEEKING's** bubble says "Set the four switches". **Playtest:** check #225 puts power on before it reads, so it reads 30 to 9 in place of 0 to 0. Only the newest two runs keep video and shots, and every report stays (tried on spare folders; the next run clears the old ones). **`Level_02`** came off the build list; the file stays until the owner says. **Not bugs:** WEAPONS FREE's switches stayed off in one script because it never clicked the alert from C3 to C2. A fighter's hit doesn't lead the Garuda to us: after a hit its last fix was 0 units from the fighters and 5,227 from our ship | **Done**. Compiled clean. Played on the final numbers by a script using the board's controls; no key pressed. **Slug** at x1 and x5: no still frame, about 300 units a second, the dot within 2 units of the hit area at the hit. **VLS-A:** two missiles left its dot and hit. **Fighters:** launched through the switches and lever, hit, came home on RECALL, four ready, none left on the plot. **Enemy missile:** the strip read `MISSILE HIT · STBD · HE · HGR −3 · FIRE`. **Crash shake:** 1.9 px at 10 units a second, 3.0 at 25, 5.4 at 50. **A slug kill's cut:** 0.637 along the ship, as worked out; the end screen covered the picture, so the number is checked and the picture is not. **Save** on the Board and Keys tabs wrote to the file, pressed with sent mouse events. **Briefing icon** works in all five levels. **Debris field** in FirstShot, sent mouse events: radius 1,250 to 3,170, all 40 pieces scattered again inside it, one undo put everything back, not saved. **NO PEEKING** won with two POINTs, a RULER, TRACK and the switches. **FINDERS KEEPERS** won by boarding: four slugs opened the right side, fighters on DISABLE, boats on SECURE, `GARUDA SECURED`. **INTERCEPT** won start to end: tuned, locked, decoded by reading the text, flown along the bearing, heard at 4,912. The longest message fits in four rows. The briefing fits at the smallest text size. **Wolf Hunt:** the Garuda killed from a fresh start with no help, 8 missiles then 8 slugs. The first salvo wrecked its magazine and it never fired again, so that fight was cheap. **Messages:** a tone each time; INCOMING SIGNAL shows with its seconds in a quiet moment; in a fight the danger lines stay on top. A new course 32 s after a message while COLD, none after. **Garuda across rocks at x1:** 9,175 units, steering round them, 0 armour lost. The crash between ships and the rocks at x5 were checked the same day. **Found, for the owner:** in NO PEEKING, from about 1,220 to 1,650 units, SIGHT and SLEW TO with MAG untouched starts a lock by itself; at 1,500 the level was lost after 10.5 game seconds. Once reinforcements are on the strip, INCOMING SIGNAL doesn't show: only the tone says a message came. Full playtest not run |
 | 144 | **FLIGHT DRILL**, a new level that teaches flying only (owner 2026-11-01). Scene `FlightDrill`. It is row 1 on the MISSIONS list and the first pick. The rows are renumbered 1 to 6 and are 118 px apart (was 136). There is nothing to fight: the Garuda is parked still and silent at the far corner. A briefing note changes at each of 13 steps, with a soft tone. The end screen reads MISSION COMPLETE, FLIGHT DRILL PASSED. Section 2 lists the steps. **Side thrusters, in every level:** press and keep down `Q` and the ship slides to port, `E` to starboard, with the nose still. Let go, and the thrusters stop the slide. The keys are on the Keys tab of Starwolf → Tuning. Side Speed Units and Side Accel Units are in each ship's stats file: 20 and 4 on our ship at full ENG. Enemy ships have the numbers, and nothing slides them yet. **ENG now raises acceleration, braking, turn rate and side thrust**, on top of top speed. Base Accel Units and Base Turn Rate in the stats file give the ENG 1 numbers. Our ship, ENG 1 to ENG 5: acceleration 1 to 2, braking 1.875 to 3.75, turn 10 to 20° a second, side speed 10 to 20. ENG 0 still turns at the ENG 1 rate and has no thrust. Enemies run at full ENG, and their numbers don't change. **New mission goal Flight:** the steps are a list on the Mission box, in its inspector. A step's ring is the jump point's ring on the plot, labelled CHECKPOINT, with its bearing and distance on the alarm strip. Rings are not drawn on the Level window's map. Their numbers are typed in the Mission box. **Alarm strip:** its text is now left-aligned in `02.1_Grid`. Long lines ran over the lamp, JUMP POINT's too. **Briefing box:** 230 px tall in a flight drill (Drill Note Height, Board tab, Mission). The other levels keep 370. **Calls made without the owner** are in section 8, "FLIGHT DRILL: calls for the owner to check" | **Done in play**, by script. Played from the list row, through the board's real power, DRADIS and rate controls, with steering, throttle, zoom and the slide set from code: two full runs at x5. Second run: 13 steps, MISSION COMPLETE, 4 min 50 s of game time, no crashes, 0 armour lost (`Logs/FlightDrill`). No person has played it. `Q` and `E` have not been pressed on a real keyboard: a script can't press keys. The playtest has two new checks: full ENG gives twice ENG 1's acceleration and turn rate, and `Q` slides the ship with its nose still and the slide stops. Full playtest 237 of 237 (`Logs/Playtests/2026-11-01_212814`), with both new checks, the six-level list, the new radio wording and Step 143's check on the gas cloud's signal. It ran before four small changes, each checked in play: the first note gained "Press P to start the clock" (the board opens paused; pressed P, ENG 2 on STANDBY, step 2 opened); Accel Units 0 no longer breaks the ship; the zoom-in step passes at exactly x0.80; a slide cut off by a power loss no longer starts again when power returns. The code review found no serious bugs |
 | 145 | INTERCEPT's start put back (owner 2026-11-01: we will not start in the middle of the map, and the Garuda will not start on any side; the course changes stay). It now starts like Wolf Hunt: us at (0, −8,000) facing north, the Garuda's box 8,000 × 2,400 at (0, 8,000). Away From Us Units and its retry are gone from `EnemySpawn`. The briefing no longer says "on any side of you". Wolf Hunt's start was not changed. With this start the first message always says BEARING NORTH; later ones change as the Garuda moves | **Done in play**. Compiled, with no errors from `EnemySpawn`. We started at (0, −8,000), the Garuda at (3,959, 7,803). The first message, 15 s in: GARUDA HEADING SOUTHWEST SPEED FIFTEEN BEARING NORTH. 46 s in, its real heading and bearing still matched, and its speed had reached 20. The whole briefing shows inside its box at the smallest text size, though the text is 4 px taller than its area (`Logs/CommsSignals`, picture 7). Decoding, the win and later messages not tried again on this start. Full playtest not run since |
+| 148 | Rocks and sensors, the enemy giving up, INTERCEPT on the sneak map, and the radio in every level (owner 2026-11-01 and 2026-11-02). **Rocks:** one rule in every level, the same for us and the enemy. Rocks make interference for DRADIS and scans only. Comms is not touched. Each rock on the straight line between a sensor and a ship, and each rock close round that ship, takes Rock Interference Units (500) off the reach. Close means within Rock Close Units (500) of the rock's edge. A large cluster therefore makes a ship very hard to pick up. More power means more reach, so it pierces interference. It also makes the ship louder. A rock on the line also blocks eyes fully, for our ship, the enemy and fighters. Interference does nothing else to eyes. This replaces Step 146's rocks, which blocked sensors outright. **False dots:** as the DRADIS sweep passes a rock in reach, it may throw a false dot near that rock. The chance is False Dot Chance (0.15) divided by the gain squared. A false dot lasts False Dot Seconds (8) and fades. False dots show on the plot only, as red dots with no label. Whether the enemy is fooled by them is an open question (section 8). **The enemy:** it gives up after Give Up Seconds (90) of hearing nothing, in every level. It goes calm and back to its patrol. On a patrol route, Turn Back Chance (25%) is the chance at each point that it turns back. These numbers are on the Board tab of Starwolf → Tuning, under Sensors and Enemy. **Levels:** every rule is the same in all levels. A level sets only its map, route, goal and which tools the tutorial takes away. Weapons off (`Mission.weaponsOff`) is only a tutorial restriction. It stops guns, missiles, PDCs and flight ops. **INTERCEPT** is now a copy of COLD RUN's map (Step 146) with the radio on (section 2). You sneak past the Garuda to the jump point and use the radio to work out where it is going. This replaced its first goal of finding the Garuda on DRADIS. `MissionGoal.FindBySignal` still exists but no level uses it now. **Radio:** the old fixed signal is gone from play. Every level uses real signals, and a level whose Garuda sends none shows NO TRAFFIC. The bearing in a message is always a direction word such as NORTHWEST, never a number | Compiled clean before the last two small edits (false dot chance, radio in every level). Those two are not compiled yet. INTERCEPT scripted run: the first message at 15 s read GARUDA HEADING WEST SPEED TWENTY BEARING NORTHEAST and matched the real position. A later one read HEADING EAST after the Garuda turned back at a route point. Tuned, locked and decoded by script, through the comms controls. The strip showed INCOMING SIGNAL, then JUMP POINT · BRG 046° after reading. Reaching the jump point gave MISSION COMPLETE. Measured with interference at 500: across a wall, lane to lane 4,000 apart, 600 lines: heard on 15 at gain 1, 28 at gain 3, 103 at gain 5. 45 to 47 false dots at once at gain 1 with 220 rocks in reach, seen on the plot (`Logs/CommsSignals`, picture 10). That was before the change to gain squared, so gain 5's count is not measured. Full playtest 242 of 245 (`Logs/Playtests/2026-11-02_004234`). The three failures are the new torpedo and fighter checks (#127, #128, #145), which belong to that work. The rock checks and the seven-row list passed. That run used 2,000 per rock, because the board scene had saved the old number. It is 500 in the scene now. Two later full playtests ran at 500, both 245 of 245: `Logs/Playtests/2026-11-02_005126` and `Logs/Playtests/2026-11-02_005945`. Not done: no person has played it. Fighters' eyes against rocks not tried in play |
+| 151 | The enemy is fooled by false dots too (owner 2026-11-02: "Yeah, obviously"). This answers the question left open in Step 148. While the enemy is calm or uneasy and hears nothing, about every False Look Seconds (120), it picks a rock within its DRADIS reach that it has a clear line to, and goes to look. The wait varies between half and one and a half times that number. It goes UNEASY and the DETECTED line doesn't count it. It does reset the time since it last heard us, so hearing us for real 20 to 60 s later takes it straight to SEARCHING. If it hears nothing for Give Up Seconds (90), it goes calm and back to its patrol. That gives the player a chance to slip past. **The rate:** the enemy's rate is deliberately not the same as our false dot rate. At our rate it would chase rocks all the time. **Levels:** the rule is in every level where the enemy hunts. Hunts is off in the training levels, so the enemy doesn't listen there. False Look Seconds is on the Board tab of **Starwolf → Tuning**, under Enemy | Compiled with no errors. In INTERCEPT at x5 in play, from a script: at 123 s it went UNEASY and headed for a false contact at (1,756, 5,663). At 214 s, 91 s later, it went calm and back to its route point (1,500, 7,000). Full playtest 245 of 245 (`Logs/Playtests/2026-11-02_005945`). It is the first full run with this rule and this code, and it used 500 per rock in the scene. No playtest check covers the false look itself. No person has played it |
 
 **Old status notes, corrected (2026-11-01).** The table and section 6 keep what was true when each
 step was written. These notes have changed since:
@@ -375,12 +377,13 @@ a `Mission` box.
 | `SilentShot` | HitUnseen | (2,400, −2,800), 4,000 away, facing west, at 8 units/s | (−4,000, 1,000) |
 | `Prize` | Capture | (−900, −4,800), 1,500 away, facing east, still | (4,500, −1,500) |
 
-### `Intercept` — made in Step 137
+### `Intercept` — made in Step 137, moved onto COLD RUN's map in Step 148
 
-The training level for real radio messages. `Battle Space` 20,000 × 20,000; `Player Spawn` at (0, −8,000)
-facing north; `Enemy Spawn · Garuda` at (0, 8,000), its box 8,000 × 2,400, Hunts off, Cruise Units 20,
-Signal Seconds 60, First Signal Seconds 15, On Air Seconds 60; a `Mission` box with the goal
-FindBySignal. No debris. The start is Wolf Hunt's (Step 145).
+The training level for real radio messages. A copy of `ColdRun`'s map with the radio on. `Battle Space`
+20,000 × 20,000 with the S corridor; `Player Spawn` at (−7,500, −7,000) facing east; `Enemy Spawn · Garuda`
+at (6,500, 6,800), box 0 × 0, Hunts on, 13 route points, Signal Seconds 60, First Signal Seconds 15, On
+Air Seconds 60; a `Jump Point` at (7,500, 7,500); a `Mission` box with the goal JumpPoint and Weapons
+Off on.
 
 ### `FlightDrill` — made in Step 144
 
@@ -5181,6 +5184,16 @@ Nothing else in the repo gets written by the log keeper. Only this file.
 
 Still not done. **This is the list to work from.** Read it before picking up any work.
 
+### False dots: answered (Steps 148 and 151, 2026-11-02)
+
+Rocks throw false dots on our plot, and the enemy is fooled by them too (owner: "Yeah, obviously").
+For now the point is that you are hiding among the rocks.
+
+### Radio countdown on the strip: not fixed (2026-11-02)
+
+A small known problem. The strip shows the radio countdown jammed against its text, like
+59INCOMING SIGNAL.
+
 ### FLIGHT DRILL: calls for the owner to check (Step 144, 2026-11-01)
 
 The owner gave the session a free hand. These calls were made without asking. Each can be changed.
@@ -5365,15 +5378,15 @@ The owner asked for these to be kept for later discussion. None of them is built
   Today the art files are in `Assets/UI/Board/Art`, and each panel has its own Art list.
 - **The level editor.** Done in Step 136: drag, resize, edit what you click, Save, and grid numbers.
   Zooming the map was offered and left out.
-- **The next level is a sneak level.** All today's levels are tests and get deleted in the end.
-  Wolf Hunt is not the level that matters. The planned next level has weapons off. A far jump point
-  is the goal, and it shows from the start. The map is one long winding corridor made of debris, a
-  horseshoe or an S (Claude suggested the S; the owner has not picked). The enemy patrols the
-  corridor. The player watches its path and moves from gas cloud to gas cloud. You lose when your
-  ship is destroyed. There is no separate "caught" rule. Not built yet: a fixed patrol route set on
-  the Level map (the enemy picks random points now), debris that blocks the enemy's hearing and
-  sight (it hears and sees through rocks now), a way to turn weapons off in a level, a jump point
-  goal from the start that you place in the level, and the corridor itself.
+- **The sneak level is built.** Step 146 built it as COLD RUN, an S-shaped map. All today's levels are tests and get deleted in the end.
+  Wolf Hunt is not the level that matters. Weapons are off. A far jump point is the goal, and it shows
+  from the start. The map is one long winding corridor made of debris. The enemy patrols the corridor
+  on a route set on the Level map. The player watches its path and moves from gas cloud to gas cloud.
+  You lose when your ship is destroyed. There is no separate "caught" rule. Since Step 148, rocks cut
+  the enemy's hearing and block its sight by the same rule as ours.
+- **INTERCEPT is built on the sneak level** (owner 2026-11-01, built in Step 148). It is a copy of COLD
+  RUN's map with the radio on. You sneak past the Garuda to the jump point and use the radio to work
+  out where it is going. This replaced its first goal, finding the Garuda on DRADIS.
 
 ### Play-through 2: scan, fighters, missiles, boarding against the live Garuda (2026-10-29, Worker)
 
@@ -5476,21 +5489,26 @@ and 139 set the squares as they are now.
 - Also from Grid Visual: the spec has "Body cam — not built yet" under §12.2 (commit b8dffe9), an idea
   for a marine helmet-camera window during boarding. Not to be built yet.
 
-### Comms intercepts (owner, 2026-10-29). Built in Steps 137 and 140, in INTERCEPT and Wolf Hunt
+### Comms intercepts (owner, 2026-10-29). Built in Steps 137, 140 and 148. Every level uses them now
 
 **Still to do.**
 
 - A read message goes when the next one comes in. There is nowhere to look back at old ones, and the
   plan is to do the mathematics across several messages.
-- WEAPONS FREE, NO PEEKING and FINDERS KEEPERS keep the fixed signal.
 
-**Calls made while building, for the owner to check.** These four were never answered in the
+**Calls made while building, confirmed by the owner on 2026-11-02.** These were never answered in the
 2026-10-29 talk, and the owner said to start building:
 
 - A soft tone plays when a message comes in.
-- A message stays on the air for 60 game seconds. Locked in time, it stays for as long as you need.
-- A message not locked in time is lost (GDD p. 31).
-- Comms hears the Garuda anywhere on the map.
+- 60 seconds to lock. 30 to 60 is good. It is adjustable as On Air Seconds on each level's Enemy
+  Spawn. Locked in time, a message stays for as long as you need.
+- A missed message is lost (GDD p. 31).
+- The bearing in a message is always a direction word such as NORTHWEST, never a number.
+- Comms hears a ship from a very large distance, so it hears the Garuda anywhere on the 20,000 map for
+  now. The exact number doesn't matter yet.
+
+**A message is guidance (owner 2026-11-02).** It gives the player a reason to move in a direction and
+think. It doesn't have to be a real decision by the enemy ship in the story.
 
 The speed is rounded to the nearest 5. Only one message is on the air at a time.
 

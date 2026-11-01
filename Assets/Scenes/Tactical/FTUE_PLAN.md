@@ -11,7 +11,7 @@ mission ends. No reinforcements.
 Planned with the owner on 2026-10-18. This is a pickup document for whoever builds it. The build
 order is in §9. Build one step, show it, wait. Do not run ahead (BUILD_LOG decision 17).
 
-**What is built (checked 2026-11-01).** The six levels on the MISSIONS list (§0), each with a
+**What is built (checked 2026-11-01).** The seven levels on the MISSIONS list (§0), each with a
 briefing box that says what to do. The enemy half of this plan, as the mission Wolf Hunt (Steps 95
 to 99): the Garuda hunts us, hears us, searches, and fights back with railguns and missiles.
 
@@ -54,28 +54,29 @@ later ones mix more of them. Each level is a small real job with a clear win at 
   built. The hangar has interceptors and assault boats, and the game has no bombers yet.
 
 **Built, Steps 114, 115, 137 and 144.** The owner said yes to levels 2, 3, 4 and 6 below in Step 114.
-Step 115 named the first three of those. INTERCEPT came in Step 137 and FLIGHT DRILL in Step 144. NEW
-GAME opens the list, titled MISSIONS (the green screen's letters have no V). All six can be picked and
+Step 115 named the first three of those. INTERCEPT came in Step 137, FLIGHT DRILL in Step 144 and COLD RUN in Step 146. Step 148 moved INTERCEPT onto COLD RUN's map. NEW
+GAME opens the list, titled MISSIONS (the green screen's letters have no V). All seven can be picked and
 played. Each goal's win and loss is
 checked. WEAPONS FREE, NO PEEKING, FINDERS KEEPERS and INTERCEPT have been won by script through the real
 controls, and FLIGHT DRILL has been played to the end by script. No person has played them since the
-last changes. Details: `BUILD_LOG.md` Steps 114, 115, 137, 141, 143 and 144.
+last changes. Details: `BUILD_LOG.md` Steps 114, 115, 137, 141, 143, 144 and 148.
 
-**The levels.** In levels 1 to 5 the Garuda does not hunt us, never listens for us and never fires.
+**The levels.** In every level except COLD RUN, INTERCEPT and WOLF HUNT the Garuda does not hunt us, never listens for us and never fires.
 That is the brain's `hunts` switch turned off, which is built. In FLIGHT DRILL it is parked at the far
 corner, out of DRADIS reach of the course. In WEAPONS FREE and FINDERS KEEPERS it stays still, 1,500
-units away. In NO PEEKING it moves at 8 units/s, 4,000 units away. In INTERCEPT it cruises at 20
-units/s, starting at the top of the map with us at the bottom, as in Wolf Hunt (Steps 130 and 145). The training levels from Step 114 keep their
+units away. In NO PEEKING it moves at 8 units/s, 4,000 units away. In INTERCEPT it patrols
+COLD RUN's S-shaped corridor. You sneak past it to the jump point and use the radio to work out where it is going (Step 148). The training levels from Step 114 keep their
 old scene names.
 
 | # | Level | Goal | Tools |
 |---|---|---|---|
 | 1 | FLIGHT DRILL (Step 144) | Finish 13 steps, in order. A note gives each step. | ENG on the power panel, the throttle, A and D, Q and E, plot zoom, DRADIS, flying through rocks, stopping in a ring |
-| 2 | WEAPONS FREE (scene `FirstShot`) | Destroy the Garuda. | ACTIVE scan, the targeting computer's lock, the four railgun switches, the lever |
-| 3 | NO PEEKING (scene `SilentShot`) | Hit the Garuda once with no scan and no lock. | Listening, bearing lines, POINT, RULER, TRACK from the plot, the railgun |
-| 4 | FINDERS KEEPERS (scene `Prize`) | Capture the Garuda. | A scan, the railgun to break a side open, interceptors on DISABLE to stop it, assault boats on SECURE |
-| 5 | INTERCEPT (Step 137) | Decode a radio message, fly the way it says, and hear the Garuda on DRADIS. | Comms: band, tuning, LOCK and the four dials. The helm. DRADIS. |
-| 6 | WOLF HUNT | As now. | Everything. It hunts us, fights back, and reinforcements come. |
+| 2 | COLD RUN (Step 146) | Fly to the jump point and come within 700 units. Weapons are off. The Garuda patrols and hunts us if it finds us. | The helm, the gas clouds, rocks to hide behind, DRADIS |
+| 3 | WEAPONS FREE (scene `FirstShot`) | Destroy the Garuda. | ACTIVE scan, the targeting computer's lock, the four railgun switches, the lever |
+| 4 | NO PEEKING (scene `SilentShot`) | Hit the Garuda once with no scan and no lock. | Listening, bearing lines, POINT, RULER, TRACK from the plot, the railgun |
+| 5 | FINDERS KEEPERS (scene `Prize`) | Capture the Garuda. | A scan, the railgun to break a side open, interceptors on DISABLE to stop it, assault boats on SECURE |
+| 6 | INTERCEPT (Steps 137 and 148) | Reach the jump point. Weapons are off. Decode the radio messages to work out where the Garuda is going, and sneak past it. It hunts us if it finds us. | Comms: band, tuning, LOCK and the four dials. The helm, the gas clouds, rocks to hide behind, DRADIS |
+| 7 | WOLF HUNT | As now. | Everything. It hunts us, fights back, and reinforcements come. |
 
 **How it is built (Step 114).**
 

@@ -13,22 +13,27 @@ and auxiliary (AUX). A bus takes at most five units, so you can fully run only
 two. More power to DRADIS means less power for the guns. Every unit you draw
 makes the ship louder. Every advantage is bought by giving something up.
 
-There are six levels. You pick one from the MISSIONS list. The enemy is the
-Garuda, a Garuda-class cruiser. In the first five levels it does not hunt you
-and does not fire.
+There are seven levels. You pick one from the MISSIONS list. The enemy is the
+Garuda, a Garuda-class cruiser. In levels 1 and 3 to 5 it does not hunt you
+and does not fire. In COLD RUN and INTERCEPT it patrols and hunts you if it
+finds you.
 
 1. **FLIGHT DRILL.** Training. Learn to fly the ship, with nothing to fight. A
    note gives you each of 13 steps: power, throttle, heading, the side
    thrusters, zoom, DRADIS, a belt of rocks, and stopping inside a ring.
-2. **WEAPONS FREE.** Training. Scan the Garuda and destroy it with the railgun.
+2. **COLD RUN.** Weapons are off. Sneak past the Garuda along an S-shaped
+   map and come within 700 units of the jump point. Hide in gas clouds and
+   behind big rocks.
+3. **WEAPONS FREE.** Training. Scan the Garuda and destroy it with the railgun.
    It stays still, 1,500 units away.
-3. **NO PEEKING.** Training. Hit the Garuda once with no scan and no lock. Use
+4. **NO PEEKING.** Training. Hit the Garuda once with no scan and no lock. Use
    POINT and RULER. A scan or a lock loses the level.
-4. **FINDERS KEEPERS.** Training. Capture the Garuda. Scan it, open one side,
+5. **FINDERS KEEPERS.** Training. Capture the Garuda. Scan it, open one side,
    stop it, then send the marines. Destroying it loses the level.
-5. **INTERCEPT.** The Garuda starts beyond DRADIS reach. Decode one of its radio
-   messages, fly the way it says, and hear it on DRADIS.
-6. **WOLF HUNT.** The full mission. The Garuda hunts you through a field of
+6. **INTERCEPT.** COLD RUN's map, with the radio on. Weapons are off. Decode the
+   Garuda's radio messages to work out where it is going, keep clear of it and
+   reach the jump point.
+7. **WOLF HUNT.** The full mission. The Garuda hunts you through a field of
    debris. Find it, then destroy it or capture it. A jump point then
    opens at a far edge of the map. Reach it to win. Once the Garuda finds you, a
    countdown starts and Naga-class frigates come in from the edges.
