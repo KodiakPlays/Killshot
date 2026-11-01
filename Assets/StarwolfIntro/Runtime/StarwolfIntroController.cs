@@ -106,7 +106,7 @@ namespace Starwolf.Intro
         {
             if (canvas) canvas.enabled = !suspended && target;
             if (suspended || !material) return;
-            clock += Time.unscaledDeltaTime;
+            clock += Mathf.Min(Time.unscaledDeltaTime, Time.maximumDeltaTime); // owner 2026-11-02: the first frame can take 6 s; it must not use up SECTION 36 unseen
             if (source) source.volume = humVolume * Mathf.Clamp01(clock / .6f);
             DrawFrame();
             if (initialisingOnly && !done && clock >= TotalDuration) { done = true; finished.Invoke(); }

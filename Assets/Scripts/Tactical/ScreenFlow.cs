@@ -42,6 +42,7 @@ public class ScreenFlow : MonoBehaviour
     public void Play(string level)
     {
         if (going || (showFirst && showFirst.activeSelf)) return; // picked already
+        if (Time.timeSinceLevelLoad < 0.5f) return; // owner 2026-11-02: COLD RUN's row is under NEW GAME; the click that opened this list must not pick a level
         TacticalWorld.chosenLevel = level;
         if (showFirst) showFirst.SetActive(true);
         else Advance();

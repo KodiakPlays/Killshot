@@ -54,13 +54,17 @@ Set these on the script in the inspector.
 The loading bar fills from empty to full over `initialisingDuration` seconds. When it is full, the
 script calls `finished`. In `01_Briefing`, `finished` loads the board.
 
+All three modes use one clock. Each frame adds at most `Time.maximumDeltaTime` (a third of a second)
+to it. When play starts in the Editor, the picture can freeze for 4 to 6 seconds on the first frame.
+That freeze no longer uses up SECTION 36 (Step 153).
+
 In `01_Briefing`, the `ScreenFlow` object runs the order (`Assets/Scripts/Tactical/ScreenFlow.cs`).
-MISSION ONE shows first. After 3 seconds, or when you press Enter, WOLF HUNT replaces it. After 3 more
-seconds, or Enter, INITIALISING switches on. Its loading bar fills, then the board loads. The cards are
-in ScreenFlow's **Cards** list. The first card is switched on in the scene and the rest are off.
+The MISSIONS list shows first. Pick a level, and INITIALISING switches on. Its loading bar fills, then
+the board loads. The list ignores a pick in its first half second (Step 153). ScreenFlow's **Cards**
+list is empty, so the MISSION ONE and WOLF HUNT cards do not show.
 
 The whole order: `00_Start` shows SECTION 36, STARWOLF and the menu. NEW GAME loads `01_Briefing`, which
-shows MISSION ONE, WOLF HUNT and INITIALISING. Then the board loads (`02.1_Grid`).
+shows the MISSIONS list and then INITIALISING. Then the board loads (`02.1_Grid`).
 
 ---
 
