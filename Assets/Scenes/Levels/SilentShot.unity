@@ -1440,7 +1440,7 @@ MonoBehaviour:
   signalSeconds: 0
   firstSignalSeconds: 15
   onAirSeconds: 60
-  awayFromUsUnits: 0
+  route: []
 --- !u!4 &633817544
 Transform:
   m_ObjectHideFlags: 0
@@ -2605,24 +2605,26 @@ MonoBehaviour:
     2. ORDERS: click the alert once, from C3 to C2.
 
     3.
-    SENSORS (key 2): turn on DRADIS. A bearing line points at the Garuda.
+    SENSORS (key 2): turn on DRADIS. Zoom out until you see the DRADIS circle. A
+    red bar on it points at the Garuda.
 
-    4.
-    Fly sideways with W, A and D. Each sweep leaves a line. Where the lines cross
-    is the Garuda.
+    4. Fly toward the bar with W, A and
+    D. When the Garuda comes into sight, zoom back in.
 
-    5. Put a POINT where they cross. A minute later, do it again.
+    5. Put a POINT on the
+    Garuda. A minute later, put another.
 
-    6.
-    Draw a RULER from the first POINT to the second.
+    6. Draw a RULER from the first POINT
+    to the second.
 
-    7. FIRE CONTROL (key 1):
-    TRACK, then SIGHT and SLEW TO.
+    7. FIRE CONTROL (key 1): TRACK, then SIGHT and SLEW TO.
 
-    8. Turn until the Garuda is inside a gun''s
-    dotted cone and wait for the solid bar to reach it. Set the four switches and
-    pull the lever.'
+    8.
+    Turn until the Garuda is inside a gun''s dotted cone and wait for the solid bar
+    to reach it. Set the four switches and pull the lever.'
   drill: []
+  jumpPoint: {fileID: 0}
+  weaponsOff: 0
 --- !u!4 &1431064136
 Transform:
   m_ObjectHideFlags: 0

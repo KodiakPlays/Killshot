@@ -19,8 +19,9 @@ and does not fire. In COLD RUN and INTERCEPT it patrols and hunts you if it
 finds you.
 
 1. **FLIGHT DRILL.** Training. Learn to fly the ship, with nothing to fight. A
-   note gives you each of 13 steps: power, throttle, heading, the side
-   thrusters, zoom, DRADIS, a belt of rocks, and stopping inside a ring.
+   note gives you each of 14 steps: power, throttle, heading, the side
+   thrusters, zoom, DRADIS, ACTIVE SCAN, a belt of rocks, and stopping inside
+   a ring.
 2. **COLD RUN.** Weapons are off. Sneak past the Garuda along an S-shaped
    map and come within 700 units of the jump point. Hide in gas clouds and
    behind big rocks.

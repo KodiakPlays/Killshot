@@ -90,7 +90,7 @@ pages, and most of it has been overtaken.
 | How to turn the repo into NotebookLM sources | `Tools/notebooklm/README.md` |
 | How the green phosphor screen works (intro, welcome page, INITIALISING), and how to put it on a new screen | `Assets/StarwolfIntro/README.md` |
 | The seven levels: what each one asks, and how to win or lose it | `Assets/TACTICAL_BOARD_SPEC.md` §15.5. Each level's numbers are in `BUILD_LOG.md`, section 2. |
-| FLIGHT DRILL: its 13 steps, and how to change one | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 2, `FlightDrill`. The notes, rings and amounts are in the Mission box in `Assets/Scenes/Levels/FlightDrill.unity`. |
+| FLIGHT DRILL: its 14 steps, and how to change one | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 2, `FlightDrill`. The notes, rings and amounts are in the Mission box in `Assets/Scenes/Levels/FlightDrill.unity`. |
 | What ENG does to the ship's movement, and the side thrusters | `Assets/TACTICAL_BOARD_SPEC.md` §4.2 and §4.3. The numbers are in each ship's stats file in `Assets/Ships`. |
 | The training levels and how they were built; the plan to split WEAPONS FREE | `Assets/Scenes/Tactical/FTUE_PLAN.md` §0 |
 | The later tutorial mission, with the XO walking you through each station. It is a plan only | `Assets/Scenes/Tactical/FTUE_PLAN.md` §1 to §9 |

@@ -70,10 +70,10 @@ old scene names.
 
 | # | Level | Goal | Tools |
 |---|---|---|---|
-| 1 | FLIGHT DRILL (Step 144) | Finish 13 steps, in order. A note gives each step. | ENG on the power panel, the throttle, A and D, Q and E, plot zoom, DRADIS, flying through rocks, stopping in a ring |
+| 1 | FLIGHT DRILL (Step 144) | Finish 14 steps, in order. A note gives each step. | ENG on the power panel, the throttle, A and D, Q and E, plot zoom, DRADIS, ACTIVE SCAN, flying through rocks, stopping in a ring |
 | 2 | COLD RUN (Step 146) | Fly to the jump point and come within 700 units. Weapons are off. The Garuda patrols and hunts us if it finds us. | The helm, the gas clouds, rocks to hide behind, DRADIS |
 | 3 | WEAPONS FREE (scene `FirstShot`) | Destroy the Garuda. | ACTIVE scan, the targeting computer's lock, the four railgun switches, the lever |
-| 4 | NO PEEKING (scene `SilentShot`) | Hit the Garuda once with no scan and no lock. | Listening, bearing lines, POINT, RULER, TRACK from the plot, the railgun |
+| 4 | NO PEEKING (scene `SilentShot`) | Hit the Garuda once with no scan and no lock. | Listening, the red bar on the DRADIS circle (Step 163), POINT, RULER, TRACK from the plot, the railgun |
 | 5 | FINDERS KEEPERS (scene `Prize`) | Capture the Garuda. | A scan, the railgun to break a side open, interceptors on DISABLE to stop it, assault boats on SECURE |
 | 6 | INTERCEPT (Steps 137 and 148) | Reach the jump point. Weapons are off. Decode the radio messages to work out where the Garuda is going, and sneak past it. It hunts us if it finds us. | Comms: band, tuning, LOCK and the four dials. The helm, the gas clouds, rocks to hide behind, DRADIS |
 | 7 | WOLF HUNT | As now. | Everything. It hunts us, fights back, and reinforcements come. |

@@ -1670,7 +1670,7 @@ does not listen for us and does not fire. Any level is also lost as §14 says.
 
 | # | Level | Scene | You win when | You lose when | Where the Garuda is |
 |---|---|---|---|---|---|
-| 1 | FLIGHT DRILL | `FlightDrill` | All 13 steps are done, in order | §14 only | Parked at the far corner, (−9,000, 9,000), still and silent, out of DRADIS reach of the course |
+| 1 | FLIGHT DRILL | `FlightDrill` | All 14 steps are done, in order | §14 only | Parked at the far corner, (−9,000, 9,000), still and silent, out of DRADIS reach of the course |
 | 2 | COLD RUN | `ColdRun` | We reach the jump point, shown from the start. Our weapons are off | §14 only | At the far end of an S-shaped corridor, patrolling it at 22 units/s. It hunts us if it finds us |
 | 3 | WEAPONS FREE | `FirstShot` | It is destroyed or captured | §14 only | 1,500 units away, still, showing its reactor side |
 | 4 | NO PEEKING | `SilentShot` | A shot hits it | It is scanned, or a lock comes on | 4,000 units away, moving at 8 units/s |
@@ -1704,8 +1704,9 @@ each step. When a step is done, a soft tone plays and the next note opens. The p
 9. Raises the throttle until the speed reaches 45.
 10. Flies into the next ring.
 11. Puts SEN on DRAW and switches DRADIS on.
-12. Flies through a belt of 39 rocks to the next ring.
-13. Stops inside the last ring, at speed 2 or less.
+12. Switches ACTIVE SCAN on, with DRADIS on.
+13. Flies through a belt of 39 rocks to the next ring.
+14. Stops inside the last ring, at speed 2 or less.
 
 A checkpoint is the jump point's ring on the plot, labelled CHECKPOINT. Its bearing and distance are on
 the alarm strip. The end screen reads MISSION COMPLETE, FLIGHT DRILL PASSED.

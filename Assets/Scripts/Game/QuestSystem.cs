@@ -231,6 +231,7 @@ public class QuestSystem : MonoBehaviour
             case DrillCheck.ZoomInTo: return (float)board.ZoomExact >= s.amount;
             case DrillCheck.DradisOn: return us.sensors.Listening;
             case DrillCheck.StopAt: return toRing <= s.ringUnits && us.nav.SpeedUnits <= s.amount;
+            case DrillCheck.ActiveOn: return us.sensors.Listening && us.sensors.active; // owner 2026-11-02: a ping is what shows rocks past sight
         }
         return false;
     }

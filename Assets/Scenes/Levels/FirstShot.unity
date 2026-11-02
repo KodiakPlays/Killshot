@@ -2574,25 +2574,28 @@ MonoBehaviour:
     3. ORDERS: click the alert once, from C3 to C2.
 
     4.
-    SENSORS (key 2): turn on DRADIS. Wait for a bearing line.
+    SENSORS (key 2): turn on DRADIS. Zoom out until you see the DRADIS circle. A
+    red bar on it points at the Garuda.
 
-    5. Turn on ACTIVE
-    SCAN. Drag the cone dial onto the line and let go. The scan reads its course
-    and speed.
+    5. Turn on ACTIVE SCAN. Drag the cone
+    dial onto the bar and let go. The scan reads its course and speed.
 
-    6. FIRE CONTROL (key 1) shows each gun''s dotted cone. Turn the
-    ship (A and D) until the Garuda is inside one. The solid bar is the gun.
+    6. FIRE
+    CONTROL (key 1) shows each gun''s dotted cone. Turn the ship (A and D) until
+    the Garuda is inside one. The solid bar is the gun.
 
-    7.
-    SIGHT, then SLEW TO. Turn MAG as the sight tells you until the bar fills: LOCKED.
+    7. SIGHT, then SLEW
+    TO. Turn MAG as the sight tells you until the bar fills: LOCKED.
 
-    8.
-    A lock lasts 10 seconds. Set LOAD, ANGLE, BEARING and ARM. Pull the lever all
-    the way. Next shot: ARM and the lever.
+    8. A lock
+    lasts 10 seconds. Set LOAD, ANGLE, BEARING and ARM. Pull the lever all the way.
+    Next shot: ARM and the lever.
 
-    9. Lock gone? Lock again. If the
-    Garuda has turned, scan again first.'
+    9. Lock gone? Lock again. If the Garuda has
+    turned, scan again first.'
   drill: []
+  jumpPoint: {fileID: 0}
+  weaponsOff: 0
 --- !u!4 &1514499373
 Transform:
   m_ObjectHideFlags: 0
@@ -2893,7 +2896,7 @@ MonoBehaviour:
   signalSeconds: 0
   firstSignalSeconds: 15
   onAirSeconds: 60
-  awayFromUsUnits: 0
+  route: []
 --- !u!4 &1650454742
 Transform:
   m_ObjectHideFlags: 0

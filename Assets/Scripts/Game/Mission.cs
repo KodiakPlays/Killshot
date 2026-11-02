@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>What finishes one step of a flight drill.</summary>
-public enum DrillCheck { EngHeld, EngAt, Reach, SpeedAt, SlideLeft, SlideRight, ZoomOutTo, ZoomInTo, DradisOn, StopAt }
+public enum DrillCheck { EngHeld, EngAt, Reach, SpeedAt, SlideLeft, SlideRight, ZoomOutTo, ZoomInTo, DradisOn, StopAt, ActiveOn }
 
 /// <summary>One step of a flight drill (owner 2026-11-01): its briefing note, what finishes it, and its ring on the plot.</summary>
 [System.Serializable]
@@ -9,7 +9,7 @@ public class DrillStep
 {
     [Tooltip("ENG HELD: ENG on STANDBY with 1 to Amount units. ENG AT: ENG at Amount or more. REACH: inside the ring. SPEED AT: speed at Amount or more. "
            + "SLIDE LEFT, SLIDE RIGHT: Q or E held for Amount game seconds. ZOOM OUT TO, ZOOM IN TO: the plot's zoom at Amount. DRADIS ON: DRADIS on, with SEN power. "
-           + "STOP AT: inside the ring, speed at Amount or less.")]
+           + "STOP AT: inside the ring, speed at Amount or less. ACTIVE ON: ACTIVE SCAN on, with DRADIS listening.")]
     public DrillCheck check;
     [Tooltip("See the check above.")]
     public float amount;

@@ -1087,7 +1087,7 @@ MonoBehaviour:
   signalSeconds: 0
   firstSignalSeconds: 15
   onAirSeconds: 60
-  awayFromUsUnits: 0
+  route: []
 --- !u!4 &548793272
 Transform:
   m_ObjectHideFlags: 0
@@ -3293,10 +3293,10 @@ MonoBehaviour:
     ringUnits: 150
     note: 'THROTTLE.
 
-      W raises the throttle. S lowers it. ENG sets the limit.
+      W raises the throttle. S lowers it. Below 0 is reverse.
+      ENG sets the limit.
 
-      Fly
-      into the CHECKPOINT ring ahead.'
+      Fly into the CHECKPOINT ring ahead.'
   - check: 2
     amount: 0
     ringAt: {x: 800, y: -7500}
@@ -3384,11 +3384,22 @@ MonoBehaviour:
     ringUnits: 0
     note: 'DRADIS.
 
-      Rocks ahead. Without DRADIS you see rocks only inside your
-      visual ring, 2,000 KM.
+      Rocks ahead. You see rocks only inside your visual ring,
+      2,000 KM. DRADIS hears ships. Rocks make no sound.
 
-      Press 3 and put SEN on DRAW. Press 2 and switch
-      DRADIS on.'
+      Press 3 and put SEN
+      on DRAW. Press 2 and switch DRADIS on.'
+  - check: 10
+    amount: 0
+    ringAt: {x: 0, y: 0}
+    ringUnits: 0
+    note: 'ACTIVE SCAN.
+
+      A ping shows rocks past your visual ring, as grey
+      circles. It also makes you loud.
+
+      Switch ACTIVE SCAN on. Drag the cone
+      dial to point ahead.'
   - check: 2
     amount: 0
     ringAt: {x: 0, y: -600}
@@ -3408,6 +3419,8 @@ MonoBehaviour:
 
       Stop inside the ring. S lowers the throttle. The
       ship takes time to slow, so start early.'
+  jumpPoint: {fileID: 0}
+  weaponsOff: 0
 --- !u!4 &2102863448
 Transform:
   m_ObjectHideFlags: 0
