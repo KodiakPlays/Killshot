@@ -56,6 +56,8 @@ public class HelmPanel : Panel
     [SerializeField] private RectTransform hdgRing;
     [Tooltip("The heading ring turns .12s linear (UIStateSpec §9.1 line 1925).")]
     [SerializeField] private Eased ringMotion = new Eased(0.12f, CssEase.Linear);
+    // the ring's angle counted on past 360, so crossing north it turns the short way, not a full turn back
+    private float ringDeg;
     [SerializeField] private TMP_Text dialHdg, dialTurn;
 
     [Header("02 ATTITUDE HOLD")]
@@ -176,7 +178,7 @@ public class HelmPanel : Panel
             thrTrack.sizeDelta = new Vector2(thrTrack.sizeDelta.x, h);
             thrTrack.anchoredPosition = new Vector2(thrTrack.anchoredPosition.x, -(trackBottom - h / 2f));
         }
-        if (hdgRing) ringMotion.Set(s.heading, z => hdgRing.localEulerAngles = new Vector3(0, 0, z)); // CSS rotate(-hdg), .12s linear
+        if (hdgRing) { ringDeg += Mathf.DeltaAngle(ringDeg, s.heading); ringMotion.Set(ringDeg, z => hdgRing.localEulerAngles = new Vector3(0, 0, z)); } // CSS rotate(-hdg), .12s linear
         if (dialHdg) dialHdg.text = hdg;
         if (dialTurn) { dialTurn.text = turnLabel; Paint(dialTurn, turnInk); }
 

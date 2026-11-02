@@ -222,12 +222,17 @@ The prefab has these parts:
 Its art files are in `Art/Helm` and the folders for each kind. The Art list has 20 entries. Two
 are stand-ins: the throttle's lit track and the heading ring.
 
+A and D turn the ship (Step 159). Each press moves the ordered heading 3°. The order stops 179°
+ahead of the bow. Hold D and the ship turns to starboard until you let go. Hold A and it turns to
+port. When you let go, the ship keeps turning until it reaches the order.
+
 Ask a technical artist before you change these:
 - The code moves the throttle's `Cap` and stretches `STAND-IN Lit track`. **Thr Well** is the
   well's place in board pixels (652, 941, 44 × 78). **Cap Base**, **Cap Span**, **Cap Height**,
   **Track Base** and **Track Span** place the cap and the track in the well. Dragging the
   throttle also reads **Thr Well**.
-- The code turns the heading ring (**Hdg Ring**).
+- The code turns the heading ring (**Hdg Ring**). The ring slides to each new heading over 0.12 s.
+  It turns the short way across north: from 359 to 000 it moves one small step.
 - The code lines up the header readouts in `Closed` and `Open`: `Turn`, `THR caption`,
   `THR value`, `THR percent sign` and `G load`, from left to right. The row starts at the left
   edge of `Turn`. **Gap To Thr**, **Gap To Value** and **Gap To G** set the gaps. Moving the
@@ -737,15 +742,20 @@ The prefab has these parts:
 - `Shade`: a dark layer over the whole board. It takes the clicks, so nothing under it can be
   pressed.
 - `Plate`: the box in the middle, with `Title`, `Reason`, `Rows` (`Labels` and `Values`) and
-  the two buttons.
+  the four buttons. RESUME and QUIT GAME are copies of RESTART MISSION, at y −70, x −160 and
+  +160. Their labels are on the panel's Barlow Condensed SemiBold font slot.
 
 It has no art yet. The shade, the plate and the buttons are plain colours with an outline. The
 Art list is empty. To give it art, add the sprites to the Art list.
 
 Ask a technical artist before you change these:
 - The script writes the title, the reason and the values. It colours the title green or red.
-- Each button has a **Click Spot** with its action (`end.restart`, `end.menu`). MISSION SELECT
-  uses `end.menu`.
+  On the pause menu it writes PAUSED in white and hides `Rows`.
+- Each button has a **Click Spot** with its action (`end.restart`, `end.menu`, `end.pause`,
+  `end.quit`). MISSION SELECT uses `end.menu`. RESUME uses `end.pause`, the same action Escape
+  sends. QUIT GAME uses `end.quit`.
+- **Resume Button**, **Quit Button** and **Rows** are the parts the script shows and hides.
+  RESUME and QUIT GAME show only on the pause menu. `Rows` is hidden on it.
 - **Menu Scene** (`01_Briefing`) is the scene MISSION SELECT loads.
 - **Delay Seconds** (2) is the wait between the end and the screen, so the last hit is seen
   first. It is on the Board tab of **Starwolf → Tuning**, under Board & time.
@@ -764,6 +774,14 @@ The prefabs:
 - `Frame`: the metal frame. Its parts are `Steel frame`, `Black backing`, `Conduits`,
   `Corner bolts` and `Stencils` (two painted labels, BUS A-14 and VENT PLENUM 3). The art files
   are in `Art/Frame`. The Art list has 5 entries.
+It is the pause menu too. In a level, Escape stops the game and opens it. The title says PAUSED in
+white. The reason line is empty. The target, our ship and the time are hidden. Two more buttons
+show on the top row: RESUME and QUIT GAME. RESTART MISSION and MISSION SELECT are below them.
+Escape again, or RESUME, closes it. Time goes back to how it was: running, or still paused if the
+player had pressed P before. While it is open, P and the drawer keys 1 to 6 do nothing. QUIT GAME
+quits the game. In the Unity editor it stops play mode. On the MISSION COMPLETE or SHIP LOST
+screen, Escape does nothing, and RESUME and QUIT GAME are hidden.
+
 - `ToolRail`: the keys for the plot tools, SEL (cursor), PNT (point), RUL (ruler), CMP (compass)
   and ERS (erase), with their
   lamps, plates, icons and labels. The art files are in `Art/ToolRail` and `Art/Rails`. The Art
@@ -781,6 +799,8 @@ The prefabs:
   `Art/Console`. The Art list has 11 entries.
 - `AlarmStrip`: `Strip`, a lamp, `Words` and `Count`. The strip's art file is in
   `Art/AlarmStrip`. The Art list has 3 entries.
+- **Menu Key** (Escape) opens and closes the pause menu. It is on the Board Manager, on the Keys
+  tab of **Starwolf → Tuning**.
 - `SignalBox`: our ship's signal, shown with the sensors drawer shut. Its parts are
   `Signal · well`, `Signal · label`, `Cells` (ten cells), a lamp, `Signal · percent` and
   `Signal · note`. Its art files are in the folders for each kind. The Art list has 4 entries.

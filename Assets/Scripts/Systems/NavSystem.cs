@@ -146,8 +146,15 @@ public class NavSystem : MonoBehaviour
     public void ToggleAttitude(string k) => attitude = attitude == k ? "" : k;
     public void SetApproachMode(string k) => approachMode = k;
     public void StepApproachRange(int d) => approachRange = System.Math.Max(0, System.Math.Min(approachRanges.Length - 1, approachRange + d));
-    /// <summary>onKey: A and D step the ordered heading and clear the attitude hold.</summary>
-    public void StepOrderedHeading(int dir) { orderedHeading = ((orderedHeading + dir * stats.headingKeyStep) % 360 + 360) % 360; attitude = ""; }
+    /// <summary>onKey: A and D step the ordered heading and clear the attitude hold. The order stops 179° ahead of the bow:
+    /// past 180 the short way round flips, and a held key swung the ship back and forth.</summary>
+    public void StepOrderedHeading(int dir)
+    {
+        int lead = System.Math.Max(-179, System.Math.Min(179, TurnLeft + dir * stats.headingKeyStep));
+        orderedHeading = ((heading + lead) % 360 + 360) % 360;
+        attitude = "";
+    }
+
 
     /// <summary>Start the ship here, facing this way, throttle at zero (where a level puts it).</summary>
     public void PlaceAt(double atX, double atY, int headingDeg)

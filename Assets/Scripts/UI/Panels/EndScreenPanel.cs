@@ -6,6 +6,8 @@ using UnityEngine.SceneManagement;
 /// The end screen (Step 85). When the mission is won or lost it covers the board and says how it ended:
 /// MISSION COMPLETE or SHIP LOST, why, the target, our ship and the time taken. RESTART MISSION plays this
 /// level again; MISSION SELECT goes back to the mission list (owner 2026-11-02). It shows the QuestSystem.
+/// It is the pause menu too (owner 2026-11-02): Escape in a level stops time and shows it titled PAUSED, with
+/// RESUME and QUIT GAME added and the rows hidden. Escape or RESUME closes it and time goes on as it was.
 /// </summary>
 public class EndScreenPanel : Panel
 {
@@ -18,16 +20,33 @@ public class EndScreenPanel : Panel
     [Tune("Board & time")] [SerializeField] private float delaySeconds = 2f;
     [Tooltip("MISSION SELECT loads this scene: the mission list.")]
     [SerializeField] private string menuScene = "01_Briefing";
+    [Tooltip("Pause menu only: RESUME and QUIT GAME.")]
+    [SerializeField] private GameObject resumeButton, quitButton;
+    [Tooltip("The target, our ship and the time, with their labels. Hidden on the pause menu.")]
+    [SerializeField] private GameObject rows;
     private QuestSystem quest;
+    private bool pausedBefore;
 
     public bool Showing => screen && screen.activeSelf;
+    /// <summary>The pause menu is up. The board's keys wait meanwhile.</summary>
+    public bool MenuOpen { get; private set; }
 
     public override void Refresh()
     {
         if (!quest) quest = FindAnyObjectByType<QuestSystem>();
-        bool on = quest && quest.Over && Time.unscaledTime >= quest.EndedAt + delaySeconds;
+        bool on = MenuOpen || (quest && quest.Over && Time.unscaledTime >= quest.EndedAt + delaySeconds);
         if (screen && screen.activeSelf != on) screen.SetActive(on);
         if (!on) return;
+        if (rows) rows.SetActive(!MenuOpen);
+        if (resumeButton) resumeButton.SetActive(MenuOpen);
+        if (quitButton) quitButton.SetActive(MenuOpen);
+        if (MenuOpen)
+        {
+            title.text = "PAUSED";
+            Paint(title, Palette.data);
+            reason.text = "";
+            return;
+        }
         var s = State;
         bool won = quest.Stage == QuestStage.MissionComplete;
         var t = s.TrackOf(quest.TargetKey);
@@ -55,6 +74,23 @@ public class EndScreenPanel : Panel
     {
         if (action == "end.restart") { SceneManager.LoadScene(gameObject.scene.name); return true; } // the board loads its level again
         if (action == "end.menu") { SceneManager.LoadScene(menuScene); return true; }
+        if (action == "end.pause") // Escape, and RESUME
+        {
+            if (quest && quest.Over) return true; // the end screen has its own buttons
+            MenuOpen = !MenuOpen;
+            if (MenuOpen) { pausedBefore = Controls.Paused; Controls.Pause(); }
+            else Controls.Pause(pausedBefore);
+            return true;
+        }
+        if (action == "end.quit")
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false; // Application.Quit does nothing in the editor
+#else
+            Application.Quit();
+#endif
+            return true;
+        }
         return false;
     }
 }

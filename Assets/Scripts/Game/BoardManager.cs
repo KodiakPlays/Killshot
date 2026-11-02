@@ -126,8 +126,10 @@ public class BoardManager : MonoBehaviour
         hangarKey = KeyCode.Alpha4, engineeringKey = KeyCode.Alpha5, commsKey = KeyCode.Alpha6;
     [Tooltip("Owner 2026-10-29: pauses and runs, as the PAUSE key does.")]
     [Tune("Keys")] [SerializeField] private KeyCode pauseRunKey = KeyCode.P;
-    [Tooltip("Owner 2026-10-29: quits the game at once, at any time, even while typing. The intro and the missions list quit on Escape too (ScreenFlow).")]
-    [Tune("Keys")] [SerializeField] private KeyCode quitKey = KeyCode.Escape;
+    [Tooltip("Owner 2026-11-02: pauses and opens the menu (the end screen titled PAUSED), or closes it, even while typing. "
+           + "The intro and the missions list still quit at once on Escape (ScreenFlow).")]
+    [UnityEngine.Serialization.FormerlySerializedAs("quitKey")]
+    [Tune("Keys")] [SerializeField] private KeyCode menuKey = KeyCode.Escape;
 
     [Header("Time control")]
     [SerializeField] private TMP_Text clock;
@@ -257,6 +259,7 @@ public class BoardManager : MonoBehaviour
     private float nextTick;
     private Panel[] panels = new Panel[0];
     private Rockers rockers;
+    private EndScreenPanel endScreen;
     private int shotsHeard, resultsHeard, killsHeard, hitsTakenHeard, boatWarningsHeard, signalsHeard;
     private bool edgeWarned, trackedWarned;
 
@@ -280,6 +283,7 @@ public class BoardManager : MonoBehaviour
         if (motion) motion.Changed += ShowSystems;
         panels = GetComponentsInChildren<Panel>(true); // a panel can sit on its own station object (a prefab)
         rockers = GetComponent<Rockers>();
+        endScreen = GetComponentInChildren<EndScreenPanel>(true);
         foreach (var p in panels) p.Bind(this);
         RefreshPanels();
         PickTool(tools[0]);
@@ -300,10 +304,10 @@ public class BoardManager : MonoBehaviour
         Shake();
         // thrown repair and order rockers fall back after 400 ms (flickBack)
         if (state.orders.ExpireFlicks(Time.unscaledTime)) RefreshPanels();
-        if (Input.GetKeyDown(quitKey)) Application.Quit(); // owner 2026-10-29: quit at any time (does nothing in the editor)
-        // owner 2026-10-29: P pauses and runs, and 1–6 open the drawers, as the board's keys do (not while typing in a text field)
+        if (Input.GetKeyDown(menuKey)) Click("end.pause", null); // owner 2026-11-02: Escape pauses and opens the menu (EndScreenPanel)
+        // owner 2026-10-29: P pauses and runs, and 1–6 open the drawers, as the board's keys do (not while typing in a text field, nor under the menu)
         var sel = UnityEngine.EventSystems.EventSystem.current ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
-        if (!sel || !sel.GetComponent<TMP_InputField>())
+        if ((!sel || !sel.GetComponent<TMP_InputField>()) && !(endScreen && endScreen.MenuOpen))
         {
             if (Input.GetKeyDown(pauseRunKey)) Click("pause", null);
             var drawerKeys = new[] { fireControlKey, sensorsKey, powerKey, hangarKey, engineeringKey, commsKey }; // in systemDrawers' order
@@ -569,8 +573,8 @@ public class BoardManager : MonoBehaviour
 
     // ---- time control --------------------------------------------------------------------
 
-    /// <summary>Stop time, as the PAUSE key does (Step 85: the mission's end).</summary>
-    public void Pause() { paused = true; ShowTime(); }
+    /// <summary>Stop time, as the PAUSE key does (Step 85: the mission's end), or run it again (the pause menu closing).</summary>
+    public void Pause(bool on = true) { paused = on; ShowTime(); }
 
     void ShowTime()
     {

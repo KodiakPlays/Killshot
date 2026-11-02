@@ -316,7 +316,7 @@ Do not treat any of these as decided. Ask the owner.
 
 1. **Enemy AI beyond Wolf Hunt.** `Assets/Scripts/Tactical/EnemyBrain.cs` drives the Garuda. It
    hunts the map, hears us by our signal, searches, then turns a side to us and fires railguns and
-   torpedoes (Step 97). Anything past that one brain is still unspecified in every document, including
+   torpedoes (Step 97). It never leaves the battle space (Step 155). Anything past that one brain is still unspecified in every document, including
    the GDD.
 2. **What happens when stability reaches zero.** Four sections spend numbers on it; none says what it
    is for. On the board, stability is a meter on the helm, and nothing else reads it.

@@ -632,6 +632,14 @@ The prototype's ladder, in the prototype's own units, for reference:
 > Level map. At each point, Turn Back Chance (25%) is the chance that the ship turns back
 > (owner 2026-11-02).
 
+> **Rule 5.3.c** An enemy ship never leaves the battle space (owner 2026-11-02). This covers the
+> Garuda and the frigates. It never heads for a point in the edge warning band (Rule 14.a). A point
+> there moves in to the band's inner edge. In the band it never heads farther out. It runs along the
+> edge instead, even while it chases us or turns a side to us to fire. If it is past the edge, it
+> heads straight for the middle. It does the same in the band if it is heading straight out or into a
+> corner. At full speed, at worst, the Garuda drifts about 520 units out while it turns, and a frigate about 750. There is no new
+> setting.
+
 ### 5.4 The alert net
 
 **Built (Step 99, owner 2026-10-27).** The moment an enemy ship reaches ALERT, the alarm strip reads
@@ -1522,6 +1530,9 @@ room can kill the party, so the magazine may not come back.
 
 > **Rule 14.b** A lost ship goes dark. Its power is out for good. The end screen reads SHIP LOST
 > (§15.2).
+
+> **Rule 14.c** Only our ship can be lost at the edge. Enemy ships never leave the battle space
+> (Rule 5.3.c).
 
 ---
 

@@ -276,14 +276,39 @@ public class EnemyBrain : MonoBehaviour
                 waypointAt = now;
                 nextCourse = 0f;
             }
+            waypoint = Inside(us, waypoint); // owner 2026-11-02: never a point past the edge band (where we heard us, a search point, a route point)
             heading = TacticalWorld.Bearing(waypoint - at);
             speed = Level == Awareness.Alert ? top : Level == Awareness.Searching ? top * 0.8f : cruiseUnits;
         }
         // owner 2026-11-01: rocks and ships are solid: it steers round them
         if (!world) world = FindAnyObjectByType<TacticalWorld>();
-        ship.nav.orderedHeading = world ? world.ClearHeading(ship.nav, heading, avoidLookUnits) : heading;
+        heading = world ? world.ClearHeading(ship.nav, heading, avoidLookUnits) : heading;
+        ship.nav.orderedHeading = KeepInside(us, at, heading);
         // a damaged engine room holds it back, as our lever is; wrecked, it drifts (DISABLE, BOARDING_README)
         ship.nav.throttle = Mathf.Clamp(Mathf.RoundToInt(speed / top * 100f), 0, ship.nav.ThrottleCap);
+    }
+
+    // Owner 2026-11-02: it can't leave the battle space either. Its edge band is our edge warning band (arenaWarnUnits):
+    // in the band it drops the outward part of its heading and runs along the edge, even chasing us; past the edge it
+    // heads straight for the middle. The board's band is 1,000 units; at full speed, at worst, the Garuda drifts about
+    // 520 units into it while it turns, a frigate about 750 (worked out from Garuda.asset and Frigate.asset).
+    static int KeepInside(ShipState us, Vector2 at, int heading)
+    {
+        var edge = Inside(us, at);
+        if (edge == at) return heading;
+        if (System.Math.Abs(at.x) > us.ArenaHalfW || System.Math.Abs(at.y) > us.ArenaHalfH) return TacticalWorld.Bearing(-at);
+        float rad = heading * Mathf.Deg2Rad;
+        var way = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad));
+        if (edge.x != at.x && way.x * at.x > 0f) way.x = 0f;
+        if (edge.y != at.y && way.y * at.y > 0f) way.y = 0f;
+        return way.sqrMagnitude < 0.01f ? TacticalWorld.Bearing(-at) : TacticalWorld.Bearing(way); // straight out, or into a corner: back to the middle
+    }
+
+    // The nearest point to p inside the battle space less its edge band
+    static Vector2 Inside(ShipState us, Vector2 p)
+    {
+        float hw = Mathf.Max(0f, (float)(us.ArenaHalfW - us.arenaWarnUnits)), hh = Mathf.Max(0f, (float)(us.ArenaHalfH - us.arenaWarnUnits));
+        return new Vector2(Mathf.Clamp(p.x, -hw, hw), Mathf.Clamp(p.y, -hh, hh));
     }
 
     // Point to point, back at each end, and it may turn back at any point.

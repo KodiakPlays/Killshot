@@ -63,7 +63,7 @@ does a few things.
 |---|---|
 | Menu | The arrow keys or `Tab` move. `Enter` or `Space` picks. A click works too. |
 | MISSIONS list | The arrow keys move. `Enter` picks. A click works too. |
-| `Esc` | Quit at once, on any screen. There is no confirm box. It does nothing in the Unity editor. |
+| `Esc` | In a level, stop the game and open the menu: RESUME, QUIT GAME, RESTART MISSION and MISSION SELECT. `Esc` again, or RESUME, closes it. On the intro and the MISSIONS list, quit at once, with no confirm box. There it does nothing in the Unity editor. On the MISSION COMPLETE or SHIP LOST screen, it does nothing. |
 | `P`, or the PAUSE key | Stop or start time. The board opens paused. |
 | Rate keys | Run time at x0.25, x1 or x5. |
 | Briefing icon, next to the rate keys | Open or close the briefing. |
@@ -80,7 +80,7 @@ does a few things.
 | Right rail, or `1` to `6` | Open or close a drawer: 1 fire control, 2 sensors, 3 power, 4 hangar, 5 engineering, 6 comms. |
 
 To change a board key, open the Keys tab of **Starwolf → Tuning** in the Unity editor. The keys do
-nothing while you type in a text box, except `Esc`, which still quits.
+nothing while you type in a text box, except `Esc`. It still opens the menu.
 
 What each panel's switches do is in `Assets/UI/Board/README.md`.
 
