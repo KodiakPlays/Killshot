@@ -1205,7 +1205,7 @@ The tool rail: CURSOR, POINT, RULER, COMPASS and ERASE (§18). The systems rail:
 |---|---|
 | Our ship | Its 3D model seen from above, in white. It glides and never blinks (owner, 2026-10-25). |
 | A contact | A bearing line, a dot with its range, or its model (§9.6) |
-| Our fighters | White wedges in a V, with no labels. The V opens as they leave our ship and closes as they land (owner, 2026-11-02) |
+| Our fighters | Small white triangles in a V, 10 px, nose pointing the way they fly, with no labels. The V is shut where they appear beside our ship. It opens as they fly out and closes as they land (owner, 2026-11-02) |
 | Our slugs and torpedoes | A white dot with a fading trail: 120 px on a slug, less on anything slower, so a torpedo's grows as its motor lights |
 | Enemy torpedoes | A red dot with a short trail |
 | A ship our marines secured | A dot |
@@ -1390,8 +1390,11 @@ box and its red number are still on the panel and do nothing else (owner, 2026-1
 
 A squadron, fighters or assault boats, then flies like this (owner, 2026-11-02):
 
-1. It starts at the hull, on the side of our ship facing fire control's target. With no target, or
-   a target with no position, it starts on the starboard side.
+1. It appears just beside our ship, on the side facing fire control's target. With no target, or
+   a target with no position, it appears on the starboard side. The leader starts past the widest
+   part of our ship as the plot draws it (the wings), plus half a fighter, plus 10 units. Zoomed
+   out, the plot draws our ship bigger than its true size. The start moves out with the drawn ship.
+   It is never closer than the side of the ship's box.
 2. It flies straight out, tilted 15° toward the stern, for 200 units, at every zoom. Only an ESCORT
    can fly further: if the small circle round our ship is bigger at the current zoom, the ESCORT
    flies out past that circle. A squadron always flies its full distance, even after RECALL or with
@@ -1403,11 +1406,13 @@ A squadron, fighters or assault boats, then flies like this (owner, 2026-11-02):
 All its flying uses these turns, on the way back too. RECALL turns it back. It lands when it
 reaches the small circle round our ship.
 
-On the plot, the V opens as the squadron leaves our ship and closes as it lands. The plot draws a
+On the plot, the V is shut where the squadron appears: all its craft start on one spot. It opens
+as the squadron flies out and closes as it lands. No craft is drawn over our ship. The plot draws a
 smooth curve between ticks. The rules still step on the tick (Rule 9.6.a).
 
-The numbers are in each ship's stats file, under hangar: `launchTiltBackDeg` 15, `launchRunUnits`
-200, `turnDegPerS` 90 and `turnEase` 180. Boats use the same numbers.
+The numbers are in each ship's stats file, under hangar: `launchSideGapUnits` 10,
+`launchTiltBackDeg` 15, `launchRunUnits` 200, `turnDegPerS` 90 and `turnEase` 180. Boats use the
+same numbers.
 
 ---
 

@@ -1158,7 +1158,7 @@ public static class PlaytestRunner
                                             hLever.transform.TransformPoint(((RectTransform)hLever.transform).rect.center)));
         if (!PlotDrag(board, hLeverAt, hLeverAt + new Vector2(240, 0), "pull the launch lever", "hangar.lever")) yield break;
         yield return 0.6f;
-        Check("Six interceptors take off: six wedges on the plot", s.hangar.Flights.Count == 1 && s.hangar.Flights[0].craft == 6 && plotPanel.FightersShown == 6 && s.hangar.Launched(s.hangar.CurrentSquad),
+        Check("Six interceptors take off: six triangles on the plot", s.hangar.Flights.Count == 1 && s.hangar.Flights[0].craft == 6 && plotPanel.FightersShown == 6 && s.hangar.Launched(s.hangar.CurrentSquad),
               s.hangar.Flights.Count + " flight, " + (s.hangar.Flights.Count > 0 ? s.hangar.Flights[0].craft : 0) + " craft, " + plotPanel.FightersShown + " drawn");
         var flight = s.hangar.Flights.Count > 0 ? s.hangar.Flights[0] : null;
         if (flight == null) yield break;

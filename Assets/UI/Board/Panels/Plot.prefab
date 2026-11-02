@@ -911,7 +911,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 7fc5a43c97454d0296938c78e51e9739, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d29a824138bf2474cbb7da56e5386dda, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -2323,8 +2323,8 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 234b9a9080301403b8d0d5321e21dab4, type: 3}
     images:
     - {fileID: 8183429877108546807}
-  - name: Fighter wedge
-    sprite: {fileID: 21300000, guid: 7fc5a43c97454d0296938c78e51e9739, type: 3}
+  - name: Fighter triangle
+    sprite: {fileID: 21300000, guid: d29a824138bf2474cbb7da56e5386dda, type: 3}
     images:
     - {fileID: 7922429107365735552}
   - name: Scanlines
@@ -2442,7 +2442,7 @@ MonoBehaviour:
   gunBarAlphaOther: 0.4
   visualRingAlpha: 0.35
   fighterTemplate: {fileID: 7922429107365735552}
-  fighterPx: 16
+  fighterPx: 10
   fighterGapPx: 10
   sweepInkAmber: {r: 1, g: 0.5882353, b: 0.50980395, a: 1}
 --- !u!1 &8662600331490899802

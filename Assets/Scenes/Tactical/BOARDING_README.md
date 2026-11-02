@@ -20,7 +20,7 @@ than 15,000 km from our ship. Leave them out of range too long and they are lost
 
 1. **Launch** as for fighters: hangar stages, launch lever, a target from fire control. Each ready
    boat carries 6 marines from the ship's 18.
-2. **Fly out** at 30 km/s, drawn as the fighters' wedges.
+2. **Fly out** at 30 km/s, drawn as the fighters' triangles.
 3. **Hold off** until the target can be boarded. The hangar line says why it is waiting:
    - "HOLDING OFF GARUDA · NO OPEN SIDE": no face of its armour is broken;
    - "HOLDING OFF GARUDA · TARGET UNDER WAY": it is moving faster than 0.5 km/s.

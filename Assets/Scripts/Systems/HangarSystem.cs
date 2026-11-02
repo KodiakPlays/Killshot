@@ -33,6 +33,8 @@ public class HangarSystem : MonoBehaviour
         [Header("Leaving the ship and turning, fighters and boats (owner 2026-11-02)")]
         [Tooltip("A squadron leaves straight out of the ship's side, tilted this many degrees toward the stern.")]
         public double launchTiltBackDeg = 15;
+        [Tooltip("It appears this far out from the ship's side, units: the side as the plot draws it, a whole fighter clear of it.")]
+        public double launchSideGapUnits = 10;
         [Tooltip("How far it flies straight out before it can turn, units.")]
         public double launchRunUnits = 200;
         [Tooltip("The sharpest it turns, degrees per game second.")]
@@ -146,6 +148,9 @@ public class HangarSystem : MonoBehaviour
     /// <summary>How far out an escort flies, and where a squadron lands, units: the plot sets both each frame from the small circle
     /// round our ship at the current zoom, so an escort's whole V clears it, and a squadron lands as its leader reaches it.</summary>
     [System.NonSerialized] public double launchClearUnits, landClearUnits;
+    /// <summary>Owner 2026-11-02: how far from our ship's centre a fighter clears its side, units. The plot sets it each frame:
+    /// zoomed out it draws our ship bigger than it is, and the fighters must still come out beside the ship you see.</summary>
+    [System.NonSerialized] public double launchSideUnits;
     double LandUnits => System.Math.Max(50, landClearUnits);
     [System.NonSerialized] public int boardings;
     /// <summary>Goes up when boats are stranded and when they are lost: each sounds the alert tone.</summary>
@@ -399,7 +404,7 @@ public class HangarSystem : MonoBehaviour
         var aim = ship.TrackOf(ship.weapons.target);
         double heading = ship.nav.heading;
         int side = aim != null && aim.hasWorld && ((System.Math.Atan2(aim.worldX - ship.nav.x, aim.worldY - ship.nav.y) * 180 / System.Math.PI - heading) % 360 + 360) % 360 > 180 ? -1 : 1;
-        double lb = (heading + side * 90) * System.Math.PI / 180.0, hull = ship.nav.BoxHalf.x;
+        double lb = (heading + side * 90) * System.Math.PI / 180.0, hull = System.Math.Max(ship.nav.BoxHalf.x, launchSideUnits) + stats.launchSideGapUnits;
         double x = ship.nav.x + System.Math.Sin(lb) * hull, y = ship.nav.y + System.Math.Cos(lb) * hull, hdg = (heading + side * (90 + stats.launchTiltBackDeg) + 360) % 360;
         var f = new Flight { squad = q.key, order = order, targetKey = ship.weapons.target, craft = SquadReady(q), x = x, y = y, hdg = hdg,
                              fromX = x, fromY = y, fromHdg = hdg, runLeft = order == "escort" ? System.Math.Max(stats.launchRunUnits, launchClearUnits) : stats.launchRunUnits };

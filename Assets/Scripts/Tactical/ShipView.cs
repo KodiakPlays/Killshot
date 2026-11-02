@@ -39,6 +39,8 @@ public class ShipView : MonoBehaviour
     }
     /// <summary>The ship's length as a share of the image, so the plot can size the image by the ship.</summary>
     public float ShipFill => shipFill;
+    /// <summary>The model's width as a share of its length, wings and all (owner 2026-11-02: fighters come out beside it).</summary>
+    public float WidthShare { get; private set; } = 0.5f;
 
     private void Awake()
     {
@@ -60,7 +62,7 @@ public class ShipView : MonoBehaviour
             bool any = false;
             foreach (var r in target.GetComponentsInChildren<Renderer>()) { if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds); }
             target.rotation = rot;
-            if (any) shipLength = Mathf.Max(b.size.x, b.size.y);
+            if (any) { shipLength = Mathf.Max(b.size.x, b.size.y); WidthShare = Mathf.Min(b.size.x, b.size.y) / shipLength; }
         }
         cam.orthographicSize = shipLength / shipFill / 2f;
         Follow();

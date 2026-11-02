@@ -370,8 +370,9 @@ The prefab has these parts, from back to front:
 - `Scanlines`, `Vignette` and `Edge`: the screen effects and the four edges
 
 Its art files are in `Art/Plot`, with `Art/Shapes/round_6` for the ground. The Art list has 6
-entries: the ground, glow, fighter wedge, scanlines, vignette and gas cloud. The fighter wedge is
-`Assets/Art/Hulls/hull_wedge_filled.png`.
+entries: the ground, glow, fighter triangle, scanlines, vignette and gas cloud. The fighter triangle
+is `Assets/UI/Sprite/triangle-128.png`. It is a small white triangle, nose pointing the way the
+fighter flies.
 
 A gas cloud shows on the plot in two ways. Within visual range (2,000 units) of our ship or of a
 fighter flight, it shows as a soft, ragged grey-blue cloud. It fills the cloud's box. The
@@ -496,7 +497,8 @@ Ask a technical artist before you change these:
   **Px Per 1000 Units** (760, on `PlotGrid`). Moving or resizing the plot means changing them.
 - The code sizes our ship's picture: **Own Ship Px At Full Zoom**, **Own Ship Min Px** and
   **Own Ship Max Px**.
-- The code sizes and spaces the fighters: **Fighter Px** and **Fighter Gap Px**.
+- The code sizes and spaces the fighters: **Fighter Px** (10) and **Fighter Gap Px** (10).
+  Fighter Px is the triangle's size on screen. Fighter Gap Px is the gap between fighters in the V.
 - The code makes the axis numbers under `Scale`: **Axis Font**, **Axis Material**,
   **Axis Font Size** and **Axis Colour**.
 - The code places labels with **Point Label Offset**, **Ruler Label Offset**,
@@ -689,17 +691,21 @@ built. Nothing damages a fighter yet, and nothing in the game changes these bars
 
 When the launch lever is pulled, this is what shows on the plot:
 
-1. The squadron starts at our ship's hull, on the side facing fire control's target. With no
-   target, it starts on the starboard side.
-2. It flies straight out, tilted a little toward the stern.
+1. The squadron appears just beside our ship, on the side facing fire control's target. With no
+   target, it appears on the starboard side. It starts past the widest part of the ship you see,
+   the wings. Zoomed out, the plot draws our ship bigger than its true size. The squadron still
+   appears beside the ship you see. All its craft start on one spot. None is drawn over the ship.
+2. It flies straight out, tilted a little toward the stern. The V opens as it goes.
 3. It curves round onto where it is going. The turn starts gently, gets tighter, then eases off as
    it lines up.
 
 Fighters and assault boats both do this. They turn the same way on all their flying, on the way
-back too. The V opens as they leave our ship and closes as they land.
+back too. The V closes as they land.
 
 To change this, use the Ship tab of **Starwolf → Tuning**, under Hangar. Each ship has its own
 numbers:
+- **Launch Side Gap Units** (10): the gap between the side of our ship and where it appears. The
+  side is the widest part of the ship as the plot draws it. Half a fighter is added to the gap.
 - **Launch Tilt Back Deg** (15): how far it tilts toward the stern as it leaves.
 - **Launch Run Units** (200): how far it flies straight out before it turns, at every zoom. Only
   an ESCORT can fly further: if the small circle round our ship is bigger at that zoom, the ESCORT

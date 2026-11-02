@@ -240,10 +240,10 @@ public class PlotPanel : Panel
            + "Inside it you see ships with your eyes. Its strength, 0 to 1; 0 hides it.")]
     [Tune("Sensors")] [SerializeField] private float visualRingAlpha = 0.35f;
 
-    [Header("Fighters (Step 54): one small wedge per craft, white like our ship (owner 2026-10-26), no labels")]
-    [Tooltip("A hidden wedge image (hull_wedge_filled, nose up; the outline vanishes this small), cloned per fighter in flight.")]
+    [Header("Fighters (Step 54): one small triangle per craft, white like our ship (owner 2026-10-26), no labels")]
+    [Tooltip("A hidden triangle image (triangle-128, nose up; owner 2026-11-02: small triangles), cloned per fighter in flight.")]
     [SerializeField] private Image fighterTemplate;
-    [Tooltip("A fighter's length on screen, px.")]
+    [Tooltip("A fighter's size on screen, px.")]
     [Tune("Hangar & fighters")] [SerializeField] private float fighterPx = 16f;
     [Tooltip("Gap between fighters in the V, px.")]
     [Tune("Hangar & fighters")] [SerializeField] private float fighterGapPx = 10f;
@@ -564,6 +564,8 @@ public class PlotPanel : Panel
 
         // fighters in flight (Step 54): a V behind the leader, each wedge pointing where the flight flies
         int nf = 0;
+        // owner 2026-11-02: how far a fighter's centre is from our ship's, a whole fighter clear of the side as drawn
+        float sidePx = ShipPx(shipView) / 2f * (shipView ? shipView.WidthShare : 0.5f) + fighterPx / 2f;
         if (fighterTemplate)
         {
             var ink = ownShipColor.gamma; // owner 2026-10-26: white, like our ship
@@ -578,13 +580,14 @@ public class PlotPanel : Panel
                 float clear = InnerRingPx + f.craft / 2 * fighterGapPx + fighterPx / 2f;
                 // owner 2026-10-26: an escort holds outside the small circle, whole V clear, even after zooming out grows it
                 if (f.order == "escort" && !f.returning && f.runLeft <= 0 && off.magnitude < clear) lead = OwnAt + (off.sqrMagnitude > 0f ? off.normalized : ahead) * clear;
-                float open = Mathf.Clamp01((lead - OwnAt).magnitude / clear); // owner 2026-11-02: the V opens as it leaves the ship and closes as it lands
+                // owner 2026-11-02: the V opens as it leaves the ship and closes as it lands; shut where they come out, none on the hull
+                float open = Mathf.Clamp01(((lead - OwnAt).magnitude - sidePx) / (clear - sidePx));
                 for (int c = 0; c < f.craft; c++)
                 {
                     int row = (c + 1) / 2;
                     var img = Fighter(nf++);
                     img.color = ink;
-                    img.rectTransform.sizeDelta = new Vector2(fighterPx * 0.5f, fighterPx);
+                    img.rectTransform.sizeDelta = new Vector2(fighterPx, fighterPx);
                     Put(img.rectTransform, lead + (right * (c % 2 == 1 ? -row : row) - ahead * row) * fighterGapPx * open, -drawnHdg);
                 }
             }
@@ -596,6 +599,7 @@ public class PlotPanel : Panel
         double kmPx = UnitsPerPx / Controls.ZoomExact;
         s.hangar.landClearUnits = (InnerRingPx + fighterPx / 2f) * kmPx;
         s.hangar.launchClearUnits = s.hangar.landClearUnits + s.hangar.SquadReady(s.hangar.CurrentSquad) / 2 * fighterGapPx * kmPx;
+        s.hangar.launchSideUnits = sidePx * kmPx;
 
         // the selected weapon's reach while Fire Control is open (Step 46)
         if (weaponRing)
@@ -671,10 +675,6 @@ public class PlotPanel : Panel
         // once a wreck, drifting on. Out of sight an identified hostile is a dot where the sweep last touched it
         // (res_* in the board: a mark only once identified). units to plot px at 1x: 60.9 px per 1000 units, then the zoom.
         var dots = new List<MarksGraphic.Shape>();
-        int n = 0;
-        string pictured = null; // the one contact picture's track
-        wreckPictured = false;
-        foreach (var t in s.tracks)
         // owner 2026-11-02: past visual range a rock is only its echo, a clean hollow circle where the ACTIVE SCAN cone passed it, that blinks
         // as the ping passes and fades; in sight the rock itself shows. A rock across the edge shows both, cut at the circle (ClipToSight).
         ClipToSight();
@@ -692,6 +692,10 @@ public class PlotPanel : Panel
             }
             rockEchoMarks.Set(echoes);
         }
+        int n = 0;
+        string pictured = null; // the one contact picture's track
+        wreckPictured = false;
+        foreach (var t in s.tracks)
         {
             if (t.own || t.captured) continue;
             bool known = t.hostile && s.sensors.identified.Contains(t.key), inSight = s.sensors.InSight(t);
@@ -1152,10 +1156,6 @@ public class PlotPanel : Panel
         ruinsImage.color = ruinsColor.gamma; // the board canvas linearises vertex colours; pre-encode
     }
 
-    // Gas clouds (see cloudImage): a copy of the picture for each cloud in visual range, at the plot's pan and zoom.
-    // Each copy is flipped its own way, so the clouds don't all look the same.
-    void ShowClouds(double z)
-    {
     // Owner 2026-11-02: what is in sight shows inside the visual range circle round our ship and round each fighter flight;
     // past them a rock shows only as its DRADIS echo. A rock across the edge is cut there: the ruins picture keeps what is
     // inside the circles, the echoes (their own copy of the contact marks, under them) what is outside.
@@ -1192,6 +1192,10 @@ public class PlotPanel : Panel
         foreach (var m in new[] { ruinsImage.material, rockEchoMarks.material }) { m.SetVectorArray("_Circles", sightCircles); m.SetFloat("_CircleCount", n); }
     }
 
+    // Gas clouds (see cloudImage): a copy of the picture for each cloud in visual range, at the plot's pan and zoom.
+    // Each copy is flipped its own way, so the clouds don't all look the same.
+    void ShowClouds(double z)
+    {
         if (!cloudImage) return;
         if (!world) world = FindAnyObjectByType<TacticalWorld>();
         if (!world) return;
