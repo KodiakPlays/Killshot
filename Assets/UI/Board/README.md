@@ -368,10 +368,27 @@ Its art files are in `Art/Plot`, with `Art/Shapes/round_6` for the ground. The A
 entries: the ground, glow, fighter wedge, scanlines, vignette and gas cloud. The fighter wedge is
 `Assets/Art/Hulls/hull_wedge_filled.png`.
 
-A gas cloud on the plot is a soft box, `Art/Plot/GasCloud.png`. It is placeholder art: a white
-square that fades out at the edges. To change it, swap the sprite on the Gas cloud entry of the Art
-list. The picture stretches to the cloud's size, and the outer 40 pixels keep their shape. **Cloud
-Alpha**, on the Board tab of Starwolf → Tuning under Plot & our ship, sets how strong it shows.
+A gas cloud shows on the plot in two ways. Within visual range (2,000 units) of our ship or of a
+fighter flight, it shows as a soft, ragged grey-blue cloud. It fills the cloud's box. The
+pictures are flipped different ways: left to right, top to bottom, or both. The three clouds in Wolf
+Hunt look different. Past visual range, while DRADIS is on, a cloud inside the DRADIS circle shows as
+a thin hollow circle in the ruins' grey. The circle is about the cloud's size. Its radius is the
+average of the cloud's half width and half height. ACTIVE SCAN is not needed. With DRADIS off, a
+cloud past visual range does not show.
+
+Our ship is in a cloud when at least 90% of its box is in the cloud's box. The picture fills that
+box. The edge you see is close to the real edge.
+
+The picture is `Art/Plot/GasCloud.png`. It is placeholder art: a white cloud with soft edges,
+640 x 384. The plot colours it. To change the look, replace the PNG with one of the same name, or
+swap the sprite on the Gas cloud entry of the Art list. The picture stretches to the cloud's box. It
+has no stretch borders. `Gas cloud (copied for each cloud)` in the prefab is switched off. The code
+copies it for each cloud. The circle is drawn on `Contacts (drawn)`.
+
+Three settings are on the Board tab of **Starwolf → Tuning**. **Cloud Alpha** (0.45, under Plot &
+our ship) sets how strong the cloud shows. **Cloud Ring Alpha** (0.5, under Sensors) sets how strong
+the circle shows. **Cloud Ring Size** (1, under Sensors) sets the circle's size. At 1 the radius is
+the cloud's average half size. The circle is never smaller than 6 px.
 
 The jump point placeholder picture is `Assets/UI/Board/Art/Plot/JumpPoint.png`. It is a white ring
 with a dot in the middle, 256 x 256. The prefab is `Assets/Prefabs/JumpPoint.prefab`. It is one

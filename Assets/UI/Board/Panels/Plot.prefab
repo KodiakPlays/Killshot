@@ -2360,7 +2360,9 @@ MonoBehaviour:
   ownShipMaxPx: 300
   ruinsImage: {fileID: 6430628026388568314}
   cloudImage: {fileID: 3679405572040343172}
-  cloudAlpha: 0.16
+  cloudAlpha: 0.45
+  cloudRingAlpha: 0.5
+  cloudRingSize: 1
   sensorRing: {fileID: 2144010668163942632}
   sensorRingMotion:
     seconds: 0.5
@@ -2639,7 +2641,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: a36d70e6b8bb4484ea20416bc98f7877, type: 3}
-  m_Type: 1
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4

@@ -3,8 +3,8 @@ using UnityEngine;
 /// <summary>
 /// Gas Cloud (owner, 2026-11-01): a box of cold dust and vapour in a level. It has no collider: a ship flies in
 /// and takes no damage. Our ship inside one cools down, and an enemy can only see it from close by. TacticalWorld
-/// finds the clouds; the numbers are in each ship's stats file, under Sensors. The plot draws each cloud in
-/// sight; the picture is on the Plot panel's Art list.
+/// finds the clouds; the numbers are in each ship's stats file, under Sensors. Owner 2026-11-02: in visual range the
+/// plot draws the cloud's picture (on the Plot panel's Art list); past it, while DRADIS listens, a hollow circle.
 /// </summary>
 public class GasCloud : MonoBehaviour
 {
@@ -15,6 +15,8 @@ public class GasCloud : MonoBehaviour
 
     /// <summary>Showing on the plot now: by the same rule as debris (TacticalWorld.SeeRuins).</summary>
     [System.NonSerialized] public bool seen;
+    /// <summary>In visual range now (ours or a fighter's): the plot shows its picture, not the DRADIS circle.</summary>
+    [System.NonSerialized] public bool inSight;
 
     public Vector2 At => transform.position;
 

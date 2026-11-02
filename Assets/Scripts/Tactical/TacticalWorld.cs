@@ -148,7 +148,13 @@ public class TacticalWorld : MonoBehaviour
             if (show) n++;
         }
         RuinsInSight = n;
-        foreach (var c in Clouds) if (c) c.seen = InSight(c.At, Mathf.Max(c.widthUnits, c.heightUnits) / 2);
+        foreach (var c in Clouds)
+        {
+            if (!c) continue;
+            float half = Mathf.Max(c.widthUnits, c.heightUnits) / 2, eyes = s.sensors.stats.visualRangeUnits;
+            c.seen = InSight(c.At, half);
+            c.inSight = (c.At - us).magnitude <= eyes + half || (s.hangar && s.hangar.Sees(c.At.x, c.At.y, eyes + half)); // owner 2026-11-02: the picture in visual range, a hollow circle past it
+        }
     }
 
     // Our ship is in a gas cloud when enough of its box is in one (owner 2026-11-01). Enemies don't hide in clouds yet.

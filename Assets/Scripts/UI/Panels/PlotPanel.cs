@@ -44,11 +44,15 @@ public class PlotPanel : Panel
     private Camera ruinsCamera;
     private RenderTexture ruinsTexture;
 
-    [Header("Gas clouds on the plot (owner 2026-11-01): each cloud in sight, behind the ruins and the marks")]
+    [Header("Gas clouds on the plot (owner 2026-11-01): each cloud in visual range, behind the ruins and the marks")]
     [Tooltip("The picture for one cloud. It stays switched off and is copied for each cloud. Its sprite is on this panel's Art list.")]
     [SerializeField] private Image cloudImage;
     [Tooltip("How strongly a cloud shows on the grid, 0 to 1. It is drawn in the ruins' colour.")]
-    [Tune("Plot & our ship")] [Range(0f, 1f)] [SerializeField] private float cloudAlpha = 0.16f;
+    [Tune("Plot & our ship")] [Range(0f, 1f)] [SerializeField] private float cloudAlpha = 0.45f;
+    [Tooltip("Owner 2026-11-02: past visual range, while DRADIS listens, a cloud shows as a hollow circle. How strong the circle is, 0 to 1.")]
+    [Tune("Sensors")] [Range(0f, 1f)] [SerializeField] private float cloudRingAlpha = 0.5f;
+    [Tooltip("The circle's size: this many times the cloud's average half size.")]
+    [Tune("Sensors")] [SerializeField] private float cloudRingSize = 1f;
     private readonly List<Image> cloudImages = new List<Image>();
     private TacticalWorld world;
 
@@ -727,6 +731,14 @@ public class PlotPanel : Panel
         if (world && s.sensors.Listening)
             foreach (var d in world.FalseDots) // owner 2026-11-02: rocks' false contacts; they look like any faint dot, and fade
                 dots.Add(new MarksGraphic.Shape { kind = "point", a = Screen(d.at.x, d.at.y), b = Screen(d.at.x, d.at.y), alpha = 1f - (Controls.MissionSeconds - d.bornAt) / Mathf.Max(1f, world.FalseDotSeconds) });
+        if (world) // owner 2026-11-02: past visual range DRADIS shows a gas cloud as a hollow circle, about the cloud's size
+            foreach (var c in world.Clouds)
+                if (c && c.seen && !c.inSight)
+                {
+                    var cloudAt = Screen(c.At.x, c.At.y);
+                    float r = Mathf.Max(6f, (c.widthUnits + c.heightUnits) / 4 * cloudRingSize / (float)UnitsPerPx * (float)Controls.ZoomExact);
+                    dots.Add(new MarksGraphic.Shape { kind = "circle", a = cloudAt, b = cloudAt + new Vector2(r, 0f), alpha = cloudRingAlpha, ink = ruinsColor.gamma });
+                }
         // enemy torpedoes coming at us (Step 55): a red dot with a trail, like our own rounds, no label
         foreach (var r in s.weapons.Incoming)
         {
@@ -1112,7 +1124,8 @@ public class PlotPanel : Panel
         ruinsImage.color = ruinsColor.gamma; // the board canvas linearises vertex colours; pre-encode
     }
 
-    // Gas clouds (see cloudImage): a copy of the picture for each cloud in sight, at the plot's pan and zoom
+    // Gas clouds (see cloudImage): a copy of the picture for each cloud in visual range, at the plot's pan and zoom.
+    // Each copy is flipped its own way, so the clouds don't all look the same.
     void ShowClouds(double z)
     {
         if (!cloudImage) return;
@@ -1130,10 +1143,11 @@ public class PlotPanel : Panel
         for (int i = 0; i < cloudImages.Count; i++)
         {
             var c = i < world.Clouds.Count ? world.Clouds[i] : null;
-            bool show = c && c.seen;
+            bool show = c && c.inSight;
             Show(cloudImages[i], show);
             if (!show) continue;
             cloudImages[i].rectTransform.sizeDelta = new Vector2((float)(c.widthUnits * z), (float)(c.heightUnits * z));
+            cloudImages[i].rectTransform.localScale = new Vector3(i % 2 == 0 ? 1f : -1f, i % 4 < 2 ? 1f : -1f, 1f);
             Put(cloudImages[i].rectTransform, Screen(c.At.x, c.At.y), 0f);
             cloudImages[i].color = ink;
         }
