@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// The end screen (Step 85). When the mission is won or lost it covers the board and says how it ended:
 /// MISSION COMPLETE or SHIP LOST, why, the target, our ship and the time taken. RESTART MISSION plays this
-/// level again; MAIN MENU goes back to the intro and the menu. It shows the QuestSystem.
+/// level again; MISSION SELECT goes back to the mission list (owner 2026-11-02). It shows the QuestSystem.
 /// </summary>
 public class EndScreenPanel : Panel
 {
@@ -16,8 +16,8 @@ public class EndScreenPanel : Panel
     [SerializeField] private TMP_Text values;
     [Tooltip("Real seconds from the end to the screen, so the last hit is seen first.")]
     [Tune("Board & time")] [SerializeField] private float delaySeconds = 2f;
-    [Tooltip("MAIN MENU loads this scene: the intro, then the menu.")]
-    [SerializeField] private string menuScene = "00_Start";
+    [Tooltip("MISSION SELECT loads this scene: the mission list.")]
+    [SerializeField] private string menuScene = "01_Briefing";
     private QuestSystem quest;
 
     public bool Showing => screen && screen.activeSelf;

@@ -110,7 +110,7 @@ GameObject:
   - component: {fileID: 6313764595024172825}
   - component: {fileID: 7468350548517817762}
   m_Layer: 5
-  m_Name: MAIN MENU
+  m_Name: MISSION SELECT
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -553,7 +553,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MAIN MENU
+  m_text: MISSION SELECT
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: cae59a5581506424582bca42766005d4, type: 2}
   m_sharedMaterial: {fileID: 5654414974495612992, guid: cae59a5581506424582bca42766005d4, type: 2}
@@ -1291,7 +1291,7 @@ MonoBehaviour:
   reason: {fileID: 6337814685272112477}
   values: {fileID: 1286317893007393278}
   delaySeconds: 2
-  menuScene: 00_Start
+  menuScene: 01_Briefing
 --- !u!1 &8121699749070900636
 GameObject:
   m_ObjectHideFlags: 0

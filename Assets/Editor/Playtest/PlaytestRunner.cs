@@ -1906,10 +1906,10 @@ public static class PlaytestRunner
         Shot("31_ship_lost_reactor");
         yield return 0.2f;
 
-        //     MAIN MENU: the intro, then the menu.
-        if (!Click("end.menu", null, "MAIN MENU")) yield break;
-        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "00_Start");
-        Check("MAIN MENU loads the intro", SceneManager.GetActiveScene().name == "00_Start", SceneManager.GetActiveScene().name);
+        //     MISSION SELECT: the mission list.
+        if (!Click("end.menu", null, "MISSION SELECT")) yield break;
+        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "01_Briefing");
+        Check("MISSION SELECT loads the mission list", SceneManager.GetActiveScene().name == "01_Briefing", SceneManager.GetActiveScene().name);
         yield return 1f;
     }
 

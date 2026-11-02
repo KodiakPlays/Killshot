@@ -727,7 +727,8 @@ Ask a technical artist before you change these:
 
 `Panels/End Screen.prefab`. Script: **End Screen Panel**, on `End Screen`. It covers the board
 when the mission is won or lost. It says MISSION COMPLETE or SHIP LOST, and why. It shows the
-target, our ship and the time taken. Its two buttons are RESTART MISSION and MAIN MENU.
+target, our ship and the time taken. Its two buttons are RESTART MISSION and MISSION SELECT.
+RESTART MISSION plays the level again. MISSION SELECT opens the MISSIONS list.
 
 It is the last part under `Tactical Board`, so it draws over everything else. Keep it last.
 
@@ -743,7 +744,9 @@ Art list is empty. To give it art, add the sprites to the Art list.
 
 Ask a technical artist before you change these:
 - The script writes the title, the reason and the values. It colours the title green or red.
-- Each button has a **Click Spot** with its action (`end.restart`, `end.menu`).
+- Each button has a **Click Spot** with its action (`end.restart`, `end.menu`). MISSION SELECT
+  uses `end.menu`.
+- **Menu Scene** (`01_Briefing`) is the scene MISSION SELECT loads.
 - **Delay Seconds** (2) is the wait between the end and the screen, so the last hit is seen
   first. It is on the Board tab of **Starwolf → Tuning**, under Board & time.
 

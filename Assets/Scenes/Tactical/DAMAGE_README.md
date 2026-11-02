@@ -127,6 +127,7 @@ The AUX costs are in the Orders section: REPAIR 30, SEAL 25, VENT 15.
 ## Still open
 
 - What happens when our ship is destroyed: since Step 85 a plain end screen reads SHIP LOST, with
-  RESTART MISSION and MAIN MENU. Whether it needs more is still open.
+  RESTART MISSION and MISSION SELECT. MISSION SELECT opens the MISSIONS list (Step 154). Whether it
+  needs more is still open.
 - A room can hold fire and radiation at once, but the design's row shows one condition. The
   displays step settles how both show.

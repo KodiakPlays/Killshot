@@ -1573,7 +1573,8 @@ plan's "ends at the kill" (`FTUE_PLAN.md` §1) is replaced.
 - The reinforcements keep coming while you run for it (§5.4).
 - When the mission ends, the game pauses. 2 s later the end screen covers the board: MISSION
   COMPLETE or SHIP LOST, the reason, then the target, our ship and the time taken.
-- RESTART MISSION plays the level again, from the board. MAIN MENU goes back to the intro.
+- RESTART MISSION plays the level again, from the board. MISSION SELECT opens the MISSIONS list
+  (`01_Briefing`).
 - The code is `QuestSystem` (on `World`) and `EndScreenPanel` (`End Screen.prefab`).
 
 ### 15.3 The level
