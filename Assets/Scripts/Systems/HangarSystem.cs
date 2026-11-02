@@ -37,6 +37,9 @@ public class HangarSystem : MonoBehaviour
         public double launchSideGapUnits = 10;
         [Tooltip("How far it flies straight out before it can turn, units.")]
         public double launchRunUnits = 200;
+        [Tooltip("Owner 2026-11-02: the hangar's dots, one on each long side, each with the line drawn out of it in Starwolf → Tuning → Hard Points. "
+               + "A squadron leaves beside the dot on the side facing its target and flies along its line, then turns. No dot or no line: straight out of the middle of that side.")]
+        public WeaponSystem.HardPoint[] dots = new WeaponSystem.HardPoint[0];
         [Tooltip("The sharpest it turns, degrees per game second.")]
         public double turnDegPerS = 90;
         [Tooltip("How fast a turn builds up and eases off, degrees per game second gained each game second. Lower is gentler.")]
@@ -142,6 +145,8 @@ public class HangarSystem : MonoBehaviour
         [Tooltip("Owner 2026-11-02: how far it still flies straight out of the ship, units, and how fast it is turning now, degrees per game second.")]
         public double runLeft, turn;
         [System.NonSerialized] public double fromX, fromY, fromHdg; // where it was at the last tick: the plot draws the curve from there
+        [System.NonSerialized] public Vector2[] line; // owner 2026-11-02: its hangar dot's drawn line, laid in the world; null once flown, or with none drawn
+        [System.NonSerialized] public double along; // how far down the line it is, units
     }
     [System.NonSerialized] private System.Collections.Generic.List<Flight> flights;
     public System.Collections.Generic.List<Flight> Flights => flights ?? (flights = new System.Collections.Generic.List<Flight>());
@@ -273,7 +278,19 @@ public class HangarSystem : MonoBehaviour
         for (double left = dt; left > 0; left -= step)
         {
             double h = System.Math.Min(left, step), dx = gx - f.x, dy = gy - f.y;
-            if (f.runLeft > 0) f.runLeft -= speed * h;
+            if (f.runLeft > 0)
+            {
+                f.runLeft -= speed * h;
+                if (f.line != null)
+                {
+                    // owner 2026-11-02: down its hangar dot's drawn line; past the end it flies on straight, or turns
+                    f.along += speed * h;
+                    Vector2 at; double way;
+                    if (!WeaponSystem.Along(f.line, f.along, out at, out way)) f.line = null;
+                    f.x = at.x; f.y = at.y; f.hdg = way;
+                    continue;
+                }
+            }
             else
             {
                 if (dx * dx + dy * dy <= reach * reach) return true;
@@ -404,10 +421,18 @@ public class HangarSystem : MonoBehaviour
         var aim = ship.TrackOf(ship.weapons.target);
         double heading = ship.nav.heading;
         int side = aim != null && aim.hasWorld && ((System.Math.Atan2(aim.worldX - ship.nav.x, aim.worldY - ship.nav.y) * 180 / System.Math.PI - heading) % 360 + 360) % 360 > 180 ? -1 : 1;
+        // owner 2026-11-02: from the hangar dot on that side (with one dot only, from it), beside the ship as drawn, along its line
+        WeaponSystem.HardPoint dot = null;
+        foreach (var d in stats.dots) if (dot == null || side * d.at.x > side * dot.at.x) dot = d;
+        if (dot != null && dot.at.x != 0) side = dot.at.x > 0 ? 1 : -1;
         double lb = (heading + side * 90) * System.Math.PI / 180.0, hull = System.Math.Max(ship.nav.BoxHalf.x, launchSideUnits) + stats.launchSideGapUnits;
-        double x = ship.nav.x + System.Math.Sin(lb) * hull, y = ship.nav.y + System.Math.Cos(lb) * hull, hdg = (heading + side * (90 + stats.launchTiltBackDeg) + 360) % 360;
+        double fb = heading * System.Math.PI / 180.0, fore = dot != null ? dot.at.y : 0;
+        double x = ship.nav.x + System.Math.Sin(lb) * hull + System.Math.Sin(fb) * fore, y = ship.nav.y + System.Math.Cos(lb) * hull + System.Math.Cos(fb) * fore;
+        double hdg = (heading + side * (90 + stats.launchTiltBackDeg) + 360) % 360, run = stats.launchRunUnits;
+        var line = dot != null ? WeaponSystem.Laid(dot.path, x, y, heading) : null;
+        if (line != null) { WeaponSystem.Along(line, 0, out _, out hdg); run = WeaponSystem.LengthOf(line); }
         var f = new Flight { squad = q.key, order = order, targetKey = ship.weapons.target, craft = SquadReady(q), x = x, y = y, hdg = hdg,
-                             fromX = x, fromY = y, fromHdg = hdg, runLeft = order == "escort" ? System.Math.Max(stats.launchRunUnits, launchClearUnits) : stats.launchRunUnits };
+                             fromX = x, fromY = y, fromHdg = hdg, runLeft = order == "escort" ? System.Math.Max(run, launchClearUnits) : run, line = line };
         if (q.key == "ih") { f.marines = Mathf.Min(marines, f.craft * stats.marinesPerBoat); marines -= f.marines; } // Step 60: the boats take marines
         Flights.Add(f);
     }

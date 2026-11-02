@@ -647,6 +647,13 @@ When a salvo is fired, this is what shows on the plot:
 
 Enemy torpedoes do the same. The curve is the same at every game speed.
 
+A line can be drawn out of each launcher (see Drawing the line, below). With a line, the line
+replaces steps 1 and 2. The torpedoes fly along the line and slow down as before. At the end of the line they
+curve onto the target. Then their motors light. Each torpedo in a salvo flies its own copy of the
+line, turned by the salvo's fan (**Torpedo Spread Deg**). A launcher on the centre line, as on the
+Garuda, sends every other torpedo along the mirror of the line. Enemy torpedoes use the lines in
+their own ship's file. With no line, they leave as in step 1.
+
 To change this, use the Ship tab of **Starwolf → Tuning**, under Weapons. Each ship has its own
 numbers:
 - **Torpedo Launch Speed Units** (80): how fast it leaves the launcher.
@@ -662,6 +669,30 @@ numbers:
 - **Torpedo Speed Units** (250): its full speed.
 - **Torpedo Turn Deg Per S** (120): the sharpest it turns with its motor on, in degrees a game
   second.
+
+**Drawing the line.** The line torpedoes and fighters follow out of the ship is drawn on the Hard
+Points tab of **Starwolf → Tuning**. Pick the ship at the top. The picture shows the ship from
+above, with the nose at the top. A line can be drawn out of a torpedo launcher dot or a hangar dot.
+- The green dots labelled HANGAR are where fighters and assault boats leave the ship. There is one
+  on each long side. On our ship they are 50 units back from the middle, at (−25, −50) and
+  (25, −50). Drag one to move it. It stays on a long side and snaps to the marks.
+- **Add a hangar dot** adds one in the middle of the long side that has fewer. **Remove this dot**
+  removes the selected dot, of either kind.
+- To draw a line, hold Shift and drag out of the dot. When you let go, the line is spaced into 32
+  even points and smoothed. A new line replaces the old one.
+- **Line smoothing** (0 to 12, default 4) sets how much a line is smoothed when you let go. At 0 it
+  stays as drawn. It changes the next line you draw.
+- The line shows in the dot's colour, with a small dot at its end.
+- Select a launcher or a hangar dot. **Line out of it** shows the line's length in units. With no
+  line it says "None: they fly straight out." **Clear the line** removes the line.
+- Each change is saved to the ship's stats file when you let go of the mouse. Cmd+Z undoes it.
+
+The line's points are in the ship's stats file. Each hard point and hangar dot has a list, `path`,
+in units from the dot (x right, y forward). The hangar dots are in the file's Hangar section, under
+`dots`.
+
+In the game, the line is placed in space at the moment of launch, turned to the ship's heading.
+Then it stays put. If the ship moves on, the line does not move with it.
 
 Its art files are in `Art/Fire Control` and the folders for each kind. The Art list has 19
 entries.
@@ -720,6 +751,15 @@ When the launch lever is pulled, this is what shows on the plot:
 
 Fighters and assault boats both do this. They turn the same way on all their flying, on the way
 back too. The V closes as they land.
+
+A squadron leaves from a hangar dot (the green dots on the Hard Points tab). It uses the dot on
+the side facing the target. With no target, it uses the starboard dot. With only one dot, it uses
+that dot. It starts level with the dot along the ship. On our ship that is 50 units back from the
+middle. If a line is drawn out of the dot (see Drawing the line, under Fire Control), the line
+replaces step 2. The squadron flies the shape of the line. Then it turns onto where it is going, as
+in step 3. An ESCORT
+flies on straight past the end of the line until its whole V is clear of the small circle round
+our ship. With no line, it flies straight out as in step 2.
 
 To change this, use the Ship tab of **Starwolf → Tuning**, under Hangar. Each ship has its own
 numbers:

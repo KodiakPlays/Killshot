@@ -113,44 +113,60 @@ public class StarwolfTuningWindow : EditorWindow
 
     const float HullPx = 300f, ConePx = 150f, DotPx = 7f, GrabPx = 14f, HullPad = 20f;
     static readonly Color Gun = new Color(0.88f, 0.63f, 0.13f), PdcInk = new Color(0.9f, 0.45f, 0.75f), TorpedoInk = new Color(0.88f, 0.3f, 0.24f), HullFill = new Color(0.22f, 0.25f, 0.28f), HullEdge = new Color(0.8f, 0.83f, 0.86f);
+    static readonly Color HangarInk = new Color(0.4f, 0.85f, 0.5f);
+    const int LinePoints = 32; // a drawn line is kept as this many points, evenly spaced
     ShipStats[] hullFiles;
-    [SerializeField] int hullFile, hullDot, hullMarks = 4;
+    [SerializeField] int hullFile, hullDot, hullMarks = 4, lineSmoothing = 4;
+    List<Vector2> stroke; // the line being drawn, units from its dot
 
-    // The ship as a rectangle, nose up, its hard points dots to drag; under it, the selected dot's gun and cone.
+    // The ship as a rectangle, nose up, its hard points and hangar dots to drag; under it, the selected dot's gun and cone.
     void DrawHardPoints()
     {
         if (hullFiles == null) hullFiles = AssetDatabase.FindAssets("t:ShipStats").Select(g => AssetDatabase.LoadAssetAtPath<ShipStats>(AssetDatabase.GUIDToAssetPath(g))).ToArray();
         if (hullFiles.Length == 0) { EditorGUILayout.HelpBox("No ship stats files in Assets/Ships.", MessageType.Info); return; }
-        EditorGUILayout.HelpBox("The top of the picture is the nose. The rectangle is the ship's solid box: shots and crashes hit it. Drag a dot: it stays on the edge, and its weapon points straight out of that side. Dotted lines show where a weapon can fire. The solid line is a railgun at rest.", MessageType.None);
+        EditorGUILayout.HelpBox("The top of the picture is the nose. The rectangle is the ship's solid box: shots and crashes hit it. Drag a dot: it stays on the edge, and its weapon points straight out of that side. Dotted lines show where a weapon can fire. The solid line is a railgun at rest. Green dots: the hangar, one on each long side.\n\nTo draw how torpedoes or fighters leave the ship, hold Shift and drag out of a torpedo launcher or a hangar dot. The line smooths when you let go. In the game they fly along the line, then turn onto the target. Fighters use the hangar dot on the side facing the target, and they start just outside the ship's picture.", MessageType.None);
         hullFile = EditorGUILayout.Popup("Ship", hullFile, hullFiles.Select(f => f.name).ToArray());
         var file = hullFiles[hullFile];
         hullMarks = EditorGUILayout.IntSlider(new GUIContent("Marks on each side", "Each side of the ship is cut into this many parts, and dots snap to the marks. 0: no marks."), hullMarks, 0, 16);
+        lineSmoothing = EditorGUILayout.IntSlider(new GUIContent("Line smoothing", "How much a line you draw is smoothed when you let go. 0: as drawn."), lineSmoothing, 0, 12);
         EditorGUI.BeginChangeCheck();
         float width = EditorGUILayout.FloatField(new GUIContent("Ship width", "Units."), file.width);
         if (EditorGUI.EndChangeCheck()) { Undo.RecordObject(file, "Ship width"); file.width = Mathf.Max(1f, width); SaveHull(file); }
 
-        var dots = file.weapons.hardPoints;
+        var dots = AllDots(file);
         Rect area = GUILayoutUtility.GetRect(10f, HullPx + 2f * ConePx + 2f * HullPad, GUILayout.ExpandWidth(true));
         float scale = HullPx / file.length;
         Vector2 middle = area.center;
         Func<Vector2, Vector2> onScreen = u => middle + new Vector2(u.x, -u.y) * scale;
+        Func<Vector2, Vector2> inUnits = p => new Vector2(p.x - middle.x, middle.y - p.y) / scale;
         int control = GUIUtility.GetControlID(FocusType.Passive);
         var e = Event.current;
         if (e.type == EventType.MouseDown && area.Contains(e.mousePosition))
         {
             var near = Enumerable.Range(0, dots.Length).Where(i => (onScreen(dots[i].at) - e.mousePosition).magnitude <= GrabPx)
                                  .OrderBy(i => (onScreen(dots[i].at) - e.mousePosition).magnitude).ToList();
-            if (near.Count > 0) { hullDot = near[0]; GUIUtility.hotControl = control; e.Use(); }
+            if (near.Count > 0) hullDot = near[0];
+            // owner 2026-11-02: Shift-drag draws the line out of the picked launcher or hangar dot
+            stroke = e.shift && hullDot < dots.Length && HasLine(file, hullDot) ? new List<Vector2>() : null;
+            if (near.Count > 0 || stroke != null) { GUIUtility.hotControl = control; e.Use(); }
         }
         else if (e.type == EventType.MouseDrag && GUIUtility.hotControl == control)
         {
-            Vector2 off = (e.mousePosition - middle) / scale;
-            MoveDot(file, dots[hullDot], new Vector2(off.x, -off.y), hullMarks);
+            Vector2 u = inUnits(e.mousePosition);
+            if (stroke == null) MoveDot(file, dots[hullDot], u, hullMarks, IsHangar(file, hullDot));
+            else if (stroke.Count == 0 || (u - dots[hullDot].at - stroke[stroke.Count - 1]).magnitude * scale >= 2f) stroke.Add(u - dots[hullDot].at);
+            Repaint();
             e.Use();
         }
         else if (e.type == EventType.MouseUp && GUIUtility.hotControl == control)
         {
             GUIUtility.hotControl = 0;
+            if (stroke != null)
+            {
+                Undo.RecordObject(file, "Draw a launch line");
+                dots[hullDot].path = Smoothed(stroke, lineSmoothing);
+                stroke = null;
+            }
             SaveHull(file);
             e.Use();
         }
@@ -168,13 +184,45 @@ public class StarwolfTuningWindow : EditorWindow
                 hullDot = file.weapons.hardPoints.Length - 1;
                 SaveHull(file);
             }
+            if (GUILayout.Button("Add a hangar dot"))
+            {
+                // on the long side with fewer, in the middle
+                Undo.RecordObject(file, "Add hangar dot");
+                float x = file.hangar.dots.Count(d => d.at.x > 0f) > file.hangar.dots.Count(d => d.at.x < 0f) ? -file.width / 2f : file.width / 2f;
+                ArrayUtility.Add(ref file.hangar.dots, new WeaponSystem.HardPoint { at = new Vector2(x, 0f) });
+                hullDot = AllDots(file).Length - 1;
+                SaveHull(file);
+            }
             if (GUILayout.Button("Remove this dot") && dots.Length > 0)
             {
                 Undo.RecordObject(file, "Remove hard point");
-                ArrayUtility.RemoveAt(ref file.weapons.hardPoints, hullDot);
+                if (IsHangar(file, hullDot)) ArrayUtility.RemoveAt(ref file.hangar.dots, hullDot - file.weapons.hardPoints.Length);
+                else ArrayUtility.RemoveAt(ref file.weapons.hardPoints, hullDot);
                 SaveHull(file);
             }
         }
+    }
+
+    // Every dot on the picture: the weapons' hard points, then the hangar's dots.
+    static WeaponSystem.HardPoint[] AllDots(ShipStats file) => file.weapons.hardPoints.Concat(file.hangar.dots).ToArray();
+    static bool IsHangar(ShipStats file, int dot) => dot >= file.weapons.hardPoints.Length;
+    // A line can be drawn out of a hangar dot or a torpedo launcher's dot.
+    static bool HasLine(ShipStats file, int dot) => IsHangar(file, dot) || MountOn(file, file.weapons.hardPoints[dot])?.kind == "MS";
+
+    // Owner 2026-11-02: a drawn line, evened out to LinePoints points spaced evenly along it, then softened, both ends kept.
+    static Vector2[] Smoothed(List<Vector2> stroke, int passes)
+    {
+        var raw = new[] { Vector2.zero }.Concat(stroke).ToArray();
+        float length = (float)WeaponSystem.LengthOf(raw);
+        if (length < 1f) return new Vector2[0];
+        var even = new Vector2[LinePoints + 1];
+        for (int k = 0; k <= LinePoints; k++) WeaponSystem.Along(raw, length * k / LinePoints, out even[k], out _);
+        for (int pass = 0; pass < passes; pass++)
+        {
+            var was = (Vector2[])even.Clone();
+            for (int k = 1; k < LinePoints; k++) even[k] = (was[k - 1] + 2f * was[k] + was[k + 1]) / 4f;
+        }
+        return even.Skip(1).ToArray();
     }
 
     void PaintHull(ShipStats file, Rect area, Func<Vector2, Vector2> onScreen)
@@ -214,18 +262,53 @@ public class StarwolfTuningWindow : EditorWindow
                 GUI.Label(new Rect(at.x + 10f, at.y + 4f, 60f, 16f), m.shortName, EditorStyles.whiteMiniLabel);
             }
             Handles.color = m != null ? Ink(m.kind) : HullEdge;
+            PaintLine(dots[i], at, onScreen);
             Handles.DrawSolidDisc(at, Vector3.forward, DotPx);
             if (i != hullDot) continue;
             Handles.color = Color.white;
             Handles.DrawWireDisc(at, Vector3.forward, DotPx + 3f);
         }
+        var bays = file.hangar.dots;
+        for (int i = 0; i < bays.Length; i++)
+        {
+            Vector2 at = onScreen(bays[i].at);
+            Handles.color = HangarInk;
+            PaintLine(bays[i], at, onScreen);
+            Handles.DrawSolidDisc(at, Vector3.forward, DotPx);
+            GUI.Label(new Rect(at.x + (bays[i].at.x < 0f ? -62f : 10f), at.y + 4f, 60f, 16f), "HANGAR", EditorStyles.whiteMiniLabel);
+            if (dots.Length + i != hullDot) continue;
+            Handles.color = Color.white;
+            Handles.DrawWireDisc(at, Vector3.forward, DotPx + 3f);
+        }
+        // the line being drawn, as drawn
+        if (stroke != null && stroke.Count > 0 && hullDot < dots.Length + bays.Length)
+        {
+            var from = AllDots(file)[hullDot].at;
+            Handles.color = Color.white;
+            Handles.DrawAAPolyLine(2f, new[] { onScreen(from) }.Concat(stroke.Select(p => onScreen(from + p))).Select(p => (Vector3)p).ToArray());
+        }
+    }
+
+    // A dot's drawn line, in the colour set, with a small dot at its end.
+    static void PaintLine(WeaponSystem.HardPoint dot, Vector2 at, Func<Vector2, Vector2> onScreen)
+    {
+        if (dot.path == null || dot.path.Length == 0) return;
+        Handles.DrawAAPolyLine(2f, new[] { at }.Concat(dot.path.Select(p => onScreen(dot.at + p))).Select(p => (Vector3)p).ToArray());
+        Handles.DrawSolidDisc(onScreen(dot.at + dot.path[dot.path.Length - 1]), Vector3.forward, 3f);
     }
 
     // The selected dot: what is on it, and that weapon's numbers.
     void DrawDot(ShipStats file)
     {
+        hullDot = Mathf.Clamp(hullDot, 0, AllDots(file).Length - 1);
+        if (IsHangar(file, hullDot))
+        {
+            var bay = AllDots(file)[hullDot];
+            EditorGUILayout.LabelField("Selected dot", "Hangar, " + bay.at.y.ToString("0.#") + " forward of the ship's centre, units");
+            DrawLineOf(file, bay);
+            return;
+        }
         var dots = file.weapons.hardPoints;
-        hullDot = Mathf.Clamp(hullDot, 0, dots.Length - 1);
         var dot = dots[hullDot];
         var all = file.weapons.mounts;
         var names = new[] { "Nothing" }.Concat(all.Select(m => m.shortName)).ToArray();
@@ -255,11 +338,26 @@ public class StarwolfTuningWindow : EditorWindow
             gun.label = name; gun.shortName = tag; gun.rangeUnits = reach; gun.ammo = Mathf.Max(0, ammo); gun.arc = arc; gun.halfArc = cone / 2;
             SaveHull(file);
         }
+        if (gun.kind == "MS") DrawLineOf(file, dot);
         if (all.Length > 1 && GUILayout.Button("Delete this weapon"))
         {
             Undo.RecordObject(file, "Delete weapon");
             dot.mount = "";
             ArrayUtility.Remove(ref file.weapons.mounts, gun);
+            SaveHull(file);
+        }
+    }
+
+    // A launcher's or hangar dot's line: how long it is, and a button to clear it.
+    void DrawLineOf(ShipStats file, WeaponSystem.HardPoint dot)
+    {
+        bool drawn = dot.path != null && dot.path.Length > 0;
+        EditorGUILayout.LabelField("Line out of it", drawn ? WeaponSystem.LengthOf(new[] { Vector2.zero }.Concat(dot.path).ToArray()).ToString("0") + " units long"
+                                                           : "None: they fly straight out. Shift-drag out of the dot to draw one.");
+        if (drawn && GUILayout.Button("Clear the line"))
+        {
+            Undo.RecordObject(file, "Clear a launch line");
+            dot.path = new Vector2[0];
             SaveHull(file);
         }
     }
@@ -317,11 +415,12 @@ public class StarwolfTuningWindow : EditorWindow
     }
 
     // A dot goes to the nearest spot on the ship's edge, on a mark if the sides have them, and its gun points out of that side.
-    static void MoveDot(ShipStats file, WeaponSystem.HardPoint dot, Vector2 u, int marks)
+    // A hangar dot stays on a long side.
+    static void MoveDot(ShipStats file, WeaponSystem.HardPoint dot, Vector2 u, int marks, bool longSides = false)
     {
         float hw = file.width / 2f, hl = file.length / 2f;
         u = new Vector2(Mathf.Clamp(u.x, -hw, hw), Mathf.Clamp(u.y, -hl, hl));
-        int side = SideOf(file, u);
+        int side = longSides ? (u.x >= 0f ? 1 : 3) : SideOf(file, u);
         if (side % 2 == 0) u = new Vector2(OnMark(u.x, hw, marks), side == 0 ? hl : -hl);
         else u = new Vector2(side == 1 ? hw : -hw, OnMark(u.y, hl, marks));
         Undo.RecordObject(file, "Move hard point");

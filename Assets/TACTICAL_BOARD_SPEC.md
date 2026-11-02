@@ -886,6 +886,9 @@ Owner, 2026-11-02: it leaves like the fighters (§12.3).
 4. Its motor lights once it is within 3° of lined up. It gains 300 units/s each game second up to
    its full speed of 250 units/s, and turns toward its target at up to 120° per game second.
 
+Owner, 2026-11-02: a line can be drawn out of a launcher on the Hard Points tab of Starwolf →
+Tuning. With a line, the torpedo flies along it in place of steps 1 and 2, slowing the same way.
+
 If its target is gone, its motor lights anyway and it flies on. It flies in short steps of 0.05
 game seconds. The curve is the same at every game speed.
 
@@ -1409,6 +1412,10 @@ A squadron, fighters or assault boats, then flies like this (owner, 2026-11-02):
 3. It turns onto where it is going. The turn builds up, reaches at most 90° a game second, and
    eases off as it lines up.
 4. It lands, docks or attacks as soon as it is within reach, at every game speed.
+
+Owner, 2026-11-02: it leaves from the hangar dot on that side, level with the dot along the ship. If
+a line is drawn out of that dot on the Hard Points tab of Starwolf → Tuning, it flies the line's
+shape in place of step 2.
 
 All its flying uses these turns, on the way back too. RECALL turns it back. It lands when it
 reaches the small circle round our ship.

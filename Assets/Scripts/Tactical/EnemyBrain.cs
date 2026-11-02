@@ -139,7 +139,7 @@ public class EnemyBrain : MonoBehaviour
             {
                 int n = Mathf.Min(fireBackSalvo, vls.ammo);
                 Vector2 tube = ship.weapons.HardPointOffset(vls.id, ship.nav.heading);
-                us.weapons.LaunchAt(ship.weapons.stats, ship.nav.x + tube.x, ship.nav.y + tube.y, ship.nav.heading, vls.arc, n, 0, vls.rangeUnits); // HE
+                us.weapons.LaunchAt(ship.weapons.stats, ship.nav.x + tube.x, ship.nav.y + tube.y, ship.nav.heading, vls.arc, n, 0, vls.rangeUnits, ship.weapons.LineOf(vls.id)); // HE
                 vls.ammo -= n;
                 nextSalvo = now + (fix ? salvoSeconds : fireBackSeconds);
             }

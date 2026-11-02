@@ -138,6 +138,58 @@ public class WeaponSystem : MonoBehaviour
         public Vector2 at;
         [Tooltip("The gun on it, by id. Empty: nothing.")]
         public string mount;
+        [Tooltip("Owner 2026-11-02: the line drawn out of it in Starwolf → Tuning → Hard Points, units from the dot (x right, y forward). "
+               + "A torpedo or fighter leaving from it flies along the line, then turns onto its target. Empty: it flies straight out.")]
+        public Vector2[] path = new Vector2[0];
+    }
+
+    /// <summary>Owner 2026-11-02: a dot's drawn line laid in the world from (x, y), on a ship with this heading; mirror: the
+    /// other side's copy. Null with no line drawn.</summary>
+    public static Vector2[] Laid(Vector2[] path, double x, double y, double heading, bool mirror = false)
+    {
+        if (path == null || path.Length == 0) return null;
+        float rad = (float)heading * Mathf.Deg2Rad, sin = Mathf.Sin(rad), cos = Mathf.Cos(rad);
+        var line = new Vector2[path.Length + 1];
+        line[0] = new Vector2((float)x, (float)y);
+        for (int i = 0; i < path.Length; i++)
+        {
+            float px = mirror ? -path[i].x : path[i].x, py = path[i].y;
+            line[i + 1] = line[0] + new Vector2(px * cos + py * sin, py * cos - px * sin);
+        }
+        return line;
+    }
+
+    /// <summary>The spot `along` units down a laid line, and the way the line points there, degrees. False past its end,
+    /// with the end and its last direction.</summary>
+    public static bool Along(Vector2[] line, double along, out Vector2 at, out double heading)
+    {
+        heading = 0;
+        for (int i = 1; i < line.Length; i++)
+        {
+            var piece = line[i] - line[i - 1];
+            float length = piece.magnitude;
+            if (length <= 0f) continue;
+            heading = (Mathf.Atan2(piece.x, piece.y) * Mathf.Rad2Deg + 360f) % 360f;
+            if (along <= length) { at = line[i - 1] + piece * (float)(along / length); return true; }
+            along -= length;
+        }
+        at = line[line.Length - 1];
+        return false;
+    }
+
+    /// <summary>A line's whole length, units.</summary>
+    public static double LengthOf(Vector2[] line)
+    {
+        double length = 0;
+        for (int i = 1; i < line.Length; i++) length += (line[i] - line[i - 1]).magnitude;
+        return length;
+    }
+
+    /// <summary>The line drawn out of a mount's hard point. None: null.</summary>
+    public Vector2[] LineOf(string id)
+    {
+        foreach (var h in stats.hardPoints) if (h.mount == id) return h.path;
+        return null;
     }
 
     [System.Serializable]
@@ -207,6 +259,8 @@ public class WeaponSystem : MonoBehaviour
         public bool motor;
         [Tooltip("Owner 2026-11-02: how fast it is turning now, degrees per game second.")]
         public double turn;
+        [System.NonSerialized] public Vector2[] line; // owner 2026-11-02: its launcher's drawn line, laid in the world; null once flown, or with none drawn
+        [System.NonSerialized] public double along; // how far down the line it is, units
         [System.NonSerialized] public Stats by; // the firing ship's numbers: how close is a hit, and what the hit does
         [System.NonSerialized] public BoardManager.Glide drawn; // owner 2026-11-01: where the plot draws it, sliding toward StepAhead
     }
@@ -510,7 +564,7 @@ public class WeaponSystem : MonoBehaviour
             Vector2 tube = HardPointOffset(m.id, ship.nav.heading);
             for (int i = 0; i < n; i++)
             {
-                var r = NewTorpedo(stats, ship.nav.x + tube.x, ship.nav.y + tube.y, ship.nav.heading, m.arc, i, n, m.rangeUnits, warhead);
+                var r = NewTorpedo(stats, ship.nav.x + tube.x, ship.nav.y + tube.y, ship.nav.heading, m.arc, i, n, m.rangeUnits, warhead, LineOf(m.id));
                 r.targetKey = tgt.key;
                 Rounds.Add(r);
             }
@@ -725,21 +779,30 @@ public class WeaponSystem : MonoBehaviour
 
     // A torpedo leaving a launcher at (x, y) on a ship with this heading: straight out of the launcher's side, tilted a little
     // toward the stern, or from one on the centre line out of each side by turns, the salvo fanned a little. by: the firing ship's numbers.
-    Round NewTorpedo(Stats by, double x, double y, double heading, int arc, int i, int n, double maxUnits, int warheadIndex)
+    // path: the line drawn out of the launcher (owner 2026-11-02), flown instead; from the centre line every other torpedo flies its mirror.
+    Round NewTorpedo(Stats by, double x, double y, double heading, int arc, int i, int n, double maxUnits, int warheadIndex, Vector2[] path = null)
     {
         int side = arc % 180 == 0 ? (i % 2 == 0 ? 1 : -1) : arc % 360 < 180 ? 1 : -1;
-        double b = (heading + side * (90 + by.torpedoTiltBackDeg) + (i - (n - 1) / 2.0) * by.torpedoSpreadDeg) * System.Math.PI / 180;
+        double fan = (i - (n - 1) / 2.0) * by.torpedoSpreadDeg, b = (heading + side * (90 + by.torpedoTiltBackDeg) + fan) * System.Math.PI / 180;
         return new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = maxUnits, speed = by.torpedoLaunchSpeedUnits,
-                           torpedo = true, warhead = warheadIndex };
+                           torpedo = true, warhead = warheadIndex, line = Laid(path, x, y, heading + fan, arc % 180 == 0 && side < 0) };
     }
 
     // Owner 2026-11-01: a torpedo flies straight out of its launcher, slowing. True once it is clear of that and can steer.
+    // Owner 2026-11-02: with a line drawn out of the launcher it flies down the line instead, slowing the same way, and is clear at its end.
     bool Clear(Round r, double dt)
     {
         var by = r.by ?? stats;
-        if (r.coasted >= by.torpedoCoastSeconds) return true;
+        if (r.line == null && r.coasted >= by.torpedoCoastSeconds) return true;
         r.coasted = System.Math.Min(by.torpedoCoastSeconds, r.coasted + dt);
         r.speed = by.torpedoLaunchSpeedUnits + (by.torpedoCoastSpeedUnits - by.torpedoLaunchSpeedUnits) * r.coasted / by.torpedoCoastSeconds;
+        if (r.line == null) return false;
+        // it heads for the spot one step further down the line; past the end the line is done and it turns from there
+        r.along += r.speed * dt;
+        Vector2 next;
+        if (!Along(r.line, r.along, out next, out _)) { r.line = null; r.coasted = by.torpedoCoastSeconds; }
+        double gx = next.x - r.x, gy = next.y - r.y, d = System.Math.Sqrt(gx * gx + gy * gy);
+        if (d > 1e-6) { r.dx = gx / d; r.dy = gy / d; }
         return false;
     }
 
@@ -785,12 +848,12 @@ public class WeaponSystem : MonoBehaviour
     [System.NonSerialized] public int pdcKills, hitsTaken;
 
     /// <summary>An enemy at (x, y) launches n torpedoes from a launcher facing `arc` degrees round from its heading. Each
-    /// flies straight out, then homes on our ship. by: the enemy's numbers, which its torpedoes fly and hit by.</summary>
-    public void LaunchAt(Stats by, double x, double y, double heading, int arc, int n, int warheadIndex, double maxUnits)
+    /// flies straight out, or down the line drawn out of its launcher, then homes on our ship. by: the enemy's numbers, which its torpedoes fly and hit by.</summary>
+    public void LaunchAt(Stats by, double x, double y, double heading, int arc, int n, int warheadIndex, double maxUnits, Vector2[] path = null)
     {
         for (int i = 0; i < n; i++)
         {
-            var r = NewTorpedo(by, x, y, heading, arc, i, n, maxUnits, warheadIndex);
+            var r = NewTorpedo(by, x, y, heading, arc, i, n, maxUnits, warheadIndex, path);
             r.by = by;
             Incoming.Add(r);
         }
