@@ -2384,8 +2384,9 @@ MonoBehaviour:
   innerRingMarginPx: 8
   passiveLines: {fileID: 537004089543985122}
   passiveLabelTemplate: {fileID: 6337045329482355875}
-  passiveLabelPx: 200
-  trailAlpha: 0.45
+  passiveBarDeg: 6
+  passiveBarWidthPx: 4
+  passiveBarArt: {fileID: 2800000, guid: c432d24e32fb54d488c1baa631bfa1a7, type: 3}
   contactMarks: {fileID: 5058668370962062356}
   contactLabelTemplate: {fileID: 3845959635087170199}
   contactShipImage: {fileID: 594920036611219167}

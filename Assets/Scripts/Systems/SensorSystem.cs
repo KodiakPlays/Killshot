@@ -68,8 +68,6 @@ public class SensorSystem : MonoBehaviour
         [Range(0f, 1f)] public float cloudSignalShare = 0.3f;
         [Tooltip("Inside a gas cloud an enemy sees the ship only from this close, units.")]
         public float cloudSeenUnits = 400f;
-        [Tooltip("A bearing line fades out over this much mission time (owner 2026-10-23: 2 minutes).")]
-        public float bearingTrailSeconds = 120f;
     }
     /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
     public Stats stats => shipStats ? shipStats.Stats.sensors : (shipStats = GetComponent<Ship>()).Stats.sensors;
@@ -157,22 +155,12 @@ public class SensorSystem : MonoBehaviour
 
     public void AckContacts() { newContacts = 0; }
 
-    /// <summary>Step 45 (owner 2026-10-23): each radar sweep that passes a heard contact leaves its
-    /// bearing line where our ship was. As we move, the lines cross at the target: that is how a
-    /// passive contact's range is found. Exact bearings; the lines fade out.</summary>
-    [System.Serializable]
-    public class BearingFix { public string key; public double x, y, brg; public float t; }
-    [System.NonSerialized] private List<BearingFix> bearingFixes;
-    public List<BearingFix> BearingFixes => bearingFixes ?? (bearingFixes = new List<BearingFix>());
-
     /// <summary>True bearing from this ship to a contact, degrees, unrounded.</summary>
     public double ExactBearing(ShipState.Track t)
     {
         if (!t.hasWorld) return t.bearing;
         return (System.Math.Atan2(t.worldX - ship.nav.x, t.worldY - ship.nav.y) * 180 / System.Math.PI + 360) % 360;
     }
-
-    public void LayBearing(ShipState.Track t, float now) { BearingFixes.Add(new BearingFix { key = t.key, x = ship.nav.x, y = ship.nav.y, brg = ExactBearing(t), t = now }); }
 
     /// <summary>Step 75 (owner 2026-10-26): the sweep touches a contact. Out of sight, the plot shows it here until the next pass.</summary>
     public void See(ShipState.Track t) { t.seen = true; t.seenAt = ship.missionNow; t.seenX = t.worldX; t.seenY = t.worldY; t.seenBrg = ExactBearing(t); t.seenRangeUnits = t.rangeUnits; }
@@ -183,8 +171,6 @@ public class SensorSystem : MonoBehaviour
         if (!t.rockOnLine && t.rangeUnits <= stats.visualRangeUnits) return true;
         return ship.hangar && ship.hangar.SeesShip(t.worldX, t.worldY, stats.visualRangeUnits); // Step 101: our fighters scout
     }
-
-    public void PruneBearings(float now) { BearingFixes.RemoveAll(f => now - f.t >= stats.bearingTrailSeconds); }
 
     /// <summary>One board tick of dt game seconds (it reads the bus fill this tick committed): the gain
     /// falls back if SEN power can no longer carry it, and the signal moves toward its target.</summary>

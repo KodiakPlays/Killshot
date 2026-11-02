@@ -485,7 +485,7 @@ public class BoardManager : MonoBehaviour
     // ERASE again while ERASE is live clears the plot and returns to CURSOR (§8.4).
     void PressErase()
     {
-        if (Tool == "ERASE") { state.marks.Clear(); state.sensors.BearingFixes.Clear(); PickTool(tools[0]); }
+        if (Tool == "ERASE") { state.marks.Clear(); PickTool(tools[0]); }
         else PickTool("ERASE");
     }
 

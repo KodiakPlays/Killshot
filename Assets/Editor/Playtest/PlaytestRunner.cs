@@ -637,12 +637,13 @@ public static class PlaytestRunner
         var t07 = s.TrackOf("t07");
         yield return (Func<bool>)(() => s.sensors.Heard(t07) && s.sensors.newContacts > 0);
         Check("At gain 2 DRADIS hears GARUDA", s.sensors.Heard(t07), "range " + t07.rangeUnits.ToString("N0") + " km, hearing range " + s.sensors.PassiveRangeUnits.ToString("N0") + " km");
-        //     Step 75: the line comes with the sweep's first touch, and holds that bearing until the next pass.
+        //     Step 75: the bar comes with the sweep's first touch. Owner 2026-11-02: then it turns with the bearing as either ship moves.
         yield return (Func<bool>)(() => t07.seen);
         yield return 0.1f;
         var pl = GameObject.Find("Passive label 0");
         string plText = pl ? pl.GetComponent<TMPro.TMP_Text>().text : "none";
-        Check("When the sweep touches it, a bearing line and label point at it", pl && plText == "BRG " + (ShipState.JsRound(t07.seenBrg) % 360).ToString("000") && Mathf.Abs(Mathf.DeltaAngle((float)t07.seenBrg, t07.bearing)) <= 1f,
+        int plBrg;
+        Check("When the sweep touches it, a bearing bar and label point at it", pl && plText.StartsWith("BRG ") && int.TryParse(plText.Substring(4), out plBrg) && Mathf.Abs(Mathf.DeltaAngle(plBrg, t07.bearing)) <= 1f,
               "\"" + plText + "\", bearing now " + t07.bearing.ToString("000"));
         Check("The alarm strip raises: 1 NEW CONTACT, with the alert tone", s.sensors.newContacts == 1 && alarmWords.gameObject.activeInHierarchy && alarmWords.text == "NEW CONTACT",
               "\"" + alarmWords.text + "\", last cue \"" + board.LastSound + "\"");
@@ -666,25 +667,22 @@ public static class PlaytestRunner
         Check("Tracked, the top-right signal box reads the signal and the trackers", boxPct.text == ShipState.JsRound(s.sensors.signal) + "%" && boxNote.text.Contains("DETECTED"),
               "\"" + boxPct.text + "\", \"" + boxNote.text + "\"");
 
-        // 18. The bearing trail (Step 45): each sweep leaves TRACK 07's bearing where we were. As we
-        //     move, the lines cross at it. They fade out over two minutes of mission time.
+        // 18. Owner 2026-11-02: a heard contact we haven't scanned is a red bar curved along the DRADIS circle toward it, with
+        //     its BRG just outside, drawn with its picture. No bearing lines. Time runs on two minutes at x10 (as the old bearing
+        //     trail check did), for the checks after.
         board.Click("rate", "10");
-        s.sensors.BearingFixes.Clear();
-        yield return (Func<bool>)(() => s.sensors.BearingFixes.FindAll(f => f.key == "t07").Count >= 2);
-        var fixes = s.sensors.BearingFixes.FindAll(f => f.key == "t07");
-        var fa = fixes[0]; var fb = fixes[fixes.Count - 1];
-        double baseUnits = System.Math.Sqrt((fb.x - fa.x) * (fb.x - fa.x) + (fb.y - fa.y) * (fb.y - fa.y));
-        double crossX, crossY;
-        bool crosses = Cross(fa, fb, out crossX, out crossY);
-        double missUnits = crosses ? System.Math.Sqrt((crossX - t07.worldX) * (crossX - t07.worldX) + (crossY - t07.worldY) * (crossY - t07.worldY)) : -1;
-        Check("Two bearing lines from different spots cross at GARUDA", crosses && missUnits < 0.01 * t07.rangeUnits,
-              fixes.Count + " lines, " + baseUnits.ToString("N0") + " km apart; they cross " + missUnits.ToString("N1") + " km from the target");
-        Shot("23_bearing_trail");
+        float barFrom = board.MissionSeconds;
+        yield return (Func<bool>)(() => board.MissionSeconds - barFrom > 5f);
+        var shapesField = typeof(MarksGraphic).GetField("shapes", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var barLayer = GameObject.Find("Contact bars (drawn)")?.GetComponent<MarksGraphic>();
+        var barShapes = barLayer ? (List<MarksGraphic.Shape>)shapesField.GetValue(barLayer) : new List<MarksGraphic.Shape>();
+        var passiveShapes = (List<MarksGraphic.Shape>)shapesField.GetValue(GameObject.Find("Passive bearings (drawn)").GetComponent<MarksGraphic>());
+        Check("A heard contact is a bar on the DRADIS circle, drawn with its picture, with no bearing lines",
+              barShapes.Exists(p => p.kind == "sector") && barLayer.art && !passiveShapes.Exists(p => p.kind == "fade"),
+              barShapes.Count + " bar(s), picture " + (barLayer && barLayer.art ? barLayer.art.name : "none") + "; other shapes: " + string.Join(", ", passiveShapes.ConvertAll(p => p.kind)));
+        Shot("23_bearing_bar");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
-        float firstLaid = fa.t;
-        yield return (Func<bool>)(() => board.MissionSeconds - firstLaid > s.sensors.stats.bearingTrailSeconds + 2f);
-        yield return 0.5f;
-        Check("A bearing line is gone after two minutes", !s.sensors.BearingFixes.Contains(fa), (board.MissionSeconds - firstLaid).ToString("0") + " s after it was laid");
+        yield return (Func<bool>)(() => board.MissionSeconds - barFrom > 122f);
         if (!Click("rate", "1", "x1 rate key")) yield break;
 
         // 19. Intercept helpers (Step 46). Our ship is under way.
@@ -1930,19 +1928,6 @@ public static class PlaytestRunner
         double a = aimDeg * System.Math.PI / 180, px = t.worldX - s.nav.x, py = t.worldY - s.nav.y;
         double along = px * System.Math.Sin(a) + py * System.Math.Cos(a);
         return along < 0 ? double.MaxValue : System.Math.Abs(px * System.Math.Cos(a) - py * System.Math.Sin(a));
-    }
-
-    // Where two bearing lines meet (world units; bearings clockwise from north). False if near parallel.
-    static bool Cross(SensorSystem.BearingFix a, SensorSystem.BearingFix b, out double x, out double y)
-    {
-        double ra = a.brg * System.Math.PI / 180, rb = b.brg * System.Math.PI / 180;
-        double ax = System.Math.Sin(ra), ay = System.Math.Cos(ra), bx = System.Math.Sin(rb), by = System.Math.Cos(rb);
-        double den = ax * by - ay * bx;
-        x = y = 0;
-        if (System.Math.Abs(den) < 1e-9) return false;
-        double u = ((b.x - a.x) * by - (b.y - a.y) * bx) / den;
-        x = a.x + u * ax; y = a.y + u * ay;
-        return true;
     }
 
     /// <summary>Press at board px a, release at board px b, on the plot, through the EventSystem.

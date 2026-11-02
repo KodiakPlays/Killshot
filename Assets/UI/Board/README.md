@@ -355,7 +355,7 @@ The prefab has these parts, from back to front:
 - `Scale`: the axis numbers, made by code
 - `Design mock-up (off)`: switched off. It has the three parts that were kept from the design's
   sample picture:
-  - `Passive label template`: the plot copies it for each passive bearing label
+  - `Passive label template`: the plot copies it for each BRG label beside a bearing bar
   - `SENSOR RANGE label (off)` and `SENSOR RANGE value (off)`: the sensors drawer links to them
 
   Leave this group as it is. Don't delete anything in it.
@@ -475,12 +475,31 @@ sight is a marker where it was last seen. It fades as it gets old, and its label
 Seconds**, **Stale Alpha** and **Stale Label Seconds** are on the Board tab of **Starwolf → Tuning**, under Sensors.
 The RULER has a thicker line and white distance text: **Ruler Width** and **Ruler Dot** are under Plot tools.
 
+A ship DRADIS hears but we haven't scanned shows as a short red bar, curved along the DRADIS circle, in its
+direction. Its label, BRG and the angle (for example BRG 053), is just outside the bar. The bar first shows when
+the sweep first touches the ship. After that it turns on every frame, following the ship's bearing as either
+ship moves. The BRG number changes with it. When the DRADIS circle is off the plot, so is the bar. Nothing is
+left behind as the sweep passes.
+
+The bar is the board's red. It is dimmer (0.6) most of the time, and full while the periscope is on that ship.
+The BRG label is amber while the periscope is on that ship, and dimmer otherwise.
+
+The bar is a picture: `Art/Plot/DradisContactBar.png`. It is placeholder art: a white bar with rounded ends,
+256 x 32. The game bends it along the circle, end to end, and colours it red. To change the look, draw a new one
+in white and replace the PNG with one of the same name. Or put a new picture in the **Passive Bar Art** slot on
+the Plot panel, under Passive bearings. That slot is in `Plot.prefab`. It is not on the Art list.
+
+The code draws the bars on `Contact bars (drawn)`, a copy of `Passive bearings (drawn)` made while the game
+runs. **Passive Bar Deg** (6) sets how many degrees of the circle the bar covers. Zoom in and the bar grows. Zoom
+out and it shrinks. **Passive Bar Width Px** (4) sets how thick it is. Both are on the Board tab of
+**Starwolf → Tuning**, under Sensors. The label is 6 px outside the bar. That gap is set in the code.
+
 Ships and shots move on the plot in two ways. Some move smoothly, on every frame. Others hop: they stop, then
 jump to a new spot each time the DRADIS sweep passes them.
 
 - Shots, torpedoes and fighters always move smoothly.
 - Anything inside visual range moves smoothly. So does a locked ship.
-- A ship on DRADIS that has not been scanned is a bearing line. The line hops to a new bearing once per sweep.
+- A ship on DRADIS that has not been scanned is a red bar on the DRADIS circle. The bar turns smoothly, on every frame.
 - A scanned ship moves smoothly while the ACTIVE SCAN cone covers it. When ACTIVE SCAN goes off or the cone
   moves away, the ship stops there and hops once per sweep.
 - A scanned ship that no sensor reaches stops at its last spot and fades.

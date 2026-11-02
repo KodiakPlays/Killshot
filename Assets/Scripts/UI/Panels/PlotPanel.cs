@@ -95,10 +95,13 @@ public class PlotPanel : Panel
     [SerializeField] private MarksGraphic passiveLines;
     [Tooltip("A hidden plot label carrying a plot.look hit (the export's text #39), cloned per heard contact.")]
     [SerializeField] private TMP_Text passiveLabelTemplate;
-    [Tooltip("The bearing line runs out to the sensor circle; its label sits this far out, or at the circle if nearer.")]
-    [Tune("Sensors")] [SerializeField] private float passiveLabelPx = 200f;
-    [Tooltip("How strong a fresh trail line is (Step 45); it fades to nothing.")]
-    [Tune("Sensors")] [SerializeField] private float trailAlpha = 0.45f;
+    [Tooltip("Owner 2026-11-02: a heard contact is a red bar curved along the DRADIS circle, toward it, turning as it moves: how much of the circle it covers, degrees.")]
+    [Tune("Sensors")] [SerializeField] private float passiveBarDeg = 6f;
+    [Tooltip("How thick the bar is, px. Its BRG label is just outside it.")]
+    [Tune("Sensors")] [SerializeField] private float passiveBarWidthPx = 4f;
+    [Tooltip("The bar's picture, bent along the circle end to end (Art/Plot/DradisContactBar.png). Draw it white: it is coloured red here.")]
+    [SerializeField] private Texture passiveBarArt;
+    private MarksGraphic barMarks; // the bars' own layer, a copy of passiveLines with the picture
     private readonly List<TMP_Text> passiveLabels = new List<TMP_Text>();
 
     [Header("Contacts on the plot (Step 34): identified hostiles at their true range and bearing")]
@@ -361,7 +364,7 @@ public class PlotPanel : Panel
             // in game time (owner 2026-10-24): `turn` seconds a sweep at x1, ten times as fast at x10
             float before = sweepDeg, step = 360f * Time.unscaledDeltaTime * Controls.Rate / turn;
             sweepDeg = (sweepDeg + step) % 360f;
-            // Step 45: the sweep leaves a bearing line on each heard contact it passes. Step 63 (owner 2026-10-24):
+            // The sweep fixes the bearing of each heard contact it passes. Step 63 (owner 2026-10-24):
             // with ACTIVE on, a contact the cone covers is identified as the sweep passes it (the design needed
             // the cone dial let go, or a contact-board row clicked, and said nothing).
             // Step 69 (owner 2026-10-25): every pass over a ship the cone covers tags it with a beep, scanned or not.
@@ -373,7 +376,7 @@ public class PlotPanel : Panel
                 bool scanned = State.sensors.identified.Contains(t.key);
                 if (State.sensors.Heard(t) || State.sensors.ConeCovers(t)) State.sensors.See(t); // Step 75: out of sight, the plot shows it here until the next pass
                 if (State.sensors.ConeCovers(t)) { Controls.SweepTag(); State.sensors.NoteScan(t); if (!scanned) Refresh(); continue; }
-                if (!scanned && State.sensors.Heard(t)) { State.sensors.LayBearing(t, Controls.MissionSeconds); Refresh(); }
+                if (!scanned && State.sensors.Heard(t)) Refresh();
             }
             if (!world) world = FindAnyObjectByType<TacticalWorld>();
             if (world) world.SweepRocks(before, step); // owner 2026-11-02: rocks in the ACTIVE SCAN cone echo
@@ -780,34 +783,30 @@ public class PlotPanel : Panel
         }
         if (contactMarks) contactMarks.Set(dots);
 
-        // passive bearings: a line fading out from our ship toward each contact DRADIS hears but has not
-        // identified (bearing only, no range), with its bearing; amber while the scope is on it (passives)
+        // passive bearings (owner 2026-11-02): a red bar curved along the DRADIS circle toward each contact DRADIS hears but has
+        // not identified (bearing only, no range), with its bearing just outside; brighter, its label amber, while the scope is
+        // on it (passives). It turns smoothly as either ship moves. The circle is often off the plot at normal zoom; the bar goes with it.
         bool down = Controls.Motion && Controls.Motion.ScopeDown;
         var bearings = new List<MarksGraphic.Shape>();
+        var bars = new List<MarksGraphic.Shape>();
+        if (!barMarks && passiveLines) { barMarks = CopyLayer(passiveLines, "Contact bars (drawn)"); barMarks.art = passiveBarArt; barMarks.SetMaterialDirty(); }
         int np = 0;
         Vector2 ownAt = OwnAt;
-        float reach = (float)(s.sensors.PassiveRangeUnits / UnitsPerPx * Controls.ZoomExact);
-        // the bearing trail (Step 45): each line from where our ship was, fading over bearingTrailSeconds
-        s.sensors.PruneBearings(Controls.MissionSeconds);
-        foreach (var f in s.sensors.BearingFixes)
-        {
-            float life = 1f - (Controls.MissionSeconds - f.t) / Mathf.Max(1f, s.sensors.stats.bearingTrailSeconds);
-            double rad = f.brg * System.Math.PI / 180.0;
-            Vector2 from = Screen(f.x, f.y), dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad));
-            bearings.Add(new MarksGraphic.Shape { kind = "fade", a = from, b = from + dir * reach, alpha = trailAlpha * life });
-        }
+        float ring = (float)(sensorUnits / UnitsPerPx * Controls.ZoomExact); // where the DRADIS circle is drawn now
         foreach (var t in s.tracks)
         {
-            if (t.own || !s.sensors.Heard(t) || s.sensors.identified.Contains(t.key) || !t.seen) continue; // Step 75: from the sweep's first touch
-            double rad = t.seenBrg * System.Math.PI / 180.0; // where the sweep last heard it; the label shows it in whole degrees
+            if (ring <= 0f || t.own || !s.sensors.Heard(t) || s.sensors.identified.Contains(t.key) || !t.seen) continue; // Step 75: from the sweep's first touch
+            double brg = t.nav ? (System.Math.Atan2(t.nav.DrawnX - s.nav.DrawnX, t.nav.DrawnY - s.nav.DrawnY) * 180 / System.Math.PI + 360) % 360 : s.sensors.ExactBearing(t);
+            double rad = brg * System.Math.PI / 180.0; // where it is drawn now; the label shows it in whole degrees
             var dir = new Vector2((float)System.Math.Sin(rad), (float)-System.Math.Cos(rad)); // board y is down
             bool on = s.ScopeOn(t, down);
-            bearings.Add(new MarksGraphic.Shape { kind = "fade", a = ownAt, b = ownAt + dir * reach, alpha = on ? 1f : 0.6f });
+            bars.Add(new MarksGraphic.Shape { kind = "sector", a = ownAt, b = ownAt + dir * (ring + passiveBarWidthPx / 2f), inner = ring - passiveBarWidthPx / 2f,
+                                              half = passiveBarDeg / 2f, alpha = on ? 1f : 0.6f, ink = alarm.gamma });
             var pl = PassiveLabel(np++);
-            pl.text = "BRG " + (ShipState.JsRound(t.seenBrg) % 360).ToString("000");
+            pl.text = "BRG " + (ShipState.JsRound(brg) % 360).ToString("000");
             pl.alpha = on ? 1f : 0.6f;
             Paint(pl, on ? caution : Controls.GridAmber ? alarm : data);
-            Place(pl.rectTransform, ownAt + dir * Mathf.Min(reach, passiveLabelPx), dir.x < 0f ? 1f : 0f);
+            Place(pl.rectTransform, ownAt + dir * (ring + passiveBarWidthPx + 6f), dir.x < 0f ? 1f : 0f);
             pl.raycastTarget = false; // owner 2026-10-29: clicking a bearing does nothing
         }
         for (int i = np; i < passiveLabels.Count; i++) passiveLabels[i].gameObject.SetActive(false);
@@ -821,6 +820,7 @@ public class PlotPanel : Panel
                 bearings.Add(new MarksGraphic.Shape { kind = "point", a = w, b = w, alpha = 0.45f * left });
             }
         if (passiveLines) { Paint(passiveLines, Controls.GridAmber ? alarm : data); passiveLines.Set(bearings); }
+        if (barMarks) barMarks.Set(bars);
 
         // the export's own passive labels (none since Step 44; kept for a configured one)
         foreach (var p in passives)
@@ -1161,18 +1161,25 @@ public class PlotPanel : Panel
     // inside the circles, the echoes (their own copy of the contact marks, under them) what is outside.
     private MarksGraphic rockEchoMarks;
     private readonly Vector4[] sightCircles = new Vector4[4];
+
+    // A copy of a marks layer, just under it, for marks with a look of their own (made while the game runs)
+    MarksGraphic CopyLayer(MarksGraphic of, string name)
+    {
+        var m = Instantiate(of, of.transform.parent);
+        foreach (Transform c in m.transform) Destroy(c.gameObject);
+        var fade = m.GetComponent<CanvasGroup>(); // the grid's fade-in may be on the layer as it is copied; the copy would stay at 0
+        if (fade) Destroy(fade);
+        m.name = name;
+        m.transform.SetSiblingIndex(of.transform.GetSiblingIndex());
+        return m;
+    }
     void ClipToSight()
     {
         if (!ruinsImage || !contactMarks || !marks) return;
         if (!rockEchoMarks)
         {
             ruinsImage.material = new Material(ruinsImage.material); // its own copy: our ship's view uses the same material
-            rockEchoMarks = Instantiate(contactMarks, contactMarks.transform.parent);
-            foreach (Transform c in rockEchoMarks.transform) Destroy(c.gameObject);
-            var fade = rockEchoMarks.GetComponent<CanvasGroup>(); // the grid's fade-in may be on the contacts as it is copied; the copy would stay at 0
-            if (fade) Destroy(fade);
-            rockEchoMarks.name = "Rock Echoes";
-            rockEchoMarks.transform.SetSiblingIndex(contactMarks.transform.GetSiblingIndex());
+            rockEchoMarks = CopyLayer(contactMarks, "Rock Echoes");
             rockEchoMarks.material = new Material(ruinsImage.material);
             rockEchoMarks.material.SetFloat("_KeyBlack", 0f);
             rockEchoMarks.material.SetFloat("_KeepOutside", 1f);

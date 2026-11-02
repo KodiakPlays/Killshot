@@ -945,9 +945,9 @@ in arc = |angDiff(solution's bearing from the bow, mount's arc centre)| <= mount
 **What it is.** How you find things. DRADIS listens. The sweep turns round our ship and updates
 what DRADIS hears. The active scan identifies a ship.
 
-**How it plays.** You never quite have a live picture. A contact you only hear is a bearing line.
-Moving your ship and laying more bearing lines finds its range. An active scan names it and lets
-you target it, but makes you louder.
+**How it plays.** You never quite have a live picture. A contact you only hear is a short red bar on
+the DRADIS circle. It gives the bearing only. To find its range, plot it with POINT and RULER, or scan
+it. An active scan names it and lets you target it, but makes you louder.
 
 **How it's built.** DRADIS hears a contact by band and range. Each pass of the sweep updates where
 each contact was last seen. The ACTIVE SCAN cone also updates a scanned ship, on every frame. With
@@ -975,11 +975,16 @@ You set the gain on the Sensors drawer. It can go up to the SEN units, never bel
 > 2.9 s at gain 5. It stops while paused, while DRADIS is off, and while the SEN bus is empty.
 
 > **Rule 9.1.b** Between passes, a contact out of sight stays where the sweep last touched it. A
-> locked ship and a scanned ship under the ACTIVE SCAN cone move smoothly instead (§9.6).
+> locked ship and a scanned ship under the ACTIVE SCAN cone move smoothly instead (§9.6). A heard
+> contact's bar turns smoothly too (Rule 9.1.c).
 
-> **Rule 9.1.c** Each pass over a heard contact that is not identified leaves a bearing line from
-> where our ship was. The lines fade out over 120 game seconds. As our ship moves, the lines cross
-> at the contact. That is how you find a passive contact's range (owner, 2026-10-23).
+> **Rule 9.1.c** A heard contact that is not identified shows as a short red bar, curved along the
+> DRADIS circle, in its direction. Its label, BRG and the angle (for example BRG 053), is just
+> outside the bar. The bar first shows at the sweep's first touch. After that it turns in real time:
+> every frame it follows the contact's bearing as either ship moves, and the BRG number changes with
+> it. It gives no range. It covers the same number of degrees of the circle at every zoom, 6 to start
+> with. When the DRADIS circle is off the plot, so is the bar. Nothing is left behind when the sweep
+> passes (owner, 2026-11-02).
 
 While DRADIS is on and SEN has power, the plot shows its hearing range as a circle round our ship,
 and the sweep. The buses are empty at load, so there is no sweep until SEN has power. The DRADIS
@@ -1041,8 +1046,10 @@ destroyed                     → no label on the plot; it stays as a wreck
 **Owner, 2026-10-26.** How a ship shows on the plot depends on how you know it.
 
 - **Our ship** glides smoothly across the plot.
-- **Heard, not identified:** a bearing line from our ship. It appears when the sweep first touches
-  the contact. It keeps that bearing until the sweep passes again.
+- **Heard, not identified:** a short red bar, curved along the DRADIS circle, in its direction, with
+  its BRG label just outside. It appears when the sweep first touches the contact. Then it turns in
+  real time as either ship moves (owner, 2026-11-02). While the periscope is on the contact, the bar
+  is full red and its label is amber. Otherwise both are dimmer.
 - **Identified, outside visual range:** a dot where the sweep last touched it, labelled with the
   range at that moment. The dot hops when the sweep passes again. While the ACTIVE SCAN cone covers
   it, the dot moves smoothly and shows where the ship is now (owner, 2026-11-01). With ACTIVE SCAN
@@ -1204,7 +1211,7 @@ The tool rail: CURSOR, POINT, RULER, COMPASS and ERASE (§18). The systems rail:
 | Thing | How it shows |
 |---|---|
 | Our ship | Its 3D model seen from above, in white. It glides and never blinks (owner, 2026-10-25). |
-| A contact | A bearing line, a dot with its range, or its model (§9.6) |
+| A contact | A red bar on the DRADIS circle, a dot with its range, or its model (§9.6) |
 | Our fighters | Small white triangles in a V, 10 px, nose pointing the way they fly, with no labels. The V is shut where they appear beside our ship. It opens as they fly out and closes as they land (owner, 2026-11-02) |
 | Our slugs and torpedoes | A white dot with a fading trail: 120 px on a slug, less on anything slower, so a torpedo's grows as its motor lights |
 | Enemy torpedoes | A red dot with a short trail |
@@ -1747,8 +1754,8 @@ The tool rail has five tools (§11.3). They draw on the plot and change nothing 
 **What it is.** CURSOR and four marking tools — POINT, RULER, COMPASS and ERASE — and the firing
 solution they help you build.
 
-**How it plays.** You work the target out yourself. Lay bearing lines, drop POINTs, wait, drop
-more, and run a RULER between them to read the target's course and speed. Press TRACK and it takes
+**How it plays.** You work the target out yourself. Drop POINTs, wait, drop more, and run a
+RULER between them to read the target's course and speed. Press TRACK and it takes
 the solution from your plot, and the gun and the sight go to where the target should be. Then
 fine-tune it by hand, or lock it with the targeting computer (§18.4). A lock lasts 10 seconds, so
 line up on where the target will be before you lock.
@@ -1813,17 +1820,17 @@ and a longer tick every 30° with its number, 000 at the top (Step 100).
 
 #### ERASE
 
-With ERASE on, click a mark to remove it. Press ERASE again to clear every mark and the bearing
-trail, and go back to CURSOR.
+With ERASE on, click a mark to remove it. Press ERASE again to clear every mark and go back to
+CURSOR.
 
 ### 18.3 How you work out a firing solution
 
 This is the loop the tools exist to serve (owner, 2026-10-23).
 
-**1 · Find the range.** A contact you only hear is a bearing line (§9.1). Move your ship. The
-bearing trail's lines cross at the contact.
+**1 · Find the range.** A contact you only hear is a red bar on the DRADIS circle, with its bearing
+(§9.1). The bar gives no range. Plot it with POINT and RULER, or scan it.
 
-**2 · Find the course and speed.** Drop a POINT where the lines cross. Wait. Drop another POINT on
+**2 · Find the course and speed.** Drop a POINT on the contact. Wait. Drop another POINT on
 the contact later. Run a RULER from the first POINT to the second. It reads the course and speed
 (§18.2).
 

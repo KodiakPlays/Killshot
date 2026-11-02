@@ -34,6 +34,10 @@ public class MarksGraphic : MaskableGraphic
     [SerializeField] private float dot = 2f, dotGap = 8f;
     [Tooltip("Board px of this rect's top-left (the plot sits at 104,100).")]
     public Vector2 origin = new Vector2(104, 100);
+    /// <summary>Owner 2026-11-02: a picture for this layer's marks. A "sector" bends it along its piece of ring, end to end;
+    /// the other shapes want none (plain white).</summary>
+    [System.NonSerialized] public Texture art;
+    public override Texture mainTexture => art ? art : base.mainTexture;
 
     private readonly List<Shape> shapes = new List<Shape>();
     private VertexHelper vh;
@@ -131,8 +135,9 @@ public class MarksGraphic : MaskableGraphic
             float t0 = mid - w + 2f * w * k / seg, t1 = mid - w + 2f * w * (k + 1) / seg;
             Vector2 d0 = new Vector2(Mathf.Cos(t0), Mathf.Sin(t0)), d1 = new Vector2(Mathf.Cos(t1), Mathf.Sin(t1));
             int i = vh.currentVertCount;
-            vh.AddVert(p + d0 * r, c, Vector2.zero); vh.AddVert(p + d1 * r, c, Vector2.zero);
-            vh.AddVert(p + d1 * inner, c, Vector2.zero); vh.AddVert(p + d0 * inner, c, Vector2.zero);
+            float u0 = (float)k / seg, u1 = (float)(k + 1) / seg; // the picture runs along the slice, its top at the rim
+            vh.AddVert(p + d0 * r, c, new Vector2(u0, 1f)); vh.AddVert(p + d1 * r, c, new Vector2(u1, 1f));
+            vh.AddVert(p + d1 * inner, c, new Vector2(u1, 0f)); vh.AddVert(p + d0 * inner, c, new Vector2(u0, 0f));
             vh.AddTriangle(i, i + 1, i + 2); vh.AddTriangle(i, i + 2, i + 3);
         }
     }
