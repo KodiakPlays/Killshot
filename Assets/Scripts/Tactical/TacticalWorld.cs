@@ -27,8 +27,9 @@ public class TacticalWorld : MonoBehaviour
     private EnemyBrain[] brains = new EnemyBrain[0];
 
     // Ruins (owner 2026-10-27): a piece of the level's terrain shows only while it is in range of our ship
-    // (its centre within range plus half its size): inside the DRADIS circle while DRADIS listens, else
-    // within visual range. Out of range it hides again.
+    // (its centre within range plus half its size). Owner 2026-11-02: that range is visual range. Past it, DRADIS
+    // shows a rock only as an echo, a hollow circle, where the ACTIVE SCAN cone passed it (RockEchoes). Gas clouds still show
+    // inside the DRADIS circle while DRADIS listens. Out of range a piece hides again.
     // Owner 2026-11-01: every ship is a solid box round its model, and every piece is solid too. Nothing passes
     // through anything: a ship that touches a piece or another ship bounces off and takes damage by its speed.
     struct Ruin { public Renderer r; public Vector2 at; public float half; public Vector2[] outline; public float reach; }
@@ -45,14 +46,10 @@ public class TacticalWorld : MonoBehaviour
     [Tune("Sensors")] [SerializeField] private float rockInterferenceUnits = 500f;
     [Tooltip("A rock this close to a ship counts against DRADIS and scans, units.")]
     [Tune("Sensors")] [SerializeField] private float rockCloseUnits = 500f;
-    [Tooltip("As the DRADIS sweep passes a rock in reach, the chance it throws a false dot, at gain 1. More power clears them fast: this is divided by the gain squared.")]
-    [Tune("Sensors")] [Range(0f, 1f)] [SerializeField] private float falseDotChance = 0.15f;
-    [Tooltip("How long a false dot stays on the plot, game seconds.")]
-    [Tune("Sensors")] [SerializeField] private float falseDotSeconds = 8f;
-    /// <summary>False dots on DRADIS (owner 2026-11-02): where, and the game second each appeared.</summary>
-    public struct FalseDot { public Vector2 at; public float bornAt; }
-    public readonly List<FalseDot> FalseDots = new List<FalseDot>();
-    public float FalseDotSeconds => falseDotSeconds;
+    /// <summary>Owner 2026-11-02: a rock makes no noise, so only a ping gets an echo off it. Each rock's last echo: where, its
+    /// half size in units, and the game second the ACTIVE SCAN cone passed it.</summary>
+    public struct RockEcho { public Vector2 at; public float half, bornAt; }
+    public readonly Dictionary<Renderer, RockEcho> RockEchoes = new Dictionary<Renderer, RockEcho>();
 
     [Header("Crashes (owner 2026-11-01)")]
     [Tooltip("Share of its speed a ship keeps after it bounces off something.")]
@@ -136,14 +133,15 @@ public class TacticalWorld : MonoBehaviour
         var s = board.State;
         if (!s.sensors) return;
         var us = new Vector2((float)s.nav.x, (float)s.nav.y);
-        float sight = Mathf.Max(s.sensors.stats.visualRangeUnits, s.sensors.Listening ? s.sensors.PassiveRangeUnits : 0f); // the plot's DRADIS circle is PassiveRangeUnits
-        bool InSight(Vector2 at, float half) => (at - us).magnitude <= sight + half
-            || (s.hangar && s.hangar.Sees(at.x, at.y, s.sensors.stats.visualRangeUnits + half)); // Step 101: what our fighters see
+        float eyes = s.sensors.stats.visualRangeUnits;
+        float dradis = Mathf.Max(eyes, s.sensors.Listening ? s.sensors.PassiveRangeUnits : 0f); // the plot's DRADIS circle is PassiveRangeUnits
+        bool InSight(Vector2 at, float half, float sight) => (at - us).magnitude <= sight + half
+            || (s.hangar && s.hangar.Sees(at.x, at.y, eyes + half)); // Step 101: what our fighters see
         int n = 0;
         foreach (var p in ruins)
         {
             if (!p.r) continue;
-            bool show = InSight(p.at, p.half);
+            bool show = InSight(p.at, p.half, eyes);
             if (p.r.enabled != show) p.r.enabled = show;
             if (show) n++;
         }
@@ -151,9 +149,9 @@ public class TacticalWorld : MonoBehaviour
         foreach (var c in Clouds)
         {
             if (!c) continue;
-            float half = Mathf.Max(c.widthUnits, c.heightUnits) / 2, eyes = s.sensors.stats.visualRangeUnits;
-            c.seen = InSight(c.At, half);
-            c.inSight = (c.At - us).magnitude <= eyes + half || (s.hangar && s.hangar.Sees(c.At.x, c.At.y, eyes + half)); // owner 2026-11-02: the picture in visual range, a hollow circle past it
+            float half = Mathf.Max(c.widthUnits, c.heightUnits) / 2;
+            c.seen = InSight(c.At, half, dradis);
+            c.inSight = InSight(c.At, half, eyes); // owner 2026-11-02: the picture in visual range, a hollow circle past it
         }
     }
 
@@ -252,32 +250,21 @@ public class TacticalWorld : MonoBehaviour
 
     public bool RockOnLine(Vector2 from, Vector2 to) { bool rock; Interference(from, to, out rock); return rock; }
 
-    /// <summary>A false contact for an enemy's DRADIS at `from`: beside a rock in reach, with a clear line to it. False: it found none.</summary>
-    public bool FalseContact(Vector2 from, float reach, out Vector2 at)
-    {
-        at = from;
-        for (int tries = 0; tries < 8 && ruins.Count > 0; tries++)
-        {
-            var p = ruins[Random.Range(0, ruins.Count)];
-            if (!p.r || (p.at - from).magnitude > reach) continue;
-            at = p.at + (from - p.at).normalized * (p.reach + rockCloseUnits);
-            if (!RockOnLine(from, at)) return true;
-        }
-        return false;
-    }
-
-    /// <summary>The DRADIS sweep turned from `before` through `step` degrees: each rock in reach that it passed may throw a false dot.</summary>
+    /// <summary>The DRADIS sweep turned from `before` through `step` degrees: each rock it passed inside the ACTIVE SCAN cone sends
+    /// back an echo. Owner 2026-11-02: otherwise a rock is silent, to us and to the enemy (the false dots of Step 148 are gone).</summary>
     public void SweepRocks(float before, float step)
     {
         var s = board.State;
         var us = new Vector2((float)s.nav.x, (float)s.nav.y);
-        FalseDots.RemoveAll(d => s.missionNow - d.bornAt >= falseDotSeconds);
         foreach (var p in ruins)
         {
-            if (!p.r || (p.at - us).magnitude > s.sensors.PassiveRangeUnits) continue;
-            float past = Mathf.Repeat(Bearing(p.at - us) - before, 360f);
-            if (past <= 0f || past > step || Random.value >= falseDotChance / (s.sensors.senBoost * s.sensors.senBoost)) continue;
-            FalseDots.Add(new FalseDot { at = p.at + Random.insideUnitCircle * (p.reach + rockCloseUnits), bornAt = s.missionNow });
+            if (!p.r) continue;
+            float brg = Bearing(p.at - us), range = (p.at - us).magnitude;
+            float past = Mathf.Repeat(brg - before, 360f);
+            if (past <= 0f || past > step) continue;
+            // rocks on the way and round it cut the ping's reach, as for a ship; aimed just short of its near side, so it doesn't block itself
+            if (s.sensors.ConeCovers(brg, range) && s.sensors.ConeCovers(brg, range + Interference(us, p.at + (us - p.at).normalized * (p.reach + rockCloseUnits), out _)))
+                RockEchoes[p.r] = new RockEcho { at = p.at, half = p.half, bornAt = s.missionNow };
         }
     }
 

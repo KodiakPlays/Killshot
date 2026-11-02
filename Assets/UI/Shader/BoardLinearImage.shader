@@ -40,6 +40,10 @@ Shader "Starwolf/UI/BoardLinearImage"
             fixed4 _Color;
             float _KeyBlack;
             float4 _ClipRect;
+            // owner 2026-11-02: the plot's sight circles (PlotPanel.ClipToSight), centre xy and radius z in canvas space. With
+            // _CircleCount 0 (every other image) nothing is cut; else what is outside them goes, or with _KeepOutside 1 what is inside.
+            float4 _Circles[4];
+            float _CircleCount, _KeepOutside;
 
             struct appdata { float4 vertex : POSITION; float4 color : COLOR; float2 uv : TEXCOORD0; };
             struct v2f { float4 pos : SV_POSITION; fixed4 color : COLOR; float2 uv : TEXCOORD0; float4 world : TEXCOORD1; };
@@ -62,6 +66,12 @@ Shader "Starwolf/UI/BoardLinearImage"
                 // use the lines as a mask for the tint
                 if (_KeyBlack > 0.5) { c.a *= saturate(max(c.r, max(c.g, c.b))); c.rgb = 1; }
                 c *= i.color;
+                if (_CircleCount > 0)
+                {
+                    float inside = 0;
+                    for (int k = 0; k < 4; k++) if (k < _CircleCount && distance(i.world.xy, _Circles[k].xy) <= _Circles[k].z) inside = 1;
+                    c.a *= _KeepOutside > 0.5 ? 1 - inside : inside;
+                }
                 #ifdef UNITY_UI_CLIP_RECT
                 c.a *= UnityGet2DClipping(i.world.xy, _ClipRect);
                 #endif

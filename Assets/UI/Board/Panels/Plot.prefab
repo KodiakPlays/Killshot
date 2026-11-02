@@ -2430,6 +2430,13 @@ MonoBehaviour:
   staleSeconds: 60
   staleAlpha: 0.35
   staleLabelSeconds: 10
+  rockEchoSeconds: 30
+  rockEchoBlinkSeconds: 1
+  rockEchoDim: 0.45
+  rockEchoSize: 1
+  rockEchoMinPx: 3
+  rockEchoMaxPx: 10
+  rockEchoInk: {r: 0.5411765, g: 0.58431375, b: 0.6156863, a: 0.6901961}
   showShipBoxes: 0
   gunBarAlpha: 1
   gunBarAlphaOther: 0.4

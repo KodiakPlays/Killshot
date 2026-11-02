@@ -551,6 +551,8 @@ public static class PlaytestRunner
         if (!Click("helm", null, "HELM header")) yield break;
         yield return 0.8f;
         if (!Click("helm.thr", null, "throttle (press mid-well)")) yield break;
+        Check("The middle of the throttle is stop (owner 2026-11-02: reverse below it)", System.Math.Abs(s.nav.throttle) <= 10, "throttle " + s.nav.throttle + "%");
+        s.nav.SetThrottle(0.2, s.nav.ThrottleCap); // the press's own rule, a fifth of the way down the well: ahead
         Check("The throttle takes a setting", s.nav.throttle > 0, "throttle " + s.nav.throttle + "%, target " + (s.nav.throttle / 100.0 * s.nav.stats.topSpeedUnits).ToString("0.00") + " km/s");
         double x0 = s.nav.x, y0 = s.nav.y;
         Vector2 img0 = shipImg.anchoredPosition, grid0 = board.GetComponentInChildren<PlotGrid>().OffsetPx;

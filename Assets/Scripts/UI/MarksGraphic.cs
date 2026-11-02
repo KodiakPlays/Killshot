@@ -41,6 +41,8 @@ public class MarksGraphic : MaskableGraphic
     public void Set(List<Shape> s) { shapes.Clear(); shapes.AddRange(s); SetVerticesDirty(); }
 
     Vector2 L(Vector2 board) { var r = rectTransform.rect; return new Vector2(r.xMin + board.x - origin.x, r.yMax - (board.y - origin.y)); }
+    /// <summary>A board px point in world space.</summary>
+    public Vector3 World(Vector2 board) => rectTransform.TransformPoint(L(board));
 
     protected override void OnPopulateMesh(VertexHelper v)
     {

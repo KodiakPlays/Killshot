@@ -222,15 +222,20 @@ The prefab has these parts:
 Its art files are in `Art/Helm` and the folders for each kind. The Art list has 20 entries. Two
 are stand-ins: the throttle's lit track and the heading ring.
 
+The throttle slider (01 FLIGHT, THRUST) runs from full reverse to full ahead (Step 157). 0 is in
+the middle. Full ahead (+100) is at the top, and full reverse (-100) is at the bottom. The lit bar
+runs from the middle to the handle: up when going ahead, down in reverse. In reverse the header
+shows a negative number, for example THR -80%.
+
 A and D turn the ship (Step 159). Each press moves the ordered heading 3°. The order stops 179°
 ahead of the bow. Hold D and the ship turns to starboard until you let go. Hold A and it turns to
 port. When you let go, the ship keeps turning until it reaches the order.
 
 Ask a technical artist before you change these:
 - The code moves the throttle's `Cap` and stretches `STAND-IN Lit track`. **Thr Well** is the
-  well's place in board pixels (652, 941, 44 × 78). **Cap Base**, **Cap Span**, **Cap Height**,
-  **Track Base** and **Track Span** place the cap and the track in the well. Dragging the
-  throttle also reads **Thr Well**.
+  well's place in board pixels (652, 941, 44 × 78). **Cap Base**, **Cap Span** and **Cap Height**
+  place the cap in the well. The lit track follows the cap. The tooltip on the cap explains the
+  slider. Dragging the throttle also reads **Thr Well**: top +100, middle 0, bottom -100.
 - The code turns the heading ring (**Hdg Ring**). The ring slides to each new heading over 0.12 s.
   It turns the short way across north: from 359 to 000 it moves one small step.
 - The code lines up the header readouts in `Closed` and `Open`: `Turn`, `THR caption`,
@@ -444,7 +449,21 @@ A crash or a hit on us shakes the plot for half a second. **Shake Seconds** and 
 
 A killed ship in sight breaks in two where the shot struck, and the halves drift apart and turn slowly. Out of sight it is a dim dot, and the dot fades away. **Wreck Drift Units**, **Wreck Spin Deg** and **Wreck Dot Fade Seconds** set this, under Plot & our ship. The break is the ship's picture cut in two by `PlotPanel`, so it needs no extra art.
 
-Rocks can put false dots on the plot. As the DRADIS sweep passes a rock in reach, a red dot with no label may show near it, then fade. The code draws them, so they need no art. **False Dot Chance** and **False Dot Seconds** set this, under Sensors. The enemy is fooled by rocks too: about every **False Look Seconds** (120) it goes to look at one. That number is on the Board tab of **Starwolf → Tuning**, under Enemy.
+Rocks show on the plot only within visual range (2,000 units) of our ship or of a fighter flight.
+They show as grey line art, on `Ruins (3D view)`. Past visual range, DRADIS shows a rock only as a
+signal. Plain DRADIS doesn't show a rock. As the DRADIS sweep passes a rock inside the ACTIVE SCAN
+cone, a clean, thin, grey hollow circle shows at the rock. It uses the plot's solid ring line. A big
+rock gives a bigger circle, never a large one: the radius stays between **Rock Echo Min Px** (3) and
+**Rock Echo Max Px** (10). The circle is bright as the ping passes and dims within about a second.
+With no new ping it fades out over 30 game seconds. Rocks in the way cut the ping's reach, as they
+do for ships. A rock across the edge of visual range is cut at the circle. The part inside shows as
+the rock. The part outside shows only as its hollow circle. The code draws the circles on
+`Rock Echoes`, a copy of `Contacts (drawn)` made while the game runs, just under the contacts. They
+need no art. **Rock Echo Seconds** (30), **Rock Echo Blink Seconds** (1), **Rock Echo Dim** (0.45),
+**Rock Echo Size** (1, times the rock's half size), **Rock Echo Min Px** (3), **Rock Echo Max Px**
+(10) and **Rock Echo Ink** (the grey) set them. They are on the Board tab of **Starwolf → Tuning**,
+under Sensors. `BoardLinearImage` cuts the rocks and the hollow circles at up to 4 circles: our
+ship's and up to 3 fighter flights'. Every other picture using that material is unaffected. Rocks throw no false dots (Step 157).
 
 While Fire Control is open, each railgun shows a soft dotted cone and a solid bar on
 `Weapon ring (drawn)`. The bar is the gun. **Rail Arc Alpha** and **Gun Bar Alpha** set how strong

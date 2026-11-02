@@ -42,8 +42,6 @@ public class EnemyBrain : MonoBehaviour
     [Tune("Enemy")] [SerializeField] private float giveUpSeconds = 90f;
     [Tooltip("On a patrol route, the chance at each point that it turns back the way it came, 0 to 1. Above 0 its route can't be timed from the last pass.")]
     [Tune("Enemy")] [Range(0f, 1f)] [SerializeField] private float turnBackChance = 0.25f;
-    [Tooltip("Rocks throw false dots at its DRADIS too (owner 2026-11-02). While calm or uneasy and hearing nothing, about this often, game seconds, it goes to look at one.")]
-    [Tune("Enemy")] [SerializeField] private float falseLookSeconds = 120f;
     [Tooltip("How loud our fighters are to it, 0–100, like our signal.")]
     [Tune("Enemy")] [SerializeField] private float fighterSignal = 60f;
     [Tooltip("Heard this clearly (0 at the edge of its hearing, 1 right on top of it): SEARCHING. Heard again 20 to 60 game seconds after it last heard us counts too.")]
@@ -93,7 +91,7 @@ public class EnemyBrain : MonoBehaviour
     public float CruiseUnits { set { cruiseUnits = value; } }
     /// <summary>A level's spawn makes it send radio messages (owner 2026-10-29).</summary>
     public void SendSignals(float first, float every, float onAir) { firstSignalSeconds = first; signalSeconds = every; onAirSeconds = onAir; }
-    private float firstSignalSeconds, signalSeconds, onAirSeconds, nextSignal, nextCourse, nextFalseLook;
+    private float firstSignalSeconds, signalSeconds, onAirSeconds, nextSignal, nextCourse;
     /// <summary>A level's spawn gives it a patrol route (owner 2026-11-02).</summary>
     public void Patrol(Vector2[] points) { route = points; }
     private Vector2[] route;
@@ -114,7 +112,7 @@ public class EnemyBrain : MonoBehaviour
         var at = new Vector2((float)ship.nav.x, (float)ship.nav.y);
         var ours = new Vector2((float)us.nav.x, (float)us.nav.y);
         float now = ship.missionNow, dist = (ours - at).magnitude;
-        if (!started) { started = true; home = at; startedAt = now; nextSignal = now + firstSignalSeconds; nextFalseLook = now + falseLookSeconds; NewHuntPoint(ship, us, at); }
+        if (!started) { started = true; home = at; startedAt = now; nextSignal = now + firstSignalSeconds; NewHuntPoint(ship, us, at); }
         if (signalSeconds > 0f) Send(ship, us, at, ours, now);
 
         // hit since the last tick: its armour or a compartment went down
@@ -193,12 +191,6 @@ public class EnemyBrain : MonoBehaviour
             Heard(ours + Off(ship, dist * (1f - clear) * 0.25f), now, Level == Awareness.Alert);
         }
         else if (hit) Heard(ours + Off(ship, dist * 0.15f), now, false); // it knows the way the shot came, not the range
-        else if (Level < Awareness.Searching && now >= nextFalseLook)
-        {
-            nextFalseLook = now + falseLookSeconds * (0.5f + (float)ship.NextDie());
-            Vector2 spot;
-            if (world && world.FalseContact(at, reach, out spot)) { Raise(Awareness.Uneasy); Heard(spot, now, false); }
-        }
         foreach (var f in us.hangar.Flights)
         {
             var p = new Vector2((float)f.x, (float)f.y);

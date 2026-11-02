@@ -383,22 +383,27 @@ Actual moves toward ordered at capped rates whenever the clock runs.
 
 ### 4.2 Throttle
 
-You drag the throttle on the helm, from 0 to 100%, or press W and S to step it 10% a press. It
-loads at 0.
+You drag the throttle on the helm, or press W and S to step it 10% a press. It runs from -100%
+(full reverse) to +100% (full ahead), with 0 in the middle of the slider (owner, 2026-11-02). S steps
+down through 0 into reverse. It loads at 0.
 
 ```
 speed limit = 25 + (ENG units − 1) × 6.25 units/s, with no thrust at ENG 0
-throttle cap = speed limit ÷ 50 × 100 × (engine room integrity ÷ 5)
-target speed = throttle ÷ 100 × 50 units/s
+throttle cap = speed limit ÷ 50 × 100 × (engine room integrity ÷ 5), ahead and in reverse
+target speed = throttle ÷ 100 × 50 units/s, times Reverse Share in reverse
 ```
 
 ENG also sets how fast speed changes (owner, 2026-11-01). On our ship, speed along the nose rises at
 1 unit/s each second at ENG 1 and at 2 at ENG 5, in equal steps. It falls at 1.875 at ENG 1 and at
 3.75 at ENG 5. Base Accel Units in the stats file gives the ENG 1 number. Enemies run at full ENG.
-There is no reverse.
 
 > **Rule 4.2.a** If the ENG bus can no longer support the throttle, the throttle drops to 0 (owner,
-> 2026-10-25). You set it again.
+> 2026-10-25). This is the same ahead and in reverse. You set it again.
+
+> **Rule 4.2.b** Full reverse is slower than full ahead (owner, 2026-11-02). Reverse Share (0.42,
+> from the HTML prototype) is in each ship's stats file, under Navigation. Reverse top speed is that
+> share of the top speed. Speeding up backwards uses that share of the acceleration. Slowing down, in
+> either direction, uses the brake rate. The enemy never uses reverse.
 
 ### 4.3 Drift — the ship slides
 
@@ -431,7 +436,7 @@ all speed      × 0.997502
 The helm shows G load and stability. Nothing uses them yet.
 
 ```
-G load    = 1 + throttle ÷ 100 + (FLANK 0.5, EVASIVE 1.2, DIRECT 0)
+G load    = 1 + |throttle| ÷ 100 + (FLANK 0.5, EVASIVE 1.2, DIRECT 0)    (-80 and +80 both give 1.8)
 stability = 100 − 45 × (G load − 1), from 0 to 100
 ```
 
@@ -572,14 +577,27 @@ cloud (−20%):
 > - More power means more reach, so it pierces interference. It also makes the ship louder.
 > - A rock on the line also blocks eyes fully, for our ship, the enemy and fighters. Interference does
 >   nothing else to eyes.
-> - As the DRADIS sweep passes a rock in reach, it may throw a false dot near that rock. The chance is
->   False Dot Chance (0.15) divided by the gain squared. A false dot lasts False Dot Seconds (8) and
->   fades. False dots show on the plot only, as red dots with no label.
-> - The enemy is fooled by them too (owner 2026-11-02). While calm or uneasy and hearing nothing, about
->   every False Look Seconds (120, Enemy section), it goes to look at a rock in reach with a clear line.
->   Hearing nothing there, it gives up after Give Up Seconds (90) and goes back to its patrol.
+> - Rocks throw no false dots, for us or for the enemy (owner 2026-11-02, Step 157). A rock is silent
+>   until ACTIVE SCAN pings it (Rule 5.1.f).
 >
-> These four numbers are on the Board tab of **Starwolf → Tuning**, under Sensors.
+> These two numbers are on the Board tab of **Starwolf → Tuning**, under Sensors.
+
+> **Rule 5.1.f** Rocks show on the plot only within visual range (owner 2026-11-02, Step 157).
+>
+> - A rock shows within visual range of our ship or of one of our fighter flights.
+> - Plain DRADIS doesn't show a rock. Only a ping from ACTIVE SCAN gets an echo off one.
+> - As the DRADIS sweep passes a rock inside the ACTIVE SCAN cone, a clean, thin, grey hollow circle
+>   shows at the rock (owner: "At best, they can be clean, hollow circles"). A big rock gives a bigger
+>   circle, never a large one. The circle is bright as the ping passes and dims within about a second.
+>   With no new ping it fades out over 30 game seconds.
+> - Rule 5.1.e's interference cuts the ping's reach. The far side of a thick field stays dark unless
+>   you add power.
+> - A rock across the edge of visual range is cut at the circle. The part inside shows as the rock.
+>   The part outside shows only as its hollow circle.
+> - Gas clouds are unchanged by this rule.
+>
+> Rock Echo Seconds, Rock Echo Blink Seconds, Rock Echo Dim, Rock Echo Size, Rock Echo Min Px, Rock
+> Echo Max Px and Rock Echo Ink are on the Board tab of **Starwolf → Tuning**, under Sensors.
 
 ### 5.2 The disguise
 
@@ -610,7 +628,7 @@ its visual range it sees us, whatever our signal. Our fighters are loud to it to
 | Level | Raised when | What it does |
 |---|---|---|
 | COLD | At the start | Hunts the map. It picks points across the battle space, moving from its own half toward ours. With a patrol route, it flies the route (Rule 5.3.b) |
-| UNEASY | It hears us faintly, or a false dot sends it to a rock (Rule 5.1.e) | Turns for where it heard us |
+| UNEASY | It hears us faintly | Turns for where it heard us |
 | SEARCHING | It hears us more clearly, or hears us again after a gap | Speeds up and searches round that spot |
 | ALERT | It hears us loud and close, sees us, or we hit it | Closes to its railguns' reach, turns a turret's side to us, and fires railgun slugs and torpedo salvos while it knows where we are. The reinforcements' countdown starts (§5.4) |
 
@@ -1193,6 +1211,7 @@ The tool rail: CURSOR, POINT, RULER, COMPASS and ERASE (§18). The systems rail:
 | A ship our marines secured | A dot |
 | DRADIS | The hearing circle and the sweep; with ACTIVE on, the scan cone |
 | Visual range | A thin ring round our ship, always on. Inside it you see ships with your eyes (§9.3) |
+| Rocks | Grey line art within visual range. Past it, a blinking grey hollow circle where ACTIVE SCAN pinged one (Rule 5.1.f) |
 | Fire control | The selected mount's reach as a dashed ring while the drawer is out; each PDC group on AUTO as a dashed sector |
 | Marks | POINT, RULER and COMPASS (§18) |
 | Jump point | Once the target is down: a green ring, the size of the distance that counts as there, with JUMP POINT beside it (§15.2) |
@@ -1703,7 +1722,7 @@ faithfully.
    Wolf Hunt is built (§15.2).
 2. **The combat autopilot** (§4.6). TAIL is not defined. TARGET LOST is only proposed.
 3. **The disguise** (§5.1, §5.2). The enemy hears our signal (§5.3), but there is no false ID. Rocks
-   make interference, block eyes and throw false dots, at the enemy too (Rule 5.1.e). Gas clouds are built for our ship (Step 129); enemies don't hide in them yet.
+   make interference and block eyes, for the enemy too (Rule 5.1.e). They throw no false dots. Gas clouds are built for our ship (Step 129); enemies don't hide in them yet.
 4. **The enemy's mind, what is left.** It never retreats. It does not use engineering, comms or the
    hangar.
 5. **Picking a target** (§20). Built: the periscope picks it, with TRACK. Fire control has no
@@ -2153,7 +2172,7 @@ not use them. This list shows where they work differently from the board.
 | §3 Power | `PowerManager.AddPower` takes 0.5 off `currentReactorPower` per bar — the reactor runs down like fuel | Units move between buses. The reactor never runs down |
 | §3 Power | Systems are named `engines / arms / bay / support / sig` | Four buses: ENG, WEP, SEN, AUX |
 | §4.3 Drift | `rb.linearVelocity = transform.up * currentSpeed` — velocity is locked to facing, so the ship never slides. `maxLateralDrift` and `driftCompensationRate` are serialized but unused | Turning leaves the velocity on its old direction; the sideways part bleeds off |
-| §4.2 Throttle | `W`/`S` set a continuous target while pressed | The throttle is dragged on the helm |
+| §4.2 Throttle | `W`/`S` set a continuous target while pressed | The throttle is dragged on the helm, or `W`/`S` step it 10% a press, from full reverse to full ahead |
 | §8.7 Arcs | `WeaponBase.angleOfFire` is declared and set in two places but never checked. No arc centre exists | ANGLE checks the solution against the mount's arc |
 | §13.1 Shields | `Shields.cs` exists with recharge, colours and a renderer | There are no shields. Auxiliary is the recovery resource |
 | §9.1 DRADIS | `Radar.cs` places every registered target every frame | DRADIS updates a contact only when the sweep passes it, or while the ACTIVE SCAN cone covers a scanned ship |

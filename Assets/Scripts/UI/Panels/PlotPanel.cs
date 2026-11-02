@@ -218,6 +218,20 @@ public class PlotPanel : Panel
     [Tune("Sensors")] [Range(0f, 1f)] [SerializeField] private float staleAlpha = 0.35f;
     [Tooltip("From this many game seconds after its last fix, a marker's label says how old it is.")]
     [Tune("Sensors")] [SerializeField] private float staleLabelSeconds = 10f;
+    [Tooltip("Owner 2026-11-02: past visual range a rock shows only as a clean hollow circle, where the ACTIVE SCAN cone passed it. It fades away over this many game seconds.")]
+    [Tune("Sensors")] [SerializeField] private float rockEchoSeconds = 30f;
+    [Tooltip("Owner 2026-11-02: the circle blinks. It is bright as the ping passes, and drops to the dim share over this many game seconds.")]
+    [Tune("Sensors")] [SerializeField] private float rockEchoBlinkSeconds = 1f;
+    [Tooltip("How bright the circle stays between blinks, 0 to 1.")]
+    [Tune("Sensors")] [Range(0f, 1f)] [SerializeField] private float rockEchoDim = 0.45f;
+    [Tooltip("Owner 2026-11-02: a rock's echo is a clean hollow circle. Its radius is this many times the rock's half size, so a big rock gives a bigger circle.")]
+    [Tune("Sensors")] [SerializeField] private float rockEchoSize = 1f;
+    [Tooltip("The smallest a rock's circle gets, px radius, however far you zoom out.")]
+    [Tune("Sensors")] [SerializeField] private float rockEchoMinPx = 3f;
+    [Tooltip("The largest a rock's circle gets, px radius, however far you zoom in (owner 2026-11-02: some were very large).")]
+    [Tune("Sensors")] [SerializeField] private float rockEchoMaxPx = 10f;
+    [Tooltip("The colour of a rock's circle.")]
+    [Tune("Sensors")] [SerializeField] private Color rockEchoInk = new Color32(0x8A, 0x95, 0x9D, 0xB0);
     [Tooltip("Owner 2026-11-01: draws each ship's collision box on the plot, to see that it fits round the model.")]
     [Tune("Plot & our ship")] [SerializeField] private bool showShipBoxes = false;
     [Tooltip("Owner 2026-11-01: inside the cone, the gun itself: a solid bar that turns slowly onto the target. Shots fly straight down it.")]
@@ -362,7 +376,7 @@ public class PlotPanel : Panel
                 if (!scanned && State.sensors.Heard(t)) { State.sensors.LayBearing(t, Controls.MissionSeconds); Refresh(); }
             }
             if (!world) world = FindAnyObjectByType<TacticalWorld>();
-            if (world) world.SweepRocks(before, step); // owner 2026-11-02: rocks throw false dots
+            if (world) world.SweepRocks(before, step); // owner 2026-11-02: rocks in the ACTIVE SCAN cone echo
             sweep.rectTransform.localEulerAngles = new Vector3(0f, 0f, -sweepDeg); // clockwise on screen
         }
         // Step 75: ships glide between ticks, so while time runs the plot redraws every frame
@@ -661,6 +675,23 @@ public class PlotPanel : Panel
         string pictured = null; // the one contact picture's track
         wreckPictured = false;
         foreach (var t in s.tracks)
+        // owner 2026-11-02: past visual range a rock is only its echo, a clean hollow circle where the ACTIVE SCAN cone passed it, that blinks
+        // as the ping passes and fades; in sight the rock itself shows. A rock across the edge shows both, cut at the circle (ClipToSight).
+        ClipToSight();
+        if (world && rockEchoMarks)
+        {
+            var echoes = new List<MarksGraphic.Shape>();
+            foreach (var e in world.RockEchoes)
+            {
+                float age = Controls.MissionSeconds - e.Value.bornAt, left = 1f - age / Mathf.Max(1f, rockEchoSeconds);
+                if (left <= 0f || !e.Key) continue;
+                float blink = Mathf.Lerp(rockEchoDim, 1f, 1f - age / Mathf.Max(0.01f, rockEchoBlinkSeconds));
+                var at = Screen(e.Value.at.x, e.Value.at.y);
+                float r = Mathf.Clamp(e.Value.half * rockEchoSize / (float)UnitsPerPx * (float)Controls.ZoomExact, rockEchoMinPx, rockEchoMaxPx);
+                echoes.Add(new MarksGraphic.Shape { kind = "circle", a = at, b = at + new Vector2(r, 0f), alpha = left * blink, ink = rockEchoInk.gamma });
+            }
+            rockEchoMarks.Set(echoes);
+        }
         {
             if (t.own || t.captured) continue;
             bool known = t.hostile && s.sensors.identified.Contains(t.key), inSight = s.sensors.InSight(t);
@@ -728,9 +759,6 @@ public class PlotPanel : Panel
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
         if (contactShipImage && pictured == null) contactShipImage.enabled = false;
         if (wreckBackHalf) wreckBackHalf.enabled = wreckPictured;
-        if (world && s.sensors.Listening)
-            foreach (var d in world.FalseDots) // owner 2026-11-02: rocks' false contacts; they look like any faint dot, and fade
-                dots.Add(new MarksGraphic.Shape { kind = "point", a = Screen(d.at.x, d.at.y), b = Screen(d.at.x, d.at.y), alpha = 1f - (Controls.MissionSeconds - d.bornAt) / Mathf.Max(1f, world.FalseDotSeconds) });
         if (world) // owner 2026-11-02: past visual range DRADIS shows a gas cloud as a hollow circle, about the cloud's size
             foreach (var c in world.Clouds)
                 if (c && c.seen && !c.inSight)
@@ -1128,6 +1156,42 @@ public class PlotPanel : Panel
     // Each copy is flipped its own way, so the clouds don't all look the same.
     void ShowClouds(double z)
     {
+    // Owner 2026-11-02: what is in sight shows inside the visual range circle round our ship and round each fighter flight;
+    // past them a rock shows only as its DRADIS echo. A rock across the edge is cut there: the ruins picture keeps what is
+    // inside the circles, the echoes (their own copy of the contact marks, under them) what is outside.
+    private MarksGraphic rockEchoMarks;
+    private readonly Vector4[] sightCircles = new Vector4[4];
+    void ClipToSight()
+    {
+        if (!ruinsImage || !contactMarks || !marks) return;
+        if (!rockEchoMarks)
+        {
+            ruinsImage.material = new Material(ruinsImage.material); // its own copy: our ship's view uses the same material
+            rockEchoMarks = Instantiate(contactMarks, contactMarks.transform.parent);
+            foreach (Transform c in rockEchoMarks.transform) Destroy(c.gameObject);
+            var fade = rockEchoMarks.GetComponent<CanvasGroup>(); // the grid's fade-in may be on the contacts as it is copied; the copy would stay at 0
+            if (fade) Destroy(fade);
+            rockEchoMarks.name = "Rock Echoes";
+            rockEchoMarks.transform.SetSiblingIndex(contactMarks.transform.GetSiblingIndex());
+            rockEchoMarks.material = new Material(ruinsImage.material);
+            rockEchoMarks.material.SetFloat("_KeyBlack", 0f);
+            rockEchoMarks.material.SetFloat("_KeepOutside", 1f);
+        }
+        var canvas = ruinsImage.canvas.rootCanvas.transform; // UI vertices reach the shader in the root canvas's space
+        float eyes = (float)(State.sensors.stats.visualRangeUnits / UnitsPerPx * Controls.ZoomExact);
+        int n = 0;
+        void Add(double x, double y)
+        {
+            if (n >= sightCircles.Length) return;
+            Vector2 at = Screen(x, y);
+            Vector3 c = canvas.InverseTransformPoint(marks.World(at)), edge = canvas.InverseTransformPoint(marks.World(at + new Vector2(eyes, 0f)));
+            sightCircles[n++] = new Vector4(c.x, c.y, Vector2.Distance(c, edge), 0f);
+        }
+        Add(State.nav.DrawnX, State.nav.DrawnY);
+        if (State.hangar) foreach (var f in State.hangar.Flights) Add(f.x, f.y);
+        foreach (var m in new[] { ruinsImage.material, rockEchoMarks.material }) { m.SetVectorArray("_Circles", sightCircles); m.SetFloat("_CircleCount", n); }
+    }
+
         if (!cloudImage) return;
         if (!world) world = FindAnyObjectByType<TacticalWorld>();
         if (!world) return;

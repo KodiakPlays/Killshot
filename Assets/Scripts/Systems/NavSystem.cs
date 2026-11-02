@@ -18,8 +18,9 @@ public class NavSystem : MonoBehaviour
     [Tooltip("Heading at load. Owner 2026-10-24: 000, bow straight up (the design's demo had 083).")]
     [Range(0, 359)] public int heading = 0;
     [Range(0, 359)] public int orderedHeading = 0;
-    [Tooltip("Throttle %, held to what the ENG bus carries. Owner 2026-10-25: 0 at load (power is cold; the design's demo had 40); if ENG can no longer carry it, it drops to 0.")]
-    [Range(0, 100)] public int throttle = 0;
+    [Tooltip("Throttle %, held to what the ENG bus carries. Owner 2026-10-25: 0 at load (power is cold; the design's demo had 40); if ENG can no longer carry it, it drops to 0. "
+           + "Owner 2026-11-02: -100 is full reverse, 100 full ahead.")]
+    [Range(-100, 100)] public int throttle = 0;
 
     [Header("Attitude hold and approach (the autopilot's settings)")]
     [Tooltip("NOSE, STBD, PORT, TAIL, or empty for none.")]
@@ -62,6 +63,8 @@ public class NavSystem : MonoBehaviour
         public double baseAccelUnits = 0.10875;
         [Tooltip("Slowing down at full ENG, units/s per mission second (Step 63: 25x).")]
         [FormerlySerializedAs("brakeKms2")] public double brakeUnits = 0.4075;
+        [Tooltip("Owner 2026-11-02: reverse is slower than ahead. Full reverse gives this share of the top speed, and speeds up backwards at this share of Accel Units (the prototype: 0.42).")]
+        [Range(0f, 1f)] public double reverseShare = 0.42;
         [Tooltip("Share of sideways speed kept each mission second: after a turn the ship slides, then lines up (Step 63: 0.9925^5).")]
         public double driftKeepPerS = 0.96307;
         [Tooltip("Share of all speed kept each mission second (Step 63: 0.9995^5).")]
@@ -136,12 +139,12 @@ public class NavSystem : MonoBehaviour
     /// <summary>thrCap: what ENG allows x the engine room's integrity.</summary>
     public int ThrottleCap => ShipState.JsRound(EngShare * 100 * EngineRoom);
     /// <summary>gLoadNum: 1 G plus 1 G at full throttle, plus the approach mode's extra.</summary>
-    public double GLoad => 1 + throttle / 100.0 + (approachMode == "FLANK" ? 0.5 : approachMode == "EVASIVE" ? 1.2 : 0);
+    public double GLoad => 1 + System.Math.Abs(throttle) / 100.0 + (approachMode == "FLANK" ? 0.5 : approachMode == "EVASIVE" ? 1.2 : 0);
     /// <summary>stabNum: 45 points lost per G over 1, 0..100.</summary>
     public double Stability => System.Math.Max(0, System.Math.Min(100, 100 - (GLoad - 1) * 45));
 
-    /// <summary>thrDown: from the pointer's height in the fader well, top = 100, capped at the press.</summary>
-    public void SetThrottle(double fromTop01, int cap) => throttle = System.Math.Max(0, System.Math.Min(System.Math.Min(100, cap), ShipState.JsRound((1 - fromTop01) * 100)));
+    /// <summary>thrDown: from the pointer's height in the fader well, top = 100, middle 0, bottom -100 (owner 2026-11-02), capped at the press both ways.</summary>
+    public void SetThrottle(double fromTop01, int cap) { cap = System.Math.Min(100, cap); throttle = System.Math.Max(-cap, System.Math.Min(cap, ShipState.JsRound((1 - 2 * fromTop01) * 100))); }
     /// <summary>setAtt: click to hold, click again to release.</summary>
     public void ToggleAttitude(string k) => attitude = attitude == k ? "" : k;
     public void SetApproachMode(string k) => approachMode = k;
@@ -154,7 +157,6 @@ public class NavSystem : MonoBehaviour
         orderedHeading = ((heading + lead) % 360 + 360) % 360;
         attitude = "";
     }
-
 
     /// <summary>Start the ship here, facing this way, throttle at zero (where a level puts it).</summary>
     public void PlaceAt(double atX, double atY, int headingDeg)
@@ -178,7 +180,7 @@ public class NavSystem : MonoBehaviour
     void Steer(double dt)
     {
         int engCap = ShipState.JsRound(EngShare * 100);
-        if (throttle > engCap) throttle = 0; // owner 2026-10-25: power lost, the throttle goes back to zero (the design held it at the cap); you set it again
+        if (System.Math.Abs(throttle) > engCap) throttle = 0; // owner 2026-10-25: power lost, the throttle goes back to zero (the design held it at the cap); you set it again
         if (heading == orderedHeading) { turnBank = 0; return; }
         // banked so the bow turns whole degrees
         turnBank += TurnPerS * dt;
@@ -201,8 +203,10 @@ public class NavSystem : MonoBehaviour
         double keep = System.Math.Pow(stats.dragKeepPerS, dt);
         fwd *= keep;
         side *= keep * System.Math.Pow(stats.driftKeepPerS, dt);
-        double target = throttle / 100.0 * stats.topSpeedUnits; // the throttle is already held to what ENG power allows (Steer)
-        fwd = Toward(fwd, target, (fwd < target ? Accel : stats.brakeUnits * Thrust) * dt);
+        double target = throttle / 100.0 * stats.topSpeedUnits * (throttle < 0 ? stats.reverseShare : 1); // the throttle is already held to what ENG power allows (Steer)
+        // speeding up, ahead or astern, at the engines' rate (less astern); slowing down, either way, at the brake rate
+        bool speedingUp = target > fwd ? fwd >= 0 : fwd <= 0;
+        fwd = Toward(fwd, target, (!speedingUp ? stats.brakeUnits * Thrust : target < 0 ? Accel * stats.reverseShare : Accel) * dt);
         // owner 2026-11-01: Q and E push the ship sideways, slowly, with the nose where it is; let go, and they stop the slide
         sliding |= slide != 0;
         if (sliding)

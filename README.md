@@ -68,8 +68,8 @@ does a few things.
 | Rate keys | Run time at x0.25, x1 or x5. |
 | Briefing icon, next to the rate keys | Open or close the briefing. |
 | Power panel, bus selectors | Click to step a bus between VENT, STANDBY and DRAW. A bus on DRAW gains one unit per game second. A bus on VENT loses one. |
-| Helm, throttle fader | Drag to set the throttle. |
-| `W` / `S` | Raise or lower the throttle 10% a press. Hold to repeat. |
+| Helm, throttle fader | Drag to set the throttle. The middle is 0. Above it is ahead, below it is reverse. |
+| `W` / `S` | Raise or lower the throttle 10% a press. Hold to repeat. `W` goes ahead. `S` goes down through 0 into reverse. Full reverse is slower than full ahead. |
 | `A` / `D` | Step the ordered heading 3° to port or starboard. Hold to repeat. The bow swings round to it. |
 | `Q` / `E` | Slide the ship to port or starboard while the key is down. The nose stays still. Let go, and the side thrusters stop the slide. They need ENG power. |
 | Scroll wheel over the plot | Zoom in and out. The SCALE knob does the same when dragged. |

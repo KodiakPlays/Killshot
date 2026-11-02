@@ -51,8 +51,8 @@ public class HelmPanel : Panel
     [SerializeField] private RectTransform thrCap, thrTrack;
     [Tooltip("Fader well element, board px (fader_thrust_well 652,941 44x78).")]
     [SerializeField] private Rect thrWell = new Rect(652, 941, 44, 78);
-    [Tooltip("thrCapBottom = 7 + thr x 0.47 px; thrTrack = 7 + thr x 0.57 + 8 px, its bottom at the well bottom less 7.")]
-    [SerializeField] private float capBase = 7f, capSpan = 47f, trackBase = 15f, trackSpan = 57f, capHeight = 17f;
+    [Tooltip("The cap's bottom, px above the well bottom: Cap Base at full reverse, Cap Base + Cap Span at full ahead (owner 2026-11-02: 0 in the middle). The lit track runs from the cap's middle at 0 to the cap.")]
+    [SerializeField] private float capBase = 7f, capSpan = 47f, capHeight = 17f;
     [SerializeField] private RectTransform hdgRing;
     [Tooltip("The heading ring turns .12s linear (UIStateSpec §9.1 line 1925).")]
     [SerializeField] private Eased ringMotion = new Eased(0.12f, CssEase.Linear);
@@ -144,7 +144,7 @@ public class HelmPanel : Panel
     {
         var n = State.nav;
         if (k == turnPortKey || k == turnStarboardKey) n.StepOrderedHeading(k == turnStarboardKey ? 1 : -1);
-        else n.throttle = Mathf.Clamp(n.throttle + (k == throttleUpKey ? throttleKeyStep : -throttleKeyStep), 0, Mathf.Min(100, n.ThrottleCap));
+        else { int cap = Mathf.Min(100, n.ThrottleCap); n.throttle = Mathf.Clamp(n.throttle + (k == throttleUpKey ? throttleKeyStep : -throttleKeyStep), -cap, cap); } // owner 2026-11-02: S goes on past 0 into reverse
         Refresh();
     }
 
@@ -165,18 +165,15 @@ public class HelmPanel : Panel
         foreach (var h in new[] { closed, open }) PaintHeader(h, hdg, turnLabel, turnInk, s.throttle.ToString(), gText, gInk, apState, apLamp);
 
         // 01 FLIGHT
+        // owner 2026-11-02: 0 in the middle of the well, full ahead at the top, full reverse at the bottom; the track lights from the middle to the cap
         float bottom = thrWell.yMax;
-        if (thrCap)
-        {
-            float capBottom = bottom - (capBase + s.throttle / 100f * capSpan);
-            thrCap.anchoredPosition = new Vector2(thrCap.anchoredPosition.x, -(capBottom - capHeight / 2f));
-        }
+        float CapMid(int thr) => bottom - (capBase + (thr + 100) / 200f * capSpan) - capHeight / 2f;
+        if (thrCap) thrCap.anchoredPosition = new Vector2(thrCap.anchoredPosition.x, -CapMid(s.throttle));
         if (thrTrack)
         {
-            float h = trackBase + s.throttle / 100f * trackSpan;
-            float trackBottom = bottom - capBase;
-            thrTrack.sizeDelta = new Vector2(thrTrack.sizeDelta.x, h);
-            thrTrack.anchoredPosition = new Vector2(thrTrack.anchoredPosition.x, -(trackBottom - h / 2f));
+            float from = CapMid(0), to = CapMid(s.throttle);
+            thrTrack.sizeDelta = new Vector2(thrTrack.sizeDelta.x, Mathf.Abs(to - from));
+            thrTrack.anchoredPosition = new Vector2(thrTrack.anchoredPosition.x, -(from + to) / 2f);
         }
         if (hdgRing) { ringDeg += Mathf.DeltaAngle(ringDeg, s.heading); ringMotion.Set(ringDeg, z => hdgRing.localEulerAngles = new Vector3(0, 0, z)); } // CSS rotate(-hdg), .12s linear
         if (dialHdg) dialHdg.text = hdg;

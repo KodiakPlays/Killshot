@@ -87,6 +87,8 @@ public class SensorSystem : MonoBehaviour
 
     /// <summary>coneCovers: active scan on, inside the cone, inside sensor range.</summary>
     public bool ConeCovers(ShipState.Track t) => active && ShipState.AngDiff(t.bearing, coneBrg) <= coneArc && t.rangeUnits <= SenRangeUnits - t.interference;
+    /// <summary>The same for a spot at this bearing and range (owner 2026-11-02: a rock answers a ping).</summary>
+    public bool ConeCovers(double brg, double range) => active && ShipState.AngDiffD(brg, coneBrg) <= coneArc && range <= SenRangeUnits;
 
     /// <summary>Contacts in band and range for a spectrum key (spectra[].count).</summary>
     public int CountIn(string band)
