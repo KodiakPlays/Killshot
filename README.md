@@ -52,8 +52,96 @@ opens. Pick a level. INITIALISING... shows, then the tactical board. The board
 loads your level from `Assets/Scenes/Levels/` on top of itself. To skip straight
 to the board, open `02.1_Grid.unity` instead. It plays Wolf Hunt.
 
-The Mac app is built outside the repo, at
-`~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`.
+## Building the game
+
+Builds go outside the repo, in `~/Documents/GitHub/Killshot-Builds/`:
+
+| Game | Folder |
+|---|---|
+| Mac | `Killshot-Builds/Mac/Starwolf.app` |
+| Windows | `Killshot-Builds/Windows/Starwolf-Win-64bit.zip` (only the zip is kept) |
+
+### The Windows game must be Intel 64-bit
+
+Almost every Windows PC has an Intel or AMD chip. The Windows game must be built
+for those chips. In Unity this is called **Intel 64-bit**. The folder and the zip
+are named `Starwolf-Win-64bit` to show it.
+
+On a Mac with an Apple chip, Unity sets the Windows game to **ARM 64-bit** by
+itself. An ARM game opens only on rare ARM laptops. On a normal PC, Windows
+refuses to open it and says the version is wrong. This happened in November 2026.
+
+Unity saves this choice on each computer, not in the repo. A new computer, or a
+fresh copy of the project, starts on ARM 64-bit again. Check it before every
+Windows build.
+
+**Unity checks this for you.** When you click Build for Windows, Unity first
+checks Architecture. If it is not Intel 64-bit, the build stops before anything
+is built. The Console shows a red error:
+
+```
+Windows build stopped. Architecture is ARM64, and it must be Intel 64-bit.
+Set it in File > Build Profiles > Windows > Architecture. ...
+```
+
+Set Architecture to Intel 64-bit and click Build again. The check is in
+`Assets/Editor/WindowsBuildCheck.cs`. It works the same on every computer.
+
+### Building the Windows game, step by step
+
+1. Open the project in Unity.
+2. Open **File → Build Profiles**.
+3. In the list on the left, click **Windows**. If Windows is not the active
+   platform, click **Switch Platform** and wait. This can take several minutes.
+4. On the right, set **Architecture** to **Intel 64-bit**. Not ARM 64-bit. Not
+   Intel 32-bit.
+5. Leave **Development Build** off.
+6. Check the scene list at the top. All ten scenes are ticked, and
+   `Tactical/00_Start` is first. The game starts from the first scene.
+7. Delete the old `Killshot-Builds/Windows/Starwolf-Win-64bit` folder and the old
+   `Starwolf-Win-64bit.zip`. Old files left in the folder can end up in the new zip.
+8. Click **Build**. Pick the `Killshot-Builds/Windows/Starwolf-Win-64bit` folder and
+   name the file `Starwolf.exe`.
+9. Check the chip. In Terminal, run:
+
+   ```
+   file ~/Documents/GitHub/Killshot-Builds/Windows/Starwolf-Win-64bit/Starwolf.exe
+   ```
+
+   It must say **x86-64**. If it says **Aarch64**, the game is ARM 64-bit and
+   won't open on normal PCs. Go back to step 4.
+10. Zip the folder. Leave out the folder whose name ends in `_DoNotShip`. It is
+    only for finding crashes, and testers don't need it. In Terminal:
+
+    ```
+    cd ~/Documents/GitHub/Killshot-Builds/Windows
+    zip -r -X Starwolf-Win-64bit.zip Starwolf-Win-64bit -x "*DoNotShip*" -x "*.DS_Store"
+    ```
+
+11. Delete the `Starwolf-Win-64bit` folder. Keep only the zip. The folder is the
+    same game unzipped, and it takes up disk space. In Terminal:
+
+    ```
+    rm -rf ~/Documents/GitHub/Killshot-Builds/Windows/Starwolf-Win-64bit
+    ```
+
+12. Upload `Starwolf-Win-64bit.zip` to the team's Google Drive, in
+    Hunter Puzzle Sim - "Starwolf" → Builds.
+
+### What testers do on Windows
+
+1. Unzip the whole zip. Keep every file together in the `Starwolf-Win-64bit` folder.
+   `Starwolf.exe` does not work on its own.
+2. Double-click `Starwolf.exe`.
+3. Windows may show "Windows protected your PC", because the game is not signed.
+   Click **More info**, then **Run anyway**.
+
+### The Mac game
+
+The Mac game is built for Apple chips only (**Apple silicon** in
+Build Profiles → macOS → Architecture). Older Macs with Intel chips can't open it.
+To make one game that opens on both kinds of Mac, pick
+**Intel 64-bit + Apple silicon**. The game file gets about twice as big.
 
 ## Controls
 
