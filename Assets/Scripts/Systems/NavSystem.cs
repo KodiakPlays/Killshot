@@ -47,6 +47,8 @@ public class NavSystem : MonoBehaviour
         public float turnRate = 20f;
         [Tooltip("The swing at ENG 1, degrees per game second (owner 2026-11-01: more power, tighter turns). Full ENG gives Turn Rate, in equal steps.")]
         public float baseTurnRate = 10f;
+        [Tooltip("Owner 2026-11-08: the slow turn for aiming the spinal railgun, Shift held with A or D, degrees per game second. It turns in fractions of a degree.")]
+        public float fineTurnDegPerS = 2f;
         // Step 41 (owner 2026-10-18): actual chases commanded at capped rates; the hull turns, the velocity
         // follows, and the sideways part bleeds off (the ship slides). The prototype's numbers (MAX_SPEED 240,
         // ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988, SPACE_DRAG .9992 per 1/60 s) were slowed to a 2.5 units/s
@@ -72,8 +74,12 @@ public class NavSystem : MonoBehaviour
         [Header("Side thrusters (owner 2026-11-01: Q and E)")]
         [Tooltip("Sideways speed with the key held, units/s, at full ENG. The nose stays where it is.")]
         public double sideSpeedUnits = 5;
-        [Tooltip("How fast the side thrusters reach that speed, and stop the slide when the key is let go, units/s per mission second, at full ENG.")]
+        [Tooltip("The side thrusters' full push with the key held, units/s per mission second, at full ENG. Owner 2026-11-09: let go, and the slide keeps going and fades (Drift Keep Per S).")]
         public double sideAccelUnits = 1;
+        [Tooltip("Owner 2026-11-09: one tap of Q or E adds this much sideways speed, units/s, at full ENG.")]
+        public double sideTapUnits = 2;
+        [Tooltip("Owner 2026-11-09: held, Q or E push gently at first and reach the full push after this many mission seconds.")]
+        public double sideRampSeconds = 2;
     }
     /// <summary>The numbers this part plays by: its section of the ship's stats file (a copy while the game runs).</summary>
     public Stats stats => shipStats ? shipStats.Stats.navigation : (shipStats = GetComponent<Ship>()).Stats.navigation;
@@ -82,8 +88,20 @@ public class NavSystem : MonoBehaviour
     [System.NonSerialized] private double turnBank;
     /// <summary>The side thrusters, from the Q and E keys: -1 slides to port, 1 to starboard, 0 neither.</summary>
     [System.NonSerialized] public int slide;
-    // still stopping a slide after the key is let go
-    [System.NonSerialized] private bool sliding;
+    /// <summary>Owner 2026-11-09: taps of Q (-1) and E (+1) since the last board tick. Each gives a small push, so a quick tap is never missed.</summary>
+    [System.NonSerialized] public int slideTaps;
+    // mission seconds Q or E has been held, for the push that grows
+    [System.NonSerialized] private double slideHeld;
+    /// <summary>Owner 2026-11-08: the slow turn for aiming, from Shift with A or D: -1 to port, 1 to starboard, 0 neither.</summary>
+    [System.NonSerialized] public int fineTurn;
+    /// <summary>The part of a degree the slow turn has put on the bow, -0.5 to 0.5. The heading stays in whole degrees for
+    /// everything else; a fixed gun fires along the heading plus this.</summary>
+    [System.NonSerialized] public double fine;
+    /// <summary>The bow to the fraction of a degree, 0 to 360.</summary>
+    public double TrueHeading => ((heading + fine) % 360 + 360) % 360;
+    /// <summary>Owner 2026-11-09: while the spinal railgun is locked on, the bow turns itself onto this heading, degrees, to the part of a
+    /// degree (WeaponSystem.TickGuns sets it each tick). NaN: no lock, the helm is yours.</summary>
+    [System.NonSerialized] public double aimHeading = double.NaN;
     // the board's clock, for drawing between ticks (Step 75)
     private BoardManager board;
 
@@ -99,8 +117,9 @@ public class NavSystem : MonoBehaviour
     {
         get
         {
+            if (fineTurn != 0 && ship != null) return heading + fine + fineTurn * stats.fineTurnDegPerS * Ahead;
             int d = TurnLeft;
-            if (d == 0 || ship == null) return heading;
+            if (d == 0 || ship == null) return heading + fine;
             return heading + System.Math.Sign(d) * System.Math.Min(System.Math.Abs(d), TurnPerS * Ahead);
         }
     }
@@ -163,6 +182,7 @@ public class NavSystem : MonoBehaviour
     {
         x = atX; y = atY;
         heading = orderedHeading = headingDeg;
+        fine = 0;
         throttle = 0;
         PlaceModel();
     }
@@ -181,7 +201,34 @@ public class NavSystem : MonoBehaviour
     {
         int engCap = ShipState.JsRound(EngShare * 100);
         if (System.Math.Abs(throttle) > engCap) throttle = 0; // owner 2026-10-25: power lost, the throttle goes back to zero (the design held it at the cap); you set it again
+        if (fineTurn != 0)
+        {
+            // owner 2026-11-08: the slow turn for aiming. Whole degrees pass into the heading, the order follows the bow, and the autopilot lets go
+            fine += fineTurn * stats.fineTurnDegPerS * dt;
+            int whole = (int)System.Math.Floor(fine + 0.5);
+            heading = ((heading + whole) % 360 + 360) % 360;
+            fine -= whole;
+            orderedHeading = heading;
+            attitude = "";
+            turnBank = 0;
+            return;
+        }
+        if (!double.IsNaN(aimHeading))
+        {
+            // owner 2026-11-09: a lock on the spinal railgun turns the ship itself: whole degrees at the usual rate, then the last part of a degree at the slow turn's
+            int whole = (int)System.Math.Floor(aimHeading + 0.5);
+            orderedHeading = (whole % 360 + 360) % 360;
+            attitude = "";
+            if (heading == orderedHeading)
+            {
+                turnBank = 0;
+                double want = aimHeading - whole, most = stats.fineTurnDegPerS * dt;
+                fine = System.Math.Abs(want - fine) <= most ? want : fine + System.Math.Sign(want - fine) * most;
+                return;
+            }
+        }
         if (heading == orderedHeading) { turnBank = 0; return; }
+        fine = 0; // a whole-degree turn drops the slow turn's part of a degree
         // banked so the bow turns whole degrees
         turnBank += TurnPerS * dt;
         int step = (int)System.Math.Floor(turnBank + 1e-9);
@@ -196,7 +243,7 @@ public class NavSystem : MonoBehaviour
     {
         if (dt <= 0) return;
         // owner 2026-10-29: with no power on the ENG bus there is no thrust and no braking: the ship drifts on
-        if (ship.power.BusUnits("eng") == 0) { sliding = false; x += vx * dt; y += vy * dt; return; }
+        if (ship.power.BusUnits("eng") == 0) { slideTaps = 0; slideHeld = 0; x += vx * dt; y += vy * dt; return; }
         double h = heading * System.Math.PI / 180;
         double nx = System.Math.Sin(h), ny = System.Math.Cos(h); // the nose
         double fwd = vx * nx + vy * ny, side = vx * ny - vy * nx; // side: to starboard
@@ -207,13 +254,14 @@ public class NavSystem : MonoBehaviour
         // speeding up, ahead or astern, at the engines' rate (less astern); slowing down, either way, at the brake rate
         bool speedingUp = target > fwd ? fwd >= 0 : fwd <= 0;
         fwd = Toward(fwd, target, (!speedingUp ? stats.brakeUnits * Thrust : target < 0 ? Accel * stats.reverseShare : Accel) * dt);
-        // owner 2026-11-01: Q and E push the ship sideways, slowly, with the nose where it is; let go, and they stop the slide
-        sliding |= slide != 0;
-        if (sliding)
-        {
-            side = Toward(side, slide * stats.sideSpeedUnits * Thrust, stats.sideAccelUnits * Thrust * dt);
-            sliding = slide != 0 || side != 0;
-        }
+        // owner 2026-11-01: Q and E push the ship sideways with the nose where it is. Owner 2026-11-09: a tap is a small push (one
+        // per tick, never past the side speed); held, the push grows gently, then faster; let go, and the slide keeps going and fades
+        double sideTop = stats.sideSpeedUnits * Thrust;
+        int tap = System.Math.Sign(slideTaps);
+        slideTaps = 0;
+        if (tap != 0) side = tap * System.Math.Max(tap * side, System.Math.Min(tap * side + stats.sideTapUnits * Thrust, sideTop));
+        slideHeld = slide != 0 ? slideHeld + dt : 0;
+        if (slide != 0) side = Toward(side, slide * sideTop, stats.sideAccelUnits * Thrust * System.Math.Min(1, slideHeld / stats.sideRampSeconds) * dt);
         vx = fwd * nx + side * ny;
         vy = fwd * ny - side * nx;
         x += vx * dt;

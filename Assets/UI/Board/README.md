@@ -231,6 +231,29 @@ A and D turn the ship (Step 159). Each press moves the ordered heading 3°. The 
 ahead of the bow. Hold D and the ship turns to starboard until you let go. Hold A and it turns to
 port. When you let go, the ship keeps turning until it reaches the order.
 
+W and S move the throttle (Step 171). A tap moves it 1. Keep the key down and it keeps counting,
+slowly at first, then faster. It moves 100 in 2 seconds. It stays where you let go. S goes on past
+0 into reverse. The throttle stops at what ENG allows. The 2 seconds is **Throttle Hold Seconds**,
+on the Helm tab of **Starwolf → Tuning**.
+
+Q and E slide the ship to port or starboard (Step 171). The nose stays still. A tap gives a small
+push. Keep the key down and the push starts gentle, then grows to full in 2 seconds. Let go, and the
+ship keeps sliding. The slide fades by itself. A tap the other way slows it. With no ENG power, Q
+and E do nothing. The numbers are in the ship's stats file, under Side thrusters: **Side Tap Units**
+and **Side Ramp Seconds**.
+
+Shift with A or D is the slow turn, for aiming the spinal railgun (Step 170). While both keys are
+down, the ship turns 2° a game second, in parts of a degree. ENG power doesn't change it. The order
+follows the bow, and the attitude key clears. The HDG readout still shows whole degrees. The ship on
+the plot turns by the part of a degree. A normal A or D turn drops the part of a degree. The speed
+is **Fine Turn Deg Per S** (2), on the Ship tab of **Starwolf → Tuning**, under Navigation. The key
+is **Fine Turn Key** (LeftShift), on the Keys tab.
+
+With a lock on and the spinal railgun picked in Fire Control, the ship turns itself onto the
+target's lead (Step 170). It turns the whole degrees at its usual rate, then the last part of a degree at the
+slow turn's rate. A and D can't turn against it. Shift with A or D still works. When the lock runs
+out, the ship stops turning itself.
+
 Ask a technical artist before you change these:
 - The code moves the throttle's `Cap` and stretches `STAND-IN Lit track`. **Thr Well** is the
   well's place in board pixels (652, 941, 44 × 78). **Cap Base**, **Cap Span** and **Cap Height**
@@ -321,7 +344,11 @@ Ask a technical artist before you change these:
   level: the ship points straight right if it heads to our right, else straight left. It stays
   flat during a turn too. The picture turns every frame, from the heading the model is drawn at
   (`LateUpdate` in `PeriscopePanel.cs`, from `NavSystem.DrawnHeading`). `Refresh` picks left or
-  right once per update. The picture uses the
+  right once per update. The picture also takes off the turn of the camera that films the ship
+  (Step 170). A wrecked ship's camera turns with the wreck (`ShipView.WreckHeading`, set by
+  `PlotPanel.ShowBroken`) and never turns back. Before this fix, a ship brought back after a wreck
+  showed tilted. `PeriscopePanel.PictureBowDeg` is where the bow points in the sight, in degrees
+  counter-clockwise from up: 90 or 270 when it lies flat. The playtest reads it. The picture uses the
   `BoardLinearImage` material, as the plot's ship pictures do, which makes the black around the
   ship see-through. The round sight cuts it off at its edge. How far away a ship
   fills the brackets is **Scope Fit Units**, on the Board tab of **Starwolf → Tuning**, under
@@ -585,11 +612,15 @@ its import settings.
 While Fire Control is open, each railgun shows a soft dotted cone and a solid bar on
 `Weapon ring (drawn)`. The bar is the gun. **Rail Arc Alpha** and **Gun Bar Alpha** set how strong
 they are. Where the guns are on the ship is set on the Hard Points tab of **Starwolf → Tuning**.
+A fixed gun, such as our spinal railgun, has no cone (Step 170). Its bar runs from its dot on the
+nose out to its full reach, 30,000. The reach ring still shows.
 
 A locked ship has white corners round it on the plot, the same as the targeting computer's box. A contact out of
 sight is a marker where it was last seen. It fades as it gets old, and its label says how old it is. **Stale
 Seconds**, **Stale Alpha** and **Stale Label Seconds** are on the Board tab of **Starwolf → Tuning**, under Sensors.
 The RULER has a thicker line and white distance text: **Ruler Width** and **Ruler Dot** are under Plot tools.
+With the spinal railgun picked, a RULER's label also shows how long its slug takes to fly its length, for
+example `18,000 km · SLUG 12 S` (Step 170). A ruler from one POINT to another (a track) still shows course and speed.
 
 A ship DRADIS hears but we haven't scanned shows as a short red bar, curved along the DRADIS circle, in its
 direction. Its label, BRG and the angle (for example BRG 053), is just outside the bar. The bar first shows when
@@ -752,6 +783,21 @@ which launcher will fire. The launcher picks itself. The design's own
 PDC controls (quadrants, LOADERS) and torpedo controls (warhead, SALVO) are not drawn yet. The
 loaders and the salvo start from each ship's stats file.
 
+Our ship's railgun is a spinal railgun, fixed on the nose (Step 170). It can't swivel. It points
+straight ahead. The game treats any railgun with Half Arc 0 as fixed. You aim it by turning the
+ship. For a fixed gun:
+- The mount screen reads its name, FIXED and its arc, its reach and its slugs: RAILGUN,
+  FIXED 000°, 30,000 km, SLUGS 12.
+- It can fire with no target and no lock. LOAD, ANGLE and BEARING open with nothing set. ARM still
+  needs the capacitor's charge.
+- A lock turns the ship onto the target for you (see Helm). Only a lock does this. A TRACK solution
+  does not.
+- With the four switches set, the ready line reads MOUNT READY. A gun that turns reads SOLUTION
+  LOCKED — MOUNT READY. For a fixed gun the ready line never asks for a target or a lock. It goes
+  on to WEAPONS NOT RELEASED or ARMING SEQUENCE INCOMPLETE.
+- The slug leaves the nose and flies straight along the nose's line, to the part of a degree. It
+  keeps the ship's motion. A drifting ship's shot drifts off the line.
+
 When a salvo is fired, this is what shows on the plot:
 
 1. Two torpedoes leave the launcher out of the ship's side, tilted a little toward the stern. They
@@ -847,6 +893,12 @@ Two are stand-ins: the selection bezel and the knob cap.
 
 Every fighter and assault boat starts the game at 100% and READY. The panel reads 6 OF 6 READY and
 4 OF 4 READY. This is the same on our ship and on every enemy ship.
+
+Our ship carries no fighters (Step 170). Each ship's file has a number, **Fighters** (0 to 6,
+default 6), on the Ship tab of **Starwolf → Tuning**, under Hangar. The Asura's is 0. The Garuda's
+is 6. At load the ship keeps only that many fighters. With none, the hangar starts on the assault
+boats. A squadron the ship doesn't carry shows nothing in its row: the INTERCEPTOR row on our ship
+is empty.
 
 A launch sends all 6 interceptors or all 4 assault boats. Each fighter does its own attack run.
 With all 6 out, one attack run takes 60 armour off a side. The 4 boats share the same 18 marines.

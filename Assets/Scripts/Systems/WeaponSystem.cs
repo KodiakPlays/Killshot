@@ -299,6 +299,10 @@ public class WeaponSystem : MonoBehaviour
         System.Array.Resize(ref pdcAuto, MountIds("PD").Length);
     }
 
+    /// <summary>Owner 2026-11-08: a railgun with no cone (Half Arc 0) is fixed to the hull, as the spinal railgun on our nose. It
+    /// fires straight along its arc, and you aim it by turning the ship. It needs no target, solution, turret or periscope bearing.</summary>
+    public bool FixedGun { get { var m = MountOf(mount); return sys == "RG" && m != null && m.halfArc == 0; } }
+
     public Solution Sol => sol[SysIndex];
     public float ShotCost => Sys != null ? Sys.shot : 50f;
     public bool WepReady => ship.power.BusUnits("wep") >= 2 && ship.damage.MagOk && ship.orders.WeaponsReleased;
@@ -325,7 +329,7 @@ public class WeaponSystem : MonoBehaviour
     {
         get
         {
-            if (!Sol.set || (!Sol.manual && ship.TrackOf(target) == null)) return false; // a hand-dialled shot needs no locked contact
+            if (!FixedGun && (!Sol.set || (!Sol.manual && ship.TrackOf(target) == null))) return false; // a hand-dialled shot needs no locked contact
             if (sys == "PD" && !loaders) return false;
             foreach (var b in sw) if (!b) return false;
             return true;
@@ -523,12 +527,12 @@ public class WeaponSystem : MonoBehaviour
 
     /// <summary>A rung's gate: LOAD needs the WEP bus, ammunition and a solution, ANGLE the turret to bear (Step 48),
     /// BEARING the scope on axis, ARM the charge. Step 55: a PDC group needs no solution or bearing, only its
-    /// autoloaders: on AUTO it fires by itself at what enters its arc.</summary>
+    /// autoloaders: on AUTO it fires by itself at what enters its arc. A fixed gun needs no solution, turret or bearing.</summary>
     public bool RungGated(int i)
     {
-        bool pd = sys == "PD";
-        return (i == 0 && (!WepReady || Empty || !OnDot(mount) || (pd ? !loaders : !Sol.set)))
-            || (i == 1 && !pd && !InArc) || (i == 2 && !pd && !OnBearing) || (i == 3 && wepCharge < ShotCost);
+        bool pd = sys == "PD", free = pd || FixedGun;
+        return (i == 0 && (!WepReady || Empty || !OnDot(mount) || (pd ? !loaders : !FixedGun && !Sol.set)))
+            || (i == 1 && !free && !InArc) || (i == 2 && !free && !OnBearing) || (i == 3 && wepCharge < ShotCost);
     }
 
     /// <summary>The lever passing 0.9 with the ladder set: rounds away, charge spent (drawWep).
@@ -548,10 +552,10 @@ public class WeaponSystem : MonoBehaviour
         var m = MountOf(mount);
         if (sys == "RG" && m != null)
         {
-            // owner 2026-11-01: the slug flies straight down the gun's bar, from its hard point. Fired before the bar is on the target, it misses
-            double b = (ship.nav.heading + m.arc + m.aimDeg) * System.Math.PI / 180;
+            // owner 2026-11-01: the slug flies straight down the gun's bar, from its hard point. Fired before the bar is on the target, it misses.
+            // Owner 2026-11-08: the bow to the fraction of a degree, for the spinal railgun; the slug keeps the ship's motion
             Vector2 gun = HardPointOffset(m.id, ship.nav.heading);
-            Rounds.Add(new Round { x = ship.nav.x + gun.x, y = ship.nav.y + gun.y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = m.rangeUnits, speed = stats.slugSpeedUnits });
+            Rounds.Add(Slug(ship.nav.x + gun.x, ship.nav.y + gun.y, ship.nav.TrueHeading + m.arc + m.aimDeg, stats.slugSpeedUnits, ship.nav.vx, ship.nav.vy, m.rangeUnits));
             m.ammo--;
             shotReport = null;
             ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + stats.fireSignalSpike);
@@ -634,7 +638,8 @@ public class WeaponSystem : MonoBehaviour
         tx -= ship.nav.x; ty -= ship.nav.y;
         double straight = (System.Math.Atan2(tx, ty) * 180 / System.Math.PI + 360) % 360;
         if (!cur.hasCourse || cur.spd <= 0.001f) return straight;
-        double c = cur.course * System.Math.PI / 180, vx = cur.spd * System.Math.Sin(c), vy = cur.spd * System.Math.Cos(c);
+        // the target's motion seen from our ship: the slug keeps ours (owner 2026-11-08)
+        double c = cur.course * System.Math.PI / 180, vx = cur.spd * System.Math.Sin(c) - ship.nav.vx, vy = cur.spd * System.Math.Cos(c) - ship.nav.vy;
         double a = vx * vx + vy * vy - stats.slugSpeedUnits * stats.slugSpeedUnits, bq = 2 * (tx * vx + ty * vy), cq = tx * tx + ty * ty;
         double disc = bq * bq - 4 * a * cq;
         if (a >= 0 || disc < 0) return straight; // can't catch it
@@ -666,9 +671,12 @@ public class WeaponSystem : MonoBehaviour
         return Mathf.Clamp(Mathf.DeltaAngle((float)ship.nav.heading + m.arc, want), -m.halfArc, m.halfArc);
     }
 
-    /// <summary>Owner 2026-11-01: inside its soft cone a railgun is a bar. It turns slowly toward the solution.</summary>
+    /// <summary>Owner 2026-11-01: inside its soft cone a railgun is a bar. It turns slowly toward the solution.
+    /// Owner 2026-11-09: a fixed gun (the spinal railgun) has no bar. On a lock the whole ship turns itself onto the lead, then you fire.</summary>
     public void TickGuns(double dt)
     {
+        var spinal = FixedGun ? MountOf(mount) : null;
+        ship.nav.aimHeading = spinal != null && Sol.set && Sol.locked ? ((LeadBearing() - spinal.arc) % 360 + 360) % 360 : double.NaN;
         foreach (var id in MountIds("RG"))
         {
             var m = MountOf(id);
@@ -859,12 +867,22 @@ public class WeaponSystem : MonoBehaviour
         }
     }
 
-    /// <summary>Wolf Hunt (Step 97): an enemy at (x, y) fires a railgun slug at us on this true bearing. It flies
-    /// straight at its ship's slug speed. PDCs cannot stop a slug.</summary>
-    public void ShootAt(Stats by, double x, double y, double brgDeg, double maxUnits)
+    /// <summary>Wolf Hunt (Step 97): an enemy at (x, y), moving at (vx, vy), fires a railgun slug at us on this true bearing. It flies
+    /// straight at its ship's slug speed, plus the ship's own motion (owner 2026-11-08). PDCs cannot stop a slug.</summary>
+    public void ShootAt(Stats by, double x, double y, double vx, double vy, double brgDeg, double maxUnits)
     {
-        double b = brgDeg * System.Math.PI / 180;
-        Incoming.Add(new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = maxUnits, speed = by.slugSpeedUnits, by = by });
+        var r = Slug(x, y, brgDeg, by.slugSpeedUnits, vx, vy, maxUnits);
+        r.by = by;
+        Incoming.Add(r);
+    }
+
+    /// <summary>Owner 2026-11-08: a slug fired from a ship moving at (vx, vy) keeps that motion. It leaves the gun on this true
+    /// bearing at this speed, so a drifting ship's shot drifts off the line, more the further it flies.</summary>
+    static Round Slug(double x, double y, double brgDeg, double speed, double vx, double vy, double maxUnits)
+    {
+        double b = brgDeg * System.Math.PI / 180, sx = System.Math.Sin(b) * speed + vx, sy = System.Math.Cos(b) * speed + vy;
+        double v = System.Math.Sqrt(sx * sx + sy * sy);
+        return new Round { x = x, y = y, dx = sx / v, dy = sy / v, speed = v, maxUnits = maxUnits };
     }
 
     /// <summary>Each tick: our PDCs take their chances, then every enemy torpedo homes on us and every enemy

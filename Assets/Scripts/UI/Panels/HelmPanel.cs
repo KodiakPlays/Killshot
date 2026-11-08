@@ -73,15 +73,17 @@ public class HelmPanel : Panel
     [SerializeField] private Graphic[] stabCells;
     [SerializeField] private TMP_Text stabPct, gLoad;
 
-    [Header("Keyboard — A and D step the ordered heading (onKey), W and S the throttle; held keys repeat as a browser does")]
+    [Header("Keyboard — A and D step the ordered heading (onKey; held, they repeat as a browser does), W and S the throttle")]
     [Tune("Helm")]
     [SerializeField] private float repeatDelay = 0.5f, repeatInterval = 0.033f;
-    [Tooltip("Owner 2026-10-29: W and S step the throttle this many percent, up to what the ENG bus allows.")]
-    [Tune("Helm")] [SerializeField] private int throttleKeyStep = 10;
+    [Tooltip("Owner 2026-11-09: a tap of W or S moves the throttle 1. Held, it keeps counting, slowly at first, then faster, and has moved 100 after this many seconds.")]
+    [Tune("Helm")] [SerializeField] private float throttleHoldSeconds = 2f;
     [Tooltip("Owner 2026-10-29: the helm's keys. Change them on the Keys tab of Starwolf → Tuning.")]
     [Tune("Keys")] [SerializeField] private KeyCode turnPortKey = KeyCode.A, turnStarboardKey = KeyCode.D, throttleUpKey = KeyCode.W, throttleDownKey = KeyCode.S;
     [Tooltip("Owner 2026-11-01: held, these slide the ship sideways. The nose stays where it is.")]
     [Tune("Keys")] [SerializeField] private KeyCode slideLeftKey = KeyCode.Q, slideRightKey = KeyCode.E;
+    [Tooltip("Owner 2026-11-08: held with the turn keys, this turns the ship slowly, for aiming the spinal railgun.")]
+    [Tune("Keys")] [SerializeField] private KeyCode fineTurnKey = KeyCode.LeftShift;
 
     Color nominal => Palette.nominal;
     Color caution => Palette.caution;
@@ -97,6 +99,10 @@ public class HelmPanel : Panel
     private int thrPressCap;
     private KeyCode heldKey;
     private float nextRepeat;
+    // the W or S key held now, when it went down, the throttle then, and the throttle the key last set
+    private KeyCode thrKey;
+    private float thrSince;
+    private int thrFrom, thrLast;
 
     public override bool Click(string action, string arg)
     {
@@ -132,20 +138,41 @@ public class HelmPanel : Panel
         if (Controls == null) return;
         // onKey ignores keys while a text field has focus
         var sel = EventSystem.current ? EventSystem.current.currentSelectedGameObject : null;
-        if (sel && sel.GetComponent<TMP_InputField>()) { heldKey = KeyCode.None; State.nav.slide = 0; return; }
+        if (sel && sel.GetComponent<TMP_InputField>()) { heldKey = thrKey = KeyCode.None; State.nav.slide = State.nav.fineTurn = 0; return; }
         State.nav.slide = (Input.GetKey(slideRightKey) ? 1 : 0) - (Input.GetKey(slideLeftKey) ? 1 : 0);
-        foreach (var k in new[] { turnPortKey, turnStarboardKey, throttleUpKey, throttleDownKey })
-            if (Input.GetKeyDown(k)) { heldKey = k; nextRepeat = Time.unscaledTime + repeatDelay; Press(k); return; }
-        if (heldKey != KeyCode.None && !Input.GetKey(heldKey)) heldKey = KeyCode.None;
+        // owner 2026-11-09: every tap of Q or E counts, even one let go before the ship next moves
+        if (Input.GetKeyDown(slideLeftKey)) State.nav.slideTaps--;
+        if (Input.GetKeyDown(slideRightKey)) State.nav.slideTaps++;
+        Throttle();
+        // owner 2026-11-08: with Shift held, A and D turn the ship slowly instead of stepping the heading
+        bool fine = Input.GetKey(fineTurnKey);
+        State.nav.fineTurn = fine ? (Input.GetKey(turnStarboardKey) ? 1 : 0) - (Input.GetKey(turnPortKey) ? 1 : 0) : 0;
+        foreach (var k in new[] { turnPortKey, turnStarboardKey })
+            if (Input.GetKeyDown(k) && !fine) { heldKey = k; nextRepeat = Time.unscaledTime + repeatDelay; Press(k); return; }
+        if (heldKey != KeyCode.None && (!Input.GetKey(heldKey) || fine)) heldKey = KeyCode.None;
         if (heldKey != KeyCode.None && Time.unscaledTime >= nextRepeat) { nextRepeat += repeatInterval; Press(heldKey); }
     }
 
     void Press(KeyCode k)
     {
-        var n = State.nav;
-        if (k == turnPortKey || k == turnStarboardKey) n.StepOrderedHeading(k == turnStarboardKey ? 1 : -1);
-        else { int cap = Mathf.Min(100, n.ThrottleCap); n.throttle = Mathf.Clamp(n.throttle + (k == throttleUpKey ? throttleKeyStep : -throttleKeyStep), -cap, cap); } // owner 2026-11-02: S goes on past 0 into reverse
+        State.nav.StepOrderedHeading(k == turnStarboardKey ? 1 : -1);
         Refresh();
+    }
+
+    // owner 2026-11-09: a tap of W or S moves the throttle 1; held, it keeps counting, slowly at first, then faster.
+    // Owner 2026-11-02: S goes on past 0 into reverse. Up to what the ENG bus allows.
+    void Throttle()
+    {
+        var n = State.nav;
+        foreach (var k in new[] { throttleUpKey, throttleDownKey })
+            if (Input.GetKeyDown(k)) { thrKey = k; thrSince = Time.unscaledTime; thrFrom = thrLast = n.throttle; }
+        if (thrKey == KeyCode.None) return;
+        // let go, or the throttle was moved some other way (power lost, the fader dragged): the key stops
+        if (!Input.GetKey(thrKey) || n.throttle != thrLast) { thrKey = KeyCode.None; return; }
+        float t = (Time.unscaledTime - thrSince) / throttleHoldSeconds;
+        int cap = Mathf.Min(100, n.ThrottleCap), by = 1 + Mathf.FloorToInt(99 * t * t);
+        thrLast = Mathf.Clamp(thrFrom + (thrKey == throttleUpKey ? by : -by), -cap, cap);
+        if (thrLast != n.throttle) { n.throttle = thrLast; Refresh(); }
     }
 
     public override void Refresh()

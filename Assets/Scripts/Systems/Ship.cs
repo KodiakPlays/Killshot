@@ -41,7 +41,7 @@ public class Ship : MonoBehaviour
         var w = GetComponent<WeaponSystem>();
         if (w) { w.salvo = Stats.weapons.salvo; w.loaders = Stats.weapons.loaders; }
         var h = GetComponent<HangarSystem>();
-        if (h) h.marines = Stats.hangar.marines;
+        if (h) { h.marines = Stats.hangar.marines; h.KeepFighters(Stats.hangar.fighters); }
         var d = GetComponent<DamageSystem>();
         if (d) for (int i = 0; i < d.compartments.Length && i < Stats.damage.crew.Length; i++) d.compartments[i].crew = Stats.damage.crew[i];
     }

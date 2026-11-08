@@ -192,6 +192,13 @@ public class HangarPanel : Panel
         {
             var row = squadRows[r];
             var sq = s.hangar.squads[r];
+            // owner 2026-11-08: a squadron the ship doesn't carry (our fighters) shows nothing
+            bool carried = sq.craft.Length > 0;
+            foreach (var part in new Component[] { row.name, row.state, row.ready, row.role, row.selLamp, row.selGlow }) Show(part, carried);
+            foreach (var part in row.tags) Show(part, carried);
+            foreach (var part in row.fuel) Show(part, carried);
+            foreach (var part in row.cells) Show(part, carried);
+            if (!carried) continue;
             bool sel = r == s.hangar.squad, sqOut = s.hangar.Launched(sq);
             Paint(row.name, sel ? data : label);
             if (row.state) { row.state.text = sqOut ? "AIRBORNE — " + Label(sq, s.hangar.LaunchedOrder(sq)) : "IN BAY"; Paint(row.state, sqOut ? ownForce : label); }

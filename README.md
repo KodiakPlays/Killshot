@@ -13,8 +13,8 @@ and auxiliary (AUX). A bus takes at most five units, so you can fully run only
 two. More power to DRADIS means less power for the guns. Every unit you draw
 makes the ship louder. Every advantage is bought by giving something up.
 
-There are seven levels. NEW GAME plays them in order, as dots on the SECTOR
-MAP. LEVELS opens the MISSIONS list, where you can pick any of them. The enemy is the
+There are eight levels. NEW GAME plays the first seven in order, as dots on the
+SECTOR MAP. LEVELS opens the MISSIONS list, where you can pick any of them. The enemy is the
 Garuda, a Garuda-class cruiser. In levels 1 and 3 to 5 it does not hunt you
 and does not fire. In COLD RUN and INTERCEPT it patrols and hunts you if it
 finds you.
@@ -39,6 +39,10 @@ finds you.
    debris. Find it, then destroy it or capture it. A jump point then
    opens at a far edge of the map. Reach it to win. Once the Garuda finds you, a
    countdown starts and Naga-class frigates come in from the edges.
+8. **LONG SHOT.** A test range for the spinal railgun, the gun on our ship's
+   nose. The Garuda patrols east and west and doesn't hunt you. Find its
+   course, stop the ship, turn the nose onto where it will be, and fire. Only
+   on the MISSIONS list.
 
 ## Running it
 
@@ -170,9 +174,10 @@ does a few things.
 | Briefing icon, next to the rate keys | Open or close the briefing. |
 | Power panel, bus selectors | Click to step a bus between VENT, STANDBY and DRAW. A bus on DRAW gains one unit per game second. A bus on VENT loses one. |
 | Helm, throttle fader | Drag to set the throttle. The middle is 0. Above it is ahead, below it is reverse. |
-| `W` / `S` | Raise or lower the throttle 10% a press. Hold to repeat. `W` goes ahead. `S` goes down through 0 into reverse. Full reverse is slower than full ahead. |
+| `W` / `S` | Raise or lower the throttle. A tap moves it 1. Keep the key down and it keeps counting, slowly at first, then faster. It moves 100 in 2 seconds. It stays where you let go. `W` goes ahead. `S` goes down through 0 into reverse. Full reverse is slower than full ahead. ENG sets the limit. |
 | `A` / `D` | Step the ordered heading 3° to port or starboard. Hold to repeat. The bow swings round to it. |
-| `Q` / `E` | Slide the ship to port or starboard while the key is down. The nose stays still. Let go, and the side thrusters stop the slide. They need ENG power. |
+| `Shift` + `A` / `D` | Turn slowly while the keys are down: 2° a game second, in parts of a degree. For aiming the spinal railgun, the gun on the nose. With a lock on and the railgun picked, the ship turns itself onto the target. `A` and `D` can't turn against it. `Shift` with `A` or `D` still can. |
+| `Q` / `E` | Slide the ship to port or starboard. The nose stays still. A tap gives a small push. Keep the key down and the push starts gentle, then grows to full in 2 seconds. Let go, and the ship keeps sliding. The slide fades by itself, to half in about 8 seconds. A tap the other way slows it. Tap left and right to steady the ship. They need ENG power. |
 | Scroll wheel over the plot | Zoom in and out. The SCALE knob does the same when dragged. |
 | Drag the empty grid, or the arrow keys | Pan the plot. With POINT, RULER or COMPASS picked, a drag draws a mark instead. |
 | `C` | Centre the plot on our ship. |

@@ -19,6 +19,7 @@ MonoBehaviour:
     headingKeyStep: 3
     turnRate: 20
     baseTurnRate: 10
+    fineTurnDegPerS: 2
     topSpeedUnits: 50
     baseSpeedUnits: 25
     accelUnits: 2
@@ -29,6 +30,8 @@ MonoBehaviour:
     dragKeepPerS: 0.99406
     sideSpeedUnits: 20
     sideAccelUnits: 4
+    sideTapUnits: 2
+    sideRampSeconds: 2
   power:
     reactorUnits: 10
     busMax: 5
@@ -54,22 +57,14 @@ MonoBehaviour:
     cloudSeenUnits: 400
   weapons:
     mounts:
-    - id: RGA
-      label: RAILGUN TURRET A
-      shortName: RG-A
+    - id: SRG
+      label: RAILGUN
+      shortName: RG
       kind: RG
-      arc: 90
-      halfArc: 45
-      rangeUnits: 2000
-      ammo: 22
-    - id: RGB
-      label: RAILGUN TURRET B
-      shortName: RG-B
-      kind: RG
-      arc: 270
-      halfArc: 45
-      rangeUnits: 2000
-      ammo: 22
+      arc: 0
+      halfArc: 0
+      rangeUnits: 30000
+      ammo: 12
     - id: PDA
       label: PDC GROUP A
       shortName: PDC-A
@@ -155,10 +150,10 @@ MonoBehaviour:
       - {x: 124.539764, y: 74.03457}
       - {x: 123.33333, y: 81.33333}
     - at: {x: 25, y: 0}
-      mount: RGA
+      mount: 
       path: []
     - at: {x: -25, y: 0}
-      mount: RGB
+      mount: 
       path: []
     - at: {x: 25, y: -100}
       mount: PDD
@@ -207,6 +202,9 @@ MonoBehaviour:
       - {x: -101.45106, y: 72.93321}
       - {x: -99.65436, y: 79.12149}
       - {x: -98, y: 85.33332}
+    - at: {x: 0, y: 100}
+      mount: SRG
+      path: []
     gunTurnDegPerSecond: 3
     lockSeconds: 10
     lockFallSeconds: 5
@@ -216,7 +214,7 @@ MonoBehaviour:
     loaders: 1
     wepFeedPerUnit: 5
     wepBleed: 3
-    slugSpeedUnits: 300
+    slugSpeedUnits: 1500
     torpedoSpeedUnits: 250
     torpedoLaunchSpeedUnits: 80
     torpedoCoastSeconds: 2.5
@@ -322,6 +320,7 @@ MonoBehaviour:
     turnDegPerS: 90
     turnEase: 180
     boatSpeedUnits: 75
+    fighters: 0
     marines: 18
     marinesPerBoat: 6
     dockUnits: 50

@@ -221,15 +221,16 @@ public class EnemyBrain : MonoBehaviour
         int rel = ShipState.JsRound(((lead - ship.nav.heading) % 360 + 360) % 360) % 360;
         if (ShipState.AngDiff(rel, m.arc) > m.halfArc) return;
         Vector2 gun = ship.weapons.HardPointOffset(id, ship.nav.heading);
-        us.weapons.ShootAt(ship.weapons.stats, ship.nav.x + gun.x, ship.nav.y + gun.y, lead + (ship.NextDie() * 2 - 1) * aimErrorDeg, m.rangeUnits);
+        us.weapons.ShootAt(ship.weapons.stats, ship.nav.x + gun.x, ship.nav.y + gun.y, ship.nav.vx, ship.nav.vy, lead + (ship.NextDie() * 2 - 1) * aimErrorDeg, m.rangeUnits);
         m.ammo--;
         nextShot[id] = now + railgunReloadSeconds + (float)ship.NextDie() * railgunJitterSeconds;
     }
 
-    // Where to aim so its slug meets us, from our position and velocity (WeaponSystem.LeadBearing, from its side).
+    // Where to aim so its slug meets us, from our position and velocity (WeaponSystem.LeadBearing, from its side). Its slug keeps
+    // its own motion (owner 2026-11-08), so it leads on our motion less its own.
     static double LeadOn(ShipState ship, ShipState us)
     {
-        double tx = us.nav.x - ship.nav.x, ty = us.nav.y - ship.nav.y, vx = us.nav.vx, vy = us.nav.vy;
+        double tx = us.nav.x - ship.nav.x, ty = us.nav.y - ship.nav.y, vx = us.nav.vx - ship.nav.vx, vy = us.nav.vy - ship.nav.vy;
         double straight = (System.Math.Atan2(tx, ty) * 180 / System.Math.PI + 360) % 360;
         double s = ship.weapons.stats.slugSpeedUnits, a = vx * vx + vy * vy - s * s, b = 2 * (tx * vx + ty * vy), c = tx * tx + ty * ty;
         double disc = b * b - 4 * a * c;

@@ -191,7 +191,7 @@ public class FireControlPanel : Panel
             Paint(pos.lamp, on ? data : lampOffSelector); Paint(pos.glow, data); Show(pos.glow, on);
         }
         if (mountLabel) mountLabel.text = m.label;
-        if (mountArc) mountArc.text = m.halfArc >= 180 ? "ALL ROUND" : "ARC " + m.arc.ToString("000") + "° ±" + m.halfArc + "°";
+        if (mountArc) mountArc.text = m.halfArc >= 180 ? "ALL ROUND" : m.halfArc == 0 ? "FIXED " + m.arc.ToString("000") + "°" : "ARC " + m.arc.ToString("000") + "° ±" + m.halfArc + "°";
         if (mountRange) mountRange.text = m.rangeUnits.ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km";
         if (sysState)
         {
@@ -285,12 +285,13 @@ public class FireControlPanel : Panel
             string t;
             if (s.weapons.sys == "PD" && s.weapons.sw[3]) t = m.shortName + " AUTO" + (s.weapons.pdcReport != null ? " · LAST: " + s.weapons.pdcReport : " — WATCHING ITS ARC"); // Step 55
             else if (s.weapons.fired) t = s.weapons.Rounds.Count > 0 || s.weapons.shotReport == null ? "ROUNDS AWAY" : s.weapons.shotReport; // Step 48: then HIT · … or MISS
-            else if (s.weapons.AllSet) t = "SOLUTION LOCKED — MOUNT READY";
+            else if (s.weapons.AllSet) t = s.weapons.FixedGun ? "MOUNT READY" : "SOLUTION LOCKED — MOUNT READY";
             else if (!s.weapons.OnDot(s.weapons.mount)) t = "NOT ON A HARD POINT — CAN'T FIRE";
-            else if (tgt == null && !manual) t = "NO TARGET DESIGNATED";
-            else if (tid == null && !manual) t = "NO LOCK — USE THE TARGETING COMPUTER";
-            else if (!s.damage.BriOk) t = "BRIDGE DAMAGED — PLOT COMPUTER OFFLINE";
-            else if (!sol.set) t = "NO LOCK — USE THE TARGETING COMPUTER";
+            // owner 2026-11-08: a fixed gun (the spinal railgun) needs no target, lock or solution
+            else if (!s.weapons.FixedGun && tgt == null && !manual) t = "NO TARGET DESIGNATED";
+            else if (!s.weapons.FixedGun && tid == null && !manual) t = "NO LOCK — USE THE TARGETING COMPUTER";
+            else if (!s.weapons.FixedGun && !s.damage.BriOk) t = "BRIDGE DAMAGED — PLOT COMPUTER OFFLINE";
+            else if (!s.weapons.FixedGun && !sol.set) t = "NO LOCK — USE THE TARGETING COMPUTER";
             else if (!s.orders.WeaponsReleased) t = s.orders.weaponsHold ? "WEAPONS HOLD" : "WEAPONS NOT RELEASED — CONDITION 2 REQUIRED";
             else if (!s.damage.MagOk) t = "MAGAZINE DAMAGED — NO ROUNDS STRUCK UP";
             else if (s.weapons.sys == "PD" && !s.weapons.loaders) t = "PDC AUTOLOADERS OFF";

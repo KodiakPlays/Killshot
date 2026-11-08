@@ -47,6 +47,8 @@ public class HangarSystem : MonoBehaviour
         [Header("Assault boats (Step 60, BOARDING_README.md)")]
         [Tooltip("Assault boat speed, units/s (Step 63: x5).")]
         [FormerlySerializedAs("boatSpeedKms")] public double boatSpeedUnits = 30;
+        [Tooltip("Owner 2026-11-08: fighters this ship carries, up to six. Our ship, an assault destroyer, carries none.")]
+        [Range(0, 6)] public int fighters = 6;
         [Tooltip("Marines aboard our ship, carried by the assault boats; those lost aboard an enemy are gone.")]
         public int marines = 18;
         [Tooltip("Marines each assault boat carries.")]
@@ -380,12 +382,25 @@ public class HangarSystem : MonoBehaviour
 
     void ClearStages() { foreach (var g in stages) { g.on = false; g.progress = 0f; } }
 
-    /// <summary>cycleSquad: next squadron, its first order, and every launch stage cleared.</summary>
+    /// <summary>cycleSquad: next squadron, its first order, and every launch stage cleared. A squadron with no craft is passed over.</summary>
     public void CycleSquad()
     {
-        squad = (squad + 1) % squads.Length;
+        for (int i = 0; i < squads.Length; i++)
+        {
+            squad = (squad + 1) % squads.Length;
+            if (squads[squad].craft.Length > 0) break;
+        }
         order = CurrentSquad.orders[0];
         ClearStages();
+    }
+
+    /// <summary>Owner 2026-11-08: the ship carries only as many fighters as its stats file says. With none, the hangar starts
+    /// on the next squadron.</summary>
+    public void KeepFighters(int n)
+    {
+        var q = System.Array.Find(squads, s => s.key == "gw");
+        if (q != null && n < q.craft.Length) System.Array.Resize(ref q.craft, Mathf.Max(0, n));
+        if (CurrentSquad.craft.Length == 0) CycleSquad();
     }
 
     public void CycleOrder()

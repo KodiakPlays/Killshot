@@ -244,8 +244,8 @@ public static class PlaytestRunner
         bool wolfFound = wolfRow; // read now: the row is gone once the board loads
         if (wolfFound) wolfRow.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "02.1_Grid");
-        Check("The level list has its seven levels; picking WOLF HUNT opens the board on Level_01",
-              rows.Length == 7 && wolfFound && SceneManager.GetActiveScene().name == "02.1_Grid" && TacticalWorld.chosenLevel == "Level_01",
+        Check("The level list has its eight levels (LONG SHOT last); picking WOLF HUNT opens the board on Level_01",
+              rows.Length == 8 && System.Array.IndexOf(rows, "LONG SHOT") >= 0 && wolfFound && SceneManager.GetActiveScene().name == "02.1_Grid" && TacticalWorld.chosenLevel == "Level_01",
               string.Join(", ", rows) + "; called the WOLF HUNT row's onClick, as a click or Enter does");
         yield return 1.5f;
         var board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
@@ -803,6 +803,7 @@ public static class PlaytestRunner
         if (!Click("drawer", "fire control", "FIRE key")) yield break;
         yield return 0.6f;
         s.nav.heading = s.nav.orderedHeading = (t07.bearing + 90) % 360; // stand-in for the helm: its left side to the target, in turret B's cone (owner 2026-11-01: 90° out of each side)
+        s.nav.vx = s.nav.vy = 0; s.nav.throttle = 0; // owner 2026-11-08: a slug keeps our motion; stopped, the aim below is the whole story
         s.weapons.sol[s.weapons.SysIndex] = new WeaponSystem.Solution(); // stand-in: clear the old solution (the board has no clear)
         if (!PlotDrag(board, knobAt, knobAt + new Vector2(8, 0), "turn the RNG knob (1 step)", "fc.knob")) yield break;
         yield return 0.3f;
@@ -1503,6 +1504,11 @@ public static class PlaytestRunner
         var sweepInner = (float)typeof(SweepGraphic).GetField("innerPx", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                                 .GetValue(plotPanel.GetComponentInChildren<SweepGraphic>(true));
         Check("The sweep starts at a small circle just outside our ship", sweepInner > 15f, sweepInner.ToString("0") + " px");
+        //     Owner rule: the ship in the targeting computer lies flat, bow left or right. Its camera turned with it when the marines
+        //     wrecked it above (the run then brought it back), so this checks the picture allows for that (owner 2026-11-09)
+        float bowDeg = scope.PictureBowDeg;
+        Check("The ship in the targeting computer lies flat, bow left or right", Mathf.Abs(Mathf.DeltaAngle(bowDeg, 90f)) < 0.5f || Mathf.Abs(Mathf.DeltaAngle(bowDeg, 270f)) < 0.5f,
+              "bow at " + bowDeg.ToString("0.0") + "° from up");
         Shot("28g_targeting_computer");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         if (board.Motion) board.Motion.SetScopeDown(false);
@@ -1823,15 +1829,103 @@ public static class PlaytestRunner
         double[] engOne = oneSecond(1), engFull = oneSecond(s.power.stats.busMax);
         Check("Full ENG gives twice ENG 1's acceleration and turn rate", Math.Abs(engFull[0] / engOne[0] - 2) < 0.05 && engFull[1] == engOne[1] * 2,
               "speed after 1 s " + engOne[0].ToString("0.00") + " to " + engFull[0].ToString("0.00") + ", heading " + engOne[1] + " to " + engFull[1]);
-        s.nav.PlaceAt(0, 0, 0); s.nav.vx = s.nav.vy = 0; s.nav.slide = -1;
+        s.nav.PlaceAt(0, 0, 0); s.nav.vx = s.nav.vy = 0; s.nav.slideTaps = -1; // a tap of Q, let go before the tick
+        s.nav.Tick(0.1);
+        double tapped = s.nav.vx;
+        s.nav.vx = 0; s.nav.slide = -1;
         for (int i = 0; i < 100; i++) s.nav.Tick(0.1);
         double sideways = s.nav.vx; int slidHdg = s.nav.heading;
         s.nav.slide = 0;
         for (int i = 0; i < 100; i++) s.nav.Tick(0.1);
-        Check("Q slides the ship to port with its nose still; let go, and the slide stops", Math.Abs(sideways + drive.sideSpeedUnits) < 0.01 && slidHdg == 0 && s.nav.vx == 0,
-              "at " + sideways.ToString("0.0") + " units/s, heading " + slidHdg + ", then " + s.nav.vx.ToString("0.0"));
+        Check("A tap of Q is a small push; held, Q slides the ship to port with its nose still; let go, and the slide fades",
+              Math.Abs(tapped + drive.sideTapUnits) < 0.01 && Math.Abs(sideways + drive.sideSpeedUnits) < 0.01 && slidHdg == 0 && s.nav.vx < 0 && s.nav.vx > sideways + 1, // still drifting to port, slower (how much depends on the run's drift number)
+              "tap " + tapped.ToString("0.0") + " units/s, held " + sideways.ToString("0.0") + ", heading " + slidHdg + ", 10 s after letting go " + s.nav.vx.ToString("0.0"));
         drive.baseAccelUnits = accelWas; drive.baseTurnRate = turnWas;
         s.power.buses[0].fill = fillWas;
+        s.nav.PlaceAt(shipX, shipY, hdgWas); s.nav.orderedHeading = orderWas; s.nav.vx = shipVx; s.nav.vy = shipVy; s.nav.throttle = thrWas;
+
+        // 25f. The spinal railgun (owner 2026-11-08, SNIPER_PLAN.md): our ship's real gun, from its file, in place of the run's
+        //      turrets. Fixed on the nose; no target or solution; Shift with A or D turns in parts of a degree; a slug keeps the
+        //      ship's motion; the ruler gives the slug's flight time; aimed to a part of a degree it hits 15,000 away, rounded it misses.
+        var spinalShip = s.nav.GetComponent<Ship>();
+        var runGuns = spinalShip.Stats.weapons;
+        var mountsWas = runGuns.mounts; var dotsWas = runGuns.hardPoints; double slugWas = runGuns.slugSpeedUnits; string sysWas = s.weapons.sys;
+        var fileGuns = spinalShip.statsFile.weapons;
+        runGuns.mounts = System.Array.ConvertAll(fileGuns.mounts, m => new WeaponSystem.Mount { id = m.id, label = m.label, shortName = m.shortName, kind = m.kind, arc = m.arc, halfArc = m.halfArc, rangeUnits = m.rangeUnits, ammo = m.ammo });
+        runGuns.hardPoints = fileGuns.hardPoints;
+        runGuns.slugSpeedUnits = fileGuns.slugSpeedUnits;
+        s.weapons.sys = "RG"; s.weapons.KeepSelection(); s.weapons.DropLock();
+        for (int i = 0; i < s.weapons.sol.Length; i++) s.weapons.sol[i] = new WeaponSystem.Solution();
+        var spinal = s.weapons.MountOf(s.weapons.mount);
+        Check("Our ship's file has one railgun, fixed on the nose: the spinal railgun", s.weapons.FixedGun && s.weapons.MountIds("RG").Length == 1 && spinal.arc == 0 && s.weapons.OnDot(spinal.id),
+              spinal.label + ", " + spinal.shortName + ", arc " + spinal.arc + " ±" + spinal.halfArc + ", " + spinal.rangeUnits.ToString("N0") + ", slug " + runGuns.slugSpeedUnits.ToString("N0") + "/s");
+        s.power.buses[1].mode = PowerSystem.BusMode.Draw; s.power.buses[1].fill = 3; s.orders.alert = 1; s.weapons.wepCharge = 100f; // stand-ins: WEP drawn, CONDITION 2, charged
+        Check("The spinal railgun needs no target or solution: LOAD, ANGLE and BEARING are open with nothing set", !s.weapons.Sol.set && !s.weapons.RungGated(0) && !s.weapons.RungGated(1) && !s.weapons.RungGated(2),
+              "solution " + s.weapons.Sol.set);
+        //     The slow turn: stand-in for Shift held with D, three ticks of a quarter game second
+        board.Pause(true);
+        s.nav.PlaceAt(0, -15000, 0); s.nav.vx = s.nav.vy = 0;
+        s.nav.fineTurn = 1;
+        for (int i = 0; i < 3; i++) s.nav.Tick(0.25);
+        s.nav.fineTurn = 0;
+        Check("Shift with D turns the ship slowly, in parts of a degree", Math.Abs(s.nav.TrueHeading - 3 * 0.25 * drive.fineTurnDegPerS) < 1e-6 && s.nav.orderedHeading == s.nav.heading,
+              "true heading " + s.nav.TrueHeading.ToString("0.000") + "° (heading " + s.nav.heading + " and " + s.nav.fine.ToString("0.000") + ")");
+        //     A slug keeps the ship's motion: 5 units/s sideways bends it off the nose's line
+        s.nav.PlaceAt(0, -15000, 0); s.nav.vx = 5; s.nav.vy = 0;
+        for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) s.weapons.Flip(i);
+        s.weapons.Fire();
+        var drifted = s.weapons.Rounds.Count > 0 ? s.weapons.Rounds[s.weapons.Rounds.Count - 1] : null;
+        double driftDeg = drifted != null ? Math.Atan2(drifted.dx, drifted.dy) * 180 / Math.PI : 0, wantDeg = Math.Atan2(5, runGuns.slugSpeedUnits) * 180 / Math.PI;
+        Check("A drifting ship's slug drifts too", drifted != null && Math.Abs(driftDeg - wantDeg) < 1e-6, driftDeg.ToString("0.000") + "° off the nose, " + (Math.Tan(driftDeg * Math.PI / 180) * spinal.rangeUnits).ToString("N0") + " units at full reach");
+        s.weapons.Rounds.Clear(); s.nav.vx = 0;
+        //     The ruler: with the spinal railgun picked it also gives the slug's flight time
+        //     (9,000 north of our ship, zoomed out with our ship in the middle: the label must be on the plot to be drawn)
+        s.marks.Clear();
+        s.marks.Add(new ShipState.Mark { id = ++s.markSeq, kind = "ruler", x = 0, y = -15000, x2 = 0, y2 = -6000, t = board.MissionSeconds });
+        plotP.CentreOnOurShip();
+        board.SetZoom(0.1);
+        yield return 0.3f;
+        string wantRuler = "SLUG " + ShipState.JsRound(9000 / runGuns.slugSpeedUnits) + " S";
+        var rulerText = System.Array.Find(plotP.GetComponentsInChildren<TMPro.TMP_Text>(false), t => t.text.Contains(" km"));
+        Check("With the spinal railgun picked, the ruler shows the slug's flight time", rulerText && rulerText.text.EndsWith(wantRuler), rulerText ? "\"" + rulerText.text + "\"" : "no ruler label");
+        s.marks.Clear();
+        board.SetZoom(1.0);
+        //     A long shot at GARUDA, still and nose-on, 15,000 away on a bearing between two whole degrees
+        if (freshBrain) freshBrain.enabled = false;
+        var spinalTarget = s.ShipOf("t07");
+        double tBrg = 10.45 * Math.PI / 180;
+        spinalTarget.nav.PlaceAt(Math.Sin(tBrg) * 15000, -15000 + Math.Cos(tBrg) * 15000, 190); spinalTarget.nav.vx = spinalTarget.nav.vy = 0; spinalTarget.nav.throttle = 0;
+        //     A lock turns the ship itself onto it (owner 2026-11-09). Stand-in for the targeting computer: its locked solution, set
+        //     by hand; the board is paused, so the guns and the helm are stepped by hand, a quarter of a game second at a time
+        s.nav.PlaceAt(0, -15000, 0);
+        s.weapons.sol[s.weapons.SysIndex] = new WeaponSystem.Solution { set = true, locked = true, wx = spinalTarget.nav.x, wy = spinalTarget.nav.y, t = (float)s.missionNow };
+        for (int i = 0; i < 40; i++) { s.weapons.TickGuns(0.25); s.nav.Tick(0.25); }
+        double lockBrg = (Math.Atan2(spinalTarget.nav.x, spinalTarget.nav.y + 15000) * 180 / Math.PI + 360) % 360;
+        Check("On a lock the ship turns itself onto the target, to the part of a degree", Math.Abs(s.nav.TrueHeading - lockBrg) < 0.01,
+              "true heading " + s.nav.TrueHeading.ToString("0.000") + "°, target at " + lockBrg.ToString("0.000") + "°");
+        s.weapons.sol[s.weapons.SysIndex] = new WeaponSystem.Solution();
+        s.weapons.TickGuns(0);
+        Check("No lock, no turn: the helm is the player's again", double.IsNaN(s.nav.aimHeading), "");
+        var nose = s.weapons.HardPointOffset(spinal.id, 10);
+        double exact = (Math.Atan2(spinalTarget.nav.x - nose.x, spinalTarget.nav.y - (-15000 + nose.y)) * 180 / Math.PI + 360) % 360;
+        board.Click("rate", "10");
+        string[] spinalReports = new string[2];
+        for (int k = 0; k < 2; k++)
+        {
+            double aim = k == 0 ? Math.Round(exact) : exact; // first the nearest whole degree, then to the part of a degree
+            s.nav.PlaceAt(0, -15000, (int)Math.Floor(aim)); s.nav.fine = aim - Math.Floor(aim); s.nav.vx = s.nav.vy = 0;
+            s.weapons.wepCharge = 100f;
+            for (int i = 0; i < 4; i++) if (!s.weapons.sw[i]) s.weapons.Flip(i);
+            int landed = s.weapons.shotResults;
+            s.weapons.Fire();
+            yield return (Func<bool>)(() => s.weapons.shotResults > landed);
+            spinalReports[k] = s.weapons.shotReport;
+        }
+        Check("Rounded to the whole degree the spinal railgun misses; aimed to the part of a degree it hits, 15,000 away",
+              spinalReports[0] == "MISS" && spinalReports[1] != null && spinalReports[1].StartsWith("HIT"), "bearing " + exact.ToString("0.000") + "°: \"" + spinalReports[0] + "\", then \"" + spinalReports[1] + "\"");
+        board.Pause(true);
+        if (freshBrain) freshBrain.enabled = true;
+        runGuns.mounts = mountsWas; runGuns.hardPoints = dotsWas; runGuns.slugSpeedUnits = slugWas; s.weapons.sys = sysWas; s.weapons.KeepSelection();
         s.nav.PlaceAt(shipX, shipY, hdgWas); s.nav.orderedHeading = orderWas; s.nav.vx = shipVx; s.nav.vy = shipVy; s.nav.throttle = thrWas;
         // 25d. Real radio messages (owner 2026-10-29), on a spare radio: all words, lost if not locked in time, read with the dials.
         var radio = new GameObject("Playtest radio").AddComponent<CommsSystem>();
@@ -1978,6 +2072,15 @@ public static class PlaytestRunner
             st.hangar.fighterSpeedUnits = standardHangar.fighterSpeedUnits;
             st.hangar.boatSpeedUnits = standardHangar.boatSpeedUnits;
             st.hangar.boatRangeUnits = standardHangar.boatRangeUnits;
+            // owner 2026-11-08: our ship's file carries no fighters now. The run still tests them, with the code's squadrons
+            st.hangar.fighters = standardHangar.fighters;
+            var hangar = ship.GetComponent<HangarSystem>();
+            if (hangar)
+            {
+                var code = new GameObject("Playtest hangar").AddComponent<HangarSystem>();
+                hangar.squads = code.squads; hangar.squad = 0; hangar.order = hangar.squads[0].orders[0];
+                UnityEngine.Object.Destroy(code.gameObject);
+            }
             double top = st.shipClass.StartsWith("Garuda") ? 8.75 : st.shipClass.StartsWith("Naga") ? 15 : 12.5;
             st.navigation.topSpeedUnits = top;
             st.navigation.baseSpeedUnits = top / 5;

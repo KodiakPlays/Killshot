@@ -53,10 +53,10 @@ Straight from the GDD:
 You drop in at one edge of a handcrafted region of space, with **old, unverified Imperial
 records** that mark a few landmarks. Everything else you have to find.
 
-Built so far: an intro, a menu and a MISSIONS list with seven levels (§15.5). The first six are short,
+Built so far: an intro, a menu and a MISSIONS list with eight levels (§15.5). The first six are short,
 with one goal each. The seventh is the full mission, Wolf Hunt, in `Level_01`. The Garuda hunts you.
 Once it finds you, more enemy ships come. Kill or capture it, then reach the jump point to win
-(§15.2).
+(§15.2). The eighth, LONG SHOT, is a test range for the spinal railgun (§8.4).
 
 ### Order of operations
 
@@ -88,7 +88,7 @@ get there, through whatever you stirred up (§15).
 | **Everything you do makes you heard** | Every unit of power makes you louder. So do an active scan and every shot. |
 | **You drift** | Turning points the ship. It does not change where you are going. |
 | **Your armour is a direction** | No shields. A bow, a stern and two sides, each with its own armour. |
-| **Shots take time** | A railgun slug takes about 7 seconds to reach 2,000 units. A torpedo takes 15 to 18 seconds to reach 3,000. Its motor lights 3 to 7 seconds in, once it has curved onto the target. You aim where the target will be. |
+| **Shots take time** | A spinal railgun slug takes 20 seconds to reach 30,000 units. The Garuda's railgun slug takes about 7 seconds to reach 2,000. A torpedo takes 15 to 18 seconds to reach 3,000. Its motor lights 3 to 7 seconds in, once it has curved onto the target. You aim where the target will be. |
 
 ---
 
@@ -106,7 +106,7 @@ Everything below breaks down system by system. Read in order for the whole pictu
 | 5 | Being seen | Our signal; how the enemy hears us; reinforcements; the disguise (not built yet) |
 | 6 | Auxiliary | The orders station, its AUX pool and the alert condition |
 | 7 | Reflex | The cloak (not built yet) |
-| 8 | Weapons | Two railgun turrets, four PDC groups, two torpedo launchers, damage |
+| 8 | Weapons | The spinal railgun, four PDC groups, two torpedo launchers, damage; the Garuda's two railgun turrets |
 | 9 | Sensing | DRADIS, the sweep, the active scan, what the plot shows of a ship |
 | 10 | Comms | Tuning and the cipher |
 | 11 | The board | Layout, plot, rails, colour, type, the periscope |
@@ -200,7 +200,8 @@ Distances are **units**. Speeds are units per second. Times are game seconds. At
 | Battle space | 20,000 × 20,000 units, set per level with a Battle Space box (Starwolf → Level) |
 | DRADIS reach | 5,000 units at gain 1, 7,500 at gain 5 |
 | Visual range | 2,000 units |
-| Railgun reach | 2,000 units |
+| Railgun reach | 2,000 units (the Garuda's turrets) |
+| Spinal railgun reach | 30,000 units (our ship, Step 170) |
 | Torpedo reach | 3,000 units |
 | PDC reach | 600 units |
 | Speed limit | 25 units/s at ENG 1, 50 at ENG 5 |
@@ -383,9 +384,12 @@ Actual moves toward ordered at capped rates whenever the clock runs.
 
 ### 4.2 Throttle
 
-You drag the throttle on the helm, or press W and S to step it 10% a press. It runs from -100%
-(full reverse) to +100% (full ahead), with 0 in the middle of the slider (owner, 2026-11-02). S steps
-down through 0 into reverse. It loads at 0.
+You drag the throttle on the helm, or use W and S. A tap of W or S moves it 1 (owner, 2026-11-09).
+Keep the key down and it keeps counting, slowly at first, then faster. It moves 100 in Throttle Hold
+Seconds (2), on the Helm tab of **Starwolf → Tuning**. It stays where you let go. If the throttle
+changes some other way while the key is down, the key stops moving it. It runs from -100% (full
+reverse) to +100% (full ahead), with 0 in the middle of the slider (owner, 2026-11-02). S goes down
+through 0 into reverse. It loads at 0.
 
 ```
 speed limit = 25 + (ENG units − 1) × 6.25 units/s, with no thrust at ENG 0
@@ -424,12 +428,37 @@ all speed      × 0.997502
 > at the same speed and direction (owner, 2026-10-29). This is true of every ship, so an EMP leaves
 > a ship drifting too.
 
-> **Rule 4.3.c** `Q` slides the ship to port and `E` to starboard while the key is down (owner,
-> 2026-11-01). The nose stays where it is. Let go, and the side thrusters stop the slide. On our ship
-> the slide reaches 20 units/s at ENG 5 and 10 at ENG 1, in equal steps. It gains 4 units/s each
-> second at ENG 5 and 2 at ENG 1, and it stops at the same rate. A slide adds no signal. Rule 4.3.b
-> covers ENG 0: no slide, and a slide already going doesn't stop. Side Speed Units and Side Accel
-> Units are in each ship's stats file. Change the keys on the Keys tab of **Starwolf → Tuning**.
+> **Rule 4.3.c** `Q` slides the ship to port and `E` to starboard (owner, 2026-11-01). The nose
+> stays where it is. On our ship the slide reaches 20 units/s at ENG 5 and 10 at ENG 1, in equal
+> steps. A slide adds no signal.
+>
+> A tap gives a small push (owner, 2026-11-09). It adds Side Tap Units (2 units/s) of side speed at
+> ENG 5 and half that at ENG 1. Every tap counts, however short. Taps never push past full side
+> speed. Two taps very close together count as one.
+>
+> Keep the key down and the push starts gentle. It grows to full over Side Ramp Seconds (2). The
+> full push adds 4 units/s each second at ENG 5 and 2 at ENG 1. Our ship reaches 20 after about 7.5
+> seconds.
+>
+> Let go, and the slide keeps going. It fades like any sideways drift. On our ship it halves in about
+> 8 seconds (Drift Keep Per S). A tap the other way slows it. The owner's idea: tap left and right to
+> steady the ship, most of all when coming to a full stop.
+>
+> Rule 4.3.b covers ENG 0: Q and E do nothing, and a slide already going doesn't stop. Side Speed
+> Units, Side Accel Units, Side Tap Units and Side Ramp Seconds are in each ship's stats file. Change
+> the keys on the Keys tab of **Starwolf → Tuning**.
+
+> **Rule 4.3.d** Shift with `A` or `D` is the slow turn, for aiming the spinal railgun (owner,
+> 2026-11-08; Step 170). While the keys are down, the bow turns 2° per game second, in parts of a
+> degree. ENG power doesn't change it. The ordered heading follows the bow, and the helm's attitude
+> key clears. The helm's HDG still shows whole degrees. A normal `A` or `D` turn drops the part of a
+> degree. Fine Turn Deg Per S is in each ship's stats file, under Navigation. The key is Fine Turn
+> Key (LeftShift), on the Keys tab.
+
+> **Rule 4.3.e** With a lock on and the spinal railgun picked, our ship turns itself onto the lock's
+> lead (owner, 2026-11-09; Step 170). It turns the whole degrees at its usual rate, then the last part
+> of a degree at the slow turn's rate. `A` and `D` can't turn against it. The slow turn still can. When the lock
+> runs out, the helm is the player's again (§18.4).
 
 ### 4.4 Stability
 
@@ -762,16 +791,18 @@ picked up again are marked stale and dropped after `staleTrackTimeout` (`TBD`).
 
 ## 8 · Weapons
 
-**What it is.** Three weapon types: two railgun turrets, four PDC groups and two torpedo launchers
-(VLS-A and VLS-B). The slug is the fastest thing on the board. A torpedo is slower, reaches further
-and hits harder.
+**What it is.** Our ship has three weapon types: a spinal railgun, fixed on the nose; four
+PDC groups; and two torpedo launchers (VLS-A and VLS-B). The Garuda keeps two railgun turrets (owner,
+2026-11-08; Step 170). The slug is the fastest thing on the board. A torpedo is slower and hits
+harder.
 
-**How it plays.** Which way you face decides what the railguns can reach. PDCs are the only answer
+**How it plays.** The spinal railgun fires where the nose points. You aim it by turning the ship. Which way
+the Garuda faces decides what its turrets can reach. PDCs are the only answer
 to a torpedo, and each group covers a fixed arc. Every shot spends charge from the weapons
 capacitor, and every slug and torpedo is counted.
 
 **How it's built.** Fire control works one mount at a time. A shot needs a firing solution, the
-arming ladder and enough charge (§20). Slugs and torpedoes fly across the plot. They hit a ship
+arming ladder and enough charge (§20). The spinal railgun needs no solution (§8.4). Slugs and torpedoes fly across the plot. They hit a ship
 they pass close enough to. The numbers are in each ship's stats file, under weapons.
 
 ### 8.1 Damage
@@ -814,8 +845,7 @@ There are no broadside guns. Arcs are measured from the bow, clockwise.
 
 | Mount | Arc | Covers | Reach | At the start |
 |---|---|---|---|---|
-| RG-A, railgun turret A | 090° ±45° | 045° → 135° | 2,000 units | 22 slugs |
-| RG-B, railgun turret B | 270° ±45° | 225° → 315° | 2,000 units | 22 slugs |
+| RG, spinal railgun, on the nose | 000°, fixed | Straight ahead only | 30,000 units | 12 slugs |
 | PDC-A, PDC group A, bow right | 045° ±135° | 270° → 180° | 600 units | 2,400 rounds |
 | PDC-B, PDC group B, bow left | 315° ±135° | 180° → 090° | 600 units | 2,400 rounds |
 | PDC-C, PDC group C, stern left | 225° ±135° | 090° → 000° | 600 units | 2,400 rounds |
@@ -823,8 +853,10 @@ There are no broadside guns. Arcs are measured from the bow, clockwise.
 | VLS-A, torpedo launcher, left side | All round | All round | 3,000 units | 8 cells |
 | VLS-B, torpedo launcher, right side | All round | All round | 3,000 units | 8 cells |
 
-This is our ship's file, `Asura.asset`, as the owner set it on 2026-11-01. Each weapon stands on a
-hard point on the Hard Points tab of Starwolf → Tuning.
+This is our ship's file, `Asura.asset`, as the owner set it on 2026-11-01. Step 170 (2026-11-09) put
+the spinal railgun on a new dot at the nose, (0, 100), and took off the two side railguns, RG-A and
+RG-B. Their dots on the long sides stay, empty, for lasers later. Each weapon stands on a hard point
+on the Hard Points tab of Starwolf → Tuning.
 
 > **Rule 8.3.a** Fire control works one mount at a time. You pick the system (RAILGUN, PDC or
 > TORPEDO), then the mount. Torpedoes are the exception: the launcher picks itself (§8.5).
@@ -832,24 +864,46 @@ hard point on the Hard Points tab of Starwolf → Tuning.
 > **Rule 8.3.b** **Ammunition is a real count** (owner, 2026-10-27). It only goes down. There is no
 > reload. With nothing left, LOAD refuses.
 
-> **Rule 8.3.c** Each railgun covers one side of the ship, 90° wide (owner, 2026-11-01). Nothing
-> covers the bow or the stern. Turning the ship brings a turret to bear.
+> **Rule 8.3.c** On the Garuda, each railgun turret covers one side of the ship, 90° wide (owner,
+> 2026-11-01). Nothing covers the bow or the stern. Turning the ship brings a turret to bear.
 
 > **Rule 8.3.d** Each of the four PDC groups covers 270°. Any bearing is covered by three of them.
 
+> **Rule 8.3.e** A railgun with Half Arc 0 is fixed to the hull (Step 170). It fires straight along
+> its arc. Our spinal railgun is one: it fires straight out of the nose. You aim it by turning the
+> ship (Rule 4.3.d).
+
 The armour is PROW 100, STBD 100, AFT 50, PORT 100 (§13.2). The aft is the weakest side.
 
-The Garuda has two railgun turrets, two PDC groups and one launcher on its centre line, with the
-same reach. It has 4 torpedo cells, and its PDC-B has no rounds. A Naga frigate has one railgun, RG-A, with 12 slugs, and no PDCs or torpedoes. Their
+The Garuda has two railgun turrets, RG-A at 090° ±45° and RG-B at 270° ±45°, each 2,000 units with
+22 slugs. It also has two PDC groups and one launcher on its centre line, with our reach. It has 4 torpedo cells, and its PDC-B has no rounds. A Naga frigate has one railgun, RG-A, with 12 slugs, and no PDCs or torpedoes. Their
 numbers are in `Assets/Ships/Garuda.asset` and `Assets/Ships/Frigate.asset`.
 
 ### 8.4 Railgun
 
-A slug flies at **300 units/s**, out to 2,000 units. It takes about 7 s to reach full range (Step 130).
+Each ship's slug speed is in its stats file. The Garuda's slug flies at **300 units/s**, out to 2,000
+units. It takes about 7 s to reach full range (Step 130).
+
+**The spinal railgun** (owner, 2026-11-08; Step 170). The owner, 2026-11-09: "it is a spinal railgun
+in this current configuration. It means it cannot swivel. It just points straight." Our slug flies
+at **1,500 units/s**, out to 30,000 units. A full-reach shot takes 20 s.
+
+- It can fire with no target, no lock and no firing solution. It fires straight along the nose's
+  line, to the part of a degree. You aim it by eye, with the slow turn (Rule 4.3.d).
+- A lock turns the ship onto the target for you (Rule 4.3.e). Only a lock does this. A TRACK
+  solution from the plot does not.
+- It needs no turret turn and no periscope bearing.
+
+**Drift** (owner, 2026-11-08; Step 170). Every slug keeps the motion of the ship that fired it, ours
+and the Garuda's. A drifting ship's shot drifts off the line, more the further it flies. A ship
+sliding 5 units/s sideways puts a spinal railgun slug 100 units off at 30,000. You can fire while moving. You
+just miss. The Garuda's aim allows for its own motion. So does our fire control's lead.
+
+Every slug, ours and the Garuda's:
 
 - A shot hits if it touches the target's box made **25% longer and 25% wider** (owner, 2026-11-01;
   Step 128). That is 437.5 × 125 on the Garuda. It is the same rule for torpedoes.
-- A slug that reaches 2,000 units without a hit counts as a miss.
+- A slug that reaches its gun's reach without a hit counts as a miss.
 - Each shot spends 70 charge from the weapons capacitor and adds 25 to our signal.
 - A hand-dialled bearing is in whole degrees. At 2,000 units one degree is about 35 units sideways.
 - When the solution has a course, the shot is aimed where the target will be when the slug arrives
@@ -1081,6 +1135,7 @@ destroyed                     → no label on the plot; it stays as a wreck
 
 > **Rule 9.6.d** The numbers on the board (Step 130): visual range 2,000 units. DRADIS reaches 5,000
 > units at gain 1 and 7,500 units at gain 5. Railguns reach 2,000 units, torpedoes 3,000 and PDCs 600.
+> Since Step 170 our spinal railgun reaches 30,000.
 
 ---
 
@@ -1286,7 +1341,8 @@ tint knob.
 `DIVERGES` — the prototype fires boarding pods like a weapon. Starwolf drops those and does
 everything through the hangar instead.
 
-**What it is.** Where you launch interceptors and assault boats.
+**What it is.** Where you launch interceptors and assault boats. Our ship carries assault boats
+only (Step 170).
 
 **How it plays.** You give a squadron a job and launch it. It flies out to fire control's target
 and gets on with it. Boarding comes last: fight a ship down first, then send the marines.
@@ -1309,6 +1365,12 @@ fighter yet, and nothing in the game changes these bars yet.
 
 Six starfighters. Their orders are DESTROY, DISABLE and ESCORT. Only craft marked READY launch. The
 Hangar panel reads 6 OF 6 READY, and a launch sends all six.
+
+> **Rule 12.1.a** Our ship carries no fighters (owner, 2026-11-08: "an assault destroyer should have
+> boarding capability… But it shouldn't have fighter jets it can deploy"; Step 170). Each ship's
+> stats file has a number, Fighters (0 to 6, default 6), under Hangar. The Asura's is 0. The
+> Garuda's is 6. At load the ship keeps only that many. Nothing is deleted. With none, the hangar
+> starts on the assault boats, and the INTERCEPTOR row on the Hangar panel shows nothing.
 
 - They fly at 100 units/s.
 - Within 200 units of the target, every fighter makes an attack run every 30 game seconds.
@@ -1576,9 +1638,10 @@ room can kill the party, so the magazine may not come back.
 
 ## 15 · Mission
 
-**Built so far:** seven levels on the MISSIONS list (§15.5). The first six are short, with one goal
+**Built so far:** eight levels on the MISSIONS list (§15.5). The first six are short, with one goal
 each. The seventh is the full mission, Wolf Hunt: the hunt, the win, the loss and the jump point
-(§15.2, Steps 85 to 99), and the level's ruins (§15.3). The rest of this section is the full design,
+(§15.2, Steps 85 to 99), and the level's ruins (§15.3). The eighth, LONG SHOT, is a test range for
+the spinal railgun. The rest of this section is the full design,
 not built yet.
 
 **What it is.** One handcrafted region of space, one Traitor Lord's flagship hidden in it, one way
@@ -1660,12 +1723,13 @@ and weapons are different (§8, §9.1).
 
 ### 15.5 The levels
 
-NEW GAME opens the MISSIONS list. All seven levels are open from the start. A click, or the arrow keys
-and Enter, picks one. INITIALISING... shows, then the board loads that level.
+LEVELS opens the MISSIONS list. All eight levels are open from the start. A click, or the arrow keys
+and Enter, picks one. INITIALISING... shows, then the board loads that level. NEW GAME's sector map
+has the first seven only.
 
-Every level is 20,000 × 20,000 units. Each has a Mission box with its goal and its briefing, which
-opens by itself and comes back with the briefing icon. Levels 1 to 6 end the moment the goal is won or
-lost. Only COLD RUN, INTERCEPT and Wolf Hunt have a jump point. In every other level the Garuda does not hunt us,
+Every level is 20,000 × 20,000 units, except LONG SHOT, which is 40,000 × 40,000. Each has a Mission
+box with its goal and its briefing, which opens by itself and comes back with the briefing icon.
+Every level but Wolf Hunt ends the moment the goal is won or lost. Only COLD RUN, INTERCEPT and Wolf Hunt have a jump point. In every other level the Garuda does not hunt us,
 does not listen for us and does not fire. Any level is also lost as §14 says.
 
 | # | Level | Scene | You win when | You lose when | Where the Garuda is |
@@ -1677,8 +1741,9 @@ does not listen for us and does not fire. Any level is also lost as §14 says.
 | 5 | FINDERS KEEPERS | `Prize` | It is captured | It is destroyed | 1,500 units away, still |
 | 6 | INTERCEPT | `Intercept` | We reach the jump point, shown from the start. Our weapons are off | §14 only | At the far end of COLD RUN's S-shaped corridor, patrolling it and sending radio messages. It hunts us if it finds us |
 | 7 | WOLF HUNT | `Level_01` | It is destroyed or captured, and we reach the jump point (§15.2) | §14 only | At the top of the map, hunting us |
+| 8 | LONG SHOT | `LongShot` | It is destroyed or captured | §14 only | Patrolling east and west, 9,000 units north of our start, at 22 units/s. It doesn't hunt us |
 
-INTERCEPT and Wolf Hunt send real radio messages. In the other five the radio shows NO TRAFFIC (§10).
+INTERCEPT and Wolf Hunt send real radio messages. In the other six the radio shows NO TRAFFIC (§10).
 The levels' numbers are in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 2.
 
 **COLD RUN and INTERCEPT** have the mission goal JumpPoint. The jump point shows from the start, and
@@ -1815,6 +1880,9 @@ A RULER end snaps to a POINT nearby. A RULER from one POINT to another, placed a
 is a **track**. It shows the target's course and speed instead, such as `CRS 210° · 5.50 km/s`. A
 dashed line shows where the target will be 300 game seconds on.
 
+With the spinal railgun picked in Fire Control, a RULER also shows how long its slug takes to fly its
+length, such as `18,000 km · SLUG 12 S` (Step 170). A track still shows course and speed.
+
 > **Rule 18.2.b** A track's course runs from the earlier POINT to the later one. Its speed is the
 > distance over the time between them.
 
@@ -1884,6 +1952,12 @@ A lock knows where the ship is. It doesn't know where the ship is going:
 A slug takes about 7 seconds to reach 2,000 units, and the gun turns 3° a second. If you haven't
 lined up on where the target will be, the lock runs out first.
 
+With the spinal railgun picked, a lock turns our ship onto the lead (owner, 2026-11-09: "you can
+ballpark the thing, or you can get into the correct radius range and do all the steps to get a
+proper target lock. At which point, your ship also just starts auto-adjusting, and then you can
+fire"; Step 170). The lead uses the lock's course, as above. With NO COURSE it points at where the
+target is now. When the lock drops, the ship stops turning itself (Rule 4.3.e).
+
 **Not built yet.** An error cone. Today a lock's range and bearing are exact. From the plot, the
 solution is as good as your POINTs and RULER.
 
@@ -1929,7 +2003,8 @@ Dropped. Fire control works one mount at a time, one shot per arming (§8.3.a, �
 
 ### 18.6 Flight time changes the weapon
 
-The slug flies at 300 units/s (Step 130). The Garuda cruises at 22 units/s, and its top speed is 35.
+The Garuda's slug flies at 300 units/s (Step 130). This table is for its turrets. Our spinal railgun's
+slug flies at 1,500 units/s (Step 170). The Garuda cruises at 22 units/s, and its top speed is 35.
 
 | Range | Flight time | A ship at 22 units/s moves | A ship at 35 units/s moves |
 |---|---|---|---|
@@ -2079,9 +2154,9 @@ much.
 | Control | Shows |
 |---|---|
 | System selector | RAILGUN, PDC or TORPEDO |
-| Mount selector | A or B, for the railgun and the PDCs |
-| Mount readout | Its name, its arc (`ARC 042° ±80°`, or `ALL ROUND`) and its reach |
-| State | `SLUGS 22`; or the PDC rounds and the loaders; or the torpedo cells |
+| Mount selector | The mount, for the PDCs. Our ship has one railgun |
+| Mount readout | Its name, its arc (`ARC 042° ±80°`, `FIXED 000°` or `ALL ROUND`) and its reach. Our spinal railgun reads `RAILGUN`, `FIXED 000°`, `30,000 km` |
+| State | `SLUGS 12`; or the PDC rounds and the loaders; or the torpedo cells |
 
 #### 02 Firing solution
 
@@ -2111,6 +2186,9 @@ Four rockers, thrown in order:
 | BEARING | The periscope is within 4° of the target's bearing, or of the dialled bearing. Free for PDCs |
 | ARM | The capacitor has the shot's charge: railgun 70, torpedo 40, PDC 25 |
 
+For a fixed gun, such as our spinal railgun, LOAD needs no solution, and ANGLE and BEARING are free (Rule
+8.3.e). Step 3 of `Assets/Scenes/Tactical/SNIPER_PLAN.md` takes ANGLE and BEARING away.
+
 > **Rule 20.1.b** Each rocker needs the one before it. Releasing a rocker releases it and every one
 > after it.
 
@@ -2129,8 +2207,8 @@ a salvo. For a PDC group the lever does nothing.
 > OFFLINE` → `NO FIRING SOLUTION` → `WEAPONS NOT RELEASED — CONDITION 2 REQUIRED` → `MAGAZINE
 > DAMAGED — NO ROUNDS STRUCK UP` → `PDC AUTOLOADERS OFF` → `ARMING SEQUENCE INCOMPLETE`
 >
-> The first two are skipped for a hand-dialled solution. With the ladder set it reads `SOLUTION
-> LOCKED — MOUNT READY`. After a shot it reads `ROUNDS AWAY`, then `HIT · …` or `MISS`. A PDC group
+> The first two are skipped for a hand-dialled solution. For a fixed gun the first four are skipped.
+> With the ladder set it reads `SOLUTION LOCKED — MOUNT READY`, or `MOUNT READY` for a fixed gun. After a shot it reads `ROUNDS AWAY`, then `HIT · …` or `MISS`. A PDC group
 > on AUTO reads `PDC-A AUTO — WATCHING ITS ARC`, then its last result.
 
 ### 20.2 What the panel puts on the plot
@@ -2139,7 +2217,7 @@ Per §19.2.a, everything here draws on the plot too.
 
 | Panel action | Plot shows |
 |---|---|
-| Fire Control open | The selected mount's reach, a dashed ring round our ship |
+| Fire Control open | The selected mount's reach, a dashed ring round our ship. For the spinal railgun, also a solid line from the nose dot out to its full reach, with no cone (Step 170) |
 | A PDC group on AUTO | Its arc, a dashed sector off our hull |
 | Shot fired | The slug in flight, at true speed: a white dot with a short trail, white like our ship and our fighters (owner 2026-10-26). The dot can go up to twice that speed just after firing, and it can slow before a hit (§9.6) |
 | Torpedo salvo fired | Each torpedo in flight, also a white dot with a short trail |

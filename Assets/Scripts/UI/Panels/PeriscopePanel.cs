@@ -39,6 +39,7 @@ public class PeriscopePanel : Panel
     [SerializeField] private Color shipInk = new Color32(0xE0, 0x4B, 0x3C, 0xFF);
     private ShipView[] views;
     private NavSystem pictured; // the ship in the picture, if any
+    private ShipView pictureView; // the camera that films it
     private int bowTo;          // 90 or 270: its bow points right or left in the sight
 
     [Header("The lock bar (owner 2026-11-01; was the design's convergence bar, which only showed range), left-anchored")]
@@ -177,6 +178,7 @@ public class PeriscopePanel : Panel
             if (view && !view.Texture) view = null;
             shipPicture.enabled = view;
             pictured = view ? seen.nav : null;
+            pictureView = view;
             if (view)
             {
                 shipPicture.texture = view.Texture;
@@ -222,10 +224,16 @@ public class PeriscopePanel : Panel
 
     // Owner 2026-10-29: the ship in the sight is always flat. The model turns every frame and Refresh runs once a tick,
     // so the picture turns here, after the model has moved. North-up picture: bow to 090 or 270.
+    // Owner 2026-11-09 (it tilted again): the camera that films a wreck turns with it (ShipView.WreckHeading), so the picture
+    // is not always north-up. Take the camera's turn off too.
     private void LateUpdate()
     {
-        if (pictured) shipPicture.rectTransform.localEulerAngles = new Vector3(0f, 0f, (float)pictured.DrawnHeading - bowTo);
+        if (pictured) shipPicture.rectTransform.localEulerAngles = new Vector3(0f, 0f, (float)pictured.DrawnHeading - (pictureView ? pictureView.WreckHeading ?? 0f : 0f) - bowTo);
     }
+
+    /// <summary>The way the pictured ship's bow points in the sight, degrees counter-clockwise from up: 90 or 270 when it lies
+    /// flat (the playtest reads it). NaN with no ship in the picture.</summary>
+    public float PictureBowDeg => pictured ? Mathf.Repeat(shipPicture.rectTransform.localEulerAngles.z - ((float)pictured.DrawnHeading - (pictureView ? pictureView.WreckHeading ?? 0f : 0f)), 360f) : float.NaN;
 
     // The ShipView watching a contact's model (the plot's), if there is one.
     ShipView ViewOf(string key)

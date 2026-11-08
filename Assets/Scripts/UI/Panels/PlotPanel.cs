@@ -577,6 +577,8 @@ public class PlotPanel : Panel
                 double dx = m.x2 - s.MarkX(m), dy = m.y2 - s.MarkY(m); // units, y north
                 string km = ShipState.JsRound(s.MarkLen(m)).ToString("#,0", System.Globalization.CultureInfo.InvariantCulture) + " km";
                 label.text = m.kind == "ruler" ? km : km + " · BRG " + Brg(dx, dy) + "°"; // owner 2026-10-27: the ruler shows the distance only
+                // owner 2026-11-08: with a fixed gun picked (the spinal railgun), the ruler also shows how long its slug takes to fly that far
+                if (m.kind == "ruler" && s.weapons.FixedGun) label.text += " · SLUG " + Duration(s.MarkLen(m) / s.weapons.stats.slugSpeedUnits);
                 if (m.kind == "ring") Grade(shapes, a, (b - a).magnitude, alpha, ref graded);
                 if (m.kind == "ruler")
                 {
@@ -712,7 +714,7 @@ public class PlotPanel : Panel
                     var rm = s.weapons.MountOf(id);
                     if (rm == null) continue;
                     bool selected = id == s.weapons.mount;
-                    sector(rm, selected ? railArcAlpha : railArcAlphaOther, "dots");
+                    if (rm.halfArc > 0) sector(rm, selected ? railArcAlpha : railArcAlphaOther, "dots"); // owner 2026-11-08: a fixed gun (the spinal railgun) has no cone, only its line
                     float aim = Mathf.Lerp(rm.aimWas, rm.aimDeg, Controls.Paused ? 1f : Controls.SinceTick / Controls.TickGameSeconds); // it glides between ticks
                     float deg = ((float)s.nav.DrawnHeading + rm.arc + aim) * Mathf.Deg2Rad, barPx = (float)(rm.rangeUnits / UnitsPerPx * Controls.ZoomExact);
                     Vector2 gun = MountAt(rm);
