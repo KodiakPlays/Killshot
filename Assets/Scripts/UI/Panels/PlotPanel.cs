@@ -61,6 +61,20 @@ public class PlotPanel : Panel
     [Tune("Plot & our ship")] [SerializeField] private float sunFromDeg = 300f;
     [Tooltip("How high the sun is above the plot, degrees: 90 shines straight down, a low sun catches the edges.")]
     [Tune("Plot & our ship")] [Range(5f, 90f)] [SerializeField] private float sunHeightDeg = 35f;
+    [System.Serializable]
+    public class NebulaLayer
+    {
+        [Tooltip("The picture. It repeats in every direction. To change the look, put another picture in its Texture.")]
+        public RawImage image;
+        [Tooltip("How near it looks, 0 to 1. At 1 it moves with the grid as you pan and zoom; at 0.1 it hardly moves, so it looks far away.")]
+        [Range(0f, 1f)] public float depth = 0.2f;
+        [Tooltip("One copy of the picture is this many units across at x1.")]
+        [Min(1f)] public float tileUnits = 4000f;
+        [Tooltip("How strongly it shows, 0 to 1.")]
+        [Range(0f, 1f)] public float alpha = 1f;
+    }
+    [Tooltip("Owner 2026-11-08: space under the ships in the close-up, the farthest layer first. The pictures are in Assets/Art/Close Up.")]
+    [SerializeField] private NebulaLayer[] nebula;
     private Camera closeUpCamera;
     private RenderTexture closeUpTexture;
     // the ships the close-up leaves out: those out of sight (a rock in the way), and wrecks, which keep their line
@@ -366,7 +380,9 @@ public class PlotPanel : Panel
             layer.alpha = 0f;
             fading.Add(layer);
         }
-        if (closeUpImage) { var layer = closeUpImage.gameObject.AddComponent<CanvasGroup>(); layer.alpha = 0f; fading.Add(layer); }
+        var below = new List<Graphic> { closeUpImage };
+        if (nebula != null) foreach (var n in nebula) below.Add(n.image);
+        foreach (var g in below) if (g) { var layer = g.gameObject.AddComponent<CanvasGroup>(); layer.alpha = 0f; fading.Add(layer); }
     }
 
     void FormGrid()
@@ -1199,6 +1215,7 @@ public class PlotPanel : Panel
         float a = CloseUp;
         closeUpImage.enabled = a > 0f;
         if (closeUpCamera) closeUpCamera.enabled = a > 0f;
+        if (nebula != null) foreach (var n in nebula) if (n.image) n.image.enabled = a > 0f;
         if (a <= 0f) return;
         if (!closeUpCamera)
         {
@@ -1235,6 +1252,19 @@ public class PlotPanel : Panel
         closeUpImage.rectTransform.sizeDelta = size;
         Put(closeUpImage.rectTransform, plotCentre, 0f);
         closeUpImage.color = new Color(1f, 1f, 1f, a);
+        // the nebula: each layer repeats, and moves and grows less than the grid the farther away it is
+        if (nebula != null)
+            foreach (var n in nebula)
+            {
+                if (!n.image) continue;
+                n.image.material = closeUpImage.material; // cut at the visual range circles too
+                n.image.rectTransform.sizeDelta = size;
+                Put(n.image.rectTransform, plotCentre, 0f);
+                double tilePx = n.tileUnits / UnitsPerPx * System.Math.Pow(Controls.ZoomExact, n.depth);
+                double shift = n.depth / n.tileUnits; // tiles the layer moves per unit the view moves: what is at the plot's centre doesn't change as you zoom
+                n.image.uvRect = new Rect((float)(viewX * shift - size.x / 2 / tilePx), (float)(viewY * shift - size.y / 2 / tilePx), (float)(size.x / tilePx), (float)(size.y / tilePx));
+                n.image.color = new Color(1f, 1f, 1f, a * n.alpha);
+            }
         var sun = RenderSettings.sun; // the board scene's sun: Sun Source in its Lighting settings
         if (sun) // the light travels away from where it comes from; the camera side of the plot is -z
         {

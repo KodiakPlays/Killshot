@@ -351,8 +351,10 @@ The plot is 1712 × 890 px. Its top-left corner is at board x 104, y 100. Its pa
 count from that corner.
 
 The prefab has these parts, from back to front:
-- `Ground`, `Grid` and `Glow`: the plot's background, the grid and its glow. `Close-up (3D view)`
-  is between `Ground` and `Grid`: the real look of ships and rocks when you zoom in (see below)
+- `Ground`, `Grid` and `Glow`: the plot's background, the grid and its glow. `Nebula far`, `Stars`,
+  `Nebula near` and `Close-up (3D view)` are between `Ground` and `Grid`, in that order. The three
+  nebula pictures are the space under the ships when you zoom in. `Close-up (3D view)` is the real
+  look of ships and rocks when you zoom in (see below)
 - `Scale`: the axis numbers, made by code
 - `Design mock-up (off)`: switched off. It has the three parts that were kept from the design's
   sample picture:
@@ -483,8 +485,8 @@ line pictures. The name labels and the white lock corners still show. A destroye
 picture, broken in two, at every zoom. The close-up leaves wrecks out. Fighters, shots and torpedoes
 are drawn flat on top. Gas clouds are unchanged.
 
-The close-up is the picture `Close-up (3D view)` in `Plot.prefab`. It is just above `Ground` and
-under `Grid`. The grid lines, marks, labels, shots, fighters and torpedoes draw on top of it. It is
+The close-up is the picture `Close-up (3D view)` in `Plot.prefab`. It is just above the three
+nebula pictures and under `Grid`. The grid lines, marks, labels, shots, fighters and torpedoes draw on top of it. It is
 cut at the visual range circles round our ship and our fighter flights, the same way the rocks are
 cut. It fades in with the rest of the plot when the board appears. **Close Up Image** on the Plot
 panel points at it. **Close Up Look** points at the glow file.
@@ -510,6 +512,35 @@ The ship models are their real length: our Asura 200 units, the Garuda 350, the 
 cameras that film the line pictures, Ship View Camera and Contact View Camera · Garuda, are moved back
 to match. Each films only its own ship. **Own Ship Max Px** (1200) lets a ship's drawn size follow its
 model up to x4.
+
+In the close-up, the space under the ships is a nebula. There are soft violet and teal gas clouds,
+stars, and thin warm and cold wisps of gas. The grid, marks and labels draw on top. Zoom out to x1
+and the nebula fades away with the close-up. Past visual range it is cut at the circle, like the
+ships.
+
+The nebula is three pictures in `Plot.prefab`, back to front: `Nebula far`, `Stars` and
+`Nebula near`. They are between `Ground` and `Close-up (3D view)`. Each one repeats in every
+direction. Far layers move less as you pan. They also grow less as you zoom. What is at the plot's
+centre stays put while you zoom. **Nebula** on the Plot
+panel is a list with one entry per layer:
+- **Image**: the layer's picture in `Plot.prefab`.
+- **Depth**: how fast it moves with the grid, at x1. At 1 it moves with the grid. Nebula far is 0.15,
+  Stars 0.3, Nebula near 0.5.
+- **Tile Units**: one copy of the picture is this many units across at x1. Nebula far is 9,000,
+  Stars 1,300, Nebula near 5,000.
+- **Alpha**: how strongly it shows. Nebula far is 1, Stars 0.9, Nebula near 0.8.
+
+The pictures are stand-in art, made by a script. They are 1024 x 1024 and repeat without seams.
+They are `Nebula Far.png`, `Stars.png` and `Nebula Near.png` in `Assets/Art/Close Up`. To change the
+look, click the layer in `Plot.prefab` and put another picture in its Texture. Or replace the PNG
+with one of the same name. A new picture must repeat without seams. Its Wrap Mode must be Repeat.
+Nebula Near and Stars need see-through parts.
+
+The metal reflects the nebula's colours. The board scene `02.1_Grid` uses
+`Assets/Art/Close Up/Nebula Reflection.png` for reflections. It is set in the Lighting window, under
+Environment Reflections, Source Custom. It is a copy of Nebula Far, imported as a cube. If you
+change Nebula Far, change this copy too. The scene's ambient light is a flat dim violet. It is set
+in the Lighting window, under Environment Lighting. The line pictures do not change.
 
 While Fire Control is open, each railgun shows a soft dotted cone and a solid bar on
 `Weapon ring (drawn)`. The bar is the gun. **Rail Arc Alpha** and **Gun Bar Alpha** set how strong
