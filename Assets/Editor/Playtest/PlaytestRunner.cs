@@ -1920,7 +1920,7 @@ public static class PlaytestRunner
         if (SaveGame.Exists(2)) { Check("Campaign: slot 3 has a real save, so the campaign checks are skipped", true, "slot3.json kept"); yield break; }
         SceneManager.LoadScene("SaveSlots");
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "SaveSlots");
-        yield return 0.6f; // past the click guard
+        yield return (Func<bool>)(() => Time.timeSinceLevelLoad > 0.6f); // past the click guard, in game time (the recorder can hold game time back)
         GameObject.Find("Slot 3").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "SectorMap");
         yield return 0.3f;
@@ -1928,7 +1928,7 @@ public static class PlaytestRunner
         Check("Campaign: slot 3 opens the SECTOR MAP with one dot, and its save file is made", SaveGame.Slot == 2 && SaveGame.Exists(2) && dots() == 1, "slot " + (SaveGame.Slot + 1) + ", " + dots() + " dot");
         SaveGame.Won("FlightDrill"); // as QuestSystem does on MISSION COMPLETE
         SceneManager.LoadScene("SectorMap");
-        yield return 0.5f;
+        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "SectorMap" && Time.timeSinceLevelLoad > 0.2f);
         var saved = SaveGame.Read(2);
         Check("Campaign: a win is saved, and the map then shows the next dot", saved != null && saved.done.Contains("FlightDrill") && dots() == 2, (saved != null ? string.Join(",", saved.done.ToArray()) : "no save") + ", " + dots() + " dots");
         SaveGame.Delete(2);
