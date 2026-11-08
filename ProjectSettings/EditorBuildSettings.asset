@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Tactical/SectorMap.unity
     guid: 4daec8ab8da984ec4ac730a7f02c04be
   - enabled: 1
+    path: Assets/Scenes/Tactical/Ship.unity
+    guid: 3940d09bb1247441a982896486e963d8
+  - enabled: 1
     path: Assets/Scenes/Tactical/SaveSlots.unity
     guid: 329767fd99cb64233a5ceacac829b9d5
   - enabled: 1

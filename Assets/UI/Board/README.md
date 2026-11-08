@@ -950,7 +950,8 @@ Ask a technical artist before you change these:
 `Panels/End Screen.prefab`. Script: **End Screen Panel**, on `End Screen`. It covers the board
 when the mission is won or lost. It says MISSION COMPLETE or SHIP LOST, and why. It shows the
 target, our ship and the time taken. Its two buttons are RESTART MISSION and MISSION SELECT.
-RESTART MISSION plays the level again. MISSION SELECT opens the MISSIONS list.
+RESTART MISSION plays the level again. MISSION SELECT opens the MISSIONS list. In a campaign it opens
+the ship's rooms (see Ship rooms, below).
 
 It is the last part under `Tactical Board`, so it draws over everything else. Keep it last.
 
@@ -976,6 +977,52 @@ Ask a technical artist before you change these:
 - **Menu Scene** (`01_Briefing`) is the scene MISSION SELECT loads.
 - **Delay Seconds** (2) is the wait between the end and the screen, so the last hit is seen
   first. It is on the Board tab of **Starwolf → Tuning**, under Board & time.
+
+### Ship rooms
+
+Scene: `Assets/Scenes/Tactical/Ship.unity`. Script: **Ship Rooms**, on `Ship`. In a campaign,
+MISSION SELECT on the End Screen opens it. It shows the board's metal frame, with five tabs along
+the top: BRIDGE, ENGINEERING, HANGAR, QUARTERS and SECTOR MAP ›. The picked tab is gold. The others
+are grey. BRIDGE shows first. SECTOR MAP › opens the sector map.
+
+Each room is a painting with people in it. Click a person, and the talk box opens at the bottom.
+It shows their picture, their name in gold and what they say. Up to three answers are on the
+right. An answer leads to another line, or ends the talk. A line with no answers shows LEAVE.
+Picking another tab closes the talk.
+
+The paintings are stand-ins: dark coloured panels with the room's name in faint letters. The
+people are grey boxes with their name under them. The people and their lines are stand-ins too:
+the XO on the BRIDGE, the CHIEF ENGINEER in ENGINEERING, the FLIGHT LEADER in the HANGAR and the
+MARINE SERGEANT in QUARTERS.
+
+To give it art, use the Art list on `Ship`. It has one slot per room painting: BRIDGE painting,
+ENGINEERING painting, HANGAR painting and QUARTERS painting. It has one slot per person: XO
+picture, CHIEF ENGINEER picture, FLIGHT LEADER picture and MARINE SERGEANT picture. Put a sprite in
+a slot, and the room or the person shows it. The talk box shows the same picture as the person in
+the room. While the game runs, a picture with a sprite shows in its own colours; the grey of the
+stand-in box goes. Import a new painting the way the board's other art is imported: sRGB (Color
+Texture) off. With it on, the painting looks too dark. Escape quits the game on this screen, as on
+SAVE SLOTS and the SECTOR MAP.
+
+To change the words, use the **Rooms** list on Ship Rooms:
+- Each room has a **Name**, a **View** (the painting), a **Tab** and **People**.
+- Each person has a **Name**, a **Picture** (the box you click) and **Lines**. The talk starts at
+  the first line.
+- Each line has a **Text** and up to three **Replies**.
+- Each reply has a **Text** and a **Next**. Next is the line it leads to, counting from 0. At -1
+  it ends the talk.
+
+The scene is a copy of the board scene `02.1_Grid.unity`. Only the board's camera, its picture
+and the `Frame` are kept. The rooms are drawn on top of the frame, where the plot is on the board.
+The tabs are in the frame's top band.
+
+Ask a technical artist before you change these:
+- **Campaign Scene** (`Ship`) on the End Screen Panel is the scene MISSION SELECT loads in a
+  campaign.
+- **Map Tab** is the tab that leaves the ship. **Map Scene** (`SectorMap`) is the scene it loads.
+- **Talk Box**, **Talk Picture**, **Talk Name**, **Talk Line** and **Reply Buttons** are the talk
+  box parts the script fills, shows and hides.
+- **Tab Picked** and **Tab Not** are the tab colours. The script sets them.
 
 ## Frame pieces
 

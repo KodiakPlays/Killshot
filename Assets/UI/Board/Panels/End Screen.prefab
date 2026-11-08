@@ -1784,6 +1784,7 @@ MonoBehaviour:
   values: {fileID: 1286317893007393278}
   delaySeconds: 2
   menuScene: 01_Briefing
+  campaignScene: Ship
   resumeButton: {fileID: 2667218964027494490}
   quitButton: {fileID: 549467413396724614}
   rows: {fileID: 3547251109473535225}

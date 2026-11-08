@@ -20,8 +20,8 @@ public class EndScreenPanel : Panel
     [Tune("Board & time")] [SerializeField] private float delaySeconds = 2f;
     [Tooltip("MISSION SELECT loads this scene: the mission list.")]
     [SerializeField] private string menuScene = "01_Briefing";
-    [Tooltip("Owner 2026-11-08: in the campaign, MISSION SELECT loads this scene instead.")]
-    [SerializeField] private string campaignScene = "SectorMap";
+    [Tooltip("Owner 2026-11-08: in the campaign, MISSION SELECT loads this scene instead: the ship's rooms, then the sector map.")]
+    [SerializeField] private string campaignScene = "Ship";
     [Tooltip("Pause menu only: RESUME and QUIT GAME.")]
     [SerializeField] private GameObject resumeButton, quitButton;
     [Tooltip("The target, our ship and the time, with their labels. Hidden on the pause menu.")]
