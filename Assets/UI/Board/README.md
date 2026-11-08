@@ -995,6 +995,18 @@ people are grey boxes with their name under them. The people and their lines are
 the XO on the BRIDGE, the CHIEF ENGINEER in ENGINEERING, the FLIGHT LEADER in the HANGAR and the
 MARINE SERGEANT in QUARTERS.
 
+ENGINEERING shows a DAMAGE REPORT beside the CHIEF ENGINEER. In a campaign, our ship keeps its
+damage after a won mission. The next campaign mission starts with it. The report lists each part
+that is not whole, with what is left and the most it can be: PROW ARMOUR 25 / 100, MAGAZINE 3 / 5.
+With no damage it reads ALL PARTS WHOLE. REPAIR ALL, under the report, makes the ship whole and
+saves at once. It shows only while there is damage. Repairs cost nothing for now. The armour on
+each side and each room's integrity stay. Fires, radiation, vented rooms and crew losses end with
+the mission. A room that ends at 0 is kept at 1. A win's damage goes into the save when you press
+MISSION SELECT; RESTART MISSION on the win screen replays from the damage before it. A lost mission
+keeps nothing. Levels from LEVELS always start whole. The panel is
+Damage report, in Room · ENGINEERING. Ship Rooms fills it through Damage Report and Repair All,
+under Repairs.
+
 To give it art, use the Art list on `Ship`. It has one slot per room painting: BRIDGE painting,
 ENGINEERING painting, HANGAR painting and QUARTERS painting. It has one slot per person: XO
 picture, CHIEF ENGINEER picture, FLIGHT LEADER picture and MARINE SERGEANT picture. Put a sprite in

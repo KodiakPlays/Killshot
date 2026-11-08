@@ -54,8 +54,9 @@ SETTINGS.
 NEW GAME opens SAVE SLOTS. There are three slots. An empty slot starts a new
 campaign. A used slot continues its campaign. The SECTOR MAP opens. Each mission
 is a dot. Click the dot, then LAUNCH. Win the mission, and the next dot shows.
-After a won mission, the ship's rooms show before the map. The game saves after
-each win. DELETE on a used slot empties it.
+After a won mission, the ship's rooms show before the map. Damage stays on the
+ship between campaign missions until REPAIR ALL in ENGINEERING. The game saves
+after each win. DELETE on a used slot empties it.
 
 LEVELS opens the MISSIONS list, for testing. Pick a level.
 

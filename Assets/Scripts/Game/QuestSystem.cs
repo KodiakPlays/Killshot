@@ -139,6 +139,7 @@ public class QuestSystem : MonoBehaviour
     {
         StartedAt = board.MissionSeconds;
         Stage = QuestStage.LocateTarget;
+        SaveGame.PutDamage(board.State.damage); // owner 2026-11-08: in the campaign, the damage from the last mission is still there
     }
 
     // Once per board tick, after the ships have moved, fired and taken their hits.
@@ -328,7 +329,7 @@ public class QuestSystem : MonoBehaviour
         EndedAt = Time.unscaledTime;
         board.missionAlarm = board.missionCount = null;
         board.Pause();
-        if (stage == QuestStage.MissionComplete) SaveGame.Won(TacticalWorld.chosenLevel); // owner 2026-11-08: the campaign notes the win, and the sector map opens the next mission
+        if (stage == QuestStage.MissionComplete) { SaveGame.KeepDamage(board.State.damage); SaveGame.Won(TacticalWorld.chosenLevel); } // owner 2026-11-08: the campaign keeps the damage and notes the win; the sector map opens the next mission
         Debug.Log("[QuestSystem] " + (stage == QuestStage.MissionComplete ? "Mission complete" : "Mission failed: " + reason));
     }
 }

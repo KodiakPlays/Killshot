@@ -75,7 +75,7 @@ public class EndScreenPanel : Panel
     public override bool Click(string action, string arg)
     {
         if (action == "end.restart") { SceneManager.LoadScene(gameObject.scene.name); return true; } // the board loads its level again
-        if (action == "end.menu") { SceneManager.LoadScene(SaveGame.InCampaign ? campaignScene : menuScene); return true; }
+        if (action == "end.menu") { SaveGame.KeepWonDamage(); SceneManager.LoadScene(SaveGame.InCampaign ? campaignScene : menuScene); return true; }
         if (action == "end.pause") // Escape, and RESUME
         {
             if (quest && quest.Over) return true; // the end screen has its own buttons

@@ -59,6 +59,12 @@ public class ShipRooms : MonoBehaviour
     [Tooltip("The answer buttons, top first. Each one's first text is its words.")]
     [SerializeField] private Button[] replyButtons;
 
+    [Header("Repairs (owner 2026-11-08): in the campaign, damage stays on the ship until it is repaired here")]
+    [Tooltip("The damage report in ENGINEERING: each part of our ship that is not whole.")]
+    [SerializeField] private TMP_Text damageReport;
+    [Tooltip("REPAIR ALL: the ship is whole again. Shown while there is damage.")]
+    [SerializeField] private Button repairAll;
+
     [Header("Look")]
     [SerializeField] private Color tabPicked = new Color32(0xE0, 0xA0, 0x20, 0xFF);
     [SerializeField] private Color tabNot = new Color32(0x77, 0x82, 0x8A, 0xFF);
@@ -86,6 +92,8 @@ public class ShipRooms : MonoBehaviour
             int k = i;
             replyButtons[i].onClick.AddListener(() => Answer(k));
         }
+        if (repairAll) repairAll.onClick.AddListener(() => { SaveGame.Repair(); ShowDamage(); });
+        ShowDamage();
         Show(0);
     }
 
@@ -106,6 +114,19 @@ public class ShipRooms : MonoBehaviour
         }
         talking = null;
         talkBox.SetActive(false);
+    }
+
+    void ShowDamage()
+    {
+        if (!damageReport) return;
+        var damage = SaveGame.InCampaign ? SaveGame.Current.damage : null;
+        bool hurt = damage != null && damage.Count > 0;
+        var lines = new System.Text.StringBuilder();
+        if (hurt)
+            foreach (var p in damage)
+                if (p.now < p.most) lines.AppendLine(p.name.PadRight(16) + Mathf.FloorToInt(p.now) + " / " + Mathf.RoundToInt(p.most));
+        damageReport.text = hurt ? lines.ToString() : "ALL PARTS WHOLE.";
+        if (repairAll) repairAll.gameObject.SetActive(hurt);
     }
 
     void Talk(Person person)

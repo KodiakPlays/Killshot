@@ -21,6 +21,16 @@ public static class SaveGame
         public string savedAt = "";
         public List<string> done = new List<string>(); // the levels won, by scene name
         public int dotsShown; // dots the sector map has shown: a newer one fades in the first time
+        [Tooltip("Owner 2026-11-08: our ship's damage after the last mission won, kept for the next one; empty when it is whole.")]
+        public List<Part> damage = new List<Part>();
+    }
+
+    /// <summary>One part of our ship: a side's armour, or a room's integrity (0 to 5).</summary>
+    [System.Serializable]
+    public class Part
+    {
+        public string name;
+        public float now, most;
     }
 
     public const int Version = 1;
@@ -78,6 +88,51 @@ public static class SaveGame
             try { if (File.Exists(p)) File.Delete(p); }
             catch (System.Exception e) { Debug.LogWarning("[SaveGame] Can't delete " + p + ": " + e.Message); }
         if (Slot == slot) Leave();
+    }
+
+    /// <summary>Owner 2026-11-08: in the campaign, damage stays on the ship from one mission to the next until it is repaired.
+    /// A won mission keeps our ship's armour and rooms as they ended (fires and crew don't stay). The level list's levels
+    /// still start whole.</summary>
+    // A win's damage waits here until MISSION SELECT: RESTART MISSION on the win screen replays from the damage before it.
+    private static List<Part> wonDamage;
+
+    public static void KeepDamage(DamageSystem d)
+    {
+        if (!InCampaign || d == null) return;
+        var parts = new List<Part>();
+        for (int i = 0; i < DamageSystem.Sides.Length; i++) parts.Add(new Part { name = DamageSystem.Sides[i] + " ARMOUR", now = d.SideArmour[i], most = d.stats.sideArmourMax[i] });
+        foreach (var c in d.compartments) parts.Add(new Part { name = c.name, now = Mathf.Max(1, c.integ), most = 5 }); // a room comes back at 1 at least: a reactor at 0 is a lost ship
+        wonDamage = parts.Exists(p => p.now < p.most) ? parts : new List<Part>();
+    }
+
+    /// <summary>MISSION SELECT after a win: the win's damage goes into the save.</summary>
+    public static void KeepWonDamage()
+    {
+        if (!InCampaign || wonDamage == null) return;
+        Current.damage = wonDamage;
+        wonDamage = null;
+        Save();
+    }
+
+    /// <summary>A campaign mission starts with the damage kept from the last one.</summary>
+    public static void PutDamage(DamageSystem d)
+    {
+        wonDamage = null; // a mission starting (or started again) drops a win's damage not yet kept
+        if (!InCampaign || d == null) return;
+        foreach (var p in Current.damage)
+        {
+            int side = System.Array.IndexOf(DamageSystem.Sides, p.name.Replace(" ARMOUR", ""));
+            if (side >= 0) { d.SideArmour[side] = Mathf.Min(p.now, d.stats.sideArmourMax[side]); continue; }
+            foreach (var c in d.compartments) if (c.name == p.name) c.integ = Mathf.Clamp(Mathf.RoundToInt(p.now), 1, 5);
+        }
+    }
+
+    /// <summary>ENGINEERING's REPAIR ALL: the ship is whole again, and saved.</summary>
+    public static void Repair()
+    {
+        if (!InCampaign) return;
+        Current.damage.Clear();
+        Save();
     }
 
     /// <summary>A mission won in the campaign: noted and saved. Outside the campaign it does nothing.</summary>
