@@ -75,6 +75,32 @@ public class PlotPanel : Panel
     }
     [Tooltip("Owner 2026-11-08: space under the ships in the close-up, the farthest layer first. The pictures are in Assets/Art/Close Up.")]
     [SerializeField] private NebulaLayer[] nebula;
+    private Material nebulaMaterial; // its own copy: it shows its pictures' see-through parts the usual way
+
+    [Header("Close-up shots and blasts (owner 2026-11-08: a shot fired looks like a shot)")]
+    [Tooltip("What shot streaks are drawn with: Assets/Art/Close Up/Glow.mat. Its Colour sets how bright every glow is.")]
+    [SerializeField] private Material glow;
+    [Tooltip("Plays where a shot hits, or a torpedo is shot down: Assets/Art/Close Up/Hit Flash.prefab.")]
+    [SerializeField] private ParticleSystem hitFlash;
+    [Tooltip("Plays where a ship is destroyed: Assets/Art/Close Up/Kill Blast.prefab.")]
+    [SerializeField] private ParticleSystem killBlast;
+    [Tooltip("A destroyed ship's two halves in the close-up: Assets/Art/Close Up/Wreck Metal.mat.")]
+    [SerializeField] private Material wreckLook;
+    [Tooltip("A shot streak's width at the front, units: a railgun slug, then a torpedo.")]
+    [Tune("Plot & our ship")] [SerializeField] private float slugWidthUnits = 6f, torpedoWidthUnits = 11f;
+    [Tooltip("The colour of our shots' streaks, then the enemy's. The Glow material makes them brighter still.")]
+    [Tune("Plot & our ship")] [SerializeField] private Color ourShotGlow = new Color(0.5f, 0.75f, 1f), theirShotGlow = new Color(1f, 0.35f, 0.15f);
+    const float EffectZ = -100f; // in front of the hulls, toward the close-up camera
+    struct Shot { public WeaponSystem.Round r; public Vector3 head, tail; public bool ours; }
+    private readonly List<Shot> shotsNow = new List<Shot>();
+    private readonly Dictionary<WeaponSystem.Round, Vector3> shotsBefore = new Dictionary<WeaponSystem.Round, Vector3>();
+    private readonly List<LineRenderer> streaks = new List<LineRenderer>();
+    private readonly HashSet<WeaponSystem.Round> flying = new HashSet<WeaponSystem.Round>();
+    private readonly List<ParticleSystem[]> blasts = new List<ParticleSystem[]>(); // flashes and blasts playing: they run in game time
+    const float StreakTail = 0.35f; // a streak's width at its tail, as a share of its width at the front
+    const float BlastWithinSeconds = 2f; // a kill first seen this many game seconds after it happened gets no blast
+    class Halves { public Transform[] piece = new Transform[2]; public Vector3[] centre = new Vector3[2]; }
+    private readonly Dictionary<ShipState.Track, Halves> wrecks = new Dictionary<ShipState.Track, Halves>();
     private Camera closeUpCamera;
     private RenderTexture closeUpTexture;
     // the ships the close-up leaves out: those out of sight (a rock in the way), and wrecks, which keep their line
@@ -327,7 +353,7 @@ public class PlotPanel : Panel
     Vector2 OwnAt => Screen(State.nav.DrawnX, State.nav.DrawnY);
     /// <summary>Owner 2026-11-01: a shot where it is drawn now, and the far end of its trail. It slides toward its spot at the
     /// next tick, at up to twice its speed. It doesn't slow for a hit: the dot stops there and the trail runs on into it.</summary>
-    Vector2 ShotAt(WeaponSystem.Round r, out Vector2 tail)
+    Vector2 ShotAt(WeaponSystem.Round r, out Vector2 tail, bool ours)
     {
         double dt = Controls.TickGameSeconds, step = r.speed * dt, pxPerUnit = Controls.ZoomExact / UnitsPerPx;
         Controls.Slide(ref r.drawn, r.x, r.y, r.x + r.dx * step, r.y + r.dy * step, r.speed * 2);
@@ -335,6 +361,12 @@ public class PlotPanel : Panel
         Vector2 at = Screen(r.drawn.x - r.dx * past, r.drawn.y - r.dy * past);
         double trail = System.Math.Min(slugTrailPx * r.speed / State.weapons.stats.slugSpeedUnits, (r.travelled + along) * pxPerUnit) - past * pxPerUnit;
         tail = at + new Vector2((float)-r.dx, (float)r.dy) * (float)System.Math.Max(0, trail); // board y is down
+        if (closeUpCamera && closeUpCamera.enabled) // owner 2026-11-08: the same shot as a glowing streak in the close-up
+        {
+            double hx = r.drawn.x - r.dx * past, hy = r.drawn.y - r.dy * past;
+            double back = System.Math.Max(0, System.Math.Min(slugTrailPx * r.speed / State.weapons.stats.slugSpeedUnits * UnitsPerPx, r.travelled + along) - past); // its x1 length in units
+            shotsNow.Add(new Shot { r = r, ours = ours, head = new Vector3((float)hx, (float)hy, EffectZ), tail = new Vector3((float)(hx - r.dx * back), (float)(hy - r.dy * back), EffectZ) });
+        }
         return at;
     }
     // The targeting computer's white corners round a point on the plot.
@@ -587,7 +619,7 @@ public class PlotPanel : Panel
         var slugInk = ownShipColor.gamma;
         foreach (var r in s.weapons.Rounds)
         {
-            Vector2 tail, at = ShotAt(r, out tail);
+            Vector2 tail, at = ShotAt(r, out tail, true);
             shapes.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = slugInk });
             shapes.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = tail, alpha = 0.8f, ink = slugInk });
         }
@@ -782,7 +814,7 @@ public class PlotPanel : Panel
                 // its model from above, sized as ours is; north up like ours (the model turns)
                 contactShipImage.texture = view.Texture;
                 var picInk = ink.gamma;
-                if (!t.wreck) picInk.a *= 1f - closeUp; // the close-up shows the ship itself
+                if (!t.wreck || (wrecks.TryGetValue(t, out var cutUp) && cutUp != null)) picInk.a *= 1f - closeUp; // the close-up shows the ship itself (a wreck, in two); a wreck it can't cut keeps its line picture
                 contactShipImage.color = picInk;
                 float px = ShipPx(view) / view.ShipFill;
                 if (t.wreck) ShowBroken(t, view, at, px, ink);
@@ -827,11 +859,12 @@ public class PlotPanel : Panel
         // enemy torpedoes coming at us (Step 55): a red dot with a trail, like our own rounds, no label
         foreach (var r in s.weapons.Incoming)
         {
-            Vector2 tail, at = ShotAt(r, out tail);
+            Vector2 tail, at = ShotAt(r, out tail, false);
             dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
             dots.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = tail, alpha = 0.8f });
         }
         if (contactMarks) contactMarks.Set(dots);
+        ShowShotsAndBlasts();
 
         // passive bearings (owner 2026-11-02): a red bar curved along the DRADIS circle toward each contact DRADIS hears but has
         // not identified (bearing only, no range), with its bearing just outside; brighter, its label amber, while the scope is
@@ -961,7 +994,7 @@ public class PlotPanel : Panel
     {
         if (!wreckBackHalf) wreckBackHalf = Instantiate(contactShipImage, contactShipImage.transform.parent);
         wreckBackHalf.texture = view.Texture;
-        wreckBackHalf.color = ink.gamma;
+        wreckBackHalf.color = contactShipImage.color;
         wreckPictured = true;
         t.wreckSeenAt = State.missionNow;
         float hdg = (float)(t.nav ? t.nav.DrawnHeading : t.worldHdg), age = State.missionNow - t.wreckAt;
@@ -1224,7 +1257,7 @@ public class PlotPanel : Panel
             closeUpCamera.orthographic = true;
             closeUpCamera.clearFlags = CameraClearFlags.SolidColor;
             closeUpCamera.backgroundColor = new Color(0, 0, 0, 0);
-            closeUpCamera.cullingMask = LayerMask.GetMask("WorldShips", "WorldTerrain");
+            closeUpCamera.cullingMask = LayerMask.GetMask("WorldShips", "WorldTerrain", "TransparentFX"); // TransparentFX: shots, blasts, wreck halves
             closeUpCamera.nearClipPlane = 1f;
             closeUpCamera.farClipPlane = 200000f;
             var data = closeUpCamera.GetUniversalAdditionalCameraData();
@@ -1234,6 +1267,8 @@ public class PlotPanel : Panel
             if (closeUpLook) { var look = closeUpCamera.gameObject.AddComponent<Volume>(); look.isGlobal = true; look.sharedProfile = closeUpLook; }
             closeUpImage.material = new Material(closeUpImage.material); // its own copy: the circles are set on it
             closeUpImage.material.SetFloat("_KeyBlack", 0f); // shown as filmed
+            nebulaMaterial = new Material(closeUpImage.material);
+            closeUpImage.material.SetFloat("_SrcBlend", (float)BlendMode.One); // its light adds over the nebula: a glow over empty space shows
             RenderPipelineManager.beginCameraRendering += CloseUpBegins;
             RenderPipelineManager.endCameraRendering += CloseUpEnds;
         }
@@ -1257,7 +1292,7 @@ public class PlotPanel : Panel
             foreach (var n in nebula)
             {
                 if (!n.image) continue;
-                n.image.material = closeUpImage.material; // cut at the visual range circles too
+                n.image.material = nebulaMaterial; // cut at the visual range circles too
                 n.image.rectTransform.sizeDelta = size;
                 Put(n.image.rectTransform, plotCentre, 0f);
                 double tilePx = n.tileUnits / UnitsPerPx * System.Math.Pow(Controls.ZoomExact, n.depth);
@@ -1271,6 +1306,156 @@ public class PlotPanel : Panel
             float from = sunFromDeg * Mathf.Deg2Rad, up = sunHeightDeg * Mathf.Deg2Rad;
             sun.transform.rotation = Quaternion.LookRotation(-new Vector3(Mathf.Cos(up) * Mathf.Sin(from), Mathf.Cos(up) * Mathf.Cos(from), -Mathf.Sin(up)));
         }
+    }
+
+    // Owner 2026-11-08: in the close-up each shot in flight is a glowing streak, ours blue-white and theirs red. A shot gone
+    // before its reach ran out has hit something, or been shot down: a flash where it was. A destroyed ship: a blast, and
+    // its model in two halves that drift apart and turn, as its line picture does (owner 2026-11-01).
+    void ShowShotsAndBlasts()
+    {
+        bool on = closeUpCamera && closeUpCamera.enabled;
+        while (streaks.Count < shotsNow.Count) streaks.Add(NewStreak());
+        for (int i = 0; i < streaks.Count; i++)
+        {
+            var line = streaks[i];
+            line.enabled = i < shotsNow.Count;
+            if (!line.enabled) continue;
+            var shot = shotsNow[i];
+            var ink = shot.ours ? ourShotGlow : theirShotGlow;
+            line.SetPosition(0, shot.tail);
+            line.SetPosition(1, shot.head);
+            float w = shot.r.torpedo ? torpedoWidthUnits : slugWidthUnits;
+            line.startWidth = w * StreakTail;
+            line.endWidth = w;
+            line.startColor = new Color(ink.r, ink.g, ink.b, 0f);
+            line.endColor = ink;
+        }
+        flying.Clear();
+        foreach (var shot in shotsNow) flying.Add(shot.r);
+        if (on && hitFlash)
+            foreach (var before in shotsBefore)
+                if (!flying.Contains(before.Key) && !Flying(before.Key) && before.Key.travelled < before.Key.maxUnits - 1) Play(hitFlash, before.Value);
+        KeepGameTime();
+        shotsBefore.Clear();
+        foreach (var shot in shotsNow) shotsBefore[shot.r] = shot.head;
+        shotsNow.Clear();
+
+        foreach (var t in State.tracks)
+        {
+            if (!t.wreck || !t.nav) continue;
+            if (!wrecks.TryGetValue(t, out var halves))
+            {
+                if (!on) continue; // cut only when the close-up first shows it: a big model takes a moment
+                wrecks[t] = halves = Break(t);
+                if (on && killBlast && State.missionNow - t.wreckAt < BlastWithinSeconds) Play(killBlast, new Vector3((float)t.nav.DrawnX, (float)t.nav.DrawnY, EffectZ));
+            }
+            if (halves == null) continue;
+            float hdg = (float)t.nav.DrawnHeading, age = State.missionNow - t.wreckAt;
+            var turn = Quaternion.Euler(0f, 0f, -hdg);
+            var at = new Vector3((float)t.nav.DrawnX, (float)t.nav.DrawnY, 0f);
+            var nose = turn * Vector3.up;
+            bool show = on && State.sensors.InSight(t);
+            for (int h = 0; h < 2; h++)
+            {
+                var piece = halves.piece[h];
+                piece.gameObject.SetActive(show);
+                if (!show) continue;
+                float apart = (h == 0 ? 1f : -1f) * wreckDriftUnits * age, spin = h == 0 ? wreckSpinDeg * age : -wreckSpinDeg * 0.7f * age;
+                piece.SetPositionAndRotation(at + turn * halves.centre[h] + nose * apart, Quaternion.Euler(0f, 0f, spin - hdg));
+            }
+        }
+    }
+
+    // A flash or a blast, in game time: still while the board is paused, five times as fast at x5 (owner: everything in game time).
+    void Play(ParticleSystem effect, Vector3 at)
+    {
+        if (effect) blasts.Add(Instantiate(effect, at, Quaternion.identity).GetComponentsInChildren<ParticleSystem>());
+    }
+    void KeepGameTime()
+    {
+        blasts.RemoveAll(b => b[0] == null); // a finished one destroys itself
+        float speed = Controls.Paused ? 0f : Controls.Rate;
+        foreach (var b in blasts) foreach (var ps in b) { var main = ps.main; main.simulationSpeed = speed; }
+    }
+
+    // a round still in either list (one not drawn this time, while the close-up was off, is not a hit)
+    bool Flying(WeaponSystem.Round r) => State.weapons.Rounds.Contains(r) || State.weapons.Incoming.Contains(r);
+
+    LineRenderer NewStreak()
+    {
+        var line = new GameObject("Shot streak").AddComponent<LineRenderer>();
+        line.gameObject.layer = LayerMask.NameToLayer("TransparentFX");
+        line.sharedMaterial = glow;
+        line.positionCount = 2;
+        line.useWorldSpace = true;
+        line.textureMode = LineTextureMode.Stretch;
+        line.alignment = LineAlignment.View;
+        line.shadowCastingMode = ShadowCastingMode.Off;
+        line.receiveShadows = false;
+        return line;
+    }
+
+    // A destroyed ship's model cut in two across the ship where the shot struck (breakAt, 0 the stern to 1 the nose): the
+    // triangles ahead of the cut, and those behind. Each half is centred on its own middle so it turns about it. Null if the
+    // model can't be read (its file needs Read/Write on, as the cruiser's has).
+    Halves Break(ShipState.Track t)
+    {
+        var ship = t.nav.GetComponent<Ship>();
+        var mf = ship ? ship.GetComponentInChildren<MeshFilter>(true) : null;
+        if (!mf || !mf.sharedMesh || !mf.sharedMesh.isReadable || !wreckLook) return null;
+        var m = mf.sharedMesh;
+        var toShip = ship.transform.worldToLocalMatrix * mf.transform.localToWorldMatrix; // the ship's own space: nose up (+y)
+        var v = m.vertices;
+        var normals = m.normals;
+        for (int i = 0; i < v.Length; i++) v[i] = toShip.MultiplyPoint3x4(v[i]);
+        for (int i = 0; i < normals.Length; i++) normals[i] = toShip.MultiplyVector(normals[i]).normalized;
+        float cut = (t.breakAt - 0.5f) * ship.Stats.length;
+        var parts = new[] { new List<int>(), new List<int>() }; // ahead of the cut, behind it
+        for (int sub = 0; sub < m.subMeshCount; sub++)
+        {
+            var tri = m.GetTriangles(sub);
+            for (int k = 0; k < tri.Length; k += 3)
+            {
+                var part = parts[(v[tri[k]].y + v[tri[k + 1]].y + v[tri[k + 2]].y) / 3f >= cut ? 0 : 1];
+                part.Add(tri[k]); part.Add(tri[k + 1]); part.Add(tri[k + 2]);
+            }
+        }
+        var halves = new Halves();
+        for (int h = 0; h < 2; h++)
+        {
+            var c = Vector3.zero;
+            foreach (int i in parts[h]) c += v[i];
+            c /= Mathf.Max(1, parts[h].Count);
+            var newIndex = new Dictionary<int, int>(); // only the points this half uses
+            var points = new List<Vector3>();
+            var pointNormals = new List<Vector3>();
+            var tris = parts[h];
+            for (int k = 0; k < tris.Count; k++)
+            {
+                if (!newIndex.TryGetValue(tris[k], out int n))
+                {
+                    newIndex[tris[k]] = n = points.Count;
+                    points.Add(v[tris[k]] - c);
+                    pointNormals.Add(tris[k] < normals.Length ? normals[tris[k]] : Vector3.forward);
+                }
+                tris[k] = n;
+            }
+            var mesh = new Mesh { name = ship.name + (h == 0 ? " front half" : " back half"), indexFormat = points.Count > 65535 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16 };
+            mesh.SetVertices(points);
+            mesh.SetNormals(pointNormals);
+            mesh.SetTriangles(tris, 0);
+            mesh.UploadMeshData(true);
+            var go = new GameObject(mesh.name);
+            go.layer = LayerMask.NameToLayer("TransparentFX");
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var mr = go.AddComponent<MeshRenderer>();
+            mr.sharedMaterial = wreckLook;
+            mr.shadowCastingMode = ShadowCastingMode.Off;
+            go.SetActive(false);
+            halves.piece[h] = go.transform;
+            halves.centre[h] = c;
+        }
+        return halves;
     }
 
     void CloseUpBegins(ScriptableRenderContext context, Camera cam) { if (cam == closeUpCamera) LeaveOut(true); }
@@ -1321,7 +1506,7 @@ public class PlotPanel : Panel
         }
         Add(State.nav.DrawnX, State.nav.DrawnY);
         if (State.hangar) foreach (var f in State.hangar.Flights) Add(f.x, f.y);
-        foreach (var m in new[] { ruinsImage.material, rockEchoMarks.material, closeUpCamera ? closeUpImage.material : null })
+        foreach (var m in new[] { ruinsImage.material, rockEchoMarks.material, closeUpCamera ? closeUpImage.material : null, nebulaMaterial })
             if (m) { m.SetVectorArray("_Circles", sightCircles); m.SetFloat("_CircleCount", n); }
     }
 
@@ -1360,7 +1545,8 @@ public class PlotPanel : Panel
         if (ruinsTexture) { ruinsTexture.Release(); Destroy(ruinsTexture); }
         RenderPipelineManager.beginCameraRendering -= CloseUpBegins;
         RenderPipelineManager.endCameraRendering -= CloseUpEnds;
-        if (closeUpCamera) { closeUpCamera.targetTexture = null; Destroy(closeUpCamera.gameObject); if (closeUpImage) Destroy(closeUpImage.material); }
+        if (closeUpCamera) { closeUpCamera.targetTexture = null; Destroy(closeUpCamera.gameObject); if (closeUpImage) Destroy(closeUpImage.material); Destroy(nebulaMaterial); }
+        foreach (var w in wrecks.Values) if (w != null) foreach (var p in w.piece) if (p) { Destroy(p.GetComponent<MeshFilter>().sharedMesh); Destroy(p.gameObject); }
         if (closeUpTexture) { closeUpTexture.Release(); Destroy(closeUpTexture); }
     }
 

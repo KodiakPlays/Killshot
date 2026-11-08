@@ -481,9 +481,9 @@ zoom-out to x4. The scale box shows x1.0 up to x4.0.
 
 The close-up shows a ship only when it is in sight. A ship behind a rock is left out. Every ship is
 the same grey in the close-up. A ship's white, red or amber colour shows only in the
-line pictures. The name labels and the white lock corners still show. A destroyed ship keeps its line
-picture, broken in two, at every zoom. The close-up leaves wrecks out. Fighters, shots and torpedoes
-are drawn flat on top. Gas clouds are unchanged.
+line pictures. The name labels and the white lock corners still show. A destroyed ship breaks in two
+in the close-up too. Shots and blasts are below. Fighters are drawn flat on top. Shots and torpedoes
+keep their flat dot and trail on top. Gas clouds are unchanged.
 
 The close-up is the picture `Close-up (3D view)` in `Plot.prefab`. It is just above the three
 nebula pictures and under `Grid`. The grid lines, marks, labels, shots, fighters and torpedoes draw on top of it. It is
@@ -541,6 +541,46 @@ The metal reflects the nebula's colours. The board scene `02.1_Grid` uses
 Environment Reflections, Source Custom. It is a copy of Nebula Far, imported as a cube. If you
 change Nebula Far, change this copy too. The scene's ambient light is a flat dim violet. It is set
 in the Lighting window, under Environment Lighting. The line pictures do not change.
+
+In the close-up, every shot in flight is a glowing streak. Ours are blue-white. The enemy's are red.
+A torpedo's streak is wider than a railgun slug's. The flat dot and trail still draw on top. PDC fire
+has no streak yet. Flashes and blasts run in game time: they stop when the board is paused.
+
+Where a shot hits a ship, there is a flash: a burst of orange sparks with a white centre. The same
+flash shows when a torpedo is shot down. It shows only in the close-up.
+
+When a ship is destroyed, there is a blast: a big white flash, sparks and slow embers. Its model then
+splits in two where the shot struck, the same as its line picture. The two halves drift apart and
+turn slowly. **Wreck Drift Units** and **Wreck Spin Deg** set this for both pictures. The halves are a
+duller, darker grey metal. Zoomed out, the broken line picture shows as before. Between x1 and x1.5
+the two fade into each other.
+
+**Slug Width Units** (6) and **Torpedo Width Units** (11) set the streak's width at the front.
+**Our Shot Glow** and **Their Shot Glow** are the two streak colours. These and the two wreck values
+are on the Board tab of **Starwolf → Tuning**, under Plot & our ship.
+
+The shot and blast files are in `Assets/Art/Close Up`:
+- `Glow.mat`: every streak. Its Colour sets how bright every glow is. It is now 3.
+- `Glow.png`: the soft dot every streak, spark and flash is drawn with.
+- `Glow.shader`: the glow. It adds light.
+- `Hit Flash.prefab`: the hit's sparks and centre flash.
+- `Kill Blast.prefab`: the blast. It has Flash, sparks and Embers.
+- `Wreck Metal.mat`: the halves.
+
+**Glow**, **Hit Flash**, **Kill Blast** and **Wreck Look** on the Plot panel point at them. The glow
+in `Close Up Look.asset` has High Quality Filtering on, Scatter 0.55 and Threshold 0.9. The old
+settings showed a blocky halo round the blast.
+
+The shots, blasts and halves are on Unity's TransparentFX layer. Only the close-up camera films it.
+The `Sun` lights it too. The close-up picture lets its light add over the nebula. A glow over empty
+space shows. `Assets/UI/Shader/BoardLinearImage.shader` has a hidden value for this. Every other
+picture on the board is unchanged.
+
+The game reads a model's shape to cut it in two. A model that can't be read is not cut: that wreck keeps
+its broken line picture in the close-up. The model
+file of the Garuda and the frigate, `Assets/3D Assets/UpdatedStarships/StarWolf_Cruiser_mesh.fbx`,
+has Read/Write on. Our ship's model does not need it. For a new enemy model, turn on Read/Write in
+its import settings.
 
 While Fire Control is open, each railgun shows a soft dotted cone and a solid bar on
 `Weapon ring (drawn)`. The bar is the gun. **Rail Arc Alpha** and **Gun Bar Alpha** set how strong

@@ -2599,6 +2599,14 @@ MonoBehaviour:
     depth: 0.5
     tileUnits: 5000
     alpha: 0.8
+  glow: {fileID: 2100000, guid: af66b1a21a5344d229bac73232ac9977, type: 2}
+  hitFlash: {fileID: 1142910112094376467, guid: 05a0fd40663f74752ae62dbbff5d2d48, type: 3}
+  killBlast: {fileID: 4685710031669286314, guid: 41f334e56c0894ca7b03864350b24a97, type: 3}
+  wreckLook: {fileID: 2100000, guid: e3c120e16a21e4f64a9a000fc4140f61, type: 2}
+  slugWidthUnits: 6
+  torpedoWidthUnits: 11
+  ourShotGlow: {r: 0.5, g: 0.75, b: 1, a: 1}
+  theirShotGlow: {r: 1, g: 0.35, b: 0.15, a: 1}
   cloudImage: {fileID: 3679405572040343172}
   cloudAlpha: 0.45
   cloudRingAlpha: 0.5
