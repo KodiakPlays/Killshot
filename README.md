@@ -13,7 +13,8 @@ and auxiliary (AUX). A bus takes at most five units, so you can fully run only
 two. More power to DRADIS means less power for the guns. Every unit you draw
 makes the ship louder. Every advantage is bought by giving something up.
 
-There are seven levels. You pick one from the MISSIONS list. The enemy is the
+There are seven levels. NEW GAME plays them in order, as dots on the SECTOR
+MAP. LEVELS opens the MISSIONS list, where you can pick any of them. The enemy is the
 Garuda, a Garuda-class cruiser. In levels 1 and 3 to 5 it does not hunt you
 and does not fire. In COLD RUN and INTERCEPT it patrols and hunts you if it
 finds you.
@@ -47,8 +48,17 @@ Open the project in **Unity 6000.5.10f1** and load:
 Assets/Scenes/Tactical/00_Start.unity
 ```
 
-Press play. The intro runs by itself to a menu. Pick NEW GAME. The MISSIONS list
-opens. Pick a level. INITIALISING... shows, then the tactical board. The board
+Press play. The intro runs by itself to a menu: NEW GAME, LEVELS and
+SETTINGS.
+
+NEW GAME opens SAVE SLOTS. There are three slots. An empty slot starts a new
+campaign. A used slot continues its campaign. The SECTOR MAP opens. Each mission
+is a dot. Click the dot, then LAUNCH. Win the mission, and the next dot shows.
+The game saves after each win. DELETE on a used slot empties it.
+
+LEVELS opens the MISSIONS list, for testing. Pick a level.
+
+INITIALISING... shows, then the tactical board. The board
 loads your level from `Assets/Scenes/Levels/` on top of itself. To skip straight
 to the board, open `02.1_Grid.unity` instead. It plays Wolf Hunt.
 
@@ -96,7 +106,7 @@ Set Architecture to Intel 64-bit and click Build again. The check is in
 4. On the right, set **Architecture** to **Intel 64-bit**. Not ARM 64-bit. Not
    Intel 32-bit.
 5. Leave **Development Build** off.
-6. Check the scene list at the top. All ten scenes are ticked, and
+6. Check the scene list at the top. All twelve scenes are ticked, and
    `Tactical/00_Start` is first. The game starts from the first scene.
 7. Delete the old `Killshot-Builds/Windows/Starwolf-Win-64bit` folder and the old
    `Starwolf-Win-64bit.zip`. Old files left in the folder can end up in the new zip.
@@ -152,7 +162,7 @@ does a few things.
 |---|---|
 | Menu | The arrow keys or `Tab` move. `Enter` or `Space` picks. A click works too. |
 | MISSIONS list | The arrow keys move. `Enter` picks. A click works too. |
-| `Esc` | In a level, stop the game and open the menu: RESUME, QUIT GAME, RESTART MISSION and MISSION SELECT. `Esc` again, or RESUME, closes it. On the intro and the MISSIONS list, quit at once, with no confirm box. There it does nothing in the Unity editor. On the MISSION COMPLETE or SHIP LOST screen, it does nothing. |
+| `Esc` | In a level, stop the game and open the menu: RESUME, QUIT GAME, RESTART MISSION and MISSION SELECT. `Esc` again, or RESUME, closes it. On the intro, SAVE SLOTS, the SECTOR MAP and the MISSIONS list, quit at once, with no confirm box. There it does nothing in the Unity editor. On the MISSION COMPLETE or SHIP LOST screen, it does nothing. |
 | `P`, or the PAUSE key | Stop or start time. The board opens paused. |
 | Rate keys | Run time at x0.25, x1 or x5. |
 | Briefing icon, next to the rate keys | Open or close the briefing. |

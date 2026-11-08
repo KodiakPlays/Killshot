@@ -20,6 +20,8 @@ public class EndScreenPanel : Panel
     [Tune("Board & time")] [SerializeField] private float delaySeconds = 2f;
     [Tooltip("MISSION SELECT loads this scene: the mission list.")]
     [SerializeField] private string menuScene = "01_Briefing";
+    [Tooltip("Owner 2026-11-08: in the campaign, MISSION SELECT loads this scene instead.")]
+    [SerializeField] private string campaignScene = "SectorMap";
     [Tooltip("Pause menu only: RESUME and QUIT GAME.")]
     [SerializeField] private GameObject resumeButton, quitButton;
     [Tooltip("The target, our ship and the time, with their labels. Hidden on the pause menu.")]
@@ -73,7 +75,7 @@ public class EndScreenPanel : Panel
     public override bool Click(string action, string arg)
     {
         if (action == "end.restart") { SceneManager.LoadScene(gameObject.scene.name); return true; } // the board loads its level again
-        if (action == "end.menu") { SceneManager.LoadScene(menuScene); return true; }
+        if (action == "end.menu") { SceneManager.LoadScene(SaveGame.InCampaign ? campaignScene : menuScene); return true; }
         if (action == "end.pause") // Escape, and RESUME
         {
             if (quest && quest.Over) return true; // the end screen has its own buttons

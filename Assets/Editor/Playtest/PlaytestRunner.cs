@@ -217,9 +217,9 @@ public static class PlaytestRunner
         yield return 1.5f;
 
         // 2. NEW GAME (the menu reads the old Input class; call what the press calls)
-        intro.Activate(0);
+        intro.Activate(1); // owner 2026-11-08: NEW GAME opens SAVE SLOTS (the campaign); the second row, LEVELS, the level list
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "01_Briefing");
-        Check("NEW GAME opens the briefing", SceneManager.GetActiveScene().name == "01_Briefing", "called Activate(0), as pressing NEW GAME does");
+        Check("LEVELS opens the level list", SceneManager.GetActiveScene().name == "01_Briefing", "called Activate(1), as pressing LEVELS does");
         yield return 2f;
         Shot("02_briefing");
         yield return 0.2f;
@@ -1162,7 +1162,10 @@ public static class PlaytestRunner
         if (flight == null) yield break;
         float launchAngle = Mathf.DeltaAngle(s.nav.heading, (float)flight.hdg), targetAngle = Mathf.DeltaAngle(s.nav.heading, (float)(System.Math.Atan2(t07.worldX - s.nav.x, t07.worldY - s.nav.y) * 180 / System.Math.PI));
         bool facesTarget = launchAngle * targetAngle > 0 || Mathf.Abs(targetAngle) < 5f || Mathf.Abs(targetAngle) > 175f; // on the nose or the tail, either side will do
-        Check("They leave from the side facing GARUDA, tilted toward the stern", flight.runLeft > 0 && facesTarget && Mathf.Abs(Mathf.Abs(launchAngle) - 90f - (float)s.hangar.stats.launchTiltBackDeg) < 1f,
+        bool drawnLine = false; // Step 162: with a line drawn out of a hangar dot, they fly the line, not the stern tilt
+        foreach (var d in s.hangar.stats.dots) if (d.path != null && d.path.Length > 1) drawnLine = true;
+        Check("They leave from the side facing GARUDA, " + (drawnLine ? "along the hangar dot's drawn line" : "tilted toward the stern"),
+              flight.runLeft > 0 && facesTarget && (drawnLine || Mathf.Abs(Mathf.Abs(launchAngle) - 90f - (float)s.hangar.stats.launchTiltBackDeg) < 1f),
               "they leave at " + launchAngle.ToString("0") + " degrees from the nose, GARUDA is at " + targetAngle.ToString("0") + ", " + flight.runLeft.ToString("0") + " units of straight flight left");
         double fx0 = flight.x, fy0 = flight.y; float ft0 = board.MissionSeconds;
         yield return 1f; // at x1: a few game seconds, well before they arrive
@@ -1911,6 +1914,25 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "01_Briefing");
         Check("MISSION SELECT loads the mission list", SceneManager.GetActiveScene().name == "01_Briefing", SceneManager.GetActiveScene().name);
         yield return 1f;
+
+        // 32. Owner 2026-11-08: the campaign. Slot 3 (skipped if a real save is in it): SAVE SLOTS opens the SECTOR MAP with
+        //     one dot; a win is saved; the map then shows two. The slot is emptied again at the end.
+        if (SaveGame.Exists(2)) { Check("Campaign: slot 3 has a real save, so the campaign checks are skipped", true, "slot3.json kept"); yield break; }
+        SceneManager.LoadScene("SaveSlots");
+        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "SaveSlots");
+        yield return 0.6f; // past the click guard
+        GameObject.Find("Slot 3").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "SectorMap");
+        yield return 0.3f;
+        System.Func<int> dots = () => { int n = 0; foreach (var b in UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.None)) if (b.name.StartsWith("Dot")) n++; return n; };
+        Check("Campaign: slot 3 opens the SECTOR MAP with one dot, and its save file is made", SaveGame.Slot == 2 && SaveGame.Exists(2) && dots() == 1, "slot " + (SaveGame.Slot + 1) + ", " + dots() + " dot");
+        SaveGame.Won("FlightDrill"); // as QuestSystem does on MISSION COMPLETE
+        SceneManager.LoadScene("SectorMap");
+        yield return 0.5f;
+        var saved = SaveGame.Read(2);
+        Check("Campaign: a win is saved, and the map then shows the next dot", saved != null && saved.done.Contains("FlightDrill") && dots() == 2, (saved != null ? string.Join(",", saved.done.ToArray()) : "no save") + ", " + dots() + " dots");
+        SaveGame.Delete(2);
+        Check("Campaign: DELETE empties the slot", !SaveGame.Exists(2) && !SaveGame.InCampaign, "");
     }
 
     // How close a slug fired from (px,py) on this bearing passes a target moving at (vx,vy), units.

@@ -154,30 +154,51 @@ MonoBehaviour:
   sectionDuration: 4
   initialisingDuration: 2
   titleDuration: 4
-  pullbackDuration: 4
+  typeShare: 0.5
+  initialisingOnly: 0
+  titleOnly: 0
+  titleText: STARWOLF
+  secondRowText: LEVELS
+  titleOffset: 0
+  canvasOrder: 32767
+  finished:
+    m_PersistentCalls:
+      m_Calls: []
   humVolume: 0.12
   newGame:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1675068442}
         m_TargetAssemblyTypeName: ScreenFlow, Assembly-CSharp
-        m_MethodName: Advance
-        m_Mode: 1
+        m_MethodName: Go
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: SaveSlots
           m_BoolArgument: 0
         m_CallState: 2
   loadGame:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1675068442}
+        m_TargetAssemblyTypeName: ScreenFlow, Assembly-CSharp
+        m_MethodName: Go
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 01_Briefing
+          m_BoolArgument: 0
+        m_CallState: 2
   settings:
     m_PersistentCalls:
       m_Calls: []
-  loadGameAvailable: 0
+  loadGameAvailable: 1
 --- !u!4 &875863682
 Transform:
   m_ObjectHideFlags: 0
@@ -557,6 +578,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScreenFlow
   nextScene: 01_Briefing
   advanceOnEnter: 0
+  showFirst: {fileID: 0}
+  advanceAfterSeconds: 0
+  cards: []
 --- !u!4 &1675068443
 Transform:
   m_ObjectHideFlags: 0

@@ -48,6 +48,15 @@ public class ScreenFlow : MonoBehaviour
         else Advance();
     }
 
+    /// <summary>Load this scene at once (owner 2026-11-08: the title's NEW GAME opens SAVE SLOTS, its second row the level
+    /// list). Safe to call from a Button's or the title menu's event.</summary>
+    public void Go(string scene)
+    {
+        if (going) return;
+        going = true;
+        SceneManager.LoadScene(scene);
+    }
+
     /// <summary>Load the next scene. Safe to call from a Button's onClick.</summary>
     public void Advance()
     {

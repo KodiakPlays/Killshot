@@ -328,6 +328,7 @@ public class QuestSystem : MonoBehaviour
         EndedAt = Time.unscaledTime;
         board.missionAlarm = board.missionCount = null;
         board.Pause();
+        if (stage == QuestStage.MissionComplete) SaveGame.Won(TacticalWorld.chosenLevel); // owner 2026-11-08: the campaign notes the win, and the sector map opens the next mission
         Debug.Log("[QuestSystem] " + (stage == QuestStage.MissionComplete ? "Mission complete" : "Mission failed: " + reason));
     }
 }

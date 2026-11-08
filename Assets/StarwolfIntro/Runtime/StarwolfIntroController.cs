@@ -23,6 +23,8 @@ namespace Starwolf.Intro
         [Tooltip("Owner 2026-10-26: the welcome page after NEW GAME. Types the title in, then holds it on the phosphor screen with no menu; that page's own text draws on top.")]
         public bool titleOnly;
         public string titleText = "STARWOLF";
+        [Tooltip("The menu's second row (owner 2026-11-08: the title shows LEVEL LIST there).")]
+        public string secondRowText = "LOAD GAME";
         [Tooltip("Moves the title up (pixels on the 1920x1080 screen).")]
         public float titleOffset;
         [Tooltip("Overlay sort order of the phosphor screen. Lower it to let another canvas draw on top.")]
@@ -64,7 +66,7 @@ namespace Starwolf.Intro
                 material = new Material(displayShader) { hideFlags = HideFlags.HideAndDontSave };
                 masks = new[] { data.MakeMask("SECTION 36", true), data.MakeMask("INITIALISING...", false),
                     data.MakeMask(titleText, true), data.MakeMask("NEW GAME", false),
-                    data.MakeMask("LOAD GAME", false), data.MakeMask("SETTINGS", false) };
+                    data.MakeMask(secondRowText, false), data.MakeMask("SETTINGS", false) };
                 GridPitchPixels = data.Pitch;
                 ApplyStaticUniforms();
                 BuildCanvas();
