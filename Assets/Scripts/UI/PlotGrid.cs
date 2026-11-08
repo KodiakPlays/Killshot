@@ -17,7 +17,7 @@ public class PlotGrid : MaskableGraphic
     [Header("Scale (owner 2026-11-01): the square on screen is 50 units at x1, where our ship (200 units) is four squares long")]
     [Tooltip("Board px per 1,000 units at x1: 50 units is 38 px, a quarter of our ship's 152 px picture.")]
     [SerializeField] private float pxPer1000Units = 760f;
-    [SerializeField, Range(0.01f, 1f)] private float zoom = 1f;
+    [SerializeField, Range(0.01f, 10f)] private float zoom = 1f;
     [Tooltip("The square sizes, units, smallest first. Each is a whole number of the smallest. The last never fades.")]
     [Tune("Plot & our ship")] [SerializeField] private float[] stepUnits = { 50f, 100f, 200f, 500f, 1000f, 2000f, 5000f };
     [Tooltip("A big square is this many squares each way (owner 2026-11-01: 5 x 5, not 10 x 10).")]
@@ -66,7 +66,7 @@ public class PlotGrid : MaskableGraphic
     /// <summary>The plot's scale: board px per 1,000 units at x1 (the plot panel reads it too).</summary>
     public float PxPer1000Units => pxPer1000Units;
     public Tint GridTint { get { return tint; } set { tint = value; SetVerticesDirty(); } }
-    public float Zoom { get { return zoom; } set { zoom = Mathf.Clamp(value, 0.01f, 1f); SetVerticesDirty(); } }
+    public float Zoom { get { return zoom; } set { zoom = Mathf.Clamp(value, 0.01f, 10f); SetVerticesDirty(); } }
     /// <summary>Step 41: how far the lines are shifted, board px (x right, y down), so the grid
     /// stays fixed in the world when the plot view is panned.</summary>
     public Vector2 OffsetPx { get { return offsetPx; } set { if (value != offsetPx) { offsetPx = value; SetVerticesDirty(); } } }

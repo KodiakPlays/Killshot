@@ -351,7 +351,8 @@ The plot is 1712 × 890 px. Its top-left corner is at board x 104, y 100. Its pa
 count from that corner.
 
 The prefab has these parts, from back to front:
-- `Ground`, `Grid` and `Glow`: the plot's background, the grid and its glow
+- `Ground`, `Grid` and `Glow`: the plot's background, the grid and its glow. `Close-up (3D view)`
+  is between `Ground` and `Grid`: the real look of ships and rocks when you zoom in (see below)
 - `Scale`: the axis numbers, made by code
 - `Design mock-up (off)`: switched off. It has the three parts that were kept from the design's
   sample picture:
@@ -465,6 +466,50 @@ need no art. **Rock Echo Seconds** (30), **Rock Echo Blink Seconds** (1), **Rock
 (10) and **Rock Echo Ink** (the grey) set them. They are on the Board tab of **Starwolf → Tuning**,
 under Sensors. `BoardLinearImage` cuts the rocks and the hollow circles at up to 4 circles: our
 ship's and up to 3 fighter flights'. Every other picture using that material is unaffected. Rocks throw no false dots (Step 157).
+
+Zoom in close and the ships and rocks inside visual range show as real 3D models. Ships are grey
+metal. Rocks are dark rock. One sun lights them. The bright spots have a soft glow. Zoom out and they
+fade back into the line pictures. Past visual range nothing changes: DRADIS shows signals as before.
+
+The close-up starts to show at zoom x1. At x1.5 it has fully replaced the line pictures. A level
+opens at x1, with the line pictures. **Close Up From Zoom** (1) and **Close Up Full Zoom** (1.5) set these. They are on the Board tab of
+**Starwolf → Tuning**, under Plot & our ship. The plot zooms in to x4. At x4 our ship is 608 px long.
+**Zoom In Limit** (4) sets this, on the same tab under Board & time. The SCALE knob turns from full
+zoom-out to x4. The scale box shows x1.0 up to x4.0.
+
+The close-up shows a ship only when it is in sight. A ship behind a rock is left out. Every ship is
+the same grey in the close-up. A ship's white, red or amber colour shows only in the
+line pictures. The name labels and the white lock corners still show. A destroyed ship keeps its line
+picture, broken in two, at every zoom. The close-up leaves wrecks out. Fighters, shots and torpedoes
+are drawn flat on top. Gas clouds are unchanged.
+
+The close-up is the picture `Close-up (3D view)` in `Plot.prefab`. It is just above `Ground` and
+under `Grid`. The grid lines, marks, labels, shots, fighters and torpedoes draw on top of it. It is
+cut at the visual range circles round our ship and our fighter flights, the same way the rocks are
+cut. It fades in with the rest of the plot when the board appears. **Close Up Image** on the Plot
+panel points at it. **Close Up Look** points at the glow file.
+
+The sun is the light called `Sun` in the board scene `02.1_Grid`. It lights ships and rocks.
+**Sun From Deg** (300) is the way the sunlight comes from, in degrees clockwise from north.
+**Sun Height Deg** (35) is how high it is above the plot. At 90 it shines straight down. Both are on
+the Board tab, under Plot & our ship. To change the sun's colour or brightness, click `Sun` in the
+scene and change them on the light. It is the scene's Sun Source, in the Lighting window.
+
+The look files are in `Assets/Art/Close Up`:
+- `Ship Metal.mat`: the grey metal for every ship.
+- `Rock.mat`: every rock and wreck piece of the level.
+- `Close Up Look.asset`: the glow. Open it to change the glow's strength.
+
+Ask a technical artist before you change the renderer. It is `Assets/Settings/Close Up Renderer.asset`,
+a copy of the game's renderer without the line look. It paints ships with Ship Metal and rocks with
+Rock. It is number 1 in the renderer list on `Assets/Settings/PC_RPAsset.asset`. **Close Up Renderer**
+(1) on the Plot panel points at it. Alpha Processing is on in PC_RPAsset. It lets the glow keep the
+see-through background.
+
+The ship models are their real length: our Asura 200 units, the Garuda 350, the frigate 100. The two
+cameras that film the line pictures, Ship View Camera and Contact View Camera · Garuda, are moved back
+to match. Each films only its own ship. **Own Ship Max Px** (1200) lets a ship's drawn size follow its
+model up to x4.
 
 While Fire Control is open, each railgun shows a soft dotted cone and a solid bar on
 `Weapon ring (drawn)`. The bar is the gun. **Rail Arc Alpha** and **Gun Bar Alpha** set how strong

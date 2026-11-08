@@ -195,10 +195,13 @@ public class BoardManager : MonoBehaviour
     static readonly string[] TabActions = { "tool", "drawer", "helm", "orders", "scope" };
 
     [Header("Console — SCALE knob and grid tint")]
-    [SerializeField, Range(0.01f, 1f)] private float zoom = 1f;
+    [SerializeField, Range(0.01f, 10f)] private float zoom = 1f;
     [Tooltip("Full zoom-out (owner 2026-11-01, Step 130: x0.058, where a 20,000-unit battle space just fits the plot's height). Past the battle space the grid carries on.")]
     [Tune("Board & time")]
     [SerializeField, Range(0.01f, 1f)] private float zoomOutLimit = 0.1f;
+    [Tooltip("Full zoom-in (owner 2026-11-08: zoom in close to see the real ships). At x1 our ship is 152 px long; at x4, 608 px.")]
+    [Tune("Board & time")]
+    [SerializeField, Range(1f, 10f)] private float zoomInLimit = 4f;
     [Tooltip("SCALE knob: zoom x10 per this many px of drag (UIStateSpec §8.2).")]
     [Tune("Board & time")]
     [SerializeField] private float zoomDragPxPerDecade = 160f;
@@ -611,13 +614,13 @@ public class BoardManager : MonoBehaviour
         // exact double is kept for the next step, the float only for display and the grid.
         // Below x0.1, z*1000 (owner 2026-10-29: down to x0.01), so the wheel's x1.12 still moves it.
         double k = z < 0.1 ? 1000.0 : 100.0;
-        zoomExact = System.Math.Max(MinZoom, System.Math.Min(1, System.Math.Floor(z * k + 0.5) / k));
+        zoomExact = System.Math.Max(MinZoom, System.Math.Min(zoomInLimit, System.Math.Floor(z * k + 0.5) / k));
         zoom = (float)zoomExact;
         if (grid) grid.Zoom = zoom;
-        if (zoomLabel) zoomLabel.text = "x" + (zoom >= 1f ? "1.0" : zoom.ToString(zoom < 0.1f ? "0.000" : "0.00", System.Globalization.CultureInfo.InvariantCulture));
-        // knobAngle: -140° at full zoom-out, +140° at x1, even per x10
-        float decades = Mathf.Max(0.01f, -Mathf.Log10((float)MinZoom));
-        scaleDial.Set(-140f + (Mathf.Log10(zoom) + decades) / decades * 280f);
+        if (zoomLabel) zoomLabel.text = "x" + zoom.ToString(zoom >= 1f ? "0.0" : zoom < 0.1f ? "0.000" : "0.00", System.Globalization.CultureInfo.InvariantCulture);
+        // knobAngle: -140° at full zoom-out, +140° at full zoom-in, even per x10
+        float decades = Mathf.Max(0.01f, Mathf.Log10(zoomInLimit / (float)MinZoom));
+        scaleDial.Set(-140f + Mathf.Log10(zoom / (float)MinZoom) / decades * 280f);
         RefreshPanels(); // the plot (marks, contacts, our ship) follows the zoom at once
     }
 

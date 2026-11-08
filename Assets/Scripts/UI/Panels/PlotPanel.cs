@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 using TMPro;
 
@@ -30,9 +32,10 @@ public class PlotPanel : Panel
     [SerializeField] private RawImage ownShipImage;
     [Tooltip("A ship is drawn at its length (its stats file) at the plot's scale: ours, 200 units, is 152 px at x1. "
            + "It shrinks with zoom like the design's glyph, but never below this (older handoff: legible at 30 px) "
-           + "and never above the maximum (owner 2026-10-17).")]
+           + "and never above the maximum (owner 2026-10-17). The maximum is big enough for the Garuda at full zoom-in (x4, 1,064 px), "
+           + "so a picture is never smaller than its ship in the close-up.")]
     [Tune("Plot & our ship")]
-    [SerializeField] private float ownShipMinPx = 30f, ownShipMaxPx = 300f;
+    [SerializeField] private float ownShipMinPx = 30f, ownShipMaxPx = 1200f;
     Color ownShipColor => Palette.ownShip;
     private ShipView shipView;
 
@@ -43,6 +46,28 @@ public class PlotPanel : Panel
     Color ruinsColor => Palette.secondary;
     private Camera ruinsCamera;
     private RenderTexture ruinsTexture;
+
+    [Header("Close-up (owner 2026-11-08): zoomed in, ships and rocks in sight show as they really look")]
+    [Tooltip("Covers the plot, just above the Ground and under the grid. Its own camera films ships and rocks at the plot's pan and zoom, "
+           + "with the Close Up Renderer: grey metal ships, rock, lit by the Sun light in the board scene, with a soft glow. It is cut at the visual range circles.")]
+    [SerializeField] private RawImage closeUpImage;
+    [Tooltip("The close-up starts to show at the first zoom and has fully replaced the line pictures at the second. Zoomed out past the first, only the line pictures show.")]
+    [Tune("Plot & our ship")] [SerializeField] private float closeUpFromZoom = 1f, closeUpFullZoom = 1.5f;
+    [Tooltip("The close-up camera's renderer: its number in the list on Assets/Settings/PC_RPAsset (the Close Up Renderer).")]
+    [SerializeField] private int closeUpRenderer = 1;
+    [Tooltip("The close-up's glow and colour. Open the file to change them.")]
+    [SerializeField] private VolumeProfile closeUpLook;
+    [Tooltip("The way the sunlight comes from, degrees clockwise from north (up the plot).")]
+    [Tune("Plot & our ship")] [SerializeField] private float sunFromDeg = 300f;
+    [Tooltip("How high the sun is above the plot, degrees: 90 shines straight down, a low sun catches the edges.")]
+    [Tune("Plot & our ship")] [Range(5f, 90f)] [SerializeField] private float sunHeightDeg = 35f;
+    private Camera closeUpCamera;
+    private RenderTexture closeUpTexture;
+    // the ships the close-up leaves out: those out of sight (a rock in the way), and wrecks, which keep their line
+    // picture broken in two (owner 2026-11-01)
+    private readonly HashSet<NavSystem> notInCloseUp = new HashSet<NavSystem>();
+    /// <summary>How far the close-up has replaced the line pictures at this zoom, 0 to 1.</summary>
+    float CloseUp => closeUpImage ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(closeUpFromZoom, closeUpFullZoom, (float)Controls.ZoomExact)) : 0f;
 
     [Header("Gas clouds on the plot (owner 2026-11-01): each cloud in visual range, behind the ruins and the marks")]
     [Tooltip("The picture for one cloud. It stays switched off and is copied for each cloud. Its sprite is on this panel's Art list.")]
@@ -341,6 +366,7 @@ public class PlotPanel : Panel
             layer.alpha = 0f;
             fading.Add(layer);
         }
+        if (closeUpImage) { var layer = closeUpImage.gameObject.AddComponent<CanvasGroup>(); layer.alpha = 0f; fading.Add(layer); }
     }
 
     void FormGrid()
@@ -475,6 +501,7 @@ public class PlotPanel : Panel
             grid.ArenaHalfUnits = new Vector2((float)s.ArenaHalfW, (float)s.ArenaHalfH); // Step 65: the grid is the battle space
             ShowAxes();
             ShowRuins(r.size, z);
+            ShowCloseUp(r.size, z);
             ShowClouds(z);
         }
         if (capture) capture.raycastTarget = Capturing;
@@ -559,7 +586,9 @@ public class PlotPanel : Panel
             if (!shipView) shipView = ShipView.Own();
             ownShipImage.texture = shipView ? shipView.Texture : null;
             ownShipImage.enabled = shipView && shipView.Texture;
-            ownShipImage.color = ownShipColor.gamma; // the board canvas linearises vertex colours; pre-encode
+            var shipInk = ownShipColor.gamma; // the board canvas linearises vertex colours; pre-encode
+            shipInk.a *= 1f - CloseUp;
+            ownShipImage.color = shipInk;
             float side = ShipPx(shipView) / (shipView ? shipView.ShipFill : 1f);
             ownShipImage.rectTransform.sizeDelta = new Vector2(side, side);
             Put(ownShipImage.rectTransform, OwnAt, 0f);
@@ -697,6 +726,9 @@ public class PlotPanel : Panel
         }
         int n = 0;
         string pictured = null; // the one contact picture's track
+        float closeUp = CloseUp;
+        notInCloseUp.Clear();
+        foreach (var t in s.tracks) if (!t.own && t.nav && (t.wreck || !s.sensors.InSight(t))) notInCloseUp.Add(t.nav);
         wreckPictured = false;
         foreach (var t in s.tracks)
         {
@@ -733,7 +765,9 @@ public class PlotPanel : Panel
             {
                 // its model from above, sized as ours is; north up like ours (the model turns)
                 contactShipImage.texture = view.Texture;
-                contactShipImage.color = ink.gamma;
+                var picInk = ink.gamma;
+                if (!t.wreck) picInk.a *= 1f - closeUp; // the close-up shows the ship itself
+                contactShipImage.color = picInk;
                 float px = ShipPx(view) / view.ShipFill;
                 if (t.wreck) ShowBroken(t, view, at, px, ink);
                 else
@@ -747,7 +781,7 @@ public class PlotPanel : Panel
                 labelPush = px * view.ShipFill / 2f;
             }
             else if (t.wreck) continue; // no picture: a wreck keeps its dim dot (below); an unknown in sight is an amber dot (Step 99)
-            else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = fresh });
+            else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = fresh * (inSight ? 1f - closeUp : 1f) });
             if (t.wreck) continue; // a wreck carries no label (Step 49)
             if (locked)
             {
@@ -1153,7 +1187,68 @@ public class PlotPanel : Panel
         ruinsCamera.transform.SetPositionAndRotation(new Vector3((float)viewX, (float)viewY, -100000f), Quaternion.identity); // look along +z, north up
         ruinsImage.rectTransform.sizeDelta = size;
         Put(ruinsImage.rectTransform, plotCentre, 0f);
-        ruinsImage.color = ruinsColor.gamma; // the board canvas linearises vertex colours; pre-encode
+        var ink = ruinsColor.gamma; // the board canvas linearises vertex colours; pre-encode
+        ink.a *= 1f - CloseUp; // the close-up shows the rocks themselves
+        ruinsImage.color = ink;
+    }
+
+    // The close-up (see closeUpImage): framed as the ruins are, filmed only while it shows
+    void ShowCloseUp(Vector2 size, double z)
+    {
+        if (!closeUpImage) return;
+        float a = CloseUp;
+        closeUpImage.enabled = a > 0f;
+        if (closeUpCamera) closeUpCamera.enabled = a > 0f;
+        if (a <= 0f) return;
+        if (!closeUpCamera)
+        {
+            closeUpCamera = new GameObject("Close-up Camera").AddComponent<Camera>();
+            closeUpCamera.gameObject.layer = LayerMask.NameToLayer("WorldShips"); // its look (the Volume below) reaches only cameras that take this layer's looks
+            closeUpCamera.orthographic = true;
+            closeUpCamera.clearFlags = CameraClearFlags.SolidColor;
+            closeUpCamera.backgroundColor = new Color(0, 0, 0, 0);
+            closeUpCamera.cullingMask = LayerMask.GetMask("WorldShips", "WorldTerrain");
+            closeUpCamera.nearClipPlane = 1f;
+            closeUpCamera.farClipPlane = 200000f;
+            var data = closeUpCamera.GetUniversalAdditionalCameraData();
+            data.SetRenderer(closeUpRenderer);
+            data.renderPostProcessing = closeUpLook;
+            data.volumeLayerMask = 1 << closeUpCamera.gameObject.layer;
+            if (closeUpLook) { var look = closeUpCamera.gameObject.AddComponent<Volume>(); look.isGlobal = true; look.sharedProfile = closeUpLook; }
+            closeUpImage.material = new Material(closeUpImage.material); // its own copy: the circles are set on it
+            closeUpImage.material.SetFloat("_KeyBlack", 0f); // shown as filmed
+            RenderPipelineManager.beginCameraRendering += CloseUpBegins;
+            RenderPipelineManager.endCameraRendering += CloseUpEnds;
+        }
+        float sharp = Mathf.Max(1f, closeUpImage.canvas.rootCanvas.scaleFactor); // the screen's pixels, not the board's 1920 x 1080 layout
+        int w = Mathf.Max(1, Mathf.RoundToInt(size.x * sharp)), h = Mathf.Max(1, Mathf.RoundToInt(size.y * sharp));
+        if (!closeUpTexture || closeUpTexture.width != w || closeUpTexture.height != h)
+        {
+            if (closeUpTexture) { closeUpCamera.targetTexture = null; closeUpTexture.Release(); Destroy(closeUpTexture); }
+            closeUpTexture = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear)
+            { name = "Close-up view", hideFlags = HideFlags.DontSave, antiAliasing = 4 };
+            closeUpCamera.targetTexture = closeUpTexture;
+            closeUpImage.texture = closeUpTexture;
+        }
+        closeUpCamera.orthographicSize = (float)(size.y / 2.0 / z);
+        closeUpCamera.transform.SetPositionAndRotation(new Vector3((float)viewX, (float)viewY, -100000f), Quaternion.identity); // look along +z, north up
+        closeUpImage.rectTransform.sizeDelta = size;
+        Put(closeUpImage.rectTransform, plotCentre, 0f);
+        closeUpImage.color = new Color(1f, 1f, 1f, a);
+        var sun = RenderSettings.sun; // the board scene's sun: Sun Source in its Lighting settings
+        if (sun) // the light travels away from where it comes from; the camera side of the plot is -z
+        {
+            float from = sunFromDeg * Mathf.Deg2Rad, up = sunHeightDeg * Mathf.Deg2Rad;
+            sun.transform.rotation = Quaternion.LookRotation(-new Vector3(Mathf.Cos(up) * Mathf.Sin(from), Mathf.Cos(up) * Mathf.Cos(from), -Mathf.Sin(up)));
+        }
+    }
+
+    void CloseUpBegins(ScriptableRenderContext context, Camera cam) { if (cam == closeUpCamera) LeaveOut(true); }
+    void CloseUpEnds(ScriptableRenderContext context, Camera cam) { if (cam == closeUpCamera) LeaveOut(false); }
+    void LeaveOut(bool off)
+    {
+        foreach (var ship in Ship.All)
+            if (notInCloseUp.Contains(ship.Nav)) foreach (var r in ship.Models) if (r) r.forceRenderingOff = off;
     }
 
     // Owner 2026-11-02: what is in sight shows inside the visual range circle round our ship and round each fighter flight;
@@ -1196,7 +1291,8 @@ public class PlotPanel : Panel
         }
         Add(State.nav.DrawnX, State.nav.DrawnY);
         if (State.hangar) foreach (var f in State.hangar.Flights) Add(f.x, f.y);
-        foreach (var m in new[] { ruinsImage.material, rockEchoMarks.material }) { m.SetVectorArray("_Circles", sightCircles); m.SetFloat("_CircleCount", n); }
+        foreach (var m in new[] { ruinsImage.material, rockEchoMarks.material, closeUpCamera ? closeUpImage.material : null })
+            if (m) { m.SetVectorArray("_Circles", sightCircles); m.SetFloat("_CircleCount", n); }
     }
 
     // Gas clouds (see cloudImage): a copy of the picture for each cloud in visual range, at the plot's pan and zoom.
@@ -1232,6 +1328,10 @@ public class PlotPanel : Panel
     {
         if (ruinsCamera) { ruinsCamera.targetTexture = null; Destroy(ruinsCamera.gameObject); }
         if (ruinsTexture) { ruinsTexture.Release(); Destroy(ruinsTexture); }
+        RenderPipelineManager.beginCameraRendering -= CloseUpBegins;
+        RenderPipelineManager.endCameraRendering -= CloseUpEnds;
+        if (closeUpCamera) { closeUpCamera.targetTexture = null; Destroy(closeUpCamera.gameObject); if (closeUpImage) Destroy(closeUpImage.material); }
+        if (closeUpTexture) { closeUpTexture.Release(); Destroy(closeUpTexture); }
     }
 
     void Put(RectTransform rt, Vector2 board, float rotZ)

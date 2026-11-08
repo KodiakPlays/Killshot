@@ -24,10 +24,20 @@ public class Ship : MonoBehaviour
         if (w) w.KeepSelection();
     }
 
+    /// <summary>Every ship in play. Each ship's camera films only its own model; the close-up leaves some out.</summary>
+    public static readonly System.Collections.Generic.List<Ship> All = new System.Collections.Generic.List<Ship>();
+    private Renderer[] models;
+    /// <summary>The parts of the ship's 3D model.</summary>
+    public Renderer[] Models => models ??= GetComponentsInChildren<Renderer>(true);
+    public NavSystem Nav { get; private set; }
+    private void OnEnable() => All.Add(this);
+    private void OnDisable() => All.Remove(this);
+
     // Values the ship changes as it plays start from the file: the salvo, the PDC loaders, the marines aboard,
     // the crew in each room.
     private void Awake()
     {
+        Nav = GetComponent<NavSystem>();
         var w = GetComponent<WeaponSystem>();
         if (w) { w.salvo = Stats.weapons.salvo; w.loaders = Stats.weapons.loaders; }
         var h = GetComponent<HangarSystem>();

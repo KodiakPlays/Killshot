@@ -66,6 +66,17 @@ public class ShipView : MonoBehaviour
         }
         cam.orthographicSize = shipLength / shipFill / 2f;
         Follow();
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += OnlyOurShip;
+        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering += EveryShip;
+    }
+
+    // The models are their real size (owner 2026-11-08), so a ship close by would show in this picture: it films only its own.
+    void OnlyOurShip(UnityEngine.Rendering.ScriptableRenderContext c, Camera camera) { if (camera == cam) Hide(true); }
+    void EveryShip(UnityEngine.Rendering.ScriptableRenderContext c, Camera camera) { if (camera == cam) Hide(false); }
+    void Hide(bool off)
+    {
+        foreach (var s in Ship.All)
+            if (s.transform != target) foreach (var r in s.Models) if (r) r.forceRenderingOff = off;
     }
 
     private void LateUpdate() => Follow();
@@ -82,6 +93,8 @@ public class ShipView : MonoBehaviour
 
     private void OnDestroy()
     {
+        UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= OnlyOurShip;
+        UnityEngine.Rendering.RenderPipelineManager.endCameraRendering -= EveryShip;
         if (cam) cam.targetTexture = null;
         if (rt) { rt.Release(); Destroy(rt); }
     }

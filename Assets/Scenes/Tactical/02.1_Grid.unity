@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_Sun: {fileID: 1612466236}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -885,7 +885,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 165162270}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 18058.42, y: 16259.874, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1304,7 +1304,7 @@ MonoBehaviour:
   target: {fileID: 891763122}
   resolution: 256
   shipFill: 0.8
-  height: 50
+  height: 740.5037
 --- !u!114 &478801459
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1380,8 +1380,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 200
+  near clip plane: 4.4430227
+  far clip plane: 2962.015
   field of view: 60
   orthographic: 1
   orthographic size: 5
@@ -1548,8 +1548,6 @@ MonoBehaviour:
   levelScene: Level_01
   rockInterferenceUnits: 500
   rockCloseUnits: 500
-  falseDotChance: 0.15
-  falseDotSeconds: 8
   crashKeepSpeed: 0.3
   crashRepeatSeconds: 3
   rockWarnSeconds: 30
@@ -1752,15 +1750,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 0bc4cfb67b9d703428626321b2bf2b48, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.1611836
+      value: 34.88381
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0bc4cfb67b9d703428626321b2bf2b48, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.1611836
+      value: 34.88381
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0bc4cfb67b9d703428626321b2bf2b48, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.1611836
+      value: 34.88381
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0bc4cfb67b9d703428626321b2bf2b48, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2183,7 +2181,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 765287326}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 18058.42, y: 16259.874, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -2931,7 +2929,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 891763121}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3894,7 +3892,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: -0.00000004371139}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.69671017, y: 0.69671017, z: 0.69671017}
+  m_LocalScale: {x: 9.966803, y: 9.966803, z: 9.966803}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 165162282}
@@ -4688,7 +4686,7 @@ GameObject:
   - component: {fileID: 1612466236}
   - component: {fileID: 1612466237}
   m_Layer: 0
-  m_Name: Ship Light
+  m_Name: Sun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4757,7 +4755,7 @@ Light:
   m_RenderMode: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 512
+    m_Bits: 1536
   m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
@@ -4879,7 +4877,7 @@ MonoBehaviour:
   target: {fileID: 765287327}
   resolution: 256
   shipFill: 0.8
-  height: 50
+  height: 1502.0798
 --- !u!114 &1654847268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4955,8 +4953,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 200
+  near clip plane: 9.012479
+  far clip plane: 6008.3193
   field of view: 60
   orthographic: 1
   orthographic size: 5
@@ -5205,7 +5203,7 @@ MonoBehaviour:
   engineeringKey: 53
   commsKey: 54
   pauseRunKey: 112
-  quitKey: 27
+  menuKey: 27
   clock: {fileID: 397062894}
   missionSeconds: 7412
   tickSeconds: 0.42
@@ -5309,6 +5307,7 @@ MonoBehaviour:
   voice: {fileID: 1765047284}
   zoom: 1
   zoomOutLimit: 0.058
+  zoomInLimit: 4
   zoomDragPxPerDecade: 160
   wheelStep: 1.12
   scaleDial:
@@ -6297,15 +6296,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.11612
+      value: 1.7197459
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.11612
+      value: 1.7197459
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.11612
+      value: 1.7197459
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: bcffb22dda75f2341aeb8b876610473e, type: 3}
       propertyPath: m_LocalPosition.x
