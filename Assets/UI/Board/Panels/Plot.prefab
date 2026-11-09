@@ -2581,7 +2581,7 @@ MonoBehaviour:
   ruinsImage: {fileID: 6430628026388568314}
   closeUpImage: {fileID: 7724250448833963525}
   closeUpFromZoom: 1
-  closeUpFullZoom: 1.5
+  closeUpFullZoom: 1.1
   closeUpRenderer: 1
   closeUpLook: {fileID: 11400000, guid: 2b934ab7d0c4f4d6fb9ebeaa7cb6a676, type: 2}
   sunFromDeg: 300

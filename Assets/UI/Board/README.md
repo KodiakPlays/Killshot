@@ -500,9 +500,11 @@ Zoom in close and the ships and rocks inside visual range show as real 3D models
 metal. Rocks are dark rock. One sun lights them. The bright spots have a soft glow. Zoom out and they
 fade back into the line pictures. Past visual range nothing changes: DRADIS shows signals as before.
 
-The close-up starts to show at zoom x1. At x1.5 it has fully replaced the line pictures. A level
-opens at x1, with the line pictures. **Close Up From Zoom** (1) and **Close Up Full Zoom** (1.5) set these. They are on the Board tab of
-**Starwolf → Tuning**, under Plot & our ship. The plot zooms in to x4. At x4 our ship is 608 px long.
+The close-up starts to show at zoom x1. At x1.1 it has fully replaced the line pictures. A level
+opens at x1, with the line pictures. One notch of the scroll wheel zooms x1.12, so one notch in
+gives the full 3D look. **Close Up From Zoom** (1) and **Close Up Full Zoom** (1.1) set these. They are on the Board tab of
+**Starwolf → Tuning**, under Plot & our ship. To open levels in the 3D look, set them to 0.8 and 1.
+The plot zooms in to x4. At x4 our ship is 608 px long.
 **Zoom In Limit** (4) sets this, on the same tab under Board & time. The SCALE knob turns from full
 zoom-out to x4. The scale box shows x1.0 up to x4.0.
 
@@ -579,7 +581,7 @@ flash shows when a torpedo is shot down. It shows only in the close-up.
 When a ship is destroyed, there is a blast: a big white flash, sparks and slow embers. Its model then
 splits in two where the shot struck, the same as its line picture. The two halves drift apart and
 turn slowly. **Wreck Drift Units** and **Wreck Spin Deg** set this for both pictures. The halves are a
-duller, darker grey metal. Zoomed out, the broken line picture shows as before. Between x1 and x1.5
+duller, darker grey metal. Zoomed out, the broken line picture shows as before. Between x1 and x1.1
 the two fade into each other.
 
 **Slug Width Units** (6) and **Torpedo Width Units** (11) set the streak's width at the front.
