@@ -31,8 +31,6 @@ Shader "Starwolf/PhosphorDisplay"
         _Change ("Seconds into the flicker", Float) = 0
         _ChangeSeconds ("Flicker length", Float) = 0.5
         _Left ("Shared left edge", Float) = 0
-        _IdentX ("Section 36 x", Float) = 0
-        _TitleX ("Title x", Float) = 0
         _Diffusion ("Diffusion strength", Float) = 0.7
         // CRT treatment on the lit text. Tune these to taste; nothing in code writes them.
         _ScanDepth ("Scanline depth", Range(0,1)) = 0.18
@@ -54,11 +52,11 @@ Shader "Starwolf/PhosphorDisplay"
             float4 _Phosphor, _Background;
             float _Stage, _Reveal, _Clock, _Selected, _LoadAvailable, _Pitch, _TitleOffset, _Progress;
             float _ScanDepth, _Vignette, _ScreenInset;
-            float _Flicker, _Change, _ChangeSeconds, _Left, _IdentX, _TitleX, _Diffusion;
+            float _Flicker, _Change, _ChangeSeconds, _Left, _Diffusion;
             float hash3(float3 v) { return frac(sin(dot(v, float3(12.9898, 78.233, 37.719))) * 43758.5453); }
             // Owner 2026-11-09: in the full intro a word flickers into being where it stands, square by
             // square in a quick scattered order, and SECTION 36 turns into STARWOLF the same way. Both
-            // words share a left edge, so the squares lit in both (the S, most of the frame) stay lit.
+            // words share one box (sized to each other), so the squares lit in both (the S, the frame) stay lit.
             // 0 = the old picture, 1 = the new, for this pixel's square.
             float settled(float2 p)
             {
@@ -97,12 +95,13 @@ Shader "Starwolf/PhosphorDisplay"
             }
             float content(float2 p)
             {
-                float2 id = p - float2(_IdentX, _TitleOffset), t = p - float2(_TitleX, _TitleOffset);
-                if (_Stage < .5) return mask(_Ident, id, _IdentSize.xy) * settled(p);
-                if (_Stage < 1.5) return mask(_Boot, p * 1.8, _BootSize.xy) * typed(p * 1.8, _BootSize.xy) + bar(p);
-                if (_Stage < 2.5 && _Flicker > .5) return lerp(mask(_Ident, id, _IdentSize.xy), mask(_Title, t, _TitleSize.xy), settled(p));
-                if (_Stage < 2.5) return mask(_Title, t, _TitleSize.xy) * typed(t, _TitleSize.xy);
+                float2 t = p - float2(0, _TitleOffset);
                 float value = 0;
+                if (_Stage < .5) value = mask(_Ident, t, _IdentSize.xy) * settled(p);
+                else if (_Stage < 1.5) value = mask(_Boot, p * 1.8, _BootSize.xy) * typed(p * 1.8, _BootSize.xy) + bar(p);
+                else if (_Stage < 2.5 && _Flicker > .5) value = lerp(mask(_Ident, t, _IdentSize.xy), mask(_Title, t, _TitleSize.xy), settled(p));
+                else if (_Stage < 2.5) value = mask(_Title, t, _TitleSize.xy) * typed(t, _TitleSize.xy);
+                else
                 {
                     // Reference screen uses upward-positive Y; hit rectangles use downward-positive Y.
                     float n = mask(_NewGame, (p - float2(0,88)) * 1.8, _NewGameSize.xy);

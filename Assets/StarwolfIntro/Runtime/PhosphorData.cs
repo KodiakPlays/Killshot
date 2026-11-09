@@ -50,20 +50,24 @@ namespace Starwolf.Intro
             throw new ArgumentException("Missing glyph: " + c);
         }
         // Top-left cell coordinates; SVG and in-game masks use this same convention.
-        public List<Vector2Int> Cells(string text, bool frame, out Vector2Int size)
+        // fitWidth (owner 2026-11-09, "sized to each other"): a word narrower than this many squares has its
+        // letters spread out to fill it, the extra shared between the gaps, so two words share one box.
+        public List<Vector2Int> Cells(string text, bool frame, out Vector2Int size, int fitWidth = 0)
         {
             var cells = new List<Vector2Int>();
             int cursor = frame ? framePaddingX : 0;
             int top = frame ? framePaddingY : 0;
-            foreach (char c in text)
+            int gaps = Mathf.Max(1, text.Length - 1), extra = 0;
+            if (fitWidth > 0) { Cells(text, frame, out var natural); extra = Mathf.Max(0, fitWidth - natural.x); }
+            for (int i = 0; i < text.Length; i++)
             {
-                var glyph = Get(c);
+                var glyph = Get(text[i]);
                 for (int y = 0; y < rowCount; y++)
                     for (int x = 0; x < glyph.rows[y].Length; x++)
                         if (glyph.rows[y][x] == '1') cells.Add(new Vector2Int(cursor + x, top + y));
-                cursor += glyph.rows[0].Length + letterGapCells;
+                cursor += glyph.rows[0].Length + letterGapCells + (i < text.Length - 1 ? (i + 1) * extra / gaps - i * extra / gaps : 0);
             }
-            int width = cursor - letterGapCells + (frame ? framePaddingX : 0);
+            int width = Mathf.Max(fitWidth, cursor - letterGapCells + (frame ? framePaddingX : 0)); // one letter: the box still fills
             int height = rowCount + top * 2;
             if (frame)
             {
@@ -73,9 +77,9 @@ namespace Starwolf.Intro
             size = new Vector2Int(width, height);
             return cells;
         }
-        public Texture2D MakeMask(string text, bool frame)
+        public Texture2D MakeMask(string text, bool frame, int fitWidth = 0)
         {
-            var cells = Cells(text, frame, out var size);
+            var cells = Cells(text, frame, out var size, fitWidth);
             int width = size.x * Pitch, height = size.y * Pitch;
             var pixels = new Color32[width * height];
             foreach (var cell in cells)

@@ -35,11 +35,14 @@ What changed, step by step, and why, is in `Assets/Scenes/Tactical/BUILD_LOG.md`
    is a different shape.
 4. In the full intro, SECTION 36 flickers into being where it stands, square by square in a quick
    scattered order. It stays, then turns into STARWOLF. Squares lit in both words stay lit: the S
-   and most of the box. Squares only SECTION 36 uses flicker out, and squares only STARWOLF uses
+   and the whole box. Squares only SECTION 36 uses flicker out, and squares only STARWOLF uses
    flicker on. While a word flickers in or over, thin bands slip sideways and the light smears and
    grains along them. It dies away as the squares settle, and never shows on the menu.
-5. So the S's line up, both words share one left edge. The script works it out from the two words'
-   widths. Now SECTION 36 is 36 px right of the middle and STARWOLF 36 px left of it.
+5. The two words are sized to each other. STARWOLF is narrower, so its letters are spread out to fill
+   SECTION 36's box: the gaps between letters grow from 4 squares to 6 or 7. Both boxes are the same
+   size and centred on the screen, so the S's line up. The box stays still during the change-over;
+   only the letters inside change. The script works the spacing out from the two words' widths.
+   This is only in the full intro. INITIALISING... and the title-only pages keep normal spacing.
 6. INITIALISING... and the title-only pages still "type in" left to right, one column of dots at a
    time, in the middle, then stay.
 

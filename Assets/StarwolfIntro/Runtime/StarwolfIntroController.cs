@@ -70,8 +70,16 @@ namespace Starwolf.Intro
                 data = PhosphorData.Load(glyphData);
                 if (!displayShader) throw new InvalidOperationException("Assign the supplied PhosphorDisplay shader; use the scene builder.");
                 material = new Material(displayShader) { hideFlags = HideFlags.HideAndDontSave };
-                masks = new[] { data.MakeMask("SECTION 36", true), data.MakeMask("INITIALISING...", false),
-                    data.MakeMask(titleText, true), data.MakeMask("NEW GAME", false),
+                // Owner 2026-11-09: in the full intro SECTION 36 and the title are sized to each other (the
+                // narrower one's letters spread out), so they share one box, centred, and the S's line up.
+                int fit = 0;
+                if (!initialisingOnly && !titleOnly)
+                {
+                    data.Cells("SECTION 36", true, out var a); data.Cells(titleText, true, out var b);
+                    fit = Mathf.Max(a.x, b.x);
+                }
+                masks = new[] { data.MakeMask("SECTION 36", true, fit), data.MakeMask("INITIALISING...", false),
+                    data.MakeMask(titleText, true, fit), data.MakeMask("NEW GAME", false),
                     data.MakeMask(secondRowText, false), data.MakeMask("SETTINGS", false) };
                 GridPitchPixels = data.Pitch;
                 ApplyStaticUniforms();
@@ -152,16 +160,11 @@ namespace Starwolf.Intro
             material.SetColor("_Background", background);
             material.SetFloat("_Pitch", GridPitchPixels);
             material.SetFloat("_TitleOffset", titleOffset);
-            // The full intro puts SECTION 36 and STARWOLF on one left edge (each a few squares off the
-            // middle), so the squares lit in both line up. A title-only page keeps its title in the middle.
-            bool full = !initialisingOnly && !titleOnly;
-            float identW = masks[0] ? masks[0].width : 0, titleW = masks[2] ? masks[2].width : 0;
-            float left = -Mathf.Round((identW + titleW) / 4f / GridPitchPixels) * GridPitchPixels;
-            material.SetFloat("_Flicker", full ? 1 : 0);
+            // The full intro's two words share one box, centred (Awake sizes them to each other); its left
+            // edge sets the squares the flicker counts in.
+            material.SetFloat("_Flicker", !initialisingOnly && !titleOnly ? 1 : 0);
             material.SetFloat("_Diffusion", diffusion);
-            material.SetFloat("_Left", left);
-            material.SetFloat("_IdentX", left + identW / 2f);
-            material.SetFloat("_TitleX", full ? left + titleW / 2f : 0f);
+            material.SetFloat("_Left", masks[0] ? -masks[0].width / 2f : 0f);
         }
         void DrawFrame()
         {
