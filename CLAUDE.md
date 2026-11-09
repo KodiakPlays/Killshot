@@ -30,6 +30,11 @@ kept current as the single living record — do not start a second status docume
 **For anything else, start with `Assets/CONTEXT_INDEX.md`.** It routes you to the right document for
 the question you have.
 
+**A new chat for one piece of work?** Read `BUILD_LOG.md` section 1 (where we are) and section 8
+(Open items, the list to work from). Each feature's plan file is linked from section 8 and from
+`CONTEXT_INDEX.md`. The owner's standing decisions are in Claude's memory notes, which load by
+themselves. Other chats share this Unity Editor: message them before you compile or enter play mode.
+
 ### The sources are a timeline, not rivals
 
 ```
