@@ -5325,6 +5325,39 @@ Nothing else in the repo gets written by the log keeper. Only this file.
 
 Still not done. **This is the list to work from.** Read it before picking up any work.
 
+### Open after Step 178: mission 1 and the battle group (2026-11-10)
+
+- **Rename mission 1.** Owner 2026-11-10: "The mission should not be called Orientation." No new
+  name yet. Ask the owner. The title is in `Assets/Campaign/Campaign.asset` → Missions → Element 0 →
+  Title. Its brief there also says "orientation checklist". Update this log, the board README and
+  `README.md` to the new name. The level file `Assets/Scenes/Levels/Orientation.unity` can keep its
+  name: players never see it.
+- **Upload the mission 1 video to Google Drive** (owner: "put it in our Google Drive in Starwolf
+  … verify that it's actually uploaded on Google Drive in Chrome"). The file is
+  `Logs/Orientation/Starwolf - Mission 1 Orientation.mp4` (6 min 30 s, 1920 × 1080, 57 MB). Not done:
+  Claude in Chrome was not connected. Upload it through Chrome, then find it with a Drive search
+  before saying it is there.
+- **Run the full playtest.** Not run since Step 178. Its checks for SKIRMISH, MISSION SELECT and the
+  sector map were changed but not yet run.
+- **Mission 1's talk lines and a Starwolf → Mission window**: the Mission Setup Tool chat is
+  planning them with the owner. Keep two facts true in any rewrite: the group is under way and we
+  keep station in its middle (THROTTLE), and the group waits south of the rock field (TAKE POINT).
+- **The battle group stops south of the rock field** and never reaches the target zone: the carrier
+  and battleship don't fit between the rocks. Owner to say if that is right.
+- **Missions 2 to 10 are not built.** Next is mission 2: pirates in a debris field, with weapons on.
+  Talk it through with the owner before building. The old levels stay switched off and are never
+  deleted. Each mission copies the pieces it needs from them.
+- **The owner's save in slot 1** has wins for the old level names, so its sector map starts again at
+  mission 1.
+- **Shared index:** `README.md`, `Assets/UI/Board/README.md` and `Assets/CONTEXT_INDEX.md` are staged
+  by an unknown chat from a HEAD older than Step 178. Committed as they are, they would undo lines
+  from Steps 178 and 183. Rebuild them on the current HEAD first.
+- **Docs not yet brought in line with Step 178:** in this log, section 1's "The first mission, Wolf
+  Hunt, is playable", section 2's flow (00_Start → 01_Briefing → 02.1_Grid) and its `00_Start` and
+  `01_Briefing` entries, and section 3's ScreenFlow and MISSION SELECT lines. In the board README, the
+  Briefing Icon's "In FLIGHT DRILL it is 230 px". In `Assets/CONTEXT_INDEX.md`, the MISSIONS list
+  mentions.
+
 ### The small number box on the Hangar panel: closed (Step 149, 2026-11-02)
 
 The box can no longer stop a launch. BEARING OUTSIDE LAUNCH CONE no longer exists. The box and its
