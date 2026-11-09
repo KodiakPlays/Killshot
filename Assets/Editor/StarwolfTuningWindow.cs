@@ -104,7 +104,7 @@ public class StarwolfTuningWindow : EditorWindow
         {
             so.ApplyModifiedProperties();
             AssetDatabase.SaveAssetIfDirty(ship.statsFile);
-            if (playing) ship.PullFromFile();
+            if (playing) foreach (var s in ships) if (s && s.statsFile == ship.statsFile) s.PullFromFile(); // every ship on this file, e.g. both arriving frigates
         }
         EditorGUILayout.Space(10);
     }

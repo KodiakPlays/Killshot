@@ -33,6 +33,31 @@ public class Ship : MonoBehaviour
     private void OnEnable() => All.Add(this);
     private void OnDisable() => All.Remove(this);
 
+    /// <summary>The model's width as a share of its length, wings and all (owner 2026-11-02: fighters come out beside it).</summary>
+    public float WidthShare { get; private set; } = 0.5f;
+    float fitted;
+    private void LateUpdate() { if (Stats.length != fitted) FitModel(); }
+
+    // Owner 2026-11-09: the 3D model is scaled evenly so its longest side is the Length number, and follows it when
+    // Tuning changes it. Measured with the ship unturned; the model grows or shrinks about the ship's centre.
+    void FitModel()
+    {
+        fitted = Stats.length;
+        var rot = transform.rotation;
+        transform.rotation = Quaternion.identity;
+        Bounds b = default;
+        bool any = false;
+        foreach (var r in Models)
+            if (r && r.gameObject.activeInHierarchy) { if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds); }
+        transform.rotation = rot;
+        float now = any ? Mathf.Max(b.size.x, b.size.y) : 0f;
+        if (now <= 0f || fitted <= 0f) return;
+        WidthShare = Mathf.Min(b.size.x, b.size.y) / now;
+        float k = fitted / now;
+        foreach (Transform c in transform)
+            if (c.GetComponentInChildren<Renderer>(true)) { c.localScale *= k; c.localPosition *= k; }
+    }
+
     // Values the ship changes as it plays start from the file: the salvo, the PDC loaders, the marines aboard,
     // the crew in each room.
     private void Awake()
@@ -44,5 +69,6 @@ public class Ship : MonoBehaviour
         if (h) { h.marines = Stats.hangar.marines; h.KeepFighters(Stats.hangar.fighters); }
         var d = GetComponent<DamageSystem>();
         if (d) for (int i = 0; i < d.compartments.Length && i < Stats.damage.crew.Length; i++) d.compartments[i].crew = Stats.damage.crew[i];
+        FitModel();
     }
 }

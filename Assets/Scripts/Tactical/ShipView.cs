@@ -16,13 +16,9 @@ public class ShipView : MonoBehaviour
     [Tooltip("The ship's length as a share of the frame; the rest is margin for the turn.")]
     [Tune("Plot & our ship")]
     [SerializeField, Range(0.3f, 1f)] private float shipFill = 0.8f;
-    [Tooltip("How far above the ship the camera sits (units). The world is the x/y plane, seen from -z.")]
-    [Tune("Plot & our ship")]
-    [SerializeField] private float height = 50f;
 
     private Camera cam;
     private RenderTexture rt;
-    private float shipLength = 1f;
 
     public Texture Texture => rt;
     /// <summary>The ship it watches (our ship, or a contact's model).</summary>
@@ -40,7 +36,7 @@ public class ShipView : MonoBehaviour
     /// <summary>The ship's length as a share of the image, so the plot can size the image by the ship.</summary>
     public float ShipFill => shipFill;
     /// <summary>The model's width as a share of its length, wings and all (owner 2026-11-02: fighters come out beside it).</summary>
-    public float WidthShare { get; private set; } = 0.5f;
+    public float WidthShare => Ship ? Ship.WidthShare : 0.5f;
 
     private void Awake()
     {
@@ -52,19 +48,7 @@ public class ShipView : MonoBehaviour
         cam.clearFlags = CameraClearFlags.SolidColor;
         cam.backgroundColor = new Color(0, 0, 0, 0);
 
-        // the ship's longest side, measured once with the model unturned
-        if (target)
-        {
-            Ship = target.GetComponentInParent<Ship>();
-            var rot = target.rotation;
-            target.rotation = Quaternion.identity;
-            var b = new Bounds(target.position, Vector3.zero);
-            bool any = false;
-            foreach (var r in target.GetComponentsInChildren<Renderer>()) { if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds); }
-            target.rotation = rot;
-            if (any) { shipLength = Mathf.Max(b.size.x, b.size.y); WidthShare = Mathf.Min(b.size.x, b.size.y) / shipLength; }
-        }
-        cam.orthographicSize = shipLength / shipFill / 2f;
+        if (target) Ship = target.GetComponentInParent<Ship>();
         Follow();
         UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += OnlyOurShip;
         UnityEngine.Rendering.RenderPipelineManager.endCameraRendering += EveryShip;
@@ -88,7 +72,12 @@ public class ShipView : MonoBehaviour
     void Follow()
     {
         if (!target) return;
-        transform.SetPositionAndRotation(target.position + new Vector3(0, 0, -height), Quaternion.Euler(0, 0, -(WreckHeading ?? 0f))); // look along +z, north up
+        // the model is its Length long (Ship.FitModel), so the frame and the camera's depth follow that number
+        float length = Mathf.Max(1f, Ship ? Ship.Stats.length : 1f);
+        cam.orthographicSize = length / shipFill / 2f;
+        cam.nearClipPlane = length * 0.5f;
+        cam.farClipPlane = length * 4f;
+        transform.SetPositionAndRotation(target.position + new Vector3(0, 0, -2f * length), Quaternion.Euler(0, 0, -(WreckHeading ?? 0f))); // look along +z, north up
     }
 
     private void OnDestroy()

@@ -539,10 +539,19 @@ Rock. It is number 1 in the renderer list on `Assets/Settings/PC_RPAsset.asset`.
 (1) on the Plot panel points at it. Alpha Processing is on in PC_RPAsset. It lets the glow keep the
 see-through background.
 
-The ship models are their real length: our Asura 200 units, the Garuda 350, the frigate 100. The two
-cameras that film the line pictures, Ship View Camera and Contact View Camera · Garuda, are moved back
-to match. Each films only its own ship. **Own Ship Max Px** (1200) lets a ship's drawn size follow its
-model up to x4.
+Each ship's 3D model is as long as its **Length** number (Step 179). Length is in the ship's stats
+file. It is at the top of the Ship tab (our ship) and the Enemy tab of **Starwolf → Tuning**. When a
+level starts, the model is scaled so its longest side, seen from above, is the Length. It is scaled
+evenly, so the width grows or shrinks with it and the shape stays the same. Change Length during play
+and the model follows at once. Today our Asura is 200 units, the Garuda 350, the frigate 100.
+**Width** does not change the model. It only sets the width of the hit box. A new ship needs no
+scaling by hand: set its Length in its stats file in `Assets/Ships`.
+
+The two cameras that film the line pictures, Ship View Camera and Contact View Camera · Garuda, follow
+Length too. How much each one frames, and how far back it is (twice the Length), come from the
+Length. So the line picture stays whole at any Length. The old **Height** value on the Board tab is
+gone. Each camera films only its own ship. **Own Ship Max Px** (1200) lets a ship's drawn size follow
+its model up to x4.
 
 In the close-up, the space under the ships is a nebula. There are soft violet and teal gas clouds,
 stars, and thin warm and cold wisps of gas. The grid, marks and labels draw on top. Zoom out to x1
