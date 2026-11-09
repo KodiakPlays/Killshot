@@ -26,7 +26,7 @@ MonoBehaviour:
     baseAccelUnits: 1
     brakeUnits: 3.75
     reverseShare: 0.42
-    driftKeepPerS: 0.9143
+    driftKeepPerS: 0.87
     dragKeepPerS: 0.99406
     sideSpeedUnits: 20
     sideAccelUnits: 4

@@ -5289,11 +5289,15 @@ A small known problem. The strip shows the radio countdown jammed against its te
 The owner played the new keys. Turning in steps at the start was fixed in Step 175. These are still
 open:
 
-1. **The drift feels too strong.** After Q or E, the slide halves in about 8 seconds (Drift Keep Per
-   S, 0.9143 on our ship). The proposal is 3 seconds. The same number also sets the slide after a
-   turn. Not answered yet.
-2. **Tapping W feels clunky.** A tap moves the throttle 1, which is half a unit a second. The ship
-   barely changes, so nothing seems to happen.
+1. **The drift felt too strong. Done (owner 2026-11-09: "let's make it 5 seconds for the slide").**
+   After Q or E, and after a turn, the slide now halves in 5 seconds (it was about 8). Drift Keep Per
+   S on our ship went from 0.9143 to 0.87 (Ship tab → Navigation): the ship keeps 87% of its slide each second. The other ship files keep
+   0.9143. Logged in `docs/TUNING_LOG.md`. Not yet felt in play.
+2. **Tapping W.** Owner 2026-11-09: a tap stays at 1 ("even tapping W is gradual… I don't think you
+   need to go to 5"). "Let's explore. Maybe it's on a curve." It already is: held, the throttle counts
+   slowly, then faster, to 100 after 2 seconds. Only the 2 seconds is in Tuning. **To do:** move the
+   tap size (1) and the curve's shape, typed into `HelmPanel.Throttle`, into Tuning so the owner can
+   try other values.
 3. **An engine flare.** The owner wants to see the engine fire when holding W. Talk through the look
    before building it. Side puffs for Q and E could go with it.
 4. **Numbers made without the owner**, all in Starwolf → Tuning: a Q or E tap is 2 units a second;

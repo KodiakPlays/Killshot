@@ -108,6 +108,12 @@ These describe the existing codebase. Match them; do not introduce a competing s
 - **Editor-only code lives in `Assets/Editor/`.** Never `using UnityEditor;` from a runtime script outside `#if UNITY_EDITOR`.
 - Use the existing `[ReadOnly]` attribute for inspector-visible but non-editable fields; the drawer already exists.
 
+## Game numbers (owner rule, 2026-11-09)
+
+- **Do** change a game number (a range, speed, damage, timer, rate, armour, layout) through what **Starwolf → Tuning** already shows: the ship stats files in `Assets/Ships`, and fields marked `[Tune]`. Look there first.
+- **Do** write every number change in `docs/TUNING_LOG.md`: the date, the number, its **old value**, its new value, where it lives, and who asked. A change with no old value written down is not allowed. Nothing is lost.
+- **Don't** put a game number in code where Tuning can't reach it. If the number has no Tuning field yet, add one (a stats-file field or `[Tune]`) and log it.
+
 ## Anti-patterns
 
 - `FindObjectOfType` / `FindObjectsOfType` in `Update` or any per-frame path — cache in `Awake` / `Start`.

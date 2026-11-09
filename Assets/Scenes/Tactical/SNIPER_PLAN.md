@@ -12,8 +12,9 @@ To shoot that far you need eyes out there. You lay sensor drones, like laying mi
 ships as dots far past your own DRADIS. You plot the enemy's course with POINT and RULER, stop the
 ship dead, turn the nose to where the enemy will be, and fire.
 
-Every shot makes a flare. Any ship inside the flare learns where you are. A long shot from outside
-the flare hits the enemy without giving you away.
+Your E-SIG is a circle round your ship. Any ship inside it learns where you are. Firing makes it
+jump out fast, and it shrinks back slowly. A long shot at a ship outside the circle hits it without
+giving you away.
 
 Up close, the ship has lasers, PDCs and torpedoes. It carries assault boats for boarding. It has
 no fighters.
@@ -29,8 +30,8 @@ no fighters.
 7. You pick RAILGUN. A thin line runs out of the nose to the railgun's full reach.
 8. You measure with the RULER. It tells you how long the slug takes to fly that far.
 9. You work out where the Garuda will be by then. You turn the nose onto that spot with the slow turn.
-10. LOAD, ARM, pull the lever. The flare goes off round you, and the slug flies.
-11. If the Garuda was outside the flare, it is hit and only knows which way the shot came from.
+10. LOAD, ARM, pull the lever. Your E-SIG circle jumps out, and the slug flies.
+11. If the Garuda was outside your E-SIG circle, it is hit and only knows which way the shot came from.
 
 ## The parts
 
@@ -63,22 +64,30 @@ no fighters.
 - You can fire while moving. You just miss.
 - The Garuda's slugs follow the same rule. Its aim is fixed to allow for it.
 
-### The flare
+### The E-SIG circle (was "the flare")
 
-- Every shot makes a flare round the ship that fired it. Any ship inside the flare at that moment
-  learns where the shooter is.
-- Each weapon has its own flare size. It has nothing to do with DRADIS.
-  - Spinal railgun: 15,000
-  - Railgun (the Garuda's): 7,500
-  - Torpedo: 3,000
-  - Laser: 2,000
-  - PDC: 1,000
-- A gas cloud doesn't shrink a flare.
-- Rocks cut a flare the same way they cut DRADIS.
-- Firing still makes your E-SIG jump, as it does today.
-- For testing, the flare shows as a circle round the ship that fades over 3 seconds. We hide it later.
-- A hit from outside the flare tells the enemy only which way the shot came from. It turns and
-  searches down that line.
+**Owner, 2026-11-09:** "It's not the railgun's flare. It's how much the eSig expands." There is no
+separate flare for each weapon. The old per-weapon sizes (15,000, 7,500, 3,000, 2,000, 1,000) are
+dropped. There is one circle: your E-SIG.
+
+- Your E-SIG is a circle round your ship. Any ship inside it learns where you are.
+- It never gets smaller than a small minimum, even with everything off.
+- It grows as you use systems: power on the buses, ACTIVE SCAN, a lock.
+- It jumps out fast when you do a lot at once, such as firing. Then it cools and shrinks back slowly.
+- The circle shows on the plot for now. We hide it later.
+- A hit from outside the circle tells the enemy only which way the shot came from. It turns and
+  searches down that line. A fire on board or a bump into a rock tells it nothing. (Owner's yes,
+  2026-11-09.)
+- A gas cloud cools the ship, as today: it shrinks the steady part, not a shot's jump.
+- Rocks cut it the same way they cut DRADIS.
+- Every number is in Starwolf → Tuning.
+- The Garuda gets the same circle, as part of following our rules.
+
+Starting numbers, **agreed by the owner 2026-11-09** ("I'm open to experimentation… make the
+largest even 20,000"): smallest 2,500 (the enemy sees you inside 2,000 anyway); largest 20,000 at
+full signal; a railgun shot adds 25 to the signal, as today, and a torpedo less; cooling 2 a second
+(today 6), so a big jump takes about 50 s to calm down. All four go on the Ship tab of Starwolf →
+Tuning, so the owner can change them. Log the old values in `docs/TUNING_LOG.md` when built.
 
 ### The sight in fire control
 
@@ -96,6 +105,10 @@ no fighters.
 
 ### Sensor drones
 
+**Owner, 2026-11-09:** "we're replacing interceptors with drones that need to be deployed." The
+drones take the hangar's empty INTERCEPTOR row, and you deploy them from the hangar. How deploying
+works is still to be agreed with the owner. The DROP key and the boat drop below are the older idea.
+
 - Our ship carries 4.
 - A DROP key in the hangar drawer drops one where the ship is.
 - Or you send an assault boat. Put a POINT on the plot, then give a boat the DRONE order in the
@@ -110,9 +123,11 @@ no fighters.
 
 ### Lasers (later)
 
+- **Owner, 2026-11-09:** lasers are a new weapon type. They hit instantly, and you have to get
+  pretty close to fire them.
 - One on each side, on the dots the railguns leave.
 - Instant hit. Reach 1,000. One shot every 3 seconds. About half a slug's damage.
-- Flare 2,000.
+- Firing one makes your E-SIG jump a little.
 
 ### Hangar
 
@@ -122,7 +137,10 @@ no fighters.
 ### The Garuda
 
 - Its weapons don't change: two swivel railguns (slug speed 300, reach 2,000), PDCs and torpedoes.
-- It follows the new flare and drift rules, the same as us.
+- It follows the E-SIG circle and drift rules, the same as us.
+- **Owner, 2026-11-09:** it follows all our weapon rules: a lock, a charge, crew arming each shot,
+  a slow gun, torpedoes that need a scan or a lock, PDCs that fire. "Otherwise this is never going
+  to work. You have to have a pretty fair chance of winning."
 
 ### A test level
 
@@ -139,7 +157,8 @@ no fighters.
    switches still show; step 3 takes them away. LONG SHOT's Garuda doesn't hunt. Added on the owner's
    word (2026-11-09): a lock turns the ship onto the target by itself. Only a lock does this. A TRACK
    solution from the plot does not.
-2. The flare, with the test circle.
+2. The E-SIG circle, shown on the plot, with the hit rule. (Was "the flare"; see "The E-SIG
+   circle" above.)
 3. The sight in fire control. ANGLE and BEARING go.
 4. Sensor drones.
 5. Lasers.
