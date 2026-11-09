@@ -229,7 +229,9 @@ shows a negative number, for example THR -80%.
 
 A and D turn the ship (Step 159). Each press moves the ordered heading 3°. The order stops 179°
 ahead of the bow. Hold D and the ship turns to starboard until you let go. Hold A and it turns to
-port. When you let go, the ship keeps turning until it reaches the order.
+port. When you let go, the ship keeps turning until it reaches the order. A turn starts smoothly
+from where the ship is, the moment you press the key (Step 175). Held, the ship keeps turning
+without a stop.
 
 W and S move the throttle (Step 171). A tap moves it 1. Keep the key down and it keeps counting,
 slowly at first, then faster. It moves 100 in 2 seconds. It stays where you let go. S goes on past

@@ -150,7 +150,10 @@ public class HelmPanel : Panel
         foreach (var k in new[] { turnPortKey, turnStarboardKey })
             if (Input.GetKeyDown(k) && !fine) { heldKey = k; nextRepeat = Time.unscaledTime + repeatDelay; Press(k); return; }
         if (heldKey != KeyCode.None && (!Input.GetKey(heldKey) || fine)) heldKey = KeyCode.None;
-        if (heldKey != KeyCode.None && Time.unscaledTime >= nextRepeat) { nextRepeat += repeatInterval; Press(heldKey); }
+        if (heldKey == KeyCode.None) return;
+        // owner 2026-11-09: held, the bow never stops: the next step is ordered as the drawn bow reaches the last one, then the key repeats as before
+        if (Mathf.Abs(Mathf.DeltaAngle((float)State.nav.DrawnHeading, State.nav.orderedHeading)) < 0.6f) Press(heldKey);
+        else if (Time.unscaledTime >= nextRepeat) { nextRepeat += repeatInterval; Press(heldKey); }
     }
 
     void Press(KeyCode k)

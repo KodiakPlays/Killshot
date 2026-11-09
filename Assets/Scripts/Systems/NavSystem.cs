@@ -107,7 +107,7 @@ public class NavSystem : MonoBehaviour
 
     // Step 75 (owner 2026-10-26): the rules step once per board tick; between ticks the ship is drawn gliding on
     // along its velocity, its bow still swinging, so a ship in view moves smoothly. Only the drawing; x and y stay true.
-    // ponytail: straight-line guess, so a speeding-up or turning ship settles back a little each tick; predict the next tick if that shows
+    // ponytail: straight-line guess, so a speeding-up ship settles back a little each tick; predict the next tick if that shows
     double Ahead => board ? board.SinceTick : 0;
     /// <summary>Where the ship is drawn now, units: its true spot, carried on by the time since the last tick.</summary>
     public double DrawnX => x + vx * Ahead;
@@ -120,7 +120,8 @@ public class NavSystem : MonoBehaviour
             if (fineTurn != 0 && ship != null) return heading + fine + fineTurn * stats.fineTurnDegPerS * Ahead;
             int d = TurnLeft;
             if (d == 0 || ship == null) return heading + fine;
-            return heading + System.Math.Sign(d) * System.Math.Min(System.Math.Abs(d), TurnPerS * Ahead);
+            // owner 2026-11-09: from the part of a degree already turned, and from the moment of the order, so a turn starts and runs smoothly
+            return heading + System.Math.Sign(d) * System.Math.Min(System.Math.Abs(d), System.Math.Max(0, turnBank + TurnPerS * Ahead));
         }
     }
 
@@ -172,6 +173,8 @@ public class NavSystem : MonoBehaviour
     /// past 180 the short way round flips, and a held key swung the ship back and forth.</summary>
     public void StepOrderedHeading(int dir)
     {
+        // a turn ordered between ticks starts now: the next tick turns the bow only for the time since the order
+        if (TurnLeft == 0 && ship != null) turnBank = -TurnPerS * Ahead;
         int lead = System.Math.Max(-179, System.Math.Min(179, TurnLeft + dir * stats.headingKeyStep));
         orderedHeading = ((heading + lead) % 360 + 360) % 360;
         attitude = "";
