@@ -32,6 +32,29 @@ is a set of short training levels, picked from a list. NEW GAME opens the list. 
 straight to Wolf Hunt. The one long mission with the XO (§1 to §9) is a later version. §0 has the
 plan.
 
+**Changed by the owner (2026-11-09): story missions replace the training levels.** "Too many levels,
+and they're not very good." The game will be about 10 story missions at most, "the Hunt for Red
+October in space", plus one SKIRMISH mode. The training levels come off every list. Their scenes are
+kept and switched off, and never deleted ("This is not meant to be destructive. Just disable it."). What each one
+tested goes into the story missions. The story:
+
+1. Orientation with your battle group.
+2. A debris field and pirates.
+3. A raided space station.
+4. A ship drifting on its side. You find it by its heat. Marines board it for intel.
+5. Hunt the pirate captain. The first fight.
+6. Board again. The captain was chasing a bounty.
+7. The other battle group is found destroyed, and yours gets hit.
+8. Escape.
+
+Where the old levels' pieces go: FLIGHT DRILL → mission 1. WEAPONS FREE and NO PEEKING → the
+pirates. FINDERS KEEPERS → boarding the drifting ship. LONG SHOT → hunting the pirate captain. COLD
+RUN and INTERCEPT → the escape. WOLF HUNT → SKIRMISH.
+
+Mission 1, ORIENTATION, is built (Step 178). It starts with a combat briefing with your battle
+group. Then you run an orientation checklist. Each part of the checklist you finish opens more of the map. §0 below
+describes the training levels as they were.
+
 Detailed status is not kept here. `BUILD_LOG.md` is the single living record; log each step there.
 
 ---

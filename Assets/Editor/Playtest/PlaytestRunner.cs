@@ -216,13 +216,11 @@ public static class PlaytestRunner
         Shot("01_menu");
         yield return 1.5f;
 
-        // 2. NEW GAME (the menu reads the old Input class; call what the press calls)
-        intro.Activate(1); // owner 2026-11-08: NEW GAME opens SAVE SLOTS (the campaign); the second row, LEVELS, the level list
-        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "01_Briefing");
-        Check("LEVELS opens the level list", SceneManager.GetActiveScene().name == "01_Briefing", "called Activate(1), as pressing LEVELS does");
-        yield return 2f;
-        Shot("02_briefing");
-        yield return 0.2f;
+        // 2. SKIRMISH (the menu reads the old Input class; call what the press calls)
+        intro.Activate(1); // owner 2026-11-08: NEW GAME opens SAVE SLOTS (the campaign). Owner 2026-11-09: the second row, SKIRMISH, is Wolf Hunt, straight onto the board
+        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "02.1_Grid");
+        Check("SKIRMISH opens the board on Level_01 (Wolf Hunt)", SceneManager.GetActiveScene().name == "02.1_Grid" && TacticalWorld.chosenLevel == "Level_01",
+              "called Activate(1), as pressing SKIRMISH does");
 
         // 2b. Step 83: if the INITIALISING screen can't start (here, no shader), it still calls finished, so Enter
         //     leads on to the board. It logs one error, which is expected.
@@ -236,17 +234,6 @@ public static class PlaytestRunner
         Check("INITIALISING can't start (no shader): it still calls finished, so Enter leads on", probeDone && !probeIntro.enabled, "");
         UnityEngine.Object.Destroy(probe);
 
-        // 3. Briefing → board (Step 114, owner 2026-10-29: the briefing is the level list; pick WOLF HUNT — call what a
-        //    click or Enter on its row calls)
-        var rows = System.Array.ConvertAll(System.Array.FindAll(UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.InstanceID),
-                                           b => b.onClick.GetPersistentMethodName(0) == "Play"), b => b.name); // the level rows, not QUIT
-        var wolfRow = GameObject.Find("WOLF HUNT");
-        bool wolfFound = wolfRow; // read now: the row is gone once the board loads
-        if (wolfFound) wolfRow.GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
-        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "02.1_Grid");
-        Check("The level list has its eight levels (LONG SHOT last); picking WOLF HUNT opens the board on Level_01",
-              rows.Length == 8 && System.Array.IndexOf(rows, "LONG SHOT") >= 0 && wolfFound && SceneManager.GetActiveScene().name == "02.1_Grid" && TacticalWorld.chosenLevel == "Level_01",
-              string.Join(", ", rows) + "; called the WOLF HUNT row's onClick, as a click or Enter does");
         yield return 1.5f;
         var board = UnityEngine.Object.FindAnyObjectByType<BoardManager>();
         Check("The board is running", board != null, "");
@@ -2003,14 +1990,14 @@ public static class PlaytestRunner
         Shot("31_ship_lost_reactor");
         yield return 0.2f;
 
-        //     MISSION SELECT: the mission list.
+        //     MISSION SELECT: outside the campaign (SKIRMISH), the title (owner 2026-11-09: the level list is gone).
         if (!Click("end.menu", null, "MISSION SELECT")) yield break;
-        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "01_Briefing");
-        Check("MISSION SELECT loads the mission list", SceneManager.GetActiveScene().name == "01_Briefing", SceneManager.GetActiveScene().name);
+        yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "00_Start");
+        Check("MISSION SELECT loads the title", SceneManager.GetActiveScene().name == "00_Start", SceneManager.GetActiveScene().name);
         yield return 1f;
 
         // 32. Owner 2026-11-08: the campaign. Slot 3 (skipped if a real save is in it): SAVE SLOTS opens the SECTOR MAP with
-        //     one dot; a win is saved; the map then shows two. The slot is emptied again at the end.
+        //     one dot; a win is saved. Owner 2026-11-09: the map has one mission, ORIENTATION, so it still shows one dot. The slot is emptied again at the end.
         if (SaveGame.Exists(2)) { Check("Campaign: slot 3 has a real save, so the campaign checks are skipped", true, "slot3.json kept"); yield break; }
         SceneManager.LoadScene("SaveSlots");
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "SaveSlots");
@@ -2020,11 +2007,11 @@ public static class PlaytestRunner
         yield return 0.3f;
         System.Func<int> dots = () => { int n = 0; foreach (var b in UnityEngine.Object.FindObjectsByType<UnityEngine.UI.Button>(FindObjectsSortMode.None)) if (b.name.StartsWith("Dot")) n++; return n; };
         Check("Campaign: slot 3 opens the SECTOR MAP with one dot, and its save file is made", SaveGame.Slot == 2 && SaveGame.Exists(2) && dots() == 1, "slot " + (SaveGame.Slot + 1) + ", " + dots() + " dot");
-        SaveGame.Won("FlightDrill"); // as QuestSystem does on MISSION COMPLETE
+        SaveGame.Won("Orientation"); // as QuestSystem does on MISSION COMPLETE
         SceneManager.LoadScene("SectorMap");
         yield return (Func<bool>)(() => SceneManager.GetActiveScene().name == "SectorMap" && Time.timeSinceLevelLoad > 0.2f);
         var saved = SaveGame.Read(2);
-        Check("Campaign: a win is saved, and the map then shows the next dot", saved != null && saved.done.Contains("FlightDrill") && dots() == 2, (saved != null ? string.Join(",", saved.done.ToArray()) : "no save") + ", " + dots() + " dots");
+        Check("Campaign: a win is saved, and the map still shows its one dot", saved != null && saved.done.Contains("Orientation") && dots() == 1, (saved != null ? string.Join(",", saved.done.ToArray()) : "no save") + ", " + dots() + " dots");
         SaveGame.Delete(2);
         Check("Campaign: DELETE empties the slot", !SaveGame.Exists(2) && !SaveGame.InCampaign, "");
     }

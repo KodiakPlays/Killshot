@@ -18,8 +18,8 @@ public class EndScreenPanel : Panel
     [SerializeField] private TMP_Text values;
     [Tooltip("Real seconds from the end to the screen, so the last hit is seen first.")]
     [Tune("Board & time")] [SerializeField] private float delaySeconds = 2f;
-    [Tooltip("MISSION SELECT loads this scene: the mission list.")]
-    [SerializeField] private string menuScene = "01_Briefing";
+    [Tooltip("MISSION SELECT loads this scene outside the campaign: the title (owner 2026-11-09: SKIRMISH; the level list is gone).")]
+    [SerializeField] private string menuScene = "00_Start";
     [Tooltip("Owner 2026-11-08: in the campaign, MISSION SELECT loads this scene instead: the ship's rooms, then the sector map.")]
     [SerializeField] private string campaignScene = "Ship";
     [Tooltip("Pause menu only: RESUME and QUIT GAME.")]
@@ -59,7 +59,7 @@ public class EndScreenPanel : Panel
         title.text = won ? "MISSION COMPLETE" : shipLost ? "SHIP LOST" : "MISSION FAILED";
         Paint(title, won ? Palette.nominal : Palette.alarm);
         bool flight = quest.Goal == MissionGoal.Flight;
-        reason.text = won && flight ? "FLIGHT DRILL PASSED" : won ? name + " " + (quest.Goal == MissionGoal.HitUnseen ? "HIT · NEVER SCANNED" : quest.Goal == MissionGoal.FindBySignal ? "FOUND BY SIGNAL" : quest.Goal == MissionGoal.JumpPoint ? "EVADED" : fate) + (quest.ExitOpen ? " · JUMPED OUT" : "")
+        reason.text = won && flight ? "CHECKLIST COMPLETE" : won ? name + " " + (quest.Goal == MissionGoal.HitUnseen ? "HIT · NEVER SCANNED" : quest.Goal == MissionGoal.FindBySignal ? "FOUND BY SIGNAL" : quest.Goal == MissionGoal.JumpPoint ? "EVADED" : fate) + (quest.ExitOpen ? " · JUMPED OUT" : "")
                     : quest.FailReason == MissionFailReason.Desertion ? "LEFT THE BATTLE SPACE"
                     : quest.FailReason == MissionFailReason.Scanned ? name + " SCANNED OR LOCKED · THIS LEVEL ALLOWS NEITHER"
                     : quest.FailReason == MissionFailReason.PrizeDestroyed ? name + " DESTROYED · IT WAS TO BE CAPTURED"

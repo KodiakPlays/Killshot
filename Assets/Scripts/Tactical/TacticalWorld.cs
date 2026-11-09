@@ -56,6 +56,8 @@ public class TacticalWorld : MonoBehaviour
     [Tune("Crashes")] [Range(0f, 1f)] [SerializeField] private float crashKeepSpeed = 0.3f;
     [Tooltip("A ship takes crash damage at most once in this many game seconds, however long it grinds against something.")]
     [Tune("Crashes")] [SerializeField] private float crashRepeatSeconds = 3f;
+    [Tooltip("Owner 2026-11-09: a steered ship (the enemy, our battle group) this close to a rock or ship, units, with every way blocked, heads straight away from it.")]
+    [Tune("Crashes")] [SerializeField] private float touchingUnits = 50f;
     [Tooltip("Owner 2026-11-01: our ship on course to hit a rock within this many game seconds raises the warning on the alarm strip, with the alert tone.")]
     [Tune("Crashes")] [SerializeField] private float rockWarnSeconds = 30f;
     [Tooltip("A moving ship is checked every this many units along its way this tick, so it can't skip through at x10.")]
@@ -100,12 +102,12 @@ public class TacticalWorld : MonoBehaviour
         board.Ticked += OnTick;
         // the level arrives a frame later; the board starts paused, so nothing has moved by then
         SceneManager.sceneLoaded += OnSceneLoaded;
-        for (int i = 0; i < SceneManager.sceneCount; i++) HideRuins(SceneManager.GetSceneAt(i)); // a level already open in the editor
+        for (int i = 0; i < SceneManager.sceneCount; i++) { HideRuins(SceneManager.GetSceneAt(i)); JoinLevelShips(SceneManager.GetSceneAt(i)); } // a level already open in the editor
         string level = string.IsNullOrEmpty(chosenLevel) ? levelScene : chosenLevel;
         if (!string.IsNullOrEmpty(level) && !LevelOpen()) SceneManager.LoadSceneAsync(level, LoadSceneMode.Additive);
     }
 
-    void OnSceneLoaded(Scene scene, LoadSceneMode mode) { HideRuins(scene); SeeRuins(); }
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode) { HideRuins(scene); JoinLevelShips(scene); SeeRuins(); }
 
     // every piece of a level's terrain starts hidden
     void HideRuins(Scene scene)
@@ -406,7 +408,7 @@ public class TacticalWorld : MonoBehaviour
     }
 
     /// <summary>Owner 2026-11-01: rocks and ships are solid, so an enemy steers round them. The heading nearest the one
-    /// it wants with its way clear for `look` units. All blocked: the one it wants.</summary>
+    /// it wants with its way clear for `look` units. All blocked: the one it wants, or, touching something, straight away from it.</summary>
     public int ClearHeading(NavSystem nav, int wanted, float look)
     {
         var at = new Vector2((float)nav.x, (float)nav.y);
@@ -421,7 +423,22 @@ public class TacticalWorld : MonoBehaviour
                 var ahead = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad));
                 if (WayClear(nav, at, ahead, look, clear)) return heading;
             }
-        return wanted;
+        return Away(nav, at, clear, wanted);
+    }
+
+    // Owner 2026-11-09, a playtest: a big ship touching a rock found every way blocked, pushed on into it and stayed
+    // pinned there. Touching something, it heads straight away from it, then looks again once it is free.
+    int Away(NavSystem nav, Vector2 at, float clear, int wanted)
+    {
+        float gap = touchingUnits; Vector2 from = at;
+        foreach (var p in ruins)
+            if (p.r && (p.at - at).magnitude - p.reach - clear < gap) { gap = (p.at - at).magnitude - p.reach - clear; from = p.at; }
+        foreach (var ship in bodies)
+        {
+            var o = new Vector2((float)ship.nav.x, (float)ship.nav.y);
+            if (ship.nav != nav && (o - at).magnitude - ship.nav.BoxHalf.magnitude - clear < gap) { gap = (o - at).magnitude - ship.nav.BoxHalf.magnitude - clear; from = o; }
+        }
+        return from == at ? wanted : Bearing(at - from);
     }
 
     bool WayClear(NavSystem nav, Vector2 at, Vector2 ahead, float look, float clear)
@@ -529,18 +546,39 @@ public class TacticalWorld : MonoBehaviour
         c.trackKey = key;
         c.transform.SetPositionAndRotation(new Vector3(at.x, at.y, template.transform.position.z), Quaternion.Euler(0f, 0f, -hdg));
         c.gameObject.SetActive(true);
-        // "Naga-class frigate" -> NAGA 1, FRIGATE
-        string cls = c.GetComponent<Ship>() ? c.GetComponent<Ship>().Stats.shipClass : "";
-        int dash = cls.IndexOf("-class");
-        string name = (dash > 0 ? cls.Substring(0, dash) : "CONTACT").ToUpperInvariant() + " " + key.Substring(1);
-        string klass = cls.Contains(" ") ? cls.Substring(cls.LastIndexOf(' ') + 1).ToUpperInvariant() : "SHIP";
-        board.State.AddTrack(new ShipState.Track { key = key, name = name, klass = klass, hostile = true, sig = new[] { "THERM", "RAD" } });
+        Join(c);
+        if (brains[brains.Length - 1]) brains[brains.Length - 1].Brief(brief, now);
+        return c;
+    }
+
+    // A ship that wasn't on the board at the start joins the world: its own track, run and measured like the rest from the next tick.
+    void Join(WorldContact c)
+    {
+        string name, klass;
+        int dot = c.name.IndexOf(" · ");
+        if (c.friendly && dot > 0) { name = c.name.Substring(0, dot).ToUpperInvariant(); klass = c.name.Substring(dot + 3).ToUpperInvariant(); } // "Indra · Carrier" -> INDRA, CARRIER
+        else
+        {
+            // "Naga-class frigate" -> NAGA 1, FRIGATE
+            string cls = c.GetComponent<Ship>() ? c.GetComponent<Ship>().Stats.shipClass : "";
+            int dash = cls.IndexOf("-class");
+            name = (dash > 0 ? cls.Substring(0, dash) : "CONTACT").ToUpperInvariant() + " " + c.trackKey.Substring(1);
+            klass = cls.Contains(" ") ? cls.Substring(cls.LastIndexOf(' ') + 1).ToUpperInvariant() : "SHIP";
+        }
+        board.State.AddTrack(new ShipState.Track { key = c.trackKey, name = name, klass = klass, hostile = !c.friendly, friendly = c.friendly, sig = new[] { "THERM", "RAD" } });
         System.Array.Resize(ref contacts, contacts.Length + 1); contacts[contacts.Length - 1] = c;
         System.Array.Resize(ref brains, brains.Length + 1); brains[brains.Length - 1] = c.GetComponent<EnemyBrain>();
         StartShip(c);
-        if (brains[brains.Length - 1]) brains[brains.Length - 1].Brief(brief, now);
         Sync();
-        return c;
+    }
+
+    // Owner 2026-11-09: a level can bring its own ships (the battle group). Each one placed in it joins the world where it stands.
+    void JoinLevelShips(Scene scene)
+    {
+        if (!scene.isLoaded || !scene.path.StartsWith(LevelFolder + "/")) return;
+        foreach (var root in scene.GetRootGameObjects())
+            foreach (var c in root.GetComponentsInChildren<WorldContact>())
+                if (System.Array.IndexOf(contacts, c) < 0) Join(c);
     }
 
     private void OnDestroy() { if (board) board.Ticked -= OnTick; SceneManager.sceneLoaded -= OnSceneLoaded; }

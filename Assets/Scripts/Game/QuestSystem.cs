@@ -200,6 +200,28 @@ public class QuestSystem : MonoBehaviour
         helpText.rectTransform.sizeDelta -= Vector2.up * (box.sizeDelta.y - drillNoteHeight);
         box.sizeDelta = new Vector2(box.sizeDelta.x, drillNoteHeight);
         ShowHelp(drill[0].note);
+        GrowMap(drill[0].mapUnits);
+    }
+
+    // Owner 2026-11-09: each part of the checklist done opens more of the map. It grows from the middle, in real seconds, as the grid forms at the start.
+    [Tooltip("A drill step that opens more of the map grows it over this many real seconds.")]
+    [Tune("Mission")] [SerializeField] private float mapGrowSeconds = 3f;
+    private float mapFrom, mapTo, mapGrowAt = -1f;
+
+    void GrowMap(float units)
+    {
+        if (units <= 0f) return;
+        mapFrom = (float)System.Math.Max(board.State.arenaWidthUnits, board.State.arenaHeightUnits);
+        mapTo = units;
+        mapGrowAt = Time.unscaledTime;
+    }
+
+    private void Update()
+    {
+        if (mapGrowAt < 0f) return;
+        float k = Mathf.SmoothStep(0f, 1f, (Time.unscaledTime - mapGrowAt) / Mathf.Max(0.01f, mapGrowSeconds));
+        board.State.arenaWidthUnits = board.State.arenaHeightUnits = Mathf.Lerp(mapFrom, mapTo, k);
+        if (k >= 1f) mapGrowAt = -1f;
     }
 
     void Drill(ShipState us)
@@ -212,6 +234,7 @@ public class QuestSystem : MonoBehaviour
         if (DrillAt + 1 >= drill.Length) { End(QuestStage.MissionComplete, MissionFailReason.None); return; }
         slideHeld = 0f;
         ShowHelp(drill[++DrillAt].note);
+        GrowMap(drill[DrillAt].mapUnits);
         board.Chime();
     }
 
@@ -233,6 +256,10 @@ public class QuestSystem : MonoBehaviour
             case DrillCheck.DradisOn: return us.sensors.Listening;
             case DrillCheck.StopAt: return toRing <= s.ringUnits && us.nav.SpeedUnits <= s.amount;
             case DrillCheck.ActiveOn: return us.sensors.Listening && us.sensors.active; // owner 2026-11-02: a ping is what shows rocks past sight
+            case DrillCheck.Scanned: // owner 2026-11-09: scan a battle group ship to see its name (the list can hold keys with no ship)
+                int named = 0;
+                foreach (var t in us.tracks) if (!t.own && us.sensors.identified.Contains(t.key)) named++;
+                return named >= s.amount;
         }
         return false;
     }

@@ -783,7 +783,7 @@ public class PlotPanel : Panel
         foreach (var t in s.tracks)
         {
             if (t.own || t.captured) continue;
-            bool known = t.hostile && s.sensors.identified.Contains(t.key), inSight = s.sensors.InSight(t);
+            bool known = (t.hostile || t.friendly) && s.sensors.identified.Contains(t.key), inSight = s.sensors.InSight(t);
             bool locked = s.weapons.LockedOn(t.key); // owner 2026-11-01: a locked ship is tracked on the grid, where it is now
             if (!known && !inSight && !locked) continue;
             // owner 2026-11-01: a scanned ship under the ACTIVE SCAN cone moves smoothly too. ACTIVE off, it hops again from where it stopped
@@ -806,7 +806,7 @@ public class PlotPanel : Panel
                 double b = t.bearing * System.Math.PI / 180.0, px = t.rangeUnits / UnitsPerPx * Controls.ZoomExact;
                 at = OwnAt + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
             }
-            Color ink = t.wreck ? wreckInk : known || locked ? alarm : caution;
+            Color ink = t.wreck ? wreckInk : known && t.friendly ? Palette.ownForce : known || locked ? alarm : caution; // owner 2026-11-09: our battle group is blue once scanned
             float age = current || !t.hasWorld ? 0f : Controls.MissionSeconds - t.seenAt;
             float fresh = Mathf.Lerp(1f, staleAlpha, age / Mathf.Max(1f, staleSeconds));
             var view = inSight ? ViewOf(t.key) : null;
@@ -831,7 +831,7 @@ public class PlotPanel : Panel
                 labelPush = px * view.ShipFill / 2f;
             }
             else if (t.wreck) continue; // no picture: a wreck keeps its dim dot (below); an unknown in sight is an amber dot (Step 99)
-            else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = fresh * (inSight ? 1f - closeUp : 1f) });
+            else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = fresh * (inSight ? 1f - closeUp : 1f), ink = known && t.friendly ? ink.gamma : default });
             if (t.wreck) continue; // a wreck carries no label (Step 49)
             if (locked)
             {

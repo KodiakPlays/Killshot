@@ -75,6 +75,31 @@ public class EnemyBrain : MonoBehaviour
     [Tooltip("When we hit it before it is ALERT: at most one salvo this often, game seconds.")]
     [Tune("Enemy")] [SerializeField] private float fireBackSeconds = 120f;
 
+    [Header("Battle group (owner 2026-11-09)")]
+    [Tooltip("One of our battle group: it flies in a loose formation along the level's Group Route (on its Mission), at the group's "
+           + "speed, and waits at the last point. It never follows us: we follow them. Our place is the formation's centre.")]
+    [Tune("Battle group")] public bool escorts;
+    [Tooltip("Its place in the formation, units from the formation's centre, turned to the way the group flies: x to the right, y ahead.")]
+    [Tune("Battle group")] [SerializeField] private Vector2 slotUnits;
+    [Tooltip("The formation's centre flies its route at this speed, units/s. Ours tops out at 50.")]
+    [Tune("Battle group")] [SerializeField] private float groupSpeedUnits = 15f;
+    [Tooltip("It drifts round its place by up to this much, units, once every Sway Seconds, so it never looks parked.")]
+    [Tune("Battle group")] [SerializeField] private float swayUnits = 150f;
+    [Tune("Battle group")] [SerializeField] private float swaySeconds = 60f;
+    [Tooltip("It keeps at least this far from our ship, units, and goes round us to reach its place.")]
+    [Tune("Battle group")] [SerializeField] private float keepClearUnits = 500f;
+    [Tooltip("Too close to our ship, it moves away at no less than this share of its top speed.")]
+    [Tune("Battle group")] [Range(0f, 1f)] [SerializeField] private float makeRoomShare = 0.3f;
+    [Tooltip("Away from its place, it flies this much faster than the formation, units/s, for each unit away.")]
+    [Tune("Battle group")] [SerializeField] private float catchUpPerUnit = 0.05f;
+    [Tooltip("This close to its place, units, it turns to the way the group flies.")]
+    [Tune("Battle group")] [SerializeField] private float inPlaceUnits = 100f;
+    private Mission mission;
+    private bool lookedForMission;
+    private Vector2 group;
+    private float groupAt = -1f;
+    private int leg, groupHeading;
+
     /// <summary>How aware it is of us. It goes back down only when it gives up.</summary>
     public Awareness Level { get; private set; }
     /// <summary>Its last thought heard or saw our ship (not our fighters): our sensors' "DETECTED BY 1 HOSTILE".</summary>
@@ -242,6 +267,7 @@ public class EnemyBrain : MonoBehaviour
 
     void Steer(ShipState ship, ShipState us, Vector2 at, Vector2 ours, float dist, float now, bool fix)
     {
+        if (escorts) { Escort(ship, us, at, ours, now); return; }
         if (!hunts && cruiseUnits <= 0f) { ship.nav.throttle = 0; return; } // Step 130: a level's still target stays as it spawned, the side it shows included
         float top = (float)ship.nav.stats.topSpeedUnits, speed = cruiseUnits;
         if (Level > Awareness.Cold && now - lastHeardAt > giveUpSeconds)
@@ -278,6 +304,43 @@ public class EnemyBrain : MonoBehaviour
         heading = world ? world.ClearHeading(ship.nav, heading, avoidLookUnits) : heading;
         ship.nav.orderedHeading = KeepInside(us, at, heading);
         // a damaged engine room holds it back, as our lever is; wrecked, it drifts (DISABLE, BOARDING_README)
+        ship.nav.throttle = Mathf.Clamp(Mathf.RoundToInt(speed / top * 100f), 0, ship.nav.ThrottleCap);
+    }
+
+    // Owner 2026-11-09: our battle group goes its own way and we follow them ("They pursue their path, and you have to sort
+    // of follow them"). The formation's centre, which starts on our ship, flies the level's group route at the group's speed
+    // and waits at its last point; each ship flies to its place round that centre, turned the way the group flies.
+    void Escort(ShipState ship, ShipState us, Vector2 at, Vector2 ours, float now)
+    {
+        if (groupAt < 0f) { group = ours; groupAt = now; groupHeading = us.nav.heading; }
+        if (!lookedForMission) { lookedForMission = true; mission = FindAnyObjectByType<Mission>(); }
+        var route = mission ? mission.groupRoute : null;
+        float dt = Mathf.Max(0f, now - groupAt), moved = 0f;
+        groupAt = now;
+        if (route != null && leg < route.Length)
+        {
+            Vector2 to = route[leg] - group;
+            moved = Mathf.Min(to.magnitude, groupSpeedUnits * dt);
+            if (to.magnitude > 1f) { group += to / to.magnitude * moved; groupHeading = TacticalWorld.Bearing(to); }
+            else leg++;
+        }
+        float rad = groupHeading * Mathf.Deg2Rad, sin = Mathf.Sin(rad), cos = Mathf.Cos(rad);
+        float t = now * 2f * Mathf.PI / Mathf.Max(1f, swaySeconds) + slotUnits.x;
+        Vector2 slot = slotUnits + new Vector2(Mathf.Sin(t), Mathf.Cos(t * 0.7f)) * swayUnits;
+        Vector2 place = group + new Vector2(slot.x * cos + slot.y * sin, slot.y * cos - slot.x * sin); // x right, y ahead, the way the group flies
+        float top = (float)ship.nav.stats.topSpeedUnits, off = (place - at).magnitude;
+        float speed = Mathf.Min(top, (dt > 0f ? moved / dt : 0f) + off * catchUpPerUnit); // the group's pace, plus a little to close on its place
+        int heading = off < inPlaceUnits ? groupHeading : TacticalWorld.Bearing(place - at);
+        // our ship is in its way: it goes round us, on the side it is already on; too close, it makes room first
+        // (a playtest: Indra crossed our bow to its new place as we turned, and the two boxes pinned each other)
+        Vector2 way = off > 0f ? (place - at) / off : Vector2.zero, toUs = ours - at;
+        float along = Vector2.Dot(toUs, way), across = way.x * toUs.y - way.y * toUs.x; // across > 0: we are to its left
+        if (toUs.magnitude < keepClearUnits) { heading = TacticalWorld.Bearing(-toUs); speed = Mathf.Max(speed, top * makeRoomShare); }
+        else if (along > 0f && along < off && Mathf.Abs(across) < keepClearUnits)
+            heading = TacticalWorld.Bearing(ours + new Vector2(way.y, -way.x) * (across > 0f ? 1f : -1f) * keepClearUnits - at);
+        if (!world) world = FindAnyObjectByType<TacticalWorld>();
+        heading = world ? world.ClearHeading(ship.nav, heading, avoidLookUnits) : heading;
+        ship.nav.orderedHeading = KeepInside(us, at, heading);
         ship.nav.throttle = Mathf.Clamp(Mathf.RoundToInt(speed / top * 100f), 0, ship.nav.ThrottleCap);
     }
 

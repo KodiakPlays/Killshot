@@ -13,11 +13,21 @@ and auxiliary (AUX). A bus takes at most five units, so you can fully run only
 two. More power to DRADIS means less power for the guns. Every unit you draw
 makes the ship louder. Every advantage is bought by giving something up.
 
-There are eight levels. NEW GAME plays the first seven in order, as dots on the
-SECTOR MAP. LEVELS opens the MISSIONS list, where you can pick any of them. The enemy is the
-Garuda, a Garuda-class cruiser. In levels 1 and 3 to 5 it does not hunt you
-and does not fire. In COLD RUN and INTERCEPT it patrols and hunts you if it
-finds you.
+The game will be about ten story missions, plus SKIRMISH. NEW GAME starts the
+story. Mission 1, ORIENTATION, is built. It is the one dot on the SECTOR MAP.
+It starts with a combat briefing. Your battle group is with you: INDRA, VARUNA
+and MARUT. Then you run a checklist of 16 steps: power, throttle, heading, the
+side thrusters, zoom, DRADIS, ACTIVE SCAN, scanning one of the group, a field
+of rocks, and stopping inside a ring. Each part you finish opens more of the
+map. Weapons are off.
+
+SKIRMISH plays WOLF HUNT (7, below) straight away.
+
+The other old test levels below are off every list. Their scenes are kept and
+switched off. They are never deleted. What each one tested goes into the story
+missions. The enemy is the Garuda, a Garuda-class cruiser. In levels 1 and 3
+to 5 it does not hunt you and does not fire. In COLD RUN and INTERCEPT it
+patrols and hunts you if it finds you.
 
 1. **FLIGHT DRILL.** Training. Learn to fly the ship, with nothing to fight. A
    note gives you each of 14 steps: power, throttle, heading, the side
@@ -41,8 +51,7 @@ finds you.
    countdown starts and Naga-class frigates come in from the edges.
 8. **LONG SHOT.** A test range for the spinal railgun, the gun on our ship's
    nose. The Garuda patrols east and west and doesn't hunt you. Find its
-   course, stop the ship, turn the nose onto where it will be, and fire. Only
-   on the MISSIONS list.
+   course, stop the ship, turn the nose onto where it will be, and fire.
 
 ## Running it
 
@@ -52,7 +61,7 @@ Open the project in **Unity 6000.5.10f1** and load:
 Assets/Scenes/Tactical/00_Start.unity
 ```
 
-Press play. The intro runs by itself to a menu: NEW GAME, LEVELS and
+Press play. The intro runs by itself to a menu: NEW GAME, SKIRMISH and
 SETTINGS.
 
 NEW GAME opens SAVE SLOTS. There are three slots. An empty slot starts a new
@@ -65,7 +74,8 @@ After a won mission, the ship's rooms show before the map. Damage stays on the
 ship between campaign missions until REPAIR ALL in ENGINEERING. The game saves
 after each win. DELETE on a used slot empties it.
 
-LEVELS opens the MISSIONS list, for testing. Pick a level.
+SKIRMISH plays WOLF HUNT straight away. In a skirmish, MISSION SELECT goes
+back to the title.
 
 INITIALISING... shows, then the tactical board. The board
 loads your level from `Assets/Scenes/Levels/` on top of itself. To skip straight
@@ -170,8 +180,7 @@ does a few things.
 | Input | What it does |
 |---|---|
 | Menu | The arrow keys or `Tab` move. `Enter` or `Space` picks. A click works too. |
-| MISSIONS list | The arrow keys move. `Enter` picks. A click works too. |
-| `Esc` | In a level, stop the game and open the menu: RESUME, QUIT GAME, RESTART MISSION and MISSION SELECT. `Esc` again, or RESUME, closes it. On the intro, SAVE SLOTS, the SECTOR MAP and the MISSIONS list, quit at once, with no confirm box. There it does nothing in the Unity editor. On the MISSION COMPLETE or SHIP LOST screen, it does nothing. |
+| `Esc` | In a level, stop the game and open the menu: RESUME, QUIT GAME, RESTART MISSION and MISSION SELECT. `Esc` again, or RESUME, closes it. On the intro, SAVE SLOTS and the SECTOR MAP, quit at once, with no confirm box. There it does nothing in the Unity editor. On the MISSION COMPLETE or SHIP LOST screen, it does nothing. |
 | `P`, or the PAUSE key | Stop or start time. The board opens paused. |
 | Rate keys | Run time at x0.25, x1 or x5. |
 | Briefing icon, next to the rate keys | Open or close the briefing. |

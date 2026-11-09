@@ -12,6 +12,9 @@ public class WorldContact : MonoBehaviour
 {
     [Tooltip("The board track this contact drives, e.g. t07 (GARUDA).")]
     public string trackKey = "t07";
+    [Tooltip("Owner 2026-11-09: one of our battle group. Placed in a level, its name and class come from this object's name, "
+           + "\"Indra · Carrier\". It shows blue once scanned and can't be targeted. Its brain should have Hunts off and Escorts on (it flies in formation with us).")]
+    public bool friendly;
 
     /// <summary>Step 49: this ship's own model — the same one ours runs on (the enemy is our ship
     /// with different stats, FTUE_PLAN §4). It takes our hits. Undamaged at load.</summary>

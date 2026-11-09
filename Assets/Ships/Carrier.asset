@@ -1,0 +1,204 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f42d8e8ba6864b329322a3b6cddd525, type: 3}
+  m_Name: Carrier
+  m_EditorClassIdentifier: Assembly-CSharp::ShipStats
+  shipClass: Indra-class carrier
+  length: 450
+  width: 230
+  navigation:
+    headingKeyStep: 3
+    turnRate: 30
+    baseTurnRate: 15
+    fineTurnDegPerS: 2
+    topSpeedUnits: 60
+    baseSpeedUnits: 30
+    accelUnits: 2.8
+    baseAccelUnits: 1.4
+    brakeUnits: 5.2
+    reverseShare: 0.42
+    driftKeepPerS: 0.9143
+    dragKeepPerS: 0.99406
+    sideSpeedUnits: 24
+    sideAccelUnits: 5.6
+    sideTapUnits: 2
+    sideRampSeconds: 2
+  power:
+    reactorUnits: 10
+    busMax: 5
+    busSignalPerUnit:
+    - 10
+    - 10
+    - 10
+    - 10
+  sensors:
+    senRangeBaseUnits: 4375
+    senRangePerStepUnits: 625
+    visualRangeUnits: 2000
+    uvRangeFactor: 0.55
+    coneArcMin: 15
+    coneArcMax: 90
+    coneArcStep: 10
+    signalRise: 9
+    signalFall: 6
+    activeScanSignal: 35
+    signalTrackedAt: 45
+    cloudInsideShare: 0.9
+    cloudSignalShare: 0.3
+    cloudSeenUnits: 400
+  weapons:
+    mounts:
+    - id: RGA
+      label: RAILGUN TURRET A
+      shortName: RG-A
+      kind: RG
+      arc: 90
+      halfArc: 45
+      rangeUnits: 2000
+      ammo: 12
+    - id: RGB
+      label: RAILGUN TURRET B
+      shortName: RG-B
+      kind: RG
+      arc: 270
+      halfArc: 45
+      rangeUnits: 2000
+      ammo: 0
+    - id: PDA
+      label: PDC GROUP A
+      shortName: PDC-A
+      kind: PD
+      arc: 90
+      halfArc: 90
+      rangeUnits: 600
+      ammo: 2400
+    - id: PDB
+      label: PDC GROUP B
+      shortName: PDC-B
+      kind: PD
+      arc: 270
+      halfArc: 90
+      rangeUnits: 600
+      ammo: 0
+    - id: VLS
+      label: TORPEDO VLS
+      shortName: VLS
+      kind: MS
+      arc: 0
+      halfArc: 180
+      rangeUnits: 3000
+      ammo: 0
+    hardPoints:
+    - at: {x: 0, y: 50}
+      mount: 
+      path: []
+    - at: {x: 12.5, y: 0}
+      mount: RGA
+      path: []
+    - at: {x: -12.5, y: 0}
+      mount: RGB
+      path: []
+    - at: {x: 12.5, y: -25}
+      mount: PDA
+      path: []
+    - at: {x: -12.5, y: -25}
+      mount: PDB
+      path: []
+    - at: {x: 0, y: -50}
+      mount: VLS
+      path: []
+    gunTurnDegPerSecond: 3
+    lockSeconds: 10
+    lockFallSeconds: 5
+    lockHoldSeconds: 10
+    manualStartRangeUnits: 2000
+    salvo: 2
+    loaders: 1
+    wepFeedPerUnit: 5
+    wepBleed: 3
+    slugSpeedUnits: 300
+    torpedoSpeedUnits: 250
+    torpedoLaunchSpeedUnits: 250
+    torpedoCoastSeconds: 3.5
+    torpedoCoastSpeedUnits: 5
+    torpedoTiltBackDeg: 30
+    torpedoCurveDegPerS: 90
+    torpedoTurnBuildSeconds: 0.3
+    torpedoBurnUnits: 1100
+    torpedoTurnDegPerS: 140
+    torpedoSpreadDeg: 20
+    torpedoRippleSeconds: 0.3
+    pdcRoundsPerGo: 100
+    hitMarginPercent: 25
+    slugArmourDamage: 50
+    slugCompartmentDamage: 2
+    heArmourDamage: 100
+    empSeconds: 60
+    fireChanceHE: 0.6
+    fireChancePEN: 0.4
+    breachChanceSlug: 0.5
+    fireSignalSpike: 25
+    spdStep: 1
+    pdcKillChance: 0.7
+  hangar:
+    fighterSpeedUnits: 100
+    fighterAttackUnits: 200
+    fighterRunSeconds: 30
+    fighterArmourDamage: 10
+    fighterCompartmentDamage: 1
+    launchTiltBackDeg: 15
+    launchSideGapUnits: 10
+    launchRunUnits: 200
+    dots: []
+    turnDegPerS: 90
+    turnEase: 180
+    boatSpeedUnits: 75
+    fighters: 6
+    marines: 0
+    marinesPerBoat: 6
+    dockUnits: 50
+    boardMaxSpeedUnits: 0.5
+    boardSeconds: 60
+    defenderShare: 0.25
+    marineLossPerDefender: 0.5
+    boatRangeUnits: 4000
+    boatStrandSeconds: 120
+  damage:
+    partySeconds: 6
+    sideArmourMax:
+    - 50
+    - 50
+    - 25
+    - 50
+    crew: 040000000900000012000000070000000600000008000000
+    roomSide: 000000000000000002000000010000000300000002000000
+    roomOrder: 010000000200000002000000010000000100000001000000
+    collisionArmourDamage: 25
+    collisionCompartmentDamage: 1
+    crashFullSpeed: 50
+    crashNudgeSpeed: 2
+    radChanceReactor: 0.5
+    fireDamageSeconds: 30
+    fireSpreadPerSecond: 0.01
+    vacuumSpreadPerSecond: 0.01
+    radSpreadPerSecond: 0.01
+    breachCrewLoss: 0.5
+    radCrewLossSeconds: 20
+    reactorContainedAt: 3
+    radFadeSeconds: 90
+  orders:
+    flickBackSeconds: 0.4
+    auxPerUnit: 3.2
+    orderCostParty: 30
+    orderCostSeal: 25
+    orderCostVent: 15
+    orderFailSeconds: 0.42

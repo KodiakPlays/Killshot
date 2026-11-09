@@ -155,10 +155,13 @@ MonoBehaviour:
   initialisingDuration: 2
   titleDuration: 4
   typeShare: 0.5
+  flickerInSeconds: 0.4
+  changeSeconds: 0.6
+  diffusion: 0.7
   initialisingOnly: 0
   titleOnly: 0
   titleText: STARWOLF
-  secondRowText: LEVELS
+  secondRowText: SKIRMISH
   titleOffset: 0
   canvasOrder: 32767
   finished:
@@ -185,14 +188,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1675068442}
         m_TargetAssemblyTypeName: ScreenFlow, Assembly-CSharp
-        m_MethodName: Go
+        m_MethodName: Play
         m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 01_Briefing
+          m_StringArgument: Level_01
           m_BoolArgument: 0
         m_CallState: 2
   settings:
@@ -576,7 +579,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9dad2186809b340548180cc219841866, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ScreenFlow
-  nextScene: 01_Briefing
+  nextScene: 02.1_Grid
   advanceOnEnter: 0
   showFirst: {fileID: 0}
   advanceAfterSeconds: 0

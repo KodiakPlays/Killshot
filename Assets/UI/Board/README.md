@@ -669,6 +669,36 @@ firing, a shot's dot can go up to twice its true speed. It can slow in the last 
 reaches the ship's hit box as the hit lands. `BoardManager.Slide` moves the drawn spot, `PlotPanel.ShotAt` draws
 shots, and `WeaponSystem.StepAhead` stops a drawn shot at the hit box.
 
+**Our battle group** (Step 178). A level can have friendly ships. In ORIENTATION they are INDRA,
+VARUNA and MARUT, round our ship at the start. Before a scan, each shows as an amber dot labelled
+BOGEY F1, F2 or F3, like any unknown ship. After an ACTIVE SCAN passes over it, its name shows in
+blue, and its dot turns blue. The blue is **Own Force** in `Palette.asset`. Zoomed in past x1.1, the
+close-up shows them as full 3D models. They can't be targeted. They are solid, like every ship.
+
+They fly their own path in a loose formation, and we follow them. They never follow us. The path
+is the level's **Group Route** (on its Mission): points they fly to in order, at 15 units a second.
+They wait at the last point. With no route, they stay where they start. Our place is the middle of
+the formation: its centre starts on our ship. Each ship flies to its place round that centre,
+turned the way the group flies, and drifts gently round that place. In ORIENTATION the path ends at
+(0, 2,800), south of the rock field: the carrier and battleship are too big to get through the
+rocks, so from TAKE POINT on we go through alone.
+They steer round rocks and ships the way the enemy does, and they stay inside the battle space.
+They keep at least 500 units from our ship and go round it to reach their places. If we get
+closer than that, they move away first.
+To change how they fly, open the level and go to the Board tab of **Starwolf → Tuning**, under
+Battle group. **Escorts** turns the formation flying on. **Slot Units** is the ship's place: x to
+the right, y ahead. INDRA is on the left (−700, 100), VARUNA on the right (700, −50) and MARUT
+behind (0, −700). **Group Speed Units** (15) is how fast the formation flies its path. **Sway Units** (150) and **Sway Seconds** (60) set
+how far and how slowly each ship drifts round its place. **Keep Clear Units** (500) is how close
+they come to our ship. **Make Room Share** (0.3) is how fast they move away when closer than that.
+**Catch Up Per Unit** (0.05) is how much faster a ship flies when it is away from its place.
+**In Place Units** (100): this close to its place, a ship turns the way the group flies.
+
+To add one to a level, drag its prefab from `Assets/Prefabs/BattleGroup` into the level scene. Its
+name on the plot comes from the object's name: `Indra · Carrier` shows as INDRA, CARRIER. Each
+prefab has **Friendly** ticked on its World Contact. Its Enemy Brain has **Hunts** off and
+**Escorts** on.
+
 Ask a technical artist before you change these:
 - The code copies four templates in play: `Passive label template`, `Fighter (template)`,
   `Contact label (template)` and `Mark label (template)`. Keep them switched off.
@@ -1015,8 +1045,16 @@ Ask a technical artist before you change these:
 `Panels/End Screen.prefab`. Script: **End Screen Panel**, on `End Screen`. It covers the board
 when the mission is won or lost. It says MISSION COMPLETE or SHIP LOST, and why. It shows the
 target, our ship and the time taken. Its two buttons are RESTART MISSION and MISSION SELECT.
-RESTART MISSION plays the level again. MISSION SELECT opens the MISSIONS list. In a campaign it opens
-the ship's rooms (see Ship rooms, below).
+RESTART MISSION plays the level again. In a skirmish, MISSION SELECT goes back to the title. In a
+campaign it opens the ship's rooms (see Ship rooms, below).
+
+It is the pause menu too. In a level, Escape stops the game and opens it. The title says PAUSED in
+white. The reason line is empty. The target, our ship and the time are hidden. Two more buttons
+show on the top row: RESUME and QUIT GAME. RESTART MISSION and MISSION SELECT are below them.
+Escape again, or RESUME, closes it. Time goes back to how it was: running, or still paused if the
+player had pressed P before. While it is open, P and the drawer keys 1 to 6 do nothing. QUIT GAME
+quits the game. In the Unity editor it stops play mode. On the MISSION COMPLETE or SHIP LOST
+screen, Escape does nothing, and RESUME and QUIT GAME are hidden.
 
 It is the last part under `Tactical Board`, so it draws over everything else. Keep it last.
 
@@ -1039,7 +1077,10 @@ Ask a technical artist before you change these:
   sends. QUIT GAME uses `end.quit`.
 - **Resume Button**, **Quit Button** and **Rows** are the parts the script shows and hides.
   RESUME and QUIT GAME show only on the pause menu. `Rows` is hidden on it.
-- **Menu Scene** (`01_Briefing`) is the scene MISSION SELECT loads.
+- **Menu Scene** (`00_Start`, the title) is the scene MISSION SELECT loads outside a campaign
+  (Step 178). It was the MISSIONS list, `01_Briefing`, before.
+- **Menu Key** (Escape) opens and closes the pause menu. It is on the Board Manager, on the Keys
+  tab of **Starwolf → Tuning**.
 - **Delay Seconds** (2) is the wait between the end and the screen, so the last hit is seen
   first. It is on the Board tab of **Starwolf → Tuning**, under Board & time.
 
@@ -1068,7 +1109,7 @@ saves at once. It shows only while there is damage. Repairs cost nothing for now
 each side and each room's integrity stay. Fires, radiation, vented rooms and crew losses end with
 the mission. A room that ends at 0 is kept at 1. A win's damage goes into the save when you press
 MISSION SELECT; RESTART MISSION on the win screen replays from the damage before it. A lost mission
-keeps nothing. Levels from LEVELS always start whole. The panel is
+keeps nothing. A skirmish always starts whole. The panel is
 Damage report, in Room · ENGINEERING. Ship Rooms fills it through Damage Report and Repair All,
 under Repairs.
 
@@ -1106,7 +1147,7 @@ Ask a technical artist before you change these:
 Scene: `Assets/Scenes/Tactical/SectorMap.unity`. Script: **Sector Map**, on `Sector Map Script`.
 It is the campaign's map of missions. SAVE SLOTS opens it. So does SECTOR MAP › in the ship's
 rooms. Each mission is a dot. Win a mission, and the next dot shows. Codex made the look (Step
-172).
+172). Since Step 178 the map has one mission: 1 ORIENTATION. More story missions come later.
 
 How it plays:
 - A painted console fills the screen. On the left is the BRIEFING screen. Under MISSION RECORD it
@@ -1190,14 +1231,6 @@ The prefabs:
 - `Frame`: the metal frame. Its parts are `Steel frame`, `Black backing`, `Conduits`,
   `Corner bolts` and `Stencils` (two painted labels, BUS A-14 and VENT PLENUM 3). The art files
   are in `Art/Frame`. The Art list has 5 entries.
-It is the pause menu too. In a level, Escape stops the game and opens it. The title says PAUSED in
-white. The reason line is empty. The target, our ship and the time are hidden. Two more buttons
-show on the top row: RESUME and QUIT GAME. RESTART MISSION and MISSION SELECT are below them.
-Escape again, or RESUME, closes it. Time goes back to how it was: running, or still paused if the
-player had pressed P before. While it is open, P and the drawer keys 1 to 6 do nothing. QUIT GAME
-quits the game. In the Unity editor it stops play mode. On the MISSION COMPLETE or SHIP LOST
-screen, Escape does nothing, and RESUME and QUIT GAME are hidden.
-
 - `ToolRail`: the keys for the plot tools, SEL (cursor), PNT (point), RUL (ruler), CMP (compass)
   and ERS (erase), with their
   lamps, plates, icons and labels. The art files are in `Art/ToolRail` and `Art/Rails`. The Art
@@ -1215,8 +1248,6 @@ screen, Escape does nothing, and RESUME and QUIT GAME are hidden.
   `Art/Console`. The Art list has 11 entries.
 - `AlarmStrip`: `Strip`, a lamp, `Words` and `Count`. The strip's art file is in
   `Art/AlarmStrip`. The Art list has 3 entries.
-- **Menu Key** (Escape) opens and closes the pause menu. It is on the Board Manager, on the Keys
-  tab of **Starwolf → Tuning**.
 - `SignalBox`: our ship's signal, shown with the sensors drawer shut. Its parts are
   `Signal · well`, `Signal · label`, `Cells` (ten cells), a lamp, `Signal · percent` and
   `Signal · note`. Its art files are in the folders for each kind. The Art list has 4 entries.

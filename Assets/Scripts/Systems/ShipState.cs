@@ -25,6 +25,8 @@ public class ShipState
         [System.NonSerialized] public bool hasWorld;
         [Tooltip("Step 60: taken by our marines (SECURE).")]
         [System.NonSerialized] public bool captured;
+        [Tooltip("Owner 2026-11-09: one of our battle group. Blue once scanned; never hostile, so never a target.")]
+        [System.NonSerialized] public bool friendly;
         [System.NonSerialized] public double worldX, worldY;
         [Tooltip("Owner 2026-11-02: units the level's rocks take off our DRADIS and scan reach to this ship (TacticalWorld.Interference).")]
         [System.NonSerialized] public float interference;
