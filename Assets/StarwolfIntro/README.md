@@ -7,7 +7,7 @@ green glow. To use the look on a new screen, add the script to an object, pick a
 normal text on a canvas above it.
 
 What changed, step by step, and why, is in `Assets/Scenes/Tactical/BUILD_LOG.md` (Steps 27, 56, 70,
-71, 94, 106). This file only says how it works and how to use it.
+71, 94, 106, 174). This file only says how it works and how to use it.
 
 ---
 
@@ -33,7 +33,15 @@ What changed, step by step, and why, is in `Assets/Scenes/Tactical/BUILD_LOG.md`
    adds faint scanlines.
 3. The script shows that image on a full-screen canvas, kept at 16:9, with black bars if the window
    is a different shape.
-4. Words "type in" left to right, one column of dots at a time, then hold.
+4. In the full intro, SECTION 36 flickers into being where it stands, square by square in a quick
+   scattered order. It stays, then turns into STARWOLF. Squares lit in both words stay lit: the S
+   and most of the box. Squares only SECTION 36 uses flicker out, and squares only STARWOLF uses
+   flicker on. While a word flickers in or over, thin bands slip sideways and the light smears and
+   grains along them. It dies away as the squares settle, and never shows on the menu.
+5. So the S's line up, both words share one left edge. The script works it out from the two words'
+   widths. Now SECTION 36 is 36 px right of the middle and STARWOLF 36 px left of it.
+6. INITIALISING... and the title-only pages still "type in" left to right, one column of dots at a
+   time, in the middle, then stay.
 
 **Why a canvas and not OnGUI.** OnGUI brightened the picture twice. The text looked pale and the
 dark green background turned black. The canvas brightens it once, which is correct. Do not go back
@@ -47,7 +55,7 @@ Set these on the script in the inspector.
 
 | Mode | Tick | What it shows | Used in |
 |---|---|---|---|
-| Full intro | nothing | SECTION 36, then the title, then the menu | `00_Start` |
+| Full intro | nothing | SECTION 36 flickers in, turns into the title, then the menu | `00_Start` |
 | Title only | `titleOnly` | The title types in and stays. No menu. | `01_Briefing`, `MISSION ONE card` and `WOLF HUNT card` |
 | INITIALISING only | `initialisingOnly` | INITIALISING... and the loading bar, then it calls `finished` | `01_Briefing`, `INITIALISING` |
 
@@ -74,7 +82,10 @@ shows the MISSIONS list and then INITIALISING. Then the board loads (`02.1_Grid`
 |---|---|
 | `glyphData`, `displayShader`, `hardwareHum` | The font, the shader and the hum. `displayShader` must be set. The other two load themselves if empty. |
 | `sectionDuration`, `titleDuration`, `initialisingDuration` | How long each word stays, in seconds. |
-| `typeShare` | How much of that time the typing takes. 0.5 = types in the first half, holds for the second. |
+| `typeShare` | INITIALISING... and the title-only pages only. How much of that time the typing takes. 0.5 = types in the first half, stays for the second. |
+| `flickerInSeconds` | Full intro only. How long SECTION 36 takes to flicker in. Default 0.4. |
+| `changeSeconds` | Full intro only. How long SECTION 36 takes to turn into the title. Default 0.6. |
+| `diffusion` | Full intro only. How strong the sideways slip, smear and grain are while a word flickers. 0 = none, 1 = strong, up to 2. Default 0.7. |
 | `titleText` | The title word. STARWOLF in the intro, MISSION ONE and WOLF HUNT on the title cards. Only letters in the font work (see section 6). |
 | `titleOffset` | Moves the title up, in pixels on the 1920 × 1080 screen. 0 = centre. |
 | `canvasOrder` | Which canvases draw on top. The screen covers every canvas with a lower number. Default 32767 covers everything. |

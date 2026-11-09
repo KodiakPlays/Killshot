@@ -27,6 +27,13 @@ Shader "Starwolf/PhosphorDisplay"
         _Clock ("Clock", Float) = 0
         _Selected ("Selected", Float) = 0
         _LoadAvailable ("Load available", Float) = 0
+        _Flicker ("Full intro: words flicker in", Float) = 0
+        _Change ("Seconds into the flicker", Float) = 0
+        _ChangeSeconds ("Flicker length", Float) = 0.5
+        _Left ("Shared left edge", Float) = 0
+        _IdentX ("Section 36 x", Float) = 0
+        _TitleX ("Title x", Float) = 0
+        _Diffusion ("Diffusion strength", Float) = 0.7
         // CRT treatment on the lit text. Tune these to taste; nothing in code writes them.
         _ScanDepth ("Scanline depth", Range(0,1)) = 0.18
         _Vignette ("Vignette", Range(0,2)) = 0.45
@@ -47,14 +54,27 @@ Shader "Starwolf/PhosphorDisplay"
             float4 _Phosphor, _Background;
             float _Stage, _Reveal, _Clock, _Selected, _LoadAvailable, _Pitch, _TitleOffset, _Progress;
             float _ScanDepth, _Vignette, _ScreenInset;
+            float _Flicker, _Change, _ChangeSeconds, _Left, _IdentX, _TitleX, _Diffusion;
+            float hash3(float3 v) { return frac(sin(dot(v, float3(12.9898, 78.233, 37.719))) * 43758.5453); }
+            // Owner 2026-11-09: in the full intro a word flickers into being where it stands, square by
+            // square in a quick scattered order, and SECTION 36 turns into STARWOLF the same way. Both
+            // words share a left edge, so the squares lit in both (the S, most of the frame) stay lit.
+            // 0 = the old picture, 1 = the new, for this pixel's square.
+            float settled(float2 p)
+            {
+                float2 c = floor((p - float2(_Left, _TitleOffset - _IdentSize.y * .5)) / _Pitch);
+                float w = max(.01, _ChangeSeconds), at = hash3(float3(c, 1)) * w * .75;
+                float coin = step(.5, hash3(float3(c, floor(_Clock * 30)))); // flickers at 30 a second
+                return _Change >= at + w * .25 ? 1 : _Change >= at ? coin : 0;
+            }
             float mask(sampler2D tex, float2 p, float2 size)
             {
                 float2 uv = p / size + .5;
                 float inside = step(0, uv.x) * step(uv.x, 1) * step(0, uv.y) * step(uv.y, 1);
                 return tex2D(tex, uv).r * inside;
             }
-            // Owner 2026-10-24: each line types in where it sits, left to right, one cell column at a
-            // time; the newest column fades up as the next arrives. Then a straight cut. No zoom.
+            // Owner 2026-10-24: INITIALISING... and the title-only pages type in where they stand, left to
+            // right, one cell column at a time; the newest column fades up as the next arrives. No zoom.
             float typed(float2 q, float2 size)
             {
                 float cols = max(1, floor(size.x / _Pitch));
@@ -77,9 +97,10 @@ Shader "Starwolf/PhosphorDisplay"
             }
             float content(float2 p)
             {
-                if (_Stage < .5) return mask(_Ident, p, _IdentSize.xy) * typed(p, _IdentSize.xy);
+                float2 id = p - float2(_IdentX, _TitleOffset), t = p - float2(_TitleX, _TitleOffset);
+                if (_Stage < .5) return mask(_Ident, id, _IdentSize.xy) * settled(p);
                 if (_Stage < 1.5) return mask(_Boot, p * 1.8, _BootSize.xy) * typed(p * 1.8, _BootSize.xy) + bar(p);
-                float2 t = p - float2(0, _TitleOffset);
+                if (_Stage < 2.5 && _Flicker > .5) return lerp(mask(_Ident, id, _IdentSize.xy), mask(_Title, t, _TitleSize.xy), settled(p));
                 if (_Stage < 2.5) return mask(_Title, t, _TitleSize.xy) * typed(t, _TitleSize.xy);
                 float value = 0;
                 {
@@ -96,14 +117,34 @@ Shader "Starwolf/PhosphorDisplay"
                 }
                 return value;
             }
+            // 1 inside the words' box (and a little round it), 0 elsewhere on the screen.
+            float near(float2 p)
+            {
+                float2 d = abs(p - float2(_Left + _IdentSize.x * .5, _TitleOffset)) - _IdentSize.xy * .5;
+                return step(max(d.x, d.y), 24);
+            }
             float4 frag(v2f_img i) : SV_Target
             {
                 float2 p = (i.uv - .5) * float2(1920,1080);
+                // Owner 2026-11-09: while a word flickers in or over, a little horizontal diffusion and
+                // grain: thin bands of the picture slip sideways and the light smears along them. It
+                // dies away as the squares settle. Never on the menu, so its hit rectangles stay put.
+                float active = (_Stage < .5 || (_Stage > 1.5 && _Stage < 2.5 && _Flicker > .5))
+                    ? saturate(1 - _Change / max(.01, _ChangeSeconds * 1.3)) * _Diffusion : 0;
+                float frame = floor(_Clock * 30), band = floor(i.uv.y * 1080 / 3);
+                float slip = step(.72, hash3(float3(band, frame, 7))) * (hash3(float3(band, frame, 3)) - .5) * 28 * active;
+                p.x += slip;
                 float core = content(p);
                 float bloom = (content(p + float2(3,0)) + content(p - float2(3,0)) +
                     content(p + float2(0,3)) + content(p - float2(0,3))) * .015;
                 bloom += (content(p + float2(7,0)) + content(p - float2(7,0)) +
                     content(p + float2(0,7)) + content(p - float2(0,7))) * .009;
+                if (active > 0)
+                {
+                    float smear = 0;
+                    for (int s = 1; s <= 4; s++) smear += (content(p + float2(s * 5, 0)) + content(p - float2(s * 5, 0))) * (.16 / s);
+                    bloom += smear * active * (.4 + abs(slip) / 14);
+                }
                 float grain = frac(sin(dot(floor(i.uv * float2(1920,1080)), float2(12.9898,78.233)) + floor(_Clock*24)) * 43758.5453);
                 float flicker = 1 + .002 * sin(_Clock * 17);
 
@@ -120,7 +161,9 @@ Shader "Starwolf/PhosphorDisplay"
                 // Grain modulates the lit phosphor rather than being added to the whole field.
                 // Added flat it lands on the target's first quantisation step and turns every
                 // unlit pixel visibly green, which is why the CRT field read as mid green.
-                float3 lit = _Phosphor.rgb * (core + bloom) * (1 + (grain - .5) * .12) + _Background.rgb;
+                // While a word changes, the grain is stronger, and the slipped bands get a faint glow of their own.
+                float3 lit = _Phosphor.rgb * (core + bloom) * (1 + (grain - .5) * (.12 + .7 * active)) + _Background.rgb
+                           + _Phosphor.rgb * grain * .05 * active * step(.01, abs(slip)) * near(p);
                 return float4(lit * scan * vignette * flicker * bezel, 1);
             }
             ENDCG

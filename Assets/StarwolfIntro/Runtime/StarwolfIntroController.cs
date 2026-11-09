@@ -16,8 +16,14 @@ namespace Starwolf.Intro
         [Min(0.1f)] public float sectionDuration = 2.5f;
         [Min(0.1f)] public float initialisingDuration = 1.2f;
         [Min(0.1f)] public float titleDuration = 2.0f;
-        [Tooltip("Owner 2026-10-24: each line types in left to right over this share of its time, holds, then cuts straight to the next. No pull-back.")]
+        [Tooltip("Owner 2026-10-24: INITIALISING... and the title-only pages type in left to right over this share of their time, then stay. No pull-back.")]
         [Range(0.1f, 1f)] public float typeShare = 0.5f;
+        [Tooltip("Owner 2026-11-09: in the full intro, SECTION 36 flickers into being, square by square, over this many seconds.")]
+        [Min(0.05f)] public float flickerInSeconds = 0.4f;
+        [Tooltip("Owner 2026-11-09: then SECTION 36 turns into STARWOLF over this many seconds. Squares lit in both words stay lit; the rest flicker over.")]
+        [Min(0.05f)] public float changeSeconds = 0.6f;
+        [Tooltip("Owner 2026-11-09: while a word flickers in or over, thin bands slip sideways and the light smears and grains along them. 0 = none, 1 = strong.")]
+        [Range(0f, 2f)] public float diffusion = 0.7f;
         [Tooltip("Owner 2026-10-24: the intro is SECTION 36, STARWOLF, then the menu. INITIALISING... plays on its own after the beta page: tick this there, and it types that line, holds, then calls finished.")]
         public bool initialisingOnly;
         [Tooltip("Owner 2026-10-26: the welcome page after NEW GAME. Types the title in, then holds it on the phosphor screen with no menu; that page's own text draws on top.")]
@@ -108,7 +114,10 @@ namespace Starwolf.Intro
         {
             if (canvas) canvas.enabled = !suspended && target;
             if (suspended || !material) return;
-            clock += Mathf.Min(Time.unscaledDeltaTime, Time.maximumDeltaTime); // owner 2026-11-02: the first frame can take 6 s; it must not use up SECTION 36 unseen
+            // Owner 2026-11-02: the first frame can take 6 s; it must not use up SECTION 36 unseen. The clock starts
+            // once the picture shows, and a slow frame can't skip SECTION 36's quick flicker-in (2026-11-09).
+            bool flickering = !initialisingOnly && !titleOnly && clock < flickerInSeconds;
+            if (canvas && canvas.enabled) clock += Mathf.Min(Time.unscaledDeltaTime, flickering ? 1f / 30f : Time.maximumDeltaTime);
             if (source) source.volume = humVolume * Mathf.Clamp01(clock / .6f);
             DrawFrame();
             if (initialisingOnly && !done && clock >= TotalDuration) { done = true; finished.Invoke(); }
@@ -143,6 +152,16 @@ namespace Starwolf.Intro
             material.SetColor("_Background", background);
             material.SetFloat("_Pitch", GridPitchPixels);
             material.SetFloat("_TitleOffset", titleOffset);
+            // The full intro puts SECTION 36 and STARWOLF on one left edge (each a few squares off the
+            // middle), so the squares lit in both line up. A title-only page keeps its title in the middle.
+            bool full = !initialisingOnly && !titleOnly;
+            float identW = masks[0] ? masks[0].width : 0, titleW = masks[2] ? masks[2].width : 0;
+            float left = -Mathf.Round((identW + titleW) / 4f / GridPitchPixels) * GridPitchPixels;
+            material.SetFloat("_Flicker", full ? 1 : 0);
+            material.SetFloat("_Diffusion", diffusion);
+            material.SetFloat("_Left", left);
+            material.SetFloat("_IdentX", left + identW / 2f);
+            material.SetFloat("_TitleX", full ? left + titleW / 2f : 0f);
         }
         void DrawFrame()
         {
@@ -161,14 +180,16 @@ namespace Starwolf.Intro
             }
             float s = Mathf.Max(.1f, sectionDuration), b = Mathf.Max(.1f, initialisingDuration);
             float t = Mathf.Max(.1f, titleDuration);
-            // Owner 2026-10-24: SECTION 36, then STARWOLF, each typed in place, then a straight cut to
-            // the menu (stage 4), with no pull-back. INITIALISING... (stage 1) plays on its own.
+            // Owner 2026-11-09: SECTION 36 flickers in, stays, and flickers over into STARWOLF; then a
+            // straight cut to the menu (stage 4), with no pull-back. INITIALISING... (stage 1) plays on its own.
             float stage = initialisingOnly ? 1 : titleOnly ? 2 : clock < s ? 0 : clock < s + t ? 2 : 4;
             float local = stage <= 1 || titleOnly ? clock : clock - s;
             float duration = stage == 1 ? b : stage == 0 ? s : t;
             material.SetFloat("_Stage", stage); material.SetFloat("_Clock", clock);
             material.SetFloat("_Reveal", stage < 3 ? Mathf.Clamp01(local / (duration * typeShare)) : 1f);
             material.SetFloat("_Progress", Mathf.Clamp01(local / duration));
+            material.SetFloat("_Change", local);
+            material.SetFloat("_ChangeSeconds", stage == 0 ? flickerInSeconds : changeSeconds);
             material.SetFloat("_Selected", selected); material.SetFloat("_LoadAvailable", loadGameAvailable ? 1 : 0);
             Graphics.Blit(Texture2D.blackTexture, target, material);
         }
