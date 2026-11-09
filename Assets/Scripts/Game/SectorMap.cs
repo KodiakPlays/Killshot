@@ -4,11 +4,12 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// The SECTOR MAP (owner 2026-11-08): the campaign's missions as dots on a grid of space. At the start one dot shows.
-/// Click a dot: a box opens with the mission's name, a line of briefing and LAUNCH. Win the mission and, back on the map,
-/// the next dot fades in with a line from the last. Finished dots stay, dimmer, and can be played again.
-/// The missions are listed on this script in order: each opens when the one before it is won. Stand-in look until the
-/// owner sends a reference for the map.
+/// The SECTOR MAP (owner 2026-11-08; Codex's console look, Step 172): the campaign's missions as dots on a star chart.
+/// The left screen shows the picked mission's number, name and text. At the start one dot shows. When the map opens,
+/// the newest dot is already picked. Click a dot to pick it. The MISSION ARCHIVE box has BRIEFING, DEBRIEF (a finished
+/// mission only) and LAUNCH, which reads REPLAY MISSION on a finished mission. Win the mission and, back on the map,
+/// the next dot fades in with a line from the last. A finished dot shows the tick picture and can be played again.
+/// The missions are listed on this script in order: each opens when the one before it is won.
 /// </summary>
 public class SectorMap : MonoBehaviour
 {
@@ -35,11 +36,19 @@ public class SectorMap : MonoBehaviour
     [SerializeField] private Button dotTemplate;
     [Tooltip("Switched off; copied for each line between two dots.")]
     [SerializeField] private Image lineTemplate;
-    [Tooltip("The mission box. Hidden until a dot is clicked.")]
+    [Tooltip("The MISSION ARCHIVE box and the left screen's mission text. Switched off in the scene; it opens on the newest dot when the map opens.")]
     [SerializeField] private GameObject box;
+    [Tooltip("On the left screen: the mission's number and name (Box Title), and its text (Box Brief).")]
     [SerializeField] private TMP_Text boxTitle, boxBrief;
+    [Tooltip("The LAUNCH button's text. It reads REPLAY MISSION on a finished mission.")]
+    [SerializeField] private TMP_Text launchLabel;
+    [Tooltip("DEBRIEF. It works only on a finished mission.")]
+    [SerializeField] private Button debriefButton;
     [Tooltip("LAUNCH: INITIALISING..., then the board with the mission's level.")]
     [SerializeField] private ScreenFlow flow;
+
+    [Tooltip("The tick picture on a finished mission's dot. Empty: a dimmer round dot with a ✓ after its name.")]
+    [SerializeField] private Sprite completedNode;
 
     [Header("Look")]
     [SerializeField] private Color openInk = new Color(0.635f, 0.976f, 0.627f, 1f);
@@ -88,9 +97,14 @@ public class SectorMap : MonoBehaviour
             }
             var dot = Instantiate(dotTemplate, map);
             ((RectTransform)dot.transform).anchoredPosition = missions[i].at;
-            dot.image.color = ink;
+            if (done && completedNode)
+            {
+                dot.image.sprite = completedNode;
+                dot.image.color = Color.white;
+            }
+            else dot.image.color = ink;
             var name = dot.GetComponentInChildren<TMP_Text>(true);
-            name.text = (i + 1) + "  " + missions[i].title + (done ? "  ✓" : "");
+            name.text = (i + 1) + "  " + missions[i].title + (done && !completedNode ? "  ✓" : "");
             name.color = ink;
             int index = i;
             dot.onClick.AddListener(() => Pick(index));
@@ -99,7 +113,8 @@ public class SectorMap : MonoBehaviour
             if (newest) { fresh.Add(dot.image); fresh.Add(name); }
         }
         foreach (var g in fresh) g.canvasRenderer.SetAlpha(0f);
-        box.SetActive(false);
+        if (shown > 0) Pick(shown - 1);
+        else box.SetActive(false);
     }
 
     private void Update()
@@ -115,8 +130,23 @@ public class SectorMap : MonoBehaviour
     {
         picked = index;
         boxTitle.text = (index + 1) + "  " + missions[index].title;
-        boxBrief.text = missions[index].brief;
+        ShowBriefing();
+        if (debriefButton) debriefButton.interactable = SaveGame.Current.done.Contains(missions[index].level);
+        if (launchLabel) launchLabel.text = SaveGame.Current.done.Contains(missions[index].level) ? "REPLAY MISSION" : "LAUNCH";
         box.SetActive(true);
+    }
+
+    /// <summary>The box's BRIEFING: the mission's text on the left screen.</summary>
+    public void ShowBriefing()
+    {
+        if (picked >= 0) boxBrief.text = missions[picked].brief;
+    }
+
+    /// <summary>The box's DEBRIEF: MISSION COMPLETE above the mission's text. Does nothing on an unfinished mission.</summary>
+    public void ShowDebrief()
+    {
+        if (picked >= 0 && SaveGame.Current.done.Contains(missions[picked].level))
+            boxBrief.text = "MISSION COMPLETE\n\n" + missions[picked].brief;
     }
 
     /// <summary>The box's LAUNCH. Safe to call from a Button's onClick.</summary>

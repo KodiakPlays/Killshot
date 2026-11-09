@@ -56,8 +56,11 @@ Press play. The intro runs by itself to a menu: NEW GAME, LEVELS and
 SETTINGS.
 
 NEW GAME opens SAVE SLOTS. There are three slots. An empty slot starts a new
-campaign. A used slot continues its campaign. The SECTOR MAP opens. Each mission
-is a dot. Click the dot, then LAUNCH. Win the mission, and the next dot shows.
+campaign. A used slot continues its campaign. The SECTOR MAP opens: a console
+with a BRIEFING screen on the left and a star chart on the right. Each mission
+is a dot. The newest dot is already picked. Click LAUNCH. Win the mission, and
+the next dot shows. A finished mission's dot shows a tick. Click it: DEBRIEF
+shows MISSION COMPLETE, and REPLAY MISSION plays it again.
 After a won mission, the ship's rooms show before the map. Damage stays on the
 ship between campaign missions until REPAIR ALL in ENGINEERING. The game saves
 after each win. DELETE on a used slot empties it.

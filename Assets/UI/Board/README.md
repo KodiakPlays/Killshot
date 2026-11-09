@@ -67,7 +67,7 @@ Art/Frame/         the metal frame: the steel texture and the conduits
 Art/ToolRail/      the tool rail's icons and its selected-key frame
 Art/SystemsRail/   the systems rail's icons
 Art/TimeControl/   the time control's plate, pause key and rate keys
-Art/Briefing/      the briefing icon
+Art/Briefing/      the briefing icon, and the sector map's console picture and tick picture
 Art/Console/       the console's casting and lamp bezel
 Art/AlarmStrip/    the alarm strip
 Art/Rails/         the rail frame, for both rails
@@ -1089,6 +1089,81 @@ Ask a technical artist before you change these:
 - **Talk Box**, **Talk Picture**, **Talk Name**, **Talk Line** and **Reply Buttons** are the talk
   box parts the script fills, shows and hides.
 - **Tab Picked** and **Tab Not** are the tab colours. The script sets them.
+
+### Sector map
+
+Scene: `Assets/Scenes/Tactical/SectorMap.unity`. Script: **Sector Map**, on `Sector Map Script`.
+It is the campaign's map of missions. SAVE SLOTS opens it. So does SECTOR MAP › in the ship's
+rooms. Each mission is a dot. Win a mission, and the next dot shows. Codex made the look (Step
+172).
+
+How it plays:
+- A painted console fills the screen. On the left is the BRIEFING screen. Under MISSION RECORD it
+  shows the picked mission's number and name, and its text. On the right is the OPERATIONAL MAP
+  screen: a star chart with the mission dots joined by lines.
+- When the map opens, the newest dot is already picked. Click a dot to pick it.
+- The MISSION ARCHIVE box on the map has three buttons. BRIEFING shows the mission's briefing
+  text. DEBRIEF works only on a finished mission. It shows MISSION COMPLETE above the briefing
+  text. LAUNCH shows INITIALISING... and opens the board with the mission's level. On a finished
+  mission it reads REPLAY MISSION and plays the mission again.
+- A finished mission's dot is a tick picture. The open mission's dot is a green dot that grows and
+  shrinks. A new dot, its name and its line fade in the first time they show.
+- Escape quits the game on this screen.
+
+The pictures are both in `Art/Briefing/`:
+- `OperationalMapConsole.png` (1840 x 1035) is the whole console. It is in the Texture slot of
+  `Operational Map Console`, a Raw Image that fills the 1920 x 1080 screen. These are painted
+  into it: the BRIEFING and OPERATIONAL MAP plates, STARWOLF / DESTROYER / OPERATIONS, MISSION
+  RECORD, CAMPAIGN ARCHIVE, STARWOLF / SECTOR PLOT, the star chart, MISSION ARCHIVE and the three
+  empty button frames. To change any of these words, change the picture.
+- `CompletedMissionNode.png` (44 x 44) is the tick on a finished dot. It is in **Completed Node**
+  on the script. With the slot empty, a finished dot is a dimmer round dot with a ✓ after its name.
+- To change the art, replace a PNG with one of the same name. Its import settings stay: sRGB
+  (Color Texture) on, Compression None. A new console picture needs its two screens and three
+  button frames in the same places. Or move the parts below to match it.
+
+The game writes these over the picture: the mission's number, name and text on the left screen,
+the three button words, and the dots, their names and the lines between them. All of it uses
+Share Tech Mono.
+
+The parts, and the script slot for each. All are under `Sector Map` in the Hierarchy, except
+`SECTOR MAP card` and `ScreenFlow`, which are on their own at the top:
+- `Operational Map Console`: the console picture. No slot.
+- `SECTOR MAP card`: the typed SECTOR MAP title from Step 167. The console picture draws over it,
+  so it does not show. No slot.
+- `Map`: the dots and lines are made in here. Slot: **Map**.
+- `Dot (copied for each mission)`: switched off. The script copies it for each mission. Its
+  picture is Unity's round Knob sprite, coloured by the script. Its `Text` is the mission's number
+  and name. Slot: **Dot Template**.
+- `Line (copied between dots)`: switched off. The script copies it for each line between two dots.
+  It is 3 px high. Slot: **Line Template**.
+- `Mission Box`: the box's fill and outline are switched off, so the box draws nothing. Slot:
+  **Box**. In it:
+  - `Title`: the mission's number and name, on the left screen. Slot: **Box Title**.
+  - `Briefing`: the mission's text, on the left screen. Slot: **Box Brief**.
+  - `BRIEFING`, `DEBRIEF` and `LAUNCH`: the three buttons, placed over the painted button frames
+    on the map. Each has a faint teal fill and a `Text`. **Debrief Button** is `DEBRIEF`.
+    **Launch Label** is the `Text` in `LAUNCH`.
+- `ScreenFlow`: shows INITIALISING... and loads the level. Slot: **Flow**.
+
+The colours and timings are under Look on the script:
+- **Open Ink**: the open dot and its name. **Done Ink**: a finished dot's name, and the dot when
+  Completed Node is empty. **Line Ink**: the lines.
+- **Pulse Seconds** (1.6) and **Pulse Size** (0.25): how often the open dot grows and shrinks, and
+  how much it grows, as a share of its size.
+- **Fade In Seconds** (1.5): how long a new dot, its name and its line take to fade in.
+
+The missions are the **Missions** list on the script, in play order. Each one opens when the one
+before it is won. Each mission has a **Title**, a **Level** (the level scene's name), a **Brief**
+(the text on the left screen) and an **At**. At is where its dot is, in px from the middle of the
+1920 x 1080 screen. Measured on the picture, the map screen runs from x −190 to 770 and from y −455
+to 305. The MISSION ARCHIVE box covers x −155 to 125 and y −405 to −120. Keep each dot and its
+name inside the screen and off the box.
+
+Ask a technical artist before you change these:
+- The buttons' On Click calls: **ShowBriefing**, **ShowDebrief** and **Launch** on Sector Map.
+- **Slots Scene** (`SaveSlots`): with no save slot picked, the map opens this scene instead.
+- **Map Scene** (`SectorMap`) on Ship Rooms is the scene SECTOR MAP › loads. See Ship rooms, above.
 
 ## Frame pieces
 
