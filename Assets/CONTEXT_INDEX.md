@@ -97,6 +97,7 @@ pages, and most of it has been overtaken.
 | The later tutorial mission, with the XO walking you through each station. It is a plan only | `Assets/Scenes/Tactical/FTUE_PLAN.md` §1 to §9 |
 | Where a panel's prefab and art are, and how to swap its art | `Assets/UI/Board/README.md` |
 | The campaign's SECTOR MAP and ship's rooms: their parts, and how to change their art | `Assets/UI/Board/README.md`, "Sector map" and "Ship rooms". The steps are 167 to 169 and 172 in `Assets/Scenes/Tactical/BUILD_LOG.md`. |
+| How to set up a campaign mission: its name, level, briefing and dot on the sector map | `Assets/Campaign/Campaign.asset`. Select it in the Project window. In Missions, add a mission and drag its level scene into Level. The level itself (checklist steps, rings, help text, battle group path) is made in its scene in `Assets/Scenes/Levels/`, with **Starwolf → Level** and the Mission part on it. Step 183 in `BUILD_LOG.md`. |
 | Spoken orders, and how an outside program (or Claude) could drive the built game — an idea, not built | `docs/voice-command-exploration.md` |
 | Ship silhouettes, class size table, obstacle tiers | `References/Starwolf_ Art Spec.pdf` |
 | Working rules — MCP, C# style, repo hygiene | `CLAUDE.md` |

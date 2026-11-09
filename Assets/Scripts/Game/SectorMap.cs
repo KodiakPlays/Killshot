@@ -9,25 +9,13 @@ using UnityEngine.UI;
 /// the newest dot is already picked. Click a dot to pick it. The MISSION ARCHIVE box has BRIEFING, DEBRIEF (a finished
 /// mission only) and LAUNCH, which reads REPLAY MISSION on a finished mission. Win the mission and, back on the map,
 /// the next dot fades in with a line from the last. A finished dot shows the tick picture and can be played again.
-/// The missions are listed on this script in order: each opens when the one before it is won.
+/// The missions are in the Campaign file (Assets/Campaign/Campaign.asset), in order: each opens when the one before it is won.
 /// </summary>
 public class SectorMap : MonoBehaviour
 {
-    [System.Serializable]
-    public class Mission
-    {
-        [Tooltip("The name on the map and in the box.")]
-        public string title;
-        [Tooltip("The level it plays: a scene in Assets/Scenes/Levels, by name.")]
-        public string level;
-        [Tooltip("The briefing line in the box.")]
-        [TextArea] public string brief;
-        [Tooltip("Where its dot is, px from the middle of the 1920 x 1080 screen.")]
-        public Vector2 at;
-    }
-
-    [Tooltip("The campaign's missions, in order. Each opens when the one before it is won.")]
-    [SerializeField] private Mission[] missions;
+    [Tooltip("The campaign file: its missions are the dots, in order.")]
+    [SerializeField] private Campaign campaign;
+    private Campaign.Mission[] missions => campaign.missions;
 
     [Header("Parts")]
     [Tooltip("The dots and lines are made in here.")]

@@ -269,6 +269,7 @@ Ask a technical artist before you change these:
   others sideways has no effect.
 - The code sets the colours of the lamps, the attitude keys, the range keys, the mode rows, the
   stability cells, and the turn and G load text.
+- **Campaign** (`Campaign.asset`): the file the map reads its missions from.
 
 ### Orders
 
@@ -1205,10 +1206,13 @@ The colours and timings are under Look on the script:
   how much it grows, as a share of its size.
 - **Fade In Seconds** (1.5): how long a new dot, its name and its line take to fade in.
 
-The missions are the **Missions** list on the script, in play order. Each one opens when the one
-before it is won. Each mission has a **Title**, a **Level** (the level scene's name), a **Brief**
-(the text on the left screen) and an **At**. At is where its dot is, in px from the middle of the
-1920 x 1080 screen. Measured on the picture, the map screen runs from x −190 to 770 and from y −455
+The missions are in the Campaign file, `Assets/Campaign/Campaign.asset` (Step 183). The script's
+**Campaign** slot has this file in it. The scene has no mission list of its own. To set up a
+mission, select the file in the Project window and edit **Missions**. They are in play order. A
+mission's dot shows only after the mission before it is won. Each mission has a name (**Title**), a
+**Level** slot, a briefing (**Brief**, the text on the left screen) and an **At**. Drag the level's
+scene into Level. The slot keeps the scene's name and adds the scene to the build's scene list. At
+is where its dot is, in px from the middle of the 1920 x 1080 screen. Measured on the picture, the map screen runs from x −190 to 770 and from y −455
 to 305. The MISSION ARCHIVE box covers x −155 to 125 and y −405 to −120. Keep each dot and its
 name inside the screen and off the box.
 
