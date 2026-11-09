@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -42,6 +43,23 @@ namespace Starwolf.Intro
         public UnityEvent loadGame = new UnityEvent();
         public UnityEvent settings = new UnityEvent();
         public bool loadGameAvailable = true;
+        [Header("Loading screen corners")]
+        [Tooltip("Owner 2026-11-10: small dim text in the four corners and the CLEARANCE LEVEL squares, as in the SECTION 36 reference picture (References/Company Logo.png). Ticked on INITIALISING in 01_Briefing.")]
+        public bool cornerText;
+        [TextArea] public string topLeft = "UC-FLEET\n// CLASSIFIED";
+        [TextArea] public string topRight = "S36-PR-001\nREV A\n1993.11.04"; // owner 2026-11-10: S36 to match SECTION 36 (the reference says S38)
+        [TextArea] public string bottomLeft = "RESEARCH   /   DEVELOPMENT   /   OPERATIONS";
+        [TextArea] public string bottomRight = "CLEARANCE LEVEL 3";
+        [Tooltip("How many of the five clearance squares under the bottom-right text are lit. The rest are hollow.")]
+        [Range(0, 5)] public int clearanceLit = 3;
+        [Tooltip("Share Tech Mono: ShareTechMono-Regular SDF.")]
+        public TMP_FontAsset cornerFont;
+        [Tooltip("Leave empty: the font's own material gives thin strokes, like the reference (2026-11-10). The Phosphor Glow material makes them too thick.")]
+        public Material cornerMaterial;
+        [Tooltip("The reference picture's corner text, measured: #73E18A, a little see-through.")]
+        public Color cornerColour = new Color(0.45f, 0.88f, 0.54f, 0.8f);
+        [Tooltip("Text size, in pixels on the 1920x1080 screen.")]
+        [Min(1)] public float cornerSize = 24;
         public event Action<int> MenuAction;
         public bool MenuVisible => !initialisingOnly && !titleOnly && clock >= TotalDuration;
         public float TotalDuration => initialisingOnly ? Mathf.Max(.1f, initialisingDuration) : Mathf.Max(.1f, sectionDuration) + Mathf.Max(.1f, titleDuration);
@@ -52,6 +70,7 @@ namespace Starwolf.Intro
         RenderTexture target;
         Canvas canvas;
         RawImage display;
+        RectTransform corners;
         Texture2D[] masks;
         AudioSource source;
         PhosphorData data;
@@ -117,10 +136,38 @@ namespace Starwolf.Intro
             var fitter = display.GetComponent<AspectRatioFitter>();
             fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
             fitter.aspectRatio = 1920f / 1080f;
+            if (cornerText) BuildCorners();
+        }
+        // Owner 2026-11-10: the reference picture's small corner text, in Share Tech Mono, dim. Laid out on the
+        // 1920x1080 screen and scaled with the display (Update), so it stays in the corners of the 16:9 picture.
+        // Places measured from References/Company Logo.png. The clearance squares are drawn by the shader.
+        void BuildCorners()
+        {
+            corners = new GameObject("Corners", typeof(RectTransform)).GetComponent<RectTransform>();
+            corners.SetParent(display.transform, false);
+            corners.sizeDelta = new Vector2(1920, 1080);
+            Corner(topLeft, new Vector2(0, 1), new Vector2(110, -95), TextAlignmentOptions.TopLeft);
+            Corner(topRight, new Vector2(1, 1), new Vector2(-113, -95), TextAlignmentOptions.TopRight);
+            Corner(bottomLeft, new Vector2(0, 0), new Vector2(116, 164), TextAlignmentOptions.BottomLeft);
+            Corner(bottomRight, new Vector2(1, 0), new Vector2(-121, 195), TextAlignmentOptions.BottomRight);
+        }
+        void Corner(string text, Vector2 corner, Vector2 offset, TextAlignmentOptions alignment)
+        {
+            var t = new GameObject("Corner text", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
+            var rect = t.rectTransform;
+            rect.SetParent(corners, false);
+            rect.anchorMin = rect.anchorMax = rect.pivot = corner;
+            rect.sizeDelta = new Vector2(900, 200);
+            rect.anchoredPosition = offset;
+            if (cornerFont) t.font = cornerFont;
+            if (cornerMaterial) t.fontSharedMaterial = cornerMaterial;
+            t.text = text; t.fontSize = cornerSize; t.color = cornerColour; t.alignment = alignment;
+            t.textWrappingMode = TextWrappingModes.NoWrap; t.characterSpacing = 4; t.raycastTarget = false;
         }
         void Update()
         {
             if (canvas) canvas.enabled = !suspended && target;
+            if (corners) corners.localScale = Vector3.one * (display.rectTransform.rect.width / 1920f);
             if (suspended || !material) return;
             // Owner 2026-11-02: the first frame can take 6 s; it must not use up SECTION 36 unseen. The clock starts
             // once the picture shows, and a slow frame can't skip SECTION 36's quick flicker-in (2026-11-09).
@@ -158,6 +205,14 @@ namespace Starwolf.Intro
             ColorUtility.TryParseHtmlString(data.background, out var background);
             material.SetColor("_Phosphor", phosphor);
             material.SetColor("_Background", background);
+            // Owner 2026-11-10: the reference's richer green. Each square fades to a deeper green at its edge,
+            // and the glow round the squares is pure green (it was the paler square colour).
+            ColorUtility.TryParseHtmlString(data.rim, out var rim);
+            ColorUtility.TryParseHtmlString(data.glow, out var glow);
+            material.SetColor("_Rim", rim);
+            material.SetColor("_Glow", glow);
+            material.SetFloat("_Corners", cornerText ? 1 : 0);
+            material.SetFloat("_ClearanceLit", clearanceLit);
             material.SetFloat("_Pitch", GridPitchPixels);
             material.SetFloat("_TitleOffset", titleOffset);
             // The full intro's two words share one box, centred (Awake sizes them to each other); its left

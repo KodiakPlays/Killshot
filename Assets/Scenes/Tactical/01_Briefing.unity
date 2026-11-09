@@ -295,6 +295,9 @@ MonoBehaviour:
   initialisingDuration: 2
   titleDuration: 2
   typeShare: 0.5
+  flickerInSeconds: 0.4
+  changeSeconds: 0.6
+  diffusion: 0.7
   initialisingOnly: 0
   titleOnly: 1
   titleText: MISSIONS
@@ -315,6 +318,22 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   loadGameAvailable: 0
+  cornerText: 0
+  topLeft: 'UC-FLEET
+
+    // CLASSIFIED'
+  topRight: 'S38-PR-001
+
+    REV A
+
+    1993.11.04'
+  bottomLeft: RESEARCH   /   DEVELOPMENT   /   OPERATIONS
+  bottomRight: CLEARANCE LEVEL 3
+  clearanceLit: 3
+  cornerFont: {fileID: 0}
+  cornerMaterial: {fileID: 0}
+  cornerColour: {r: 0.45, g: 0.88, b: 0.54, a: 0.8}
+  cornerSize: 24
 --- !u!4 &158073076
 Transform:
   m_ObjectHideFlags: 0
@@ -994,6 +1013,9 @@ MonoBehaviour:
   initialisingDuration: 2
   titleDuration: 2
   typeShare: 0.5
+  flickerInSeconds: 0.4
+  changeSeconds: 0.6
+  diffusion: 0.7
   initialisingOnly: 0
   titleOnly: 1
   titleText: WOLF HUNT
@@ -1014,6 +1036,22 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   loadGameAvailable: 0
+  cornerText: 0
+  topLeft: 'UC-FLEET
+
+    // CLASSIFIED'
+  topRight: 'S38-PR-001
+
+    REV A
+
+    1993.11.04'
+  bottomLeft: RESEARCH   /   DEVELOPMENT   /   OPERATIONS
+  bottomRight: CLEARANCE LEVEL 3
+  clearanceLit: 3
+  cornerFont: {fileID: 0}
+  cornerMaterial: {fileID: 0}
+  cornerColour: {r: 0.45, g: 0.88, b: 0.54, a: 0.8}
+  cornerSize: 24
 --- !u!4 &751530472
 Transform:
   m_ObjectHideFlags: 0
@@ -1228,6 +1266,9 @@ MonoBehaviour:
   initialisingDuration: 2
   titleDuration: 2
   typeShare: 0.5
+  flickerInSeconds: 0.4
+  changeSeconds: 0.6
+  diffusion: 0.7
   initialisingOnly: 1
   titleOnly: 0
   titleText: STARWOLF
@@ -1260,6 +1301,22 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   loadGameAvailable: 0
+  cornerText: 1
+  topLeft: 'UC-FLEET
+
+    // CLASSIFIED'
+  topRight: 'S36-PR-001
+
+    REV A
+
+    1993.11.04'
+  bottomLeft: RESEARCH   /   DEVELOPMENT   /   OPERATIONS
+  bottomRight: CLEARANCE LEVEL 3
+  clearanceLit: 3
+  cornerFont: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
+  cornerMaterial: {fileID: 0}
+  cornerColour: {r: 0.45, g: 0.88, b: 0.54, a: 0.8}
+  cornerSize: 24
 --- !u!4 &976202082
 Transform:
   m_ObjectHideFlags: 0
@@ -1754,6 +1811,9 @@ MonoBehaviour:
   initialisingDuration: 2
   titleDuration: 2
   typeShare: 0.5
+  flickerInSeconds: 0.4
+  changeSeconds: 0.6
+  diffusion: 0.7
   initialisingOnly: 0
   titleOnly: 1
   titleText: MISSION ONE
@@ -1774,6 +1834,22 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   loadGameAvailable: 0
+  cornerText: 0
+  topLeft: 'UC-FLEET
+
+    // CLASSIFIED'
+  topRight: 'S38-PR-001
+
+    REV A
+
+    1993.11.04'
+  bottomLeft: RESEARCH   /   DEVELOPMENT   /   OPERATIONS
+  bottomRight: CLEARANCE LEVEL 3
+  clearanceLit: 3
+  cornerFont: {fileID: 0}
+  cornerMaterial: {fileID: 0}
+  cornerColour: {r: 0.45, g: 0.88, b: 0.54, a: 0.8}
+  cornerSize: 24
 --- !u!4 &1504229157
 Transform:
   m_ObjectHideFlags: 0

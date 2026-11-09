@@ -7,7 +7,7 @@ green glow. To use the look on a new screen, add the script to an object, pick a
 normal text on a canvas above it.
 
 What changed, step by step, and why, is in `Assets/Scenes/Tactical/BUILD_LOG.md` (Steps 27, 56, 70,
-71, 94, 106, 174). This file only says how it works and how to use it.
+71, 94, 106, 174, 181). This file only says how it works and how to use it.
 
 ---
 
@@ -15,10 +15,10 @@ What changed, step by step, and why, is in `Assets/Scenes/Tactical/BUILD_LOG.md`
 
 | File | What it does |
 |---|---|
-| `Shaders/PhosphorDisplay.shader` | Draws the screen: the dot letters, the glow around them, the dark green background, scanlines, the darker edges, and the loading bar. |
-| `Runtime/StarwolfIntroController.cs` | The script. Makes the letter shapes, runs the timing, draws the shader into an image, and shows that image on screen. Also handles the menu keys and clicks. |
+| `Shaders/PhosphorDisplay.shader` | Draws the screen: the dot letters, the glow around them, the dark green background, scanlines, the darker edges, the loading bar, and the clearance squares. |
+| `Runtime/StarwolfIntroController.cs` | The script. Makes the letter shapes, runs the timing, draws the shader into an image, and shows that image on screen. Also handles the menu keys and clicks. With Corner Text ticked, it also makes the small corner text. |
 | `Runtime/PhosphorData.cs` | Reads the dot font and turns a word into a letter shape. |
-| `Resources/StarwolfIntro/glyphs.json` | The dot font: each letter drawn as rows of `1` and `0`. Also holds the two colours. |
+| `Resources/StarwolfIntro/glyphs.json` | The dot font: each letter drawn as rows of `1` and `0`. The four colours are in it too. |
 | `Resources/StarwolfIntro/hardware-hum.wav` | The low hum that plays under the screen. |
 | `Materials/ShareTechMono-Regular SDF Phosphor Glow.mat` | Material for normal TextMeshPro text: green glow to match the dots. |
 
@@ -45,6 +45,13 @@ What changed, step by step, and why, is in `Assets/Scenes/Tactical/BUILD_LOG.md`
    This is only in the full intro. INITIALISING... and the title-only pages keep normal spacing.
 6. INITIALISING... and the title-only pages still "type in" left to right, one column of dots at a
    time, in the middle, then stay.
+7. Each lit square is pale green in the middle and fades to a deeper green at its edge. The glow
+   round the squares is pure green, with a wide faint halo. Both were matched to the reference
+   picture `References/Company Logo.png`.
+8. With Corner Text ticked, the screen also shows small dim text in its four corners, in Share Tech
+   Mono. On INITIALISING, five CLEARANCE LEVEL squares show under the bottom-right text: the first
+   few lit, the rest hollow. The text is laid out on the 1920 × 1080 screen and grows and shrinks
+   with it.
 
 **Why a canvas and not OnGUI.** OnGUI brightened the picture twice. The text looked pale and the
 dark green background turned black. The canvas brightens it once, which is correct. Do not go back
@@ -95,6 +102,21 @@ shows the MISSIONS list and then INITIALISING. Then the board loads (`02.1_Grid`
 | `humVolume` | Volume of the hum. |
 | `newGame`, `loadGame`, `settings`, `loadGameAvailable` | Menu wiring. Full intro mode only. |
 
+**Loading screen corners.** Small dim text in the four corners, and the clearance squares. All
+words and places were copied and measured from `References/Company Logo.png`.
+
+| Field | What it does |
+|---|---|
+| `cornerText` | Tick box. Shows the corner text. On INITIALISING it also shows the five clearance squares. Off by default. Meant for `INITIALISING` in `01_Briefing`. |
+| `topLeft` | Top-left words. Default: UC-FLEET, and // CLASSIFIED on the line below. |
+| `topRight` | Top-right words. Default: S36-PR-001, REV A and 1993.11.04, one per line. The reference picture says S38. The owner picked S36 to match SECTION 36 (2026-11-10). |
+| `bottomLeft` | Bottom-left words. Default: RESEARCH / DEVELOPMENT / OPERATIONS, on one line. |
+| `bottomRight` | Bottom-right words. Default: CLEARANCE LEVEL 3. |
+| `clearanceLit` | How many of the five clearance squares are lit, 0 to 5. The rest are hollow. Default 3. The 3 in CLEARANCE LEVEL 3 is in `bottomRight`. Change both together. |
+| `cornerFont`, `cornerMaterial` | The text's font: `ShareTechMono-Regular SDF`. Leave the material empty. The font's own material gives thin strokes, like the reference picture. The Phosphor Glow material made them too thick: 18% of the corner area lit, against the reference's 11%. With the font's own material it is 10%. If the font is empty, the text uses TextMeshPro's default font. |
+| `cornerColour` | The text colour. Default #73E18A at 80%. |
+| `cornerSize` | The text size, in pixels on the 1920 × 1080 screen. Default 24. |
+
 ---
 
 ## 5 · Putting the look on a new screen
@@ -120,16 +142,21 @@ top now. The DEMO welcome page had it until Step 94 removed the page.
 
 **Colours** are in `glyphs.json`:
 
-- `phosphor`: the dot colour, `#A2F9A0`.
+- `phosphor`: the middle of each lit square, `#A2F9A0`.
+- `rim`: the deeper green at the edge of each lit square, `#3CA050`.
+- `glow`: the glow round the squares, `#1AFF2E`, pure green.
 - `background`: the screen colour, `#001100` (very dark green).
 
 These match the reference images. Change them here, not in the shader.
 
-**Letters.** The font only has the letters it has needed so far:
+**Letters.** The font has every letter and number:
 
-`A B C D E F G H I L M N O P R S T U W 3 6 .` and space.
+`A` to `Z`, `0` to `9`, `.` `:` `-` and space.
 
-A word with any other letter stops the script with "Missing glyph". To add a letter, add an entry to
+The 5 has cut corners on its right side at the middle and bottom, like the B and D. The S has square
+corners there.
+
+A word with any other character stops the script with "Missing glyph". To add one, add an entry to
 `glyphs` in `glyphs.json`:
 
 - exactly 10 rows;
@@ -150,9 +177,11 @@ does not set them, so the value written there is the value used.
 | `_ScanDepth` | How dark the scanlines are. 0 = none. |
 | `_Vignette` | How much the screen darkens towards the corners. |
 | `_ScreenInset` | How wide the dark rounded edge of the screen is. |
+| `_GlowNear` | Glow next to a square. Default 0.02. |
+| `_GlowFar` | Glow a little further out. Default 0.012. |
+| `_GlowWide` | Wide halo round the strokes. Default 0.003. |
 
-The glow around the dots is the two `bloom` lines in `frag()`. The first number (.015) is the glow
-right next to a dot. The second (.009) is the wider, fainter glow.
+The glow's colour is `glow` in `glyphs.json` (section 6).
 
 ---
 
@@ -174,6 +203,8 @@ right next to a dot. The second (.009) is the wider, fainter glow.
 From the owner's reference images, still to come:
 
 - the frame with open sides;
-- the small second line under the title (STRATEGIC SYSTEMS DIVISION);
-- the corner text and the clearance squares;
 - a lit rim around the screen and visible scanline bands.
+
+The corner text and the clearance squares are built (Step 181, section 4). The small line under
+the title in the reference, STRATEGIC SYSTEMS DIVISION, is not wanted. `References/LogoREADME.md`
+says the logo has no subtitle.

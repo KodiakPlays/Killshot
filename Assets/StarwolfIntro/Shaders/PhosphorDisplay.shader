@@ -32,10 +32,19 @@ Shader "Starwolf/PhosphorDisplay"
         _ChangeSeconds ("Flicker length", Float) = 0.5
         _Left ("Shared left edge", Float) = 0
         _Diffusion ("Diffusion strength", Float) = 0.7
+        // Owner 2026-11-10: the reference's richer green. The script writes these four (colours from glyphs.json).
+        _Rim ("Square edge colour", Color) = (0.24,0.63,0.31,1)
+        _Glow ("Glow colour", Color) = (0.1,1,0.18,1)
+        _Corners ("INITIALISING: clearance squares on", Float) = 0
+        _ClearanceLit ("Clearance squares lit", Float) = 3
         // CRT treatment on the lit text. Tune these to taste; nothing in code writes them.
         _ScanDepth ("Scanline depth", Range(0,1)) = 0.18
         _Vignette ("Vignette", Range(0,2)) = 0.45
         _ScreenInset ("Screen edge falloff", Range(0.001,0.3)) = 0.06
+        // The glow round the squares (owner 2026-11-10: was .015 and .009, with no wide halo).
+        _GlowNear ("Glow next to a square", Range(0,0.1)) = 0.02
+        _GlowFar ("Glow a little further out", Range(0,0.1)) = 0.012
+        _GlowWide ("Wide halo round the strokes", Range(0,0.05)) = 0.003
     }
     SubShader
     {
@@ -53,6 +62,8 @@ Shader "Starwolf/PhosphorDisplay"
             float _Stage, _Reveal, _Clock, _Selected, _LoadAvailable, _Pitch, _TitleOffset, _Progress;
             float _ScanDepth, _Vignette, _ScreenInset;
             float _Flicker, _Change, _ChangeSeconds, _Left, _Diffusion;
+            float4 _Rim, _Glow;
+            float _Corners, _ClearanceLit, _GlowNear, _GlowFar, _GlowWide;
             float hash3(float3 v) { return frac(sin(dot(v, float3(12.9898, 78.233, 37.719))) * 43758.5453); }
             // Owner 2026-11-09: in the full intro a word flickers into being where it stands, square by
             // square in a quick scattered order, and SECTION 36 turns into STARWOLF the same way. Both
@@ -93,12 +104,22 @@ Shader "Starwolf/PhosphorDisplay"
                 float fill = cell.x > 1.5 && cell.y > 1.5 && cell.y < rows - 2.5 && cell.x - 1 <= _Progress * (cols - 4);
                 return inside * lamp * saturate(border + fill * (cell.x < cols - 2.5));
             }
+            // Owner 2026-11-10: the reference's CLEARANCE LEVEL squares, bottom right on INITIALISING: five
+            // squares, the first _ClearanceLit lit, the rest hollow. Places measured from References/Company Logo.png.
+            float clearance(float2 p)
+            {
+                float2 q = p - float2(597, -381);
+                float i = floor(q.x / 53.4), x = q.x - i * 53.4;
+                if (i < 0 || i > 4 || x > 26 || q.y < 0 || q.y > 26) return 0;
+                if (i < _ClearanceLit - .5) return 1;
+                return (x < 3 || x > 23 || q.y < 3 || q.y > 23) ? 1 : 0;
+            }
             float content(float2 p)
             {
                 float2 t = p - float2(0, _TitleOffset);
                 float value = 0;
                 if (_Stage < .5) value = mask(_Ident, t, _IdentSize.xy) * settled(p);
-                else if (_Stage < 1.5) value = mask(_Boot, p * 1.8, _BootSize.xy) * typed(p * 1.8, _BootSize.xy) + bar(p);
+                else if (_Stage < 1.5) value = mask(_Boot, p * 1.8, _BootSize.xy) * typed(p * 1.8, _BootSize.xy) + bar(p) + clearance(p) * _Corners;
                 else if (_Stage < 2.5 && _Flicker > .5) value = lerp(mask(_Ident, t, _IdentSize.xy), mask(_Title, t, _TitleSize.xy), settled(p));
                 else if (_Stage < 2.5) value = mask(_Title, t, _TitleSize.xy) * typed(t, _TitleSize.xy);
                 else
@@ -134,10 +155,18 @@ Shader "Starwolf/PhosphorDisplay"
                 float slip = step(.72, hash3(float3(band, frame, 7))) * (hash3(float3(band, frame, 3)) - .5) * 28 * active;
                 p.x += slip;
                 float core = content(p);
+                // Owner 2026-11-10: each square is pale in the middle and a deeper green at its edge, as in the
+                // reference. The title squares are 6 px, so look 2 px in; the small words and the bar, 1 px.
+                float o = (_Stage < .5 || (_Stage > 1.5 && _Stage < 2.5)) ? 2 : 1;
+                float inner = saturate((content(p + float2(o,0)) + content(p - float2(o,0)) +
+                    content(p + float2(0,o)) + content(p - float2(0,o))) * .25);
+                float3 dotColour = lerp(_Rim.rgb, _Phosphor.rgb, inner);
                 float bloom = (content(p + float2(3,0)) + content(p - float2(3,0)) +
-                    content(p + float2(0,3)) + content(p - float2(0,3))) * .015;
+                    content(p + float2(0,3)) + content(p - float2(0,3))) * _GlowNear;
                 bloom += (content(p + float2(7,0)) + content(p - float2(7,0)) +
-                    content(p + float2(0,7)) + content(p - float2(0,7))) * .009;
+                    content(p + float2(0,7)) + content(p - float2(0,7))) * _GlowFar;
+                bloom += (content(p + float2(12,0)) + content(p - float2(12,0)) + content(p + float2(0,12)) + content(p - float2(0,12)) +
+                    content(p + float2(6,6)) + content(p - float2(6,6)) + content(p + float2(6,-6)) + content(p + float2(-6,6))) * _GlowWide;
                 if (active > 0)
                 {
                     float smear = 0;
@@ -161,7 +190,7 @@ Shader "Starwolf/PhosphorDisplay"
                 // Added flat it lands on the target's first quantisation step and turns every
                 // unlit pixel visibly green, which is why the CRT field read as mid green.
                 // While a word changes, the grain is stronger, and the slipped bands get a faint glow of their own.
-                float3 lit = _Phosphor.rgb * (core + bloom) * (1 + (grain - .5) * (.12 + .7 * active)) + _Background.rgb
+                float3 lit = (dotColour * core + _Glow.rgb * bloom) * (1 + (grain - .5) * (.12 + .7 * active)) + _Background.rgb
                            + _Phosphor.rgb * grain * .05 * active * step(.01, abs(slip)) * near(p);
                 return float4(lit * scan * vignette * flicker * bezel, 1);
             }

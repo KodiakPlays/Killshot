@@ -9,7 +9,8 @@ namespace Starwolf.Intro
     {
         public int schemaVersion, rowCount, strokeCells, cellPixels, cellGapPixels, letterGapCells;
         public int framePaddingX, framePaddingY;
-        public string phosphor, background;
+        // Owner 2026-11-10: rim = the deeper green at each square's edge; glow = the pure green round the squares.
+        public string phosphor, background, rim, glow;
         public PhosphorGlyph[] glyphs;
         public int Pitch => cellPixels + cellGapPixels;
         public static PhosphorData Load(TextAsset source)
@@ -24,7 +25,8 @@ namespace Starwolf.Intro
             if (schemaVersion != 1 || rowCount != 10 || strokeCells != 2 || cellPixels < 1 ||
                 cellGapPixels < 1 || letterGapCells < 1 || framePaddingX < 1 || framePaddingY < 1)
                 throw new ArgumentException("Invalid phosphor grid specification.");
-            if (!ColorUtility.TryParseHtmlString(phosphor, out _) || !ColorUtility.TryParseHtmlString(background, out _))
+            if (!ColorUtility.TryParseHtmlString(phosphor, out _) || !ColorUtility.TryParseHtmlString(background, out _) ||
+                !ColorUtility.TryParseHtmlString(rim, out _) || !ColorUtility.TryParseHtmlString(glow, out _))
                 throw new ArgumentException("Invalid palette.");
             var seen = new HashSet<string>();
             foreach (var glyph in glyphs)
