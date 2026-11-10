@@ -117,6 +117,16 @@ words and places were copied and measured from `References/Company Logo.png`.
 | `cornerColour` | The text colour. Default #73E18A at 80%. |
 | `cornerSize` | The text size, in pixels on the 1920 × 1080 screen. Default 24. |
 
+**Menu** (full intro only).
+
+| Field | What it does |
+|---|---|
+| `watermark` | Tiny text in the bottom-right corner of the title menu. Default "Shagun Shah" (owner 2026-11-10). Empty: none. Shows on the menu only. Uses `cornerFont`. |
+| `watermarkSize`, `watermarkColour` | Its size (10 on the 1920 × 1080 screen) and colour (the corner text's green at 50%). |
+
+**Coming back to the title** (Step 188). SECTION 36 plays once, when the game starts. The next time the
+title opens in the same run, only STARWOLF flickers in, from an empty screen, then the menu.
+
 ---
 
 ## 5 · Putting the look on a new screen

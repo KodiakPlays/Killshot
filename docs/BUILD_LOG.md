@@ -6,7 +6,7 @@ A running record of the new scene flow being built under `Assets/Scenes/Tactical
 exists, what is wired to what, which step we are on, and what to do next. You should not have to
 work any of that out again.
 
-Last updated: 2026-11-10 (Step 192: MILK RUN, part 2). Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
+Last updated: 2026-11-10. Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
 
 ---
 
@@ -32,7 +32,7 @@ and SETTINGS (Step 178). The intro and loading screens have the richer green and
 shows the next dot (Step 167). After a campaign mission, the ship's rooms show, then the map
 (Step 168). On SAVE SLOTS, the map and the rooms, Escape opens a small menu: RESUME, MAIN MENU and
 QUIT GAME (Step 190). The game will be about 10 story missions, plus SKIRMISH (owner 2026-11-09). The map has
-one so far: 1 MILK RUN (Step 178, called ORIENTATION until 2026-11-10; its whole flow is Step 192). The map's missions are in the Campaign file,
+one so far: 1 ORIENTATION (Step 178). The map's missions are in the Campaign file,
 `Assets/Campaign/Campaign.asset` (Step 183). SKIRMISH plays Wolf Hunt straight away. The MISSIONS list and
 the other old test levels are off every list. Their scene files are kept and switched off. They are never deleted (owner).
 
@@ -52,14 +52,11 @@ passed. Every control is clickable and shows its states. The flow is `00_Start` 
 `02.1_Grid`, with `Level_01` loaded on top of the board. The full record is
 `Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md` (deleted; `git show 12ccdd1:Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`).
 
-**Checked on 2026-11-01 (Step 143).** Everything built up to Step 142 has now been played on the final numbers, in the running game, by a script using the board's controls. Step 143 in the table has each result. Nobody pressed a key: keys 1 to 6, P, W, A, S, D and Escape are for the owner to try. Full playtests have run since. For where the playtest and the play checks stand now, see section 8, "Brought up to date on 2026-11-09". Pressing against a rock with the throttle on grinds: repeated small hits, one every 3 game seconds. The white corners stay (owner 2026-11-01).
+**Checked on 2026-11-01 (Step 143).** Everything built up to Step 142 has now been played on the final numbers, in the running game, by a script using the board's controls. Step 143 in the table has each result. Nobody pressed a key: keys 1 to 6, P, W, A, S, D and Escape are for the owner to try. The full playtest has not run since Step 141, so it hasn't yet run the new message wording, the fixed gas cloud check or Step 142. Pressing against a rock with the throttle on grinds: repeated small hits, one every 3 game seconds. The white corners stay (owner 2026-11-01).
 
 **Smooth movement (Step 138), measured 2026-11-01.** The shots' dots were measured frame by frame. Nobody has watched them yet. A slug's dot never stops, and it reaches the hit area within 2 units as the hit lands, at x1 and at x5. Just after firing it goes about 340 units a second, then about 300. In the last tick before a hit it slows to 60 to 75. That slow last tick is the one thing to judge by eye. Fighters fly and land. A scanned ship under the ACTIVE SCAN cone moves on every frame, stops when ACTIVE SCAN goes off, then hops every 4.9 s. A ship not scanned showed as a bearing line, and the line hopped every 4.9 s. Since Step 161 it is a red bar on the DRADIS circle, and the bar turns on every frame. A short fight video is at `Logs/FightVideo/fight.mp4`: 16.5 seconds, no sound, Wolf Hunt, at x1. The `Logs/` folder is ignored by git, so the video is on this machine only and is not in the repo. A script staged the fight. It put the two ships 1,300 units apart, turned the power on, set Condition 1 and marked the Garuda as scanned. The script added our slugs, missiles and fighters. They were not fired through the switches. The Garuda chose its own moves and fired back by itself, and the hits, the damage and the kill came from the game's own rules. The Garuda dies 14 seconds in and splits in two on screen. The missiles are shown as they were before the owner's new missile changes. The script was run once in the Editor and is not saved in the repo. Nobody has watched the video yet.
 
-**Next up:** everything left is in **section 8, Open items**. It was brought up to date on 2026-11-09,
-after an audit of the whole log. Start with its first section, "Brought up to date on 2026-11-09".
-The owner's order of work is in the triage further down section 8. Every known bug is in section 8,
-"Bug list".
+**Next up:** everything left is sorted in **section 8, "Triage: everything left, sorted"**. Start there.
 
 **Agreed on 2026-10-25, not built:** the combat autopilot. W/S throttle was built in Step 106. It is in section 8,
 with the owner's ruling on Soham's old scripts.
@@ -256,8 +253,6 @@ Do not run ahead. Do one step, show it, wait.
 | 189 | Every menu screen gets an Art list (owner 2026-11-10: "just go in order… save slots are the easiest… Pause menu is so easy. Let's start doing it… let's just start blocking that all off"). **What the player sees:** the pause menu and the end screen have the board's art. The grey box in the middle is now the board's dark plate. RESUME, RESTART MISSION, MISSION SELECT and QUIT GAME are the board's bevelled keys. Their words are still easy to read. The other screens look the same as before. **What the owner sees:** each screen has an Art list now. It is the same **Art List** script the frame pieces use. No new code. The lists show in **Starwolf → Art** (Step 185). **SAVE SLOTS** (`Assets/Scenes/Tactical/SaveSlots.unity`): the list is on `Slot List`. Its entries are Slot button (Slot 1 to 3) and Delete button (Delete 1 to 3). Both are empty. This screen is green words on black, like the intro. The box behind each button can't be seen. It shows as a faint green box only when you point at it (14%) or press it (28%). A picture there would show only then too. The slots are left empty for real art. **End screen and pause menu** (`Assets/UI/Board/Panels/End Screen.prefab`): its Art list was empty. It now has Shade (empty), Plate (`Plates/plate_dark.png`) and Button (`Plates/plate_legend.png`, on all four buttons). The plate and the buttons are set to Image Type Sliced. Their colours are the same as before. **Menu Scene** is still `00_Start`. **The briefing** (`01_Briefing.unity`): the list is on `Level List`. It has one entry, Mission button (the 8 buttons), empty. The screen looks like SAVE SLOTS. No script opens this scene any more. **The sector map** (`SectorMap.unity`): the list is on `Sector Map`. Its entries are Button (BRIEFING, DEBRIEF and LAUNCH) and Mission box. Both are empty. The Mission box's image is switched off. No picture or layout changed. The map's **Campaign** slot still has the Campaign file in it. The Mission Setup and Campaign Flow chats said yes first. **The start screen** (`00_Start.unity`): unchanged. The intro's code draws it in green letters. Its old START GAME button is switched off. It has no boxes to give art. **Made without the owner:** the art on the end screen (plate_dark and plate_legend). Keeping the end screen's colours. Leaving the green screens' slots empty. The entry names. **Files:** `SaveSlots.unity`, `End Screen.prefab`, `01_Briefing.unity`, `SectorMap.unity`. | **Done.** git shows each change is only the new list. SaveSlots also got Unity's usual tidy-ups when it was saved: newer intro settings written out, and text colours stored again. The screen looks the same (`Logs/ArtLists/01_saveslots_before.png`). End screen pictures: `Logs/ArtLists/02_endscreen_before.png` and `02_endscreen_after.png`. They were drawn in a test scene. The colours are close to the board's, but not exact. Nobody has played through these screens since |
 | 190 | The Escape menu on the screens between missions (owner 2026-11-09: Escape on SAVE SLOTS, the map and the rooms opens a small menu with RESUME, MAIN MENU and QUIT GAME; 2026-11-10, on the build order in `docs/CAMPAIGN_FLOW_PLAN.md`: "Build order is perfectly fine. Let's go ahead". This is step 1 of that plan). **What the player sees:** on SAVE SLOTS, the SECTOR MAP and the ship's rooms, Escape opens a small menu. It reads PAUSED, then RESUME, MAIN MENU and QUIT GAME. Escape again, or RESUME, closes it. A dark see-through layer covers the screen behind. That screen can't be clicked, and it doesn't move on by itself. MAIN MENU goes back to the title (`00_Start`). The save stays as it was last saved. No slot is picked until you pick one again. QUIT GAME quits the game. In the Unity editor it stops play mode. Before, Escape quit the game at once on these three screens. On the intro and the briefing, Escape still quits at once. **The look:** the same as the pause menu in a mission: dark buttons, white Barlow Condensed letters, and an amber tint when the mouse is over a button. **How it is set up:** the menu is one prefab, `Assets/UI/Menus/Escape Menu.prefab`. It has a separate canvas, drawn on top of everything. A copy is in `SaveSlots.unity`, `SectorMap.unity` and `Ship.unity`, switched off. Each copy's buttons call that scene's ScreenFlow: **Resume**, **MainMenu** and **Quit**. ScreenFlow, the script that moves between screens, has two new settings. **Escape Menu** is the menu Escape opens; left empty, Escape quits at once, as before. **Main Menu Scene** is the scene MAIN MENU loads (`00_Start`). No new script. The Art Manager chat may give the menu board art later, on the prefab. How to change its look is in `docs/BOARD_UI.md`, "Escape menu". No game numbers changed, so there is no row in `docs/TUNING_LOG.md`. **Made without the owner:** the PAUSED title, and the look copied from the pause menu. **Files:** `Assets/Scripts/Tactical/ScreenFlow.cs`. New `Assets/UI/Menus/Escape Menu.prefab`. `SaveSlots.unity`, `SectorMap.unity`, `Ship.unity` **After a review, two fixes:** opening the menu picks RESUME, so Enter or Space can't press a button behind it (on SAVE SLOTS that could start slot 1). Once a level is loading after LAUNCH, Escape and MAIN MENU do nothing. Checked in play on SAVE SLOTS: before, slot 1 was picked; with the menu open, RESUME was; after RESUME, nothing (`Logs/CampaignFlow/02_escape_menu_save_slots.png`). | **Done.** Checked in play with a hidden test save, deleted afterwards. The buttons were pressed by script. On the sector map the menu opened over the map (`Logs/CampaignFlow/01_escape_menu_sector_map.png`). RESUME closed it. MAIN MENU in the ship's rooms opened `00_Start` and left the campaign. QUIT GAME on SAVE SLOTS stopped play mode. Nobody has pressed the real Escape key: a script can't press keys. The key only switches the menu on and off |
 | 191 | The Escape menu gets board art, like the pause menu (the open item "Escape menu art" in section 8, after Steps 189 and 190). **What the player sees:** the Escape menu on SAVE SLOTS, the sector map and the ship's rooms now looks like the pause menu in a mission. The box is the board's dark plate. RESUME, MAIN MENU and QUIT GAME are the board's bevelled keys. The amber when you point at or press a button is the same as before. **What the owner sees:** `Assets/UI/Menus/Escape Menu.prefab` has an Art list on its top object, `Escape Menu`. It is the same **Art List** script. Its entries: Dim (empty), Box (`Plates/plate_dark.png`) and Button (`Plates/plate_legend.png`, on the three buttons). The box and the buttons are set to Image Type Sliced. The box is the pause menu plate's grey (0.31, 0.34, 0.36), as see-through as before. Each button's Normal and Selected colour is the pause menu's grey (0.40, 0.42, 0.44). The buttons and their clicks were not replaced. **Starwolf → Art** now also lists the prefabs in `Assets/UI/Menus/`. Before, it read only `Assets/UI/Board/Panels/`. How to change it: `docs/BOARD_UI.md`, "Escape menu". No game numbers changed, so there is no row in `docs/TUNING_LOG.md`. **Made without the owner:** matching the pause menu's art and greys. **Files:** `Assets/UI/Menus/Escape Menu.prefab`, `Assets/Editor/StarwolfArtWindow.cs`. | **Done.** Compiled with no errors. Pictures before and after: `Logs/ArtLists/03_escape_before.png` and `03_escape_after.png`. Nobody has played through these screens since |
-| 192 | MILK RUN, part 2: mission 1 plays the owner's whole flow (owner 2026-11-10, go ahead: the station, the hidden pirate corvette, torpedoes, the boarding, the intel). **What the player sees:** MILK RUN (`Assets/Scenes/Levels/Orientation.unity`) has 23 checkpoints. Checkpoints 1 to 11 are Codex's: power, throttle, heading, side thrusters, zoom, DRADIS, ACTIVE SCAN, and a scan of one ship of the group. Rings 2 and 3 moved to fit the Tutorial Mission Manager chat's new spawn. Then: 12, ENG to 5, and the map grows to 24,000. 13, speed 45. 14, into the ring at (300, 1,900), at the rocks. 15, stop in the ring at (0, 5,900), at the station. 16, scan the station, s1. 17, DRADIS gain to 4. Until then the pirate corvette, p1, is hidden in the wreckage. 18, scan p1. It runs. 19, Condition 2. This checkpoint frees the weapons. COMMAND: "You pursue that immediately, Captain. We'll stay here to take care of survivors." 20, lock p1. 21, open one side of p1's armour with torpedoes. 22, the marines capture p1. 23, a 20 s wait with the last note, then MISSION COMPLETE. The railgun is off for the whole mission. Fire Control reads RAILGUN HOLD. Torpedoes, PDCs and the boats still work. The words of 12 to 23 are stand-ins. Codex rewrites them. **The corvette:** it stays still until we scan it. Then it runs straight away from us. It steers round rocks and keeps inside the map. It runs at 0.6 of its top speed: 36. Our top speed is 50. We can catch it. Once one side of its armour is gone, it stops dead. Then the marines can board it. It can't be destroyed. Its reactor never drops below 1. Outside the map, it is never counted as gone. Marines sent on DESTROY capture it. Its crew can't fight off our marines. **What the owner can set:** on the Mission's Drill list, seven new checks. GAIN AT: the DRADIS gain dial. CONDITION AT: the alert condition. LOCKED. NEAR: the alarm strip shows that ship's bearing and range (MILK RUN does not use it). BREACHED: one side of its armour is gone. CAPTURED. WAIT: game seconds. A checkpoint can name a ship by its track key (Track). SCANNED with a Track means that one ship. A checkpoint can tick Weapons Free. When that checkpoint starts, the level's weapons-off ends. The Mission has Railgun Off. A ship's WorldContact has Cannot Be Destroyed. An enemy brain has Flees and Flee Speed Share (Tuning, Enemy tab). The numbers are in `docs/TUNING_LOG.md`. **Made without the owner:** the crew of a ship that can't be destroyed can't fight off our marines (the owner can say no). The words of 12 to 23. **Other chats:** the Tutorial Mission Manager chat built the station, the wrecks, the pods, p1's place and the group's path (section 8, "Open after Step 178"). **Files:** `Mission.cs` (the new checks, `track`, `weaponsFree`, `railgunOff`), `QuestSystem.cs` (the new checks; `StepStarts`; NEAR on the alarm strip), `EnemyBrain.cs` (`flees`, `fleeSpeedShare`, `Flee`), `WorldContact.cs` and `ShipState.cs` (`cannotBeDestroyed`), `DamageSystem.cs` (the reactor stays at 1), `HangarSystem.cs` (DESTROY becomes SECURE; the marines always win), `OrdersSystem.cs` (`railgunHold`), `WeaponSystem.cs` (`WepReady`), `FireControlPanel.cs` (RAILGUN HOLD), `Orientation.unity`. | **Built.** Compiled with no errors. Checked in play by a one-time script, not saved. At gain 2 DRADIS did not hear p1. At gain 4 it did. Once scanned, p1 got out of the wrecks, then ran at 34 to 36. Once its armour was open, its throttle went to 0 and it slowed to 0.3. Its reactor, set to 0, came back to 1. It was not destroyed. The capture checkpoint passed. The last note showed in the BRIEFING box (`Logs/MilkRun/intel-note.png`). MISSION COMPLETE showed 20 s later. At WEP 2 the railgun was not ready and torpedoes were. Not checked: a real lock through the targeting computer, a real torpedo hit, a real boarding, a full play-through by a person. Not committed |
-| 193 | Codex's art, tried out in a test scene (owner 2026-11-10: "Make a new scene for this… It doesn't have to be in the flow. I just want to see this in action." Then: the new Fire Control "needs to appear when you click Fire Control"; "the periscope goes away, and that red visual camera comes into this Fire Control"; the drag lever "should go away, and we should have a large button instead, which just starts glowing and says 'Fire, Fire, Fire'". Then: the hangar painting goes "into the in-between mission flow so you can see the hangar room"). **What the player sees:** in the test scene `Assets/Scenes/Tactical/Fire Control Codex.unity`, FIRE on the systems rail slides in Codex's Fire Control from the right. It is as tall as the plot. The top window reads FIRE CONTROL and TARGETING COMPUTER, with the mount's short name. The monitor shows the target's name: BOGEY T07 until it is scanned, then GARUDA in amber. Under it are the periscope bearing, the tracking ID and where the track comes from. SIGHT lowers the periscope, and its round red view shows in the monitor, with SLEW on its left and MAG on its right. With SIGHT up, a scanned Garuda shows as a pale wireframe picture. Below the monitor are the firing solution and the ready line. Then come four sections numbered 1 to 4: the weapon system, the solution knobs and TRACK, the capacitor, and the four arming switches. At the bottom is the FIRE button. It is dark and reads FIRE until a press would fire. Then it turns red, glows and reads FIRE  FIRE  FIRE. One press fires one shot. The periscope at the top of the board is gone in this scene. Between missions, the HANGAR room shows Codex's painting. Click the flight leader to talk. GOOD closes the talk. **What changed:** new `Fire Control - Codex.prefab`, a variant of `Fire Control.prefab`, with Codex's housing art. `FireControlPanel.cs` has the contact name and picture, and the FIRE button (the click `fc.fire`). The board's own Fire Control leaves them empty. `WeaponSystem.cs`: the checks in `Fire()` moved into `ReadyToFire`. The rules did not change. In the test scene the periscope is moved inside the drawer and scaled to the monitor. Codex's frame, `Frame - Fire Control.prefab`, is in the test scene. Its Art list now names its own picture. `Ship.unity`: the HANGAR painting and the FLIGHT LEADER picture (in `Assets/UI/Rooms`). The painting keeps its shape. Her button is over her in the painting. The grey HANGAR stand-in title is off. The talk picture keeps its shape. **Made without the owner:** SIGHT still lowers the periscope by hand, so the lock rules are unchanged. The drawer is plot height, on the right. The switches are drawn at three quarters size. The button's colours and glow. **A mistake, undone:** Codex's frame was put on `02.1_Grid` too. The owner said the work was for the test scene only. It was taken out the same night. **Files:** `Fire Control Codex.unity`, `Fire Control - Codex.prefab`, `Frame - Fire Control.prefab`, `Art/Fire Control/InspectorHousing.png`, `Art/Fire Control/Garuda-profile.png`, `Art/Frame/FireControlSurround.png`, `Assets/UI/Rooms/HangarRoom.png`, `Assets/UI/Rooms/FlightLeader.png`, `Ship.unity`, `FireControlPanel.cs`, `WeaponSystem.cs`, `docs/TUNING_LOG.md` (Fire Glow Seconds), `docs/BOARD_UI.md` | **Done, as a test.** One-time Play Mode checks, nothing kept. Every Fire Control control took clicks where it is drawn. A locked switch refused with the refused sound. TRACK dropped 1 px while held. FIRE on the rail opened and closed the drawer. SIGHT brought the view into the monitor, and SLEW and MAG took clicks. With weapons released, WEP powered and the four switches set, the button glowed. One press fired one slug (charge 100% to 30%). A second press did nothing. The test marked the Garuda as scanned. The hangar talk opened and closed. Screenshots in `Logs/FireControlCodex/`. Not a full playtest. The owner still decides whether this Fire Control replaces the board's (section 8). |
 
 **Old status notes, corrected (2026-11-01).** The table and section 6 keep what was true when each
 step was written. These notes have changed since:
@@ -323,10 +318,6 @@ step was written. These notes have changed since:
 - Step 167, in the table, the sector map's stand-in look: the title SECTOR MAP, the faint green grid,
   the box with the briefing line and LAUNCH, and the dimmer dot with a ✓ after its name. Step 172
   replaced it. The box now shows the newest dot as soon as the map opens.
-- Steps 167 and 172, in the table, the open dot that grows and shrinks, and Pulse Size on the Sector
-  Map Script: Step 176 removed both. The open dot keeps one size. A new dot still fades in.
-- Step 143, in the table, "`Level_02` ... the file stays until the owner says": the file no longer
-  exists (checked 2026-11-09).
 - Steps 167, 172 and 178, in the table, the Missions list on the Sector Map Script in
   `SectorMap.unity`: Step 183 moved it into the Campaign file, `Assets/Campaign/Campaign.asset`. The
   scene no longer has a Missions list.
@@ -1050,11 +1041,6 @@ These are settled. Do not reopen them.
 ---
 
 - **Notes go in `docs/`** (owner 2026-11-10). Never make a .md note inside `Assets`. Add to a note that exists first. Step 187.
-- **Every script starts with a plain-English note** (owner 2026-11-10). It says what the script does and how it works. It goes above the script's `using` lines. The rules and the layout are in `docs/script-notes/BRIEF.md`.
-- **Codex's Fire Control** (owner 2026-11-10). FIRE on the systems rail opens it as a drawer. It never stays fixed on the side. The periscope's red view goes inside its monitor, and the periscope at the top goes. A big FIRE button that glows FIRE FIRE FIRE replaces the drag lever. So far it is built in the test scene only (Step 193).
-- **Tests stay in their test scene** (owner 2026-11-10). Once a test scene is made for some work, every follow-up for it goes there. Change `02.1_Grid` or a level only when the owner names that scene.
-- **Never stretch painted art** (owner 2026-11-10). On other screen shapes, corners keep their size and plain pieces of the edges repeat (Step 182).
-
 ## 5 · Known issues and traps
 
 1. ~~Build Settings not on disk.~~ **Fixed.** The scenes are now written into
@@ -1118,7 +1104,7 @@ These are settled. Do not reopen them.
     automated play-mode test looks like it does nothing.** Even with it on, driving play mode over
     time from outside the editor proved unreliable. Held keys have to be checked by hand.
 
-13. ~~**The old `TacticalGrid.shader` (unused) takes its line width in pixels, not world units.**~~ **Gone.** The shader and its material were deleted on 2026-10-29 (section 8, "Deleted on 2026-10-29"). Step 18 has the story.
+13. **The old `TacticalGrid.shader` (unused) takes its line width in pixels, not world units.** Step 18 has the story.
 
 14. **Keep QA evidence in `Logs/`, not `Temp/`.** `Logs/` is git-ignored and survives Unity
     restarts. `Temp/` does not.
@@ -1184,13 +1170,6 @@ These are settled. Do not reopen them.
     `LiberationSans SDF - Fallback`. They show as
     changed in every `git status`. Put them back; don't commit them. A lasting fix (a TextMesh Pro
     setting) is for later.
-29. **The close-up zoom number in `PlotPanel.cs` is not the one the game uses.** The code says 1.5.
-    The Plot prefab sets 1.1, and the prefab wins. Change it on the prefab.
-30. **The `[ReadOnly]` mark for the Inspector is in `Assets/Scripts/GameManager.cs`,** an older
-    script. Look there for it.
-31. **An Art list puts the old picture back.** You change an image's sprite by hand, but a panel's Art list (or an `ArtList`) has an entry for that image. The editor puts the entry's sprite back. Change the sprite in the Art list entry instead. Codex's frame did not show as delivered for this reason (Step 193).
-32. **Two Fire Control panels in one scene fight.** The board gives a press and a drag to the first panel that takes it. A second Fire Control takes the TRACK press and the lever from the one you see, even when it is switched off. Delete the old one (Step 193).
-33. **In the test scene `Fire Control Codex`, the periscope is inside the Fire Control drawer.** With SIGHT down, closing the drawer leaves the periscope down out of sight, and a lock can still build. Raise SIGHT before closing. Not fixed: the board's own Fire Control has no periscope inside it.
 
 ---
 
@@ -5379,77 +5358,6 @@ Nothing else in the repo gets written by the log keeper. Only this file.
 
 Still not done. **This is the list to work from.** Read it before picking up any work.
 
-### Done: a plain-English note at the top of every script (owner 2026-11-10)
-
-All 108 C# scripts in `Assets` now start with a note in plain English. It says what the script does
-and how it works. Four writer agents wrote the notes. They read each script in full, one at a time.
-Four checker agents then read each note and the whole script again. They checked the English and
-every fact. 47 notes passed and 61 were fixed, for wrong facts and English slips. A tool then put
-each note above line 1, one script at a time. After each one it proved the code under the note is
-the same as before, byte for byte. No code changed. Nothing was commented out. The game scripts and
-the editor scripts were compiled outside Unity with Unity's own compiler. There were no errors. The
-old `/// <summary>` notes under each script's `using` lines are as they were.
-
-- `docs/SCRIPT_LIST.md`: every script, with what it does. It is made from the notes.
-- `docs/script-notes/`: the rules for the writers (`BRIEF.md`) and the checkers (`VERIFY.md`), the
-  four script lists, the notes, the checkers' verdicts, and `notes_tool.py`. The tool adds the notes
-  and proves the code is unchanged.
-- The writers noticed some things in the code along the way. The bugs are in "Bug list", further
-  down this section, under "Found by the script notes". Two traps went into section 5, traps 29 and
-  30.
-- **Left to do:**
-  1. Done: Unity compiled all 108 notes with 0 errors, and the full playtest then ran (Ship Layout
-     Manager, 2026-11-10).
-  - Done: a tidy pass cut every note to short sentences. None is over 20 words. 13 scripts had been
-    changed by other chats, so their notes were matched to the new code first. All 108 notes are
-    checked again, the code under each is proven unchanged, and both sets of scripts compile.
-  2. Go through the script notes' bugs in "Bug list" with the owner. None is fixed.
-  3. Owner question: keep `docs/script-notes/` for running this again later, or delete it?
-  4. Answered (owner 2026-11-10): yes. `CLAUDE.md` now says: when you change what a script does,
-     update its note in the same edit, and a new script gets a note too.
-  - In progress (owner 2026-11-10, "yes, please"): each note gets a third part, "Technical:" (data,
-    who calls what, where the numbers are set, traps). Each script's old `/// <summary>` note is then
-    deleted, after its useful facts move into the new note. The job sheet is
-    `docs/script-notes/TECH.md`. Four writers, then four verifiers, one per list. Then
-    `notes_tool.py reapply` swaps the notes in and `dropold` deletes each old note. Each step
-    proves nothing else in the script changed.
-  5. Nothing is committed yet.
-
-### Open: the information hierarchy, a talk (2026-11-10, the owner's main priority)
-
-The Information Hierarchy chat is working out how the plot shows what we know about a ship, from
-nothing to everything: a ping, a DRADIS contact, a bogey, a scanned ship, a locked ship, the
-telemetry dot, and later drones, comms and boarding. The owner's aim: settle the shape of each icon
-and what each shape means (hollow circle, full circle, hollow triangle, full triangle). **Nothing is
-decided. Nothing is built.** Build nothing until the owner says go.
-
-- **The page:** https://claude.ai/artifact/2mUFc4kKo7NitkEv72UK6T. It shows each stage as it looks
-  today, with screenshots, then three ways to shape it: **A** circle to triangle (my pick), **B** one
-  dot filling in, **C** navy frames (square unknown, diamond enemy, circle ours). Then three looks for
-  the telemetry dot. The owner: "This is excellent." To change it, read it back with the Artifact
-  tool and publish to the same link. The full screenshots are in `Logs/InfoHierarchy/` (this Mac
-  only, not in git).
-- **Waiting on the owner's feedback**, the page's five points:
-  1. Which ladder: A, B or C? My pick is A. Ship triangles would need to be bigger than our fighter
-     triangles, or the fighters change shape.
-  2. Should a scan first leave a ship unnamed, with the name coming after the cone stays on it a few
-     seconds? My view: yes. It changes a rule.
-  3. When does a ship become a bogey past visual range? My view: keep today's rule, only by sight or
-     a lock.
-  4. Should the plot say GARUDA · CRUISER? It says GARUDA today. My view: yes.
-  5. The telemetry dot's look. My view: a hollow square in A or B, a hollow diamond in C.
-- **What the plot does today** (found by this talk, in `PlotPanel.Refresh`):
-  - A ship is never an unknown ping. One scan names it at once.
-  - A ship that is heard but not scanned shows only a red bar on the DRADIS circle, with BRG.
-  - A bogey shows only inside visual range, or when locked without a scan.
-  - A scanned ship and an incoming torpedo are both red dots.
-  - Colour does nearly all the work. Hollow grey circles already mean rock echoes. White triangles
-    already mean our fighters.
-- **After the owner answers:** write the answers into this log and Claude's memory notes. Send the
-  telemetry dot's look to the Sniper Configuration chat, which builds the dot (`SNIPER_PLAN.md`).
-  Message the Tutorial and Campaign Manager chat before touching `PlotPanel.cs`. It has its own
-  uncommitted lines there (friendly ships turn blue once scanned).
-
 ### Open after Step 185: art (2026-11-10)
 
 The art master list is `docs/team-reports/art/2026-11-09.md`. **Starwolf → Art** shows the same
@@ -5477,6 +5385,7 @@ pictures as they are now. Set-up: `docs/BOARD_UI.md`, "How to change a panel's a
 - **Owner question:** should the art audit become a team agent that can be run again, or was once
   enough?
 
+
 ### Open after Step 182: the board on screens of other shapes (2026-11-10)
 
 Step 182 is built and checked. The battle board now fills any screen. Pictures of it are in
@@ -5496,6 +5405,7 @@ after at the MacBook's shape.
   shapes".
 - **The Fire Control art chat's test scene** (`Fire Control Codex.unity`) still has a fixed 1920 × 1080
   board.
+
 
 ### Open after Step 178: mission 1 and the battle group (2026-11-10)
 
@@ -5539,9 +5449,8 @@ escape pods round it; the pirate corvette p1 at (2,600, 7,200) inside seven wrec
 at gain 2 does not hear it, at gain 4 it does (range 2,907, interference 3,500).
 
 **Still open for MILK RUN:**
-- **Built in Step 192** by the Mission Setup Tool chat: the checkpoints, the corvette's flight, the
-  can't-be-destroyed switch and railgun off. Next: Codex writes the words of checkpoints 12 to 23.
-  Nobody has played it through yet.
+- The Mission Setup Tool chat: the checkpoints (the old rings are in the wrong places now), the
+  corvette's flight, the can't-be-destroyed switch, railgun off. Then Codex writes the words.
 - ~~The group's small shuttles going out to the escape pods.~~ **Built:** three shuttles (h1 to h3, Friendly, class SHUTTLE, `Assets/Ships/Shuttle.asset`) under Station Area / Shuttles. Each waits until we are within 4,000, then ferries at 20 between the group's waiting point and one of the three nearest pods (`EnemyBrain` Patrol Route and Wait For Us Units, set in the level). Checked in play. Committed with the scene by the Mission Setup Tool chat.
 - The station picture's side corners are clipped a little: its camera frame fits its length, not its
   corner-to-corner width.
@@ -5560,152 +5469,38 @@ at gain 2 does not hear it, at gain 4 it does (range 2,907, interference 3,500).
   playable", section 2's flow (00_Start → 01_Briefing → 02.1_Grid) and its `00_Start` and `01_Briefing`
   entries, and section 3's ScreenFlow and MISSION SELECT lines. In `docs/BOARD_UI.md`, the Briefing
   Icon's "In FLIGHT DRILL it is 230 px". In `docs/CONTEXT_INDEX.md`, the MISSIONS list mentions.
-
-### Brought up to date on 2026-11-09, after an audit of the whole log
-
-This list was last brought up to date on 2026-11-02 (Step 157). Nothing from Steps 158 to 176 went
-in. On 2026-11-09 five readers went through this log, the code, the team reports
-(`docs/team-reports/`), the playtest reports (`Logs/Playtests/*/report.md`), `SNIPER_PLAN.md` and
-the owner's notes. What they found is in the six sections just below. Items that are done are struck
-out where they stand, with the step that did them. Items marked **unsure** need a quick check first.
-The owner questions they found are added to "Owner questions never answered", in "Found by two
-audits" below. The owner's order of work is unchanged: see "Later, in the owner's order" in the
-triage below.
-
-**Codex art test (2026-11-10, Step 193).**
-
-- **Codex's Fire Control: built as a test, the owner still to decide** (owner 2026-11-10). It is in a test
-  scene, `Assets/Scenes/Tactical/Fire Control Codex.unity`: a copy of `02.1_Grid`, not in Build
-  Settings or the game flow. The drawer is `Panels/Fire Control - Codex.prefab`, a variant of the
-  board's Fire Control. FIRE on the systems rail slides it in from the right. The periscope's round
-  red view shows in its monitor. The periscope at the top of the board is gone in this scene. A big
-  FIRE button replaces the drag lever. It glows FIRE  FIRE  FIRE when a press would fire. The
-  button and `Fire()` both read the new `WeaponSystem.ReadyToFire`. The fire rules did not change.
-  Also built: Codex's frame, `Panels/Frame - Fire Control.prefab`, in the test scene only. It was put
-  in `02.1_Grid` too, and taken out again the same night: the owner keeps `02.1_Grid` unchanged. The HANGAR room in `Ship.unity` shows Codex's painting and the FLIGHT LEADER's picture.
-  Set-up: `docs/BOARD_UI.md`, "Fire Control - Codex (test panel)", "Frame pieces" and
-  "Ship rooms". Screenshots: `Logs/FireControlCodex/`. Open:
-  - The owner has not decided whether this Fire Control replaces the board's. Until then the board
-    keeps `Fire Control.prefab` and the periscope at the top.
-  - Codex's Hangar package, `docs/Codex-Starwolf-Art/03-Hangar/Starwolf-Hangar.unitypackage` (the
-    assault-boat roster for the board's Hangar drawer), is not unpacked.
-  - The FLIGHT LEADER still says "Every fighter is fuelled and armed". Our ship has no fighters
-    since Step 170. The owner picks the new words.
-  - Should the periscope come down by itself when this Fire Control opens? Asked 2026-11-10, no answer
-    yet. Today SIGHT does it by hand, and the lock rules are as before.
-  - If this Fire Control goes into the game: a lowered periscope must come up when the drawer closes
-    (section 5, trap 33). The drawer sheet must also be tied to the right edge with pivot (1, 0.5),
-    like the other drawers since Step 182.
-
-**Playtest and play checks (2026-11-09).**
-
-- The last full playtest is `Logs/Playtests/2026-11-09_005653`: 256 of 256, during Step 170. No full
-  run since. It has not run Step 170's fix for the tilting ship in the targeting computer, or its new
-  check, or Steps 172 to 176.
-- The playtest still tests the old two side turrets and slug speed 2,500 (all but section 25f). It
-  puts six fighters back on our ship. So it can't catch the briefing and fighter problems below.
-- No person has played Steps 160 to 176, except the owner's try of the new keys. That led to Step
-  175 and to "Ship movement feel", below. Step 175 itself and the intro flicker (Step 174) need a
-  person. Step 173 had no check in play mode. Step 176 had a filmed play check on 2026-11-09: the
-  newest dot keeps one size (`Logs/SectorMapCheck/sector-map.mp4`).
-
-**Committed and cleaned up (2026-11-10).**
-
-- ~~Step 176 waits for a commit.~~ Done: the code is commit 351f915, and its row in the table went
-  in after the docs move. Its lines in this section go in with the rest of this section.
-- ~~`.gitignore`~~ Done, commit 05dd3cf (owner 2026-11-10): videos and screenshots never go into
-  git. It ignores every video (mp4, mov, webm, avi, mkv), and every picture under `docs/` and
-  `References/`. Game art in `Assets/` is still committed. `References/Company Logo.png` was in git
-  before and stays.
-- ~~Old staged copies~~ Done: the old staged `BUILD_LOG.md`, `SectorMap.cs` and both README files
-  are out of the queue.
-- Logs cleaned up (owner 2026-11-10: delete old screenshots and videos). Deleted: every picture and
-  video in the `Logs/` check folders from 2 November or earlier (273 MB), two old watcher logs, and
-  an old spare copy of the project in `.claude/worktrees/` (482 MB, from 26 October, nothing
-  unsaved in it). Kept: everything from 8 November on, the cutscene film (`Logs/Cutscene/`), the
-  newest two playtest runs, and every text note and playtest report.
-
-### Campaign: still to do (Steps 167 to 172; owner 2026-11-08 and 09)
-
-- **How to set up a campaign mission** (Step 183, 2026-11-10). The missions are in the Campaign
-  file, `Assets/Campaign/Campaign.asset`. Select it in the Project window. In Missions, add a
-  mission. Type its name and briefing. Drag its level scene into Level. Set where its dot goes. The
-  level itself is made in its own scene in `Assets/Scenes/Levels`, with **Starwolf → Level** and the
-  Mission part on it. Planned on top of this file, not built: the end card's closing line,
-  CAMPAIGN COMPLETE and the percent on the save slot, and the Mission Setup Tool chat's work (call
-  signs, who speaks, a line for each checkpoint, a Starwolf → Mission window).
-- **Mission setup: the words in a mission** (owner 2026-11-09 and 10; talked through; the window
-  is **not built**; MILK RUN's flow is built, Step 192). The plan is `docs/MISSION_SETUP_PLAN.md`. The owner writes and changes every word in a
-  mission in one window, **Starwolf → Mission**: the mission's name, its briefing on the sector map,
-  several lines of talk at each checkpoint (each with who says it), the title word STARWOLF, and the
-  ships' call signs. All of it goes in the Campaign file. Extend `Campaign.cs`; never a second
-  mission list. Waiting on the owner, in this order:
-  1. Our ship's call sign and the others'. Owner 2026-11-10: call signs in English with an Indic
-     feel, like Red October, not Indian names. INDRA, VARUNA and MARUT must go. Offered, no answer:
-     RED MONSOON (my pick), BLACK MONSOON, THIRD EYE, SAFFRON NIGHT, SILENT TIGER, IRON LOTUS; carrier
-     BANYAN, battleship TUSKER, corvette MONGOOSE, enemy COBRA.
-  2. Mission 1's new name: **MILK RUN** (Codex, 2026-11-10, with a new briefing). Codex wrote the
-     talk for checkpoints 1 to 11. Not committed. See the plan.
-  3. The owner told how mission 1 goes (2026-11-10). **MILK RUN's flow is built (Step 192):** 23
-     checkpoints, from power to the corvette's capture and the intel. Codex writes the words of
-     checkpoints 12 to 23; the ones there now are stand-ins. Nobody has played it through yet. Not
-     built: the group's shuttles to the escape pods. Still open: the call signs and our ship's name
-     (item 1). Still to do: the window and the checkpoint talk in the Campaign file (ask once more
-     before the new window script). The checkpoints are still on the level's Mission object.
-- **Between missions: the plan is `docs/CAMPAIGN_FLOW_PLAN.md`** (owner 2026-11-10). The owner's
-  answers on supplies carrying over, repairs, the end card and the build order are there. The Escape
-  menu is built (Step 190). Next: the end card and the percent on the save slot.
-- **Actions between missions: the travel bar** (owner 2026-11-09). A bar at the top of the ship's
-  rooms, about 10 units long. Think of it as travel time, days or hours, to the next mission. Every
-  action has its own cost and fills the bar. When the bar is full, you go on to the next mission.
-  The actions the owner named: restock torpedoes, restock drones, extra ammo, heal the marines, and
-  repairs (for example the reactor). The free REPAIR ALL must go. It is still there
-  (`ShipRooms.cs:65`, `SaveGame.cs:130`). Starting costs (owner's OK, 2026-11-09): repair the
-  reactor 3, repair any other room 2, restock torpedoes 2, heal the marines 2, restock drones 1,
-  extra ammo 1. The bar's length and every cost are Tuning numbers. There is no LAUNCH in the rooms
-  (owner: "Just the launch, no"). You go to the sector map to launch. The SECTOR MAP button stays,
-  and you can go any time; time left on the bar is lost. When the bar is full, the actions lock and
-  the SECTOR MAP button flashes to call you there (my call; the owner said "you figure it out").
-  Still to decide: how much one repair fixes. Not built.
-- **The campaign has no end.** Nothing happens when every mission is done. From Step 167's "Not
-  changed". **Owner's answer, 2026-11-09:** the campaign will have 10 missions. After the last one,
-  an end card shows the story's closing line, then the title. The save slot reads CAMPAIGN COMPLETE
-  and 100%. Not built. The end card's line and the save slot's CAMPAIGN COMPLETE and percent are
-  planned on the Campaign file (Step 183). **Built in Step 190:** Escape on SAVE SLOTS, the map and
-  the rooms opens a small menu: RESUME, MAIN MENU, QUIT GAME. MAIN MENU goes back to the title, and
-  no slot is picked until you pick one again (`SaveGame.Leave()`, which before ran only on DELETE).
-- **A SAVE during a mission** (the pause menu): parked by the owner, "mention it later". The owner
-  liked checkpoints better: a save at one or two set moments in a mission. Not built.
-- **The story** (owner 2026-11-09, still being talked through): about 10 missions, "Red October in
-  space". Mission 1, ORIENTATION (to be renamed, owner 2026-11-10), and SKIRMISH are built (Step 178). Missions 2 to 10 are not. The old
-  test levels are switched off and kept, never deleted. Each mission copies the pieces it needs.
-- **The ship rooms' four people and their lines are stand-ins** (Step 168). The owner plans the story
-  separately.
-- **LONG SHOT is not on the sector map** (Step 170). Since Step 178 the map shows one mission,
-  ORIENTATION, so this waits for the story missions.
-- **Left over from Step 172:** the hidden `SECTOR MAP card` in `SectorMap.unity`, and
-  `Assets/Art/Sector Map/Grid Square.png`, now unused. Also `docs/Codex-Sector-Map/`, a patch folder
-  no longer needed. Delete only with the owner's yes.
-
-### The sniper ship and weapons: still to do (Step 170 on)
-
-- **Sniper plan steps 2 to 6** (tracked only in `SNIPER_PLAN.md`): the flare is next (its 15,000 size
-  waits for the owner's yes). The sight in fire control is paused by the owner (2026-11-09); it would
-  take away ANGLE and BEARING. Then sensor drones, lasers and a new damage type.
-- **LONG SHOT can't be a long shot yet.** A lock reaches only as far as DRADIS (7,500). The gun
-  reaches 30,000. It waits on the drones. The owner wants DRADIS to reach "a little further", with no
-  number yet.
-- **Torpedoes should do area damage** (owner 2026-11-09). A torpedo that misses still hurts a ship
-  near the blast. Not built: `WeaponSystem` and `DamageSystem` have no blast or area damage.
-- **A shot with no course.** Step 141 left "a missing course doesn't yet change a shot at the Garuda"
-  for the owner. Since Step 170 (slug 1,500 a second, reach 30,000), by Step 141's sums a NO COURSE
-  shot should miss past about 15,000. Nobody has checked it again or asked.
-- **The close-range weapon** in the designer's table (Step 130) was "left out until the owner designs
-  it". Nothing since. The sniper plan's lasers (step 5) may be the answer: **unsure**.
-- **The close-up (Step 166):** PDC fire has no streak. The Garuda's fighters stay flat triangles.
-  Cutting the Garuda's model took 102 ms on the frame of the kill.
-- **Step 173:** the code's default for Close Up Full Zoom is still 1.5. The prefab uses 1.1, and the
-  game uses the prefab's number.
+- **The owner's picks from the firing looks page** ("Ship Actions Lab", 2026-11-10). Built: the
+  torpedoes, A2 and A3 (Step 184). Still to build, in this order:
+  - **The railgun. Decided: build it, don't ask again** (owner 2026-11-10: "I already explained
+    what I want… I don't want to talk about it more"). C2: a small push back after each shot, which
+    the thrusters stop. No glow along the ship: the ship is built around the gun. The charge is a
+    flare at the muzzle only, as the page shows it, then a flash and vent gas. C3: our shot leaves a line on the table that
+    fades in 5 game seconds. Whether enemy shots leave a line is not answered. D2: a far shot's mark
+    counts down and blinks IMPACT ?. D3: a hit shows only if a drone watches. It waits on the drones.
+  - **The boats.** B3, for every craft, assault boats too.
+  - **The PDCs.** E2, streams.
+  - **Where the looks are:** the page https://claude.ai/artifact/KXZhwnSU7hoG7aaEqThx6g (read it
+    with the Artifact tool). Each option's numbers are in its script: B3 leaves at 560, breaks at
+    0.35 s at up to 240° a second with a thruster flash, slows to 170 in the turn, then burns to
+    300, three craft 0.35 s apart. C2 kicks back 40 units/s for 0.4 s, then the stern thrusters stop
+    it (about 24 units in all). The owner's picks are in Claude's memory note "Ship actions look".
+- **Step 184, the full playtest ran on 2026-11-10** (`Logs/Playtests/2026-11-10_113810`, run by the Ship Layout
+  Manager chat): the two changed torpedo checks passed. Six checks failed on the Garuda's salvo (#153 to #162):
+  only 1 of its 2 torpedoes was in flight, so the PDC and hit counts were off by one. Likely the new ripple. Two
+  more failed (#186, #194): the Garuda's model did not show on the plot when locked and in sight. The Ship Visual
+  Artefact chat then changed #153 to wait for the ripple's second torpedo (not run again yet). It says #186 and #194
+  likely come from the other uncommitted PlotPanel change, "every ship in sight shows its line picture, never a dot".
+- ~~**Step 184, the close-up:** the table's white dot draws on top of a drifting torpedo's body and
+  hides most of it.~~ **Fixed the same day:** zoomed in, a torpedo's table dot and trail fade out.
+- **Step 184:** the torpedo model is a plain cylinder (owner 2026-11-10: "instantiate a little
+  cylinder… It's so tiny. And as soon as it leaves the visual range, it becomes an icon anyway").
+  It uses the ships' metal, set as Torpedo Look on the Plot panel. A real model can replace it later.
+- **Step 184:** the side-thruster puffs that A2 showed while the nose swings are not built.
+- **Step 184, the enemy's salvo:** each torpedo leaves from where its launcher was when it fired. The
+  enemy moves about 10 units between them.
+- ~~**Player 1 runs the fight sums again** (Step 184). The torpedo flight changed. The Ship Layout
+  Manager chat's fight sums of 2026-11-10 (the room-rule numbers above) used the old flight.~~
+  **Done 2026-11-10:** the Step 186 run (the box) used the new torpedo flight.
 - ~~**A room layout editor** (owner asked 2026-11-09; not built; found missing from this list the same
   day). The plan is `docs/ROOM_LAYOUT_PLAN.md`. In Tuning's Hard Points tab, each
   room gets a side and an order number, and each side its armour. No dragging. This is how the
@@ -5742,38 +5537,6 @@ triage below.
   2026-11-09 at 23:56, after Step 180 was finished. `docs/TUNING_LOG.md` has no row for it. The fight
   sums of 2026-11-10 used the file as saved. For the owner: keep it and log it (old value PROW 2), or
   put it back.~~ **Settled, Step 186:** every ship gets the new layout. The old values are in `docs/TUNING_LOG.md`.
-- **The owner's picks from the firing looks page** ("Ship Actions Lab", 2026-11-10). Built: the
-  torpedoes, A2 and A3 (Step 184). Still to build, in this order:
-  - **The railgun. Decided: build it, don't ask again** (owner 2026-11-10: "I already explained
-    what I want… I don't want to talk about it more"). C2: a small push back after each shot, which
-    the thrusters stop. No glow along the ship: the ship is built around the gun. The charge is a
-    flare at the muzzle only, as the page shows it, then a flash and vent gas. C3: our shot leaves a line on the table that
-    fades in 5 game seconds. Whether enemy shots leave a line is not answered. D2: a far shot's mark
-    counts down and blinks IMPACT ?. D3: a hit shows only if a drone watches. It waits on the drones.
-  - **The boats.** B3, for every craft, assault boats too.
-  - **The PDCs.** E2, streams.
-  - **Where the looks are:** the page https://claude.ai/artifact/KXZhwnSU7hoG7aaEqThx6g (read it
-    with the Artifact tool). Each option's numbers are in its script: B3 leaves at 560, breaks at
-    0.35 s at up to 240° a second with a thruster flash, slows to 170 in the turn, then burns to
-    300, three craft 0.35 s apart. C2 kicks back 40 units/s for 0.4 s, then the stern thrusters stop
-    it (about 24 units in all). The owner's picks are in Claude's memory note "Ship actions look".
-- **Step 184, the full playtest ran on 2026-11-10** (`Logs/Playtests/2026-11-10_113810`, run by the Ship Layout
-  Manager chat): the two changed torpedo checks passed. Six checks failed on the Garuda's salvo (#153 to #162):
-  only 1 of its 2 torpedoes was in flight, so the PDC and hit counts were off by one. Likely the new ripple. Two
-  more failed (#186, #194): the Garuda's model did not show on the plot when locked and in sight. The Ship Visual
-  Artefact chat then changed #153 to wait for the ripple's second torpedo (not run again yet). It says #186 and #194
-  likely come from the other uncommitted PlotPanel change, "every ship in sight shows its line picture, never a dot".
-- ~~**Step 184, the close-up:** the table's white dot draws on top of a drifting torpedo's body and
-  hides most of it.~~ **Fixed the same day:** zoomed in, a torpedo's table dot and trail fade out.
-- **Step 184:** the torpedo model is a plain cylinder (owner 2026-11-10: "instantiate a little
-  cylinder… It's so tiny. And as soon as it leaves the visual range, it becomes an icon anyway").
-  It uses the ships' metal, set as Torpedo Look on the Plot panel. A real model can replace it later.
-- **Step 184:** the side-thruster puffs that A2 showed while the nose swings are not built.
-- **Step 184, the enemy's salvo:** each torpedo leaves from where its launcher was when it fired. The
-  enemy moves about 10 units between them.
-- ~~**Player 1 runs the fight sums again** (Step 184). The torpedo flight changed. The Ship Layout
-  Manager chat's fight sums of 2026-11-10 (the room-rule numbers above) used the old flight.~~
-  **Done 2026-11-10:** the Step 186 run (the box) used the new torpedo flight.
 - **Finish Step 186** (the rooms in a row). In this order:
   1. ~~Read Unity's console. A compile was started, then the Editor's connection dropped. The code compiled with no
      errors outside Unity.~~ **Done:** Unity compiled it at 02:08 on 2026-11-10 with no errors. Its compiled code
@@ -5807,157 +5570,6 @@ triage below.
 - **Owner's idea: active scanning improves the hit** (2026-11-10). Scanning over time could improve
   the odds, or allow a hit aimed at one room, such as the bridge. Owner: "That becomes the value of
   active scanning." A talk first. Not built.
-
-### The Garuda does not follow our rules (QA, 2026-11-09)
-
-From the QA report, `docs/team-reports/qa/2026-11-08.md`. The README's "Ruled out" list says the
-enemy is our ship with different numbers and a brain. It never gets separate rules.
-
-- Its guns need no charge, no lock and no slow turn. It aims at our true position.
-- It never fires its PDCs, so our torpedoes and boats are never shot down. `EnemyBrain` never turns
-  on `pdcAuto`, and `WeaponSystem`'s PDC stops run only on rounds coming at us. Step 55 said "Enemy
-  PDCs come later, with the ship AI".
-- Firing doesn't make it louder. It is always heard at full reach.
-- It never hides in gas clouds (`TacticalWorld.cs:158`: "Enemies don't hide in clouds yet").
-- It still turns with no ENG power, and under EMP too.
-- It fights fires only in its magazine (`EnemyBrain.cs`, about line 130). Fire, vacuum and radiation
-  elsewhere go unchecked (Step 59).
-- With no slugs left, it falls back to an old 10,000 reach and waits 8,000 away (`EnemyBrain.cs:326`).
-- Its lead is worked out from the ship's centre, not from the gun.
-- A fire on our ship, or a bump into a rock, counts as a hit. It tells the Garuda where we are,
-  starts ALERT and starts the reinforcement clock again (QA 3).
-
-### Bug list: every known bug, not fixed
-
-Every known bug that is not fixed is listed here. Add a bug when you find one. Take it out when it
-is fixed.
-
-Found by the audit (2026-11-09):
-
-- **NO PEEKING: a lock can start by itself** at about 1,220 to 1,650 units, with SIGHT, SLEW TO and
-  MAG untouched, and the level is lost (Step 143; `WeaponSystem.cs:436–448`).
-- **INCOMING SIGNAL never shows once a mission line is on the alarm strip** (the reinforcement
-  countdown). Only the tone plays (Step 143; `BoardManager.cs:551`). This is not the "59INCOMING
-  SIGNAL" spacing bug below.
-- **A Naga frigate shows no picture in the targeting computer.** Only "Contact View Camera · Garuda"
-  exists (Step 152).
-- **Enemy torpedoes and slugs are drawn on our plot even when our sensors can't see them**
-  (`PlotPanel.cs`, about line 862). This goes against "DRADIS shows signals only".
-- **The mission clock starts at 2:03:32,** the design's demo time (`BoardManager.missionSeconds =
-  7412`). Step 63 logged it "for the owner". No answer.
-- **The helm reads "AUTO — DIRECT" with NOSE lit at load,** but there is no autopilot
-  (`HelmPanel.cs:192`; Step 112).
-- **Hangar landing and launch distances change with the plot's zoom** (`PlotPanel.cs:682–684`; QA 4).
-- **At x5 and x10 ships move in big steps,** so slug hits and PDC checks can be judged wrong. Shift
-  turns once a tick: 0.84° at x1 and 4.2° at x5 (QA 5, Player 1).
-- **One fixed dice, seed 49, for every ship and every game** (`ShipState.cs:344`; QA 11).
-- **When a lock runs out, it clears the armed switches** (`DropLock`; Player 1).
-- **The Tuning window's "Keep play-mode changes" drops struct values,** such as sounds and RECALL
-  presses (`StarwolfTuningWindow.Write`; Step 40).
-- **Small** (QA 10, 12, 13 and 14): the sight uses a fixed 4°. The fire lever reads the hangar's
-  lever setting (`FireControlPanel.cs:118`). Tuning during play refills ammunition. Every radio
-  message signs as GARUDA. A coast time of 0 gives a broken torpedo (`WeaponSystem.cs:806`).
-  `PlotPanel`'s list of ship views is made once (about line 1022), so later reinforcements may have no
-  view. About 10 more numbers are typed into the code.
-- **Unsure: drawn lines in `Asura.asset`.** Step 162's row says no lines were drawn in the ship files.
-  Its commit fc356b7 added line points to both torpedo launchers and both hangar dots in `Asura.asset`.
-  Nobody says who drew them. Torpedoes fly them, so check whether they are test lines.
-
-Found by the script notes (2026-11-10):
-
-- **`Assets/UI/UI_Script/UIController.cs`, `AddBogie`:** the line
-  `if (bogieList[j].wepImageGo = null)` sets the picture to empty. It was meant to check whether the
-  picture is empty. The next line would then crash. Nothing calls `AddBogie` today. This old UI is
-  only in the older scenes: Demo, Prototype, Prototype Dev, UI and Canvas_CRT. The battle board does
-  not use it.
-- **`Assets/Editor/Playtest/PlaytestRunner.cs`:** the comment at the top of the class says the run
-  calls `StarwolfIntroController.Activate(0)`. The code calls `Activate(1)`, SKIRMISH. The comment is
-  wrong.
-- **Older scripts the battle board does not use.** They are on the PlayerShip prefab and in the older
-  scenes.
-  - `PointDefenseCanon.cs`: nothing calls `SpinUp`. The gun never fires.
-  - `Macrocannon.cs`: nothing calls `AttemptLock`. The gun never locks.
-  - `CommsManager.cs`: nothing calls `TryLockSignal`.
-  - `MissileLauncher.cs`: once the spare torpedoes run out, torpedoes still in the tubes can never be
-    fired.
-  - `GameClock.cs`: the clock stops at its time limit. Nothing ends the mission.
-  - `WeaponManager.cs`: on the PlayerShip prefab, two gun slots have a type and a name that do not
-    match the gun in them.
-
-Found earlier in this log. The detail is under the heading named:
-
-- **The radio countdown is jammed against its text** on the strip: 59INCOMING SIGNAL. See "Radio
-  countdown on the strip: not fixed".
-- **The Garuda breaks our ship's rules in nine ways.** For example, a fire on our ship or a bump into
-  a rock tells it where we are. See "The Garuda does not follow our rules".
-- **In the close-up, the table's white dot hides most of a drifting torpedo's body** (Step 184). See
-  "The sniper ship and weapons: still to do".
-- **The game stops for 102 ms on the frame of a kill,** while it cuts the Garuda's model in two (Step
-  166). See "The sniper ship and weapons: still to do".
-- **Unsure: at x5, our locked shots may land too far back on a moving Garuda** (Step 186). Check in
-  the game first. See "The sniper ship and weapons: still to do", "LONG SHOT at x5".
-- **The FLIGHT LEADER in the HANGAR room still says "Every fighter is fuelled and armed".** Our ship
-  has no fighters. The owner picks the new words. See "Brought up to date on 2026-11-09", "Codex art
-  test".
-- **Unsure: six board pictures have sRGB on.** Their colours may be wrong. Check each by eye first.
-  See "Open after Step 185: art".
-- **The old levels' briefings have wrong text since Step 170.** Leave it for the level rework. See
-  "The level rework".
-- **The COMPASS eraser area is a square** (Step 36). See "Smaller, not built".
-- **On the amber grid, the sweep's tail uses the edge colour.** The design has a deeper red (Step
-  43). See "Smaller, not built".
-- **"HANGAR BAY DAMAGED — CANNOT SPOT CRAFT" shows when the hangar is only airless.** See
-  "Play-through 2", item 5.
-- **The Garuda starts facing a random way.** The owner's rule: at the top, facing south. See "Found
-  by two audits", "Added on 2026-11-09".
-- **`HangarSystem.cs`'s scuttle sets the reactor to 0 directly.** It should go through
-  `DamageSystem`. See "Found by two audits", "Restructure: done".
-- **`PlotPanel.cs` asks for a text field every frame.** Small. See "Found by two audits",
-  "Restructure: done".
-- **The playtest's periscope check can fail by chance.** See section 5, trap 23.
-- **The playtest's RECALL check (#56 on 2026-10-29) can fail on a busy machine.** See "Play-through
-  2".
-- **A playtest cut short leaves Unity's Asynchronous Shader Compilation off.** See section 5, trap
-  26.
-- **Seven font files rewrite themselves whenever Unity runs.** See section 5, trap 28.
-
-### The level rework (owner 2026-11-09): wrong text in the old levels
-
-The owner said on 2026-11-09: too many tutorials. After the current work is in, the levels get
-reworked as a set, and the mission map is cleaned up. Until then, don't fix small text in the old
-levels. These items are for that rework, not to fix now.
-
-- **Since Step 170 (one nose gun, no fighters), briefings are wrong.** WEAPONS FREE
-  (`FirstShot.unity:2584`) and NO PEEKING (`SilentShot.unity:2623`) talk about each gun's dotted cone.
-  FINDERS KEEPERS (`Prize.unity:2610`) says to pick the interceptors. WOLF HUNT
-  (`Level_01.unity:10629` and `10633`) says the fighters help, and talks about a gun's cone.
-- **From the Learning report** (`docs/team-reports/learning/2026-11-08.md`): INTERCEPT's row still
-  says "FIND IT ON DRADIS" (`01_Briefing.unity:182`). COLD RUN asks for C2. In NO PEEKING, ZOOM IN
-  leads to a lock, and a lock loses.
-- **FLIGHT DRILL's step 5** still says the slide stops when you let go. Left on purpose (owner).
-- **COLD RUN:** check its walls under the interference rule (Step 148 replaced the full block, so the
-  old result no longer counts). Have someone fly it with the real keys.
-- Splitting WEAPONS FREE and the FLIGHT DRILL calls (both below) probably belong to this rework now.
-
-### Smaller, not built (found by the audit, 2026-11-09)
-
-- **Nothing damages a fighter** (Step 150), and its bar never changes. The code calls the bar fuel.
-  The owner calls it health. Low while our ship has no fighters.
-- **Step 144:** the Level window doesn't draw FLIGHT DRILL's checkpoint rings. Enemy ships have
-  side-thruster numbers, but nothing slides them.
-- **Step 148:** no level uses `MissionGoal.FindBySignal` (`QuestSystem.cs:244`). A small clean-up.
-- **Step 125:** the playtest switches crashes off, so crashes are never tested.
-- **Step 70, the owner's intro list:** the corner text and clearance squares are built (Step 181,
-  owner 2026-11-10). The STRATEGIC SYSTEMS DIVISION line is not wanted: `References/LogoREADME.md`
-  says the logo has no subtitle. Still open: a frame with open sides and a lit rim on the screen.
-  Not built. **Unsure** whether still wanted after Step 174.
-- **Step 114:** the MISSION ONE and WOLF HUNT cards are kept switched off in `01_Briefing`.
-- **Step 36:** the COMPASS eraser area is a square (`PlotPanel.cs`, about line 613). **Step 43:** on
-  the amber grid, the sweep's tail uses the edge colour, not the design's deeper red.
-- **The spec's §18 "error cone"** is not built, and was not listed until now.
-- **Clean how-to notes, one per board section.** The owner said later. Wait for their go.
-- **Maybe later:** a signal readout at the top of the board. The cutscene experiment's next pass:
-  bigger height gaps, top-to-top passes.
 
 ### The small number box on the Hangar panel: closed (Step 149, 2026-11-02)
 
@@ -6002,9 +5614,6 @@ open:
 
 The owner gave the session a free hand. These calls were made without asking. Each can be changed.
 
-**Probably overtaken (unsure, 2026-11-09).** The owner said on 2026-11-09 that the levels get
-reworked as a set later ("The level rework", above). These calls may go with that rework.
-
 1. **The name.** FLIGHT DRILL.
 2. **Its place.** First on the MISSIONS list, and the first pick.
 3. **ENG 1 is half of full ENG** for acceleration and turn rate: 1 to 2, and 10 to 20° a second.
@@ -6013,8 +5622,7 @@ reworked as a set later ("The level rework", above). These calls may go with tha
 6. **A slide stops by itself** when the key is let go. The owner changed this in Step 171: the slide
    keeps going and fades.
 7. **A slide adds no signal.**
-8. **The 14 steps and their wording** (section 2, `FlightDrill`). Step 163 added an ACTIVE SCAN step
-   to the first 13.
+8. **The 13 steps and their wording** (section 2, `FlightDrill`).
 9. **The parked Garuda.** It is still and silent at the far corner, beyond DRADIS reach of the course.
 10. **No speed readout.** The full-throttle step ends at speed 45, and the player can't read the speed.
     The note says to take the throttle to 100.
@@ -6035,8 +5643,7 @@ and agreed the first jobs.
 
 1. **A briefing button.** Built in Step 134: a small icon next to the time control.
 2. **Split WEAPONS FREE.** It takes about 19 actions to reach the first shot. The plan is in
-   `FTUE_PLAN.md` §0. **Probably overtaken (unsure):** the owner said on 2026-11-09 that the levels
-   get reworked as a set later ("The level rework", above).
+   `FTUE_PLAN.md` §0.
 3. **Real sounds.** Every board sound is a generated tone. The only sound file in the game is the
    intro hum. Start with the switches, the lever, the railgun, hits and the kill. Where the sounds
    come from is not decided.
@@ -6112,7 +5719,7 @@ periscope picks the target. Item 2 (the first salvo) was answered "no change".
 
 8. The Mac app play-through: done by the owner on 2026-10-28.
 9. `Level_02`: deleted in Step 106. An empty scene of that name came back on 2026-10-29, and came off
-   the build list on 2026-11-01. The file no longer exists (checked 2026-11-09).
+   the build list on 2026-11-01.
 10. Optional: give the terminal Accessibility permission, so a session can play the app itself.
 
 **Traps for the next build.** The disk is nearly full (about 4.4 GB free on 2026-11-01; each app is
@@ -6132,23 +5739,18 @@ project since c3044fa, so it no longer goes back to Intel.
   Setup Tool chat is talking it through (call signs, who speaks, a line for each checkpoint). It is
   planned on top of the Campaign file, `Assets/Campaign/Campaign.asset` (Step 183). No Starwolf →
   Mission menu item exists yet.
-- **Features, each planned with the owner:** the combat autopilot (A/P); ruins block shots; salvage,
-  fuel and range; enemy boarders; the conditions page abilities and the FIRE, BLKHD and SCRUB
-  switches; a verdict on Soham's 8 unused scripts (read each in full first); spoken orders; the XO
-  walkthrough, derelicts, the disguise and fog of war; the old build's helm art (the shader the owner
-  liked and the orange nav wheel). Done since: the grid forming (Step 120), the periscope showing the
-  real enemy (Step 109), the plot grid touch-up (Step 139), ruins hide us (Step 148: rocks cut DRADIS
-  and scans, and block sight, both sides). **Probably done or overtaken (unsure, 2026-11-09):** what
-  is left of the hangar launch (Steps 147, 149, 160 and 162); a faster way to dial long ranges (Step
-  170's fixed gun needs no ANGLE or BEARING).
+- **Features, each planned with the owner:** the combat autopilot (A/P); ruins block shots and hide
+  us; what is left of the hangar launch; a faster way to dial long ranges; salvage, fuel and range;
+  enemy boarders; the conditions page abilities and the FIRE, BLKHD and SCRUB switches; a verdict on
+  Soham's 8 unused scripts (read each in full first); spoken orders; the XO walkthrough, derelicts,
+  the disguise and fog of war; the old build's helm art (the shader the owner liked and the orange
+  nav wheel). Done since: the grid forming (Step 120), the periscope showing the real enemy (Step
+  109), the plot grid touch-up (Step 139).
 - **Small jobs:** Board follow-ups 3 and 4 (helm, orders and periscope don't slide; the wreck's grey;
-  one contact model at a time, now only past the close-up: since Step 164, at x1.1 and closer, every
-  ship shows as its model). From Step 27: `Title` and `StartButton` in `00_Start` are switched off,
-  not deleted (delete with the owner's yes); SETTINGS does nothing. The whole-project folder cleanup
-  (the unused files went on 2026-10-29). Done since: LOAD GAME is now LEVELS, and opens the MISSIONS
-  list (Step 167). **Probably overtaken (unsure, 2026-11-09):** the corner microtext (it belonged to
-  the CRT look the flat intro replaced); the Claude Design request (the owner now brings art from
-  ChatGPT and Codex).
+  one contact model at a time). From Step 27: the corner microtext; `Title` and `StartButton` in `00_Start` are switched
+  off, not deleted (delete with the owner's yes); SETTINGS does nothing; LOAD GAME is dimmed. The
+  Claude Design request (the owner: send it soon). The whole-project folder cleanup (the unused files
+  went on 2026-10-29).
 
 The owner's answers (2026-10-29) are built in Steps 106 and 107.
 
@@ -6162,8 +5764,7 @@ The owner's answers (2026-10-29) are built in Steps 106 and 107.
 - **`Starship_Silhouette.png` stays deleted** (the owner's ChatGPT art; git has it at `499909d`).
 - **The Claude Design request: send it soon.** Next: bring `CLAUDE_DESIGN_NEEDS.md` up to date (PDC
   quadrants are now two halves; contact clicking changed in Step 106), draft the request, the owner
-  sends it. Keep `HANDOFF_GAPS.md` and `CLAUDE_DESIGN_NEEDS.md` until then. **Probably overtaken
-  (unsure, 2026-11-09):** the owner now brings art from ChatGPT and Codex.
+  sends it. Keep `HANDOFF_GAPS.md` and `CLAUDE_DESIGN_NEEDS.md` until then.
 - **The XO walkthrough and the derelicts are still wanted, later**, once Wolf Hunt feels right.
 - New plans this day, below: distances in units, the plot zoom-out, comms intercepts.
 
@@ -6232,19 +5833,13 @@ sent an HE salvo of two. PDC-B went on AUTO.
 
 1. **Fighters always know where the enemy is.** They fly to its true position even when we have only
    heard its bearing. The launch bearing only sets where they take off; there is no "scout along a
-   bearing" order. So scouting can't fail, and the hunt loses its search. **Paused** while our ship
-   carries no fighters (Step 170: the Asura has 0, and the enemy brain launches none). Keep it for
-   when fighters come back.
-2. ~~**A fighter's hit tells the Garuda where our ship is,** not where the fighters are: it gets a fix on
-   us and opens fire on us (`EnemyBrain.Listen`, the hit branch uses our position). Probably a bug.~~
-   Not a bug: Step 143 checked it.
+   bearing" order. So scouting can't fail, and the hunt loses its search.
+2. **A fighter's hit tells the Garuda where our ship is,** not where the fighters are: it gets a fix on
+   us and opens fire on us (`EnemyBrain.Listen`, the hit branch uses our position). Probably a bug.
 3. **One magazine hit leaves us defenceless.** The magazine is behind the bow. Since Step 180 the owner
    can move it in Tuning (Hard Points tab → ROOMS). A wrecked magazine stops
    the railguns and missiles, and the PDCs too: PDC fire needs `WepReady`, which needs the magazine,
    though PDC rounds are counted per mount. Should PDCs keep firing with the magazine gone?
-   **Answered in part** (owner 2026-11-01): a hit magazine can't fire, and its crew repair it
-   (`EnemyBrain.cs:129`). **Still open, unsure:** whether a wrecked magazine should also stop the
-   PDCs was never asked as a separate question.
 4. **Its railguns don't miss.** Drifting straight at 14,000 km, we took a slug every 15 game seconds:
    three opened the bow, wrecked and breached the magazine, and the vacuum spread to every room; the
    reactor fell to 2 units and DRADIS went deaf. The same as the first game. Our missiles take about
@@ -6256,9 +5851,8 @@ sent an HE salvo of two. PDC-B went on AUTO.
    14,000 km each way, so a contact at 15,000–30,000 km, inside our DRADIS circle and our railgun's
    reach, is off the screen.~~ Fixed in Step 130: the map is 20,000, and at x0.058 all of it fits the
    plot's height.
-7. ~~**Boarding is still untested in a real game.** The Garuda's stern was open, but by then our hangar
-   was airless and the boats could not launch.~~ Done: Step 143 won FINDERS KEEPERS by boarding,
-   through the board's controls, by script.
+7. **Boarding is still untested in a real game.** The Garuda's stern was open, but by then our hangar
+   was airless and the boats could not launch.
 
 None of these were changed: they are game feel or game rules, so the owner decides.
 
@@ -6297,11 +5891,10 @@ still stops at the edge. Step 111 took the limit to x0.01 with the change to uni
 x0.1 and replaced the square rule below (decision 53). Step 130 set the limit to x0.058, and Steps 135
 and 139 set the squares as they are now.
 
-- **Still to do, owner's call (2026-11-01):** the Garuda's 350 x 100 is a trial. ~~Our ship's old
+- **Still to do, owner's call (2026-11-01):** the Garuda's 350 x 100 is a trial. Our ship's old
   VLS has no hard point. Choosing MISSILE now picks the first launcher on a dot, VLS-A (Step 143). It
-  fires to the left side only. No control picks VLS-B yet.~~ Done in Steps 147 to 150: the launcher on
-  the target's side fires (`WeaponSystem.PickLauncher`, commit 1c19d9c). If a ship's size changes,
-  move its hard points to the new edges too.
+  fires to the left side only. No control picks VLS-B yet. If a ship's size changes, move its hard
+  points to the new edges too.
 - **Done in Step 130:** at x0.058 the whole 20,000 map fits the plot's height, with the railgun and
   missile rings.
 
@@ -6367,8 +5960,8 @@ DRADIS's 30,000 km.
 - Everything in the message is in words, the speed too (for example "SPEED NINETY"), so the whole
   message is in code and has to be decoded. "Which way it is" is a word like "northeast". There are no
   digits in the message. Nothing about comms is open now.
-- ~~In WEAPONS FREE, NO PEEKING and FINDERS KEEPERS, comms has one fixed made-up signal (band 2, 72.2) with a fixed message,
-  and nothing reads the decoded text.~~ Step 148 removed the fixed signal from every level.
+- In WEAPONS FREE, NO PEEKING and FINDERS KEEPERS, comms has one fixed made-up signal (band 2, 72.2) with a fixed message,
+  and nothing reads the decoded text.
 
 ### Found by two audits (2026-10-29, Worker)
 
@@ -6383,16 +5976,13 @@ triage above are left out.
 - **Set the heading by bearing or with the mouse** (2026-09-01; the old orange nav wheel on the helm,
   2026-10-04 and 10-17). Only A/D work, 3° a step.
 - **A stale firing solution expires after about 20 s** (2026-09-01). Not built, never logged. Maybe
-  dropped when the handoff's fire sequence came in; nobody confirmed. **Probably overtaken (unsure,
-  2026-11-09):** Step 141's lock lasts 10 s, which covers most of it. A plot TRACK never expires.
-- **Salvo, PDC quadrants and LOADERS on fire control** (2026-10-04, 10-23). Salvo is in the Tuning
-  window only; the others are not drawn. ~~Warhead controls~~: wrong. The mount knob picks the
-  warhead (`FireControlPanel.cs:89`, since Step 53).
+  dropped when the handoff's fire sequence came in; nobody confirmed.
+- **Salvo, PDC quadrants, LOADERS and warhead controls on fire control** (2026-10-04, 10-23). Salvo
+  is in the Tuning window only; the others are not drawn.
 - ~~**The comms cipher does nothing in play** (2026-09-01: "keep the comms game"). It solves on the
   panel; nothing reads it.~~ Real messages built in Steps 137 and 140, in INTERCEPT and Wolf Hunt.
-- **~~Ruins hide us;~~ ruins block shots** (2026-09-01). Listed under features. Gas clouds hide us
-  since Step 129. Ruins hide us since Step 148 (rocks cut DRADIS and scans, and block sight, both
-  sides). Ruins blocking shots is not built: `WeaponSystem` has no rock check.
+- **Ruins hide us; ruins block shots** (2026-09-01). Listed under features; not built. Gas clouds hide
+  us since Step 129.
 - **The cloak (Reflex)** (2026-09-01: "I like the cloak"). Only the spec mentions it.
 - **Waypoints** (2026-09-01: "later"). Not tracked anywhere until now.
 - **Engineering's missing displays**: conditions per room, broken parts, team roster, door state
@@ -6402,41 +5992,12 @@ triage above are left out.
   screen with dark bands above and below (Step 87). The other screens still show dark bands on
   screens that aren't 16:9: the title, SAVE SLOTS, SECTOR MAP, the ship's rooms and the MISSIONS
   list.
-- **Fighter loadouts and fuel; salvage and intel from boarding** (2026-09-01). Not built. Fighter
-  loadouts and fuel are **paused** while our ship carries no fighters (Step 170). Keep them for when
-  fighters come back.
+- **Fighter loadouts and fuel; salvage and intel from boarding** (2026-09-01). Not built.
 
 **Owner questions never answered** (beyond the triage): the autopilot's TAIL facing; the asset audit's
-28 items (`ASSET_AUDIT.md`, in git at 12ccdd1); the interceptor art on the hangar panel (**paused**
-while our ship carries no fighters, Step 170); the calls made overnight in Steps 94–101 (none
-confirmed yet). Answered since: our slugs glide (Step 138); stability is left as it is (owner,
-2026-11-01); every `report.md` is kept (owner).
-
-**Added on 2026-11-09** (the audit of the whole log). Calls made without the owner that change how
-the game plays. None was confirmed later.
-
-- Step 158: a gas cloud's hollow circle shows on plain DRADIS with no scan. Rocks need an ACTIVE SCAN
-  ping.
-- Step 141: the newer of scan and plot sets the course. Fighters need no scan.
-- Step 170: only a lock turns the ship, not a plot TRACK. LONG SHOT's Garuda neither hunts nor fires.
-- Step 169: fires, radiation, vented rooms and crew losses don't carry over between missions. A room
-  at 0 comes back at 1. A lost mission keeps no damage.
-- Step 168: MISSION SELECT goes to the ship's rooms after a lost mission too.
-- Steps 171 and 175, the movement numbers: see "Ship movement feel", item 4, near the top of
-  section 8.
-- Step 162: the hangar dots are 50 units back from the middle. With no line drawn, craft start level
-  with the dot.
-- Steps 77, 79, 80, 88, 91 to 93, 110, 111 and 113 to 115: calls never put to the owner. Still in
-  force: Step 79, a PDC group under 100 rounds can't fire, and the stranded clock never resets. Step
-  91, a spawn past the edge moves 3,000 inside. (Steps 88, 93 and 111 are overtaken.)
-- Step 139: the grid strengths, 8% and 24%, were left for the owner to judge.
-- The Garuda's random facing (QA) against the start rule of 2026-11-01: top, facing south. "Wolf
-  Hunt", below, still says random.
-- Player 1 (`docs/team-reports/player-1/2026-11-09.md`): three Garuda hits on our nose wreck the
-  magazine and stop the spinal railgun. Nobody wins Wolf Hunt at x5. LONG SHOT has a 5 to 9 minute
-  trip with nothing new.
-- The producer's roadmap (2026-11-08) waits on 11 owner questions. They are in
-  `docs/team-reports/producer/2026-11-08.md`.
+28 items (`ASSET_AUDIT.md`, in git at 12ccdd1); the interceptor art on the hangar panel; the calls made
+overnight in Steps 94–101 (none confirmed yet). Answered since: our slugs glide (Step 138); stability
+is left as it is (owner, 2026-11-01); every `report.md` is kept (owner).
 
 **Answered by the owner but not acted on:** the damage displays (10-24). The grid glide-in was built in
 Step 120. (`Assets/Screenshots`, `PlotAnnotation.cs`, `TacticalGrid.shader/.mat` and the
@@ -6447,9 +6008,8 @@ other unused files were deleted on 2026-10-29, with the owner's yes.)
 - ~~Step 96 says the Garuda is "bigger". No stats file has a size; every hit uses one 100 km radius.
   Bigger only in its numbers, not on the plot or to a slug (not checked in the scene).~~ Fixed: ships
   have sizes and hit boxes since Steps 123 and 126.
-- ~~The playtest keeps only the newest run's video, and screenshots from 3 runs. The owner asked for the
-  last two runs to keep both (`PlaytestRunner.cs`, around line 102).~~ Fixed in Step 143: the newest
-  two runs keep both (`PlaytestRunner.cs:102`).
+- The playtest keeps only the newest run's video, and screenshots from 3 runs. The owner asked for the
+  last two runs to keep both (`PlaytestRunner.cs`, around line 102).
 - ~~`FTUE_PLAN` still lists the Garuda's hearing, searching and firing back as not built (Step 97 built them).~~ Fixed: it reads "Done, Step 97".
 - ~~`docs/BOARD_UI.md` says the palette has 23 colours.~~ Fixed 2026-10-29 (22).
 - ~~The knowledge graph (`graphify-out`) was last built on 2026-10-27, before the Handoff renames.~~ Rebuilt 2026-11-01.
@@ -6546,8 +6106,7 @@ From `UI_INTEGRATION_LOG.md`, section 10 (deleted; `git show 12ccdd1:Assets/Scen
    verified:** `ASSET_AUDIT.md` (deleted; `git show 12ccdd1:Assets/Scenes/Tactical/ASSET_AUDIT.md`). Of 28 items, 5 fit as-is, 7 fit after a small change, 10 get partial
    help, 6 have nothing. Nothing is used yet; each use needs the owner's yes.
 2. **The short Claude Design request**, when the owner asks. Drop row 2.7 of
-   `CLAUDE_DESIGN_NEEDS.md` (own-ship blink): decision 34 says our ship never blinks. **Probably
-   overtaken (unsure, 2026-11-09):** the owner now brings art from ChatGPT and Codex.
+   `CLAUDE_DESIGN_NEEDS.md` (own-ship blink): decision 34 says our ship never blinks.
 3. **Helm, Orders and the periscope don't slide yet** (decision 35). They open at once, or drop
    inside their own clip. If they are made to slide, clip them to the frame's opening and keep them
    under the rails, as Step 66 did for the drawers.
@@ -6558,8 +6117,7 @@ From `UI_INTEGRATION_LOG.md`, section 10 (deleted; `git show 12ccdd1:Assets/Scen
    - The wreck's grey (`wreckInk`, #8A959D) is pale next to our white ship. Tune it if it is hard to
      tell apart.
    - Only one contact can show as its model at a time (`contactShipImage`). A second one in visual
-     range shows as an amber dot. **Partly fixed:** in the Step 164 close-up (x1.1 and closer) every
-     ship shows as its model. Further out, still one.
+     range shows as an amber dot.
 5. **To do after Steps 75–76** (owner, 2026-10-26). All done. The two frame stencils were deleted in
    Step 89, and the visual range ring was drawn in Step 106. Step 130 tuned visual range and DRADIS
    reach, and brought `scalesim.py` up to date. The spec's numbers were updated on 2026-11-01.
@@ -6667,8 +6225,7 @@ His code has things the board lacks:
   into `EnemyBrain`, which gives orders instead of using physics.
 - **Contacts that sign themselves up** (`RadarTarget`), for enemies spawned mid-mission.
 - **A stability that drains on hard turns** (`ShipStability`). Today the board's stability is only a
-  number on the helm. ~~Open: should it be a mechanic?~~ The owner said on 2026-11-01 to leave it as
-  it is.
+  number on the helm. Open: should it be a mechanic?
 
 Don't copy:
 - Unity frame time.
@@ -6713,10 +6270,7 @@ dropped from this list: ruins on the plot (Step 92), hitting a piece damages the
 Garuda hunts you (Step 97), the grid forming (Step 120).
 
 1. **What ruins do, still to come.** Block shots (the prototype's penetration against toughness:
-   asteroid 3, structure 4, ruins 3, starbase 5). `WeaponSystem` has no rock check yet. ~~Hide us
-   from sensors (line of sight).~~ Done in Step 148: rocks cut DRADIS and scans, and block sight,
-   both sides.
+   asteroid 3, structure 4, ruins 3, starbase 5); hide us from sensors (line of sight).
 2. **Smaller.** The wrecks are whole ships (break some apart later). Soham's `Asteroid.cs` could make rocks
    breakable later (add the "Asteroid" tag first). WRECK-4 and WRECK-11 use the same cruiser model
-   as the Garuda. ~~The ship models go to 100–500 m when the outside cameras come.~~ Done in Step
-   164: the models are 200, 350 and 100 units.
+   as the Garuda. The ship models go to 100–500 m when the outside cameras come.

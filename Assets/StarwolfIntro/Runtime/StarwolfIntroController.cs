@@ -60,6 +60,12 @@ namespace Starwolf.Intro
         public Color cornerColour = new Color(0.45f, 0.88f, 0.54f, 0.8f);
         [Tooltip("Text size, in pixels on the 1920x1080 screen.")]
         [Min(1)] public float cornerSize = 24;
+        [Header("Menu")]
+        [Tooltip("Owner 2026-11-10: tiny dim text in the bottom-right corner of the title menu. Empty: none.")]
+        public string watermark = "Shagun Shah";
+        [Tooltip("The watermark's text size, in pixels on the 1920x1080 screen.")]
+        [Min(1)] public float watermarkSize = 10;
+        public Color watermarkColour = new Color(0.45f, 0.88f, 0.54f, 0.5f);
         public event Action<int> MenuAction;
         public bool MenuVisible => !initialisingOnly && !titleOnly && clock >= TotalDuration;
         public float TotalDuration => initialisingOnly ? Mathf.Max(.1f, initialisingDuration) : Mathf.Max(.1f, sectionDuration) + Mathf.Max(.1f, titleDuration);
@@ -71,6 +77,13 @@ namespace Starwolf.Intro
         Canvas canvas;
         RawImage display;
         RectTransform corners;
+        TextMeshProUGUI watermarkText;
+        // Owner 2026-11-10: SECTION 36 plays once, when the game starts. Coming back to the title later (MAIN MENU, or
+        // the end of a fight) shows only STARWOLF flickering in from nothing, then the menu.
+        static bool introSeen;
+        bool returning;
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetIntroSeen() { introSeen = false; }
         Texture2D[] masks;
         AudioSource source;
         PhosphorData data;
@@ -100,6 +113,21 @@ namespace Starwolf.Intro
                 masks = new[] { data.MakeMask("SECTION 36", true, fit), data.MakeMask("INITIALISING...", false),
                     data.MakeMask(titleText, true, fit), data.MakeMask("NEW GAME", false),
                     data.MakeMask(secondRowText, false), data.MakeMask("SETTINGS", false) };
+                if (!initialisingOnly && !titleOnly)
+                {
+                    returning = introSeen;
+                    introSeen = true;
+                    if (returning)
+                    {
+                        // The title flickers over from an empty picture the size of SECTION 36's box, so the box itself
+                        // flickers in too. The clock starts where SECTION 36 would end.
+                        var blank = new Texture2D(masks[0].width, masks[0].height, TextureFormat.RGBA32, false, true)
+                            { name = "Empty", filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+                        blank.SetPixels32(new Color32[masks[0].width * masks[0].height]); blank.Apply(false, true);
+                        Destroy(masks[0]); masks[0] = blank;
+                        clock = Mathf.Max(.1f, sectionDuration);
+                    }
+                }
                 GridPitchPixels = data.Pitch;
                 ApplyStaticUniforms();
                 BuildCanvas();
@@ -136,7 +164,7 @@ namespace Starwolf.Intro
             var fitter = display.GetComponent<AspectRatioFitter>();
             fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
             fitter.aspectRatio = 1920f / 1080f;
-            if (cornerText) BuildCorners();
+            if (cornerText || (!initialisingOnly && !titleOnly && !string.IsNullOrEmpty(watermark))) BuildCorners();
         }
         // Owner 2026-11-10: the reference picture's small corner text, in Share Tech Mono, dim. Laid out on the
         // 1920x1080 screen and scaled with the display (Update), so it stays in the corners of the 16:9 picture.
@@ -146,12 +174,22 @@ namespace Starwolf.Intro
             corners = new GameObject("Corners", typeof(RectTransform)).GetComponent<RectTransform>();
             corners.SetParent(display.transform, false);
             corners.sizeDelta = new Vector2(1920, 1080);
-            Corner(topLeft, new Vector2(0, 1), new Vector2(110, -95), TextAlignmentOptions.TopLeft);
-            Corner(topRight, new Vector2(1, 1), new Vector2(-113, -95), TextAlignmentOptions.TopRight);
-            Corner(bottomLeft, new Vector2(0, 0), new Vector2(116, 164), TextAlignmentOptions.BottomLeft);
-            Corner(bottomRight, new Vector2(1, 0), new Vector2(-121, 195), TextAlignmentOptions.BottomRight);
+            if (cornerText)
+            {
+                Corner(topLeft, new Vector2(0, 1), new Vector2(110, -95), TextAlignmentOptions.TopLeft);
+                Corner(topRight, new Vector2(1, 1), new Vector2(-113, -95), TextAlignmentOptions.TopRight);
+                Corner(bottomLeft, new Vector2(0, 0), new Vector2(116, 164), TextAlignmentOptions.BottomLeft);
+                Corner(bottomRight, new Vector2(1, 0), new Vector2(-121, 195), TextAlignmentOptions.BottomRight);
+            }
+            if (!initialisingOnly && !titleOnly && !string.IsNullOrEmpty(watermark))
+            {
+                // Owner 2026-11-10: a tiny watermark in the bottom-right corner, on the menu only (Update).
+                watermarkText = Corner(watermark, new Vector2(1, 0), new Vector2(-80, 60), TextAlignmentOptions.BottomRight);
+                watermarkText.fontSize = watermarkSize; watermarkText.color = watermarkColour; watermarkText.characterSpacing = 2;
+                watermarkText.enabled = false;
+            }
         }
-        void Corner(string text, Vector2 corner, Vector2 offset, TextAlignmentOptions alignment)
+        TextMeshProUGUI Corner(string text, Vector2 corner, Vector2 offset, TextAlignmentOptions alignment)
         {
             var t = new GameObject("Corner text", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
             var rect = t.rectTransform;
@@ -163,21 +201,24 @@ namespace Starwolf.Intro
             if (cornerMaterial) t.fontSharedMaterial = cornerMaterial;
             t.text = text; t.fontSize = cornerSize; t.color = cornerColour; t.alignment = alignment;
             t.textWrappingMode = TextWrappingModes.NoWrap; t.characterSpacing = 4; t.raycastTarget = false;
+            return t;
         }
         void Update()
         {
             if (canvas) canvas.enabled = !suspended && target;
             if (corners) corners.localScale = Vector3.one * (display.rectTransform.rect.width / 1920f);
+            if (watermarkText) watermarkText.enabled = MenuVisible;
             if (suspended || !material) return;
             // Owner 2026-11-02: the first frame can take 6 s; it must not use up SECTION 36 unseen. The clock starts
             // once the picture shows, and a slow frame can't skip SECTION 36's quick flicker-in (2026-11-09).
-            bool flickering = !initialisingOnly && !titleOnly && clock < flickerInSeconds;
+            float s = Mathf.Max(.1f, sectionDuration);
+            bool flickering = !initialisingOnly && !titleOnly && (clock < flickerInSeconds || (returning && clock < s + changeSeconds));
             if (canvas && canvas.enabled) clock += Mathf.Min(Time.unscaledDeltaTime, flickering ? 1f / 30f : Time.maximumDeltaTime);
             if (source) source.volume = humVolume * Mathf.Clamp01(clock / .6f);
             DrawFrame();
             if (initialisingOnly && !done && clock >= TotalDuration) { done = true; finished.Invoke(); }
         }
-        public void RestartIntro() { clock = 0; selected = 0; suspended = false; done = false; if (source && !source.isPlaying) source.Play(); }
+        public void RestartIntro() { clock = returning ? Mathf.Max(.1f, sectionDuration) : 0; selected = 0; suspended = false; done = false; if (source && !source.isPlaying) source.Play(); }
         public void SkipToMenu() { clock = TotalDuration; }
         // Game integration calls this after New/Load Game, or while its Settings panel owns input.
         public void HideMenu() { suspended = true; if (source) source.Pause(); }

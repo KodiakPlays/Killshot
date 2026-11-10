@@ -202,6 +202,25 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   loadGameAvailable: 1
+  cornerText: 0
+  topLeft: 'UC-FLEET
+
+    // CLASSIFIED'
+  topRight: 'S36-PR-001
+
+    REV A
+
+    1993.11.04'
+  bottomLeft: RESEARCH   /   DEVELOPMENT   /   OPERATIONS
+  bottomRight: CLEARANCE LEVEL 3
+  clearanceLit: 3
+  cornerFont: {fileID: 11400000, guid: e4e5f26a143d94b499702466d8d7d615, type: 2}
+  cornerMaterial: {fileID: 0}
+  cornerColour: {r: 0.45, g: 0.88, b: 0.54, a: 0.8}
+  cornerSize: 24
+  watermark: Shagun Shah
+  watermarkSize: 10
+  watermarkColour: {r: 0.45, g: 0.88, b: 0.54, a: 0.5}
 --- !u!4 &875863682
 Transform:
   m_ObjectHideFlags: 0
@@ -584,6 +603,8 @@ MonoBehaviour:
   showFirst: {fileID: 0}
   advanceAfterSeconds: 0
   cards: []
+  escapeMenu: {fileID: 0}
+  mainMenuScene: 00_Start
 --- !u!4 &1675068443
 Transform:
   m_ObjectHideFlags: 0
