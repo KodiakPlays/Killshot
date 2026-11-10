@@ -1279,7 +1279,7 @@ The tool rail: CURSOR, POINT, RULER, COMPASS and ERASE (§18). The systems rail:
 |---|---|
 | Our ship | Its 3D model seen from above, in white. It glides and never blinks (owner, 2026-10-25). |
 | A contact | A red bar on the DRADIS circle, a dot with its range, or its model (§9.6) |
-| Our fighters | Small white triangles in a V, 10 px, nose pointing the way they fly, with no labels. The V is shut where they appear beside our ship. It opens as they fly out and closes as they land (owner, 2026-11-02) |
+| Our fighters | Small white triangles in a V, 10 px, nose pointing the way they fly, with no labels. The V is shut where they appear beside our ship. It opens as they fly out and closes as they land (owner, 2026-11-02). Zoomed in, each is a small 3D model, 10 units long, and its triangle fades out. The models' V spreads so they never overlap (owner, 2026-11-11, Step 199) |
 | Our slugs and torpedoes | A white dot with a fading trail: 120 px on a slug, less on anything slower, so a torpedo's grows as its motor lights |
 | Enemy torpedoes | A red dot with a short trail |
 | A ship our marines secured | A dot |

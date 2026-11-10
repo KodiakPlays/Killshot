@@ -55,6 +55,9 @@
 //   Our railgun: a charge glows at the muzzle while it is armed, then a flash and vent gas as it
 //   fires. On the table its shot leaves a line that fades, and rings mark the charge and the shot.
 //   A POINT on the slug's path counts down to its arrival, then blinks IMPACT ?.
+//   Each craft in flight is a small fighter model, 10 units long, and its triangle fades out.
+//   Zoomed right in, the V spreads so the models don't overlap. With no fighter model set in the
+//   Inspector, the triangles stay.
 //   Craft leaving the ship streak while the catapult's push lasts and flash as they break.
 //   PDC streams walk onto incoming torpedoes, dotted on the table and glowing in the close-up.
 //   A wreck's model is cut into two drifting halves. The effects run in game time. The sun's
@@ -176,7 +179,7 @@ public class PlotPanel : Panel
     [SerializeField] private ParticleSystem killBlast;
     [Tooltip("A destroyed ship's two halves in the close-up: Assets/Art/Close Up/Wreck Metal.mat.")]
     [SerializeField] private Material wreckLook;
-    [Tooltip("Owner 2026-11-10: a torpedo's model in the close-up, a small cylinder: Assets/Art/Close Up/Ship Metal.mat. With none, a pale stroke stands in.")]
+    [Tooltip("Owner 2026-11-10: a torpedo's model in the close-up, a small cylinder: Assets/Art/Close Up/Ship Metal.mat. With none, a pale stroke stands in. The craft models wear it too.")]
     [SerializeField] private Material torpedoLook;
     private readonly List<Transform> torpedoModels = new List<Transform>();
     [Tooltip("A shot streak's width at the front, units: a railgun slug, then a torpedo.")]
@@ -415,6 +418,13 @@ public class PlotPanel : Panel
     [Tooltip("Gap between fighters in the V, px.")]
     [Tune("Hangar & fighters")] [SerializeField] private float fighterGapPx = 10f;
     private readonly List<Image> fighters = new List<Image>();
+    [Tooltip("Owner 2026-11-11: zoomed in, each craft in flight shows as this 3D model in the ships' grey metal (Torpedo Look), and its "
+           + "triangle fades out: Assets/3D Assets/Starships/StarWolf_LightFighter.fbx. With none, the triangles stay.")]
+    [SerializeField] private GameObject fighterModel;
+    [Tooltip("Owner 2026-11-11: a craft model's length in the close-up, units. Zoomed right in, the V spreads so the models never overlap.")]
+    [Tune("Hangar & fighters")] [SerializeField] private float fighterModelUnits = 10f;
+    private readonly List<Transform> fighterModels = new List<Transform>();
+    private float fighterModelSize; // the model's longer side, across or along, at scale 1
     /// <summary>Fighters drawn now (the playtest reads it).</summary>
     public int FightersShown { get; private set; }
 
@@ -746,12 +756,16 @@ public class PlotPanel : Panel
         }
 
         // fighters in flight (Step 54): a V behind the leader, each wedge pointing where the flight flies
-        int nf = 0;
+        int nf = 0, nm = 0;
+        double kmPx = UnitsPerPx / Controls.ZoomExact;
+        // owner 2026-11-11: zoomed in, a craft is its 3D model and its triangle fades out; the models' V never closes up past a model's length
+        float craftCloseUp = fighterModel ? CloseUp : 0f, modelGapPx = Mathf.Max(fighterGapPx, fighterModelUnits / (float)kmPx);
         // owner 2026-11-02: how far a fighter's centre is from our ship's, a whole fighter clear of the side as drawn
         float sidePx = ShipPx(shipView) / 2f * (shipView ? shipView.WidthShare : 0.5f) + fighterPx / 2f;
         if (fighterTemplate)
         {
             var ink = ownShipColor.gamma; // owner 2026-10-26: white, like our ship
+            ink.a *= 1f - craftCloseUp;
             foreach (var f in s.hangar.Flights)
             {
                 Controls.Slide(ref f.drawn, f.x, f.y, f.x, f.y); // owner 2026-11-01: it slides after the flight, up to one tick behind
@@ -771,15 +785,17 @@ public class PlotPanel : Panel
                     var img = Fighter(nf++);
                     img.color = ink;
                     img.rectTransform.sizeDelta = new Vector2(fighterPx, fighterPx);
-                    Put(img.rectTransform, lead + (right * (c % 2 == 1 ? -row : row) - ahead * row) * fighterGapPx * open, -drawnHdg);
+                    var v = right * (c % 2 == 1 ? -row : row) - ahead * row;
+                    Put(img.rectTransform, lead + v * fighterGapPx * open, -drawnHdg);
+                    if (craftCloseUp > 0f) FighterModel(nm++, lead + v * modelGapPx * open, drawnHdg, kmPx);
                 }
             }
             for (int i = nf; i < fighters.Count; i++) fighters[i].gameObject.SetActive(false);
         }
+        for (int i = nm; i < fighterModels.Count; i++) fighterModels[i].gameObject.SetActive(false);
         FightersShown = nf;
         // an escort flies out until its whole V (rows behind the leader, half a craft) is outside the small circle round
         // our ship, and a squadron lands when its leader's nose reaches the circle
-        double kmPx = UnitsPerPx / Controls.ZoomExact;
         s.hangar.landClearUnits = (InnerRingPx + fighterPx / 2f) * kmPx;
         s.hangar.launchClearUnits = s.hangar.landClearUnits + s.hangar.SquadReady(s.hangar.CurrentSquad) / 2 * fighterGapPx * kmPx;
         s.hangar.launchSideUnits = sidePx * kmPx;
@@ -1187,6 +1203,35 @@ public class PlotPanel : Panel
         }
         fighters[i].gameObject.SetActive(true);
         return fighters[i];
+    }
+
+    // Owner 2026-11-11: craft model i in the close-up at a board px spot, nose on its heading, fighterModelUnits long. Made as
+    // needed and kept. On TransparentFX, as the torpedoes: the close-up films it, the ship pictures don't.
+    void FighterModel(int i, Vector2 at, float hdg, double kmPx)
+    {
+        while (fighterModels.Count <= i)
+        {
+            var go = Instantiate(fighterModel);
+            go.name = "Fighter model";
+            go.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            go.transform.localScale = Vector3.one;
+            Bounds b = default;
+            bool any = false;
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+            {
+                r.gameObject.layer = LayerMask.NameToLayer("TransparentFX");
+                if (torpedoLook) r.sharedMaterial = torpedoLook;
+                r.shadowCastingMode = ShadowCastingMode.Off;
+                if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds);
+            }
+            fighterModelSize = Mathf.Max(b.size.x, b.size.y, 0.001f);
+            fighterModels.Add(go.transform);
+        }
+        var t = fighterModels[i];
+        t.gameObject.SetActive(true);
+        var world = new Vector3((float)(viewX + (at.x - plotCentre.x) * kmPx), (float)(viewY - (at.y - plotCentre.y) * kmPx), EffectZ + 10f);
+        t.SetPositionAndRotation(world, Quaternion.Euler(0f, 0f, -hdg) * Quaternion.Euler(0f, 180f, 0f)); // laid as our ship's model is: nose north at 0
+        t.localScale = Vector3.one * (fighterModelUnits / fighterModelSize);
     }
 
     TMP_Text ContactLabel(int i)

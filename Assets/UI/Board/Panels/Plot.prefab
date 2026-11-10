@@ -2698,6 +2698,8 @@ MonoBehaviour:
   fighterTemplate: {fileID: 7922429107365735552}
   fighterPx: 10
   fighterGapPx: 10
+  fighterModel: {fileID: 919132149155446097, guid: 7812e28579c367b4e87288b971d10b36, type: 3}
+  fighterModelUnits: 10
   sweepInkAmber: {r: 1, g: 0.5882353, b: 0.50980395, a: 1}
 --- !u!1 &8425409134869110677
 GameObject:

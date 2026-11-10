@@ -11,6 +11,7 @@ How to add a row: one row per number. "Where" is the Tuning tab and field, or th
 
 | Date | Number | Old | New | Where | Who asked, and why |
 |---|---|---|---|---|---|
+| 2026-11-11 | Fighter Model Units: how long a craft's 3D model is in the close-up | none (new; craft were triangles at every zoom) | 10 units | Board tab → Hangar & fighters (`PlotPanel`) | Owner 2026-11-11: in the tutorial the craft had no 3D model zoomed in; use the starfighter model, "10 units long is the best", 20 the most; zoomed out, triangles |
 | 2026-11-11 | Watermark Place: where the title menu's watermark sits | 80 px in from the right, 60 px up (set in the code, no setting) | The same, 80 and 60, now a setting | `StarwolfIntroController` on the intro in `00_Start` → Menu → Watermark Place (X in from the right, Y up from the bottom, on the 1920 × 1080 screen) | Owner 2026-11-11: "I would like a setting for that." Only the setting is new. The value didn't change |
 | 2026-11-10 | Letters Per Second: how fast the end card's closing line types in | none (new) | 30 letters a second | Board tab → End card, with `Assets/Scenes/Tactical/EndCard.unity` open (`EndCard`) | Owner 2026-11-09: after the last mission, an end card shows the story's closing line, then the title (Step 194). A new number |
 | 2026-11-10 | Hold Seconds: how long the whole closing line stays up before the title | none (new) | 5 s | Board tab → End card, with `EndCard.unity` open (`EndCard`) | Same (Step 194). A new number. Any key or click skips ahead |

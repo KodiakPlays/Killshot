@@ -685,8 +685,21 @@ zoom-out to x4. The scale box shows x1.0 up to x4.0.
 The close-up shows a ship only when it is in sight. A ship behind a rock is left out. Every ship is
 the same grey in the close-up. A ship's white, red or amber colour shows only in the
 line pictures. The name labels and the white lock corners still show. A destroyed ship breaks in two
-in the close-up too. Shots and blasts are below. Fighters are drawn flat on top. Shots and torpedoes
+in the close-up too. Shots and blasts are below. Our craft show as small 3D models (below). Shots and torpedoes
 keep their flat dot and trail on top. Gas clouds are unchanged.
+
+**Our craft in the close-up** (Step 199; owner 2026-11-11). Zoomed in, each craft we launch, fighter
+or assault boat, is a small grey 3D fighter model. Its nose points the way it flies. Its white
+triangle fades out as the close-up comes in. Zoomed out, only the triangles show. The models fly in
+the same V as the triangles. Zoomed right in, the V spreads so the craft are never closer than one
+model length, so they never overlap. The triangles' V does not change. **Fighter Model Units** (10)
+is a model's length in units. It is on the Board tab of **Starwolf → Tuning**, under Hangar &
+fighters. **Fighter Model** on the Plot panel points at the model,
+`Assets/3D Assets/Starships/StarWolf_LightFighter.fbx`. Every craft uses this one model (owner). It
+is a sample; the owner will find a better one. Leave the slot empty and the triangles show at every
+zoom. The models wear the ships' grey metal, **Torpedo Look** (`Assets/Art/Close Up/Ship Metal.mat`).
+They are on the TransparentFX layer, like the torpedo models, so the small ship pictures don't show
+them.
 
 The close-up is the picture `Close-up (3D view)` in `Plot.prefab`. It is just above the three
 nebula pictures and under `Grid`. The grid lines, marks, labels, shots, fighters and torpedoes draw on top of it. It is
