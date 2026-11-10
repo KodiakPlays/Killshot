@@ -5821,6 +5821,15 @@ triage below.
   - **D3: a hit shows only if a drone watches.** It waits on the drones.
   - **For the owner: should enemy shots leave a line on the table too?** Not answered. Today only
     ours do (C3).
+  - **The page's Learning map tab, watched (2026-11-11).** Owner: "Watch everything, and then can you
+    put the GIF in each of these things?" All 34 reference clips were watched frame by frame. Each card
+    now has a GIF of the real moment, and its link opens the video at that second. About half of the
+    first descriptions were wrong (for example, the Star Trek II part has phasers only, and the Donnager
+    clip has no railgun fire), so the cards now say what is really on screen, with a "Watched" note.
+    Three clips were swapped for clearer ones. Page: https://claude.ai/artifact/KXZhwnSU7hoG7aaEqThx6g
+    (Learning map tab). Nothing in the game changed.
+  - **Next, when the owner is back:** the answer on enemy shot lines; D3 once the drones exist; a
+    torpedo model for the close-up; Player 1 to run the fight sums again after Steps 184 and 197.
   - ~~**The boats.** B3, for every craft, assault boats too.~~ **Built, Step 197.** Only our ship
     launches craft, so only ours fly it.
   - ~~**The PDCs.** E2, streams.~~ **Built, Step 197.**
