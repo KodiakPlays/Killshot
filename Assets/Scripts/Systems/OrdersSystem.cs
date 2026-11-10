@@ -18,17 +18,29 @@
 // - An order that runs spends the charge. DamageSystem then does the order on the picked room.
 // - A thrown rocker, here or on the Engineering panel, flicks back after a short time.
 //   BoardManager lets the rockers fall back each frame.
+//
+// Technical:
+// - Data: alert is 0, 1 or 2 for CONDITION 3, 2 or 1. auxCharge is 0 to 100. dcThrown lists the
+//   rockers thrown now.
+// - OrdersPanel calls DoAlert and RunOrder. It reads OrderBlock, OrderCost, auxCharge, orderFail
+//   and alert.
+// - RunOrder refuses when the charge is short or DamageSystem.EngBlock gives a reason. Otherwise
+//   it pays, then calls DamageSystem.ApplyOrder.
+// - DamageSystem calls OrderCost and FlickBack for the Engineering panel's rockers. REBOOT and
+//   RECALL cost nothing (OrderCost gives -1).
+// - BoardManager calls TickAux each step and ExpireFlicks every frame. It watches orderRefusals.
+//   Only our ship's AUX charge fills.
+// - WeaponsReleased and FlightOpsReleased are the same test: CONDITION 2 or 1, and no weaponsHold.
+//   WeaponSystem, FireControlPanel and HangarSystem read them.
+// - Mission sets weaponsHold and railgunHold when a level starts. A drill step can clear
+//   weaponsHold. WeaponSystem and FireControlPanel read railgunHold.
+// - Flick-back and refusal times are real seconds (Time.unscaledTime).
+// - Numbers: OrdersSystem.Stats, the orders part of each ship's stats file: the costs, the charge
+//   rate and the two times.
 // =================================================================================================
 
 using UnityEngine;
 
-/// <summary>
-/// Orders: one ship's orders station. It holds the alert condition, the AUX order pool, what each order
-/// costs and why one is refused, and the repair and order rockers that flick back after a throw. Our ship
-/// and every enemy carry one (the enemy is our ship with other stats). Owner 2026-10-26: orders live in one
-/// place, here. The repairs an order sends are damage control's (DamageSystem). Rules from board-logic.js
-/// (ALERTS, ENG_ORDERS, doAlert, orderBlock, runOrder, flickBack) and Steps 33h-2, 40 and 59.
-/// </summary>
 public class OrdersSystem : MonoBehaviour
 {
     /// <summary>The ship this belongs to. Orders read its AUX bus and send repairs to its damage control.</summary>

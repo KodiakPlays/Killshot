@@ -1,12 +1,35 @@
+// =================================================================================================
+// SweepGraphic.cs
+//
+// What it does:
+// Draws the DRADIS sweep on the plot: a bright line that turns round our ship, with a faint tail
+// fading out behind it. It is on the Plot panel prefab. It shows while DRADIS is on.
+//
+// How it works:
+// - It draws the sweep once, pointing north, filling its box. The line runs from a small circle
+//   round our ship out to the rim.
+// - The tail is a band behind the line. It fades from faint to nothing over the tail's angle. The
+//   angle is in the Tuning window, Board tab, Sensors.
+// - PlotPanel does the moving. It sizes the box to the sensor circle, puts it on our ship, and
+//   turns it every frame.
+// - PlotPanel sets the line and tail strength for the white or amber grid. It sets the small
+//   circle's size. The sweep is redrawn only when one of these changes.
+//
+// Technical:
+// - Data: tailDegrees, edgeAlpha and tailAlpha (0 to 1), lineWidth and innerPx (px).
+// - PlotPanel calls SetInner and SetAlphas. Each one redraws only when its value changes.
+// - PlotPanel sizes, places and turns the sweep's box. This script never turns anything.
+// - The picture uses the graphic's colour, made fainter by edgeAlpha and tailAlpha.
+// - The tail is cut into slices of about 2 degrees. Each slice fades a little more.
+// - Numbers: tailDegrees is in the "Sensors" [Tune] section. lineWidth is in the Inspector.
+// - Trap: the tail is drawn behind the line for a clockwise turn. A turn the other way would lead
+//   with the tail.
+// - Trap: PlaytestRunner reads innerPx by its name. Renaming the field breaks that check.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Step 43. The radar sweep: a bright leading edge with a faint tail fading behind it, turning
-/// round our ship while DRADIS is on (UIStateSpec §9.2 rd-sweep; colours sweepEdge and sweepTail
-/// from board-logic.js renderVals). Drawn once with the edge pointing north and filling its rect;
-/// PlotPanel sizes the rect to the sensor circle and turns it.
-/// </summary>
 public class SweepGraphic : MaskableGraphic
 {
     [Tooltip("How far the fading tail reaches behind the edge, degrees. The design gives no figure.")]

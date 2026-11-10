@@ -1,3 +1,43 @@
+// =================================================================================================
+// MissileLauncher.cs
+//
+// What it does:
+// An older physics weapon: a set of launch tubes that lock onto a ship and fire guided torpedoes
+// (the Missile script). It is one of the guns WeaponManager can switch between.
+// No scene or prefab has it. The battle board does not use this script.
+//
+// How it works:
+// - It is built on WeaponBase. Settings left at 0 in the Inspector get defaults: 5 torpedoes,
+//   5 seconds to reload a tube, 150 damage. Its range becomes the lock range, 25,000 units.
+// - At the start it loads one torpedo into each tube, while ammo lasts.
+// - WeaponManager asks it to lock every loaded tube onto a target. The target must be between 500
+//   and 25,000 units away.
+// - A tube locks after 2 seconds. It drops the lock if the target is gone or moves out of range.
+// - Firing launches a torpedo from every tube that is loaded and locked. Each torpedo gets the
+//   target and the base damage times the damage factor.
+// - WeaponManager only fires it while spare ammo is left and the reload time has passed.
+//   Torpedoes still in the tubes when the spare ammo runs out are never fired.
+// - Each tube that fired reloads after the reload time, if ammo is left.
+// - WeaponUIDisplay asks it for the first tube's lock progress.
+//
+// Technical:
+// - It extends WeaponBase. It overrides Start, CanFire and Fire(point). Fire ignores the point.
+// - Data: one entry per launch tube in tubeLoaded, tubeLocked, lockProgress (seconds) and
+//   currentTargets.
+// - WeaponManager.LoadActiveWeapon calls LockAllTubes(target). WeaponManager.FireActiveWeapon
+//   calls Fire. WeaponUIDisplay calls GetLockProgress(0).
+// - FireMissile calls Missile.Initialize(target, damage). The torpedo starts with the tube's
+//   rotation.
+// - Numbers: lock time (2 s), lock range (500 to 25,000), tubes and prefab are in the Inspector.
+// - Trap: the tube arrays are sized in Start. With no launch tubes, GetLockProgress(0) gives an
+//   error.
+// - Trap: CanFire passes with a loaded tube that is not locked. Fire then launches nothing, and
+//   WeaponManager still buzzes.
+// - Trap: once locked, a tube never checks the range again.
+// - Trap: a second lock request during the 2 seconds starts a second count. That tube then locks
+//   in 1 second.
+// =================================================================================================
+
 using UnityEngine;
 using System.Collections;
 

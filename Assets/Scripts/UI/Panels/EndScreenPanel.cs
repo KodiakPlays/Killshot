@@ -1,14 +1,58 @@
+// =================================================================================================
+// EndScreenPanel.cs
+//
+// What it does:
+// The screen that covers the battle board when a mission ends. It says MISSION COMPLETE, SHIP LOST
+// or MISSION FAILED, why, and how the fight went. Escape in a level opens it as the pause menu.
+// It is on the End Screen prefab.
+//
+// How it works:
+// - BoardManager redraws it after every click and every 0.42 seconds. It finds QuestSystem in the
+//   scene and asks it if the mission is over.
+// - The screen shows 2 real seconds after the end. The delay is in the Tuning window, under
+//   "Board & time".
+// - The title is green on a win and red on a loss. MISSION FAILED means the player scanned or
+//   locked the target in a level that allows neither. Destroying a ship meant for capture is
+//   MISSION FAILED too. Any other loss is SHIP LOST.
+// - The reason line names the target and what happened to it, or the cause of the loss: LEFT THE
+//   BATTLE SPACE, REACTOR DESTROYED and so on. A won flight mission says CHECKLIST COMPLETE.
+// - The right column shows the target and its fate. It shows our ship's armour left, as a percent
+//   of its full side armour, or LOST. Last comes the time taken, in hours, minutes and seconds.
+// - RESTART MISSION loads the same scene again. MISSION SELECT tells SaveGame to keep the damage
+//   from a won campaign mission. Then it loads the Ship scene in the campaign, or 00_Start outside
+//   it. After the campaign's last mission is won, it loads the EndCard scene instead. That needs
+//   the Campaign file's closing line to be written. Until then it loads the Ship scene.
+// - Escape comes in from BoardManager. It stops time and shows the screen titled PAUSED. This has
+//   RESUME and QUIT GAME, and no rows. Escape or RESUME closes it and puts time back to
+//   running or paused, as before. Escape does nothing once the mission is over.
+// - QUIT GAME stops play mode in the editor and closes the game in a build.
+// - While the pause menu is open, BoardManager ignores the board's keys. The playtest runner
+//   reads this screen's texts.
+//
+// Technical:
+// - Data: MenuOpen is true while the pause menu is up. Showing is true while the screen is on.
+// - BoardManager calls Refresh and Click. The actions are "end.restart", "end.menu", "end.pause"
+//   and "end.quit". BoardManager sends "end.pause" on Escape.
+// - BoardManager reads MenuOpen to stop the board's keys. PlaytestRunner reads Showing.
+// - It finds QuestSystem once with FindAnyObjectByType. It reads Over, EndedAt, Stage, Goal,
+//   FailReason, TargetKey, StartedAt and ExitOpen.
+// - It reads ShipState.TrackOf, ShipOf and destroyed. Armour is DamageSystem.SideArmour against
+//   sideArmourMax in the damage part of the ship stats file.
+// - The pause menu calls BoardManager.Pause. On close it puts back the pause state from before.
+// - MISSION SELECT calls SaveGame.KeepWonDamage. Then SaveGame.InCampaign and FinishedWith pick
+//   the scene.
+// - Numbers: the delay is a [Tune] field under "Board & time". The three scene names are in the
+//   Inspector on the End Screen prefab.
+// - Trap: PlaytestRunner reads the private title, reason and values fields by name. Renaming them
+//   breaks the playtest.
+// - Trap: the end card loads only if the EndCard scene is in the build and
+//   SaveGame.campaign.closingLine is filled in. The delay counts real seconds (Time.unscaledTime).
+// =================================================================================================
+
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// The end screen (Step 85). When the mission is won or lost it covers the board and says how it ended:
-/// MISSION COMPLETE or SHIP LOST, why, the target, our ship and the time taken. RESTART MISSION plays this
-/// level again; MISSION SELECT goes back to the mission list (owner 2026-11-02). It shows the QuestSystem.
-/// It is the pause menu too (owner 2026-11-02): Escape in a level stops time and shows it titled PAUSED, with
-/// RESUME and QUIT GAME added and the rows hidden. Escape or RESUME closes it and time goes on as it was.
-/// </summary>
 public class EndScreenPanel : Panel
 {
     [Tooltip("The screen itself. Hidden while the mission runs.")]

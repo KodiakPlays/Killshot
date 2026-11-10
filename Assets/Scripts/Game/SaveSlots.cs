@@ -1,12 +1,40 @@
+// =================================================================================================
+// SaveSlots.cs
+//
+// What it does:
+// The SAVE SLOTS screen. It is in the SaveSlots scene. It shows three rows, one per save. Picking
+// an empty row starts a new campaign. Picking a used row goes on with that campaign. Either one
+// opens the sector map.
+//
+// How it works:
+// - When the screen opens, it reads each slot through SaveGame and writes its row. An empty slot
+//   says EMPTY. A used one shows the save time and how much of the campaign is won. It reads
+//   "CAMPAIGN", then for example "1 OF 10" and "10%". With all won it reads "CAMPAIGN COMPLETE".
+//   Only the missions in the Campaign file count.
+// - Each row's DELETE button shows only while its slot has a save.
+// - A click on a row picks that slot in SaveGame and loads the SectorMap scene. Clicks in the
+//   first half second after the screen opens are ignored.
+// - The first click on DELETE changes it to SURE? CLICK AGAIN. The second click deletes the save.
+// - The row buttons in the scene call it when clicked.
+//
+// Technical:
+// - Data: rows and deletes are the row texts and DELETE texts, slot 1 first. asking is the slot
+//   waiting for a second DELETE click, or -1.
+// - Pick(slot) and Delete(slot) are set on the Buttons in the SaveSlots scene. Slots count from 0.
+// - Pick calls SaveGame.Play, then loads mapScene. Delete calls SaveGame.Delete on the second
+//   click.
+// - Show reads each slot with SaveGame.Read and counts wins with Campaign.Won. Each DELETE click
+//   redraws the rows.
+// - The DELETE button is the parent object of each DELETE text. Show hides it for an empty slot.
+// - With no Campaign file set, a used row shows how many levels are won, with no percent.
+// - SectorMap opens this scene when no slot is picked.
+// - Numbers: mapScene and the Campaign file are in the Inspector.
+// =================================================================================================
+
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// The SAVE SLOTS screen (owner 2026-11-08): NEW GAME opens it. Three rows, one per save. An empty row starts a new
-/// campaign; a used one carries on with it. Either opens the sector map. DELETE empties a row after a second click.
-/// The saves themselves are SaveGame's.
-/// </summary>
 public class SaveSlots : MonoBehaviour
 {
     [Tooltip("The text on each slot's row, slot 1 first.")]

@@ -1,14 +1,49 @@
+// =================================================================================================
+// BoardMotion.cs
+//
+// What it does:
+// How the battle board moves. It is on the board in the battle scene. It slides the six drawers
+// in and out and drops and raises the periscope. It opens the helm and the orders station, and
+// runs the board's small looping animations. It does not read the game.
+//
+// How it works:
+// - BoardManager calls it when the player clicks a drawer key, the periscope, the helm or the
+//   orders station.
+// - Only one drawer is out at a time. Opening one slides it in and fades it up, and closes any
+//   other. Clicking the open drawer's key closes it.
+// - The periscope's box grows down when lowered and shrinks back when raised. Some parts show only
+//   while it is down, others only while it is up.
+// - The helm and the orders station swap from their closed look to their open look at once. Their
+//   header latch slides a few px.
+// - Each move runs over a set time on an easing curve. The times are in the Tuning window, Board
+//   tab, Motion. In the editor, outside play mode, every move happens at once.
+// - Every frame it moves the running animations on, by real time. They keep going while the game
+//   is paused.
+// - Looping animations: some lamps blink, some parts drift a little to and fro, some fade gently
+//   up and down.
+// - It tells BoardManager after each change. Other panels read the open drawer and whether the
+//   periscope is down.
+//
+// Technical:
+// - Data: drawers (name, group, fade). OpenDrawerName, ScopeDown, HelmOpen and OrdersOpen are
+//   the state now.
+// - BoardManager calls ToggleDrawer, ToggleScope, ToggleHelm and ToggleOrders. FireControlPanel
+//   calls ToggleScope from its sight button.
+// - Changed fires after each change. BoardManager listens and relights the systems rail lamps.
+// - PlotPanel reads OpenDrawerName. BoardManager, FireControlPanel, PeriscopePanel and PlotPanel
+//   read ScopeDown.
+// - Each move is keyed by the object it moves. A new move on that object replaces the old one.
+// - Easing curves are CssEase values in the Inspector. Travel distances, in board px, are there
+//   too.
+// - Numbers: the times are in the "Motion" [Tune] section on the Tuning window's Board tab.
+// - Trap: drawer names must match BoardManager's systemDrawers list, word for word.
+// - A drawer's object is switched off once it has slid out.
+// =================================================================================================
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Step 32. How the handoff board moves: the six drawers slide and fade in, the periscope drops,
-/// the helm and orders station open with their latches, and the board's looping animations run.
-/// Every timing and curve is from reference/UIStateSpec.md §9 and is tunable here. Nothing here
-/// reads game state; Step 33 calls these methods from the board's controls.
-/// Tweens run in play mode; in edit mode every change lands at once.
-/// </summary>
 public class BoardMotion : MonoBehaviour
 {
     [System.Serializable]

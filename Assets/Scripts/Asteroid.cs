@@ -1,9 +1,40 @@
+// =================================================================================================
+// Asteroid.cs
+//
+// What it does:
+// A rock that guns can shoot to pieces. It belongs to the older physics weapons, where shots are
+// real moving objects. No scene or prefab has it. The battle board does not use this script.
+//
+// How it works:
+// - It goes on a rock object with a collider.
+// - At the start it fills its health to the maximum (50 by default). Then it tries to tag itself
+//   "Asteroid".
+// - Guns hurt it through IDamageable, the damage interface of the older weapons. Each hit takes
+//   health away and writes a line to the Console.
+// - At half health or less it swaps to a "damaged" material, if one is set in the Inspector.
+// - At zero health it shows a blast effect. It throws out 2 to 5 debris pieces with a random
+//   push. It removes itself. The debris is removed after 10 seconds.
+// - The old Railgun's beam damages it like any other target and keeps going through it.
+// - In the Scene view, when selected, it draws a red ring that shrinks as health drops.
+//
+// Technical:
+// - Data: currentHealth and maxHealth, in health points.
+// - TakeDamage(damage) takes health away and returns the amount taken. It never takes more than
+//   is left.
+// - Callers: Shell, PDCBullet, Missile, BoardingPod and Railgun, through IDamageable. No script
+//   names Asteroid directly.
+// - CanBeDamaged() is false once it is destroyed. Later hits do nothing.
+// - Numbers: all in the Inspector (health, debris count and push, damage threshold 0.5). The
+//   Tuning window does not show them.
+// - Trap: the "Asteroid" tag is not in the project's tag list. Start gives an error at that line
+//   until the tag is added.
+// - Trap: ShowDamage swaps the renderer's material. The original material is saved but never put
+//   back.
+// - A debris piece gets its push only if its prefab has a Rigidbody.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// Example destructible asteroid that can be damaged and destroyed by weapons
-/// Railgun can penetrate through it, other weapons destroy on impact
-/// </summary>
 [RequireComponent(typeof(Collider))]
 public class Asteroid : MonoBehaviour, IDamageable
 {

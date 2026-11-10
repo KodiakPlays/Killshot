@@ -1,11 +1,34 @@
+// =================================================================================================
+// ShipStats.cs
+//
+// What it does:
+// The shape of a ship's stats file: all of one ship's game numbers in one file. The files are in
+// Assets/Ships, one per ship, for example Asura and Garuda. The Tuning window edits them.
+//
+// How it works:
+// - A file has the ship's class name, its length and its width in units. The length and width
+//   make the ship's box. Shots and crashes hit the box.
+// - It then has one section per ship system: navigation, power, sensors, weapons, hangar, damage
+//   and orders. Each section is the list of numbers for that system.
+// - Each ship object points at its file through the Ship script. Each system reads its section
+//   from there.
+// - The Tuning window edits the files on its Ship, Enemy, Hard Points and Ranges tabs. Hard Points
+//   and Ranges let you pick any stats file.
+//
+// Technical:
+// - Data: shipClass, length and width (units), then one Stats section per system: navigation,
+//   power, sensors, weapons, hangar, damage and orders.
+// - Each section's fields are written in its system's script, as NavSystem.Stats,
+//   PowerSystem.Stats and so on. Add a number there.
+// - Ship.Stats gives the file in the editor and a copy of it in play mode.
+// - NavSystem.BoxHalf reads length and width. Ship sizes the model to length.
+// - StarwolfTuningWindow finds every ShipStats file in the project. It edits them and calls
+//   Ship.PullFromFile in play mode.
+// - Trap: there is no Create menu item. Copy an existing file to make a new ship.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// One ship's numbers, in one file (owner, 2026-10-27: a stats file per ship). Each ship part reads its
-/// section: navigation, power, sensors, weapons, hangar, damage and orders. Starwolf → Tuning edits them, on
-/// the Ship tab (our ship) and the Enemy tab. The files are in Assets/Ships. The enemy is our ship with other
-/// stats: same sections, its own numbers.
-/// </summary>
 public class ShipStats : ScriptableObject
 {
     [Tooltip("What the ship is, shown at the top of its Tuning tab.")]

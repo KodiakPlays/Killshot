@@ -1,13 +1,45 @@
+// =================================================================================================
+// DebrisFieldEditor.cs
+//
+// What it does:
+// This is the Inspector for a Debris Field in a level. It shows the field's settings and adds two
+// buttons, Scatter and Reshuffle. It is an editor tool. The game itself does not use it.
+//
+// How it works:
+// - It draws the normal Debris Field settings, then the two buttons under them.
+// - Scatter deletes every piece under the field, hand-moved ones too. It asks DebrisField for a
+//   fresh layout from the same seed. Then it places a copy of a piece prefab at each spot.
+// - Each copy is turned and sized to the layout. It measures how wide the prefab's model is
+//   across. Then it scales the copy to the size the layout asks for.
+// - Reshuffle picks a new random seed, then does a Scatter.
+// - All of this is one undo step. It marks the scene as changed.
+// - A note under the buttons shows how many pieces were placed, out of how many asked for. It
+//   turns into a warning when the gap between pieces left no room for the rest.
+// - The Level window calls Scatter when it adds a new debris field. It calls it again after you
+//   resize one on its map.
+// - It has a self-test. It tries every shape and spread on a hidden field. It checks that each
+//   piece is inside the shape and no two are closer than the gap. It checks that the same seed
+//   gives the same layout. No other script calls this test.
+//
+// Technical:
+// - [CustomEditor(typeof(DebrisField))] makes Unity draw this Inspector for every DebrisField.
+// - Scatter(DebrisField) is public and static. LevelWindow calls it on Add and after a resize drag.
+// - Scatter reads DebrisField.Layout(). Each piece gives a prefab, a spot (at), turnDeg and
+//   sizeUnits.
+// - Copies stay linked to their prefab. They go under the field, at local x and y, with z at 0.
+// - Scale is the prefab's scale times sizeUnits, divided by its width. Across() finds that width.
+// - Across() measures the prefab's meshes seen from above, in units. No mesh counts as 1 unit wide.
+// - Trap: Scatter deletes every child of the field. Anything else placed under it goes too.
+// - Reshuffle sets DebrisField.seed to a random whole number of 1 or more.
+// - Numbers: count, shape, spread, gap, sizes and seed are on the DebrisField, in the Inspector.
+// - Check() returns "ok" or what failed. It uses a hidden object that is never saved.
+// =================================================================================================
+
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-/// <summary>
-/// Step 77. The Debris Field's inspector: its settings, then Scatter (lay the pieces out again from the
-/// same seed) and Reshuffle (a new seed). Both replace every piece under the field, hand-moved ones too,
-/// in one undo.
-/// </summary>
 [CustomEditor(typeof(DebrisField))]
 public class DebrisFieldEditor : Editor
 {

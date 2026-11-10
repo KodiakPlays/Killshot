@@ -1,14 +1,40 @@
+// =================================================================================================
+// GameClock.cs
+//
+// What it does:
+// An older mission clock. It counts game time from a mission's start and stops when a time limit
+// runs out. It is in the Prototype Dev scene, and no other script reads it. The battle board does
+// not use this script.
+//
+// How it works:
+// - Only one clock is kept. A second copy removes itself.
+// - Every frame, unless paused, it adds to the time so far. It adds the frame's time, times a
+//   speed setting. Then it tells anyone listening.
+// - The time limit is 3,600 seconds (one hour) by default. When the time so far reaches it, the
+//   clock stops and tells anyone listening. It writes "Mission time expired" to the Console.
+//   A limit of 0 means no limit.
+// - Pause stops the clock and freezes the whole game. Resume starts both again.
+// - Other code can ask for the time so far and the time left. It can ask for the travel time
+//   between two points at a given speed.
+// - It can write a number of seconds as hours, minutes and seconds (00:00:00).
+//
+// Technical:
+// - Data: elapsedGameTime in seconds. It grows by Time.deltaTime times the clock's timeScale field.
+// - GameClock.Instance is set in Awake. No script reads it.
+// - Events: OnTimeUpdated(seconds) every frame, OnMissionTimerExpired, OnPaused and OnResumed.
+//   Nothing listens to them.
+// - StrategicPause sets Unity's Time.timeScale to 0. Resume sets it back to 1. TogglePause
+//   switches between them.
+// - GetRemainingTime returns -1 with no limit. CalculateETA returns -1 for a speed of 0 or less.
+// - Numbers: missionTimeLimitSeconds (3,600) and timeScale (1) are in the Inspector.
+// - Trap: the clock's timeScale field and Unity's Time.timeScale are two different numbers.
+// - Trap: Resume forces Time.timeScale to 1. Any other game speed is lost.
+// - Trap: once the limit runs out, nothing starts the clock again.
+// =================================================================================================
+
 using UnityEngine;
 using System;
 
-/// <summary>
-/// Universal game clock per GDD spec.
-/// 
-/// Governs enemy ship movement, ETA calculations, scanner sweeps, and mission timing.
-/// All intercepted messages reference the game clock to report arrival times, movement speeds, and rendezvous points.
-/// The clock does NOT pause when systems are offline or in menus.
-/// The player may pause the game at any time for strategic decisions - the clock STOPS during this pause.
-/// </summary>
 public class GameClock : MonoBehaviour
 {
     public static GameClock Instance { get; private set; }

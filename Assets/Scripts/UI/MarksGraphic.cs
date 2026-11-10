@@ -1,12 +1,43 @@
+// =================================================================================================
+// MarksGraphic.cs
+//
+// What it does:
+// Draws simple shapes on the plot: dots, lines, dashed and dotted lines, rings, filled circles and
+// slices of a ring. It is on several layers of the Plot panel prefab. PlotPanel tells each layer
+// what to draw. The plot marks, the sensor circle, the scan cone, weapon reach rings, contact dots
+// and bearing lines all use it.
+//
+// How it works:
+// - PlotPanel gives it a list of shapes. Each shape has a kind, two points in board px, a
+//   faintness and an optional colour. It then redraws the layer.
+// - POINT is a dot. RULER is a thick line with a dot at each end. COMPASS is a dashed ring with a
+//   line from the middle.
+// - Other kinds: a plain line, a line that fades out, and dashed and dotted lines. More kinds: a
+//   solid or dashed ring, a filled circle, and a slice of a ring for the scan cone.
+// - A slice of ring can show a picture, bent along the slice.
+// - Sizes are in screen px. They stay the same at every zoom. The sizes are in the Tuning window,
+//   Board tab, Plot tools.
+// - Dashes and ring pieces are drawn only where they show on the plot.
+//
+// Technical:
+// - Data: a list of Shape. Each has a kind name, points a and b in board px (y down), alpha and
+//   ink. A "sector" adds inner (px) and half (degrees).
+// - Kinds: point, ruler, circle, disc, fade, dash, dots, dashring, sector and line.
+// - Set(list) swaps in new shapes and redraws. PlotPanel calls it for each layer.
+// - World(board) gives a board px point in world space.
+// - origin is the board px of the layer's top-left corner.
+// - ink is already turned to gamma. With ink left clear, a shape takes the layer's colour.
+// - art is a picture for "sector" shapes. PlotPanel sets it.
+// - It builds one UI mesh. Dashes and ring pieces outside the layer, plus a margin, are skipped.
+//   A far ring could be too big for one mesh. Dots, plain lines and slices are always built.
+// - Numbers: the "Plot tools" [Tune] section: dot sizes, line widths, and dash and dot gaps.
+// - Trap: an unknown kind draws as a COMPASS: a line and a dashed ring.
+// =================================================================================================
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Step 33i. The plot marks, drawn: a dot (POINT), a line with end dots (RULER), and a dashed ring
-/// with its bearing line (COMPASS), in own-force blue (UIStateSpec §8.4). Positions are given in
-/// board px; sizes are screen px, so marks keep their size across zoom (--lbl = 1 / zoom).
-/// </summary>
 public class MarksGraphic : MaskableGraphic
 {
     public struct Shape

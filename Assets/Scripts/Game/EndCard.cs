@@ -10,20 +10,28 @@
 //   mission is won.
 // - The line comes from the Campaign file, its Closing Line. An empty line skips to the title.
 // - The letters appear one by one, at Letters Per Second. The whole line then stays up for Hold
-//   Seconds. Both are on the Board tab of Starwolf → Tuning, with this scene open.
+//   Seconds. Both are on the Board tab of Starwolf > Tuning, with this scene open.
 // - Any key or click shows the whole line at once. Another one goes on to the title.
 // - It leaves the campaign first. The save already says CAMPAIGN COMPLETE.
 // - It reads keys through Unity's old Input class.
+//
+// Technical:
+// - Inspector fields: campaign (the Campaign file), line (the TMP_Text it types into), and
+//   titleScene ("00_Start" by default).
+// - Start calls SaveGame.Leave, copies campaign.closingLine into the text and hides every letter.
+// - Update shows more letters through maxVisibleCharacters, at lettersPerSecond. It times with
+//   Time.time.
+// - GoOn loads titleScene. The going flag stops a second load.
+// - EndScreenPanel loads this scene by name (its endCardScene, "EndCard"). It does so only when
+//   the Campaign file has a closing line and the scene is in the build.
+// - lettersPerSecond and holdSeconds are [Tune("End card")] numbers. They show in the Tuning
+//   window only with this scene open.
 // =================================================================================================
 
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// The end card (owner 2026-11-09): after the campaign's last mission is won, the story's closing line types in on
-/// black, then the title shows, with STARWOLF flickering in as it does on every return to the title (Step 188).
-/// </summary>
 public class EndCard : MonoBehaviour
 {
     [Tooltip("The Campaign file. Its Closing Line is the text shown.")]

@@ -1,15 +1,64 @@
+// =================================================================================================
+// BoardManager.cs
+//
+// What it does:
+// The main script of the battle board. It is on the board's top object in the battle scene.
+// It runs the game clock and takes every click on the board. It plays the board's beeps and tells
+// every panel when to redraw.
+//
+// How it works:
+// - On start it gives ShipState our ship's eight systems: NavSystem, PowerSystem, SensorSystem,
+//   CommsSystem, WeaponSystem, HangarSystem, DamageSystem and OrdersSystem. The panels read
+//   ShipState.
+// - Every 0.42 real seconds it moves the game on one step. The step's game time is set by the
+//   rate keys (x0.25, x1, x5). While paused, nothing in the game moves.
+// - Each step it moves the mission clock first. Then it runs power, orders, the helm, the battle
+//   space edge, shots, fighters and enemy fire. Next come repairs and fires, launches, the weapons
+//   charge, the lock, guns, sensors and comms. Then TacticalWorld and QuestSystem take their step,
+//   and every panel redraws.
+// - When our ship crosses out of the battle space, the rate drops to x1 and an alert plays.
+// - ClickSpot sends it each click, press, drag and mouse wheel turn. It does the tool rail, the
+//   drawer keys, pause, rate, the grid tint and the zoom itself. Any other click goes to each
+//   panel in turn.
+// - Keys 1 to 6 open the drawers, P pauses, Escape opens the pause menu. The keys are set in the
+//   Tuning window, Keys tab. HelmPanel, CommsPanel and PlotPanel read keys too.
+// - Zoom comes from dragging the SCALE knob or the mouse wheel over the plot. It passes the zoom
+//   to PlotGrid and turns the knob's pointer.
+// - Sounds are simple beeps it builds in code: clicks, the railgun, hits, misses, kills, alerts,
+//   the lock and an incoming radio message.
+// - The alarm strip shows one line at a time. It shows the first that applies, in this order:
+//   the battle space edge, what just hit us, and a rock ahead. Then incoming fire with its
+//   bearing, the mission's line, new contacts and a radio signal.
+// - A hit on us shakes the plot for half a second.
+//
+// Technical:
+// - Data: missionSeconds is the mission clock in game seconds. rate is the time rate. paused stops
+//   every step.
+// - One step is tickSeconds real seconds (0.42). Its game time is TickGameSeconds: rate x
+//   tickSeconds x gameSecondsAtX1. After a stall it drops the missed steps.
+// - State is our ShipState. The eight systems are set in the Inspector, from the OwnShip object.
+//   Reading State before Awake still gives it the systems.
+// - Ticked fires each step after the ship systems. TacticalWorld and QuestSystem listen to it.
+// - Beeps: Update watches counters on WeaponSystem, HangarSystem and CommsSystem. A changed counter
+//   plays its beep. PlaytestRunner reads Sounds, LastSound and Tags.
+// - ClickSpot calls Click, Down, Up, Drag and Scroll. Panels get points in 1920 x 1080 board px,
+//   y down. PanelPoint takes off the shift on screens that are not 16:9.
+// - Struck and rockAlarm: TacticalWorld. Alert, Chime and missionAlarm: QuestSystem. LockCue and
+//   LockLost: PeriscopePanel. PlotPanel calls SweepTag, and Slide to glide shots and fighters
+//   between steps.
+// - Pause(on) is called by EndScreenPanel and QuestSystem. SetZoom is called by BattleSpace and
+//   PlaytestRunner. It clamps the zoom and rounds it to 0.01 (0.001 below x0.1).
+// - Numbers: [Tune] sections "Board & time" (step, zoom, shake) and "Sound" (each beep). The keys
+//   are on the Tuning window's Keys tab. Keys use the old Input Manager. Colours come from
+//   BoardPalette. Tint turns each colour to gamma first (GammaBoardPresenter).
+// - Trap: the rates list in the Inspector has x10 too. Its key is switched off in the TimeControl
+//   prefab. PlaytestRunner still clicks rate 10.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Step 33a. The board frame's controls, clickable with no game wiring: tool rail, systems keys
-/// and drawer latches, helm and orders headers, periscope carriage, pause and rate keys with the
-/// mission clock, the alarm strip, and the console's SCALE knob and grid-tint selector.
-/// Behaviour and every value are from the handoff's reference/UIStateSpec.md and board-logic.js
-/// (renderVals); colours are the design's sRGB values and are pre-encoded when applied, because
-/// the board blends in gamma space (GammaBoardPresenter). Later this state is fed by the game.
-/// </summary>
 public class BoardManager : MonoBehaviour
 {
     [System.Serializable]

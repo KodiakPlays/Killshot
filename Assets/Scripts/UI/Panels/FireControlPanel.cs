@@ -1,20 +1,67 @@
+// =================================================================================================
+// FireControlPanel.cs
+//
+// What it does:
+// The Fire Control drawer on the battle board. The player picks a weapon: the railgun, PDCs or
+// torpedoes. They check the firing solution and the charge. Then they throw four arming rockers
+// and pull the fire lever. It is on the Fire Control prefab. The test version in the Fire Control
+// Codex scene uses it too. That version has a target monitor and a big FIRE button in place of the
+// lever.
+//
+// How it works:
+// - BoardManager passes it clicks. SIGHT raises or lowers the periscope. The weapon knob steps to
+//   the next weapon kind. The mount knob steps to the next gun, or the next warhead for torpedoes.
+//   TRACK asks WeaponSystem for a firing solution. Each rocker flips. FIRE fires once.
+// - Dragging the RNG, BRG or SPD knob sideways changes the solution one step for every 8, 6 or 8
+//   px. The fire lever follows the mouse. Near the end of its travel, with all four rockers
+//   set, it fires once per pull. Let go and it springs back.
+// - The TRACK key and the FIRE button drop 1 px while pressed. While a press would fire, the FIRE
+//   button's glow pulses once every 0.8 real seconds. Both numbers are in the Tuning window, under
+//   "Motion".
+// - BoardManager redraws it after every click and every 0.42 seconds. It reads WeaponSystem,
+//   PowerSystem, OrdersSystem and DamageSystem through ShipState.
+// - The top shows the gun's short name and a SIGHT lamp, lit while the periscope is down. It shows
+//   the periscope's bearing, and ON BEARING or how far off it is.
+// - The weapon section shows the chosen weapon and gun. The knob shows two guns at a time. It shows
+//   the weapon's arc, range and ammunition. A weapon's lamp turns red once it is armed.
+// - The firing solution shows where the track came from, and its range, relative bearing and
+//   speed. It turns the three knobs to match. The lamp is green with a solution and amber with a
+//   track.
+// - The charge section fills ten cells and marks the cost of one shot. It says if it is charged,
+//   charging, or draining with no power on the WEP bus.
+// - Each arming rocker shows thrown, ready or locked, with a hint. A locked rocker gives the
+//   reason: NO HARD POINT, NOT RELEASED, MAGAZINE HIT, NO WEP BUS, CHARGING, OUT OF ARC and so on.
+//   The status line names the first thing stopping a shot, or the shot's result.
+//   The railgun is fixed on the nose and needs no target, lock or solution. If the level keeps
+//   the railgun off, the first rocker and the status line show RAILGUN HOLD.
+// - In the Codex version, the monitor shows the target's name, and its picture once a Garuda is
+//   scanned. The picture hides while the periscope is down. The FIRE button reads FIRE FIRE FIRE
+//   and lights red when a press would fire.
+//
+// Technical:
+// - Data: the weapon state is in WeaponSystem. This script keeps only drag start points, the lever
+//   pull and the pressed keys.
+// - BoardManager calls Click, Down, Drag, Up and Refresh. Click actions: "fc.sight", "fc.system",
+//   "fc.mount", "fc.track", "fc.flip" (arg = rocker 0 to 3) and "fc.fire".
+// - Press and drag actions: "fc.knob" (arg = rng, brg or spd), "fc.lever", "fc.track", "fc.fire".
+// - It calls WeaponSystem: CycleSystem, CycleMount, CycleWarhead, ComputeSol, NudgeSol, Flip and
+//   Fire. SIGHT calls BoardMotion.ToggleScope.
+// - The lever writes WeaponSystem.fireLever, 0 to 1. It fires past HangarSystem.leverFireAt, the
+//   same mark as the launch lever.
+// - Numbers: the press drop and glow time are [Tune] fields under "Motion". Knob steps, lever
+//   travel and the Codex profile name are in the Inspector.
+// - Mount arcs, ranges and the speed step are in the weapons part of the ship stats file. Shot
+//   costs are in WeaponSystem.systems.
+// - The Codex parts (contact monitor, FIRE button) are empty on the board's prefab. Each use checks
+//   for empty. There are no controls for PDC loaders or torpedo salvo.
+// - Trap: PlaytestRunner reads the private trackId and sysState fields by name.
+// - Trap: the mount range is a number in units with "km" after it.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Step 33g. The Fire Control drawer: the SIGHT key and periscope bearing, the weapon system and
-/// mount selectors with the mount's readout, the firing solution (TRACK and the RNG/BRG/SPD knobs),
-/// the capacitor, the LOAD → ANGLE → BEARING → ARM ladder and the fire lever. Rules and values from
-/// board-logic.js (pickSystem/cycleSystem, cycleMount, computeSol, nudgeSol, stepKnob, flip,
-/// leverDown and the lever drag, drawWep, the capacitor in the tick; renderVals mountShort,
-/// sightLamp, scopeBrgLabel, brgEchoLabel/Ink, sysAngle, sysPositions, mountAngle, mountPositions,
-/// mountLabel, mountArc, mountRange, sysState/Ink, solLamp, trackId/Ink, trackSrc, solInk, solRange,
-/// solBrg, solSpd, rng/brg/spdAngle, capPct, capCells, capLabel, capInk, capLamp, capNote,
-/// interlocks, leverLeft, leverTrack, readyLabel/Ink) and UIStateSpec §8.2 and §11.
-/// The PDC (quadrants, LOADERS) and torpedo (warhead, SALVO) controls were never measured — the
-/// drawer was measured on RAILGUN — so they are not drawn (HANDOFF_GAPS); their state still shows.
-/// </summary>
 public class FireControlPanel : Panel
 {
     [System.Serializable]

@@ -15,13 +15,15 @@
 //   hangar bay or magazine damaged.
 // - The launch itself is refused with no craft ready, no marines, or, for boats, a target not
 //   scanned. The craft leave from the side facing fire control's target. If the hangar dot has a
-//   drawn line, they fly along it (Tuning window, Hard Points). Then they turn smoothly to the
-//   target.
+//   drawn line, they fly along it (Tuning window, Hard Points). They are thrown out fast and slow
+//   to their normal speed. At the end of the straight run they break hard onto the target, then
+//   turn smoothly.
 // - Every board step the craft fly on. Near the target, each fighter makes an attack run every so
 //   often and DamageSystem takes the hit. DESTROY hits the side facing them. DISABLE hits the end
 //   of the ship nearer its engine room. ESCORT stays near our ship.
 // - Assault boats dock only once the target has an open side and has nearly stopped. The marines
 //   fight aboard for a set time. Their chance to win is their number against the enemy defenders.
+//   Against a ship that cannot be destroyed, they always win.
 // - On a win the marines follow the order: DESTROY blows up the ship, DISABLE wrecks its engine
 //   room and magazine, SECURE captures it. A ship that cannot be destroyed is captured on
 //   DESTROY. A loss kills the marines.
@@ -33,19 +35,33 @@
 // - Our fighters see what is near them. SensorSystem uses this for ships. A rock in the way
 //   blocks the view. TacticalWorld uses it to show rocks and gas clouds.
 // - It writes each squadron's status line for the Hangar panel.
+//
+// Technical:
+// - Data: squads are "gw" (fighters) and "ih" (assault boats). stages are the six launch steps,
+//   0 to 100. Flights are the craft in the air.
+// - A Flight's x, y and hdg are in units and degrees. Speeds are in units per game second.
+// - ship is its ShipState. It reads the orders, power, damage, nav, fire control's target and
+//   the tracks.
+// - HangarPanel calls CycleSquad, CycleOrder, PressStage, ToggleDoors, SetLbrg, LaunchSquad and
+//   RecallSquad. It reads StageBlock, LaunchBlock, FlightStatus and LaunchDev.
+// - BoardManager calls TickLaunch and TickFlights each step, for our ship only. No other ship's
+//   hangar launches.
+// - Traps: squad keys "gw" and "ih" are used by name. Status lines say KM, but the numbers are
+//   units. Fly moves in slices of 0.05 game seconds. lbrg, the launch bearing, is only shown on
+//   the panel. LaunchSquad ignores it. FireControlPanel's fire lever reads leverFireAt from here.
+// - PlotPanel sets launchClearUnits, landClearUnits and launchSideUnits each frame from the zoom.
+//   It draws Flights.
+// - It calls TakeFighterRun and KillCrew on the target's DamageSystem. Boarding odds use
+//   ShipState.Roll.
+// - SensorSystem calls SeesShip. TacticalWorld calls Sees. EnemyBrain reads Flights. BoardManager
+//   watches boatWarnings. Ship calls KeepFighters and sets marines at the start.
+// - Numbers: HangarSystem.Stats, the hangar part of each ship's stats file. The hangar dots and
+//   lines are set in Tuning, Hard Points. Stage rates are in the Inspector.
 // =================================================================================================
 
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// Hangar: one ship's squadrons and what they do once launched. It holds the squadrons and their craft,
-/// the launch stages, the bay doors, the launch bearing and lever, the squadrons in flight, the fighters'
-/// attack runs, and the assault boats with the marines they carry. Our ship and every enemy carry one (the
-/// enemy is our ship with other stats). Owner 2026-10-26: the hangar lives in one place, here. Contacts,
-/// damage, crew and kills stay on the ship state (ShipState); this reads them. Rules from
-/// board-logic.js (SQUADS, LAUNCH_STAGES, stageBlock, launchBlock, pressStage, launch) and Steps 54 and 60.
-/// </summary>
 public class HangarSystem : MonoBehaviour
 {
     /// <summary>The ship this belongs to. The hangar reads its contacts, AUX bus, alert state, compartments,

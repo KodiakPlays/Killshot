@@ -1,15 +1,67 @@
+// =================================================================================================
+// TacticalWorld.cs
+//
+// What it does:
+// TacticalWorld is the real world behind the battle board: our ship, the other ships and the
+// level's rocks, in units (x east, y north). It is on the World object in the board scene. It
+// moves the other ships, checks crashes, and writes true bearings and ranges into the board.
+//
+// How it works:
+// - At start it places each other ship where its model is, with engines on. It drops board tracks
+//   with no ship. Then it loads the level scene on top: the one picked from the menu, or Level_01.
+//   A level already open in the editor plays instead.
+// - When a level loads, it hides every piece of terrain. It notes each piece's outline seen from
+//   above. It finds the gas clouds. Ships placed in the level, such as the battle group, join in.
+//   Each gets a new board track.
+// - The board steps the game forward, never while paused. Each step, every other ship updates its
+//   clock, EMP, repair team, fires, vacuum and radiation. Its EnemyBrain decides, and its
+//   NavSystem moves it. A wreck or a captured ship gets no throttle and drifts. A ship whose brain
+//   is off does not move.
+// - Then every ship's box is checked against the rocks and the other ships. The check runs every
+//   20 units along its way. A ship that hits something is pushed clear and bounces off slower. It
+//   takes damage by its speed through DamageSystem, at most once every 3 game seconds.
+// - A crash by our ship shows a COLLISION report on the board. If our ship will hit a rock within
+//   30 game seconds, the alarm strip shows ROCK AHEAD. It shows the seconds left, and the alert
+//   sounds.
+// - It marks our ship as in a gas cloud when enough of its box is inside one. Then it fills in the
+//   board's track list for each other ship. It writes the true place, heading, speed, course,
+//   bearing, range and rock interference.
+// - Terrain within sight range of our ship, or of our fighters, shows. The rest hides. A gas cloud
+//   inside the DRADIS circle is marked as seen. Inside sight range it is marked as in sight.
+// - Rocks make interference. Each rock on the line takes units off DRADIS and scan reach. So does
+//   each rock close to the far ship. A rock on the line blocks sight. Enemies use the same rule.
+//   As the DRADIS sweep passes, rocks inside the ACTIVE SCAN cone leave an echo for the plot.
+// - For enemy steering it finds the nearest heading with a clear way ahead. If every way is blocked
+//   and the ship is touching something, it heads straight away from it.
+// - EnemySpawn and PlayerSpawn call it to place ships and set up enemies. QuestSystem asks if any
+//   enemy is ALERT and adds arriving ships. SensorsPanel asks how many enemies hear us.
+//
+// Technical:
+// - Inspector: board, dropTracksWithoutContact and levelScene (Level_01). LevelFolder is
+//   Assets/Scenes/Levels. ScreenFlow.Play sets the static chosenLevel.
+// - Data: contacts (WorldContact) and brains (EnemyBrain), side by side. The ruins list keeps each
+//   terrain piece's centre, half size, outline and reach, in units.
+// - Awake gives ShipState its RockOnLine and ShipOf(key) lookups. It adds OnTick to board.Ticked.
+// - OnTick: each contact's clock, EMP, TickParty, TickConditions, Think and nav.Tick. Then
+//   Collide, WarnRocks, InClouds, Sync and SeeRuins.
+// - Sync() writes each track's worldX, worldY, worldHdg, speed, course, bearing, rangeUnits and
+//   interference. Bearing() is whole degrees, 0 north, clockwise.
+// - Crashes test box corners against each piece's outline, seen from above. Crash() calls
+//   DamageSystem.TakeCollision, then board.Struck for our ship.
+// - Callers: EnemySpawn, PlayerSpawn, QuestSystem (AnyAlert, AddContact), SensorsPanel
+//   (HearingUs), PlotPanel (SweepRocks, RockEchoes, Clouds). EnemyBrain calls Interference and
+//   ClearHeading.
+// - Numbers: [Tune("Sensors")] for rock interference, [Tune("Crashes")] for crashes and ROCK AHEAD.
+//   Terrain is anything on the WorldTerrain layer.
+// - Trap: each piece's outline is measured once, when its level loads. Moving a rock in play mode
+//   leaves its hit area behind.
+// - Trap: solid is not saved. PlaytestRunner sets it false to switch every crash off.
+// =================================================================================================
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Step 34. The real world behind the tactical board: our ship and the contacts, in units
-/// (1 unit = 1 units, x east, y north). Once per board tick it writes each contact's true bearing and
-/// range into the board's track list, so every board rule reads real numbers. It never runs per
-/// frame; it steps inside the board's single timer (UIStateSpec "One timer").
-/// Owner decision 2026-10-17: a new world feeds the board; the old Radar / EnemyShip / PlayerShip
-/// scripts are not used.
-/// </summary>
 public class TacticalWorld : MonoBehaviour
 {
     [SerializeField] private BoardManager board;

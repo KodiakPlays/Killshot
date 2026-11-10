@@ -22,34 +22,38 @@
 //   signal: read a radio message, then hear the target on DRADIS. Jump point: reach it.
 // - Flight drill: the steps run in order. Each step's note replaces the last and a soft tone
 //   plays. A step can grow the map from the middle over 3 real seconds. A step can end the
-//   level's weapons-off. When a step asks us to close on a ship, the alarm strip shows its
-//   bearing and distance once DRADIS hears it. A step that names a ship the level lacks logs a
-//   warning, since it can never finish.
+//   level's weapons-off. A step can ask us to close on a ship. Once DRADIS hears it, the alarm
+//   strip shows its bearing and distance. A step that names a ship the level lacks logs a
+//   warning. That step can never finish.
 // - The help bubble waits until the plot grid has formed. A click closes it. A small icon on the
 //   board opens it again.
 // - At the end it pauses the board and clears its line on the alarm strip. On a win it saves the
 //   damage and the win through SaveGame. EndScreenPanel reads how the mission ended.
+//
+// Technical:
+// - Data: Stage, FailReason and Goal. targetKey is the target's track key, t07 by default.
+//   StartedAt is in game seconds. EndedAt is in real seconds.
+// - Its step runs on BoardManager.Ticked. It writes board.missionAlarm and missionCount. It calls
+//   board.Alert, Chime and Pause.
+// - Mission sets Goal and calls PlaceJumpPoint, StartDrill and ShowHelp. BoardManager calls
+//   ToggleHelp from the briefing icon.
+// - PlotPanel reads ExitOpen, ExitAt, ExitReachUnits and ExitName to draw the ring. In a drill,
+//   these come from the step's ring.
+// - EndScreenPanel reads Stage, FailReason, Goal, TargetKey, StartedAt and EndedAt.
+// - Reinforcements start on TacticalWorld.AnyAlert. Arrive copies the reinforcement contact
+//   through TacticalWorld.AddContact, with keys r1, r2 and on.
+// - SaveGame: PutDamage in Start. KeepDamage and Won(TacticalWorld.chosenLevel) on a win.
+// - A drill step's map grows in Update, in real time. It sets ShipState.arenaWidthUnits and
+//   arenaHeightUnits.
+// - Numbers: the "Mission" [Tune] section on the Tuning window's Board tab. targetKey and the
+//   reinforcement contact are in the Inspector.
+// - Traps: arrivals use Unity's Random. Hit unseen wins on WeaponSystem.lastShotHit: a hit on any
+//   ship. The strip says KM, but the number is in units.
 // =================================================================================================
 
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// The mission: what wins it and what loses it. Soham Aradhye's quest system from the GDD ("Quests"), on
-/// the board's tick since Step 85: it reads the ships' own flags. No popups or journal; the alarm strip says
-/// what changed, and the end screen (EndScreenPanel) shows how it ended.
-///
-/// Wolf Hunt (owner 2026-10-27), in order:
-/// - Find the target (our sensors identify it), then destroy or capture it.
-/// - Then a jump point appears at a far edge of the battle space (the GDD's escape, spec Rule 15.2.a). Our ship
-///   reaching it wins.
-/// - When the Garuda finds us (its awareness reaches ALERT), the alarm says REINFORCEMENTS INBOUND and a
-///   countdown starts (Step 99).
-/// Lose: our ship destroyed (its reactor at 0), or lost at the battle space's edge. When it ends, the board pauses.
-///
-/// The training levels (owner 2026-10-29, FTUE_PLAN §0): a level's Mission sets another goal. Each is won or lost
-/// the moment it is met, with no jump point.
-/// </summary>
 public enum QuestStage
 {
     NotStarted,

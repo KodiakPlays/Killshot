@@ -1,3 +1,46 @@
+// =================================================================================================
+// CommsManager.cs
+//
+// What it does:
+// An older radio game: a signal comes in, the game pauses, and the player tunes in to catch it.
+// It is on an object in TestScene and works with the older UIController screen.
+// The battle board does not use this script. The board's comms are in other scripts.
+//
+// How it works:
+// - The file describes a Signal: a frequency, a band (1, 2 or 3) and a message. A Signal has a
+//   time limit, 30 seconds by default, and may be coded.
+// - At the start it hides the comms panel through UIController and finds the PlayerShip.
+// - When a signal comes in, it opens the comms panel and pauses the game. It ignores the signal
+//   if one is already being tuned or the ship is at hyperspeed.
+// - While tuning, every frame, keys 1, 2 and 3 pick the band. The left and right arrows move the
+//   frequency by 0.1, between 1 and 99.9.
+// - The panel's strength light goes grey on the wrong band. On the right band it goes from red to
+//   green as the frequency gets closer. A tone rises in pitch.
+// - A timer counts the time limit in real seconds. When it runs out, the panel closes and the
+//   game un-pauses.
+// - A lock check needs the right band and a frequency within 1.0. It plays a sound and adds the
+//   message to the comms log. Nothing in the script calls this check. It never runs.
+// - It can make a random test signal with a fixed sample message. No scene or script asks
+//   for one.
+//
+// Technical:
+// - Data: currentSignal, currentBand (1 to 3), currentFrequency (1 to 99.9) and isIntercepting.
+// - ReceiveSignal(signal) starts the tuning. No script calls it. No script or scene calls
+//   GenerateTestSignal, OnFrequencyChanged or FrequancyTune either.
+// - It pauses with Time.timeScale = 0 and sets it back to 1 on close. The timer counts
+//   Time.unscaledDeltaTime.
+// - It calls UIController.Instance: ShowCommsPanel, SetCommsBand, SetCommsFrequency,
+//   SetCommsSignalStrength, AddCommsLog and FrequancyTune.
+// - It finds the PlayerShip once at the start and reads its IsInHyperspeed.
+// - Keys are read through the old Input Manager (Input.GetKey).
+// - Numbers: signalLockTolerance (1.0) and the sounds are in the Inspector. The 0.1 step and the
+//   strength fade over 10 are fixed in code.
+// - Trap: the arrows move 0.1 per frame. Tuning speed depends on the frame rate.
+// - Trap: maxSignalRange and Signal.isEncrypted are never read. TryLockSignal is private and
+//   never called.
+// - The Signal class is in this file, in the global namespace. No other script uses it.
+// =================================================================================================
+
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;

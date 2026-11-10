@@ -10,25 +10,36 @@
 // How it works:
 // - It names the board track the ship drives, for example t07 for the Garuda.
 // - The friendly setting marks a ship of our battle group. Its name and class on the board are
-//   read from the object's name, for example INDRA and CARRIER.
+//   read from the object's name, for example INDRA and CARRIER. Any ship placed in a level is
+//   named the same way.
 // - The cannot-be-destroyed setting marks a mission ship that must stay in the fight. It is
 //   copied into the ship record.
 // - The object needs the same ship parts as our ship: NavSystem, PowerSystem,
 //   SensorSystem, CommsSystem, WeaponSystem, HangarSystem, DamageSystem and OrdersSystem.
 // - The first time another script asks for its Ship, it builds one ship record from those parts.
 //   The enemy runs on the same rules as our ship, with different numbers.
-// - TacticalWorld finds every WorldContact under it and moves them. It writes their bearing and
-//   range into their tracks. EnemyBrain needs one on the same object.
+// - TacticalWorld finds every WorldContact under it and in the level, and moves them. It writes
+//   their bearing and range into their tracks. EnemyBrain needs one on the same object.
 // - ShipView, PlotPanel and PeriscopePanel use it to tell an enemy's model from ours.
+//
+// Technical:
+// - Fields: trackKey (text, matches a ShipState.Track key), friendly and cannotBeDestroyed.
+// - RequireComponent adds the eight ship parts when the script is added.
+// - Ship is built on first read. It calls ShipState.UseNav, UsePower, UseSensors, UseComms,
+//   UseWeapons, UseHangar, UseDamage and UseOrders.
+// - cannotBeDestroyed is copied into the record. DamageSystem then keeps the reactor at 1 or more.
+//   In HangarSystem our marines always win, and a DESTROY boarding becomes a capture.
+// - ShipState.ShipOf(key), set by TacticalWorld, finds a contact's Ship by trackKey. QuestSystem
+//   keeps the switched-off reinforcement template as a WorldContact.
+// - Trap: two contacts with the same trackKey drive the same track. ShipOf returns the first.
+// - Trap: cannotBeDestroyed is read once, when Ship is built. A later change does nothing.
+// - TacticalWorld reads friendly when a ship joins. It sets the track's name and friendly flag.
+// - Placed on the Garuda and the template in 02.1_Grid and Fire Control Codex. Also in the
+//   Orientation level and the three battle group prefabs.
 // =================================================================================================
 
 using UnityEngine;
 
-/// <summary>
-/// Step 34. A contact in the tactical world: where it is (this transform, in units) and which board
-/// track it drives (ShipState.tracks, by key). TacticalWorld reads it once per board tick.
-/// Its NavSystem, on the same object, moves it; its PowerSystem powers it; its SensorSystem hears and scans; its CommsSystem listens; its WeaponSystem fights; its HangarSystem launches; its DamageSystem takes the hits; its OrdersSystem sets the alert.
-/// </summary>
 [RequireComponent(typeof(NavSystem), typeof(PowerSystem), typeof(SensorSystem))]
 [RequireComponent(typeof(CommsSystem), typeof(WeaponSystem), typeof(HangarSystem))]
 [RequireComponent(typeof(DamageSystem), typeof(OrdersSystem))]

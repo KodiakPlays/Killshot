@@ -1,3 +1,29 @@
+// =================================================================================================
+// Shell.cs
+//
+// What it does:
+// One cannon shell for the older physics weapons. Macrocannon and BroadsideCannon fire it.
+// No prefab has this script. The battle board does not use this script.
+//
+// How it works:
+// - The gun that fires it gives it a speed, a direction and a damage amount.
+// - Every frame it moves itself along that line.
+// - It removes itself after 15 seconds.
+// - When it passes into something, it deals its damage through IDamageable, if that thing can
+//   take damage. Then it removes itself. Unity only reports this when one of the two is set as
+//   a trigger.
+//
+// Technical:
+// - Initialize(velocity, damage) is called by Macrocannon and BroadsideCannon, right after they
+//   make the shell. The velocity is in units per second.
+// - It moves by setting transform.position each frame, outside physics.
+// - Trap: BroadsideCannon also sets the shell's Rigidbody velocity. A moving Rigidbody then
+//   doubles the shell's speed.
+// - Trap: Unity needs a Rigidbody on the shell or on the thing hit, or no hit is reported.
+// - Trap: it does not skip the ship that fired it. Any trigger touch removes it.
+// - Numbers: the 15-second life is fixed in code. Speed and damage come from the gun.
+// =================================================================================================
+
 using UnityEngine;
 
 public class Shell : MonoBehaviour

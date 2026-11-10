@@ -1,14 +1,44 @@
+// =================================================================================================
+// ShipRooms.cs
+//
+// What it does:
+// Our ship between campaign missions. It is in the Ship scene. There is a tab for each room, and
+// a SECTOR MAP tab to go on. Each room is one picture with people in it. Click a person to talk.
+//
+// How it works:
+// - The rooms, their tabs, their pictures and their people are set in the Inspector. Each person
+//   has a picture button and a list of lines. Each line has up to three answers.
+// - When the scene opens, it shows the first room. A picture with art on it loses the grey tint
+//   of the stand-in box.
+// - Clicking a tab shows that room, hides the others and closes the talk box. The picked tab's
+//   name turns amber.
+// - Clicking a person opens the talk box with their picture, name and first line.
+// - Each answer button leads to another line, or ends the talk. A line with no answers shows a
+//   single LEAVE button.
+// - The damage report shows each part of our ship that is not whole, from the save in SaveGame.
+//   With no damage it says ALL PARTS WHOLE.
+// - REPAIR ALL shows only while there is damage. A click clears the damage in the save.
+// - The SECTOR MAP tab loads the SectorMap scene.
+//
+// Technical:
+// - Data: rooms is a list of Room: name, view, tab and people. Each Person has a name, a picture
+//   Button and lines. Each Line has replies. A Reply's next is a line number from 0, or -1 to end.
+// - The Ship scene has four rooms: BRIDGE, ENGINEERING, HANGAR and QUARTERS.
+// - Start adds every click in code: tabs, people, answers, REPAIR ALL and the SECTOR MAP tab.
+// - Swap the paintings and people's pictures in the ArtList on the same object.
+// - SaveGame: it reads SaveGame.Current.damage and calls SaveGame.Repair. Outside the campaign the
+//   report says ALL PARTS WHOLE.
+// - EndScreenPanel opens the Ship scene after a campaign mission. No other script calls this one.
+// - Tab names turn to gamma before they are coloured. The canvas blends in gamma space.
+// - Trap: there are as many answer buttons as replyButtons. Extra replies in a Line never show.
+// - Numbers: the rooms, lines, colours and mapScene are in the Inspector.
+// =================================================================================================
+
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>
-/// The ship between missions (owner 2026-11-08): the board's metal frame with a tab for each room (BRIDGE, ENGINEERING,
-/// HANGAR, QUARTERS) and SECTOR MAP to go on. Each room is one 2D painting with people in it. Click a person and the talk
-/// box opens: their picture, their name, what they say and the answers you can pick. The paintings and pictures are
-/// stand-in boxes until the art comes: put it on the Art List on this object, one slot per painting and per person.
-/// </summary>
 public class ShipRooms : MonoBehaviour
 {
     [System.Serializable]

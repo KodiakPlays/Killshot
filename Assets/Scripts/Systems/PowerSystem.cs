@@ -1,12 +1,46 @@
+// =================================================================================================
+// PowerSystem.cs
+//
+// What it does:
+// One ship's reactor and its four power buses: ENG, WEP, SEN and AUX. Every ship has one. The
+// Power panel on the board shows our ship's buses and lets the player switch them.
+//
+// How it works:
+// - Each bus has a number of power units and a switch with three settings: VENT, STANDBY and DRAW.
+//   A click steps the switch one setting, and turns back at each end.
+// - Every whole second of game time, a bus on VENT loses one unit. Then a bus on DRAW gains one
+//   unit. It needs room on the bus and free units in the reactor. STANDBY keeps its units.
+// - The reactor's units and each bus's top come from the ship's stats file (the Tuning window).
+// - Reactor damage lowers the units it can give, never below 2. If the buses have more than that,
+//   the last buses lose units first, at once.
+// - The emergency load shed switch puts every bus on VENT and locks the switches. Released, every
+//   bus goes back to STANDBY.
+// - An EMP hit empties every bus, and they stay empty until the EMP wears off. A destroyed ship's
+//   buses stay empty.
+// - At the start of a level, TacticalWorld puts each other ship's ENG bus on DRAW and full. It
+//   does the same for them after an EMP wears off.
+// - Other systems read the units on each bus: speed and turning, weapons, sensors, the AUX charge
+//   and the ship's signal.
+//
+// Technical:
+// - Data: buses in the order ENG, WEP, SEN, AUX. fill is whole units. mode is Vent, Standby or
+//   Draw. dir is the way the switch steps next. shed is the load shed switch.
+// - PowerPanel calls CycleBus and ToggleShed. It reads ReactorCap, TotalFill and the buses.
+// - BusUnits(key) gives a bus's units. NavSystem, WeaponSystem, SensorSystem, HangarSystem and
+//   OrdersSystem read it.
+// - Tick(dt) runs each step, from BoardManager, for our ship only. bank keeps part seconds. A bus
+//   then moves one unit per whole game second at any rate.
+// - HoldToCap runs every step. Over the cap, the last bus in the list loses units first.
+// - ReactorCap reads the reactor room in DamageSystem. DamageSystem calls BlackOut on an EMP hit.
+//   TacticalWorld calls PowerEngines for the other ships.
+// - SensorSystem reads busSignalPerUnit for the ship's signal.
+// - Numbers: PowerSystem.Stats, the power part of each ship's stats file: reactorUnits, busMax and
+//   busSignalPerUnit.
+// - Trap: PowerEngines and QuestSystem take buses[0] as ENG. Keep the bus order.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// Power: one ship's reactor and its four buses (ENG, WEP, SEN, AUX). It holds each bus's units and
-/// selector and the emergency load shed, and fills or drains the buses once per board tick. Our ship and
-/// every enemy carry one (the enemy is our ship with other stats). Owner 2026-10-26: power lives in one
-/// place, here. Rules from board-logic.js (REACTOR_UNITS, BUS_MAX, BUSES, reactorCap, cycleBus,
-/// toggleShed, the power part of tickPower) and UIStateSpec §11 "Power: buses, standby and venting".
-/// </summary>
 public class PowerSystem : MonoBehaviour
 {
     public enum BusMode { Vent, Standby, Draw } // BUS_MODES order

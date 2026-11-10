@@ -1,17 +1,61 @@
+// =================================================================================================
+// HelmPanel.cs
+//
+// What it does:
+// The Helm panel on the battle board, for steering and speed. It shows the heading, the throttle
+// and the attitude hold keys. It shows the approach range and mode, and the ship's stability. It
+// reads the helm keys. It is on the Helm prefab. The movement rules are in NavSystem.
+//
+// How it works:
+// - BoardManager passes it clicks. An attitude key turns that hold on or off. A mode button picks
+//   the approach mode. The range arrows step the approach range. NavSystem makes each change.
+// - Pressing or dragging the throttle fader sets the throttle from -100 to +100 by the mouse's
+//   height: 0 in the middle, full ahead at the top, full reverse at the bottom. The limit is what
+//   the engine's power and the engine room allow at the press.
+// - Every frame it reads the keys, unless a text box is in use. Q and E slide the ship sideways
+//   while held, and every tap counts.
+// - W and S move the throttle 1 per tap. Held, they count faster and faster. After 2 seconds they
+//   have moved it 100. S goes on past 0 into reverse.
+// - A and D step the ordered heading. Held, they keep stepping, and the nose does not stop. With
+//   Shift held, A and D turn the ship slowly instead, for aiming the railgun.
+// - The keys are in the Tuning window, on the Keys tab. The timing for held keys is under "Helm".
+// - BoardManager redraws it after every click and every 0.42 seconds. It redraws itself after
+//   each key step. It reads NavSystem through ShipState.
+// - The header has a closed and an open form. Each shows the heading, the turn still to go and the
+//   throttle. It shows the G load, and MANUAL or AUTO. Each part moves along as the text before it
+//   grows.
+// - The fader's cap and lit track follow the throttle. The heading ring turns the short way over
+//   0.12 seconds. The chosen attitude key lights up, and a note names the hold. The chosen
+//   approach mode lights up.
+// - Stability shows as nine cells and a percent. The G load turns amber from 2.2 G and red from
+//   3.4 G.
+//
+// Technical:
+// - Data: the ship's motion state is in NavSystem. This script keeps the held key, its repeat time
+//   and when W or S went down.
+// - BoardManager calls Click, Down, Drag and Refresh. Click actions: "helm.att" (arg = hold key),
+//   "helm.mode" (arg = mode) and "helm.range" (arg = 1 or -1). The fader is "helm.thr".
+// - It calls NavSystem: ToggleAttitude, SetApproachMode, StepApproachRange, SetThrottle and
+//   StepOrderedHeading.
+// - Every frame it writes NavSystem.slide and fineTurn. Each Q or E tap adds to slideTaps. W and S
+//   write NavSystem.throttle directly.
+// - A W or S hold moves the throttle by 1 + 99 x (time held / hold time) squared. NavSystem's
+//   ThrottleCap limits it. The hold stops if anything else changes the throttle.
+// - Keys are read with the old Input Manager. They are [Tune] fields on the Keys tab. Key timing is
+//   [Tune] under "Helm".
+// - The fader well, cap sizes, header gaps and ring time are in the Inspector on the Helm prefab.
+//   The approach ranges are a field on NavSystem.
+// - Trap: thrWell is in board px and must match the art. The header layout expects a font with
+//   letters all the same width.
+// - Trap: the approach range shows units divided by 1000, with "k KM" after it. The G colour lines
+//   are in the code.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 
-/// <summary>
-/// The helm panel (Step 33h-1): the header readouts (closed and open), the throttle fader, the heading
-/// dial, the attitude hold keys, approach range and mode, the stability readout, and the A and D
-/// heading keys. Rules and values from board-logic.js (thrDown, setAtt, setApMode, apRangeUp/Down,
-/// onKey, gLoadNum, stabNum, the heading swing in tickPower; renderVals helmHdg, turnLabel, turnInk,
-/// hdgRing, helmThr, thrTrack, thrCapBottom, apAtt, apAttNote, apModes, apRangeLabel, apState,
-/// apLamp, gLoad, gInk, stabPct, stabCells) and UIStateSpec §11 "Helm". It shows the ship's
-/// NavSystem and passes the throttle, the keys and the clicks to it; the movement rules are there.
-/// </summary>
 public class HelmPanel : Panel
 {
     [System.Serializable]

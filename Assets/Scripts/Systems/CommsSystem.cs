@@ -1,11 +1,49 @@
+// =================================================================================================
+// CommsSystem.cs
+//
+// What it does:
+// One ship's radio. Our ship has one, and every enemy and battle group ship has one too. The Comms
+// panel on the board reads and changes our ship's radio. You tune to a message, lock onto it, then
+// turn four letter dials to decode it.
+//
+// How it works:
+// - The radio has a band (1 to 3) and a frequency (1 to 100, in 0.1 steps). It has a lock and
+//   four dials. Changing the band or the frequency drops the lock.
+// - The lock only takes when the frequency is within 0.3 of the message's frequency, on the
+//   right band.
+// - Each message is coded by shifting each letter by the four key numbers in turn. Once locked,
+//   each dial step shifts the letters back. The message reads true when all four dials match.
+// - With no real messages in the level, one fixed coded message is always on the air.
+// - When a level's ship sends real messages, TacticalWorld switches the radio to them. The radio
+//   starts quiet. EnemyBrain then sends a message now and then.
+// - A new message gets a random band, frequency and code, and the dials go back to A. It stays on
+//   the air for a set time. If it is not locked by then, it is lost.
+// - Decoding a real message marks it read and counts it. QuestSystem uses the count.
+// - It writes the Garuda's report in words: its heading, its speed to the nearest 5, and its
+//   bearing from our ship as one of eight directions.
+// - BoardManager plays a tone for each message that comes in and shows INCOMING SIGNAL on the
+//   alarm strip.
+//
+// Technical:
+// - Data: chan is the band, 1 to 3. freq is 1 to 100. dials are four numbers, 0 to 25, with A
+//   as 0. air is Quiet, OnAir, Read or Lost.
+// - freq and signalFreq are doubles. Float rounding would move the 0.3 lock window.
+// - CommsPanel calls CycleChan, SetFreq, LockSignal and StepDial. It reads TuneOff, Plaintext,
+//   Solved and air.
+// - EnemySpawn calls TacticalWorld.Signals. That calls UseRealSignals on our radio.
+// - EnemyBrain sends with Receive(Report(...), offAirAt). Waiting(now) turns a message not locked
+//   in time to Lost.
+// - BoardManager and EnemyBrain call Waiting each step. QuestSystem calls it in a jump point
+//   level. BoardManager watches signalsIn. QuestSystem reads messagesRead.
+// - Receive uses Unity's Random: band, frequency 5 to 95, key numbers 1 to 25. A key of 0 would
+//   read before a dial turns.
+// - Trap: only our ship's radio does anything. The radios on other ships are never read.
+// - Numbers: the fixed message, its band, frequency and key, and lockWindow are in the Inspector.
+//   Message timing is on the level's EnemySpawn.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// Comms: one ship's radio. It holds the band and frequency, the lock on a carrier, the four cipher dials,
-/// and the message it can hear. Our ship and every enemy carry one (the enemy is our ship with other stats).
-/// Owner 2026-10-26: comms live in one place, here. Rules from board-logic.js (SIGNAL, CIPHER_KEY, MESSAGE,
-/// vigenere, tuneOff, cycleChan, startTune, lockSignal, stepDial).
-/// </summary>
 public class CommsSystem : MonoBehaviour
 {
     [Header("Radio — SIGNAL, CIPHER_KEY, MESSAGE and the board's initial state")]

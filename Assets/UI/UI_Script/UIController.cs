@@ -1,3 +1,82 @@
+// =================================================================================================
+// UIController.cs
+//
+// What it does:
+// The main script of the older ship screens, made before the battle board. It draws power bars, a
+// hull readout, a scanner and the old DRADIS screen (named Radar in the code). It draws a grid
+// map, a weapons screen, a stability meter and a comms panel. It is on the Demo, Prototype,
+// Prototype Dev, UI and Canvas_CRT scenes. It is on the Canvas and PlayerShip prefabs too. The
+// battle board does not use this script.
+//
+// How it works:
+// - Only one copy runs. A second copy deletes the object it is on when it starts. Other scripts
+//   reach the running copy directly, by the script's name.
+// - At start it finds PowerManager, WeaponManager, HullSystem and PlayerShip in the scene. It sets
+//   up the power bars, the grid map, the DRADIS screen, the scanner and the screen static. It
+//   opens the map at its closest zoom.
+// - Power: one bar per PowerManager channel (engines, arms, bay, support, sig) and one for the
+//   reactor. Every frame it copies PowerManager's numbers onto the bars. It lights the switch of
+//   each channel drawing power. A switch click asks PowerManager to start or stop that channel.
+// - VENT asks PowerManager to drain all channels slowly. EMERGENCY VENT drains them at once. Small
+//   lights between the bars show the power flowing.
+// - Every 0.1 seconds it shows HullSystem's four sides (port, aft, prow, starboard) out of 100.
+// - Scanner: a slider sweeps back and forth every frame. Each new scan puts four coloured blocks
+//   at random places, one per side of the enemy ship. Space turns the block under the slider red.
+//   The ] key steps to the next ship in its contact list (BogieClass) and shows that ship's model.
+// - DRADIS screen: every frame the sweep turns 10 degrees a second. The / key draws a red
+//   contact mark at the sweep's bearing, fading over 3 seconds. The old DRADIS script asks it for
+//   one dot per target, and removes them again.
+// - Grid map: three zoom steps, 10x, 100x and 1000x. Three buttons pick a step, and PlayerShip
+//   steps through them on a game pad button. Each step changes the grid, the DRADIS range and the
+//   camera on the screen. It sets whether ships show as models or icons. PlayerShip keeps sending
+//   our position and turn. The grid and compass follow.
+// - Weapons screen: the railgun shot grows, flashes and fades, and shakes the view. Our laser draws
+//   a beam to the current target. Test keys: R fires the railgun and P our laser. Keys 0 to 4
+//   fire a laser at us from contacts 0 to 4.
+// - Weapon panel: the tab button steps to the next weapon and tells WeaponManager. FIRE plays the
+//   laser or railgun effect. It asks WeaponManager to fire at the target, or straight ahead with
+//   none. LOAD asks WeaponManager to load the active weapon. WeaponManager sends back the name,
+//   type, icon, status, ammunition and recharge to show.
+// - Stability: ShipStability sends the stability value. The meter shows it as a percent: white,
+//   amber below 25 percent, red below 10. ShipStability turns an alert text on and off.
+// - Comms: CommsManager shows or hides the signal panel. It sends the band, frequency, signal
+//   colour and message. Buttons turn a tuning dial, up to five full turns, and slide a marker. It
+//   has a step to connect the frequency slider (1 to 99.9) and the lock button. No script uses it.
+// - The railgun effect, an enemy laser and a key in TestUIKeyControler shake the view along a
+//   curve. They flash static on each screen. Tab and zoom changes flash static too. A speed meter
+//   shows PlayerShip's speed every frame.
+// - Some parts do nothing: the speedometer text, the cloak, repair and signal ghost buttons, and
+//   a commented-out block that adds contacts. No other script adds ships to its contact list.
+//
+// Technical:
+// - Data: UIController.Instance is the running copy. bogieList and currentBogieTarget are the
+//   contact list and the target. worldZoom is the map step: 0, 1 or 2.
+// - Power: uiPowerMetClass has one UIPowerClass per channel, then the reactor last. _pmSystems
+//   lists PowerManager's channels in button order: engines, arms, bay, support, sig.
+// - Saved buttons call ChargeBtn, VentBtn, FrequancyTune, WorldGridZoom and BtnBogieTab. No saved
+//   button calls BtnWepTab, BtnWeaponFire, BtnWeaponLoad or EmergencyVentBtn.
+// - PlayerShip calls UpdateCompass, WorldGridLocUpdate, WorldGridRotUpdate, GetWorldZoom and
+//   WorldGridZoom.
+// - ShipStability calls StabilityMeterStart, StabilityMeterUpdate and SetAlertActive.
+//   CommsManager calls the comms methods and FrequancyTune.
+// - WeaponManager and WeaponUIDisplay call UpdateWeaponDisplay and GetWeaponIcon. Railgun calls
+//   RailFire. The old DRADIS script calls CreateOrGetRadarBlip, DestroyRadarBlip and
+//   RadarBlipRadius.
+// - TestUIKeyControler calls RailFire, updateShipHit, UpdateSpeedometer and UpdateCompass.
+// - It calls PowerManager: ToggleDrawState, VentAllSystems, EmergencyVentSystemsOnly and the
+//   reactor numbers. It calls WeaponManager: SwitchToWeapon, FireActiveWeapon, LoadActiveWeapon.
+// - Each screen is an image with a shader. At start it gives each a new material. It then sets
+//   the shader's values by name, such as _PowerCur or _LaserFire.
+// - Numbers are in the code or the Inspector. None are in the Tuning window.
+// - Keys are fixed in the code and read with the old Input Manager: Space, /, ], R, P, 0 to 4.
+// - Trap: the contact list is empty in every saved scene and prefab. Keys 0 to 4 then stop with an
+//   error. P does too, with no target.
+// - Trap: AddBogie tests wepImageGo with "=" in place of "==". It clears the field, then uses it.
+//   Nothing calls AddBogie or RemoveBogie.
+// - Trap: with no PlayerShip in the scene, start stops with an error after its warning. The
+//   static flashes expect at least five static images.
+// =================================================================================================
+
 using System;
 using System.Collections;
 using System.Collections.Generic;

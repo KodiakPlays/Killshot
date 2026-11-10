@@ -1,3 +1,48 @@
+// =================================================================================================
+// EnemyShip.cs
+//
+// What it does:
+// An older enemy ship that flies as a physics object. It wanders, chases the player's ship,
+// circles it and shoots lasers at it. It is on the EnemyShip1 and EnemyShip2 prefabs, used in
+// the Prototype Dev scene. The battle board does not use this script.
+//
+// How it works:
+// - A type picked in the Inspector sets its numbers. Patrol uses the Inspector values.
+//   Stationary Defender cannot move, with 20 health and fast fire. Tank has 50 health and is
+//   slow. Interceptor is fast with 2 health. Sniper sees far, keeps its distance and has 2 health.
+// - At the start it adds a physics body if it has none and finds the object tagged "Player".
+// - Every physics step it picks a mode by distance to the player: wander, chase or fight.
+//   It drops back to wandering when the player is more than 1.15 times its sight range away.
+// - Wander: it flies at half thrust to random points near where it started. After losing the
+//   player, it wanders near the place it lost them. With patrolEnabled off, it does not wander.
+// - Chase: it turns toward the player and flies at full thrust.
+// - Fight: it circles the player, or turns away if it is too close. When it faces the player,
+//   it fires a laser shot. The gap between shots is 0.5 seconds by default. Each type sets a
+//   different gap, from 0.2 to 1.2 seconds.
+// - When wandering or chasing, it casts five feeler lines ahead and steers toward the clearest.
+// - It caps its speed every physics step.
+// - Laser shots take health off it directly. The old Railgun kills it in one hit. Other guns use
+//   IDamageable. At zero health it makes a burst of particles and removes itself.
+// - In the Scene view, when selected, it draws rings for sight range, fight range and wander area.
+//
+// Technical:
+// - Data: currentHealth and maxHealth, in whole points. Distances and speeds are small scene
+//   numbers (sight range 30 by default). They do not match board units.
+// - EnemyShip1 is set to Tank and EnemyShip2 to Interceptor. Their presets replace most of the
+//   prefab numbers.
+// - fireRate is the gap between shots in seconds, counted with Time.time.
+// - TakeDamage(int) is called by Laser and by Railgun (9999). IDamageable.TakeDamage(float)
+//   rounds the damage to a whole number.
+// - GameManager spawns these prefabs and sets patrolEnabled. BroadsideCannon looks for them as
+//   targets.
+// - FireLaser makes a copy of laserPrefab and calls Laser.Fire(direction, true).
+// - Numbers: all in the Inspector. The Tuning window does not show them.
+// - Trap: for any type except Patrol, Awake overwrites the Inspector numbers with the type's set.
+// - Trap: in open space all five feelers are equally clear. It takes the first, 60 degrees off its
+//   goal.
+// - Trap: damage of 0.5 or less through IDamageable rounds to nothing.
+// =================================================================================================
+
 using UnityEngine;
 
 public class EnemyShip : MonoBehaviour, IDamageable

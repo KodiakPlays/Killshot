@@ -1,15 +1,45 @@
+// =================================================================================================
+// Rockers.cs
+//
+// What it does:
+// Makes the rocker switches on the battle board slide smoothly between up and down. It is on the
+// board's top object in the battle scene, next to BoardManager. Each rocker's picture shows a
+// fixed state. This script covers the jump with a short slide.
+//
+// How it works:
+// - The rocker groups and the rockers are set in the Inspector. Each group has a slide time and
+//   its thrown and locked pictures. It sets the pad's spot in the picture and how far the pad
+//   moves.
+// - The panels only swap a rocker's picture. Every frame, after the panels, this script checks
+//   each rocker for a new picture.
+// - On a change it shows a cover over the pad. Then it slides the old pad and the new pad from the
+//   old spot to the new one. The new pad fades in. At the end the cover and both pads hide again.
+// - A change while the rocker is hidden (its drawer shut) is only noted. No slide plays.
+// - Before BoardManager acts on a click, it asks this script. A rocker that shows its locked
+//   picture dips a little and springs back. BoardManager plays the refused sound. It still passes
+//   the click on to the panels.
+// - It runs on real time and keeps moving while the game is paused. The slide and dip times are in
+//   the Tuning window, Board tab, Motion.
+//
+// Technical:
+// - Data: families have a slide time, the pad's cut-out (image px), travel (px), and the thrown
+//   and locked pictures.
+// - rockers each have an image, a cover, two pad images, a family number, and an action and arg.
+//   The action and arg match the rocker's ClickSpot.
+// - BoardManager finds it on the same object. It calls Refuse(action, arg) before each click.
+// - LateUpdate watches each rocker's picture. It runs after the panels have swapped pictures that
+//   frame.
+// - At rest the cover and both pads are off. The board then shows the plain picture.
+// - Numbers: each family's slide time and the dip size and time are in the "Motion" [Tune]
+//   section. Pad cut-outs and travel are in the Inspector.
+// - Trap: the cut-out takes the whole texture of the rocker's picture. Pictures packed in an atlas
+//   would cut wrong.
+// - Moving(action, arg) says if a pad moves now. PlaytestRunner calls it.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Step 40. Rocker pads slide (UIStateSpec §9.1: the pad's top on cubic-bezier(.3,1.5,.5,1), its
-/// background on ease; .14 s for the 30x38 and 24x32 rockers, .12 s for 22x30 and REBOOT). The handoff
-/// bakes each state into one sprite, so while a pad moves, a well-coloured cover hides the baked pad
-/// and two cut-outs, the old pad and the new, slide over it with the new one fading in. At rest all
-/// three are off and the board shows the sprite exactly as before. Panels only swap sprites; this
-/// follows them. A locked rocker that is clicked dips and springs back (owner, 2026-10-18; not in the
-/// design). The families and the rockers are set in the scene (the board builder that once filled them is gone).
-/// </summary>
 public class Rockers : MonoBehaviour
 {
     [System.Serializable]

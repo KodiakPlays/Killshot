@@ -5383,14 +5383,14 @@ Still not done. **This is the list to work from.** Read it before picking up any
 
 ### Done: a plain-English note at the top of every script (owner 2026-11-10)
 
-All 108 C# scripts in `Assets` now start with a note in plain English. It says what the script does
+All 109 C# scripts in `Assets` now start with a note in plain English. It says what the script does
 and how it works. Four writer agents wrote the notes. They read each script in full, one at a time.
 Four checker agents then read each note and the whole script again. They checked the English and
 every fact. 47 notes passed and 61 were fixed, for wrong facts and English slips. A tool then put
 each note above line 1, one script at a time. After each one it proved the code under the note is
 the same as before, byte for byte. No code changed. Nothing was commented out. The game scripts and
 the editor scripts were compiled outside Unity with Unity's own compiler. There were no errors. The
-old `/// <summary>` notes under each script's `using` lines are as they were.
+old `/// <summary>` notes were deleted later, in the Technical pass below.
 
 - `docs/SCRIPT_LIST.md`: every script, with what it does. It is made from the notes.
 - `docs/script-notes/`: the rules for the writers (`BRIEF.md`) and the checkers (`VERIFY.md`), the
@@ -5405,16 +5405,20 @@ old `/// <summary>` notes under each script's `using` lines are as they were.
   - Done: a tidy pass cut every note to short sentences. None is over 20 words. 13 scripts had been
     changed by other chats, so their notes were matched to the new code first. All 108 notes are
     checked again, the code under each is proven unchanged, and both sets of scripts compile.
-  2. Go through the script notes' bugs in "Bug list" with the owner. None is fixed.
+  2. Go through the script notes' bugs in "Bug list" with the owner. Only the enemy torpedo salvo bug
+     is fixed in code.
   3. Owner question: keep `docs/script-notes/` for running this again later, or delete it?
   4. Answered (owner 2026-11-10): yes. `CLAUDE.md` now says: when you change what a script does,
      update its note in the same edit, and a new script gets a note too.
-  - In progress (owner 2026-11-10, "yes, please"): each note gets a third part, "Technical:" (data,
-    who calls what, where the numbers are set, traps). Each script's old `/// <summary>` note is then
-    deleted, after its useful facts move into the new note. The job sheet is
-    `docs/script-notes/TECH.md`. Four writers, then four verifiers, one per list. Then
-    `notes_tool.py reapply` swaps the notes in and `dropold` deletes each old note. Each step
-    proves nothing else in the script changed.
+  - Done (owner 2026-11-10, "yes, please"): all 109 notes now have a third part, "Technical:" (data,
+    who calls what, where the numbers are set, traps). A new script, `EndCard.cs`, was added today.
+    Each note was brought up to date with today's code. Four writers, then four verifiers, one per
+    list. 53 notes passed and 56 were fixed (passed + fixed per list: 13 + 12, 16 + 18, 18 + 17,
+    6 + 9). The 81 old `/// <summary>` notes are deleted, after their useful facts moved into the new
+    notes. 28 scripts had none. A tool proved each script changed only in its top note and the
+    deleted old-note lines. The game and editor code compile with 0 errors. 35 bugs were found. They
+    are in "Bug list", under "Found by the Technical pass". The job sheet is
+    `docs/script-notes/TECH.md`.
   5. Nothing is committed yet.
 
 ### Open: the information hierarchy, a talk (2026-11-10, the owner's main priority)
@@ -5797,6 +5801,8 @@ triage below.
      in row 4.~~ **Done 2026-11-10.** It shows them.
   4. ~~The fight sums: `docs/scale-sim/scalesim.py` still plays the Step 180 rule (`next_room` with sides). Give it the
      rows and the spot where each shot lands (`enters_box` knows it), then run it with the Step 180 rule and the box,
+  **Later the same day:** the cause of the missing torpedo was a bug in `WeaponSystem.cs`. The Garuda's second
+  torpedo never left the queue. Fixed in code, not yet played. See "Bug list", "Found by the Technical pass".
      both on the new torpedo flight. Put the results in the sheet's "Room hits" tab: parts 1 and 2 (the layout and the
      hits to destroy) and part 4 (the fights). The geometry in part 3 stays. This also covers the Step 184 re-run above.~~
      **Done 2026-11-10.** The results are in the sheet and in `docs/ROOM_LAYOUT_PLAN.md`, "Step 186".
@@ -5918,6 +5924,79 @@ Found earlier in this log. The detail is under the heading named:
 - **The COMPASS eraser area is a square** (Step 36). See "Smaller, not built".
 - **On the amber grid, the sweep's tail uses the edge colour.** The design has a deeper red (Step
   43). See "Smaller, not built".
+Found by the Technical pass of the script notes (2026-11-10):
+
+- **`WeaponSystem.cs`, `LaunchAt`: an enemy torpedo salvo fired only its first torpedo.** The others
+  waited in the queue forever. Their cells were still spent. Nothing called `Release(dt, true)`. This
+  explains the Step 184 playtest result "only 1 of its 2 torpedoes". That result was put down to the
+  ripple's timing. **Fixed in code, not yet played (Ship Visual Artefact, 2026-11-10).**
+- `BoardManager.cs`, `TickAux` and the steps beside it: AUX, power, sensors, charge and launches move
+  on for our ship only. Other ships' AUX never fills. `EnemyBrain` repairs its magazine with
+  `DamageSystem.ApplyOrder` for free. This is not yet in "The Garuda does not follow our rules".
+- `QuestSystem.cs`, the HitUnseen goal: any hit we see wins, on any ship. It should need a hit on the
+  target. SilentShot has only one enemy today. The bug does not show there yet.
+- `QuestSystem.cs`, `Point`: the alarm strip shows "KM" after a distance in units. This is on the
+  jump point, checkpoint and NEAR lines.
+- `HangarSystem.cs`, `FlightStatus`: the RETURNING and OUTBOUND lines show "KM". The distances are in
+  units.
+- `NavSystem.cs`, `Steer`: there is no check for ENG power. Any ship still turns with ENG at 0 or under
+  EMP, ours too. "The Garuda does not follow our rules" lists this for the Garuda only.
+- `PeriscopePanel.cs`, `ViewOf`: the list of ship pictures is made once. A ship that joins later, such
+  as a reinforcement, never gets a picture in the targeting computer. `PlotPanel` has the same fault,
+  under "Small" above.
+- `PlotPanel.cs`, `TrackRailShots` and `TrackPdcBursts`: each redraw adds the frame's time. A frame
+  where the game steps or the plot is dragged redraws twice. Shot lines, PDC streams and the muzzle
+  timers then run fast. Only the picture is wrong.
+- **Older scripts the battle board does not use.** One line each:
+  - `UIController.cs`, `Update`: keys 0 to 4 read an empty contact list and crash. P sends an empty
+    target to `LaserFireCo` and crashes. This happens in every scene with this old UI.
+  - `UIController.cs`, `StartSpeedometerUpdates`: it logs "PlayerShip not found", then reads the
+    ship's turn rate anyway and crashes. `Start` stops there. The UI scene has no PlayerShip.
+  - `Asteroid.cs`, `Start`: the "Asteroid" tag is missing from the project's tag list. Setting it
+    gives an error.
+  - `Autopilot.cs`: Port and Starboard are swapped. Port puts the target on the right.
+  - `Autopilot.cs`, `FixedUpdate`: the left click is read with `GetMouseButtonDown` in the physics
+    step. Clicks can be missed.
+  - `CommsManager.cs`: the arrow keys move the frequency 0.1 each frame. A faster frame rate tunes
+    faster.
+  - `EnemyShip.cs`: in open space all five feelers score the same. It takes the first one and steers
+    60° off its goal.
+  - `Laser.cs` and `HullSystem.cs`, `DetermineHitSide`: the laser passes the way it travels.
+    `HullSystem` reads that as the way to the hit. A nose hit counts as aft. On the PlayerShip prefab,
+    `Shields` takes laser hits first and hides this.
+  - `PlayerShip.cs`: it calls `ControllerHaptics.StopAll` every physics step outside hyperspeed. Any
+    other controller buzz stops within one step.
+  - `PowerManager.cs`, Black Alert: it vents nothing. Its end-of-frame step writes over the Vent
+    settings in the same frame.
+  - `Shields.cs` and `Railgun.cs`, `ApplyDamage`: the railgun checks for `PlayerShip` before
+    `Shields`. On the PlayerShip prefab both are on one object. Railgun hits skip the shield.
+  - `Shields.cs`: a hit while the shield refills stops the refill. It starts again only after the
+    shield breaks again.
+  - `ShipStability.cs`: turning drains at most 3 a second (0.15 on the prefab). The meter refills at
+    5 a second. Turning alone never empties a meter above 10. The prefab's zone limits are 60 and 90.
+    The code's are 0.6 and 1.1. Every turn on the prefab counts as gentle.
+  - `BoardingPodLauncher.cs`, `LoadPod`: loading takes the pod from the ammo. `CanFire` needs ammo
+    above 0. The last pod loads but never fires.
+  - `BroadsideCannon.cs`: ammo never refills. Nothing calls `Reload`. On the PlayerShip prefab, range
+    and ammo are 0. It can never fire there.
+  - `Macrocannon.cs`, `ArmWeapon`: it counts the barrels before the 1-second load ends. Four quick
+    requests load four shells. The next shot reads a barrel that does not exist and errors.
+  - `Macrocannon.cs`: loading takes ammo. `CanFire` needs ammo above 0. Shells loaded with the last
+    ammo never fire.
+  - `Missile.cs`: blast damage falls off by the distance to each object's centre. An object whose
+    centre is past the 100-unit blast gets negative damage. It is healed.
+  - `MissileLauncher.cs`: a second lock request while a tube is locking runs two counts at once. The
+    lock comes in about 1 second.
+  - `Railgun.cs`: the tags HeavyArmor, Station, Asteroid and Debris are missing from the project's tag
+    list. The checks that stop the beam and remove rocks never match. Unity may also log a tag error
+    on each hit. Not checked.
+  - `Railgun.cs`, `Update`: switching guns while charging leaves `Update` early. The charge never
+    fires or ends. The charge rumble keeps going.
+  - `WeaponManager.cs`, `SwitchToNextWeapon` and `SwitchToPreviousWeapon`: with no gun slots, they
+    divide by 0 and error. `PlayerShip` can add an empty `WeaponManager`.
+  - `WeaponUIDisplay.cs`: the Broadside bar divides ammo by max ammo. With max 0, as on the
+    PlayerShip prefab, the bar gets a broken number (NaN).
+
 - **"HANGAR BAY DAMAGED — CANNOT SPOT CRAFT" shows when the hangar is only airless.** See
   "Play-through 2", item 5.
 - **The Garuda starts facing a random way.** The owner's rule: at the top, facing south. See "Found

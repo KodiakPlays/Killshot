@@ -1,3 +1,101 @@
+// =================================================================================================
+// PlotPanel.cs
+//
+// What it does:
+// The plot: the map in the middle of the battle board. It draws our ship, other ships, shots, rocks
+// and gas clouds on the grid. It draws the DRADIS circle and the player's POINT, RULER and COMPASS
+// marks. Zoomed in, a close-up shows ships and rocks as lit 3D models with real shot effects. It is
+// on the Plot prefab. Most of its numbers are in the Tuning window.
+//
+// How it works:
+// - At the start of a level the grid lines form over 4 real seconds. Then the rest of the plot
+//   fades in over 1.5 seconds. QuestSystem waits for this before it shows the briefing.
+// - While time runs, it redraws the whole plot every frame and the view follows our ship.
+//   Dragging the empty grid or pressing the arrow keys pans it and stops the following. C centres
+//   on our ship again. TacticalWorld centres it at a level's start point. The view stays inside
+//   the battle space unless our ship leaves it.
+// - With POINT, RULER or COMPASS picked, a press and drag on the plot draws a mark through
+//   ShipState. Marks stay put in space. A RULER end snaps to a POINT within 12 px. With ERASE
+//   picked, a click on a mark deletes it.
+// - A POINT shows the mission time of its placing. A RULER shows its length, and with the railgun
+//   picked, the slug's flight time too. A RULER from one POINT to another shows the target's course
+//   and speed. A dashed line shows where it will be 300 seconds later. A COMPASS shows its length
+//   and bearing, and its ring is marked like a compass.
+// - Numbers along the top and left edges give the distance from our ship, in units. They follow
+//   the grid's square sizes.
+// - While DRADIS listens, a circle round our ship shows its hearing range. A small circle shows
+//   just outside the ship. With ACTIVE on, the scan cone is drawn out to the scan's range.
+// - The DRADIS sweep turns inside the circle in game time, faster with more gain. It stops while
+//   paused. It is invisible by default but still works. As it passes a ship, it fixes the ship's
+//   place. A ship under the ACTIVE scan cone gets scanned and a beep. It asks TacticalWorld to ping
+//   the rocks in the cone.
+// - A ship in visual range shows as a top-down picture of its model, from its ShipView camera. It
+//   is red once identified, blue for our battle group, and amber while unknown. Out of sight, a
+//   scanned ship is a dot at its last fixed place. The dot dims over 60 game seconds, and after 10
+//   seconds its label says how long ago. Labels give the name (or BOGEY) and range.
+// - A locked ship gets white corners and LOCKED. A heard ship not yet identified shows as a red bar
+//   on the DRADIS circle. The bar points at it and shows its bearing. The bar is brighter while the
+//   periscope is on it.
+// - A destroyed ship's picture splits in two at the point of the hit. The halves drift apart and
+//   turn slowly. Out of sight, its dim dot fades over 120 game seconds.
+// - Our shots and enemy shots are dots with fading trails that slide between updates. A ring grows
+//   where a torpedo's motor lights. Fighters are small white triangles in a V that opens as they
+//   leave the ship. It tells HangarSystem the distances for launching and landing.
+// - While Fire Control is open, it draws the chosen weapon's reach as a dashed ring, and the
+//   railgun's line. Each PDC group on AUTO shows its arc. A thin ring always shows the visual
+//   range. A Tuning switch draws each ship's collision box.
+// - A separate camera films the level's rocks from above. The picture is drawn over the grid.
+//   Rocks show inside the visual range of our ship and of each fighter flight. Past it, only their
+//   DRADIS echoes show: hollow circles that blink and fade over 30 game seconds. A gas cloud in
+//   sight shows as a cloud picture; past visual range, as a hollow circle.
+// - Zoomed in, a second camera films ships and rocks as lit 3D models over a nebula picture.
+//   Shots are glowing streaks: ours blue-white, theirs red. A torpedo is a small cylinder with a
+//   flare. Its plot dot and trail fade out as the close-up comes in. With no torpedo look set in
+//   the Inspector, a pale stroke stands in and the dot stays. Hits get a flash and kills a blast.
+//   Our railgun: a charge glows at the muzzle while it is armed, then a flash and vent gas as it
+//   fires. On the table its shot leaves a line that fades, and rings mark the charge and the shot.
+//   A POINT on the slug's path counts down to its arrival, then blinks IMPACT ?.
+//   Craft leaving the ship streak while the catapult's push lasts and flash as they break.
+//   PDC streams walk onto incoming torpedoes, dotted on the table and glowing in the close-up.
+//   A wreck's model is cut into two drifting halves. The effects run in game time. The sun's
+//   direction is in the Tuning window.
+// - Once the jump point opens, it shows as a green ring with its name. The playtest runner reads
+//   several of its parts.
+//
+// Technical:
+// - Data: viewX and viewY are the plot centre in units, x east and y north. Marks are in
+//   ShipState, in units.
+// - Screen(wx, wy) turns a world point into board px, y down. The scale is grid.PxPer1000Units for
+//   each 1000 units, times BoardManager.ZoomExact.
+// - BoardManager calls Click, Down, Drag, Up and Refresh. Actions: "plot" (marking tools),
+//   "plot.pan" (the empty grid) and "plot.erase" (arg = mark id, on ClickSpots it makes).
+// - Marks go through ShipState: MarkDown, MarkMove, MarkUp, PointNear, EraseMark, TrackLeg and
+//   MarkLen. The mark being drawn is ShipState.draft.
+// - Update forms the grid, turns the sweep, reads the C and arrow keys, and redraws while time
+//   runs. The sweep calls SensorSystem.See and NoteScan, BoardManager.SweepTag and
+//   TacticalWorld.SweepRocks.
+// - TacticalWorld calls CentreOnOurShip. QuestSystem waits on GridFormed. PlaytestRunner reads
+//   View, the sweep, rings and fighters. It reads viewX, viewY, labels and axisLabels by name.
+// - It makes two cameras in play: "Ruins View Camera" and "Close-up Camera". Each films into a
+//   separate picture. OnDestroy removes them.
+// - The close-up uses renderer number closeUpRenderer in PC_RPAsset, and the closeUpLook profile.
+//   While it films, ships out of sight and wrecks are switched off.
+// - Shot streaks are LineRenderers on the TransparentFX layer. Flashes and blasts are copies of
+//   particle prefabs. Their speed follows the game rate.
+// - Break cuts a wreck's mesh at Track.breakAt. The mesh needs Read/Write on. Without it the line
+//   picture stays.
+// - It ages WeaponSystem.Bursts and removes the finished PDC streams. The stream time is
+//   pdcStreamSeconds in the weapons part of the ship stats file.
+// - Numbers: most are [Tune] fields under "Plot & our ship", "Sensors", "Plot tools", "Periscope &
+//   fire control" and "Hangar & fighters". Keys are on the Keys tab.
+// - Trap: every redraw writes HangarSystem's launch and landing distances. They come from the
+//   small circle as drawn, in screen px. They change with zoom.
+// - Trap: the rail shot lines, PDC streams and muzzle timers grow by the frame time on each redraw.
+//   A frame with two redraws counts it twice.
+// - Trap: the sight cut takes at most four circles: our ship and three fighter flights. Labels say
+//   "km" for numbers in units.
+// =================================================================================================
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -5,14 +103,6 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Step 33i. The plot tools and plot clicks: POINT, RULER, COMPASS marks with their labels, ERASE
-/// (click a mark to delete it), the capture surface that takes the pointer only for the three
-/// marking tools, and the passive bearing label that puts the periscope on its contact (lookAt).
-/// Rules and values from board-logic.js (plotPt, plotDown, plotMove, plotUp, eraseMark,
-/// pressErase, lookAt, pickTarget, validSet; renderVals marksView, plotCapture, passives) and
-/// UIStateSpec §8.4.
-/// </summary>
 public class PlotPanel : Panel
 {
     [System.Serializable]

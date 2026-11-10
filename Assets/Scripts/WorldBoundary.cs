@@ -1,13 +1,41 @@
+// =================================================================================================
+// WorldBoundary.cs
+//
+// What it does:
+// The edge of the play area for the older physics player ship. A ship that stays outside too
+// long is charged with cowardice and destroyed. It is on an object in the Prototype Dev scene.
+// The battle board does not use this script. The board's edge rule is in ShipState.
+//
+// How it works:
+// - At the start it finds the object tagged "Player", if no ship is set in the Inspector.
+// - The play area is a circle around the centre of the world. By default the edge is 50,000 units
+//   from the centre.
+// - Every frame it checks the ship's distance from the centre.
+// - Within 5,000 units of the edge it gives a warning once and writes it to the Console.
+// - Past the edge a 30-second countdown starts. It tells anyone listening the time left each
+//   frame.
+// - Coming back inside the edge stops and resets the countdown. It tells listeners the ship is
+//   back.
+// - When the countdown ends, it removes the player's ship and writes COWARDICE to the Console.
+//   After that it stops checking.
+// - No script listens to its messages.
+//
+// Technical:
+// - Data: playableAreaRadius and warningDistance in units, desertionTimer in seconds.
+// - The centre is the world origin (Vector3.zero). The distance is a straight 3D distance.
+// - Events: OnBoundaryWarning, OnOutOfBounds, OnDesertionTimerTick(seconds left), OnDesertion and
+//   OnReturnedToBounds.
+// - Getters: IsOutOfBounds, IsWarning, GetDesertionTimeRemaining, GetPlayableAreaRadius and
+//   HasDeserted. No script calls them.
+// - Numbers: radius (50,000), warning distance (5,000) and countdown (30 s) are in the Inspector.
+// - Trap: it removes the ship object outright. HullSystem and GameManager never hear of it, and
+//   no defeat is written.
+// - The countdown uses scaled Time.deltaTime.
+// =================================================================================================
+
 using UnityEngine;
 using System;
 
-/// <summary>
-/// World boundary system per GDD spec.
-/// 
-/// If the player leaves the playable area, a warning and timer appear.
-/// If the player does not turn back in time, they are charged with cowardice
-/// and the ship self-destructs. The game ends and the player must restart the mission.
-/// </summary>
 public class WorldBoundary : MonoBehaviour
 {
     [Header("Boundary Settings")]

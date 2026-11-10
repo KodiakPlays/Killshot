@@ -1,3 +1,80 @@
+// =================================================================================================
+// PlaytestRunner.cs
+//
+// What it does:
+// This is the full playtest. It plays the game by itself in the editor and checks over 200
+// things on the way. It films the run and writes a report.
+// Start it from Starwolf > Playtest > Run power-up playtest.
+//
+// How it works:
+// - The menu item stops if play mode is on. It asks to save open scenes. It remembers the open
+//   scene and the Game view size. Then it opens 00_Start and enters play mode.
+// - When play mode starts it makes a folder in Logs/Playtests, named after the date and time. It
+//   deletes the video and screenshots of older runs. Only the newest two runs keep theirs.
+//   Every report.md stays.
+// - It films the Game view with Unity Recorder to playtest.mp4, at 30 frames a second. The game
+//   steps one video frame at a time. The film shows game time exactly.
+// - The run is one long list of steps. Each step waits for a time on the game's clock. Or it
+//   waits for something to become true, for up to 15 seconds. Then it checks a result.
+// - Each check adds a PASS or FAIL row to report.md. A FAIL also shows as a warning in the
+//   Console. Screenshots go into the shots folder at set points.
+// - It presses board controls where they are on screen, as a mouse would. Before each press it
+//   checks the control is on top there. A covered control is a FAIL.
+// - The intro menu and some keys use Unity's old input system. A script cannot press those. For
+//   those, the run calls the code the press would call. It starts with SKIRMISH, the Wolf Hunt
+//   level.
+// - On each fresh board it puts fixed test numbers into the ships' running copies: speeds,
+//   ranges, weapons, the map size, the enemy's and the mission's numbers. The stats files are
+//   not changed. It gives the ships the fighter and boat squadrons written in the code.
+// - Many steps use stand-ins. Where the real control is a drag, it sets the value by hand. It
+//   turns off damage chances and collisions, and moves ships into place. Most are put back after.
+// - First come the intro, the grid forming before the briefing, and the start state. Then power,
+//   signal and LOAD SHED. Then the plot tools, the helm, DRADIS, plotting a track and fire control.
+// - Next come hand-aimed railgun shots, leading a moving target, ACTIVE SCAN and the lock. Then
+//   torpedoes (HE, EMP, PEN), fighters, PDCs, our ship's death, assault boats and a fight to the
+//   kill.
+// - Then the Engineering ship picture, and fire, vacuum and radiation with their repairs. It
+//   checks that a moved room takes hits at its new row. Then MISSION COMPLETE, RESTART MISSION,
+//   the plot's zoom, the plot stopping at the map's edge, rocks and gas clouds. Then ENG power,
+//   the side slide, the nose railgun and radio messages. Then leaving the battle space, a lost
+//   reactor and MISSION SELECT.
+// - Last it checks the campaign through save slot 3. Then it empties that slot again. If slot 3
+//   already has a real save, it skips this part.
+// - At the end it writes PASS or FAIL with the counts and stops the film. It leaves play mode two
+//   seconds later. Then it reopens the scene you had and gives back your Game view size.
+// - An error in a step ends the run as crashed. Leaving play mode early ends it as stopped.
+//
+// Technical:
+// - [InitializeOnLoad] static class. It listens to playModeStateChanged from editor load. No
+//   other script calls it.
+// - Run() is the menu item. It saves three SessionState keys: the run's time stamp, the scene to
+//   go back to, and the Game view size. They survive the reload into play mode.
+// - The whole run is one IEnumerator, PowerUpRun(). Tick() steps it on EditorApplication.update.
+// - A yielded float waits that many seconds. A yielded Func<bool> waits until true, up to 15 s.
+//   Both go by Time.unscaledTime. The recorder can hold the game behind real time.
+// - Film: RecorderController, MP4 at high quality, Game view, 30 frames a second, no sound. An odd
+//   width or height is cut by one pixel.
+// - Output is Logs/Playtests/<date_time>/: playtest.mp4, report.md and shots/*.png.
+//   KeepRunsWithMedia (2) sets how many runs keep film and shots.
+// - Check(step, ok, detail) adds one report row. Shot(name) saves a screenshot.
+// - Click(action, arg, label) finds the ClickSpot with that action and arg. It fails if something
+//   else is on top at its centre. Most failed clicks and drags end the run at that step.
+// - Old-input presses: StarwolfIntroController.Activate(1) stands for SKIRMISH.
+//   PlotPanel.CentreOnOurShip() stands for the C key.
+// - PlotDrag() presses at one board pixel and lets go at another. The top ClickSpot must have the
+//   expected action, "plot" by default.
+// - Board pixels assume X1, the zoom that gives 60.9 px per 1,000 units. Many drag spots depend
+//   on it.
+// - WrittenNumbers() runs on each fresh board. It writes fixed numbers into Ship.Stats,
+//   BoardManager, EnemyBrain and QuestSystem. The stats files in Assets/Ships are untouched.
+// - Trap: many checks read private fields by name, through reflection. Renaming one breaks the
+//   run with no compile error.
+// - Trap: ClickSpot action names such as "drawer", "power.bus" and "fc.flip" are typed into the
+//   run. Renaming one fails its step.
+// - The campaign part uses SaveGame slot index 2, slot 3 on screen. It deletes that slot at the
+//   end.
+// =================================================================================================
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,17 +90,6 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>
-/// The standing end-of-feature playtest (owner, 2026-10-17): plays the real user flow — intro, menu
-/// NEW GAME, briefing, board — then sets up the ship, checking each step, and films the run with
-/// Unity Recorder. Output: Logs/Playtests/&lt;time&gt;/ — playtest.mp4, report.md, shots/*.png. Each run
-/// keeps video and shots for the newest KeepRunsWithMedia runs only; every report stays.
-/// Board controls are clicked where they are on screen, through the EventSystem, after checking the
-/// control is the topmost thing there (so a blocked control fails). The intro menu and the
-/// briefing's Enter are read through the old Input class, which a script cannot press, so the run
-/// calls what those presses call (StarwolfIntroController.Activate(0), ScreenFlow.Advance) and the
-/// report says so. Grows as features land.
-/// </summary>
 [InitializeOnLoad]
 public static class PlaytestRunner
 {

@@ -1,3 +1,61 @@
+// =================================================================================================
+// PlayerShip.cs
+//
+// What it does:
+// The older player ship, flown directly as a physics object with the keyboard or a game controller.
+// It is on the PlayerShip prefab, used in the Demo, TestScene, Prototype, Prototype Dev and
+// Canvas_CRT scenes. The battle board does not use this script. The board's ship is in Ship.
+//
+// How it works:
+// - At the start it finds, or adds, the parts it needs on the same object: a physics body,
+//   PowerManager, ShipStability, HullSystem, InternalSubsystems and WeaponManager.
+//   It finds TargetingSystem and the main camera.
+// - Every physics step: W speeds up, S slows down and then reverses, A and D turn. The top speed
+//   is 100 units per second times engine power, damage and hyperspeed. Speed changes by 50 units
+//   per second each second, 5 on the PlayerShip prefab. The ship always moves the way it faces.
+// - Turning drains ShipStability. With no stability left, the ship cannot turn and its aft hull
+//   takes 5 damage per second. Q and E dodge sideways 10 units in 0.2 seconds, when ShipStability
+//   allows it. The PlayerShip prefab sets the dodge to 50 units.
+// - Space or Left Ctrl fires the current gun through WeaponManager, if weapon power is above 20%.
+//   It aims at the target locked in TargetingSystem, or straight ahead. F2 lets guns fire with
+//   no power, for testing.
+// - Left Shift turns hyperspeed on and off. It needs engine power above 80%. It gives 4 times the
+//   speed and drains 2 engine power bars per second. It blocks dodging and firing. It turns off
+//   by itself when engine power runs out.
+// - Keys 1, 2 and 3 switch the engine, weapon and sensor power on PowerManager. V vents all power.
+//   N is Black Alert. The controller buttons, triggers and d-pad do most of these jobs. The
+//   controller can switch guns and change the zoom of the older map screen.
+// - It keeps the main camera on the ship, turned with it and tilted a little into turns. It sends
+//   the heading and position to the older UIController screen.
+// - Hits go to HullSystem. A laser hit straight on the ship picks the hull side by its direction.
+//   Hits through Shields and all other hits go to the front. When HullSystem says the ship is
+//   destroyed, it removes the ship.
+// - The old Railgun can put it on standby: the ship stops and takes no controls for a few
+//   seconds. Then PowerManager restarts the reactor.
+// - Holding F1 writes speed, turn, stability and power details to the Console.
+//
+// Technical:
+// - Data: currentSpeed and targetSpeed in units per second. turnRate is in degrees per second:
+//   90 in code, 20 on the PlayerShip prefab. The nose points along transform.up, on the XY plane.
+// - FixedUpdate sets rb.linearVelocity to transform.up times currentSpeed every step. Dodges move
+//   the body with MovePosition.
+// - Callers: Laser calls TakeDamage(damage, direction). Railgun, Shields and TestUIKeyControler
+//   call TakeDamage(damage). Railgun calls EnterRailgunStandby.
+// - UIController reads GetCurrentSpeed and turnRate. Autopilot reads turnRate. CommsManager reads
+//   IsInHyperspeed.
+// - It calls PowerManager (ToggleSystemState, ToggleDrawState, EmergencyVent, BlackAlert,
+//   RemoveEnginesPower, RebootReactor) and WeaponManager.FireActiveWeapon.
+// - Input is the old Input Manager. The axes ControllerThrust, LeftTrigger, RightTrigger, DPadX
+//   and DPadY are in ProjectSettings/InputManager.asset.
+// - Numbers: in the Inspector. The 100 top speed, 20% fire limit and 5 hull damage per second
+//   are fixed in code.
+// - Trap: with no engine power, the ship creeps forward at 5 units per second. Only S, or the
+//   stick pulled back, stops it.
+// - Trap: outside hyperspeed it calls ControllerHaptics.StopAll every physics step. Other buzzes
+//   get cut short.
+// - The drift settings and enginePowerDrainRate are in the Inspector but never read.
+// =================================================================================================
+
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;

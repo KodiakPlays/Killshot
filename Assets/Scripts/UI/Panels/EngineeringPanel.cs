@@ -1,14 +1,57 @@
+// =================================================================================================
+// EngineeringPanel.cs
+//
+// What it does:
+// The Engineering drawer on the battle board. It shows the damage to our ship: a top-down picture
+// coloured by armour, a row for each room (compartment), and the repair rockers. The player picks
+// a room and throws a rocker to repair it. It is on the Engineering prefab.
+//
+// How it works:
+// - BoardManager passes it clicks. The ACTING ON selector steps to the next room, and clicking a
+//   room picks it. A repair rocker asks DamageSystem to run that repair on the chosen room.
+//   DamageSystem refuses a blocked repair.
+// - BoardManager redraws it after every click and every 0.42 seconds. It reads DamageSystem,
+//   PowerSystem and OrdersSystem through ShipState.
+// - The ship picture has four parts: prow, starboard, aft and port. Each is white while its
+//   side's armour is full, amber once hit and red once gone. The picture's size is in the Tuning
+//   window, under "Engineering & orders".
+// - Each room row shows a ring of five segments for its health. It shows SEAL or VENT, its
+//   condition (NOM, FIRE, RAD) and its crew. Lit segments are white at 4 or 5, amber at 2 or 3, red
+//   below.
+// - The hazard line counts rooms with a condition or open to space, and adds up the crew.
+// - The next line lists what is broken: reactor power below full, the hangar, the magazine, the
+//   engine's thrust. With nothing broken it says ALL SYSTEMS NOMINAL. The line is cut short with
+//   dots if it does not fit beside the damage control party line.
+// - The party line shows the room the damage control party is working in. It shows the party's
+//   time so far against the time it needs, in game seconds. Otherwise it says STANDBY.
+// - The ACTING ON pointer turns to the chosen room. Its name shows, with a lamp in its health
+//   colour.
+// - Each rocker shows thrown, ready or locked. A note lists the repairs ready, or the first reason
+//   a repair is blocked, or NO WORK AVAILABLE. A rocker marked not fitted stays dark.
+// - The playtest runner reads its rows, ship picture and rockers.
+//
+// Technical:
+// - Data: rows and repairs are Inspector lists on the Engineering prefab. Each row has a room key.
+//   The fitted repair ids are party, seal, vent, reboot and recall. A sixth, dum2, is not fitted.
+// - BoardManager calls Click and Refresh. The actions are "eng.cycle", "eng.pick" (arg = room key)
+//   and "eng.run" (arg = repair id).
+// - It calls DamageSystem.CycleComp, PickComp and EngRun. EngRun spends AUX through OrdersSystem
+//   and throws the rocker.
+// - It reads DamageSystem: Comp, CompHealth, compartments, engSel, SideArmour, EngBlock and the
+//   party. It reads PowerSystem.ReactorCap and OrdersSystem.dcThrown.
+// - A rocker is thrown while OrdersSystem.dcThrown has "eng_" plus its id. BoardManager clears it
+//   when the flick time runs out.
+// - Each ring segment is a Wedge. The ship picture is four RawImages in hullSides.
+// - Numbers: the picture size is a [Tune] field under "Engineering & orders". Ring angles and row
+//   edges are in the Inspector. Party time and armour are in the damage part of the stats file.
+// - Trap: rowLeft and rowRight are board px. The degraded line's box is resized on every redraw.
+// - Trap: PlaytestRunner reads the private fields hullSides, rows and repairs by name.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Step 33e. The Engineering drawer: the ship schematic and compartment screen, the hazard,
-/// degraded and party lines, the ACTING ON selector, and the repair rockers. Rules and values from
-/// board-logic.js (cycleComp, pickComp, engBlock, engRun, applyOrder, flickBack, the party in the
-/// tick; renderVals compartments, hazardLine/Ink, degradedLine/Ink, partyLine/Ink, compName,
-/// compAngle, compLamp, engNote/Ink, engSwitches) and UIStateSpec §11 "Engineering".
-/// </summary>
 public class EngineeringPanel : Panel
 {
     [System.Serializable]

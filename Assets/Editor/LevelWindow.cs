@@ -1,3 +1,58 @@
+// =================================================================================================
+// LevelWindow.cs
+//
+// What it does:
+// This is the Level window (Starwolf > Level), an editor window for building levels. Each level is
+// a small scene in Assets/Scenes/Levels. The window opens a level on top of the battle board and
+// shows it from above as a map. You pick, move, resize, add and delete its parts there.
+//
+// How it works:
+// - At the top is a Save button for the open level. Below it is the list of levels, each with an
+//   Open button, then a New level button. Nothing works while the game is in play mode.
+// - Open loads the board scene, then the level on top of it. The Scene view turns to look down on
+//   the whole battle space. New level makes the next free Level_NN scene and adds it to Build
+//   Settings. Then it opens it the same way.
+// - The map draws the battle space's edge and a grid, numbered in units from the centre. Debris
+//   shows as grey dots and gas clouds as blue boxes. The enemy spawn and its route are red. The
+//   player spawn is a white P and the jump point is a J.
+// - The battle space size comes from the level's Battle Space if it has one. If not, it comes from
+//   the board's BoardManager. With no board open it uses 100,000 by 100,000 units.
+// - A click on the map picks what is under the mouse. A click on debris picks its whole group.
+//   Option-click picks one piece. What is picked shows in amber, with white squares on its edges.
+//   A picked debris field shows in amber where Scatter would put its pieces.
+// - Dragging moves the picked thing. Dragging a white square resizes it, or moves a point on the
+//   enemy's route. A resized debris field is scattered again by DebrisFieldEditor when you let go.
+// - Under the map you can type the battle space's width and height. A list shows every part of
+//   the level. The picked part shows its position, its normal Inspector settings and a Delete
+//   button. Debris groups, single pieces and the jump point show no settings.
+// - Each time the window redraws, it checks every spawn. A spawn outside the battle space, or in
+//   the edge's warning band, moves back. It goes to 500 units inside that band.
+// - Buttons at the bottom add new parts: enemy and player spawns, a battle space, a debris field, a
+//   gas cloud or a Mission. Each goes where the Scene view is looking. The battle space goes at the
+//   centre. A second press on player spawn or battle space picks the one already there. A new
+//   debris field gets the block, drum, girder, plate and rock prefabs from
+//   Assets/Prefabs/Terrain. It is scattered at once.
+// - All changes can be undone. They mark the level as changed until you press Save.
+//
+// Technical:
+// - Opened from the menu, Starwolf > Level. No other script calls it.
+// - Map space is world units, x east and y north. Grid lines are 500 units apart, doubled to fit.
+// - The board scene path is the Board constant (02.1_Grid). The level folder is
+//   TacticalWorld.LevelFolder. TacticalWorld loads the level on top of the board at play.
+// - Open loads the board, then adds the level. The board stays the active scene for its lighting.
+// - Size: BattleSpace.widthUnits and heightUnits. Without one, it reads arenaWidthUnits and
+//   arenaHeightUnits from BoardManager's state.
+// - Spawn margin: the board's arenaWarnUnits (1,000 with no board) plus SpawnPastWarningUnits
+//   (500).
+// - Debris pieces are Renderers on the WorldTerrain layer. A group is its DebrisField. Without one,
+//   it is the object one level below its root object, as in Terrain/Asteroid field 1.
+// - It calls DebrisFieldEditor.Scatter. The amber preview comes from DebrisField.Layout(). It is
+//   worked out again only when a field setting changes.
+// - Trap: the spawn check runs on every redraw. A level with a spawn outside is marked changed on
+//   open.
+// - Trap: a level must be in Build Settings to load at play. New level adds it there.
+// =================================================================================================
+
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,16 +61,6 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Starwolf → Level (owner, 2026-10-25). Each level is a small scene in Assets/Scenes/Levels, loaded
-/// on top of the board at play (TacticalWorld). Open one here and the window shows it from above (owner,
-/// 2026-10-27): the battle space's edge, every piece of debris as a dot, the spawn boxes, the gas clouds, and a grid
-/// with the plot's numbers. Click anything on the map, or in the list, and its settings show under the map. Drag it to
-/// move it; drag a white square to resize it (owner, 2026-11-01). A click on a piece of debris picks its group;
-/// Option-click picks that one piece. The map shows a picked debris field in amber, as Scatter would lay it out
-/// with those settings. Add parts with the buttons at the bottom. Save is at the top.
-/// World units: x east, y north.
-/// </summary>
 public class LevelWindow : EditorWindow
 {
     const string Board = "Assets/Scenes/Tactical/02.1_Grid.unity";

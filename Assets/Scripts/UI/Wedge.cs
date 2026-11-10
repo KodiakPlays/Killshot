@@ -1,11 +1,36 @@
+// =================================================================================================
+// Wedge.cs
+//
+// What it does:
+// Draws a filled pie slice inside its box on the battle board. The Sensors panel uses one for the
+// ACTIVE SCAN cone on its dial. The Engineering panel uses them for the ring pieces that show each
+// room's strength.
+//
+// How it works:
+// - The slice has a start angle and a width in degrees. 0 is straight up, and angles go clockwise.
+// - The panel that uses it sets the angles. The Sensors panel sets them from the cone's bearing
+//   and width. The Engineering panel sets a fixed ring of pieces for each room. It lights one
+//   piece per point of room strength.
+// - It fans out from the middle of its box to the rim. Wider slices use more pieces, up to the
+//   number set in the Inspector.
+// - It uses the colour set on it. The panel that uses it sets that colour.
+// - It converts the colour for the board's way of mixing colours. A switch in the Inspector turns
+//   this off.
+//
+// Technical:
+// - Data: fromDeg and sweepDeg (degrees, 0 up, clockwise), segments (the most pieces for a full
+//   circle) and gammaBoard.
+// - Set(from, sweep) changes the slice and redraws. SensorsPanel calls it for the scan cone.
+//   EngineeringPanel calls it for each piece of a room's ring.
+// - SensorsPanel passes the cone's bearing minus its half width, and twice the half width.
+// - It builds one UI mesh: a fan of triangles from the box's middle.
+// - The radius is half the box's shorter side.
+// - A slice of 0 degrees or less draws nothing.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// A filled pie slice in its rect: the active scan cone on the sensors dial. The board draws it as
-/// a CSS conic gradient whose stops the package does not give; the cone's angles and colour come
-/// from board-logic.js (coneKnobFrom, coneArc, coneInk). Angles are CSS: 0 up, clockwise.
-/// </summary>
 [RequireComponent(typeof(CanvasRenderer))]
 public class Wedge : MaskableGraphic
 {

@@ -1,11 +1,49 @@
+// =================================================================================================
+// ShipView.cs
+//
+// What it does:
+// A ShipView is a small camera that films one 3D ship model from straight above. It makes a
+// square picture, and the plot shows it as the ship. The board scene has one for our ship and one
+// for an enemy ship's model. More are copied during play.
+//
+// How it works:
+// - When it starts it makes a square picture, 256 pixels by default. Its camera films into it.
+//   It finds the Ship it is watching.
+// - Every frame, after everything has moved, it moves over its ship. The frame is sized to the
+//   ship's length from its stats file. The ship fills 80 percent of the frame by default.
+// - North stays up. The camera never turns, and the model turns inside the picture. For a wreck,
+//   the camera turns with the wreck, and the plot turns the picture instead.
+// - While this camera films, it hides every other ship's model. Each picture shows only its ship.
+// - A ship that joins during a level, such as one of the battle group, starts with no camera.
+//   TacticalWorld asks ShipView for one. It copies an enemy ship's camera and points it at the
+//   new ship. A big ship's copy gets a sharper picture: one pixel per 4 units of its length, up to
+//   2,048.
+// - PlotPanel uses the pictures to draw our ship and contacts on the plot. PeriscopePanel uses the
+//   enemy pictures in the targeting computer.
+// - The picture size, the ship's share of the frame and the units per pixel are in the Tuning
+//   window. They are under Plot and our ship.
+//
+// Technical:
+// - Needs a Camera. Inspector: target (the model's transform), then [Tune("Plot & our ship")]
+//   resolution (256 px), shipFill (0.8) and unitsPerPx (4).
+// - Awake() makes the render texture (ARGB32, linear, 4x smoothing). It adds itself to
+//   ShipView.All.
+// - LateUpdate() calls Follow(). The camera is orthographic, 2 lengths above the model. The
+//   frame's height is length divided by shipFill.
+// - Length comes from Ship.Stats.length, the stats file. Ship.FitModel sizes the model to it.
+// - Hiding: it listens to RenderPipelineManager begin and end camera events. It sets
+//   forceRenderingOff on every other Ship.All model while this camera draws.
+// - Give(ship) is called by TacticalWorld when a ship joins. It copies a view whose target is a
+//   WorldContact. With none in the scene, the new ship gets no picture. Sharpen() then sizes the
+//   copy's picture to a power of two, from resolution up to 2,048 px.
+// - Own() finds the view whose target is not a WorldContact: our ship.
+// - Readers: PlotPanel (Own, All, Texture, ShipFill, WidthShare) and PeriscopePanel (Texture,
+//   ShipFill, WreckHeading). Trap: PeriscopePanel lists the views once. Later copies are missing.
+// - PlotPanel sets WreckHeading for a wreck. Null means north up.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// A small camera looking straight down at one 3D ship in the tactical world, rendering it into a
-/// texture the board shows on the plot (owner 2026-10-17: our ship must appear on the plot, as
-/// the 3D model seen from above). The same setup will serve the future external viewports.
-/// North stays up: the camera follows the ship but never turns; the ship model turns.
-/// </summary>
 [RequireComponent(typeof(Camera))]
 public class ShipView : MonoBehaviour
 {

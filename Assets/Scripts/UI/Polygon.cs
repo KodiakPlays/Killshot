@@ -1,10 +1,29 @@
+// =================================================================================================
+// Polygon.cs
+//
+// What it does:
+// Draws a filled shape with straight sides, such as a triangle, inside its box on the board. It is
+// on the small arrows in the Helm panel prefab.
+//
+// How it works:
+// - The corners are set in the Inspector. Each corner is a share of the box: x from the left and
+//   y from the top, from 0 to 1.
+// - It fills the shape by joining the first corner to each pair of corners after it. It needs at
+//   least three corners. The shape must have no dents.
+// - It uses the colour set on it in the Inspector.
+// - Other scripts can give it new corners. No script does that now.
+//
+// Technical:
+// - Data: points, a list of corners as shares of the box (x from the left, y from the top).
+// - It is a UI graphic (MaskableGraphic). It builds its mesh in OnPopulateMesh.
+// - SetPoints(list) swaps the corners and redraws. No script calls it.
+// - Its default shape is a triangle pointing up.
+// - Trap: a shape with a dent fills wrong. Fewer than three corners draws nothing.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// A filled convex polygon over the rect: a CSS clip-path polygon(). Points are fractions of the
-/// box, x from the left and y from the top, as CSS writes them.
-/// </summary>
 public class Polygon : MaskableGraphic
 {
     [SerializeField] private Vector2[] points = { new Vector2(0.5f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) };

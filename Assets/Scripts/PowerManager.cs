@@ -1,3 +1,54 @@
+// =================================================================================================
+// PowerManager.cs
+//
+// What it does:
+// The power system of the older physics player ship. A reactor feeds five power channels:
+// engines, arms (weapons), bay, support and sig (sensors). It is on the PlayerShip prefab. The
+// battle board does not use this script. The board's power is in PowerSystem.
+//
+// How it works:
+// - The reactor has 15 power, 8 on the PlayerShip prefab. Reactor damage from InternalSubsystems
+//   lowers this. Each channel has 5 bars. At the start every channel is off at 0.
+// - Each channel is off, drawing or venting. Every frame, drawing channels fill at 0.5 bars per
+//   second, shared between all channels drawing. Each bar costs the reactor 0.5 power.
+//   A channel stops drawing when it is full.
+// - Venting empties a channel at 1 bar per second and gives the power back to the reactor.
+//   Venting cannot be stopped once it starts.
+// - Keys 1, 2 and 3 on PlayerShip step a channel through off, draw, off, vent, off. The power
+//   buttons in the Demo scene and the Canvas prefab do the same. The UIController panel buttons
+//   and the controller d-pad only switch between off and draw.
+// - Other code can add or remove one bar at once. Hyperspeed on PlayerShip uses this to drain
+//   engine power.
+// - Vent All vents every channel. Black Alert sets engines and arms drawing and the rest off.
+//   The older UIController screen can empty every channel at once.
+// - The old Railgun empties every channel at once and takes the reactor offline. No channel can
+//   draw until the reactor restarts.
+// - Other scripts ask it for a channel's power as a share of full (0 to 1). PlayerShip, Autopilot
+//   and the old Railgun use this.
+// - Each bar above the first gives a bonus. Among them are more engine push, slower stability
+//   loss and faster cannon loading. Full engine power unlocks supercruise. Only the stability
+//   bonus is read. PlayerShip reads it.
+// - PowerManagerEditor shows it in the Inspector. The older UIController screen shows the bars.
+//
+// Technical:
+// - Data: five PowerChannel objects (engines, arms, bay, support, sig). Each has a PowerState,
+//   whole bars (currentPower, maxPower 5) and a readyToVent flag.
+// - currentReactorPower is a float. GetReactorPower rounds it down. Each bar costs 0.5.
+// - GetSystemEfficiency(name) gives bars over max. Names: engines, arms or weapons, bay, support,
+//   sig or sensors. Any other name gives 0.
+// - Callers: PlayerShip, Railgun, UIController, InternalSubsystems (DrainSystemPower) and
+//   Autopilot.
+// - Scene buttons in Demo and the Canvas prefab call ToggleEngines, ToggleWeapons, ToggleSensors,
+//   ToggleCrew and ToggleShields. Renaming these breaks the buttons.
+// - ToggleCrew switches the support channel. ToggleShields switches the bay channel.
+// - Numbers: fill rate, vent rate and reactor size are in the Inspector. Start resets every
+//   channel to 0. Rates count scaled Time.deltaTime.
+// - Order: [DefaultExecutionOrder(-10)] runs it before UIController each frame.
+// - Trap: Black Alert vents nothing. Its end-of-frame step replaces the vent states in the same
+//   frame.
+// - Nothing sets finishingCurrentBar to true. The code that finishes a part-filled bar never runs.
+// =================================================================================================
+
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;

@@ -1,3 +1,44 @@
+// =================================================================================================
+// BroadsideCannon.cs
+//
+// What it does:
+// An older physics weapon: guns on the left and right sides of the player's ship. While fire is
+// held, each side locks onto an enemy beside the ship and fires a shell at it. It is on the
+// PlayerShip prefab, one of the guns WeaponManager switches between. The battle board does not
+// use this script.
+//
+// How it works:
+// - It is built on WeaponBase. That gives it range, reload time, ammo and damage settings.
+// - WeaponManager tells it fire is pressed, if it has ammo left. Fire counts as held for 0.2
+//   seconds after each press. When fire is let go, both sides lose their locks.
+// - While fire is held, every frame each side looks for EnemyShips within range and beside the
+//   ship: more than 45 degrees off the nose and off the tail. It picks the one nearest straight
+//   out from that side.
+// - Each side locks on after 2 seconds on the same target. A new target starts the count again.
+// - A locked side fires once its reload time has passed and ammo is left. Each shot uses one ammo
+//   and gives a controller buzz through ControllerHaptics. The lock then starts again.
+// - The shot goes straight out sideways from that side's fire point at 100 units per second.
+//   It works with a Laser shot or a Shell shot. A Shell gets the base damage times the damage
+//   factor.
+// - WeaponUIDisplay asks it for each side's lock and the lock progress.
+//
+// Technical:
+// - It extends WeaponBase. Fire(point) only stamps lastFireInputTime. The real firing is in
+//   Update.
+// - WeaponManager.FireActiveWeapon calls Fire after WeaponBase.CanFire passes.
+// - WeaponUIDisplay reads IsPortLocked, IsStarboardLocked, HasPortTarget, HasStarboardTarget and
+//   GetLockProgress.
+// - Targets: Physics.OverlapSphere at range, then EnemyShip on each hit collider or its parents.
+//   This runs twice per frame while fire is held.
+// - Numbers: shell speed (100) and lock time (2 s) are in the Inspector. Range, reload, ammo and
+//   damage are WeaponBase fields.
+// - The 0.2-second hold window and the 45-degree arc are fixed in code.
+// - Trap: the shot flies straight out sideways. It is not aimed at the locked ship.
+// - Trap: both sides share one ammo count. Ammo never refills.
+// - Trap: on the PlayerShip prefab its range, ammo, reload and damage are 0. It never fires there.
+// - Trap: WeaponManager buzzes the controller on every fire press. Each shot buzzes again.
+// =================================================================================================
+
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;

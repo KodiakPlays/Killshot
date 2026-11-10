@@ -1,3 +1,59 @@
+// =================================================================================================
+// StarwolfTuningWindow.cs
+//
+// What it does:
+// This is the Tuning window (Starwolf > Tuning), the editor window for changing game numbers. It
+// has six tabs: Ship, Enemy, Board, Keys, Hard Points and Ranges. Changes to a ship's stats file
+// are saved at once. A running game uses them at once.
+//
+// How it works:
+// - Ship shows our ship's stats file from the open scene, section by section. Enemy shows the
+//   same for each enemy ship. Outside play mode you can pick another stats file for a ship.
+// - Board lists every setting marked [Tune] on the scripts in the open scene. They are in fold-out
+//   sections. Keys shows only the Keys section, and Board leaves it out. A Save button saves the
+//   open scenes.
+// - In play mode, Board and Keys changes are lost when play stops. If "Keep play-mode changes" is
+//   ticked, it notes the values as play stops. Then it writes them back into the scene.
+// - Hard Points, WEAPONS view: pick a stats file. The ship is a rectangle, nose up, with its
+//   weapon dots and green hangar dots. A dragged dot stays on the edge and snaps to the marks on
+//   each side. Its weapon points straight out of that side.
+// - Each weapon shows a dotted cone where it can fire. A railgun adds a solid line. Shift-drag out
+//   of a torpedo launcher or hangar dot to draw a launch line. Torpedoes or fighters fly out along
+//   it. On letting go, the line becomes 32 evenly spaced points, then is smoothed.
+// - Under the picture you edit the picked dot's weapon: name, short name, reach, ammunition,
+//   direction and cone width. Buttons add a railgun, PDC or torpedo launcher, add or remove dots,
+//   and delete a weapon. It warns about weapons on no dot.
+// - Hard Points, ROOMS view: the six rooms are drawn in rows from bow to stern. The four sides'
+//   armour is around them. You type each room's row number and each side's armour.
+// - Ranges draws each reach as a coloured ring round the ship: sight, DRADIS at dial 1 and 5,
+//   railguns, PDCs, torpedoes and assault boats. Drag a ring or its slider. Reaches snap to 100
+//   units. It sets how much bigger the hit area is than a ship's box.
+// - A green box marks what the plot shows at a chosen zoom. It reads this from the Plot prefab. A
+//   dotted square marks the battle space.
+// - Every stats file change can be undone. The lists rebuild when a scene opens or changes.
+//
+// Technical:
+// - Opened from the menu, Starwolf > Tuning. No other script calls it.
+// - Ship and Enemy list the Ship objects in the open scene. Ours has no WorldContact. Each enemy
+//   has one.
+// - A stats file (ShipStats) edit is saved to disk at once. In play mode, the window then calls
+//   PullFromFile() on every Ship using that file.
+// - Board and Keys: Collect() walks each script's saved fields, up to 4 levels into classes and
+//   lists. Every [Tune("Section")] field is shown. TuneAttribute.cs defines the mark.
+// - Keep play-mode changes records each value by GlobalObjectId and path as play stops. It keeps
+//   numbers, true or false, text, choice lists, Vector2 and Color only.
+// - Hard Points edits weapons.mounts, weapons.hardPoints, hangar.dots and width in the chosen
+//   ShipStats. Positions are units from the ship's centre, x right, y forward.
+// - Mount.arc is degrees from the nose. halfArc is half the cone. Dragging a dot sets arc to its
+//   side.
+// - ROOMS edits damage.roomRow and damage.sideArmourMax. Room order is MAG, BRI, HAB, HGR, RCT,
+//   ENG, as in DamageSystem.Stats.
+// - Ranges: the DRADIS rings set senRangeBaseUnits and senRangePerStepUnits together. A weapon ring
+//   sets every weapon of that kind.
+// - Trap: the stats file list on Hard Points and Ranges loads once. Reopen the window to see a
+//   new file. The Ranges battle space width and plot zoom are for the picture only.
+// =================================================================================================
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,19 +62,6 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-/// <summary>
-/// Starwolf → Tuning (owner, 2026-10-27): six tabs.
-/// - Ship: our ship's stats file, section by section (navigation, power, sensors, weapons, hangar, damage, orders).
-/// - Enemy: the same for each enemy ship in the open scene.
-/// - Board: every value marked [Tune("Section")] on the open scene's other components (the plot, sounds, the
-///   clock), grouped by section, as before (owner, 2026-10-17).
-/// - Keys: the board's keys, the values marked [Tune("Keys")] (owner, 2026-10-29).
-/// - Hard Points: a ship as a rectangle, with its hard points as dots to drag (owner, 2026-11-01). Its ROOMS view:
-///   each room's row from bow to stern, and each side's armour (owner, 2026-11-09 and 2026-11-10).
-/// - Ranges: every system's reach as a ring round a ship, to drag (owner, 2026-11-01).
-/// A stats file edit is kept, in play mode too, and the running game takes it at once. A Board or Keys edit made
-/// in play mode is lost when play stops, unless "Keep play-mode changes" is ticked.
-/// </summary>
 public class StarwolfTuningWindow : EditorWindow
 {
     [MenuItem("Starwolf/Tuning")]

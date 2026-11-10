@@ -1,26 +1,49 @@
+// =================================================================================================
+// InternalSubsystems.cs
+//
+// What it does:
+// The parts inside the older physics player ship: bridge, sensors, reactor, engines, magazine,
+// life support and crew. It is on the PlayerShip prefab. Once a hull side is broken, hits on that
+// side damage the parts behind it. The battle board does not use this script.
+//
+// How it works:
+// - At the start each part gets 100 health and a hull side. Bridge and sensors are at the front,
+//   reactor and engines at the back. The magazine is on the right, and life support and crew on
+//   the left.
+// - It listens to HullSystem. When a hit leaves a side at 0, it picks one part on that side at
+//   random. That part loses the full damage of the hit. It writes each hit to the Console.
+// - When life support reaches 0, a 120-second countdown starts. At the end it tells listeners
+//   life support has failed and writes GAME OVER to the Console. Repairing life support stops it.
+// - While the reactor is damaged but not destroyed, it drains power every 5 seconds. It asks
+//   PowerManager to take one bar from a power channel picked at random.
+// - Other scripts ask it for damage factors. PlayerShip and Autopilot read the speed and turn
+//   factors from engine and bridge damage. PowerManager reads the reactor factor.
+// - It gives factors for sensor range and weapons. It says if the scanner or the crew is out. No
+//   script reads these.
+// - Other code can repair one part by a set amount.
+//
+// Technical:
+// - Data: seven Subsystem objects (bridge, sensors, reactor, engines, magazine, lifeSupport,
+//   crew). Each has a SubsystemType, a HullSide, maxHealth and currentHealth.
+// - Start finds HullSystem and PowerManager on the same object. It listens to
+//   HullSystem.OnHullDamaged. PlayerShip adds this script if its object has none.
+// - Factor methods: GetSpeedMultiplier and GetTurnRateMultiplier (PlayerShip, Autopilot),
+//   GetReactorMultiplier (PowerManager). Each returns 1 when the part is whole.
+// - The reactor drain calls PowerManager.DrainSystemPower with a channel name: engines, arms,
+//   bay, support or sig.
+// - Events: OnSubsystemDamaged, OnSubsystemDestroyed, OnLifeSupportCritical and
+//   OnLifeSupportFailed. Nothing listens to them. "Game over" is only a Console line.
+// - Numbers: part health (100), the life support countdown (120 s) and the drain gap (5 s) are in
+//   the Inspector. The factor ranges are fixed in code.
+// - Trap: the drain stops once the reactor is fully destroyed. It runs only while the reactor is
+//   damaged.
+// - RepairSubsystem(type, amount) has no caller. Nothing else heals a part.
+// - Timers count scaled Time.deltaTime.
+// =================================================================================================
+
 using UnityEngine;
 using System;
 
-/// <summary>
-/// Internal ship subsystems per GDD spec.
-/// Each system is associated with a hull side. When that side is breached,
-/// damage to that side can randomly hit one of the associated subsystems.
-/// 
-/// Associations:
-///   Prow  -> Bridge, Sensors
-///   Aft   -> Reactor, Engines
-///   Starboard -> Magazine
-///   Port  -> Life Support, Crew
-/// 
-/// Effects when damaged:
-///   Bridge       - Movement lag, loss of steering
-///   Magazine     - Damages weapons (guns, missiles, PDCs, PODs)
-///   Life Support - Activates a Game Over timer
-///   Engines      - Reduces max speed, increases turn time  
-///   Reactor      - Limits total power, drains power from random active system
-///   Sensors      - Disables scanner, reduces radar range
-///   Crew         - Disables abilities
-/// </summary>
 public enum SubsystemType
 {
     Bridge,

@@ -1,13 +1,43 @@
+// =================================================================================================
+// PowerPanel.cs
+//
+// What it does:
+// The Power drawer on the battle board. It shows the reactor and the four power buses: ENG, WEP,
+// SEN and AUX. The player sets each bus to DRAW, STBY or VENT, and can throw the emergency load
+// shed. It is on the Power prefab. The power rules are in PowerSystem.
+//
+// How it works:
+// - BoardManager passes it clicks. A bus switch steps to the next setting, back and forth across
+//   VENT, STBY and DRAW. The load shed rocker sets every bus to VENT. Thrown again, it sets them
+//   all to STBY. While the shed is on, the bus switches do nothing. PowerSystem makes each change.
+// - BoardManager redraws it after every click and every 0.42 seconds. It reads PowerSystem and
+//   DamageSystem through ShipState.
+// - The top shows the units in use against the reactor's limit: green, amber with 2 or fewer left,
+//   red with none left. Ten cells and a line of text show the units still free.
+// - Five core cells show the health of the reactor room, as a number out of 5. They are green at 4
+//   or 5, amber at 2 or 3, and red below.
+// - The load shed rocker, its lamp and its note show ALL BUSES VENTING in red, or SHED READY.
+// - Each bus column fills its cells to the bus's units and shows the number. The setting shows as
+//   STBY in amber, DRAW in green or VENT in red. A lamp shows the same colour. The switch's
+//   pointer turns left for VENT, up for STBY and right for DRAW.
+// - The playtest runner finds this script to check that the drawer opens.
+//
+// Technical:
+// - Data: the power state is in PowerSystem: buses (units, setting, step direction) and shed.
+// - BoardManager calls Click and Refresh. The actions are "power.shed" and "power.bus" (arg = bus
+//   0 to 3: ENG, WEP, SEN, AUX).
+// - It calls PowerSystem.ToggleShed and CycleBus. It reads ReactorCap, TotalFill and buses, and
+//   DamageSystem.CompHealth("rct").
+// - PowerSystem.ReactorCap is the reactor room's health share of reactorUnits, never below 2.
+// - Numbers: reactorUnits and the most units per bus are in the power part of the ship stats file.
+// - Trap: the bus columns in the Inspector must be in the same order as PowerSystem.buses.
+// - Trap: the amber line at 2 units left and the health colours are in the code.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Step 33b. The Power drawer: reactor core, emergency load shed and the four bus columns. It only shows
-/// our ship's PowerSystem and passes the clicks to it (owner 2026-10-26). Every label and colour is from
-/// board-logic.js renderVals (loadLabel, loadColor, reactorLabel, r1–r10, coreCells, coreHealthLabel,
-/// shedNote, shedLamp, buses[]) and UIStateSpec §11 "Power: buses, standby and venting".
-/// </summary>
 public class PowerPanel : Panel
 {
     [System.Serializable]

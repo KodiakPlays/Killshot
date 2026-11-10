@@ -1,16 +1,61 @@
+// =================================================================================================
+// HangarPanel.cs
+//
+// What it does:
+// The Hangar drawer on the battle board. The player picks a squadron and its order, and runs six
+// launch stages. Then they pull the launch lever. RECALL calls the squadron back. It is on the
+// Hangar prefab. The work is done in HangarSystem; this script draws it and passes on input.
+//
+// How it works:
+// - BoardManager passes it clicks. The bay switch opens or seals the doors. One knob picks the next
+//   squadron, the other the next order. Each stage rocker starts or stops its stage. RECALL calls
+//   the squadron back. HangarSystem makes each change.
+// - The player types a launch bearing in a text box. HangarSystem reads it as it is typed. When
+//   the player finishes, it shows as three digits.
+// - The launch lever only moves when nothing blocks the launch and all six stages are full. Pulled
+//   near the end of its travel, it launches once per pull. Let go and it springs back.
+// - BoardManager redraws it after every click and every 0.42 seconds. It reads HangarSystem
+//   through ShipState.
+// - The top shows how many craft are ready and how many squadrons are out. Its screen widens to
+//   fit the text. The bay shows doors OPEN or SEALED, VACUUM or 1.0 ATM, and the catapult charge.
+// - Each squadron screen shows IN BAY or AIRBORNE with its order. It shows how many craft are
+//   ready, and a fuel bar per craft. Colours: green ready, amber rearming, red down or lost, blue
+//   airborne. A squadron with no craft on our ship shows nothing. A frame moves to the chosen
+//   squadron.
+// - The launch order shows the chosen squadron and its order. It shows how far the launch bearing
+//   is from our heading: green, amber past 40 degrees, red past the launch cone.
+// - The six stages are CREW, FUEL, ORDNANCE, EVAC, DOORS and CATAPULT, in order. Each rocker
+//   shows thrown, ready or locked. Each bar fills smoothly over 0.4 seconds.
+// - The status line shows what an airborne squadron is doing, or the running stage's percent. It
+//   may show the first stage not set and why, or what blocks the launch. Or it says ALL SYSTEMS GO.
+//   The lever reads SAFE, READY or AIRBORNE.
+// - RECALL's lamp is lit while the chosen squadron is out. Its pressed picture fades in over 0.1
+//   seconds. The time is in the Tuning window under "Motion". The playtest runner reads the status
+//   line.
+//
+// Technical:
+// - Data: the hangar state is in HangarSystem. This script keeps the lever's drag start, the
+//   RECALL press and the bar motions.
+// - BoardManager calls Click, Down, Drag, Up and Refresh. Click actions: "hangar.doors",
+//   "hangar.squad", "hangar.order", "hangar.stage" (arg = stage 0 to 5) and "hangar.recall".
+// - Press actions: "hangar.lever" and "hangar.recall".
+// - The bearing text box on the prefab calls OnBearingTyped and OnBearingDone. Both call
+//   HangarSystem.SetLbrg.
+// - It calls HangarSystem: ToggleDoors, CycleSquad, CycleOrder, PressStage, RecallSquad and
+//   LaunchSquad. It reads LaunchBlock, StageBlock, LaunchDev and FlightStatus.
+// - The lever writes HangarSystem.launchLever, 0 to 1. It launches past HangarSystem.leverFireAt.
+// - Numbers: the RECALL fade is a [Tune] field under "Motion". Bar times, lever travel and header
+//   sizes are in the Inspector. Stage rates and the launch cone are fields on HangarSystem.
+// - The bars move with Eased. The catapult bar eases in and out. The stage bars move evenly.
+// - Trap: a refused lever press still counts as used. The lever stays put.
+// - Trap: PlaytestRunner reads the private interlock field by name. The 40 degree amber line is in
+//   the code.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Step 33f. The Hangar drawer: bay status, the two squadron screens, the launch order (ship,
-/// launch bearing, command), the six launch-stage rockers with their loading bars, the launch lever
-/// and RECALL. Rules and values from board-logic.js (toggleDoors, setLbrg, launchDev, stageCells,
-/// stageBlock, pressStage, cycleSquad, cycleOrder, launchBlock, launchSquad, recallSquad, llDown and
-/// the lever drag, the launch part of the tick; renderVals hangarReady, door*, press*, cat*,
-/// squads, squadAngle, orderAngle, devLabel/Ink, interlock/Ink, launchLamp, llLeft, llTrack,
-/// llHint/Ink, recallLamp) and UIStateSpec §8.2 and §11 "Hangar: launching a squadron".
-/// </summary>
 public class HangarPanel : Panel
 {
     [System.Serializable]

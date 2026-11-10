@@ -1,15 +1,56 @@
+// =================================================================================================
+// SaveGame.cs
+//
+// What it does:
+// The campaign's save files. There are three save slots, one small text file each, in the folder
+// Unity gives the game on that computer. It is not on any object. The save slots screen, the
+// sector map, the ship rooms, the end screen and QuestSystem call it.
+//
+// How it works:
+// - A save keeps the levels won, the save time and our ship's damage. It keeps how many sector
+//   map dots have shown. The damage is each side's armour and each room's state.
+// - Picking a slot reads its file. An empty slot starts a new campaign and saves it at once.
+//   Reading falls back to the .bak copy if the main file is missing or broken.
+// - Saving writes a new file next to the old one, then swaps them. The file before is kept as
+//   .bak. If saving fails, the game goes on and the old save stays.
+// - At the start of a campaign mission it puts the saved damage back on our ship's DamageSystem.
+// - On a win it notes the level as won and saves. It keeps the ship's damage aside. That
+//   damage goes into the save when the player picks MISSION SELECT.
+// - A room always comes back with at least 1 point. Fires, air loss and radiation are not kept.
+// - On a win it also keeps the rounds left in each gun and launcher, the marines and each room's
+//   crew. Marines still out on boats are lost. The next mission starts with those. Nothing goes
+//   above the stats file's numbers.
+// - REPAIR ALL in the ship rooms clears the saved damage and saves.
+// - Delete removes a slot's file and its copies. Outside the campaign, every save step does
+//   nothing.
+// - The sector map hands it the Campaign file. FinishedWith tells the end screen when the last
+//   mission is won. Then the end card comes next.
+//
+// Technical:
+// - Data: SaveGame.Data has version, savedAt, done, dotsShown, damage and stores. done lists won
+//   levels by scene name.
+// - damage and stores are lists of Part: a name, now and most. stores names each gun or launcher
+//   by its label, then MARINES, then each room's name plus CREW.
+// - Files: slot1.json to slot3.json in Application.persistentDataPath, written with JsonUtility.
+//   Older files still load. Raise Version when a field changes meaning.
+// - The folder name comes from Company Name and Product Name in Project Settings, Player. Change
+//   either and the game looks in a new, empty folder.
+// - Slot is -1 outside the campaign. Every save step checks InCampaign first.
+// - Callers: SaveSlots (Read, Play, Delete), SectorMap (campaign, Current, Save) and QuestSystem
+//   (PutDamage, KeepDamage, Won).
+// - More callers: EndScreenPanel (FinishedWith, KeepWonDamage), ShipRooms (Repair), EndCard and
+//   ScreenFlow (Leave).
+// - KeepDamage takes full rounds, marines and crew from Ship.statsFile. Full armour comes from
+//   DamageSystem.stats. PutDamage only lowers the ship's numbers.
+// - Traps: parts match by name. A renamed room or gun label loses what was saved for it.
+// - Trap: a win's damage and stores wait in memory until KeepWonDamage. PutDamage drops them. So
+//   does quitting. REPAIR ALL clears the damage only.
+// =================================================================================================
+
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-/// <summary>
-/// The campaign's saves (owner 2026-11-08): three slots, one small file each, in the folder Unity gives the game.
-/// On a Mac: ~/Library/Application Support/Shagun Shah/Starwolf. On Windows: AppData/LocalLow/Shagun Shah/Starwolf.
-/// The folder's name comes from the Company Name and Product Name in Project Settings → Player: change either and
-/// the game looks in a new, empty folder. The files stay when the game closes and when a new build is installed.
-/// The game saves after each mission won and after a repair. It writes the new file beside the old one, then swaps
-/// them, and keeps the one before as .bak: a crash while saving never spoils a save.
-/// </summary>
 public static class SaveGame
 {
     /// <summary>What a save keeps. A later build may add fields: an older file still loads, and the new fields start

@@ -1,11 +1,44 @@
+// =================================================================================================
+// TargetingSystem.cs
+//
+// What it does:
+// This is the older aim-and-lock for the 3D physics ships. It puts a reticle on the target under
+// the middle of the screen, and a key locks it. The battle board does not use this script. No
+// scene or prefab has it.
+//
+// How it works:
+// - At start it finds the main camera and a WeaponManager. It makes one reticle and hides it. The
+//   reticle prefab comes from this script, or from WeaponManager.
+// - Every frame it casts a line from the middle of the screen, up to 1,000 units. If it hits an
+//   object with Targetable, that is the current target. The reticle moves onto it. If not, the
+//   reticle hides.
+// - Pressing T (set in the Inspector) locks the current target. Pressing it again on the same
+//   target unlocks it.
+// - On a lock it tells WeaponManager to load the active weapon at the target. An unlock loads it
+//   at nothing.
+// - The reticle is red while the target under the middle of the screen is the locked one.
+//   Otherwise it is white.
+// - PlayerShip asks it for the locked target.
+// - It reads keys through Unity's old Input class.
+//
+// Technical:
+// - Inspector: cam, maxDistance (1,000 units), targetLayers, reticlePrefab, lockKey (T) and
+//   weaponManager.
+// - Start() finds Camera.main and a WeaponManager once. It falls back to
+//   WeaponManager.targetingReticlePrefab, and makes one reticle copy.
+// - Update(): UpdateAim, HandleLockInput, then UpdateReticleVisual. The ray is Physics.Raycast,
+//   and it skips triggers.
+// - It finds targets with GetComponentInParent<Targetable>() on the collider hit.
+// - A lock calls WeaponManager.LoadActiveWeapon(Transform) with the aim point. An unlock passes
+//   null.
+// - GetLockedTargetTransform() gives the locked aim point, or null. PlayerShip calls it.
+// - Trap: the lock stays when the target leaves the middle. Unlocking needs that target back under
+//   the middle.
+// - Keys use Input.GetKeyDown, the old Input class.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// Handles acquiring targets under the center of the screen, displays a world-space reticle,
-/// and supports a simple toggle lock that turns the reticle red when locked.
-/// Press the configured `lockKey` to lock/unlock the current target.
-/// When a target is locked, the system will call `WeaponManager.LoadActiveWeapon(target)` if present.
-/// </summary>
 public class TargetingSystem : MonoBehaviour
 {
     [Header("Detection")]

@@ -1,15 +1,93 @@
+// =================================================================================================
+// WeaponSystem.cs
+//
+// What it does:
+// One ship's weapons: fire control, the shots in flight, and the PDCs. Every ship has one. The Fire
+// Control panel on the board aims and fires our ship's weapons. The ship's stats file lists its
+// weapons. Our ship has the railgun on its nose, four PDC groups and two torpedo launchers.
+//
+// How it works:
+// - Each weapon's reach, arc and ammunition come from the ship's stats file. Each weapon fires
+//   from its dot on the hull (Tuning window, Hard Points). A weapon with no dot cannot fire.
+//   Ammunition only goes down.
+// - Firing needs four switches thrown in order: LOAD, ANGLE, BEARING, ARM. LOAD needs 2 or more
+//   units on the WEP bus and a working magazine. It needs weapons released, ammunition and a firing
+//   solution. ANGLE needs the target in the gun's arc. BEARING needs the periscope on the target.
+//   ARM needs enough charge. The fixed railgun and the PDCs skip the solution, ANGLE and BEARING.
+//   A level can hold the railgun. Then its LOAD switch cannot be thrown.
+// - With all four thrown, the fire lever or the FIRE button fires. Firing drops ARM: one shot per
+//   arming.
+// - The weapons charge fills by the WEP units every second of game time, up to 100. With no WEP
+//   power it drains. Each shot costs charge. A LOAD or ANGLE switch that stops being allowed drops.
+// - A firing solution is a point in space with a course and speed. TRACK makes one from the plot:
+//   the newest POINT, and the newest RULER from one POINT to another. The RNG, BRG and SPD knobs
+//   change it by hand. Each board step it works out the range and bearing again from our ship.
+// - The lock: keep a ship in the periscope's brackets at the right zoom and a bar fills. Once full,
+//   the ship is the target for a short time, and the solution follows it. Its course comes from the
+//   newest of a scan or a plotted track. The lock drops when its time is up or the ship is lost.
+// - Railgun: the slug leaves the gun's dot, straight along the gun, and keeps our ship's motion.
+//   The aim leads a moving target. Firing a slug or torpedoes makes our signal jump. Each
+//   railgun shot pushes the ship back a little (NavSystem.Kick).
+// - A ship nobody watches is out of sight, off DRADIS and unlocked. A slug that hits one still does
+//   its damage, then flies on. Its report is "IMPACT ?", the same as a far miss.
+// - A turret railgun turns slowly inside its arc toward the target. The fixed railgun on our nose
+//   does not turn. While it is locked, NavSystem turns the whole ship onto the aim.
+// - Torpedoes need the target scanned or locked. A salvo leaves one at a time. It comes from the
+//   launcher on the target's side and the other, by turns. Each drifts out of the ship's side and
+//   slows while its nose swings round. Then its motor lights and it chases the target. A launcher
+//   with a drawn line sends it along the line first.
+// - Every board step every shot flies. Its whole path is tested against each ship's box, made a
+//   bit bigger. The first box it reaches is hit on that side, and DamageSystem takes the hit.
+//   DamageSystem gets the spot along the ship where the shot landed. That spot picks the room.
+//   A shot that reaches the end of its range misses.
+// - Each hit or miss writes a short report. The side and the damage show only once the target is
+//   scanned. BoardManager plays the sound for each shot and each result.
+// - EnemyBrain fires the enemy's slugs and torpedoes at us through our ship's WeaponSystem. They
+//   fly the same way and hit our ship's box.
+// - PDCs: ARM on a PDC group puts it on AUTO. Each group on AUTO gets one try at each enemy torpedo
+//   inside its arc and range. A try spends a set number of rounds and downs the torpedo by chance.
+//   Each try is a stream the plot draws (Bursts). A torpedo it downs goes down once the stream
+//   has walked onto it, half a second later.
+//   PDCs need their loaders on. They cannot stop slugs.
+// - The panel cycles the weapon type, the weapon and the torpedo warhead (HE, EMP, PENETRATOR).
+//   The salvo size and the PDC loaders come from the stats file. No control changes them.
+//
+// Technical:
+// - Data: mounts have id, kind (RG, PD or MS), arc and halfArc in degrees, rangeUnits and ammo.
+//   hardPoints are spots in units from the ship's centre: x right, y forward.
+// - A railgun with halfArc 0 is the fixed gun (FixedGun). It fires along the heading plus its arc.
+// - sw is the ladder: LOAD, ANGLE, BEARING, ARM. sol has one Solution per system. A Solution is a
+//   world point at a time, with a course and a speed.
+// - FireControlPanel calls CycleSystem, CycleMount, CycleWarhead, ComputeSol (TRACK), NudgeSol,
+//   Flip and Fire. It reads ReadyToFire, LockSource and TrackIdFor.
+// - BoardManager calls TickRounds, TickIncoming, TickCharge, TickLock and TickGuns each step. Only
+//   our ship's weapons step.
+// - EnemyBrain fires at us with LaunchAt and ShootAt on our ship's WeaponSystem. Those rounds go in
+//   Incoming. Each keeps the enemy's Stats in its by field. On the enemy ship it uses MountIds,
+//   OnDot, HardPointOffset and LineOf.
+// - A salvo waits in a queue (Queue, Release). TickRounds releases ours. TickIncoming releases
+//   the enemy's.
+// - A hit: FirstStruck or ReachesUs tests the path with ShipState.EntersBox. Then DamageSystem's
+//   TakeSlug or TakeWarhead gets the side and the spot along the ship. Torpedoes fly in slices of
+//   0.05 game seconds. Slugs fly the whole step at once.
+// - TickGuns sets NavSystem.aimHeading for the fixed gun while locked. Fire calls NavSystem.Kick
+//   and raises SensorSystem.signal.
+// - TickLock reads ShipState.ScopeSubject and ScopeFits, and SensorSystem.ScanOf for the course.
+//   While lockKey is set, SensorSystem raises our signal.
+// - PlotPanel draws Rounds, Incoming and Bursts, and calls StepAhead. PeriscopePanel reads LockBar.
+//   BoardManager watches shotsFired, shotResults and hitsTaken.
+// - Laid, Along and LengthOf lay a drawn launch line in the world. HangarSystem and the Tuning
+//   window use them.
+// - Numbers: WeaponSystem.Stats, the weapons part of each ship's stats file. Hard points and lines
+//   are set in Tuning, Hard Points. Each system's shot cost is in the Inspector.
+// - Traps: a hit's damage uses the shooter's Stats. PDC kill rolls use the ship's dice.
+// - StepSalvo, ToggleLoaders, ToggleQuad, PickTarget and ValidTarget have no callers. quads is
+//   never read.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// Weapons: one ship's fire control and what it has in flight. It holds the weapon groups (railgun, PDC,
-/// torpedo), the mounts, warheads, the arming ladder, the firing solutions, the salvo, the PDC loaders and
-/// AUTO groups, the capacitor and the fire lever. It fires slugs and torpedoes, flies them, and its PDCs
-/// take their chances at enemy torpedoes coming in. Our ship and every enemy carry one (the enemy is our
-/// ship with other stats). Owner 2026-10-26: weapons live in one place, here. The contact list, damage and
-/// kills stay on the ship state (ShipState); this reads them. Rules from board-logic.js (MOUNTS,
-/// SYSTEMS, WARHEADS, SWITCHES, computeSol, nudgeSol, flip, allSet, drawWep) and Steps 47–55.
-/// </summary>
 public class WeaponSystem : MonoBehaviour
 {
     /// <summary>The ship this belongs to. Weapons read its contacts, its WEP bus, the periscope, where it is,

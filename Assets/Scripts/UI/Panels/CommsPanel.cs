@@ -1,14 +1,56 @@
+// =================================================================================================
+// CommsPanel.cs
+//
+// What it does:
+// The Comms drawer on the battle board. The player picks a radio band and turns a knob to tune in
+// a signal. They lock onto it, then turn four key dials to decode the message. It is on the Comms
+// prefab. The radio's real state is in CommsSystem; this script draws it and passes on clicks.
+//
+// How it works:
+// - BoardManager passes it clicks. The band button steps to the next of three bands. The LOCK
+//   rocker locks the signal if the tuning is close enough. A key dial click steps that dial one
+//   letter on; Shift-click steps it back. CommsSystem makes each change.
+// - Dragging the tuning knob turns it around the scope's centre. Half a turn moves the
+//   frequency by 26.
+// - BoardManager redraws it after every click and every 0.42 seconds. It reads everything from
+//   CommsSystem and SensorSystem through ShipState.
+// - The top line shows INCOMING SIGNAL, DECIPHERING, MESSAGE READ, NO TRAFFIC or SIGNAL LOST.
+// - The band pointer turns 40 degrees per band. The chosen band's lamp and label light up. The
+//   frequency shows with one decimal place, and two pointers turn with it.
+// - The round scope has 56 bars hanging in from the rim. On the right band, the bars near the
+//   signal's frequency grow long. Bars within 2 of the tuned frequency light up bright.
+// - The LOCK rocker, its lamp and the SIG lamp change with how close the tuning is. A note says
+//   SEEKING, CARRIER FOUND, CARRIER LOCKED, NO CARRIER ON THIS BAND or CARRIER CLOSED.
+// - The letters show the message as decoded so far. A real message is laid out in rows of up to
+//   21 letters, whole words to a row. The letters the last dial changed turn red for 1.1 seconds.
+// - Each key dial points at its letter, A to Z, and shows it.
+// - Every frame, the SIG lamp blinks while our ship's signal is high enough for the enemy to
+//   track us.
+//
+// Technical:
+// - Data: the radio's state is in CommsSystem. This script keeps only the knob's start angle, the
+//   highlight timer and the message it last laid out.
+// - BoardManager calls Click, Down, Drag and Refresh. The actions are "comms.band", "comms.lock",
+//   "comms.dial" (arg = dial 0 to 3) and "comms.tune" for the knob.
+// - It calls CommsSystem.CycleChan, LockSignal, StepDial and SetFreq. It reads TuneOff, lockWindow,
+//   Plaintext, dials, air and activeDial.
+// - Update runs on real time (Time.unscaledTime). The blink and the red letters keep going while
+//   the game is paused. When the red time ends it sets comms.activeDial to -1 and redraws.
+// - Numbers in the Inspector on the Comms prefab: scope centre, rim radius, bar sizes, red time,
+//   blink timing and the letter grid.
+// - The lock window is a field on CommsSystem. The tracked signal line is in the sensors part of
+//   the ship stats file.
+// - Some numbers are in the code: 26 per half turn, 40 degrees per band, the SIG lamp's band of 12
+//   and the bar heights. The bar maths expects 56 bars.
+// - Trap: scopeCentre and letterStart are in board px and must match the art. The bars expect a
+//   parent that covers the whole board, anchored top-left.
+// - Shift-click is read with the old Input Manager (Input.GetKey).
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Step 33d. The Comms drawer: band selector, tuning knob and the 56-bar receiver scope, the LOCK
-/// rocker, and the decrypt screen with its four key dials. Rules and values from board-logic.js
-/// (cycleChan, startTune, tuneOff, lockSignal, stepDial, vigenere; renderVals chanAngle, chanLamps,
-/// freqLabel, freqBearing, tuneAngle, spectrumBars, sigLamp, lockCap/lockLamp, tuneNote, commsState,
-/// plainChars, solvedLabel, keyDials) and UIStateSpec §8.2 and §11 "Comms: tune, lock, decrypt".
-/// </summary>
 public class CommsPanel : Panel
 {
     [System.Serializable]

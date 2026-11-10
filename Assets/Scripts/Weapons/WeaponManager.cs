@@ -1,10 +1,55 @@
+// =================================================================================================
+// WeaponManager.cs
+//
+// What it does:
+// The gun switcher of the older physics player ship. It keeps gun slots, fires the picked gun and
+// sends its state to the older UIController screen. It is on the PlayerShip prefab. The battle
+// board does not use this script. The board's guns are in WeaponSystem.
+//
+// How it works:
+// - The gun slots are set in the Inspector. Each slot has a gun type, the gun on the ship, an
+//   on/off switch and a name. On the PlayerShip prefab the four slots use LaserWeapon, Railgun,
+//   LaserWeapon again and BroadsideCannon. The last two slots have types and names that do not
+//   match their guns.
+// - At the start it names any unnamed slot and picks the starting gun set in the Inspector.
+//   Each switch writes the gun's name to the Console.
+// - Other scripts can pick a gun by number, by type, or the next or previous one. Slots that are
+//   off are skipped.
+// - When asked to fire at a point or a ship, it checks two things. Weapon power must be at least
+//   10%, and the gun must be ready. Then the gun fires. For gun types other than the laser and
+//   the railgun, a controller buzz plays through ControllerHaptics. PlayerShip and UIController
+//   ask it to fire.
+// - A load request primes the picked gun. Torpedo tubes lock onto the given ship. The Macrocannon
+//   loads a shell. The boarding pod launcher takes the ship as its target. UIController's
+//   load button and TargetingSystem send this request.
+// - Ten times a second it sends the picked gun's state to UIController: its name, type, icon,
+//   ammo, reload progress and status (Ready, Reloading or Offline).
+// - Other code can add, remove, or switch off slots, and swap the aiming mark prefab.
+//
+// Technical:
+// - Data: weaponSlots (a list of WeaponSlot, in WeaponType.cs), activeWeaponIndex and
+//   currentWeapon.
+// - FireActiveWeapon(point or transform, power 0 to 1): called by PlayerShip, UIController and
+//   WeaponSystemExample. It calls the gun's CanFire, then Fire(point).
+// - LoadActiveWeapon(transform): called by TargetingSystem and UIController. It picks the action
+//   by the gun's class.
+// - Switching: PlayerShip, UIController and WeaponSystemExample. Railgun asks GetActiveWeapon.
+//   WeaponUIDisplay asks GetActiveWeaponSlot and CanActiveWeaponFire.
+// - RefreshWeaponDisplay calls UIController.Instance.UpdateWeaponDisplay and GetWeaponIcon.
+// - TargetingSystem reads the public targetingReticlePrefab field.
+// - Numbers: requiresPower and minPowerForWeapons (0.1) are in the Inspector. The 0.1-second
+//   refresh is fixed in code.
+// - Trap: the buzz and the icon follow the slot's type. The load action follows the gun's class.
+//   The prefab's mismatched slots get the wrong buzz and icon.
+// - Trap: with no slots, next and previous gun give a divide-by-zero error. PlayerShip can add
+//   an empty WeaponManager.
+// - Trap: Railgun.CanFire is always false. Its slot always shows Reloading.
+// =================================================================================================
+
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// Manages multiple weapon systems and handles weapon switching, firing, and power management
-/// </summary>
 public class WeaponManager : MonoBehaviour
 {
     [Header("Weapon Slots")]

@@ -1,3 +1,40 @@
+// =================================================================================================
+// Radar.cs
+//
+// What it does:
+// The old DRADIS screen of the older physics player ship, named Radar in the code. It places a dot
+// for each nearby ship on a round screen in the older UIController panel. It is on the PlayerShip
+// prefab. The battle board does not use this script. The board's DRADIS is in SensorSystem and
+// PlotPanel.
+//
+// How it works:
+// - Only one is kept. A second copy removes itself.
+// - At the start it finds the object tagged "Player", if no ship is set in the Inspector.
+// - Ships with RadarTarget sign up with it when they switch on. They sign off when they switch
+//   off.
+// - The range has five steps: 500, 1,000, 2,000, 4,000 and 8,000 units. The R key moves to the next
+//   step and writes the range to the Console.
+// - Every frame it works out where each ship is from the player's ship. It scales that to the
+//   screen. UIController makes one dot per ship, and this script moves the dot there.
+// - A ship past the range has its dot hidden. A ship set to show its heading has its dot turned to
+//   match.
+// - When a ship is gone, it drops the ship from the list. It asks UIController to remove its dot.
+//
+// Technical:
+// - Data: targets (a list of RadarTarget) and currentRangeIndex into rangeSteps, in units.
+// - Radar.RegisterTarget and Radar.UnregisterTarget are called by RadarTarget in OnEnable and
+//   OnDisable.
+// - It calls UIController.Instance: RadarBlipRadius, CreateOrGetRadarBlip(target) and
+//   DestroyRadarBlip(target).
+// - A dot's place is the target's position in the player ship's local space. It is scaled by the
+//   range to the screen radius.
+// - Numbers: rangeSteps and the key (R) are in the Inspector. The key uses the old Input Manager.
+// - Trap: a second Radar removes its whole object. On the PlayerShip prefab, that object is the
+//   ship.
+// - Trap: a RadarTarget switched on before Radar's Awake finds no Radar.Instance. It never gets
+//   a dot.
+// =================================================================================================
+
 using UnityEngine;
 using System.Collections.Generic;
 

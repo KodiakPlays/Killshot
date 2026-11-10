@@ -1,3 +1,41 @@
+// =================================================================================================
+// LaserWeapon.cs
+//
+// What it does:
+// An older physics laser gun. It fires Laser shots from a fire point. It is on the PlayerShip
+// prefab, one of the guns WeaponManager switches between. The battle board does not use this
+// script.
+//
+// How it works:
+// - It is built on WeaponBase. That gives it range, reload time, ammo and damage settings.
+// - At the start, any setting left at 0 in the Inspector gets a default: 30 shots, 3 seconds to
+//   refill. It fires at most once a second. With no fire point set, it fires from the object it
+//   is on.
+// - When asked to fire at a point, it fires a laser shot toward it. It needs shots left and must
+//   not be refilling.
+// - It can fire straight ahead from the fire point too. That needs weapon power at 20% or more.
+//   The older Weapons script asks this way.
+// - Each shot uses one shot from the magazine and gives a controller buzz through
+//   ControllerHaptics.
+// - When the magazine is empty, it refills all shots after the refill time.
+// - A shot prefab with no Laser script still flies: it gets a push forward and is removed after
+//   5 seconds.
+// - Other scripts can ask for shots left, whether it is refilling, and how far the refill is.
+//
+// Technical:
+// - It extends WeaponBase. It overrides Start, Fire(point) and CanFire.
+// - WeaponManager.FireActiveWeapon calls Fire(point). The Weapons script calls TryFire(power).
+//   WeaponSystemExample checks for it by type.
+// - Fire makes a copy of laserPrefab and calls Laser.Fire(direction, false).
+// - Data: currentAmmo (shots left), isRecharging and rechargeTimer (seconds).
+// - Numbers: in the Inspector. Start sets fireRate to 1 second, whatever WeaponBase says.
+// - Trap: here reloadTime is the full magazine refill. The gap between shots is fireRate.
+// - Trap: baseDamage and damageModifier do nothing. A shot's damage comes from the Laser prefab.
+// - Trap: laserSpeed only moves a shot prefab with no Laser script. A Laser shot uses the speed
+//   set on the Laser prefab.
+// - The refill counts scaled Time.deltaTime.
+// =================================================================================================
+
 using UnityEngine;
 
 public class LaserWeapon : WeaponBase

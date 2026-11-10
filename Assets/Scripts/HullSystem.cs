@@ -1,12 +1,47 @@
+// =================================================================================================
+// HullSystem.cs
+//
+// What it does:
+// The hull of the older physics player ship, split into four sides with separate health: port
+// (left), starboard (right), prow (front) and aft (back). It is on the PlayerShip prefab.
+// The battle board does not use this script. The board's damage is in DamageSystem.
+//
+// How it works:
+// - At the start it sets each side to full health. The defaults are port 50, starboard 50,
+//   prow 40 and aft 10, set in the Inspector.
+// - When PlayerShip asks, it works out the side a hit came from. A hit more along the ship is
+//   front or back. A hit more across it is left or right.
+// - A hit takes health from that one side only. A side cannot go below 0.
+// - After each hit it tells anyone listening the side hit, the damage, and the health left.
+//   InternalSubsystems listens and damages the parts inside when that side is broken.
+// - The first time a side reaches 0, it tells listeners the side is breached. It writes a line to
+//   the Console.
+// - When all four sides are at 0, it tells listeners the ship is destroyed. PlayerShip and
+//   GameManager listen.
+// - Other scripts can ask for each side's health, the total, and the total as a share of full.
+//   The older UIController screen shows the four sides this way.
+//
+// Technical:
+// - Data: four HullQuadrant objects (port, starboard, prow, aft). Each has maxHealth and
+//   currentHealth, in hull points.
+// - Awake copies the Inspector maximums into the quadrants. GetTotalMaxHealth and
+//   GetTotalIntegrityPercentage read the Inspector values directly.
+// - TakeDamage(side, damage) and DetermineHitSide(direction) are called by PlayerShip. PlayerShip
+//   adds a HullSystem if its object has none.
+// - Events: OnHullDamaged(side, damage, health left), OnHullBreached(side), OnShipDestroyed.
+//   InternalSubsystems, PlayerShip and GameManager listen.
+// - UIController reads each quadrant's GetHealthPercentage for its hull display.
+// - DetermineHitSide takes a direction from the ship toward the hit, with the nose along
+//   transform.up.
+// - Trap: Laser passes its travel direction, the reverse. A hit on the nose counts as aft. On the
+//   PlayerShip prefab this path never runs: Shields takes laser hits first.
+// - Trap: OnShipDestroyed fires again on every hit after all four sides reach 0.
+// - The overflow from HullQuadrant.TakeDamage and the breachNotified list are never read.
+// =================================================================================================
+
 using UnityEngine;
 using System;
 
-/// <summary>
-/// Directional hull system per GDD spec.
-/// Hull is divided into four quadrants: Port (Left), Starboard (Right), Prow (Front), Aft (Rear).
-/// Each side has its own health. Incoming damage affects only the side it hits.
-/// Once breached, internal components on that side are exposed to damage.
-/// </summary>
 public enum HullSide
 {
     Port,       // Left

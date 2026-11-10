@@ -1,3 +1,47 @@
+// =================================================================================================
+// GameManager.cs
+//
+// What it does:
+// An older match setup for the physics ships. It places the player's ship and enemy groups, then
+// waits for a win or a loss. It is on an object in the Demo, TestScene,
+// Prototype, Prototype Dev and Canvas_CRT scenes. The battle board does not use this script.
+//
+// How it works:
+// - Only one is kept. A second copy removes itself.
+// - Enemy groups are set in the Inspector. Each row has an enemy prefab, how many to place, and
+//   wander on or off. A row can make a new enemy appear after one dies, 10 seconds later by
+//   default.
+// - At the start it places the player ship prefab, if one is set. It goes at the spawn point, or
+//   at the world centre. It listens for that ship's HullSystem to say the ship is destroyed.
+// - It places each enemy at a random spot on a ring around the spawn centre. By default the ring
+//   is 30 to 80 units out. It tries up to 20 spots to keep enemies at least 5 units apart.
+// - It tells each EnemyShip whether to wander. It watches every frame for each enemy to be gone.
+// - When an enemy dies, it lowers the count and places a new one if that group asks for it.
+// - When no enemies are left, it writes VICTORY to the Console. When the player's ship is
+//   destroyed, it writes DEFEAT. Then it waits 3 seconds. Nothing else happens after that.
+// - The file makes the ReadOnly mark: a value shown greyed out in the Inspector that cannot
+//   be edited. ReadOnlyDrawer draws it, and any script can use it. Here it is on the enemy count
+//   and on the game-over and player-alive checkboxes.
+//
+// Technical:
+// - Data: enemyGroups (a list of EnemyGroup rows), activeEnemies, and totalEnemiesAlive.
+// - GameManager.Instance is set in Awake. No script reads it or calls its public methods.
+// - Public methods: SpawnEnemyFromGroup(index), SpawnEnemyShip(position, rotation),
+//   GetTotalEnemiesAlive, IsGameOver and IsPlayerAlive.
+// - It sets EnemyShip.patrolEnabled. It listens to HullSystem.OnShipDestroyed on the player ship.
+//   Enemies with no HullSystem are checked every frame until they are gone.
+// - Numbers: spawn ring, gap, tries and end delay are in the Inspector. The Tuning window does
+//   not show them.
+// - Prototype Dev sets two EnemyShip1 and two EnemyShip2, 100 to 500 units out. It sets no player
+//   ship prefab. The other four scenes set no enemy groups.
+// - Trap: ReadOnlyAttribute is defined at the bottom of this file. ReadOnlyDrawer and every
+//   [ReadOnly] field need it.
+// - Trap: defeat only fires for a ship it placed from playerShipPrefab. A ship already in the
+//   scene is never watched.
+// - Trap: SpawnEnemyShip always uses group 0. It skips that group's count and wander setting.
+// - Respawn and end waits use scaled time (WaitForSeconds).
+// =================================================================================================
+
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;

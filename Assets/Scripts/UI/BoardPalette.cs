@@ -1,10 +1,36 @@
+// =================================================================================================
+// BoardPalette.cs
+//
+// What it does:
+// The battle board's colours, in one file: Assets/UI/Board/Palette.asset. Every panel and
+// BoardManager take their colours from it. Change a colour there and the whole board follows.
+//
+// How it works:
+// - State colours: green for working and amber for a warning. Bright amber is for a warning about
+//   to turn bad. Red is for failed or hostile, and blue for our craft. There are bright and dark
+//   screen greens, and white for our ship on the plot.
+// - Text colours: readouts, labels, notes and second lines. More are for lettering on the metal,
+//   dim lettering and lettering in a dark well. One is for controls that cannot be used now.
+// - Off colours: unlit lamps, empty and lit bar cells, unlit power lamps and unlit ring parts.
+// - Each colour is typed as it should look on screen. The panels convert it for the board.
+// - If a panel has no palette file set, it uses this script's starting colours. They can differ
+//   from the file.
+//
+// Technical:
+// - Data: one Color per use, in three groups: States, Text, and Off and empty. Each is typed as it
+//   looks on screen (sRGB).
+// - Or(palette) gives that file. With none, it gives one shared copy made with this script's
+//   starting colours.
+// - Panel reads it through its Palette property. BoardManager calls Or for its lamps and labels.
+// - Panel.Paint and BoardManager.Tint turn each colour to gamma before they use it.
+// - Each panel and BoardManager has a palette slot in the Inspector. Each should point at
+//   Assets/UI/Board/Palette.asset.
+// - Trap: a panel with an empty slot ignores the file. It shows this script's starting colours.
+// - To add a colour: add a field here, then set its value in the file.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// The board's colours, in one place (owner, 2026-10-26). Every panel reads its colours from this
-/// file. Type each colour as it should look on screen; the panels convert it for the board.
-/// The file is Assets/UI/Board/Palette.asset.
-/// </summary>
 public class BoardPalette : ScriptableObject
 {
     [Header("States")]

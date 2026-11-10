@@ -1,11 +1,43 @@
+// =================================================================================================
+// GasCloud.cs
+//
+// What it does:
+// A gas cloud is a box of cold gas placed in a level. Ships fly through it and take no damage.
+// Our ship's signal drops while it is inside. An enemy can only see our ship in the cloud from
+// close by.
+//
+// How it works:
+// - The cloud's width and height are set in the Inspector, in units.
+// - Other scripts ask it two things: is a point inside the box, and how much of a ship's box is
+//   inside it (0 to 1). For the second, it cuts the ship's box into 100 small squares and counts
+//   the ones inside.
+// - TacticalWorld finds the clouds at the start of a level. It decides if our ship is in a cloud.
+//   It marks whether each cloud is seen on DRADIS or in visual range.
+// - SensorSystem and EnemyBrain use that to lower our signal and the enemy's sight range.
+// - The plot shows the cloud's picture in visual range. Past it, while DRADIS listens, it shows a
+//   hollow circle out to DRADIS range.
+// - The Level window uses it to draw, add and resize clouds.
+// - In the Scene view it draws a blue box with the cloud's name.
+//
+// Technical:
+// - Data: widthUnits and heightUnits, in units, centred on the object. The box never turns. It
+//   lines up with north.
+// - Inside(p) tests a world point. ShareInside(at, heading, half) gives the share of a ship's box
+//   inside, 0 to 1.
+// - TacticalWorld finds the clouds when a level starts. Each step it sets SensorSystem.inCloud and
+//   each cloud's seen and inSight.
+// - PlotPanel reads seen and inSight. It draws the picture (its cloudImage) or the hollow circle.
+// - Numbers: cloudInsideShare, cloudSignalShare and cloudSeenUnits, in the Sensors part of the ship
+//   stats file. The cloud's size is in the Inspector.
+// - The cloud has no collider. Crashes and hits never see it.
+// - Trap: only our ship is checked. An enemy ship in a cloud is not hidden.
+// - Trap: for seen and inSight, TacticalWorld treats the cloud as a circle. Its radius is half the
+//   longer side.
+// - Other callers: LevelWindow and PlaytestRunner.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// Gas Cloud (owner, 2026-11-01): a box of cold dust and vapour in a level. It has no collider: a ship flies in
-/// and takes no damage. Our ship inside one cools down, and an enemy can only see it from close by. TacticalWorld
-/// finds the clouds; the numbers are in each ship's stats file, under Sensors. Owner 2026-11-02: in visual range the
-/// plot draws the cloud's picture (on the Plot panel's Art list); past it, while DRADIS listens, a hollow circle.
-/// </summary>
 public class GasCloud : MonoBehaviour
 {
     [Tooltip("Width of the cloud, units (east to west).")]

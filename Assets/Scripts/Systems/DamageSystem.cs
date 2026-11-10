@@ -17,9 +17,9 @@
 //   the room at that spot along the ship. A wrecked room lets the hit through to the next one.
 // - WeaponSystem sends railgun slugs and torpedoes. HE torpedoes strip armour hard. PENETRATOR
 //   torpedoes go straight to a room. EMP torpedoes knock the power out for a while.
-// - A hit on a room can start a fire, or blow out its air and kill crew. A hit on the reactor can
-//   leak radiation. HangarSystem sends fighter runs and marine boarding losses. TacticalWorld
-//   sends crashes; a faster crash does more damage.
+// - A torpedo hit on a room can start a fire. A slug hit can blow out its air and kill crew. A
+//   hit on the reactor can leak radiation. HangarSystem sends fighter runs and marine boarding
+//   losses. TacticalWorld sends crashes; a faster crash does more damage.
 // - Every board step, fires wear their rooms down and radiation kills crew. Fire, air loss and
 //   radiation can spread to the rooms next door. Radiation fades once the reactor is repaired
 //   or vented.
@@ -31,19 +31,32 @@
 //   everyone inside. REBOOT adds 1 strength. RECALL calls the team back.
 // - An order is refused, with a reason, when it cannot run or the AUX charge is too low. The
 //   charge comes from OrdersSystem. SaveGame reads and writes the armour and room strength.
+//
+// Technical:
+// - Data: compartments are the six rooms, by key: mag, bri, hab, hgr, rct, eng. integ is 0 to 5.
+//   SideArmour follows Sides: PROW, STBD, AFT, PORT.
+// - engSel is the picked room. partyT is the team's time out, in game seconds, or -1.
+// - ship is its ShipState. Through it, damage sets destroyed and empUntil, reads the alert, rolls
+//   the dice and cuts the power.
+// - Hits in: WeaponSystem calls TakeSlug and TakeWarhead. HangarSystem calls TakeFighterRun and
+//   KillCrew. TacticalWorld calls TakeCollision. All but KillCrew return the hit report's tail.
+// - NextRoom(side, fromBow) picks the room a hit reaches. fromBow is 0 at the bow, 1 at the
+//   stern. PeriscopePanel calls it too.
+// - TickParty and TickConditions run each step. BoardManager calls them for our ship, TacticalWorld
+//   for the others.
+// - EngineeringPanel calls CycleComp, PickComp, EngBlock and EngRun. OrdersSystem asks EngBlock,
+//   pays the AUX, then calls ApplyOrder. EnemyBrain calls PickComp and ApplyOrder and pays nothing.
+// - Numbers: DamageSystem.Stats, the damage part of each ship's stats file (Assets/Ships). Its
+//   lists use the room order MAG, BRI, HAB, HGR, RCT, ENG.
+// - Chances use the ship's dice (ShipState.Roll). Spread chances are per game second, turned into
+//   a chance per step.
+// - Traps: room keys are used by name in many scripts and in the deck plan (Neighbours). A
+//   warhead's room damage is the shooter's slugCompartmentDamage. partiesLost is never read.
+//   Neighbours is fixed in the code. It does not follow roomRow from the stats file.
 // =================================================================================================
 
 using UnityEngine;
 
-/// <summary>
-/// Damage: one ship's compartments and hull, and what happens to them. It holds the six compartments (their
-/// integrity, crew, air and conditions), the armour on each side, what a slug, a warhead or a fighter run does,
-/// fire, vacuum and radiation spreading, the crew, and damage control (the selected compartment, the repair
-/// orders and the team out). Our ship and every enemy carry one (the enemy is our ship with other stats).
-/// Owner 2026-10-26: damage lives in one place, here. Whether the ship is destroyed or captured, its EMP clock
-/// and its dice stay on the ship state (ShipState). Rules from board-logic.js (COMPARTMENTS, engBlock,
-/// engRun, applyOrder, the party tick), DAMAGE_README.md and Steps 49, 53, 58 and 59.
-/// </summary>
 public class DamageSystem : MonoBehaviour
 {
     /// <summary>The ship this belongs to. Damage reads and sets whether it is destroyed, its EMP clock, its

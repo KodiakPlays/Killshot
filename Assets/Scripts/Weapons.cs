@@ -1,12 +1,33 @@
+// =================================================================================================
+// Weapons.cs
+//
+// What it does:
+// An older laser gun for the physics ship that passes every request on to LaserWeapon. No scene,
+// prefab or other script uses it. The battle board does not use this script. The board's guns
+// are in WeaponSystem.
+//
+// How it works:
+// - The code marks it as replaced by WeaponManager and LaserWeapon. Unity shows a warning where
+//   other code uses it.
+// - At the start it finds LaserWeapon on the same object, or adds one. It writes a warning to the
+//   Console.
+// - Fire, can-fire, ammo and recharge questions all go straight to LaserWeapon.
+// - The Inspector settings on this script (laser prefab, fire point, speed, power, ammo, reload)
+//   are not passed to LaserWeapon. LaserWeapon uses the settings on LaserWeapon.
+//
+// Technical:
+// - The class has [System.Obsolete]. Any code that names Weapons gets a compiler warning.
+// - Methods: TryFire(power 0 to 1), Fire(target point), CanFire, GetCurrentAmmo, GetMaxAmmo,
+//   IsRecharging, GetRechargeProgress and GetLaserWeapon. No script calls them.
+// - Each method finds or adds the LaserWeapon first, if Start has not run yet.
+// - With no LaserWeapon, GetMaxAmmo returns this script's maxAmmo and GetRechargeProgress
+//   returns 1.
+// - Trap: a LaserWeapon it adds starts with LaserWeapon's defaults and no laser prefab. It
+//   cannot fire until one is set.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// LEGACY COMPATIBILITY WRAPPER
-/// This class maintains backward compatibility with existing code.
-/// For new implementations, use WeaponManager with specific weapon types (LaserWeapon, Macrocannon, etc.)
-/// 
-/// This wrapper delegates to a LaserWeapon instance for actual functionality.
-/// </summary>
 [System.Obsolete("Use WeaponManager with LaserWeapon instead for modular weapon system")]
 public class Weapons : MonoBehaviour
 {

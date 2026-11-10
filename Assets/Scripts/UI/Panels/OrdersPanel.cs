@@ -1,14 +1,48 @@
+// =================================================================================================
+// OrdersPanel.cs
+//
+// What it does:
+// The Orders station on the battle board. The player sets the alert condition and throws order
+// rockers that spend the AUX charge: a damage control party, SEAL and VENT. Each order acts on the
+// room picked in the Engineering drawer. It is on the Orders prefab.
+//
+// How it works:
+// - BoardManager passes it clicks. The alert switch steps from CONDITION 3 to 2 to 1, then back
+//   to 3. An order rocker asks OrdersSystem to run that order. OrdersSystem refuses it when the
+//   AUX charge is too low or the room cannot take it.
+// - BoardManager redraws it after every click and every 0.42 seconds. It reads OrdersSystem,
+//   PowerSystem and DamageSystem through ShipState.
+// - The alert selector, in its stowed and open forms, shows the condition: green at 3, amber at 2,
+//   red at 1. A line says if weapons and flight ops are released. They are released at
+//   condition 2 or 1, unless WEAPONS HOLD is on.
+// - It shows the name of the room the orders act on.
+// - The AUX charge shows as a percent and ten cells. It is green from 30 percent. Below that it is
+//   amber, or red with no power on the AUX bus. Beside it is the charge per second, or NO FEED.
+// - Each rocker shows thrown, ready or locked. Its lamp lights while thrown and turns red when the
+//   order is refused. FIRE, BLKHD and SCRUB are blank plates with no rocker.
+// - The note under the rockers says AUX BUS DEAD with no power. Or it gives the reason for the
+//   last refused order. Or it asks for more power on AUX to charge faster.
+//
+// Technical:
+// - Data: the order state is in OrdersSystem. Its alert is 0 for CONDITION 3, 1 for CONDITION 2
+//   and 2 for CONDITION 1.
+// - BoardManager calls Click and Refresh. The actions are "orders.alert" and "orders.run" (arg =
+//   party, seal or vent).
+// - It calls OrdersSystem.DoAlert and RunOrder. It reads auxCharge, OrderCost, OrderBlock,
+//   orderFail, dcThrown and WeaponsReleased.
+// - OrderBlock asks DamageSystem.EngBlock about the room picked in Engineering (engSel).
+// - A rocker is thrown while OrdersSystem.dcThrown has its plain id. Engineering's rockers use
+//   "eng_" plus the id.
+// - Numbers: order costs, the AUX charge per unit and the flick times are in the stats file's
+//   orders part.
+// - Blank plates are orders ticked blank in the Inspector. They get no rocker picture and no glow.
+// - Trap: the 30 percent green line for the AUX charge is in the code.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Step 33h-2. The orders station: the alert condition selector (stowed and open), the AUX order
-/// pool, and the order rockers. Rules and values from board-logic.js (doAlert, runOrder, orderBlock,
-/// flickBack, the AUX charge in tickPower; renderVals alertLabel, alertAngle, alertPositions,
-/// alertInk, alertRelease(Ink), compName, auxPct, auxInk, auxRate, auxCells, orderSwitches,
-/// orderNote(Ink)) and UIStateSpec §11 "Orders".
-/// </summary>
 public class OrdersPanel : Panel
 {
     [System.Serializable]

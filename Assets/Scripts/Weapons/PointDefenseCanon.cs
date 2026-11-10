@@ -1,3 +1,36 @@
+// =================================================================================================
+// PointDefenseCanon.cs
+//
+// What it does:
+// An older physics PDC: a fast gun with several barrels that fires PDCBullet shots. It is one of
+// the guns WeaponManager can switch between, but no scene or prefab has it. The battle board does
+// not use this script. The board's PDCs are in WeaponSystem.
+//
+// How it works:
+// - It is built on WeaponBase. That gives it reload time, ammo and damage settings.
+// - It must spin up before it can fire. Spinning up takes 0.5 seconds. No script asks it to spin
+//   up. It never fires.
+// - It fires only with ammo left and once the reload time has passed after the last shot.
+//   It works out a rate of 30 shots a second. The fire check does not use that rate.
+// - Each shot leaves the next barrel in turn, straight out the front of the gun. It is turned up
+//   to 2 degrees at random. It flies at 2,000 units per second and uses one ammo.
+// - Each bullet's damage is the base damage times the damage factor.
+// - If given a target, it turns toward it every frame at up to 45 degrees per second. No script
+//   gives it a target.
+//
+// Technical:
+// - It extends WeaponBase. It overrides Start, CanFire and Fire(point). Fire ignores the point.
+// - WeaponManager.FireActiveWeapon calls CanFire and Fire. SpinUp, SpinDown and TrackTarget have
+//   no caller.
+// - Fire calls PDCBullet.Initialize(direction times bulletVelocity, damage).
+// - Numbers: rate (30), spread (2 degrees), bullet speed (2,000) and turn speed (45) are in the
+//   Inspector. The 0.5-second spin-up is fixed in code.
+// - Trap: Start sets fireRate from rateOfFire. WeaponBase.CanFire checks reloadTime instead.
+// - Trap: it fires along transform.forward. The older ships face along transform.up. The gun
+//   object must be turned to match.
+// - Trap: the gunBarrels list must not be empty, or firing gives an error.
+// =================================================================================================
+
 using UnityEngine;
 using System.Collections;
 

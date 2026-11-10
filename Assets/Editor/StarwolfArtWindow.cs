@@ -2,15 +2,15 @@
 // StarwolfArtWindow.cs
 //
 // What it does:
-// This is the Art window (Starwolf > Art). It lists every picture in one place: first the board's
-// panel prefabs, then the open scenes. You swap a picture by dropping a new one in its box.
+// This is the Art window (Starwolf > Art). It lists every picture in one place: first the prefabs,
+// then the open scenes. You swap a picture by dropping a new one in its box.
 //
 // How it works:
-// - It reads every prefab in Assets/UI/Board/Panels. For each of our scripts on them, it lists
-//   every picture slot: the Art lists, and the pictures the code swaps in, such as rocker states
-//   and keys.
+// - It reads every prefab in Assets/UI/Board/Panels and Assets/UI/Menus. The menus include the
+//   Escape menu. For each of our scripts on them, it lists every picture slot: the Art lists, and
+//   the pictures the code swaps in, such as rocker states and keys.
 // - It reads each open scene. It lists picture slots on our scripts. It lists images whose
-//   picture is not on an Art list. Panels that are copies of the prefabs are left out.
+//   picture is not on an Art list. Anything in a scene that is a copy of a prefab is left out.
 // - Each group is a fold-out with a count. Each row shows the part's name and the file name. It
 //   shows how many places use that file, and a box with the picture.
 // - A Find box filters by panel, part or file name. "Waiting for art" shows only empty boxes and
@@ -22,6 +22,22 @@
 // - Then it saves the prefab, or marks the scene as changed. Nothing is moved.
 // - The list is rebuilt when a scene opens or the project or scene changes. Pictures cannot be
 //   changed in play mode.
+//
+// Technical:
+// - Opened from the menu, Starwolf > Art. No other script calls it.
+// - Folders are constants at the top: PrefabFolders and SceneFolder (Assets/Scenes/Tactical/).
+// - A Row is one picture slot: a SerializedObject and a property path. Its type is Sprite,
+//   Texture or Texture2D.
+// - "Our scripts" means scripts whose file is under Assets/Scripts/. RawImages with a fixed picture
+//   are listed too. Render textures are skipped.
+// - The Art list is the "art" field (Panel.ArtSlot[]) on Panel and ArtList.
+// - Set() writes the new picture. That runs the script's OnValidate, and Panel.ApplyArt updates
+//   its images.
+// - A prefab row saves the prefab at once. A scene row only marks the scene changed. Save it by
+//   hand.
+// - "Everywhere" changes every row of the same type that shows the same old picture.
+// - The change and its question box run on EditorApplication.delayCall, after the window draws.
+// - Trap: "Waiting for art" also shows any row whose name has "stand-in" in it.
 // =================================================================================================
 
 using System.Collections.Generic;
@@ -31,13 +47,6 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Starwolf → Art (owner, 2026-11-10): every picture in one window. First the board's panels from
-/// Assets/UI/Board/Panels: their Art lists, and the pictures their code swaps (rocker states, keys,
-/// the periscope shutter). Then the open scenes' own pictures (the pause and rate keys, the ship's
-/// rooms, the sector map). A change goes into the prefab or scene the picture is already in.
-/// Nothing moves. Art never goes in Tuning (owner: "Tuning is for systems").
-/// </summary>
 public class StarwolfArtWindow : EditorWindow
 {
     [MenuItem("Starwolf/Art")]

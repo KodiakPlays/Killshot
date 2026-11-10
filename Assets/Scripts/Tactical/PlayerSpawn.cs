@@ -1,10 +1,31 @@
+// =================================================================================================
+// PlayerSpawn.cs
+//
+// What it does:
+// A Player Spawn marks where our ship starts in a level, and the way it faces. It is placed in a
+// level scene, one per level. It is seen only in the Scene view and the Level window.
+//
+// How it works:
+// - When play starts it finds TacticalWorld and asks it to put our ship here.
+// - TacticalWorld places our ship at this spot, turned the way the spawn points. Then the plot
+//   centres on our ship.
+// - The Level window adds one with its Player spawn button, and only one per level.
+// - In the Scene view it draws a white square with its name and a line for the bow. With no turn,
+//   the bow points north.
+//
+// Technical:
+// - It has no settings. It uses its transform: x and y in world units, and its Z angle.
+// - Start() calls TacticalWorld.SpawnPlayer(position, Z angle). By then TacticalWorld has set up
+//   its ships.
+// - SpawnPlayer calls NavSystem.PlaceAt on board.State.nav. The heading is minus the Z angle,
+//   rounded to a whole degree.
+// - Then SpawnPlayer calls PlotPanel.CentreOnOurShip() and TacticalWorld.Sync().
+// - Trap: with two Player Spawns, the last Start() wins. The Level window allows only one.
+// - LevelWindow and PlaytestRunner also read it. The gizmo code is inside #if UNITY_EDITOR.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// Player Spawn: where the player's ship starts in a level (owner, 2026-10-26). A box seen only in the
-/// Scene view, never on the board, like Enemy Spawn. At play it puts the player's ship here, facing the way the arrow points, and the plot
-/// opens on it. One per level.
-/// </summary>
 public class PlayerSpawn : MonoBehaviour
 {
     // Start, not Awake: TacticalWorld has set its ships up by now, whether this level was open with

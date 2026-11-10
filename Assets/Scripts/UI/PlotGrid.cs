@@ -1,14 +1,48 @@
+// =================================================================================================
+// PlotGrid.cs
+//
+// What it does:
+// Draws the grid of squares on the plot, the map in the middle of the battle board. It is on the
+// Plot panel prefab. It draws the edge of the battle space as a heavier line. The grid can be
+// white or amber.
+//
+// How it works:
+// - The scale is board px per 1,000 units at x1. BoardManager passes it the zoom. PlotPanel
+//   passes it the pan and the size of the battle space.
+// - The squares change size as you zoom: 50, 100, 200, 500 units and up. Each size fades out as
+//   its squares get too small on screen. The next size takes over.
+// - The lines are counted from the middle of the world. A line in both sizes stays solid.
+// - Every fifth line each way is a big line, brighter than the small ones. The big squares grow
+//   with the small squares.
+// - The lines go on past the battle space. The edge is drawn on top: amber on the white grid, red
+//   on the amber grid.
+// - The grid tint knob on the board's console switches white and amber, through BoardManager.
+// - At the start of a level the lines glide in from the plot's edges, big lines first, then small.
+//   PlotPanel sets how far the grid has formed.
+// - The square sizes and the fade sizes are in the Tuning window, Board tab, Plot & our ship.
+//
+// Technical:
+// - Data: pxPer1000Units is board px per 1,000 units at x1. stepUnits are the square sizes, in
+//   units. bigEvery is 5. There are minor, major and edge colours for each tint.
+// - PxPerUnit is pxPer1000Units x zoom / 1000. PlotPanel reads PxPer1000Units to place ships and
+//   marks. The Tuning window reads it too.
+// - BoardManager sets Zoom and GridTint. PlotPanel sets OffsetPx (the pan, board px),
+//   ArenaHalfUnits and Formed (0 to 1).
+// - PlotPanel reads PxPerUnit, LineShare and SmallestUnits for its edge numbers. They then fade
+//   with the lines.
+// - It builds one UI mesh. A changed setting rebuilds it. Lines are counted from the world's
+//   centre, in steps of the smallest square.
+// - With gammaBoard on, colours turn to gamma first. The board blends in gamma space.
+// - Numbers: the "Plot & our ship" [Tune] section: square sizes, bigEvery and the fade widths.
+//   Colours, line widths and the forming shares are in the Inspector. The whole forming time is
+//   PlotPanel's gridFormSeconds.
+// - Trap: each square size must be a whole number of the smallest. pxPer1000Units sets the scale
+//   of the whole plot.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// The plot's two grid layers, drawn as one UI mesh. Colours and line weights come from the handoff's
-/// textures/plot-grid.json. Tint toggles white and amber (owner, 2026-10-04 — the handoff's red is replaced by amber).
-/// Owner 2026-11-01 (a designer's steps): the squares on screen change size as you zoom. Each size fades out as its
-/// squares close up, and the next size takes over. The lines are counted from the world's centre, so a line that is in
-/// both sizes stays solid. A big square is always 5 x 5 of the squares on screen, so the big lines move up with them.
-/// Owner 2026-10-29: the lines carry on past the battle space, and its edge is a heavier line.
-/// </summary>
 [RequireComponent(typeof(CanvasRenderer))]
 public class PlotGrid : MaskableGraphic
 {

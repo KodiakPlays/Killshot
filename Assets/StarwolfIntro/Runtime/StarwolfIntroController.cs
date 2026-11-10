@@ -1,3 +1,56 @@
+// =================================================================================================
+// StarwolfIntroController.cs
+//
+// What it does:
+// This draws the green screen of blocky lit squares. It is used for the intro and the title menu.
+// It shows the INITIALISING loading line and title cards such as MISSION ONE. It is in the
+// 00_Start, 01_Briefing, SaveSlots and SectorMap scenes.
+//
+// How it works:
+// - It has three ways to play. Full intro: SECTION 36 flickers in square by square and stays.
+//   Then it turns into the title and cuts to a three-row menu. INITIALISING only: types that line,
+//   then says it is finished. Title only: types the title in and keeps it on screen, with no menu.
+//   SECTION 36 plays once per game. Back at the title later, only the title flickers in from
+//   nothing, then the menu shows.
+// - At start it reads glyphs.json and the hum sound from the intro's Resources folder. It asks
+//   PhosphorData for a picture of each word. In the full intro, SECTION 36 and the title are
+//   sized to one shared box.
+// - It builds a full-screen layer with a black backing and a 16:9 display. It starts the hardware
+//   hum, fading in over 0.6 seconds.
+// - If anything fails at start, it writes the error to the Console and switches off. In
+//   INITIALISING mode it says it is finished at once, and the game moves on.
+// - Every frame it draws a 1920 by 1080 picture through the PhosphorDisplay shader. Its clock runs
+//   only while the picture is on screen. A slow first frame cannot skip the SECTION 36 flicker.
+// - Words type in from left to right over half their time, then stay. The times for each part are
+//   set in the Inspector.
+// - Menu: Up, Down and Tab move between rows. Enter or Space picks. The mouse can point and
+//   click. The second row is skipped when it is switched off.
+// - Picking a row runs the New Game, second row or Settings action set in the scene.
+// - An option adds small dim text in the four corners and the CLEARANCE LEVEL squares. The
+//   INITIALISING screens in 01_Briefing and SectorMap use it. The title menu shows a tiny dim
+//   watermark in the bottom-right corner. Its text, size, colour and place are set in the Inspector.
+// - Other scripts can restart the intro, skip to the menu, or hide and show the menu.
+//
+// Technical:
+// - Namespace Starwolf.Intro. Modes: initialisingOnly, titleOnly, or neither for the full intro.
+// - Files: glyphData and hardwareHum fall back to Resources/StarwolfIntro. displayShader must be
+//   set to Starwolf/PhosphorDisplay.
+// - Awake builds six masks: SECTION 36, INITIALISING..., the title, NEW GAME, the second row and
+//   SETTINGS. They go to the shader's _Ident to _Settings.
+// - ApplyStaticUniforms() runs every frame. A shader reload resets the material, and this puts the
+//   masks and colours back.
+// - The picture is a 1920 x 1080 ARGBHalf linear render texture, drawn with Graphics.Blit.
+//   Trap: an sRGB texture turns the near-black field mid green.
+// - The clock uses Time.unscaledDeltaTime. While a word flickers, one frame adds at most 1/30 s.
+// - The static introSeen flag remembers SECTION 36 has played. It resets when play mode starts.
+// - Scene events: finished, newGame, loadGame and settings, wired in each scene. ScreenFlow
+//   methods are the usual targets.
+// - Menu keys and clicks are read in OnGUI. PlaytestRunner calls Activate(1) and reads MenuVisible
+//   and Elapsed. It also adds a hidden INITIALISING copy with no shader, to test the failure path.
+// - RestartIntro, SkipToMenu, HideMenu, ShowMenu, SetLoadGameAvailable and SeekPreview are public.
+//   No script calls them.
+// =================================================================================================
+
 using System;
 using TMPro;
 using UnityEngine;

@@ -16,14 +16,28 @@
 // - For a flight drill it starts the drill steps. For every other goal it shows the help text.
 // - EnemyBrain reads the battle group's route. The group flies it from point to point.
 // - The flight drill step is in this file too. Each step has a briefing note and a check that
-//   ends it: a speed, a zoom, a ring to reach, a scan, a lock and so on. A step may name a ship
+//   ends it: a speed, a zoom, a ring to reach, a scan, a lock, a wait. A step may name a ship
 //   or station by its track key. A step may show a ring on the plot and may set a new map size.
 //   A step may end the level's weapons-off when it starts. QuestSystem runs the steps in order.
+//
+// Technical:
+// - Data: goal is a MissionGoal (listed in QuestSystem.cs). drill is a list of DrillStep.
+//   groupRoute is a list of points in units, x east, y north.
+// - Start sets QuestSystem.Goal. Then it calls PlaceJumpPoint for a jump point goal, and
+//   StartDrill or ShowHelp.
+// - Start sets OrdersSystem.weaponsHold and railgunHold. FireControlPanel and WeaponSystem read
+//   them.
+// - It runs in Start. The board is ready by then, opened with the level or loaded on top of it.
+// - EnemyBrain finds the Mission once and reads groupRoute. QuestSystem reads each DrillStep.
+// - A DrillStep's weaponsFree clears weaponsHold when the step starts. QuestSystem does that.
+// - Each DrillStep has check, amount, track, ringAt, ringUnits, mapUnits and note. Places and
+//   sizes are in units. The tooltip on check says what each check needs.
+// - Trap: level scenes save DrillCheck as a number. Add new checks at the end of the list only.
+// - Numbers: in the Inspector on the Mission object in each level scene. The Level window adds it.
 // =================================================================================================
 
 using UnityEngine;
 
-/// <summary>What finishes one step of a flight drill.</summary>
 public enum DrillCheck { EngHeld, EngAt, Reach, SpeedAt, SlideLeft, SlideRight, ZoomOutTo, ZoomInTo, DradisOn, StopAt, ActiveOn, Scanned,
                          GainAt, ConditionAt, Locked, Near, Breached, Captured, Wait } // owner 2026-11-10, MILK RUN: new ones go on the end, so saved levels keep theirs
 

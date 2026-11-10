@@ -1,16 +1,46 @@
+// =================================================================================================
+// SectorMap.cs
+//
+// What it does:
+// The SECTOR MAP screen of the campaign. It is in the SectorMap scene. It shows the campaign's
+// missions as dots on a star chart. Click a dot to read its mission, then launch it.
+//
+// How it works:
+// - If no save slot is picked, it opens the SaveSlots scene instead.
+// - It reads the mission list from the Campaign file and the levels won from SaveGame.
+// - It hands the Campaign file to SaveGame. The end screen uses it to spot the last mission.
+// - It shows every won mission plus the next one. Each new dot is joined to the last by a line.
+// - A dot shown for the first time fades in with its line over 1.5 seconds. It saves how many
+//   dots have shown.
+// - A won mission's dot shows the check mark picture, or a dimmer dot with a check mark after
+//   its name.
+// - When the map opens, the newest dot is picked. Picking a dot shows its number, name and
+//   briefing on the left screen.
+// - BRIEFING shows the mission text. DEBRIEF works only on a won mission and adds MISSION COMPLETE
+//   above the text. LAUNCH reads REPLAY MISSION on a won mission.
+// - LAUNCH asks ScreenFlow to play the mission's level.
+//
+// Technical:
+// - Data: campaign is the Campaign file. picked is the dot shown, from 0. fresh is the new dot,
+//   its name and its line.
+// - Start sets SaveGame.campaign first, even when it then leaves for SaveSlots.
+// - Wins are counted in order from mission 1. The first mission not won stops the count.
+// - Each opening writes dotsShown and calls SaveGame.Save.
+// - Dots and lines are copies of dotTemplate and lineTemplate, made inside map. A dot's place is
+//   its mission's at, in px.
+// - Each dot's click calls Pick, set up in code. The scene's Buttons call ShowBriefing,
+//   ShowDebrief and Launch.
+// - Launch calls ScreenFlow.Play with the level's scene name.
+// - The fade counts from the scene load (Time.timeSinceLevelLoad).
+// - Numbers and look: the colours, fadeInSeconds, slotsScene and the check mark picture are in the
+//   Inspector.
+// =================================================================================================
+
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// The SECTOR MAP (owner 2026-11-08; Codex's console look, Step 172): the campaign's missions as dots on a star chart.
-/// The left screen shows the picked mission's number, name and text. At the start one dot shows. When the map opens,
-/// the newest dot is already picked. Click a dot to pick it. The MISSION ARCHIVE box has BRIEFING, DEBRIEF (a finished
-/// mission only) and LAUNCH, which reads REPLAY MISSION on a finished mission. Win the mission and, back on the map,
-/// the next dot fades in with a line from the last. A finished dot shows the tick picture and can be played again.
-/// The missions are in the Campaign file (Assets/Campaign/Campaign.asset), in order: each opens when the one before it is won.
-/// </summary>
 public class SectorMap : MonoBehaviour
 {
     [Tooltip("The campaign file: its missions are the dots, in order.")]

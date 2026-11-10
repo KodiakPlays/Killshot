@@ -1,14 +1,57 @@
+// =================================================================================================
+// Railgun.cs
+//
+// What it does:
+// The older physics railgun on the PlayerShip prefab. Press Space to charge it and let go to fire
+// a beam through ships. Firing empties all the ship's power and leaves the ship without controls
+// for a few seconds. The battle board does not use this script. The board's railgun is in
+// WeaponSystem.
+//
+// How it works:
+// - It is built on WeaponBase. At the start its range becomes 2,000 units. It finds PowerManager,
+//   PlayerShip and WeaponManager on the ship. It makes a line for the beam if none is set.
+// - It only reacts when it is the gun picked in WeaponManager. WeaponManager's normal fire button
+//   does nothing for it.
+// - Pressing Space, or both controller triggers, starts a charge. Arms power must be above 90%.
+//   The charge starts venting all power. The controller rumble grows over 2 seconds.
+// - Letting go of Space, or the right trigger while the left is held, fires at once.
+// - Firing empties every power channel and takes the reactor offline through PowerManager.
+// - The beam goes from the fire point along the ship's heading, up to 2,000 units. It passes
+//   through things in its way: up to 11 by default, 6 on the PlayerShip prefab. Each thing it
+//   hits cuts the damage for the next by 15%. Anything tagged "HeavyArmor" or "Station" stops it.
+// - An EnemyShip hit is destroyed at once. The Shields script and other things with IDamageable
+//   take the damage. A thing tagged "Asteroid" or "Debris" with none of these is removed.
+// - It shows the beam fading over 0.3 seconds. It plays sounds and impact effects if set. It gives
+//   a hard controller kick and plays the older UIController screen's railgun effect.
+// - After firing, PlayerShip goes on standby for 4 seconds. Then the reactor restarts. Every
+//   channel stays off until the player turns it on.
+// - WeaponUIDisplay asks it for the charge progress.
+//
+// Technical:
+// - It extends WeaponBase. CanFire always returns false and Fire(point) is empty. Its Update
+//   reads the keys.
+// - It reads keys through the old Input Manager, with the LeftTrigger and RightTrigger axes.
+//   Rumble goes through the new Input System (Gamepad.current).
+// - It calls PowerManager (VentAllSystems, DrainAllPowerInstantly, RebootReactor),
+//   PlayerShip.EnterRailgunStandby and UIController.Instance.RailFire.
+// - WeaponUIDisplay reads IsCharging, GetChargeProgress, CanFire and the ammo. FireInstant and
+//   CancelCharge have no caller.
+// - The beam is a chain of Physics.Raycast calls, one per thing passed through.
+// - Numbers: range, pass-through count, damage drop, standby time and beam look are in the
+//   Inspector. The PlayerShip prefab sets damage 100 and 3 ammo. Ammo is shown but never used up.
+// - Trap: the charge time only paces the rumble and the progress bar. A quick tap fires a full
+//   shot.
+// - Trap: ApplyDamage checks PlayerShip before Shields. Shields on a PlayerShip object never take
+//   the hit.
+// - Trap: the tags HeavyArmor, Station, Asteroid and Debris are not in the project's tag list.
+// - Trap: after a gun switch mid-charge it stops reading keys. The charge and its rumble go on.
+// =================================================================================================
+
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// Hold Space to charge the railgun (requires Arms power > 90%).
-/// Release Space to fire in the ship's facing direction.
-/// Enemies in the beam path are destroyed instantly.
-/// After firing, all power is drained and the ship enters a brief standby before rebooting.
-/// </summary>
 public class Railgun : WeaponBase
 {
     [Header("Railgun Settings")]

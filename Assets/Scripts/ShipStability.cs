@@ -1,3 +1,43 @@
+// =================================================================================================
+// ShipStability.cs
+//
+// What it does:
+// A stability meter for the older physics player ship. Hard turns and dodges use it up, and it
+// refills over time. It is on the PlayerShip prefab. The battle board does not use this script.
+//
+// How it works:
+// - It starts full at 100 and shows the meter on the older UIController screen.
+// - Every frame it refills at 5 per second. At 10 or less it refills at 1.5 per second.
+//   When it is full again, it turns the alert light off.
+// - When PlayerShip turns, it asks for a drain each physics step. Gentle turns drain a little,
+//   medium turns more, and sharp turns the most. Faster speed adds up to half as much again.
+//   The engine power bonus from PowerManager lowers the drain.
+// - A drain above 0.01 in one step turns the alert light on. It writes the turn details to the
+//   Console.
+// - A dodge costs 45. It needs at least 45 left, and there is a 0.5-second wait between dodges.
+// - Other scripts can ask if it is empty, if it is low (10 or less), and its value.
+//   PlayerShip stops turning and damages the hull when it is empty.
+// - Every change updates the meter on the UIController screen.
+//
+// Technical:
+// - Data: currentStability and maxStability (100), in stability points.
+// - PlayerShip calls CalculateTurnStabilityDrain(degrees this step, speed, power factor) each
+//   physics step it turns. The power factor is PowerManager.GetEngineStabilityDecayMultiplier.
+// - PlayerShip also calls CanPerformDodge, ApplyDodge, IsStabilityDepleted and CanDodgeAgain.
+//   PlayerShip has [RequireComponent(typeof(ShipStability))].
+// - Turn zones: by default up to 0.6 degrees per step is gentle, up to 1.1 is medium, above is
+//   sharp. Their factors are 0.1, 0.5 and 2.
+// - It calls UIController.Instance: StabilityMeterStart, StabilityMeterUpdate and SetAlertActive.
+// - Numbers: in the Inspector. The low mark (10%), the slow refill factor (0.3) and the dodge
+//   wait (0.5 s) are fixed in code.
+// - Trap: with the code's numbers the biggest turn drain is 3 per second. The refill is 5 per
+//   second, or 1.5 at 10 or less. Turning alone only empties a meter already at 10 or less.
+// - Trap: the PlayerShip prefab sets the zone limits to 60 and 90. Its ship turns 0.4 degrees a
+//   step at most. Every turn is gentle, at 0.15 per second at most.
+// - Trap: the zone limits are per physics step (0.02 s). A new physics step length moves them.
+// - ApplyStabilityDrain(amount) has no caller. Railgun finds this script but never calls it.
+// =================================================================================================
+
 using UnityEngine;
 
 public class ShipStability : MonoBehaviour

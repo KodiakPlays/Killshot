@@ -101,6 +101,8 @@ Docs may lag the code. **Code and live Editor state win.**
 
 These describe the existing codebase. Match them; do not introduce a competing style.
 
+- **Do** keep the plain-English note at the top of every script (owner, 2026-11-10): "What it does", then "How it works", above the `using` lines. When you change what a script does, update its note in the same edit. A new script gets a note too. The layout and the English rules are in `docs/script-notes/BRIEF.md`.
+
 - **No namespaces.** Every type is in the global namespace, except the intro package (`Assets/StarwolfIntro`, namespace `Starwolf.Intro`). Don't add one to a new file.
 - **No asmdefs.** Runtime code compiles into `Assembly-CSharp`; code under `Assets/Editor/` into `Assembly-CSharp-Editor`. Adding an `.asmdef` silently severs existing references — treat it as a deliberate architectural decision, not a tidy-up.
 - **Prefer `[SerializeField] private`** over public fields for inspector-exposed state.

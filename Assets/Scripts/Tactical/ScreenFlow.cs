@@ -1,10 +1,49 @@
+// =================================================================================================
+// ScreenFlow.cs
+//
+// What it does:
+// ScreenFlow moves the game from one screen to the next. It is in the menu and story scenes: the
+// title, the briefing, the save slots, the sector map and the ship rooms. Buttons and menus call
+// it to load the next scene or to start a level.
+//
+// How it works:
+// - Each copy has a next scene set in the Inspector. Advance loads that scene. If none is set, it
+//   writes an error to the Console.
+// - Go loads a named scene at once. Play picks a level by name for TacticalWorld. Then it shows
+//   the "show first" screen if there is one. If not, it loads the next scene.
+// - Play ignores clicks in the first half second after the scene opens. Nothing loads twice.
+// - Every frame it can move on by itself: when Enter is pressed, if that is switched on, or after
+//   a set number of seconds.
+// - Before moving on it can show title cards one after another, then the "show first" screen.
+//   That screen calls Advance when it is done.
+// - Escape opens and closes the Escape menu, where one is set: the save slots, the sector map
+//   and the ship rooms. Its buttons are RESUME, MAIN MENU and QUIT GAME. While it is open,
+//   nothing moves on by itself. Opening it picks RESUME. Enter or Space then cannot press a
+//   button behind it. Once a level is loading, Escape and MAIN MENU do nothing.
+// - With no Escape menu set, Escape quits the game. This does nothing in the editor.
+// - MAIN MENU loads the title. The save stays as it was last saved. QUIT GAME stops play mode
+//   in the editor.
+// - It reads keys through Unity's old Input class.
+//
+// Technical:
+// - Inspector fields: nextScene, advanceOnEnter, showFirst, advanceAfterSeconds, cards, escapeMenu
+//   and mainMenuScene (00_Start).
+// - Public: Advance(), Go(scene), Play(level), Resume(), MainMenu() and Quit(). Button and event
+//   lists in the scenes call them.
+// - SectorMap calls Play() in code. The Escape Menu prefab's buttons are wired in each scene.
+// - Play() writes TacticalWorld.chosenLevel. TacticalWorld loads that level. QuestSystem and
+//   EndScreenPanel read it too.
+// - The going flag is set once a load starts. After that Advance, Go, Play and MainMenu do
+//   nothing. Resume and Quit still work.
+// - Timers count Time.timeSinceLevelLoad. Card n ends at advanceAfterSeconds times (n + 1).
+// - Trap: Enter skips a card, but the next card's time still counts from the scene's start.
+// - MainMenu() calls SaveGame.Leave() before it loads the title.
+// - Keys use Input.GetKeyDown, the old Input class. A test script cannot press them.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Moves from one screen to the next. Used by the intro screens.
-/// Either wire a Button's onClick to Advance(), or let it wait for Enter.
-/// </summary>
 public class ScreenFlow : MonoBehaviour
 {
     [Header("Where to go")]

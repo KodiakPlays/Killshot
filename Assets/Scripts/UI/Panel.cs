@@ -1,12 +1,43 @@
+// =================================================================================================
+// Panel.cs
+//
+// What it does:
+// The shared base of every panel on the battle board: Helm, Power, Plot, Sensors, Fire Control,
+// Comms, Hangar, Engineering, Orders, Periscope and the end screen. Each panel script is built on
+// it. It is never on an object by itself.
+//
+// How it works:
+// - At the start BoardManager links every panel to itself. Each panel then reads and changes the
+//   game through BoardManager's ShipState.
+// - BoardManager passes on every click, press, drag and release it does not use itself. Each panel
+//   says whether it used it. Press and drag places come in board px.
+// - After every change and every board step, BoardManager asks each panel to redraw.
+// - Each panel has a list of pictures and a list of fonts in the Inspector. Swapping a picture or a
+//   font there puts it on every image or text listed under it. This happens in the editor only.
+//   ArtList uses the same lists for board pieces that have no panel.
+// - Each panel takes its colours from the board's palette file (BoardPalette).
+// - It has small helpers for the panels. One sets a colour as the design shows it. One shows or
+//   hides a part. One squashes runs of spaces in a text to one.
+//
+// Technical:
+// - Data: art (a list of ArtSlot), fonts (a list of FontSlot) and palette (a BoardPalette).
+// - The eleven panel scripts in Assets/Scripts/UI/Panels are built on it.
+// - BoardManager finds every Panel under it at Start, switched-off ones too, and calls Bind.
+//   Controls is then that BoardManager. State is its ShipState.
+// - Click, Down, Drag and Up return true when the panel used the action. Each panel must write
+//   Refresh.
+// - Down, Drag and Up points are board px in the panel's 1920 x 1080 layout, y down.
+// - Paint turns a colour to gamma and keeps the graphic's alpha. Show switches a part on or off.
+//   Html squashes runs of spaces.
+// - ApplyArt and ApplyFonts run from OnValidate, in the editor only. ArtList calls them too.
+// - Trap: BoardManager asks the panels in the order it found them. The first to use an action
+//   stops the rest.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Base for one drawer or station of the handoff board. BoardManager passes on the input
-/// it does not handle itself and asks every panel to redraw after each change and each tick.
-/// A panel only reads and changes ShipState; it never touches game systems.
-/// </summary>
 public abstract class Panel : MonoBehaviour
 {
     /// <summary>One piece of the panel's art: a sprite and every image that shows it.</summary>

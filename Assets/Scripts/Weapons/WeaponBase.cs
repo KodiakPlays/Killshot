@@ -1,3 +1,36 @@
+// =================================================================================================
+// WeaponBase.cs
+//
+// What it does:
+// The shared base for every older physics gun: LaserWeapon, Macrocannon, MissileLauncher,
+// PointDefenseCanon, Railgun, BroadsideCannon and BoardingPodLauncher. It is never put on an
+// object by itself. The battle board does not use this script.
+//
+// How it works:
+// - It gives every gun the same Inspector settings. The defaults are range 500, a 45-degree angle
+//   of fire and a 1-second reload. Ammo is 30, base damage 10 and the damage factor 1.
+// - At the start it fills the ammo to the maximum.
+// - By default a gun can fire when it is not reloading and has ammo. The reload time must have
+//   passed after the last shot. Each gun can change this check.
+// - Each gun fills in what happens when it fires at a target point.
+// - Other scripts can ask for the ammo left, the maximum ammo and the reload progress (0 to 1).
+//   WeaponManager reads the reload this way.
+// - The angle of fire is stored but no gun uses it to aim or block a shot.
+//
+// Technical:
+// - An abstract class. The seven guns above extend it. WeaponSlot.weaponInstance (WeaponType.cs)
+//   is typed as WeaponBase.
+// - Inspector fields (protected): range, angleOfFire, reloadTime, maxAmmo, baseDamage and
+//   damageModifier.
+// - Runtime fields: currentAmmo, lastFireTime (Time.time), isReloading and fireRate (seconds
+//   between shots). The Inspector does not show fireRate.
+// - WeaponManager calls CanFire, Fire(point) and GetReloadProgress through this type.
+// - Trap: several guns overwrite range, or fill zero fields with defaults, in Start.
+//   The Inspector value may not be the one used.
+// - Trap: the base CanFire checks reloadTime. Only LaserWeapon checks fireRate.
+// - isReloading never turns on, and Reload() has no caller.
+// =================================================================================================
+
 using UnityEngine;
 
 public abstract class WeaponBase : MonoBehaviour

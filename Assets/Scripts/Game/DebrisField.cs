@@ -1,14 +1,44 @@
+// =================================================================================================
+// DebrisField.cs
+//
+// What it does:
+// A debris field is a shape in a level filled with pieces of wreckage, rock or station. It is
+// placed in the level scenes. Its pieces are real copies saved in the level under this object.
+// The field is the same every play. Only the editor tools use this script.
+//
+// How it works:
+// - The shape is a circle, a ring, a band or a line, set in the Inspector, in units. The shape
+//   turns with the object.
+// - The Inspector sets the piece prefabs, how many pieces and their size range. It sets the
+//   smallest gap between two pieces and how they spread: even, thicker in the middle, or in clumps.
+// - It works out where each piece goes from a seed number. The same seed gives the same layout.
+//   It picks random spots and skips any outside the shape or too close to a placed piece.
+// - It makes at most 50 tries for each piece asked for, counted over the whole field. A tight
+//   gap can leave fewer pieces than asked.
+// - The Scatter and Reshuffle buttons in DebrisFieldEditor ask it for the layout and put the
+//   pieces in the scene. Reshuffle picks a new seed first.
+// - The Level window uses it to find, draw, resize and add debris fields.
+// - In the Scene view it draws the shape's outline in grey with the field's name.
+//
+// Technical:
+// - Data: radiusUnits, innerRadiusUnits, lengthUnits and widthUnits, in units. Points are relative
+//   to the field: x east, y north when not turned.
+// - Layout() returns a list of Piece: prefab, spot, turn in degrees and size in units. It changes
+//   nothing in the scene.
+// - Inside(p) tests a point relative to the field. LevelWindow turns world points into that first.
+// - Callers: DebrisFieldEditor (Scatter, Reshuffle and its self-check) and LevelWindow. The game
+//   never calls this script in play mode.
+// - It uses System.Random with the seed. The same seed gives the same layout on any machine.
+// - A line shape is one piece wide: the top of the size range.
+// - Each new spot is checked against every placed piece. That is quick up to a few thousand pieces.
+// - Trap: Scatter deletes every piece under the field first, hand-moved ones too.
+// - Numbers: in the Inspector on each field, in its level scene.
+// =================================================================================================
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// Step 77 (owner, 2026-10-26). A debris field in a level: a shape filled with wreckage, rock or station
-/// pieces. Its pieces are real copies saved in the level under this object, so the field is the same every
-/// play and any piece can be moved by hand. Scatter and Reshuffle in its inspector lay them out again
-/// (Editor/DebrisFieldEditor). Nothing here runs at play. World units (x east, y north);
-/// the shape turns with this object.
-/// </summary>
 public class DebrisField : MonoBehaviour
 {
     public enum Shape { Circle, Ring, Band, Line }

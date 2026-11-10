@@ -1,9 +1,34 @@
+// =================================================================================================
+// WeaponSystemExample.cs
+//
+// What it does:
+// A sample that shows how to drive WeaponManager, the older physics gun switcher, from the
+// keyboard. No scene or prefab has it. The battle board does not use this script.
+//
+// How it works:
+// - At the start it finds WeaponManager on the same object, or adds one and writes a warning.
+// - Every frame it reads keys. E picks the next gun and Q the previous one. It writes the gun's
+//   name to the Console.
+// - Keys 1 to 4 pick the laser, the Macrocannon, the torpedo launcher or the PDC.
+// - Holding Space fires the picked gun at full power. It aims at an aiming mark set in the
+//   Inspector, or 1,000 units straight ahead.
+// - Other code can ask it for a short status text: the gun's name, type, whether it can fire,
+//   and for a laser its ammo and refill progress.
+//
+// Technical:
+// - It calls WeaponManager: SwitchToNextWeapon, SwitchToPreviousWeapon, SwitchToWeaponType,
+//   FireActiveWeapon, GetActiveWeaponSlot and CanActiveWeaponFire.
+// - GetWeaponStatus() has no caller.
+// - Keys are read through the old Input Manager. The fire, next and previous keys are in the
+//   Inspector. Keys 1 to 4 are fixed in code.
+// - Trap: with no aiming mark, it aims along transform.forward. The older ships face along
+//   transform.up.
+// - Trap: on PlayerShip, its keys clash. Q and E dodge there, and 1 to 3 switch power.
+// - Numbers: the 1,000-unit aim distance is in the Inspector.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// Example implementation showing how to use the modular weapon system
-/// This can be attached to a player ship or enemy ship to demonstrate the weapon manager
-/// </summary>
 public class WeaponSystemExample : MonoBehaviour
 {
     [Header("Weapon Manager")]

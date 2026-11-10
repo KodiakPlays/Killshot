@@ -1,11 +1,45 @@
+// =================================================================================================
+// EnemySpawn.cs
+//
+// What it does:
+// An Enemy Spawn marks where an enemy ship starts in a level. It is placed in a level scene. It
+// shows only in the Scene view and the Level window. It sets how that enemy behaves in this level:
+// whether it hunts us, its cruise speed, its patrol route and its radio messages.
+//
+// How it works:
+// - It names the board track whose ship starts here, for example t07 for the Garuda.
+// - When play starts it passes its settings to TacticalWorld. Hunts on: the enemy listens for us,
+//   hunts us and fires. Hunts off: it only cruises and never fires.
+// - A cruise speed of -1 keeps the Tuning window's speed. With hunts off, 0 makes the ship stay
+//   where it starts.
+// - A route of two or more points becomes the enemy's patrol route.
+// - A message time above 0 makes it send radio messages. The first comes after a set time. Then
+//   they come one at a time, each on the air for a set time.
+// - With a box width or height of 0, the ship starts at the spawn's centre. It faces the way the
+//   spawn points. With a size, it starts at a random point in the box each game. It faces a
+//   random way.
+// - A random start is kept at least 1,000 units inside the level's Battle Space.
+// - In the Scene view it draws a red square with its name. It draws a line for the bow, the box
+//   and the route.
+//
+// Technical:
+// - Data: trackKey, sizeUnits (units), hunts, cruiseUnits (units/s, -1 keeps the Tuning value) and
+//   route (world units, x east, y north).
+// - Radio: signalSeconds, firstSignalSeconds and onAirSeconds, in game seconds. All are set in the
+//   Inspector or the Level window.
+// - Start() calls TacticalWorld.Hunts, Signals, Patrols and Spawn. By then TacticalWorld has set
+//   up its ships.
+// - Hunts sets the brain's hunts and firesBack together. The brain is EnemyBrain.
+// - Trap: Signals always runs. It puts our CommsSystem on real messages, even at signalSeconds 0.
+// - Spawn faces the ship by the spawn's Z angle. A heading is minus that angle.
+// - The random start uses UnityEngine.Random, unseeded. Each game is different.
+// - The 1,000-unit margin applies only with a BattleSpace in the level.
+// - LevelWindow reads it to draw the map, drag the box and route, and keep it inside.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// Where an enemy ship starts in a level (owner, 2026-10-25). A box seen only in the Scene view,
-/// never on the board. At play it moves its contact here, facing the way the arrow points. Wolf Hunt
-/// (owner 2026-10-27): with a size, it starts at a random point in the box, facing a random way, every game.
-/// </summary>
 public class EnemySpawn : MonoBehaviour
 {
     [Tooltip("The board track whose ship starts here, e.g. t07 (GARUDA).")]

@@ -3,9 +3,9 @@
 //
 // What it does:
 // This is the mind of a computer-run ship: the Garuda, the ships of our battle group, and a ship
-// that runs from us, like the pirate corvette. It
-// listens for our ship, decides where to go and fires its weapons. It only sets its ship's
-// ordered heading and throttle. The ship then moves by the same rules as ours.
+// that runs from us, like the pirate corvette. It listens for our ship, decides where to go and
+// fires its weapons. It only sets its ship's ordered heading and throttle. The ship then moves by
+// the same rules as ours.
 //
 // How it works:
 // - TacticalWorld calls it each time the board steps the game forward. Its numbers are in the
@@ -13,51 +13,62 @@
 // - How aware it is only goes up: COLD, UNEASY, SEARCHING, ALERT. After 90 game seconds without
 //   hearing us, it calms down to COLD. Then it goes back to its patrol.
 // - Inside its sight range it sees us and goes ALERT. A rock in the way blinds it. A gas cloud
-//   around us cuts its sight. Past that, it hears us by its DRADIS reach times our signal, less
-//   any interference from rocks. Its gain goes up as it gets more aware.
-// - The clearer it hears us, the more aware it gets and the better it guesses where we are. A
-//   hit makes it ALERT and tells it roughly where the shot came from. It can hear our fighters.
+//   around us cuts its sight. Past that, it hears us by its DRADIS reach, less any interference
+//   from rocks, times our signal. Its gain goes up as it gets more aware. The clearer it hears
+//   us, the more aware it gets and the better it guesses where we are. A hit makes it ALERT and
+//   tells it roughly where the shot came from. It can hear our fighters.
 // - When hit, or ALERT with a recent fix on us, it fires torpedo salvos. They come from a
 //   launcher in reach. With a fix its railguns fire too. Each fires when in reach and reloaded,
 //   with us in its cone. It aims where we will be, a little off. Each shot pushes it back a
-//   little, as ours does. A damaged magazine stops it
-//   firing and sends its repair team.
+//   little, as ours does. A damaged magazine stops it firing and sends its repair team.
 // - Steering: ALERT with a fix, it closes in, then turns a side to us and slows. Otherwise it goes
-//   to where it last heard us and searches round it.
+//   to where it last heard us and searches round it. It steers round rocks and ships ahead of it.
+//   It keeps out of the battle space's edge band. If it gets outside, it heads for the middle.
 // - When COLD, it hunts random points across the map. The points drift from its half toward ours.
-//   If its level spawn gives it a patrol route, it follows that instead.
-// - On a patrol route it may turn back at any point. Without a route it changes course halfway
-//   between its radio messages.
+//   If it has a patrol route, it follows that instead. The route comes from its level spawn, or
+//   is set on the ship in the level. On a route it may turn back at any point. A ship can stay
+//   still until our ship comes within a set range.
 // - A level spawn can make it send radio messages to our comms. Each gives its bearing, heading
-//   and speed. It sends the next only after the last is read or lost.
-// - It steers round rocks and ships ahead of it. It keeps out of the battle space's edge band. If
-//   it gets outside, it heads for the middle.
+//   and speed. It sends the next only after the last is read or lost. Without a route it changes
+//   course halfway between messages.
 // - With the battle group setting on, it steers by the formation instead. The group waits where it
 //   starts until our ship comes close. Then it flies the Mission's group route and turns smoothly
-//   onto each new leg. Each ship keeps its place, nose forward, and keeps clear of our ship. The
-//   group waits at the route's end.
-// - With the runs-from-us setting on, it sits still until our ship scans it. Then it runs straight
-//   away from us, round rocks and inside the map, at a set share of its top speed. Once one side
-//   of its armour is gone, it stops dead.
+//   onto each new leg. The group waits at the route's end.
+// - Each group ship keeps its place, nose forward. In flight it turns at most a set angle off the
+//   group's course. It speeds up when behind its place and eases off when ahead. Far from its
+//   place, it flies straight for it. Close to our ship, it keeps the group's course. It stops if
+//   we are ahead of it and speeds on if we are behind. It passes us on its side of the
+//   formation. When it steers round rocks and ships, it ignores our ship.
+// - With the runs-from-us setting on, it stays still until our ship scans it. Then it runs straight
+//   away from us, round rocks and inside the map. It runs at a set share of its top speed. Once
+//   one side of its armour is gone, it stops and stays still.
+//
+// Technical:
+// - Needs a WorldContact on the same object. Data: Level (Awareness), lastKnown and waypoint in
+//   world units, lastHeardAt and lastFixAt in game seconds.
+// - TacticalWorld.OnTick calls Think(ship, us) once per board step, then ship.nav.Tick. A wrecked
+//   or captured ship gets throttle 0 instead of Think. A switched-off brain skips both.
+// - Steering writes only ship.nav.orderedHeading and ship.nav.throttle (percent, capped by
+//   ThrottleCap). Shots go through us.weapons.ShootAt and LaunchAt. Think also spends its
+//   ammunition and orders its repair team. Each railgun shot calls ship.nav.Kick.
+// - TacticalWorld passes EnemySpawn's settings in through CruiseUnits, Patrol() and SendSignals().
+//   AddContact calls Brief() for a ship that arrives.
+// - TacticalWorld.AnyAlert reads Level for QuestSystem. TacticalWorld.HearingUs reads HearsUs for
+//   SensorsPanel's "DETECTED BY" count.
+// - Hearing reach is senRangeBaseUnits plus gain times senRangePerStepUnits, from its ship's stats
+//   file. Rocks take off TacticalWorld.Interference. Trap: every radio message names it GARUDA.
+// - Every random choice uses ship.NextDie(). Steering goes through TacticalWorld.ClearHeading,
+//   then KeepInside. The edge band is ShipState.arenaWarnUnits.
+// - Numbers: [Tune("Enemy")] and [Tune("Battle group")], on the Board tab, per ship. Weapon
+//   reach, ammunition and slug speed are in its ship's stats file.
+// - Trap: escorts and flees change only the steering. It still listens and fires unless hunts and
+//   firesBack are off.
+// - Trap: a hit is seen as a drop in its total armour and room integrity from the last step.
 // =================================================================================================
 
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// The enemy's mind (Step 51; Wolf Hunt, Step 97, owner 2026-10-27). It only writes orders into its own
-/// ship's ShipState (an ordered heading and a throttle) and fires by its own ship's weapon numbers. The ship
-/// turns and moves with the same maths as ours (its NavSystem; TacticalWorld ticks it each board tick).
-///
-/// How aware it is (FTUE_PLAN §4.2) only goes up: COLD, UNEASY, SEARCHING, ALERT.
-/// - Hearing (owner 2026-10-27): it hears us out to its DRADIS reach times our signal (0–100). Silent, we
-///   are not heard. Within its visual range it sees us, whatever our signal. Our fighters are loud too.
-/// - COLD: it hunts the map: points across the battle space, drifting from its half to ours.
-/// - UNEASY: heard faintly. It heads for where it heard us.
-/// - SEARCHING: heard clearly, or twice in a minute. It goes faster, then searches round that spot.
-/// - ALERT: heard loud and close, seen, or hit. QuestSystem starts the reinforcements' countdown. It closes
-///   to its railguns' reach, turns a side to us, and fires railguns and torpedo salvos while it has a fix.
-/// </summary>
 [RequireComponent(typeof(WorldContact))]
 public class EnemyBrain : MonoBehaviour
 {

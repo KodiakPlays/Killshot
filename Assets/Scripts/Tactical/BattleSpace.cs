@@ -1,12 +1,34 @@
+// =================================================================================================
+// BattleSpace.cs
+//
+// What it does:
+// A Battle Space sets how big a level's battle space is, in units. It is placed in a level scene,
+// one per level. A level without one keeps the size set on the board's BoardManager.
+//
+// How it works:
+// - Its width and height are set in the Inspector, or in the Level window. Each is at least 1,000
+//   units.
+// - When play starts it finds the board's BoardManager. It sets the board's battle space to this
+//   width and height. Then it redraws the plot at the same zoom.
+// - The battle space is always centred on the grid's centre, wherever this object is placed.
+// - EnemySpawn reads it to keep the enemy's start inside the battle space.
+// - In the Scene view it draws the edge as a grey box. Its size is written at the top left.
+//
+// Technical:
+// - Data: widthUnits and heightUnits, units, at least 1,000 each. The default is 100,000 each.
+// - Start() writes them to arenaWidthUnits and arenaHeightUnits in BoardManager.State. Then
+//   BoardManager.SetZoom(ZoomExact) redraws the plot.
+// - Without a Battle Space, the size is those two values, [Tune("Arena")] in ShipState.
+// - Start() runs after the board is set up, whether the level opened with it or loaded on top.
+// - It uses FindAnyObjectByType. With no BoardManager it does nothing.
+// - EnemySpawn and LevelWindow read it. LevelWindow adds it, at the grid's centre.
+// - Trap: QuestSystem can grow the battle space later in a drill, over the same two values.
+// - The gizmo is editor-only code, inside #if UNITY_EDITOR.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// Battle Space: how big a level's battle space is, units (owner, 2026-10-27, decision 50). Seen only in
-/// the Scene view, like the spawn boxes, as the battle space's edge. At play it sets the board's
-/// battle space to this size, centred on the grid's centre. One per level; a level without one keeps
-/// the board's own size (100,000 x 100,000 units).
-/// </summary>
 public class BattleSpace : MonoBehaviour
 {
     [Tooltip("Width of the battle space, units (east to west).")]

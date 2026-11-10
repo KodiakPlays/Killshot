@@ -1,3 +1,41 @@
+// =================================================================================================
+// TestUIKeyControler.cs
+//
+// What it does:
+// A test script that controls the older ship screens (UIController) from the keyboard. It is on the
+// Demo, Prototype, Prototype Dev, UI and Canvas_CRT scenes. The battle board does not use this
+// script.
+//
+// How it works:
+// - At start it finds the main camera, if none is set in the Inspector.
+// - Every frame it searches the scene for PlayerShip.
+// - While R is held, it asks UIController for the railgun effect, every frame.
+// - While W or S is held, and as either is let go, it reads PlayerShip's speed. It sends the speed
+//   to UIController's speedometer. With S held or on letting go, going backwards gives a negative
+//   speed. The speedometer does nothing with it.
+// - When the camera turns by more than 0.1 degrees, it sends the camera's angle to the same
+//   speedometer.
+// - B shakes the view and flashes static through UIController, and gives PlayerShip 10 damage.
+// - 0 clears the four hull side readouts. 4, 5 and 6 fill all four with 25, 50 or 100.
+// - The checks for Q, E, 1, 2 and 3 do nothing. A block for A and D is commented out. A few
+//   values at the top are never used.
+//
+// Technical:
+// - Data: cameraTransform is the camera watched for turns. lastCameraRotation is its last y angle,
+//   in degrees.
+// - playerShipRef, playerShipTrans, rotation and movmentSpeed are never used.
+// - It calls UIController.Instance: RailFire, UpdateSpeedometer, updateShipHit and UpdateCompass.
+//   It calls PlayerShip.TakeDamage.
+// - No other script calls it. It runs from its Update.
+// - Keys are fixed in the code and read with the old Input Manager.
+// - Trap: it runs FindFirstObjectByType for PlayerShip every frame.
+// - Trap: R held starts a new railgun effect every frame. The effects pile up.
+// - Trap: UIController reads HullSystem every 0.1 seconds. With a HullSystem in the scene, that
+//   writes over the 0, 4, 5 and 6 test values.
+// - Trap: UIController reads 0 and 4 too, for its enemy laser test. With no contacts, those keys
+//   stop it with an error.
+// =================================================================================================
+
 using System.Diagnostics;
 using UnityEngine;
 

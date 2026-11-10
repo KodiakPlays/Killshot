@@ -1,3 +1,42 @@
+// =================================================================================================
+// PhosphorData.cs
+//
+// What it does:
+// This reads the blocky green letters used on the intro screen. Each letter is drawn as a grid of
+// small squares. It turns a word into a black-and-white picture for the intro screen to show.
+// StarwolfIntroController is the only script that uses it.
+//
+// How it works:
+// - The letter shapes, sizes and colours are in glyphs.json, in the intro's Resources folder. Load
+//   reads that file.
+// - Load checks the file and stops with an error if anything is wrong: the sizes, the four colour
+//   codes, or a letter that is badly written or listed twice.
+// - Each letter is 10 rows of 0s and 1s. Every stroke is two squares wide and two tall. Letters
+//   that break this rule are refused.
+// - Cells lays out a word, letter by letter, with gaps between letters. It can add a box round
+//   the word. It can spread the letters out to fill a set width. Two words then share one box
+//   size.
+// - MakeMask turns that layout into a picture: a white square for each lit cell, with gaps
+//   between squares. The intro's display shader colours it.
+// - Lower-case letters are read as capitals. A letter with no shape in the file is an error.
+//
+// Technical:
+// - Namespace Starwolf.Intro. PhosphorData and PhosphorGlyph are plain classes, filled from JSON.
+// - The file is Assets/StarwolfIntro/Resources/StarwolfIntro/glyphs.json. Its numbers are cell and
+//   gap sizes in pixels, and gaps and padding in cells.
+// - Colours: phosphor, background, rim and glow, as #RRGGBB text. The controller passes them to
+//   the shader.
+// - Load(TextAsset) and Validate() throw ArgumentException on any fault. Get(c) throws on a
+//   missing letter.
+// - Cells(text, frame, out size, fitWidth) gives lit cells from the top left, and the size in
+//   cells.
+// - MakeMask() builds an RGBA32 Texture2D: point filtered, linear, no mipmaps, unreadable after
+//   Apply. Pitch is cellPixels plus cellGapPixels.
+// - StarwolfIntroController is the only caller. It loads the file once and makes six masks.
+// - Trap: Validate wants schemaVersion 1, rowCount 10 and strokeCells 2. Change those and every
+//   load fails.
+// =================================================================================================
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;

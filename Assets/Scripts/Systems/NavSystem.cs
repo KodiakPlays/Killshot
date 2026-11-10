@@ -1,13 +1,63 @@
+// =================================================================================================
+// NavSystem.cs
+//
+// What it does:
+// One ship's movement: where it is, how fast it goes, the way it faces, and its throttle. Every
+// ship has one. The Helm panel on the board steers our ship through it. It puts the ship's 3D
+// model in the right place.
+//
+// How it works:
+// - Each board step it steers, then moves the ship, then places the model. The numbers come from
+//   the ship's stats file (the Tuning window).
+// - The throttle runs from -100 (full reverse) to 100 (full ahead). More ENG power gives a higher
+//   top speed, faster speeding up and tighter turns. If ENG power drops below what the throttle
+//   needs, the throttle goes back to 0. Engine room damage lowers the throttle limit and the turn.
+// - A and D move the ordered heading a few degrees. The bow then swings toward it in whole
+//   degrees, at the ship's turn rate.
+// - Shift with A or D gives a slow turn for aiming, down to a part of a degree. While the railgun
+//   is locked on, WeaponSystem gives it a heading and the bow turns itself onto it.
+// - Speed along the nose moves toward the throttle's speed. Reverse is slower. Sideways speed
+//   fades. After a turn the ship slides, then lines up. All speed fades a little.
+// - Q and E push the ship sideways with the nose kept still. A tap gives a small push. Held, the
+//   push grows over a short time. Let go, and the slide fades.
+// - With no power on the ENG bus there is no thrust and no braking. The ship drifts on.
+//   A railgun shot pushes the ship back (Kick). The thrusters stop the push soon after. With no
+//   ENG power the push stays as drift.
+// - Between board steps the model glides on along its speed and its turn. It uses BoardManager's
+//   time from the last step. It places the model every frame.
+// - It gives the ship's box size for crashes and the plot, and its speed and course. It gives the
+//   G-load and stability numbers the Helm panel shows.
+// - It keeps the autopilot settings the Helm panel sets: attitude hold, approach mode and approach
+//   range. They do not steer the ship. The approach mode adds to the G-load.
+//
+// Technical:
+// - Data: x and y are the true position in units (x east, y north). vx and vy are units per
+//   game second.
+// - heading and orderedHeading are whole degrees, clockwise from north. fine adds the part of a
+//   degree. throttle is -100 to 100.
+// - Tick(dt) steers, moves, then places the model. BoardManager calls it for our ship.
+//   TacticalWorld calls it for the others.
+// - HelmPanel calls SetThrottle, StepOrderedHeading, ToggleAttitude, SetApproachMode and
+//   StepApproachRange. It sets slide, slideTaps and fineTurn from the keys. EnemyBrain sets
+//   orderedHeading and throttle itself, held to ThrottleCap.
+// - WeaponSystem sets aimHeading while the railgun is locked. NaN means no lock. WeaponSystem and
+//   EnemyBrain call Kick on each railgun shot.
+// - It reads the ENG bus (PowerSystem) and the engine room (DamageSystem). Speed, push and turn
+//   rise in equal steps from ENG 1 to full ENG. turnBank keeps the part degrees between steps.
+//   Slow rates then turn at the right speed.
+// - DrawnX, DrawnY and DrawnHeading move the ship on by BoardManager.SinceTick. PlotPanel,
+//   PeriscopePanel and HelmPanel read them. Update places the model every frame.
+// - TacticalWorld calls PlaceAt to start a ship. It uses BoxHalf, wasX and wasY for crashes.
+//   BoxHalf comes from the length and width in the stats file.
+// - Numbers: NavSystem.Stats, the navigation part of each ship's stats file. The kick numbers are
+//   in the weapons part.
+// - Traps: the drawn spot is a straight-line guess between steps. Steer has no ENG check. With ENG
+//   at 0 the bow still turns, at the ENG 1 rate.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// Navigation: one ship's movement. It holds the ship's position, velocity, heading, ordered heading and
-/// throttle, and moves the ship once per board tick. Our ship and every enemy carry one (the enemy is
-/// our ship with other stats). Owner 2026-10-26: movement lives in one place, here.
-/// Rules from board-logic.js (thrDown, setAtt, setApMode, apRangeUp/Down, onKey, gLoadNum, stabNum,
-/// the heading swing in tickPower), Step 41 (the ship moves and slides) and Step 63 (5x speeds).
-/// </summary>
 public class NavSystem : MonoBehaviour
 {
     [Header("Where the ship is, units (x east, y north)")]

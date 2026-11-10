@@ -1,16 +1,51 @@
+// =================================================================================================
+// Autopilot.cs
+//
+// What it does:
+// An autopilot for the older physics ship (PlayerShip). It flies the ship to a point, or keeps it
+// side-on to a target at a set distance. No scene, prefab or other script turns it on. The battle
+// board does not use this script.
+//
+// How it works:
+// - It goes on the same object as PlayerShip, PowerManager and InternalSubsystems, and finds them
+//   at the start.
+// - Other code starts it in one of two ways: fly to a point, or fight a target at a range with
+//   the left or right side facing it. The ranges on offer are 0, 5,000, 10,000, 18,000 and 25,000.
+// - Every physics step, any of W, A, S, D or a left click switches it off at once.
+// - Flying to a point: it turns the ship toward the point and pushes it forward. It stops the
+//   autopilot within 1 unit of the point. It does not brake. It does not steer round obstacles.
+// - Fighting: it turns the ship side-on to the target. When the ship is over 500 units too far,
+//   it may push forward. It does so only if its nose points partly toward the target. If it is
+//   too close, it does not push.
+// - Turning speed is the ship's turn rate times two factors: the engine power from PowerManager
+//   and the damage factor from InternalSubsystems.
+// - Pushing forward sets the ship's speed straight to 100 units per second. This is multiplied by
+//   the engine power and by the engine damage factor from InternalSubsystems.
+// - Each start, stop and range change writes a line to the Console.
+//
+// Technical:
+// - Data: navigationTarget (a world point), combatTarget, desiredRange in units, and orientation
+//   (AutopilotOrientation: Port or Starboard).
+// - Methods: EngageNavigation, EngageCombat, SetRange(index), SetOrientation and Disengage. No
+//   script calls them.
+// - It runs in FixedUpdate. It reads keys through the old Input Manager (Input.GetKey).
+// - It calls PowerManager.GetSystemEfficiency("engines"). It calls InternalSubsystems for
+//   GetTurnRateMultiplier and GetSpeedMultiplier. It reads PlayerShip.turnRate (degrees per
+//   second).
+// - It moves the Rigidbody: MoveRotation to turn, and linearVelocity set outright to push. The
+//   ship turns on the XY plane, nose along transform.up.
+// - Numbers: the range list (engagementRanges) is in the Inspector. The top speed of 100, the
+//   500-unit band and the 1-unit arrival distance are fixed in code.
+// - Trap: the sides are swapped. Port puts the target on the ship's right. Starboard puts it on
+//   the left.
+// - Trap: a push sets the ship's speed outright each step. A faster ship drops to that speed.
+// - Trap: once side-on, the nose points across the line to the target. A push then does not
+//   close the range.
+// - Trap: the left click is read in FixedUpdate. A click on a frame with no physics step is missed.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// Autopilot system per GDD spec.
-/// 
-/// Player activates from World Map by selecting a coordinate, beacon, signal source, or ship contact.
-/// Ship turns and accelerates based on current turn speed and engine thrust.
-/// Does NOT avoid obstacles. Does NOT decelerate automatically.
-/// Disengages instantly on any manual movement input (WASD or mouse click).
-/// 
-/// Combat mode: Set Target, Set Range (0, 5000, 10000, 18000, 25000), Set Orientation (Port/Starboard).
-/// Ship rotates and maintains course and distance accordingly.
-/// </summary>
 public enum AutopilotOrientation
 {
     Port,       // Face target with port (left) side

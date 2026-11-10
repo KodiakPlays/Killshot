@@ -1,9 +1,39 @@
+// =================================================================================================
+// WeaponUIDisplay.cs
+//
+// What it does:
+// Fills in the gun readout on the older UIController screen for the physics guns: gun name,
+// status, ammo and a fill bar. No scene or prefab has it. The battle board does not use this
+// script.
+//
+// How it works:
+// - At the start it finds WeaponManager in the scene, unless one is set in the Inspector.
+// - Ten times a second it reads the picked gun from WeaponManager and sends the readout to
+//   UIController.
+// - With no gun picked it shows NO WEAPON and OFFLINE. Otherwise the status is READY or RELOADING.
+// - Broadside: it shows LOCKED, PAINTING or SCANNING for each side, and the ammo. The fill bar
+//   shows the lock progress or the ammo.
+// - Macrocannon: it shows LOCKED or SCANNING.
+// - Torpedo launcher: it shows MISSILES, with the first tube's lock progress as the fill bar.
+// - Railgun: while charging it shows CHARGING and the charge percent. Otherwise it shows the ammo
+//   and COOLDOWN. The old Railgun never reports itself ready. READY never shows for it.
+// - Other code can set the WeaponManager by hand or ask for an update at once.
+//
+// Technical:
+// - It calls WeaponManager.GetActiveWeaponSlot and CanActiveWeaponFire. It checks the picked
+//   gun's class and reads that gun's getters.
+// - It sends the readout through UIController.Instance.UpdateWeaponDisplay and GetWeaponIcon.
+// - SetWeaponManager and ForceUpdate have no caller.
+// - Numbers: the update gap (0.1 s) and the auto-find switch are in the Inspector.
+// - Trap: WeaponManager sends the same readout every 0.1 seconds too. With both running, each
+//   overwrites the other.
+// - Trap: a torpedo launcher with no tubes gives an error on its lock progress.
+// - Trap: a Broadside with 0 maximum ammo, as on the PlayerShip prefab, makes the fill 0 / 0.
+//   The fill bar gets NaN.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// UI component for displaying weapon information
-/// Gathers weapon data and routes display through UIController
-/// </summary>
 public class WeaponUIDisplay : MonoBehaviour
 {
     [Header("Weapon System")]

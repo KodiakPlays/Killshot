@@ -78,8 +78,10 @@ pages, and most of it has been overtaken.
 | What the game is, how to run it, the controls | `README.md` (repo root) |
 | What Soham's older scripts do, read line by line as of 2026-09-01 | `docs/CODEBASE_BASELINE.md` |
 | What the board's scripts are and what they are wired to | `docs/BUILD_LOG.md`, section 3 |
+| What any C# script does | `docs/SCRIPT_LIST.md` lists all 109. Each script also starts with a note in plain English on what it does and how it works. The rules for those notes are in `docs/script-notes/BRIEF.md`. |
 | What is built in the tactical scene, and the traps already hit | `docs/BUILD_LOG.md`. The traps are in section 5. |
 | What is left to do, sorted | `docs/BUILD_LOG.md`, section 8, "Triage" |
+| Every known bug that is not fixed | `docs/BUILD_LOG.md`, section 8, "Bug list" |
 | A ship's numbers: speed, power, weapons, armour, crew per room | `Assets/Ships/Asura.asset` (our ship), `Assets/Ships/Garuda.asset` (the enemy cruiser) and `Assets/Ships/Frigate.asset` (the Naga-class frigates). Edit them in **Starwolf → Tuning**, on the Ship and Enemy tabs. Each room's row from bow to stern (Step 186), and each side's armour, are also on the Hard Points tab → ROOMS. |
 | The keys, and how to change them | `README.md`, Controls. Change them on the Keys tab of **Starwolf → Tuning**. |
 | How damage works: armour, rooms, fire, vacuum, radiation | `docs/DAMAGE_README.md` |

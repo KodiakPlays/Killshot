@@ -1,12 +1,40 @@
+// =================================================================================================
+// ScopeSight.cs
+//
+// What it does:
+// Draws the red line picture inside the periscope's round window on the battle board. It is on the
+// Periscope panel prefab. The picture looks down a corridor: ribs that drift inward, rails that run
+// to a small far frame, and a horizon with height marks.
+//
+// How it works:
+// - It redraws every frame. A counter moves on by real time and makes the ribs drift toward the
+//   middle. It keeps moving while the game is paused.
+// - First it fills a dark red-black ground. Then a faint glow at the far frame.
+// - Nine upright ribs on each side drift inward. Nearer ribs are thicker and brighter.
+// - Rails run from the near edges to the far frame, at three heights, top and bottom.
+// - The far frame is a small bright box in the middle.
+// - Short horizon lines show at the left and right edges. A ladder of height marks shows on the
+//   right.
+// - PeriscopePanel passes it the periscope zoom. A higher zoom makes the corridor bigger.
+// - The ground and line colours are set in the Inspector. A round mask in the prefab cuts the
+//   picture to a circle.
+//
+// Technical:
+// - Data: zoom (set by PeriscopePanel), drift (counter steps per real second), and the ground and
+//   ink colours.
+// - Update moves the counter by Time.unscaledDeltaTime and asks for a redraw. OnPopulateMesh then
+//   builds the whole picture again.
+// - Points are px inside the graphic, y down from the top-left.
+// - Colours turn to gamma first. Each line sets how faint it is.
+// - Sizes follow the box. At zoom 1 the corridor's near end is the box's width and 0.54 of its
+//   height. The zoom scales both.
+// - PeriscopePanel is the only script that uses it.
+// - Numbers: drift and the two colours are in the Inspector. The shape's numbers are in the code.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Step 33h-3. The periscope sight picture: board-logic.js drawScope, redrawn every frame in
-/// accent.alarm on the periscope ground — a corridor of ribs drifting inward, rails to a far
-/// aperture, and the horizon and elevation ladder. Canvas px, y down, as the board draws it.
-/// Sits under a circle mask (the aperture is a 340 px circle).
-/// </summary>
 public class ScopeSight : MaskableGraphic
 {
     [Tooltip("scopeZoom, set by the periscope panel.")]

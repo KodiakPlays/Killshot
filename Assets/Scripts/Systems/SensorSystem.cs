@@ -1,15 +1,57 @@
+// =================================================================================================
+// SensorSystem.cs
+//
+// What it does:
+// One ship's sensors: DRADIS, the ACTIVE SCAN cone, and the ship's signal (how easy it is to
+// hear). Every ship has one. The Sensors panel on the board shows and sets our ship's sensors.
+// It decides what other ships are heard, scanned and in sight.
+//
+// How it works:
+// - DRADIS hears a ship when DRADIS is on and the SEN bus has power. The ship must be in range and
+//   give off the picked band: THERM, RAD, UV or EM. UV hears less far. Rocks on the line cut the
+//   range.
+// - The range grows with the gain, from 1 to 5. The gain cannot go above the units on the SEN
+//   bus. If the SEN power drops below the gain, the gain goes back to 1.
+// - ACTIVE SCAN covers a cone. The player turns it and makes it wider or narrower. Letting go of
+//   the cone dial scans every ship inside it. Clicking a heard ship's row scans just that one, if
+//   it is inside the cone.
+// - A scan names the ship and notes its course, its speed and the time. WeaponSystem uses that
+//   note for its shot.
+// - A ship is in sight when its near side is inside visual range and no rock is on the line. It
+//   takes half the box's shorter side off the range. It is in sight near one of our fighters too.
+// - When the DRADIS sweep touches a ship, the plot asks it to note the ship's place and the time.
+//   Out of sight, the plot shows the ship at that place until the next pass.
+// - It counts each ship the first time it is heard or named. BoardManager shows the count on the
+//   alarm strip until the player clears it.
+// - Every board step the signal moves slowly toward its target. Each power unit on a bus adds to
+//   it. ACTIVE SCAN or a weapons lock adds more. In a gas cloud the ship keeps only a share.
+// - The ranges, signal rates and gas cloud numbers come from the ship's stats file (the Tuning
+//   window).
+//
+// Technical:
+// - Data: senBoost is the gain, 1 to 5. spectrum is the band. coneBrg and coneArc are degrees.
+//   coneArc is half the cone's width. signal is 0 to 100. identified lists scanned track keys.
+//   It starts with bc1, our boat's track, set in the Inspector.
+// - Contacts are ShipState.tracks. Heard, ConeCovers and InSight test one Track. A Track's
+//   interference, from rocks, cuts the range.
+// - SensorsPanel calls ToggleDradis, ToggleActive, SetGain, SetSpectrum, SetCone, ConeWiden,
+//   ConeNarrow, ResolveLit and Identify.
+// - PlotPanel calls See as the sweep passes a ship, and NoteScan. It reads Heard and InSight.
+// - WeaponSystem reads ScanOf (course and speed at the scan), Heard and InSight for its shot.
+// - BoardManager calls Tick, NoteNewContacts and AckContacts. Tick runs for our ship only.
+// - TacticalWorld sets inCloud each step. EnemyBrain reads our signal and inCloud.
+// - InSight uses the other ship's NavSystem.BoxHalf, and our fighters through
+//   HangarSystem.SeesShip.
+// - SignalTarget adds each bus's units times PowerSystem's busSignalPerUnit. ACTIVE SCAN or a lock
+//   (WeaponSystem.lockKey) adds activeScanSignal.
+// - Numbers: SensorSystem.Stats, the sensors part of each ship's stats file: ranges, cone steps,
+//   signal rates and the gas cloud numbers.
+// =================================================================================================
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// Sensors: one ship's DRADIS and active scan. It holds the gain, the band, the scan cone, the ship's own
-/// signal (how loud it is), which contacts are identified, and the bearing trail. It decides what is heard,
-/// what the cone covers and what is in sight. Our ship and every enemy carry one (the enemy is our ship with
-/// other stats). Owner 2026-10-26: sensors live in one place, here. The contact list stays on the ship
-/// state (ShipState.tracks); this reads it. Rules from board-logic.js (heard, coneCovers, spectra
-/// count, trackers, startGain, moveCone, resolveLit, identify, getSig) and Steps 35, 42–45 and 75.
-/// </summary>
 public class SensorSystem : MonoBehaviour
 {
     [Header("DRADIS and active scan — the board's initial state")]

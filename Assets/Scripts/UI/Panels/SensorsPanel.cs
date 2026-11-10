@@ -1,14 +1,63 @@
+// =================================================================================================
+// SensorsPanel.cs
+//
+// What it does:
+// The Sensors drawer on the battle board. The player turns DRADIS and ACTIVE SCAN on and off, and
+// sets the gain and the band. They aim and widen the scan cone, and read the list of contacts. It
+// shows our ship's signal in the drawer and in the signal box. That box is at the top right of the
+// frame. It is on the Sensors prefab. The sensor rules are in SensorSystem.
+//
+// How it works:
+// - BoardManager passes it clicks. The DRADIS and ACTIVE rockers switch on and off. A band row
+//   picks that band. NARROW and WIDEN change the cone's width. Clicking a contact row scans that
+//   ship if DRADIS hears it and the cone covers it. SensorSystem makes each change.
+// - Dragging the gain fader sets the gain from 1 to 5 by the mouse's height. The limit is the
+//   power on the SEN bus. Dragging on the cone dial points the cone at the mouse. Letting go of the
+//   dial scans every ship under the cone.
+// - BoardManager redraws it after every click and every 0.42 seconds. It reads SensorSystem
+//   through ShipState. It asks TacticalWorld how many enemy ships can hear us.
+// - The signal shows as a percent and ten cells: white, amber from the fifth, red from the eighth.
+//   A note says DETECTED BY a number of HOSTILES, IN GAS CLOUD, UNDETECTED, RUNNING SILENT,
+//   EMISSIONS DECAYING or EMISSIONS LOW. Every frame, the signal lamps blink while our signal is
+//   high enough for the enemy to track us.
+// - The gain section shows the scan's range, the gain, and how much gain the SEN bus allows. The
+//   fader's cap slides to its place over 0.12 seconds.
+// - Each band row shows how many ships are in that band. The chosen band lights up.
+// - The cone dial's needle and wedge show the cone's bearing and width, with numbers. A label
+//   says EMITTING while ACTIVE is on.
+// - The contact list has one row per heard or scanned ship. Each row shows the ship's name (BOGEY
+//   until scanned) and its bearing. It shows the range and class once scanned, and RESOLVING while
+//   under the cone. A row lights up while the cone covers it.
+// - The end of the file adds a small helper that sets a colour's see-through value.
+//   EngineeringPanel uses it too. The playtest runner reads the signal note.
+//
+// Technical:
+// - Data: the sensor state is in SensorSystem: dradis, active, senBoost (gain 1 to 5), spectrum,
+//   coneBrg, coneArc and signal.
+// - BoardManager calls Click, Down, Drag, Up and Refresh. Clicks: "sensors.dradis",
+//   "sensors.active", "sensors.band", "sensors.narrow", "sensors.widen" and "sensors.identify".
+// - Press and drag: "sensors.gain" and "sensors.cone". Letting go of the cone calls
+//   SensorSystem.ResolveLit.
+// - It calls SensorSystem: ToggleDradis, ToggleActive, SetSpectrum, ConeNarrow, ConeWiden,
+//   Identify, SetGain and SetCone. SetGain stops at GainCap.
+// - A contact row's arg is its place in the list of heard or scanned ships. The list is built
+//   fresh on each click.
+// - The DETECTED BY count is TacticalWorld.HearingUs. TacticalWorld is found once with
+//   FindAnyObjectByType.
+// - Numbers: the tracked signal line is in the sensors part of the ship stats file. Fader, dial and
+//   blink numbers are in the Inspector.
+// - Trap: wellTop, trackBottom and dialCentre are board px and must match the art. The scan range
+//   shows units with "KM" after it.
+// - Trap: the signal box and SENSOR RANGE slots are empty on the prefab. The board scene fills
+//   them. The SENSOR RANGE texts there are switched off. Moving them shows nothing.
+// - ColorAlpha.WithAlpha is at the end of the file. PlaytestRunner reads the private sigNote field
+//   by name.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Step 33c. The Sensors drawer: DRADIS and ACTIVE SCAN masters, own emissions, array gain and the
-/// four spectrum bands, the active scan cone dial with NARROW / WIDEN, and the contact board.
-/// Rules and values from board-logic.js (setToggles, sigCells, sigInk, sigLamp, sigNote, spectra,
-/// gainCapTop, gainTrack, boostCost, senRangeLabel, cone*, emit*, bogeyCount, bogeys) and
-/// UIStateSpec §8.2 (startGain, startCone) and §11 "Sensors: listen, then look, then ping".
-/// </summary>
 public class SensorsPanel : Panel
 {
     [System.Serializable]

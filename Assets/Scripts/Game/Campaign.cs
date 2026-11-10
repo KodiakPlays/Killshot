@@ -1,10 +1,35 @@
+// =================================================================================================
+// Campaign.cs
+//
+// What it does:
+// The list of campaign missions, in order. The list is one file in the project:
+// Assets/Campaign/Campaign.asset. The sector map reads it and shows one dot per mission.
+//
+// How it works:
+// - Each mission has a title, a level scene, a briefing text and a spot on the sector map.
+// - The spot is in px from the middle of a 1920 x 1080 screen.
+// - The level is a slot in the Inspector. You drag the level's scene into it, and it keeps the
+//   scene's name. The scene slot is drawn by SceneDrawer, in Assets/Editor/ReadOnlyDrawer.cs.
+//   That drawer adds the scene to the build's scene list.
+// - This file makes the [Scene] mark. It turns a text field into that scene slot.
+// - SectorMap reads the list. A mission opens once the one before it is won.
+// - The file also has the story's closing line. The end card shows it after the last mission.
+// - Won counts how many of its missions a save has won. The save slots show that count.
+//
+// Technical:
+// - Data: missions is a list of Campaign.Mission: title, level, brief and at. level is the scene
+//   name as text.
+// - closingLine is read by EndCard. EndScreenPanel shows the end card only if it is not empty.
+// - Won(done) counts the missions whose level is in a save's list of won levels. SaveSlots and
+//   SaveGame.FinishedWith call it.
+// - SectorMap, SaveSlots and EndCard each get the file in the Inspector. SectorMap passes it on to
+//   SaveGame.campaign.
+// - SceneAttribute is the [Scene] mark. Its drawer is SceneDrawer, in the Editor folder.
+// - Trap: saves keep won levels by scene name. A renamed level scene loses its wins in old saves.
+// =================================================================================================
+
 using UnityEngine;
 
-/// <summary>
-/// The campaign (owner 2026-11-10): its missions, in order, in one file, Assets/Campaign/Campaign.asset. The sector map
-/// shows them as dots. Each dot appears once the mission before it is won. Drag a mission's level scene into its Level
-/// slot; the slot also puts the scene in the build.
-/// </summary>
 public class Campaign : ScriptableObject
 {
     [System.Serializable]

@@ -26,18 +26,33 @@
 // - It marks a contact as a wreck when its ship is destroyed, and counts the kill.
 // - Each ship has a set of dice with a fixed start, for damage chances and the PDCs.
 // - It works out where a straight shot path meets a ship's box, and the side it goes through.
-// - It has number helpers that round the same way as the web page version of the board.
+//   Its number helpers round the same way as the web page version of the board.
+//
+// Technical:
+// - Data: a plain class on no object. Our ship's copy is saved in the scene, on BoardManager.
+//   WorldContact makes one in code for each other ship, with the code's starting values.
+// - The Use methods link the eight systems and set each system's ship field. CommsSystem gets no
+//   link back.
+// - tracks is the contact list. TacticalWorld calls KeepTracks and AddTrack, and writes each
+//   Track's world place. It sets ShipOf and RockOnLine on our ShipState only. Others have none.
+// - missionNow is the mission clock in game seconds. BoardManager sets it for our ship.
+//   TacticalWorld copies it to the others.
+// - PlotPanel calls MarkDown, MarkMove, MarkUp, PointNear and EraseMark. WeaponSystem and PlotPanel
+//   call TrackLeg.
+// - PeriscopePanel calls Slew, EndSlew, SlewTo and SetZoom. It reads ScopeFill and ScopeFits.
+//   Slew clears weapons.sw[2] and sw[3] unless locked.
+// - BoardManager calls TickArena and NoteWrecks each step. WeaponSystem and HangarSystem call Kill.
+//   WeaponSystem calls EntersBox for each shot.
+// - Roll and NextDie use System.Random seeded 49. DamageSystem, WeaponSystem, HangarSystem and
+//   EnemyBrain share it. The rolls start the same every game.
+// - Numbers: [Tune] sections "Arena", "Periscope & fire control" and "Plot tools" on the Tuning
+//   window's Board tab.
+// - Trap: use JsRound for shown numbers. Mathf.RoundToInt rounds halves to even.
 // =================================================================================================
 
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-/// The handoff board's own state and rules, ported from reference/board-logic.js — what the
-/// board's controls do before any game system is wired in. Plain data: one instance lives on
-/// BoardManager and every panel reads it. Grows one drawer at a time (Step 33b on).
-/// Every starting value and constant is from the board's initial state and data tables.
-/// </summary>
 [System.Serializable]
 public class ShipState
 {

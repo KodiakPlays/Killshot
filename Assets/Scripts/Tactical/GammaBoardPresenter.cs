@@ -1,15 +1,42 @@
+// =================================================================================================
+// GammaBoardPresenter.cs
+//
+// What it does:
+// This makes the battle board's see-through layers mix their colours the way a web browser does.
+// It is in the board scene, and in the Ship and Fire Control Codex scenes.
+//
+// How it works:
+// - The board camera draws the whole board into an off-screen picture the size of the screen.
+//   The colours are mixed in that picture with the design's values, left unconverted.
+// - A second camera shows that picture full screen on a top layer. A board shader converts the
+//   colours once, at that last step.
+// - It runs in the editor as well as in play mode. Every frame it checks the screen size and the
+//   smoothing setting. It makes a new off-screen picture only when one of them changes.
+// - The smoothing setting softens the edges of shapes the board draws itself: room rings, bars,
+//   plot lines and wedges. 4 is the default. 1 means hard, grainy edges.
+// - The picture is the same size as the screen. Mouse clicks on the board line up with what you
+//   see.
+// - When it is switched off, the board camera gets its normal output back. The picture is freed.
+//
+// Technical:
+// - [ExecuteAlways]. Inspector fields: boardCamera, presentCamera, screen (a RawImage on an
+//   overlay canvas) and msaaSamples (4).
+// - Refresh() runs in OnEnable and every LateUpdate. It rebuilds the texture only on a new
+//   presentCamera size or msaaSamples value.
+// - The texture is ARGB32, linear, 24-bit depth, never saved. boardCamera.targetTexture and
+//   screen.texture both point at it.
+// - The shader is Starwolf/UI/BoardGammaToLinear, in Assets/UI/Shader. Its material is in
+//   Assets/UI/Board/Materials.
+// - Trap: board sprites are imported with sRGB off. Board colours in code are written with
+//   Color.gamma. A new sprite or colour must follow the same rule, or it looks wrong.
+// - Five files in Assets/UI/Board have sRGB on and still look right. Three are plain white plot
+//   shapes. Two are sector map pictures.
+// - No script calls it. PlotGrid has a gammaBoard switch for the same rule.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Makes the handoff board blend its translucency in gamma space, as the browser board does,
-/// inside a Linear project. The board camera draws the board canvas into a linear-format render
-/// texture the size of the screen; a RawImage on an overlay canvas shows it through
-/// Starwolf/UI/BoardGammaToLinear. The board's sprites are imported with sRGB off, and its colours
-/// are written pre-encoded (Color.gamma) because the canvas linearises vertex colours once — so the
-/// blend sees the design's sRGB values, and nothing is converted until that last step.
-/// Same size as the screen, so the board canvas's raycasts still line up with the mouse.
-/// </summary>
 [ExecuteAlways]
 public class GammaBoardPresenter : MonoBehaviour
 {

@@ -1,16 +1,64 @@
+// =================================================================================================
+// PeriscopePanel.cs
+//
+// What it does:
+// The Periscope panel on the battle board. It is the targeting computer. The player turns the
+// round sight onto a ship. They zoom until the ship fits the box in the middle. Then they wait for
+// the lock bar to fill. It shows what a scan has found about that ship. It is on the Periscope
+// prefab.
+//
+// How it works:
+// - Dragging across the sight turns its bearing. Dragging the MAG knob sideways zooms from 1x to
+//   8x. SLEW turns the sight straight onto the target, or onto a bearing dialled by hand.
+//   ShipState makes each change.
+// - BoardManager redraws it after every click and every 0.42 seconds. It reads ShipState,
+//   WeaponSystem and SensorSystem.
+// - The readouts show the gun's short name, the zoom and the bearing. They show how far off axis
+//   the sight is: green on axis, amber within 12 degrees. SLEW shows an arrow while dragging.
+//   ScopeSight draws the moving sight picture with this zoom.
+// - While the periscope is down, it picks the heard ship nearest the sight's middle, within 27
+//   degrees. The box appears, with the ship's name (BOGEY until scanned) and a hint: SLEW LEFT or
+//   RIGHT, ZOOM IN, ZOOM OUT, TOO FAR, LOCKING with a percent, or LOCKED with seconds left.
+// - The box is white, amber when the ship fits it, and green once locked on that ship.
+// - Through BoardManager it plays a beep as the ship comes to fit. Another beep plays as the lock
+//   comes on. The refused sound plays as the lock drops.
+// - The ship's picture is the plot's top-down picture of it, from its ShipView camera, drawn red.
+//   Its size follows zoom and range. Every frame, after the models move, it turns the picture
+//   flat. The bow points left or right by the way the ship is heading.
+// - The lock bar fills as the lock builds, then runs down as the lock runs out. It is amber, then
+//   green while locked.
+// - The subject box names the ship on the sight's bearing. Once scanned, it shows each side's
+//   armour in percent. Through an open side, it shows the room the next hit would damage and that
+//   room's health. A destroyed ship reads WRECK, a captured one PRIZE.
+// - The SLEW lamp is green on axis and amber off it. The playtest runner reads the subject box,
+//   the armour line and the angle of the ship picture.
+//
+// Technical:
+// - Data: the sight's bearing, zoom and slew are in ShipState (scopeBrg, scopeZoom, slewing). This
+//   script keeps drag start points and the fit and lock state of the last redraw.
+// - BoardManager calls Click, Down, Drag, Up and Refresh. The click is "scope.slewTo". Press and
+//   drag are "scope.slew" and "scope.mag".
+// - It calls ShipState: SlewTo, Slew, SetZoom and EndSlew. It reads ScopeOn, ScopeFits, ScopeFill,
+//   ScopeSubject and ScopeOnAxis.
+// - The lock is in WeaponSystem: Locked, LockedOn, lockFill, lockLeft and LockBar. The sounds go
+//   through BoardManager.LockCue and LockLost.
+// - It finds the ShipView cameras with FindObjectsByType and matches them by WorldContact.trackKey.
+//   LateUpdate turns the picture by NavSystem.DrawnHeading less ShipView.WreckHeading.
+// - HullLine is public and static. PlaytestRunner calls it. It reads PictureBowDeg and the private
+//   subjectName, subjectClass and shipPicture fields by name.
+// - Numbers: slew speed, zoom drag, fit distance and fit slack are [Tune] fields on ShipState,
+//   under "Periscope & fire control". Lock times are in the weapons part of the stats file.
+// - The view width, px per degree, box size, lock bar edges and red ink are in the Inspector.
+// - Trap: the ShipView list is found once, the first time a ship is in the sight. A ShipView made
+//   later is missed.
+// - Trap: convLeft and parentLeft are board px. The picture needs the BoardLinearImage material.
+//   The 12 degree amber line is in the code.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Step 33h-3. The periscope: drag across the aperture to slew, the MAG knob, SLEW (to the target)
-/// and CLASS, the off-axis, MAG and bearing readouts, the target brackets, the convergence bar, and
-/// the live sight picture. Rules and values from board-logic.js (startSlew, moveSlew, endSlew,
-/// magDown, slewTo, classify, scopeOn, scopeSubject, scopeOffDeg, offBearing, drawScope; renderVals
-/// mountShort, scopeSubjectName/Class, classifyLamp/Glow, slewLamp/Glow, slewLabel, slewInk,
-/// scopeBrgLabel, offBearingLabel, offAxisInk, scopeZoomLabel, magAngle, tgtX, tgtVisible, scopeConv)
-/// and UIStateSpec §11 "Periscope".
-/// </summary>
 public class PeriscopePanel : Panel
 {
     [SerializeField] private TMP_Text mountShort;
