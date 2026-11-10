@@ -10,7 +10,8 @@ the smaller pieces on it: two rails of keys, the time control, the console, the 
 the signal box.
 
 Each panel and each frame piece is a prefab file in `Panels/`. You can open a prefab by itself
-and change its art and its fonts. You don't need to touch code.
+and change its art and its fonts. You don't need to touch code. To see and change every picture
+in one window, open **Starwolf → Art** (see [How to change a panel's art](#how-to-change-a-panels-art)).
 
 The art files are in `Art/`. The fonts are in `Assets/UI/Fonts`. The board's colours are in one
 file, `Palette.asset`.
@@ -226,6 +227,80 @@ Not done yet:
 
 ## How to change a panel's art
 
+There are two ways. The Art window is the easier one.
+
+### In the Art window
+
+Open **Starwolf → Art**. It shows every picture on the board in one window, and the pictures in
+the open scenes. Nothing moved. Each picture is still in its prefab or scene. The window changes
+it there. New on 2026-11-10. The owner: "Please, please don't keep art in tuning. Tuning is for
+systems."
+
+What you see, from the top:
+- **Find**. Type a panel, a part or a file name. Only the pictures that match show.
+- **Waiting for art**. Tick it to show only empty boxes and stand-ins.
+- The line "A scene's own pictures show when it is open:", then one button for each scene in
+  `Assets/Scenes/Tactical/` that is in the build list and not open. A button opens that scene. If
+  a scene has unsaved changes, it asks you to save them first.
+- One fold for each prefab in `Panels/` and in `Assets/UI/Menus/` (the Escape menu). It shows the
+  panel's name and how many pictures it has.
+- One fold for each open scene, named "Scene ·" and the scene's name.
+
+While Find has text, or Waiting for art is ticked, every fold with a match is open.
+
+Each row is one picture. Its name is in bold. The file name is under it. If the same picture is in
+more than one row, "used in" and the number of rows follow the file name, for example "used in 6
+places". The picture's box is on the right.
+
+To change a picture:
+1. Find its row.
+2. Drop the new picture onto its box. Or click **Select** on the box and pick one.
+3. If the old picture is in other rows too, a box asks: **Only here**, **Cancel** or
+   **Everywhere** (with the number of rows). Everywhere changes every row that showed the old
+   picture. Many stand-ins use `Shapes/circle.png`. To replace one stand-in, pick **Only here**.
+4. In a panel, the change is saved into the prefab at once. In a scene, the scene is marked as
+   changed. Save the scene to keep it.
+
+A change to an Art list entry still puts the picture on all of the entry's images at once.
+
+A panel's fold lists:
+- Every Art list entry, by its name.
+- Every picture the panel's code swaps. For example **Rocker Up**, **Rocker Locked** and
+  **Rocker Thrown**. In Engineering each repair rocker shows by its name: "reboot · Up",
+  "reboot · Locked", "reboot · Thrown". The Hangar has **Recall Up** and **Recall Pressed**. The
+  Periscope has **Aperture Idle** and **Aperture Slewing**. The Plot has **Passive Bar Art**.
+- Pictures on raw images: Engineering's four ship pictures, and the stars and nebulas behind the
+  plot.
+
+A scene's fold lists:
+- Pictures on objects that are not copies of the panel prefabs. In `02.1_Grid`, on
+  `Tactical Board`: **Pause Key Run**, **Pause Key Paused**, **Rate Key On**, **Rate Key Off**, and
+  the **Thrown** and **Locked** picture for each rocker size (the **Rockers** script). In `Ship`,
+  the ship rooms' Art list: four paintings and four people. In `SectorMap`, **Completed Node** and
+  the console picture.
+- Images in the scene that have a picture and are on no Art list. For example `PlotRing`,
+  `Briefing Icon` and `ReferenceOverlay`.
+- The menu screens' Art lists (Step 189). All their entries are empty.
+  - SAVE SLOTS (`SaveSlots`), on `Slot List`: **Slot button** (Slot 1 to 3) and **Delete button**
+    (Delete 1 to 3).
+  - The briefing (`01_Briefing`), on `Level List`: **Mission button** (the 8 buttons). No script
+    opens this scene any more.
+  - The sector map (`SectorMap`), on `Sector Map`: **Button** and **Mission box**. See Sector map.
+
+  SAVE SLOTS and the briefing are green words on black, like the intro. The box behind each button
+  can't be seen. It shows as a faint green box only when you point at it or press it. A picture
+  there shows only then too. The start screen (`00_Start`) has no Art list. The intro's code draws
+  it.
+
+In play mode the boxes are greyed out. The window says "Stop play mode to change pictures."
+
+Not in the window:
+- The rocker images themselves. Their code sets the picture. Their states are listed.
+- The ships drawn from their 3D models, and other pictures the game draws while it runs.
+- Fonts. They are still on each panel's **Fonts** list.
+
+### In the prefab
+
 1. Double-click the prefab to open it, for example `Panels/Power.prefab`.
 2. Select the top object (`Power`).
 3. On its script (**Power Panel**), open the **Art** list.
@@ -288,7 +363,8 @@ Hierarchy, stand-in parts have names that start with `STAND-IN`.
   **Centre** (the knob's centre) and a **Home Position** (the pointer's start). If you move a
   knob, these must change too.
 - Sprites the code swaps, such as rocker switches. These sprites are fields on the script,
-  outside the Art list. The rockers also slide in play. The script for that is **Rockers**, on
+  outside the Art list. **Starwolf → Art** lists them, one row per state. The rockers also slide
+  in play. The script for that is **Rockers**, on
   `Tactical Board` in the scene. It uses the rocker sprites too.
 - Colours that change in play, such as lamps lighting up. The code takes them from the palette
   (see [Colours](#colours)). A colour you set on the image is replaced in play.
@@ -1187,8 +1263,12 @@ The prefab has these parts:
   the four buttons. RESUME and QUIT GAME are copies of RESTART MISSION, at y −70, x −160 and
   +160. Their labels are on the panel's Barlow Condensed SemiBold font slot.
 
-It has no art yet. The shade, the plate and the buttons are plain colours with an outline. The
-Art list is empty. To give it art, add the sprites to the Art list.
+Its Art list has three entries (Step 189). They also show in **Starwolf → Art**.
+- **Shade**: empty. The shade is a plain dark colour.
+- **Plate**: `Plates/plate_dark.png`, the board's dark plate. A stand-in.
+- **Button**: `Plates/plate_legend.png`, the board's bevelled key, on all four buttons. A stand-in.
+
+The plate and the buttons are set to Image Type Sliced. Their colours are the same as before.
 
 Ask a technical artist before you change these:
 - The script writes the title, the reason and the values. It colours the title green or red.
@@ -1375,6 +1455,10 @@ Its Art list is on `Escape Menu`, the prefab's top object (Step 191). It also sh
 The box and the buttons are set to Image Type Sliced. They match the pause menu. The box is the
 pause menu plate's grey (0.31, 0.34, 0.36). The buttons are the pause menu's grey (0.40, 0.42,
 0.44).
+
+`Sector Map` has an Art list (Step 189). It has two empty entries: **Button** (BRIEFING, DEBRIEF
+and LAUNCH) and **Mission box**. The Mission box's image is switched off. Switch it on to see a
+picture there. Both entries also show in **Starwolf → Art**.
 
 Ask a technical artist before you change these:
 - Each button's On Click calls ScreenFlow in the same scene: **Resume**, **MainMenu** or **Quit**.

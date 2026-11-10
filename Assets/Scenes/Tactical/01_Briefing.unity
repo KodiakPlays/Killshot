@@ -2017,6 +2017,7 @@ GameObject:
   - component: {fileID: 1602095124}
   - component: {fileID: 1602095123}
   - component: {fileID: 1602095122}
+  - component: {fileID: 1602095126}
   m_Layer: 0
   m_Name: Level List
   m_TagString: Untagged
@@ -2115,6 +2116,31 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1602095126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1602095121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e999c9ca35df24b0999afaecf09c373d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArtList
+  art:
+  - name: Mission button
+    sprite: {fileID: 0}
+    images:
+    - {fileID: 498503496}
+    - {fileID: 1804525536}
+    - {fileID: 1707796307}
+    - {fileID: 1205420450}
+    - {fileID: 2066283959}
+    - {fileID: 1931024063}
+    - {fileID: 1917340748}
+    - {fileID: 779289964}
+  fonts: []
 --- !u!1 &1675068441
 GameObject:
   m_ObjectHideFlags: 0

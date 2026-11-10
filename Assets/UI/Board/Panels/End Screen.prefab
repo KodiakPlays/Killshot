@@ -73,8 +73,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 0a9dfd493ef954d02bbc3cb848c79341, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -166,8 +166,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 4df97a849e22f4ce39012929b5459989, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -273,8 +273,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 4df97a849e22f4ce39012929b5459989, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -939,8 +939,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 4df97a849e22f4ce39012929b5459989, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1046,8 +1046,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 4df97a849e22f4ce39012929b5459989, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1759,7 +1759,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3c2eb7e263244db6a2dbea1c2fa2b9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EndScreenPanel
-  art: []
+  art:
+  - name: Shade
+    sprite: {fileID: 0}
+    images:
+    - {fileID: 5236837966907240103}
+  - name: Plate
+    sprite: {fileID: 21300000, guid: 0a9dfd493ef954d02bbc3cb848c79341, type: 3}
+    images:
+    - {fileID: 92184190016609921}
+  - name: Button
+    sprite: {fileID: 21300000, guid: 4df97a849e22f4ce39012929b5459989, type: 3}
+    images:
+    - {fileID: 6723516437414972233}
+    - {fileID: 7327291204900569866}
+    - {fileID: 1039240372944175869}
+    - {fileID: 7927309179712410864}
   fonts:
   - name: Barlow Condensed SemiBold
     font: {fileID: 11400000, guid: cae59a5581506424582bca42766005d4, type: 2}
