@@ -5552,8 +5552,30 @@ at gain 2 does not hear it, at gain 4 it does (range 2,907, interference 3,500).
 
 **Still open for MILK RUN:**
 - **Built in Step 192** by the Mission Setup Tool chat: the checkpoints, the corvette's flight, the
-  can't-be-destroyed switch and railgun off. Next: Codex writes the words of checkpoints 12 to 23.
-  Nobody has played it through yet.
+  can't-be-destroyed switch and railgun off. Codex wrote the words of all 23 (2026-11-11: COMMAND
+  only, no CAPTAIN replies). **Done:** Codex's words are committed (49f9f74, Step 200).
+- **Done: played through, 2026-11-11, and passed (Step 200)** (Tutorial Mission Manager chat; a script working the board's own
+  controls, Codex's new text): all 23 checkpoints passed and the run ended in MISSION COMPLETE. A real
+  lock came through the targeting computer. One torpedo salvo was fired at range 281; it hit and
+  stopped the corvette. The six launch stages took about 40 s. The marines took the captain 63 s
+  after launch, and 12 of 18 marines came back. Our battle group shows blue in sight before a scan.
+  Every captured note fits its box. Log: `Logs/MilkRun/playthrough.log`. Open points, sent to the
+  Mission Setup Tool chat:
+  - Checkpoint 16, "Station traffic control isn't answering. Ping the station.", was replaced
+    after 0.4 s. The station was probably already named because ACTIVE SCAN was still on. Not
+    confirmed. A player may never read the line. **Fixed in Step 200:** every checkpoint note
+    stays up at least 4 game seconds (Min Note Seconds).
+  - At checkpoint 18, "Contact east of the station", the red contact was not on the plot. It
+    showed about 3 s later. This may be DRADIS sweep timing. Not confirmed. **Left as it is (Step
+    200):** it is the DRADIS sweep catching up.
+  - The corvette ran nearly to the map edge. It was caught near (11,000, 10,700), with
+    APPROACHING THE EDGE OF THE BATTLE SPACE showing. Is a chase that long wanted? **Fixed in Step
+    200:** the corvette runs at 24 units/s. It ran at 36.
+  - Checkpoint 20 says "Take SEN back down" with no number. Checkpoint 22 says "Give AUX power"
+    without saying where it comes from. The reactor's 10 units are full at ENG 5, WEP 2 and SEN 3.
+    **Fixed in Step 200:** "Take SEN back down to 1 to free power." and "Give AUX 2."
+  - Not checked: what shows after MISSION COMPLETE. Not checked on screen: the notes of
+    checkpoints 4 to 10, 12 and 16, which the script cleared in about 1 s each.
 - ~~The group's small shuttles going out to the escape pods.~~ **Built:** three shuttles (h1 to h3, Friendly, class SHUTTLE, `Assets/Ships/Shuttle.asset`) under Station Area / Shuttles. Each waits until we are within 4,000, then ferries at 20 between the group's waiting point and one of the three nearest pods (`EnemyBrain` Patrol Route and Wait For Us Units, set in the level). Checked in play. Committed with the scene by the Mission Setup Tool chat.
 - The station picture's side corners are clipped a little: its camera frame fits its length, not its
   corner-to-corner width.
