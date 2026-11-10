@@ -62,7 +62,8 @@ Assets/Scenes/Tactical/00_Start.unity
 ```
 
 Press play. The intro runs by itself to a menu: NEW GAME, SKIRMISH and
-SETTINGS.
+SETTINGS. The full intro plays once per run. Each later return to the title
+shows only STARWOLF flickering in, then the menu.
 
 NEW GAME opens SAVE SLOTS. There are three slots. An empty slot starts a new
 campaign. A used slot continues its campaign. The SECTOR MAP opens: a console
