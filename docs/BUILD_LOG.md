@@ -5370,137 +5370,66 @@ after at the MacBook's shape.
 
 ### Open after Step 178: mission 1 and the battle group (2026-11-10)
 
-- **Rename mission 1.** Owner 2026-11-10: "The mission should not be called Orientation." No new
-  name yet. Ask the owner. The title is in `Assets/Campaign/Campaign.asset` → Missions → Element 0 →
-  Title. Its brief there also says "orientation checklist". Update this log, the board README and
-  `README.md` to the new name. The level file `Assets/Scenes/Levels/Orientation.unity` can keep its
-  name: players never see it.
-- **Upload the mission 1 video to Google Drive** (owner: "put it in our Google Drive in Starwolf
-  … verify that it's actually uploaded on Google Drive in Chrome"). The file is
-  `Logs/Orientation/Starwolf - Mission 1 Orientation.mp4` (6 min 30 s, 1920 × 1080, 57 MB). Not done:
-  Claude in Chrome was not connected. Upload it through Chrome, then find it with a Drive search
-  before saying it is there.
-- **Run the full playtest.** Not run since Step 178. Its checks for SKIRMISH, MISSION SELECT and the
-  sector map were changed but not yet run.
-- **Mission 1's talk lines and a Starwolf → Mission window**: the Mission Setup Tool chat is
-  planning them with the owner. Keep two facts true in any rewrite: the group is under way and we
-  keep station in its middle (THROTTLE), and the group waits south of the rock field (TAKE POINT).
-- **The battle group stops south of the rock field** and never reaches the target zone: the carrier
-  and battleship don't fit between the rocks. Owner to say if that is right.
-- **Missions 2 to 10 are not built.** Next is mission 2: pirates in a debris field, with weapons on.
-  Talk it through with the owner before building. The old levels stay switched off and are never
-  deleted. Each mission copies the pieces it needs from them.
-- **The owner's save in slot 1** has wins for the old level names, so its sector map starts again at
-  mission 1.
-- **Shared index:** `README.md`, `docs/BOARD_UI.md` and `docs/CONTEXT_INDEX.md` are staged
-  by an unknown chat from a HEAD older than Step 178. Committed as they are, they would undo lines
-  from Steps 178 and 183. Rebuild them on the current HEAD first.
-- **Docs not yet brought in line with Step 178:** in this log, section 1's "The first mission, Wolf
-  Hunt, is playable", section 2's flow (00_Start → 01_Briefing → 02.1_Grid) and its `00_Start` and
-  `01_Briefing` entries, and section 3's ScreenFlow and MISSION SELECT lines. In the board README, the
-  Briefing Icon's "In FLIGHT DRILL it is 230 px". In `docs/CONTEXT_INDEX.md`, the MISSIONS list
-  mentions.
-- **The owner's picks from the firing looks page** ("Ship Actions Lab", 2026-11-10). Built: the
-  torpedoes, A2 and A3 (Step 184). Still to build, in this order:
-  - **The railgun. Decided: build it, don't ask again** (owner 2026-11-10: "I already explained
-    what I want… I don't want to talk about it more"). C2: a small push back after each shot, which
-    the thrusters stop. No glow along the ship: the ship is built around the gun. The charge is a
-    flare at the muzzle only, as the page shows it, then a flash and vent gas. C3: our shot leaves a line on the table that
-    fades in 5 game seconds. Whether enemy shots leave a line is not answered. D2: a far shot's mark
-    counts down and blinks IMPACT ?. D3: a hit shows only if a drone watches. It waits on the drones.
-  - **The boats.** B3, for every craft, assault boats too.
-  - **The PDCs.** E2, streams.
-  - **Where the looks are:** the page https://claude.ai/artifact/KXZhwnSU7hoG7aaEqThx6g (read it
-    with the Artifact tool). Each option's numbers are in its script: B3 leaves at 560, breaks at
-    0.35 s at up to 240° a second with a thruster flash, slows to 170 in the turn, then burns to
-    300, three craft 0.35 s apart. C2 kicks back 40 units/s for 0.4 s, then the stern thrusters stop
-    it (about 24 units in all). The owner's picks are in Claude's memory note "Ship actions look".
-- **Step 184, the full playtest ran on 2026-11-10** (`Logs/Playtests/2026-11-10_113810`, run by the Ship Layout
-  Manager chat): the two changed torpedo checks passed. Six checks failed on the Garuda's salvo (#153 to #162):
-  only 1 of its 2 torpedoes was in flight, so the PDC and hit counts were off by one. Likely the new ripple. Two
-  more failed (#186, #194): the Garuda's model did not show on the plot when locked and in sight. The Ship Visual
-  Artefact chat then changed #153 to wait for the ripple's second torpedo (not run again yet). It says #186 and #194
-  likely come from the other uncommitted PlotPanel change, "every ship in sight shows its line picture, never a dot".
-- ~~**Step 184, the close-up:** the table's white dot draws on top of a drifting torpedo's body and
-  hides most of it.~~ **Fixed the same day:** zoomed in, a torpedo's table dot and trail fade out.
-- **Step 184:** the torpedo model is a plain cylinder (owner 2026-11-10: "instantiate a little
-  cylinder… It's so tiny. And as soon as it leaves the visual range, it becomes an icon anyway").
-  It uses the ships' metal, set as Torpedo Look on the Plot panel. A real model can replace it later.
-- **Step 184:** the side-thruster puffs that A2 showed while the nose swings are not built.
-- **Step 184, the enemy's salvo:** each torpedo leaves from where its launcher was when it fired. The
-  enemy moves about 10 units between them.
-- ~~**Player 1 runs the fight sums again** (Step 184). The torpedo flight changed. The Ship Layout
-  Manager chat's fight sums of 2026-11-10 (the room-rule numbers above) used the old flight.~~
-  **Done 2026-11-10:** the Step 186 run (the box) used the new torpedo flight.
-- ~~**A room layout editor** (owner asked 2026-11-09; not built; found missing from this list the same
-  day). The plan is `docs/ROOM_LAYOUT_PLAN.md`. In Tuning's Hard Points tab, each
-  room gets a side and an order number, and each side its armour. No dragging. This is how the
-  magazine question (producer N3) gets answered: the owner puts it where they want it. Today which
-  room is behind which side is fixed in code (`DamageSystem.BehindSide`). The plan also sets what a
-  hit damages once a side is open, and what comes after a wrecked room. One open question for the
-  owner, in the plan.~~ **Done, Step 180.** Later, its own talk: a separate setup for conditions
-  (fire, vacuum, radiation), owner 2026-11-09.
-- **A playtest check for a moved room** (Steps 180 and 186). Still to add. The check: give a room another row, and a
-  side hit at that row's spot damages it. Step 186 changed the starboard hangar check to aim at row 4.
-- ~~**Player 1 runs the fight sums again** (Step 180). Hits now go past a wrecked room, and the bridge
-  and habitation can be hit. Fights will be shorter. Not run yet. First, the fight sums
-  (`docs/scale-sim/scalesim.py`, `BEHIND`) and their README still use the old fixed room per side.
-  They need the new steps before the numbers mean anything.~~ **Done 2026-11-10.** The fight sums
-  now play the new hit rule. Every fight was run twice on the same ship files, levels and dice: once
-  with the old rule, once with the new. Wins went up in Wolf Hunt at x1 (14% to 41%) and LONG SHOT
-  (x1 40% to 100%, x5 19% to 55%), and down in the chases (below). The full numbers are in the
-  "Room hits" tab of the Google Sheet
-  [Starwolf Tuning and Roadmap](https://docs.google.com/spreadsheets/d/1jSI0Y1bzp3S412vM--h7_IBPSifXZ_-lRuxFVhAW_tQ/edit),
-  and in the rows dated 2026-11-10 in `docs/team-reports/numbers.csv`.
-- ~~**For the owner: can a hit on the bow or stern destroy a ship?** With the starting layout, the
-  reactor can be reached only through STBD (after the hangar) or PORT. Hits on PROW or AFT wreck the
-  magazine, bridge, habitation and engine room, then do nothing. Slug hits to destroy the Garuda:
-  PORT 6, STBD 9. Our ship: PORT 4, STBD 6. PROW and AFT: never. Keep it that way, or move a room?
-  (Fight sums, 2026-11-10.)~~ **Answered, Step 186:** the rooms are in a row (the box). Every plate can lead to a kill.
-- **The chases got harder with the new hit rule** (fight sums, 2026-11-10). About 13 points fewer
-  wins at x1. COLD RUN: x1 47% to 34%, x5 26% to 19%. INTERCEPT: x1 47% to 34%, x5 27% to 20%.
-  Weapons are off in the chases, and the Garuda hits our STBD side most as we run. In 24 COLD RUN
-  fights (good player, quiet, x1), 40 of the 67 room hits on us were on STBD. 7 of our 16 deaths came
-  through our hangar into our reactor. Under the old rule a wrecked hangar stopped those hits.
-  With the box (Step 186) they are easier again: COLD RUN x1 34% to 38%, INTERCEPT x1 33% to 37%.
-- ~~**Our ship's bridge is at AFT 2, and the tuning log doesn't say so.** `Assets/Ships/Asura.asset`
-  has the bridge at AFT 2. The starting layout has it at PROW 2. It was saved in Tuning on
-  2026-11-09 at 23:56, after Step 180 was finished. `docs/TUNING_LOG.md` has no row for it. The fight
-  sums of 2026-11-10 used the file as saved. For the owner: keep it and log it (old value PROW 2), or
-  put it back.~~ **Settled, Step 186:** every ship gets the new layout. The old values are in `docs/TUNING_LOG.md`.
-- **Finish Step 186** (the rooms in a row). In this order:
-  1. ~~Read Unity's console. A compile was started, then the Editor's connection dropped. The code compiled with no
-     errors outside Unity.~~ **Done:** Unity compiled it at 02:08 on 2026-11-10 with no errors. Its compiled code
-     has Room Row and no Room Side.
-  2. ~~A quick play check on `02.1_Grid`: slugs through the Garuda's PORT, near the middle, go to the reactor; slugs
-     through its PROW go magazine, then bridge, then reactor; the targeting computer's hull line names those rooms.~~
-     **Done 2026-11-10** (Step 186 row).
-  3. ~~Open Starwolf → Tuning → Hard Points → ROOMS and take a screenshot: five rows, habitation and hangar side by side
-     in row 4.~~ **Done 2026-11-10.** It shows them.
-  4. ~~The fight sums: `docs/scale-sim/scalesim.py` still plays the Step 180 rule (`next_room` with sides). Give it the
-     rows and the spot where each shot lands (`enters_box` knows it), then run it with the Step 180 rule and the box,
-     both on the new torpedo flight. Put the results in the sheet's "Room hits" tab: parts 1 and 2 (the layout and the
-     hits to destroy) and part 4 (the fights). The geometry in part 3 stays. This also covers the Step 184 re-run above.~~
-     **Done 2026-11-10.** The results are in the sheet and in `docs/ROOM_LAYOUT_PLAN.md`, "Step 186".
-  5. ~~A docs agent for `docs/ROOM_LAYOUT_PLAN.md`, `docs/DAMAGE_README.md` (sides and rooms), `docs/CONTEXT_INDEX.md`
-     and the Step 186 row. The design page above has the rules and numbers.~~ **Done 2026-11-10.**
-  6. ~~The full playtest, once, with this batch (its starboard hangar check changed).~~ **Done 2026-11-10**
-     (`Logs/Playtests/2026-11-10_113810`): every room check passed, the starboard hangar check included.
-  7. ~~Not committed. Commit only when the owner asks, from a private index.~~ **Done 2026-11-10** (owner asked):
-     two commits, the rooms, then the fight program.
-     `docs/scale-sim/scalesim.py` also holds the Step 184 torpedo flight (the Ship Visual Artefact chat's lines;
-     its commit 46e1cda left them out). Commit them with the Step 186 sim changes.
-- **LONG SHOT at x5 fell to 23% wins with the box** (Step 186; it was 55% under Step 180). At x5 our
-  shots land behind the middle of the moving Garuda: half of them between 0.6 and 0.78 of the way
-  from bow to stern. So they hit habitation, the hangar and the engine room before its reactor.
-  First check in the game whether the lock's lead at x5 really lands that far aft. Change nothing
-  before that.
-- **Owner's idea: exposed rooms take a condition by chance** (2026-11-10). Once a side's armour is
-  gone, the rooms behind it could catch a fire, lose air or take radiation by random chance. For the
-  conditions talk. Not built.
-- **Owner's idea: active scanning improves the hit** (2026-11-10). Scanning over time could improve
-  the odds, or allow a hit aimed at one room, such as the bridge. Owner: "That becomes the value of
-  active scanning." A talk first. Not built.
+**The owner's direction for mission 1 (2026-11-10), to build next:**
+- Mission 1 is **MILK RUN** (Codex's name; take it). Codex writes the lines; this chat shapes the
+  tutorial. Codex's new briefing and checkpoint 1 and 2 notes are in `Assets/Campaign/Campaign.asset`
+  and `Orientation.unity`, uncommitted. Keep them.
+- The story frame: we merge the old tutorials into a few missions with a story round them.
+- The opening: we come out of **hyper velocity** (not light speed) into the map. A ping comes into
+  the orange briefing box from the battleship: "make your way to us". Then the power lesson (press 3,
+  ENG to DRAW), as now. We fly to the battle group and join it.
+- Then we fly with the group towards a **station**, through a **small rock field** where we learn to
+  manoeuvre. The group flies a loose formation round us, nose forward, never drifting.
+- The station: a big layered disc, 4,000 to 5,000 units across, made from Unity shapes, with the
+  wireframe look. Put its shapes on the WorldTerrain layer: the board then outlines it like a rock,
+  keeps it hidden until in range, and makes it solid.
+- **No more videos** (owner: "you're filming junk videos").
+
+**Done and committed (2c3153f, "MILK RUN, part 1"), checked in play:**
+- Every ship in sight shows its line picture, never a dot: one picture per ship on the plot
+  (`PlotPanel.ExtraShipImage`; copies made during the grid's fade-in fade in too), and a camera for each
+  ship a level brings (`ShipView.Give`, called in `TacticalWorld.Join`). A big ship or station gets a
+  sharper picture (Units Per Px). A ship counts as in sight once its near side is within visual range
+  (`SensorSystem.InSight`).
+- The battle group flies nose forward: no sway; while the group moves each ship keeps within Most Off
+  Course Deg (30) of the group's course, speeds up when behind its place and eases off when ahead; the
+  formation turns onto a new leg at Group Turn Deg; a ship that comes within Keep Clear of ours keeps its
+  course (stops if we are ahead, goes on if we are behind); its rock and ship avoidance ignores our ship.
+  The group waits where it starts until we are within Join Units (800). MARUT's place is (0, −900).
+  Check: from our arrival we flew to the group; it waited, then set off; on the straight legs each ship
+  turned 0 to 3 degrees in 3 s; the corner was a smooth turn; MARUT jinked once (about 50 degrees) as it set
+  off with our ship beside it.
+- A level's own ships are named by their object ("Pirate · Corvette" → PIRATE).
+
+**The MILK RUN layout, built and saved in `Orientation.unity` (not committed: the Mission Setup Tool chat
+commits it with its checkpoints):** our arrival at (−2,500, −3,800), heading 45; the group waits at
+(0, −1,500) and flies (−1,200, 1,800), (−3,000, 4,000), (−2,600, 6,200); a small rock field at
+(1,000, 3,600), radius 1,200, 22 rocks; the station s1 (`Station · Ruin`, `Assets/Ships/Station.asset`,
+a layered square turned 45 degrees, made of Unity shapes) at (0, 8,500), with ten wrecked ships and ten
+escape pods round it; the pirate corvette p1 at (2,600, 7,200) inside seven wrecks: from (0, 5,900) DRADIS
+at gain 2 does not hear it, at gain 4 it does (range 2,907, interference 3,500).
+
+**Still open for MILK RUN:**
+- The Mission Setup Tool chat: the checkpoints (the old rings are in the wrong places now), the
+  corvette's flight, the can't-be-destroyed switch, railgun off. Then Codex writes the words.
+- The group's small shuttles going out to the escape pods: not built.
+- The station picture's side corners are clipped a little: its camera frame fits its length, not its
+  corner-to-corner width.
+
+**Other open items:**
+- **The ship call signs:** INDRA, VARUNA and MARUT must go (owner). No new names chosen yet: see
+  `docs/MISSION_SETUP_PLAN.md`, "Names".
+- **Run the full playtest.** Not run since Step 178.
+- **Missions 2 to 10 are not built.** Talk each through with the owner before building. The old
+  levels stay switched off and are never deleted.
+- **The owner's save in slot 1** has wins for the old level names, so its map starts again at mission 1.
+- **Shared index:** `README.md`, `docs/BOARD_UI.md` (was `Assets/UI/Board/README.md`) and
+  `docs/CONTEXT_INDEX.md` may still be staged by another chat from a HEAD older than Step 178.
+  Committed as they are, they would undo lines from Steps 178 and 183.
+- **Docs not yet in line with Step 178:** in this log, section 1's "The first mission, Wolf Hunt, is
+  playable", section 2's flow (00_Start → 01_Briefing → 02.1_Grid) and its `00_Start` and `01_Briefing`
+  entries, and section 3's ScreenFlow and MISSION SELECT lines. In `docs/BOARD_UI.md`, the Briefing
+  Icon's "In FLIGHT DRILL it is 230 px". In `docs/CONTEXT_INDEX.md`, the MISSIONS list mentions.
 
 ### The small number box on the Hangar panel: closed (Step 149, 2026-11-02)
 
