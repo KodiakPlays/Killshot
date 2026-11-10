@@ -43,6 +43,22 @@ Mission Manager chat: the station, the wrecks, the escape pods, p1's place, the 
 new spawn. This chat: the new checks, Weapons Free, Railgun Off, Cannot Be Destroyed, the corvette's
 run, checkpoints 12 to 23, and new places for rings 2 and 3.
 
+**The tools, in order (owner, 2026-11-11: "I'm okay with starting like this. Then we'll evaluate,
+and it builds as we go").** First, MILK RUN's play-through fixes and the player build. Then:
+1. A Starwolf → Mission window. The campaign's missions on the left (name, briefing, map dot). The
+   open mission's checkpoints on the right, as cards: lines (speaker and words), the order, done
+   when, the ring. A Names page: our ship, the battle group, the enemy and the title word.
+2. The Level window draws and places ships, stations and wrecks, the numbered checkpoint rings and
+   the group's route.
+3. Play from checkpoint N.
+Talk before each one. The owner is still weighing whether a mission should be part of its level.
+Today it already is: the checkpoints are on the Mission object in the level scene. The window
+would show and edit them there, so either way still works.
+
+**Who decides (owner, 2026-11-11).** The Mission Setup Tool chat has the final say on everything in
+a mission, Codex's words included. Codex helps with the writing. The chat checks Codex's lines,
+changes them when a mission needs it, and says what it changed.
+
 **Still open.**
 - Codex rewrites the words of checkpoints 12 to 23. The ones there now are stand-ins.
 - Nobody has played it through. A script checked the parts. Not checked: a real lock, a real

@@ -5386,10 +5386,9 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "CAPTAIN \xB7 Flagship, we have you in sight.\nCOMMAND \xB7 Good morning,
-      Commander. Take station astern. We'll lead you in.\n\nPOWER \xB7 Press P to
-      unpause. Press 3 to open Power. Click ENG to DRAW. At ENG 2, click again for
-      STANDBY."
+    note: "COMMAND \xB7 Commander, this is Flagship. Form up astern for the station
+      approach.\n\nPOWER \xB7 Press P to unpause. Press 3 to open Power. Click ENG
+      to DRAW. At ENG 2, click again for STANDBY."
   - check: 2
     amount: 0
     track: 
@@ -5426,8 +5425,8 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "COMMAND \xB7 Come back to starboard.\nCAPTAIN \xB7 Aye. Coming back in.\n\nHELM
-      \xB7 Hold E for 3 game seconds to slide to starboard."
+    note: "COMMAND \xB7 Come back to starboard.\n\nHELM \xB7 Hold E for 3 game seconds
+      to slide to starboard."
   - check: 6
     amount: 0.2
     track: 
@@ -5435,9 +5434,9 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "COMMAND \xB7 Can you fit the whole formation on your plot?\n\nPLOT \xB7
-      Put the pointer over the plot. Roll the wheel to zoom out until SCALE reads
-      x0.20 or less."
+    note: "COMMAND \xB7 Widen your plot until you can see the whole formation.\n\nPLOT
+      \xB7 Put the pointer over the plot. Roll the wheel to zoom out until SCALE
+      reads x0.20 or less."
   - check: 7
     amount: 0.8
     track: 
@@ -5445,9 +5444,9 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "CAPTAIN \xB7 I've got the group. Bringing the plot back in to check our
-      spacing.\n\nPLOT \xB7 With the pointer over the plot, roll the wheel to zoom
-      in to x0.80 or more."
+    note: "COMMAND \xB7 Bring the plot back in. Check your spacing on the flagship.\n\nPLOT
+      \xB7 With the pointer over the plot, roll the wheel to zoom in to x0.80 or
+      more."
   - check: 6
     amount: 0.12
     track: 
@@ -5475,9 +5474,8 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "CAPTAIN \xB7 Request permission to ping the formation for identification.\nCOMMAND
-      \xB7 Go ahead.\n\nSENSORS \xB7 Switch ACTIVE SCAN on. Other ships can hear
-      your ping."
+    note: "COMMAND \xB7 Ping the formation.\n\nSENSORS \xB7 Switch ACTIVE SCAN on.
+      Other ships can hear your ping."
   - check: 11
     amount: 1
     track: 
@@ -5533,8 +5531,8 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "CAPTAIN \xB7 Station ahead. No lights.\nCOMMAND \xB7 Scan it, Commander.\n\nSENSORS
-      \xB7 ACTIVE SCAN on. Aim the scan cone at the station until its name appears."
+    note: "COMMAND \xB7 Station traffic control isn't answering. Ping the station.\n\nSENSORS
+      \xB7 Switch ACTIVE SCAN on. Hold the cone on the station until its name appears."
   - check: 12
     amount: 4
     track: 
@@ -5542,9 +5540,9 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "COMMAND \xB7 It's a ruin. Wrecks all round it, and escape pods. No one
-      answers.\nCAPTAIN \xB7 DRADIS has something faint in the wreckage.\n\nSENSORS
-      \xB7 Boost DRADIS. Press 3 and take SEN to 4. Press 2 and turn GAIN up to 4."
+    note: "COMMAND \xB7 Hull breach confirmed. Escape pods in the wreckage. DRADIS
+      has a faint contact. Increase gain.\n\nSENSORS \xB7 Press 3 and bring SEN to
+      4. Press 2 and raise GAIN to 4."
   - check: 11
     amount: 0
     track: p1
@@ -5552,8 +5550,9 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "CAPTAIN \xB7 There. A red contact, east of the station.\n\nSENSORS \xB7
-      Aim the scan cone at the red contact until its name appears."
+    note: "COMMAND \xB7 Contact east of the station. Ping it for identification.\n\nSENSORS
+      \xB7 Keep ACTIVE SCAN on. Move the cone from the station to the red contact.
+      Hold it there until the ship's name appears."
   - check: 13
     amount: 1
     track: 
@@ -5561,9 +5560,9 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "COMMAND \xB7 Pirate corvette, and it's running. You pursue that immediately,
-      Captain. We'll stay here to take care of survivors.\n\nORDERS \xB7 Set Condition
-      2 to release weapons. Torpedoes only: the railgun stays cold."
+    note: "COMMAND \xB7 Pirate corvette, moving away. Pursue immediately, Captain.
+      Torpedoes only. We'll recover the pods.\n\nORDERS \xB7 Set Condition 2 to release
+      weapons."
   - check: 14
     amount: 0
     track: p1
@@ -5573,7 +5572,7 @@ MonoBehaviour:
     mapUnits: 0
     note: "COMMAND \xB7 Get a lock on it.\n\nFIRE CONTROL \xB7 Lock the corvette
       with the targeting computer. Keep ENG high to keep up. Take SEN back down to
-      free power."
+      1 to free power."
   - check: 16
     amount: 0
     track: p1
@@ -5591,9 +5590,9 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "CAPTAIN \xB7 Its armour is open. It's dead in space.\nCOMMAND \xB7 Send
-      the marines. I want the captain alive.\n\nHANGAR \xB7 Give AUX power. Launch
-      the assault boats on SECURE. Stay close."
+    note: "COMMAND \xB7 The corvette has lost propulsion. Send the marines. Take
+      the pirate captain alive.\n\nHANGAR \xB7 Give AUX 2. Launch the assault boats
+      on SECURE. Stay close."
   - check: 18
     amount: 20
     track: 
@@ -5601,8 +5600,8 @@ MonoBehaviour:
     ringAt: {x: 0, y: 0}
     ringUnits: 0
     mapUnits: 0
-    note: "MARINES \xB7 Corvette secured. We have the captain.\nCOMMAND \xB7 Good
-      work, Captain. Bring the prisoner aboard. We'll hear what they know."
+    note: "COMMAND \xB7 The boarding party has the pirate captain. Bring the prisoner
+      aboard. We'll hear what the captain knows."
   jumpPoint: {fileID: 0}
   weaponsOff: 1
   railgunOff: 1
@@ -7500,7 +7499,7 @@ MonoBehaviour:
   fireBackSalvo: 2
   fireBackSeconds: 120
   flees: 1
-  fleeSpeedShare: 0.6
+  fleeSpeedShare: 0.4
   escorts: 0
   slotUnits: {x: 0, y: -900}
   groupSpeedUnits: 15

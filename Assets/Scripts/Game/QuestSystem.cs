@@ -24,7 +24,8 @@
 //   plays. A step can grow the map from the middle over 3 real seconds. A step can end the
 //   level's weapons-off. A step can ask us to close on a ship. Once DRADIS hears it, the alarm
 //   strip shows its bearing and distance. A step that names a ship the level lacks logs a
-//   warning. That step can never finish.
+//   warning. That step can never finish. A step's note stays up at least 4 game seconds, even
+//   when its check is already met.
 // - The help bubble waits until the plot grid has formed. A click closes it. A small icon on the
 //   board opens it again.
 // - At the end it pauses the board and clears its line on the alarm strip. On a win it saves the
@@ -220,6 +221,8 @@ public class QuestSystem : MonoBehaviour
     // The flight drill (owner 2026-11-01): one step at a time; each step's note replaces the last
     [Tooltip("In a flight drill the briefing box is this tall, board px.")]
     [Tune("Mission")] [SerializeField] private float drillNoteHeight = 230f;
+    [Tooltip("Owner 2026-11-11: a drill step's note stays up at least this many game seconds, even if its check is already met (MILK RUN's station line flashed past).")]
+    [Tune("Mission")] [SerializeField] private float minNoteSeconds = 4f;
     private DrillStep[] drill;
     private float slideHeld, stepStartedAt;
     /// <summary>The drill's step now, counted from 0.</summary>
@@ -280,7 +283,7 @@ public class QuestSystem : MonoBehaviour
         if (step.ringUnits > 0f) Point(d);
         else if (near != null && near.hasWorld && us.sensors.Heard(near)) Point(new Vector2((float)(near.worldX - us.nav.x), (float)(near.worldY - us.nav.y)), us.NameOf(near));
         else board.missionAlarm = board.missionCount = null;
-        if (!Passed(step, us, d.magnitude)) return;
+        if (!Passed(step, us, d.magnitude) || us.missionNow - stepStartedAt < minNoteSeconds) return; // Passed first: a slide keeps counting while the note is read
         if (DrillAt + 1 >= drill.Length) { End(QuestStage.MissionComplete, MissionFailReason.None); return; }
         slideHeld = 0f;
         StepStarts(drill[++DrillAt]);
