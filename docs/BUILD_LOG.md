@@ -5595,7 +5595,12 @@ at gain 2 does not hear it, at gain 4 it does (range 2,907, interference 3,500).
 - **The ship call signs:** INDRA, VARUNA and MARUT must go (owner). No new names chosen yet: see
   `docs/MISSION_SETUP_PLAN.md`, "Names".
 - **The player build:** not made yet. It is next, now MILK RUN's fixes are in (Step 200). The build
-  ends with MILK RUN (owner).
+  ends with MILK RUN (owner). Two things first (Mission Setup Tool chat, paused for the night on
+  2026-11-11): (1) check what shows after MISSION COMPLETE in MILK RUN: the ship's rooms and the end
+  card. Nobody has looked yet. (2) Agree when to build with the other chats. Several have unfinished
+  work in the same scripts (railgun effects, the plot's new contact shapes, the campaign rooms), and a
+  build made now would ship it half done. Each chat commits its work or says it is safe to ship.
+  Then make the Mac and Windows (x64) zips, named with the date.
 - **Run the full playtest.** Not run since Step 178.
 - **Missions 2 to 10 are not built.** Talk each through with the owner before building. The old
   levels stay switched off and are never deleted.
