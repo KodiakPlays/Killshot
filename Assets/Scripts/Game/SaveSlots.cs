@@ -10,7 +10,7 @@
 // - When the screen opens, it reads each slot through SaveGame and writes its row. An empty slot
 //   says EMPTY. A used one shows the save time and how much of the campaign is won. It reads
 //   "CAMPAIGN", then for example "1 OF 10" and "10%". With all won it reads "CAMPAIGN COMPLETE".
-//   Only the missions in the Campaign file count.
+//   Only the missions switched on in the Campaign file count.
 // - Each row's DELETE button shows only while its slot has a save.
 // - A click on a row picks that slot in SaveGame and loads the SectorMap scene. Clicks in the
 //   first half second after the screen opens are ignored.
@@ -50,7 +50,7 @@ public class SaveSlots : MonoBehaviour
     // "CAMPAIGN · 4 OF 10 · 40%", or "CAMPAIGN COMPLETE · 100%" once every mission is won. Old test levels don't count.
     string Progress(SaveGame.Data save)
     {
-        int total = campaign ? campaign.missions.Length : 0;
+        int total = campaign ? campaign.On.Length : 0;
         if (total == 0) return "CAMPAIGN · " + save.done.Count + (save.done.Count == 1 ? " MISSION DONE" : " MISSIONS DONE");
         int won = campaign.Won(save.done);
         return won >= total ? "CAMPAIGN COMPLETE · 100%" : "CAMPAIGN · " + won + " OF " + total + " · " + Mathf.FloorToInt(100f * won / total) + "%";

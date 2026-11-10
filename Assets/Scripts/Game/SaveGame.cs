@@ -26,7 +26,7 @@
 // - Delete removes a slot's file and its copies. Outside the campaign, every save step does
 //   nothing.
 // - The sector map hands it the Campaign file. FinishedWith tells the end screen when the last
-//   mission is won. Then the end card comes next.
+//   mission switched on is won. Then the end card comes next.
 //
 // Technical:
 // - Data: SaveGame.Data has version, savedAt, done, dotsShown, damage, stores, travelOpen and
@@ -97,8 +97,9 @@ public static class SaveGame
     /// <summary>True when this level is the campaign's last mission and every mission is won: the end card comes next.</summary>
     public static bool FinishedWith(string level)
     {
-        if (!InCampaign || campaign == null || campaign.missions.Length == 0) return false;
-        return campaign.missions[campaign.missions.Length - 1].level == level && campaign.Won(Current.done) == campaign.missions.Length;
+        var on = InCampaign && campaign != null ? campaign.On : null;
+        if (on == null || on.Length == 0) return false;
+        return on[on.Length - 1].level == level && campaign.Won(Current.done) == on.Length;
     }
 
     static string PathOf(int slot) => Path.Combine(Application.persistentDataPath, "slot" + (slot + 1) + ".json");

@@ -1451,8 +1451,8 @@ It is the campaign's map of missions. SAVE SLOTS opens it. So does SECTOR MAP �
 rooms. Each mission is a dot. Win a mission, and the next dot shows. Codex made the look (Step
 172). Since Step 178 the map has one story mission. It was 1 ORIENTATION; it is now 1 MILK RUN. More story missions come later.
 For now a second dot, 2 TEST MISSION, follows it (Step 204). It is a throwaway test, won 5 game
-seconds after time starts. It comes out before the player build: delete the second entry in
-`Assets/Campaign/Campaign.asset` → Missions.
+seconds after time starts. It comes out before the player build: in **Starwolf → Campaign**,
+switch TEST MISSION off (Step 205). Do not delete it.
 
 How it plays:
 - A painted console fills the screen. On the left is the BRIEFING screen. Under MISSION RECORD it
@@ -1512,7 +1512,9 @@ The colours and timings are under Look on the script:
 
 The missions are in the Campaign file, `Assets/Campaign/Campaign.asset` (Step 183). The script's
 **Campaign** slot has this file in it. The scene has no mission list of its own. To set up a
-mission, select the file in the Project window and edit **Missions**. They are in play order. A
+mission, open **Starwolf → Campaign** (Step 205). It edits this file. The missions are in play
+order. Drag a row to move it. + adds a mission, and − removes the picked one. Each mission has an
+On switch. A mission switched off gets no dot, and the save slot's count skips it. A
 mission's dot shows only after the mission before it is won. Each mission has a name (**Title**), a
 **Level** slot, a briefing (**Brief**, the text on the left screen) and an **At**. Drag the level's
 scene into Level. The slot keeps the scene's name and adds the scene to the build's scene list. At
@@ -1535,7 +1537,7 @@ line at once. Another one goes straight to the title. The end card leaves the ca
 was already written at the win.
 
 The closing line is in the Campaign file: `Assets/Campaign/Campaign.asset` → **Closing Line**.
-Select the file in the Project window and type it there. It stays empty for now (owner
+Type it in **Starwolf → Campaign**, under the missions (Step 205). It stays empty for now (owner
 2026-11-11). With the line empty, the end card goes straight on to the title, where only STARWOLF
 flickers in, in the middle of the screen (Step 203). Today the last mission is the throwaway TEST
 MISSION (Step 204). A campaign win of MILK RUN opens the ship's rooms and the travel bar. A win of
@@ -1549,7 +1551,7 @@ Two numbers, on the Board tab of **Starwolf → Tuning**, under End card, with `
 - **Hold Seconds** (5): how long the whole line stays up before the title.
 
 The save slot: on SAVE SLOTS, a used slot reads "CAMPAIGN · 1 OF 10 · 10%". That is missions won,
-out of the missions in the Campaign file, and the percent. With every mission won it reads
+out of the missions switched on in the Campaign file (Step 205), and the percent. With every mission won it reads
 "CAMPAIGN COMPLETE · 100%". Old test levels don't count.
 
 Ask a technical artist before you change these:

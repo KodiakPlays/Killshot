@@ -7,7 +7,7 @@
 //
 // How it works:
 // - If no save slot is picked, it opens the SaveSlots scene instead.
-// - It reads the mission list from the Campaign file and the levels won from SaveGame.
+// - It reads the missions switched on from the Campaign file, and the levels won from SaveGame.
 // - It hands the Campaign file to SaveGame. The end screen uses it to spot the last mission.
 // - It shows every won mission plus the next one. Each new dot is joined to the last by a line.
 // - A dot shown for the first time fades in with its line over 1.5 seconds. It saves how many
@@ -22,7 +22,8 @@
 // - Opening the map shuts the ship's rooms' travel bar. Units left there are lost.
 //
 // Technical:
-// - Data: campaign is the Campaign file. picked is the dot shown, from 0. fresh is the new dot,
+// - Data: campaign is the Campaign file. missions is campaign.On, read in Start.
+// - picked is the dot shown, from 0. fresh is the new dot,
 //   its name and its line.
 // - Start sets SaveGame.campaign first, even when it then leaves for SaveSlots.
 // - Wins are counted in order from mission 1. The first mission not won stops the count.
@@ -47,7 +48,7 @@ public class SectorMap : MonoBehaviour
 {
     [Tooltip("The campaign file: its missions are the dots, in order.")]
     [SerializeField] private Campaign campaign;
-    private Campaign.Mission[] missions => campaign.missions;
+    private Campaign.Mission[] missions; // the missions switched on, read once in Start
 
     [Header("Parts")]
     [Tooltip("The dots and lines are made in here.")]
@@ -85,6 +86,7 @@ public class SectorMap : MonoBehaviour
     private void Start()
     {
         SaveGame.campaign = campaign; // the end screen reads it to know the last mission
+        missions = campaign.On;
         if (!SaveGame.InCampaign) { UnityEngine.SceneManagement.SceneManager.LoadScene(slotsScene); return; }
         var save = SaveGame.Current;
         int open = 0;

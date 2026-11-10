@@ -15,8 +15,9 @@ makes the ship louder. Every advantage is bought by giving something up.
 
 The game will be about ten story missions, plus SKIRMISH. NEW GAME starts the
 story. Mission 1, ORIENTATION, is built. It is the first dot on the SECTOR MAP.
-For now a second dot, TEST MISSION, is a throwaway test. It comes out before
-the player build.
+For now a second dot, TEST MISSION, is a throwaway test. For the player build
+it is switched off in **Starwolf → Campaign**. That window sets up the
+campaign's missions in the Unity editor.
 It starts with a combat briefing. Your battle group is with you: INDRA, VARUNA
 and MARUT. Then you run a checklist of 16 steps: power, throttle, heading, the
 side thrusters, zoom, DRADIS, ACTIVE SCAN, scanning one of the group, a field
