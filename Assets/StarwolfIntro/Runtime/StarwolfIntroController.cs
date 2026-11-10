@@ -119,6 +119,9 @@ namespace Starwolf.Intro
         [Tooltip("The watermark's text size, in pixels on the 1920x1080 screen.")]
         [Min(1)] public float watermarkSize = 10;
         public Color watermarkColour = new Color(0.45f, 0.88f, 0.54f, 0.5f);
+        [Tooltip("Owner 2026-11-11: where the watermark's bottom-right corner is, in pixels on the 1920x1080 screen. " +
+                 "X: in from the right edge. Y: up from the bottom edge. Size, colour and place change live in play mode.")]
+        public Vector2 watermarkPlace = new Vector2(80, 60);
         public event Action<int> MenuAction;
         public bool MenuVisible => !initialisingOnly && !titleOnly && clock >= TotalDuration;
         public float TotalDuration => initialisingOnly ? Mathf.Max(.1f, initialisingDuration) : Mathf.Max(.1f, sectionDuration) + Mathf.Max(.1f, titleDuration);
@@ -236,9 +239,10 @@ namespace Starwolf.Intro
             }
             if (!initialisingOnly && !titleOnly && !string.IsNullOrEmpty(watermark))
             {
-                // Owner 2026-11-10: a tiny watermark in the bottom-right corner, on the menu only (Update).
-                watermarkText = Corner(watermark, new Vector2(1, 0), new Vector2(-80, 60), TextAlignmentOptions.BottomRight);
-                watermarkText.fontSize = watermarkSize; watermarkText.color = watermarkColour; watermarkText.characterSpacing = 2;
+                // Owner 2026-11-10: a tiny watermark in the bottom-right corner, on the menu only. Update sets its size,
+                // colour and place from the Inspector every frame.
+                watermarkText = Corner(watermark, new Vector2(1, 0), Vector2.zero, TextAlignmentOptions.BottomRight);
+                watermarkText.characterSpacing = 2;
                 watermarkText.enabled = false;
             }
         }
@@ -260,7 +264,12 @@ namespace Starwolf.Intro
         {
             if (canvas) canvas.enabled = !suspended && target;
             if (corners) corners.localScale = Vector3.one * (display.rectTransform.rect.width / 1920f);
-            if (watermarkText) watermarkText.enabled = MenuVisible;
+            if (watermarkText)
+            {
+                watermarkText.enabled = MenuVisible;
+                watermarkText.fontSize = watermarkSize; watermarkText.color = watermarkColour;
+                watermarkText.rectTransform.anchoredPosition = new Vector2(-watermarkPlace.x, watermarkPlace.y);
+            }
             if (suspended || !material) return;
             // Owner 2026-11-02: the first frame can take 6 s; it must not use up SECTION 36 unseen. The clock starts
             // once the picture shows, and a slow frame can't skip SECTION 36's quick flicker-in (2026-11-09).

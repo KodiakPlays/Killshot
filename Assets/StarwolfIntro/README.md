@@ -123,6 +123,7 @@ words and places were copied and measured from `References/Company Logo.png`.
 |---|---|
 | `watermark` | Tiny text in the bottom-right corner of the title menu. Default "Shagun Shah" (owner 2026-11-10). Empty: none. Shows on the menu only. Uses `cornerFont`. |
 | `watermarkSize`, `watermarkColour` | Its size (10 on the 1920 × 1080 screen) and colour (the corner text's green at 50%). |
+| `watermarkPlace` | Where its bottom-right corner is, in pixels on the 1920 × 1080 screen. X is in from the right edge, Y is up from the bottom edge. Default 80, 60 (owner 2026-11-11). Size, colour and place change straight away in play mode. |
 
 **Coming back to the title** (Step 188). SECTION 36 plays once, when the game starts. The next time the
 title opens in the same run, only STARWOLF flickers in, from an empty screen, then the menu.
