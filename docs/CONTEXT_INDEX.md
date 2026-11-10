@@ -99,6 +99,8 @@ pages, and most of it has been overtaken.
 | Where a panel's prefab and art are, and how to swap its art | `docs/BOARD_UI.md` |
 | The campaign's SECTOR MAP and ship's rooms: their parts, and how to change their art | `docs/BOARD_UI.md`, "Sector map" and "Ship rooms". The steps are 167 to 169 and 172 in `docs/BUILD_LOG.md`. |
 | How to set up a campaign mission: its name, level, briefing and dot on the sector map | `Assets/Campaign/Campaign.asset`. Select it in the Project window. In Missions, add a mission and drag its level scene into Level. The level itself (checklist steps, rings, help text, battle group path) is made in its scene in `Assets/Scenes/Levels/`, with **Starwolf → Level** and the Mission part on it. Step 183 in `BUILD_LOG.md`. |
+| The Escape menu on SAVE SLOTS, the sector map and the ship's rooms: its prefab, and how to change its look | `Assets/UI/Menus/Escape Menu.prefab`. See `docs/BOARD_UI.md`, "Escape menu". Step 190 in `docs/BUILD_LOG.md`. |
+| Between missions: the travel bar, repairs and restocks, the end card, the Escape menu, the ship rooms. The owner's answers and the build order | `docs/CAMPAIGN_FLOW_PLAN.md` |
 | Spoken orders, and how an outside program (or Claude) could drive the built game — an idea, not built | `docs/voice-command-exploration.md` |
 | Ship silhouettes, class size table, obstacle tiers | `References/Starwolf_ Art Spec.pdf` |
 | Working rules — MCP, C# style, repo hygiene | `CLAUDE.md` |

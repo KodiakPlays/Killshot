@@ -1240,8 +1240,8 @@ picture, CHIEF ENGINEER picture, FLIGHT LEADER picture and MARINE SERGEANT pictu
 a slot, and the room or the person shows it. The talk box shows the same picture as the person in
 the room. While the game runs, a picture with a sprite shows in its own colours; the grey of the
 stand-in box goes. Import a new painting the way the board's other art is imported: sRGB (Color
-Texture) off. With it on, the painting looks too dark. Escape quits the game on this screen, as on
-SAVE SLOTS and the SECTOR MAP.
+Texture) off. With it on, the painting looks too dark. Escape opens the Escape menu on this screen, as on
+SAVE SLOTS and the SECTOR MAP (see Escape menu, below).
 
 To change the words, use the **Rooms** list on Ship Rooms:
 - Each room has a **Name**, a **View** (the painting), a **Tab** and **People**.
@@ -1279,9 +1279,9 @@ How it plays:
   text. DEBRIEF works only on a finished mission. It shows MISSION COMPLETE above the briefing
   text. LAUNCH shows INITIALISING... and opens the board with the mission's level. On a finished
   mission it reads REPLAY MISSION and plays the mission again.
-- A finished mission's dot is a tick picture. The open mission's dot is a green dot that grows and
-  shrinks. A new dot, its name and its line fade in the first time they show.
-- Escape quits the game on this screen.
+- A finished mission's dot is a tick picture. The open mission's dot is a plain green dot. It keeps
+  one size (Step 176). A new dot, its name and its line fade in the first time they show.
+- Escape opens the Escape menu (see Escape menu, below).
 
 The pictures are both in `Art/Briefing/`:
 - `OperationalMapConsole.png` (1840 x 1035) is the whole console. It is in the Texture slot of
@@ -1340,6 +1340,47 @@ Ask a technical artist before you change these:
 - The buttons' On Click calls: **ShowBriefing**, **ShowDebrief** and **Launch** on Sector Map.
 - **Slots Scene** (`SaveSlots`): with no save slot picked, the map opens this scene instead.
 - **Map Scene** (`SectorMap`) on Ship Rooms is the scene SECTOR MAP › loads. See Ship rooms, above.
+
+### Escape menu
+
+`Assets/UI/Menus/Escape Menu.prefab` (Step 190). On SAVE SLOTS, the SECTOR MAP and the ship's
+rooms, Escape opens it. It reads PAUSED, then RESUME, MAIN MENU and QUIT GAME. Escape again, or
+RESUME, closes it. MAIN MENU goes back to the title. QUIT GAME quits the game. In the Unity editor
+it stops play mode. On the intro, Escape still quits at once.
+
+It has a separate canvas, drawn on top of everything. A copy is in `SaveSlots.unity`,
+`SectorMap.unity` and `Ship.unity`, switched off. It looks like the pause menu in a mission: dark
+buttons, white Barlow Condensed letters, and an amber tint when the mouse is over a button.
+
+The parts:
+- `Dim`: a dark see-through layer over the whole screen. It takes the clicks, so nothing under it
+  can be pressed.
+- `Box`: the dark box in the middle.
+- `Title`: PAUSED.
+- `RESUME`, `MAIN MENU` and `QUIT GAME`: the three buttons. Each has its words in a `Label`.
+
+To change its look, open the prefab and change it there. The change shows in all three scenes.
+- The box's colour is on the Image of `Box`.
+- A button's grey is Normal and Selected, under Colors on its Button. The amber tint is
+  Highlighted and Pressed.
+- The letters are Barlow Condensed SemiBold, on each `Label` and on `Title`.
+
+Its Art list is on `Escape Menu`, the prefab's top object (Step 191). It also shows in
+**Starwolf → Art**.
+- **Dim**: empty. The dim layer is a plain dark colour.
+- **Box**: `Plates/plate_dark.png`, the board's dark plate. A stand-in.
+- **Button**: `Plates/plate_legend.png`, the board's bevelled key, on RESUME, MAIN MENU and QUIT
+  GAME. A stand-in.
+
+The box and the buttons are set to Image Type Sliced. They match the pause menu. The box is the
+pause menu plate's grey (0.31, 0.34, 0.36). The buttons are the pause menu's grey (0.40, 0.42,
+0.44).
+
+Ask a technical artist before you change these:
+- Each button's On Click calls ScreenFlow in the same scene: **Resume**, **MainMenu** or **Quit**.
+  Each scene's copy is wired to that scene's `ScreenFlow` object.
+- **Escape Menu** on ScreenFlow is the copy Escape opens. Left empty, Escape quits the game at once.
+- **Main Menu Scene** (`00_Start`) on ScreenFlow is the scene MAIN MENU loads.
 
 ## Frame pieces
 

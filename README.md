@@ -180,7 +180,7 @@ does a few things.
 | Input | What it does |
 |---|---|
 | Menu | The arrow keys or `Tab` move. `Enter` or `Space` picks. A click works too. |
-| `Esc` | In a level, stop the game and open the menu: RESUME, QUIT GAME, RESTART MISSION and MISSION SELECT. `Esc` again, or RESUME, closes it. On the intro, SAVE SLOTS and the SECTOR MAP, quit at once, with no confirm box. There it does nothing in the Unity editor. On the MISSION COMPLETE or SHIP LOST screen, it does nothing. |
+| `Esc` | In a level, stop the game and open the menu: RESUME, QUIT GAME, RESTART MISSION and MISSION SELECT. `Esc` again, or RESUME, closes it. On SAVE SLOTS, the SECTOR MAP and the ship's rooms, open a small menu: RESUME, MAIN MENU and QUIT GAME. `Esc` again, or RESUME, closes it. MAIN MENU goes back to the title. On the intro, quit at once, with no confirm box. There it does nothing in the Unity editor. On the MISSION COMPLETE or SHIP LOST screen, it does nothing. |
 | `P`, or the PAUSE key | Stop or start time. The board opens paused. |
 | Rate keys | Run time at x0.25, x1 or x5. |
 | Briefing icon, next to the rate keys | Open or close the briefing. |
