@@ -853,9 +853,11 @@ reaches the ship's hit box as the hit lands. `BoardManager.Slide` moves the draw
 shots, and `WeaponSystem.StepAhead` stops a drawn shot at the hit box.
 
 **Our battle group** (Step 178). A level can have friendly ships. In ORIENTATION they are INDRA,
-VARUNA and MARUT, round our ship at the start. Before a scan, each shows as an amber dot labelled
-BOGEY F1, F2 or F3, like any unknown ship. After an ACTIVE SCAN passes over it, its name shows in
-blue, and its dot turns blue. The blue is **Own Force** in `Palette.asset`. Zoomed in past x1.1, the
+VARUNA and MARUT, round our ship at the start. Inside visual range, each shows in blue, scanned or
+not: its line picture, its dot and its label. Before a scan, the label reads BOGEY F1, F2 or F3.
+After an ACTIVE SCAN passes over it, the label shows its name. Past visual range, a scanned friendly
+ship is a blue dot. One not scanned shows like any unknown ship: a red bar on the DRADIS circle,
+with its bearing. The blue is **Own Force** in `Palette.asset`. Zoomed in past x1.1, the
 close-up shows them as full 3D models. They can't be targeted. They are solid, like every ship.
 
 They fly their own path in a loose formation, and we follow them. They never follow us. The path
