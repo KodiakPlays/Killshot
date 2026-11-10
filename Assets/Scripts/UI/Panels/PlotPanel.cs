@@ -86,8 +86,16 @@ public class PlotPanel : Panel
     [SerializeField] private ParticleSystem killBlast;
     [Tooltip("A destroyed ship's two halves in the close-up: Assets/Art/Close Up/Wreck Metal.mat.")]
     [SerializeField] private Material wreckLook;
+    [Tooltip("Owner 2026-11-10: a torpedo's model in the close-up, a small cylinder: Assets/Art/Close Up/Ship Metal.mat. With none, a pale stroke stands in.")]
+    [SerializeField] private Material torpedoLook;
+    private readonly List<Transform> torpedoModels = new List<Transform>();
     [Tooltip("A shot streak's width at the front, units: a railgun slug, then a torpedo.")]
     [Tune("Plot & our ship")] [SerializeField] private float slugWidthUnits = 6f, torpedoWidthUnits = 11f;
+    [Tooltip("Owner 2026-11-10 (drop, drift, flare): a torpedo's body in the close-up, along its nose, this long in units, and its colour. It drifts cold before its motor lights.")]
+    [Tune("Plot & our ship")] [SerializeField] private float torpedoBodyUnits = 14f;
+    [Tune("Plot & our ship")] [SerializeField] private Color torpedoBodyInk = new Color(0.87f, 0.9f, 0.93f, 0.7f);
+    [Tooltip("Its motor bursts on with a flare this big across in the close-up, units. It grows and fades over Torpedo Flare Seconds (game seconds). On the table a ring grows by Torpedo Ring Px where it lit.")]
+    [Tune("Plot & our ship")] [SerializeField] private float torpedoFlareUnits = 60f, torpedoFlareSeconds = 0.6f, torpedoRingPx = 16f;
     [Tooltip("The colour of our shots' streaks, then the enemy's. The Glow material makes them brighter still.")]
     [Tune("Plot & our ship")] [SerializeField] private Color ourShotGlow = new Color(0.5f, 0.75f, 1f), theirShotGlow = new Color(1f, 0.35f, 0.15f);
     const float EffectZ = -100f; // in front of the hulls, toward the close-up camera
@@ -624,8 +632,10 @@ public class PlotPanel : Panel
         foreach (var r in s.weapons.Rounds)
         {
             Vector2 tail, at = ShotAt(r, out tail, true);
-            shapes.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f, ink = slugInk });
-            shapes.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = tail, alpha = 0.8f, ink = slugInk });
+            float seen = TableDot(r);
+            shapes.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = seen, ink = slugInk });
+            shapes.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = tail, alpha = 0.8f * seen, ink = slugInk });
+            AddLightRing(shapes, r);
         }
         // a prize our marines hold (Step 60): an own-force dot where it lies, no label (placeholder until its glyph)
         foreach (var t in s.tracks)
@@ -864,8 +874,10 @@ public class PlotPanel : Panel
         foreach (var r in s.weapons.Incoming)
         {
             Vector2 tail, at = ShotAt(r, out tail, false);
-            dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = 1f });
-            dots.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = tail, alpha = 0.8f });
+            float seen = TableDot(r);
+            dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = seen });
+            dots.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = tail, alpha = 0.8f * seen });
+            AddLightRing(dots, r);
         }
         if (contactMarks) contactMarks.Set(dots);
         ShowShotsAndBlasts();
@@ -1318,22 +1330,34 @@ public class PlotPanel : Panel
     void ShowShotsAndBlasts()
     {
         bool on = closeUpCamera && closeUpCamera.enabled;
-        while (streaks.Count < shotsNow.Count) streaks.Add(NewStreak());
-        for (int i = 0; i < streaks.Count; i++)
+        int used = 0, models = 0;
+        foreach (var shot in shotsNow)
         {
-            var line = streaks[i];
-            line.enabled = i < shotsNow.Count;
-            if (!line.enabled) continue;
-            var shot = shotsNow[i];
+            var r = shot.r;
             var ink = shot.ours ? ourShotGlow : theirShotGlow;
-            line.SetPosition(0, shot.tail);
-            line.SetPosition(1, shot.head);
-            float w = shot.r.torpedo ? torpedoWidthUnits : slugWidthUnits;
-            line.startWidth = w * StreakTail;
-            line.endWidth = w;
-            line.startColor = new Color(ink.r, ink.g, ink.b, 0f);
-            line.endColor = ink;
+            if (!r.torpedo || r.motor) Streak(used++, shot.tail, shot.head, r.torpedo ? torpedoWidthUnits : slugWidthUnits, new Color(ink.r, ink.g, ink.b, 0f), ink);
+            if (!r.torpedo) continue;
+            // owner 2026-11-10 (drop, drift, flare): the torpedo's body along its nose, which swings onto the target while it drifts cold.
+            // The nose turns on between ticks, at its turn now.
+            double deg = (r.motor ? System.Math.Atan2(r.dx, r.dy) * 180 / System.Math.PI : r.nose) + r.turn * Controls.SinceTick, rad = deg * System.Math.PI / 180;
+            var along = new Vector3((float)System.Math.Sin(rad), (float)System.Math.Cos(rad), 0f);
+            if (torpedoLook) // owner 2026-11-10: a small cylinder, just behind the glows
+            {
+                var model = TorpedoModel(models++);
+                model.SetPositionAndRotation(new Vector3(shot.head.x, shot.head.y, EffectZ + 10f), Quaternion.Euler(0f, 0f, -(float)deg));
+                model.localScale = new Vector3(torpedoWidthUnits / 2f, torpedoBodyUnits / 2f, torpedoWidthUnits / 2f); // the cylinder is 2 long, 1 across
+            }
+            else Streak(used++, shot.head - along * (torpedoBodyUnits / 2f), shot.head + along * (torpedoBodyUnits / 2f), torpedoWidthUnits / 2f, torpedoBodyInk, torpedoBodyInk, 1f);
+            // its motor bursts on: a flare that grows and fades
+            float age = r.motor ? (float)r.lit + Controls.SinceTick : float.MaxValue;
+            if (age >= torpedoFlareSeconds) continue;
+            float f = 1f - age / torpedoFlareSeconds, size = torpedoFlareUnits * (1.5f - 0.5f * f);
+            var flare = Color.Lerp(ink, Color.white, 0.5f);
+            flare.a = f;
+            Streak(used++, shot.head - along * (size / 2f), shot.head + along * (size / 2f), size, flare, flare, 1f);
         }
+        for (int i = used; i < streaks.Count; i++) streaks[i].enabled = false;
+        for (int i = models; i < torpedoModels.Count; i++) torpedoModels[i].gameObject.SetActive(false);
         flying.Clear();
         foreach (var shot in shotsNow) flying.Add(shot.r);
         if (on && hitFlash)
@@ -1384,6 +1408,50 @@ public class PlotPanel : Panel
 
     // a round still in either list (one not drawn this time, while the close-up was off, is not a hit)
     bool Flying(WeaponSystem.Round r) => State.weapons.Rounds.Contains(r) || State.weapons.Incoming.Contains(r);
+
+    // One glowing stroke in the close-up, streaks[i]: tail to head, its width at the head and a share of that at the tail.
+    void Streak(int i, Vector3 tail, Vector3 head, float width, Color tailInk, Color headInk, float tailShare = StreakTail)
+    {
+        while (streaks.Count <= i) streaks.Add(NewStreak());
+        var line = streaks[i];
+        line.enabled = true;
+        line.SetPosition(0, tail);
+        line.SetPosition(1, head);
+        line.startWidth = width * tailShare;
+        line.endWidth = width;
+        line.startColor = tailInk;
+        line.endColor = headInk;
+    }
+
+    // Owner 2026-11-10: torpedo models for the close-up, made as needed and kept for the next frame.
+    Transform TorpedoModel(int i)
+    {
+        while (torpedoModels.Count <= i)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            go.name = "Torpedo model";
+            Destroy(go.GetComponent<Collider>());
+            go.layer = LayerMask.NameToLayer("TransparentFX");
+            var look = go.GetComponent<MeshRenderer>();
+            look.sharedMaterial = torpedoLook;
+            look.shadowCastingMode = ShadowCastingMode.Off;
+            torpedoModels.Add(go.transform);
+        }
+        torpedoModels[i].gameObject.SetActive(true);
+        return torpedoModels[i];
+    }
+
+    // Owner 2026-11-10: zoomed in, a torpedo's model shows, so its table dot and trail fade out as the close-up comes in.
+    float TableDot(WeaponSystem.Round r) => r.torpedo && torpedoLook ? 1f - CloseUp : 1f;
+
+    // Owner 2026-11-10 (drop, drift, flare): on the table, a ring grows and fades where a torpedo's motor lit.
+    void AddLightRing(List<MarksGraphic.Shape> list, WeaponSystem.Round r)
+    {
+        float age = r.torpedo && r.motor ? ((float)r.lit + Controls.SinceTick) / torpedoFlareSeconds : 1f;
+        if (age >= 1f) return;
+        var at = Screen(r.litX, r.litY);
+        list.Add(new MarksGraphic.Shape { kind = "circle", a = at, b = at + new Vector2(4f + torpedoRingPx * age, 0f), alpha = 1f - age, ink = caution.gamma });
+    }
 
     LineRenderer NewStreak()
     {

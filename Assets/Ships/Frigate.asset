@@ -118,15 +118,16 @@ MonoBehaviour:
     wepBleed: 3
     slugSpeedUnits: 300
     torpedoSpeedUnits: 250
-    torpedoLaunchSpeedUnits: 80
-    torpedoCoastSeconds: 2.5
-    torpedoCoastSpeedUnits: 15
-    torpedoTiltBackDeg: 15
-    torpedoCurveDegPerS: 32
-    torpedoTurnBuildSeconds: 0.5
-    torpedoBurnUnits: 300
-    torpedoTurnDegPerS: 120
+    torpedoLaunchSpeedUnits: 250
+    torpedoCoastSeconds: 3.5
+    torpedoCoastSpeedUnits: 5
+    torpedoTiltBackDeg: 30
+    torpedoCurveDegPerS: 90
+    torpedoTurnBuildSeconds: 0.3
+    torpedoBurnUnits: 1100
+    torpedoTurnDegPerS: 140
     torpedoSpreadDeg: 20
+    torpedoRippleSeconds: 0.3
     pdcRoundsPerGo: 100
     hitMarginPercent: 25
     slugArmourDamage: 50

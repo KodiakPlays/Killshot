@@ -931,39 +931,48 @@ with no WEP units: charge − 3 per game second
 ### 8.5 Torpedo
 
 Owner, 2026-11-01: a torpedo is always slower than a slug. It leaves the ship slowly, then goes.
-Owner, 2026-11-02: it leaves like the fighters (§12.3).
+Owner, 2026-11-10 (Step 184): "drop, drift, flare", pushed out about 300 units so it shows when zoomed out.
 
-1. It leaves the launcher out of the ship's side at 80 units/s, tilted 15° toward the stern.
-2. It flies straight for 2.5 game seconds, slowing to 15 units/s.
-3. It curves onto the target at 15 units/s. The turn takes 0.5 game seconds to build up to its
-   sharpest, 32° per game second, and 0.5 game seconds to ease off as it lines up.
-4. Its motor lights once it is within 3° of lined up. It gains 300 units/s each game second up to
-   its full speed of 250 units/s, and turns toward its target at up to 120° per game second.
+1. It is pushed out of the launcher's side at 250 units/s, tilted 30° toward the stern.
+2. It drifts cold for 3.5 game seconds, slowing fast at first, down to 5 units/s. It drifts about
+   300 units. It doesn't keep the ship's motion, so a moving ship leaves it behind.
+3. While it drifts, only its nose turns, onto the target, at up to 90° per game second. A turn takes
+   0.3 game seconds to build up and to ease off.
+4. When the drift ends its motor bursts on. It flies where its nose points. It gains 1,100 units/s
+   each game second up to its full speed of 250 units/s, and turns toward its target at up to 140°
+   per game second.
 
 Owner, 2026-11-02: a line can be drawn out of a launcher on the Hard Points tab of Starwolf →
-Tuning. With a line, the torpedo flies along it in place of steps 1 and 2, slowing the same way.
+Tuning. With a line, the torpedo drifts along it in place of step 2, slowing the same way, and its
+motor lights at the line's end. No ship has a torpedo line now (owner, 2026-11-10).
 
-If its target is gone, its motor lights anyway and it flies on. It flies in short steps of 0.05
-game seconds. The curve is the same at every game speed.
+If its target is gone, it drifts on, then its motor lights anyway and it flies on. It flies in short
+steps of 0.05 game seconds. The curve is the same at every game speed.
 
-Each flies at most 3,000 units. That takes 15 to 18 game seconds. The further it has to turn, the
-longer it takes. Enemy torpedoes follow the same rules.
+Each flies at most 3,000 units, the drift included. That takes about 15 game seconds. Enemy torpedoes follow the same
+rules.
 
 - The launchers reach all round, so nothing picks one (owner, 2026-11-01). The one on the target's
-  side fires. With none left there, the other fires.
-- A salvo is 2 torpedoes out of one launcher. They fan 20° apart, one either side of the tilted
-  line. With our ship facing 000, a salvo from the right side leaves on headings 095 and 115. A
-  launcher on the centre line, as on the Garuda, sends them out of each side by turns.
+  side fires first.
+- A salvo leaves one torpedo at a time, 0.3 game seconds apart (owner, 2026-11-10). It uses both
+  launchers by turns, starting with the one on the target's side. With one launcher empty, the other
+  fires them all. Torpedoes from the same launcher fan 20° apart. With our ship facing 000, a salvo of
+  2 leaves on headings 120 (right side) and 240 (left side). A launcher on the centre line, as on the
+  Garuda, sends them out of each side by turns.
 - A torpedo needs a target identified by an active scan (§9.4).
 - Each torpedo uses one cell. The salvo size is set in the stats file. The salvo knob is not drawn
   yet.
 - A salvo spends 40 charge and adds 25 to our signal.
 - A torpedo hits by the same rule as a slug (§8.4), ours and the enemy's.
 
-The numbers are in each ship's stats file, under Weapons: `torpedoLaunchSpeedUnits` 80,
-`torpedoTiltBackDeg` 15, `torpedoCoastSeconds` 2.5, `torpedoCoastSpeedUnits` 15,
-`torpedoCurveDegPerS` 32, `torpedoTurnBuildSeconds` 0.5, `torpedoBurnUnits` 300,
-`torpedoSpeedUnits` 250, `torpedoTurnDegPerS` 120 and `torpedoSpreadDeg` 20.
+The numbers are in each ship's stats file, under Weapons: `torpedoLaunchSpeedUnits` 250,
+`torpedoTiltBackDeg` 30, `torpedoCoastSeconds` 3.5, `torpedoCoastSpeedUnits` 5,
+`torpedoCurveDegPerS` 90, `torpedoTurnBuildSeconds` 0.3, `torpedoBurnUnits` 1,100,
+`torpedoSpeedUnits` 250, `torpedoTurnDegPerS` 140, `torpedoSpreadDeg` 20 and `torpedoRippleSeconds` 0.3.
+
+The look (Step 184): in the close-up a drifting torpedo is a small pale body along its nose. When its
+motor lights, a soft flare grows and fades there, and on the table a small amber ring grows where it
+lit. The sizes are on the Board tab, under Plot & our ship.
 
 ### 8.6 PDC
 

@@ -682,6 +682,13 @@ In the close-up, every shot in flight is a glowing streak. Ours are blue-white. 
 A torpedo's streak is wider than a railgun slug's. The flat dot and trail still draw on top. PDC fire
 has no streak yet. Flashes and blasts run in game time: they stop when the board is paused.
 
+A torpedo drifting with its motor off is a small metal cylinder along its nose, with no glow (Step
+184). Its metal is **Torpedo Look** on the Plot panel (`Assets/Art/Close Up/Ship Metal.mat`, the same
+as the ships). When its motor bursts on, a big soft flare grows and fades: blue-white for ours, pale
+red for the enemy's. Then the torpedo is a streak with the cylinder on it. Zoomed in, the table's
+white dot and trail fade out for torpedoes, so the cylinder shows. On the table, a small amber ring
+grows and fades where the motor lit.
+
 Where a shot hits a ship, there is a flash: a burst of orange sparks with a white centre. The same
 flash shows when a torpedo is shot down. It shows only in the close-up.
 
@@ -692,7 +699,11 @@ duller, darker grey metal. Zoomed out, the broken line picture shows as before. 
 the two fade into each other.
 
 **Slug Width Units** (6) and **Torpedo Width Units** (11) set the streak's width at the front.
-**Our Shot Glow** and **Their Shot Glow** are the two streak colours. These and the two wreck values
+**Our Shot Glow** and **Their Shot Glow** are the two streak colours. **Torpedo Body Units** (14) and
+**Torpedo Body Ink** (pale grey, 70%) set the torpedo body's length and colour. **Torpedo Flare Units**
+(60) is the flare's size across as it starts. It grows to one and a half times that. **Torpedo Flare
+Seconds** (0.6) is how long the flare and the ring take to fade, in game seconds. **Torpedo Ring Px**
+(16) is how much the ring grows on the table. These and the two wreck values
 are on the Board tab of **Starwolf → Tuning**, under Plot & our ship.
 
 The shot and blast files are in `Assets/Art/Close Up`:
@@ -921,7 +932,8 @@ The prefab has these parts:
 
 PDCs and torpedoes work through the same system selector, mount selector and arming rockers
 (Steps 53 and 55). With TORPEDO selected, the mount selector picks the warhead, and its lamps show
-which launcher will fire. The launcher picks itself. The design's own
+which launcher will fire. The launcher picks itself. A salvo uses the other launcher too, by turns
+(Step 184). The design's own
 PDC controls (quadrants, LOADERS) and torpedo controls (warhead, SALVO) are not drawn yet. The
 loaders and the salvo start from each ship's stats file.
 
@@ -940,38 +952,48 @@ ship. For a fixed gun:
 - The slug leaves the nose and flies straight along the nose's line, to the part of a degree. It
   keeps the ship's motion. A drifting ship's shot drifts off the line.
 
-When a salvo is fired, this is what shows on the plot:
+When a salvo is fired, this is what shows on the plot (Step 184, owner 2026-11-10: "drop, drift,
+flare" and the ripple salvo):
 
-1. Two torpedoes leave the launcher out of the ship's side, tilted a little toward the stern. They
-   fan out, one either side of that line.
-2. They fly straight and slow down.
-3. They curve onto the target. The turn starts gently, gets tighter, then eases off as they line
-   up.
-4. Their motors light and they zip to full speed.
+1. The torpedoes leave one at a time, 0.3 game seconds apart. Ours come from both launchers by
+   turns, starting with the one on the target's side. A salvo of two is one from each launcher.
+   Each leaves from where its launcher is when its turn comes.
+2. Each is pushed out of the ship's side, tilted 30° toward the stern. Torpedoes from the same
+   launcher fan out either side of that line.
+3. It drifts with its motor off. It slows fast at first, then hardly moves. It drifts about 300
+   units in 3.5 game seconds. Its nose swings onto the target as it drifts. The turn starts gently,
+   gets tighter, then eases off as the nose lines up.
+4. Its motor bursts on. It speeds up to full speed in about 0.2 game seconds. It flies where its
+   nose points and turns onto the target.
 
-Enemy torpedoes do the same. The curve is the same at every game speed.
+Enemy torpedoes do the same. An enemy's salvo comes from one launcher. Each of its torpedoes leaves
+from where that launcher was when it fired. The flight is the same at every game speed.
 
-A line can be drawn out of each launcher (see Drawing the line, below). With a line, the line
-replaces steps 1 and 2. The torpedoes fly along the line and slow down as before. At the end of the line they
-curve onto the target. Then their motors light. Each torpedo in a salvo flies its own copy of the
+A line can be drawn out of each launcher (see Drawing the line, below). With a line, the torpedo
+drifts down the line in place of the straight push out. It slows the same way. Its motor lights at
+the line's end. Since Step 184 no ship file has a torpedo line (owner 2026-11-10: "A2 wins. Take
+the lines off"). Each torpedo in a salvo flies its own copy of the
 line, turned by the salvo's fan (**Torpedo Spread Deg**). A launcher on the centre line, as on the
 Garuda, sends every other torpedo along the mirror of the line. Enemy torpedoes use the lines in
 their own ship's file. With no line, they leave as in step 1.
 
 To change this, use the Ship tab of **Starwolf → Tuning**, under Weapons. Each ship has its own
 numbers:
-- **Torpedo Launch Speed Units** (80): how fast it leaves the launcher.
-- **Torpedo Tilt Back Deg** (15): how far it tilts toward the stern as it leaves.
-- **Torpedo Spread Deg** (20): how far apart the two in a salvo fan.
-- **Torpedo Coast Seconds** (2.5): how long it flies straight out, slowing, in game seconds.
-- **Torpedo Coast Speed Units** (15): how slow it gets. It stays at this speed as it curves.
-- **Torpedo Curve Deg Per S** (32): the sharpest it curves before its motor lights, in degrees a
-  game second.
-- **Torpedo Turn Build Seconds** (0.5): how long a turn takes to build up and to ease off, in game
+- **Torpedo Launch Speed Units** (250): how fast it is pushed out of the launcher.
+- **Torpedo Tilt Back Deg** (30): how far it tilts toward the stern as it leaves.
+- **Torpedo Spread Deg** (20): how far apart torpedoes from the same launcher fan.
+- **Torpedo Ripple Seconds** (0.3): the time between one torpedo of a salvo leaving and the next,
+  in game seconds.
+- **Torpedo Coast Seconds** (3.5): how long it drifts with its motor off, in game seconds. Its motor
+  lights at the end.
+- **Torpedo Coast Speed Units** (5): its speed at the end of the drift.
+- **Torpedo Curve Deg Per S** (90): the fastest its nose swings while it drifts, in degrees a game
+  second.
+- **Torpedo Turn Build Seconds** (0.3): how long a turn takes to build up and to ease off, in game
   seconds.
-- **Torpedo Burn Units** (300): the speed its motor adds each game second.
+- **Torpedo Burn Units** (1,100): the speed its motor adds each game second.
 - **Torpedo Speed Units** (250): its full speed.
-- **Torpedo Turn Deg Per S** (120): the sharpest it turns with its motor on, in degrees a game
+- **Torpedo Turn Deg Per S** (140): the sharpest it turns with its motor on, in degrees a game
   second.
 
 **Drawing the line.** The line torpedoes and fighters follow out of the ship is drawn on the Hard

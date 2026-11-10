@@ -66,15 +66,15 @@ public class WeaponSystem : MonoBehaviour
         [FormerlySerializedAs("slugSpeedKms")] public double slugSpeedUnits = 2500;
         [Tooltip("A torpedo's speed with its motor on, units/s (owner 2026-11-01: always slower than a slug; a torpedo reaches further and hits harder).")]
         public double torpedoSpeedUnits = 100;
-        [Tooltip("Owner 2026-11-01: a torpedo leaves its launcher straight out of the ship's side at this speed, units/s.")]
+        [Tooltip("Owner 2026-11-01: a torpedo is pushed out of its launcher, out of the ship's side, at this speed, units/s.")]
         public double torpedoLaunchSpeedUnits = 80;
-        [Tooltip("Game seconds it flies straight out, slowing.")]
+        [Tooltip("Owner 2026-11-10 (drop, drift, flare): game seconds it drifts cold, slowing, fast at first. Then its motor bursts on.")]
         public double torpedoCoastSeconds = 1.5;
-        [Tooltip("Its speed at the end of that, units/s. It stays at this speed as it curves onto the target.")]
+        [Tooltip("Its speed at the end of the drift, units/s.")]
         public double torpedoCoastSpeedUnits = 30;
         [Tooltip("Owner 2026-11-02: it leaves the ship's side tilted this many degrees toward the stern.")]
         public double torpedoTiltBackDeg = 15;
-        [Tooltip("The sharpest it curves onto the target before its motor lights, degrees per game second.")]
+        [Tooltip("Owner 2026-11-10: the fastest its nose swings onto the target while it drifts cold, degrees per game second.")]
         public double torpedoCurveDegPerS = 60;
         [Tooltip("Owner 2026-11-02: game seconds a turn takes to build up to its sharpest, and to ease off as it lines up.")]
         public double torpedoTurnBuildSeconds = 0.5;
@@ -84,6 +84,8 @@ public class WeaponSystem : MonoBehaviour
         public double torpedoTurnDegPerS = 6.5;
         [Tooltip("A salvo leaves the launcher fanned this many degrees apart.")]
         public double torpedoSpreadDeg = 3;
+        [Tooltip("Owner 2026-11-10 (ripple salvo): game seconds between one torpedo of a salvo leaving and the next. They leave from both sides by turns.")]
+        public double torpedoRippleSeconds = 0.3;
         [Tooltip("Rounds one PDC group spends on each go at an enemy torpedo (owner 2026-10-27).")]
         public int pdcRoundsPerGo = 100;
         [Tooltip("A shot from this ship, slug or torpedo, hits a ship if it touches the ship's box made this much bigger, percent (owner 2026-11-01; was a 100-unit circle round the ship's centre).")]
@@ -259,6 +261,8 @@ public class WeaponSystem : MonoBehaviour
         public bool motor;
         [Tooltip("Owner 2026-11-02: how fast it is turning now, degrees per game second.")]
         public double turn;
+        [Tooltip("Owner 2026-11-10: where its nose points while it drifts cold, degrees. Then where its motor lit, and game seconds since.")]
+        public double nose, litX, litY, lit;
         [System.NonSerialized] public Vector2[] line; // owner 2026-11-02: its launcher's drawn line, laid in the world; null once flown, or with none drawn
         [System.NonSerialized] public double along; // how far down the line it is, units
         [System.NonSerialized] public Stats by; // the firing ship's numbers: how close is a hit, and what the hit does
@@ -562,17 +566,34 @@ public class WeaponSystem : MonoBehaviour
         }
         if (sys == "MS" && m != null)
         {
-            // a salvo out of the launcher, fanned a little; each torpedo flies straight out, then homes on the target
-            var tgt = ship.TrackOf(target);
-            int n = Mathf.Min(salvo, m.ammo);
-            Vector2 tube = HardPointOffset(m.id, ship.nav.heading);
-            for (int i = 0; i < n; i++)
+            // Owner 2026-11-10 (ripple salvo): one torpedo at a time, torpedoRippleSeconds apart, from the launcher on the target's side
+            // and the other one by turns. Each leaves from where its launcher is when its turn comes, fanned a little among its own.
+            string key = ship.TrackOf(target).key;
+            int wh = warhead;
+            Mount other = null;
+            foreach (var id in MountIds("MS")) { var l = MountOf(id); if (other == null && l != m && l.ammo > 0 && OnDot(id)) other = l; }
+            var from = new System.Collections.Generic.List<Mount>();
+            for (int left = m.ammo, more = other != null ? other.ammo : 0; from.Count < salvo && left + more > 0;)
             {
-                var r = NewTorpedo(stats, ship.nav.x + tube.x, ship.nav.y + tube.y, ship.nav.heading, m.arc, i, n, m.rangeUnits, warhead, LineOf(m.id));
-                r.targetKey = tgt.key;
-                Rounds.Add(r);
+                bool next = more > 0 && (from.Count % 2 == 1 || left == 0);
+                from.Add(next ? other : m);
+                if (next) more--; else left--;
             }
-            m.ammo -= n;
+            int fromM = from.FindAll(l => l == m).Count, km = 0, ko = 0;
+            for (int i = 0; i < from.Count; i++)
+            {
+                var l = from[i];
+                int k = l == m ? km++ : ko++, of = l == m ? fromM : from.Count - fromM;
+                l.ammo--;
+                Queue(i * stats.torpedoRippleSeconds, () =>
+                {
+                    if (ship.destroyed) return null;
+                    Vector2 tube = HardPointOffset(l.id, ship.nav.heading);
+                    var r = NewTorpedo(stats, ship.nav.x + tube.x, ship.nav.y + tube.y, ship.nav.heading, l.arc, k, of, l.rangeUnits, wh, LineOf(l.id));
+                    r.targetKey = key;
+                    return r;
+                }, false);
+            }
             shotReport = null;
             ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + stats.fireSignalSpike);
         }
@@ -707,6 +728,33 @@ public class WeaponSystem : MonoBehaviour
     {
         var list = Rounds;
         for (int i = list.Count - 1; i >= 0; i--) if (!InFlight(list[i], dt, RoundStep)) list.RemoveAt(i);
+        Release(dt, false);
+    }
+
+    // Owner 2026-11-10 (ripple salvo): a salvo's torpedoes leave one at a time. make builds one where its launcher is when its turn comes (null: it can't leave).
+    class Queued { public double wait; public System.Func<Round> make; public bool theirs; }
+    [System.NonSerialized] private System.Collections.Generic.List<Queued> queued;
+    System.Collections.Generic.List<Queued> Waiting => queued ?? (queued = new System.Collections.Generic.List<Queued>());
+
+    void Queue(double wait, System.Func<Round> make, bool theirs)
+    {
+        if (wait > 0) { Waiting.Add(new Queued { wait = wait, make = make, theirs = theirs }); return; }
+        var r = make();
+        if (r != null) (theirs ? Incoming : Rounds).Add(r);
+    }
+
+    // Lets out the torpedoes whose turn has come, ours or the enemy's, after the others have flown this tick. Each flies the rest of the tick it left in.
+    void Release(double dt, bool theirs)
+    {
+        var q = Waiting;
+        for (int i = 0; i < q.Count; i++)
+        {
+            var w = q[i];
+            if (w.theirs != theirs || (w.wait -= dt) > 0) continue;
+            q.RemoveAt(i--);
+            var r = w.make();
+            if (r != null && InFlight(r, -w.wait, theirs ? (System.Func<Round, double, double, bool>)IncomingStep : RoundStep)) (theirs ? Incoming : Rounds).Add(r);
+        }
     }
 
     const double TorpedoStepSeconds = 0.05;
@@ -727,7 +775,7 @@ public class WeaponSystem : MonoBehaviour
     // One step of one of our rounds. False once it has hit or run out of range.
     bool RoundStep(Round r, double dt, double gone)
     {
-        if (r.torpedo && Clear(r, dt)) Steer(r, dt);
+        if (r.torpedo) { Drift(r, dt); Steer(r, dt); }
         double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
         double flight = r.speed > 0 ? step / r.speed : 0; // seconds of this tick the round is flying
         string side;
@@ -791,59 +839,69 @@ public class WeaponSystem : MonoBehaviour
     Round NewTorpedo(Stats by, double x, double y, double heading, int arc, int i, int n, double maxUnits, int warheadIndex, Vector2[] path = null)
     {
         int side = arc % 180 == 0 ? (i % 2 == 0 ? 1 : -1) : arc % 360 < 180 ? 1 : -1;
-        double fan = (i - (n - 1) / 2.0) * by.torpedoSpreadDeg, b = (heading + side * (90 + by.torpedoTiltBackDeg) + fan) * System.Math.PI / 180;
-        return new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), maxUnits = maxUnits, speed = by.torpedoLaunchSpeedUnits,
+        double fan = (i - (n - 1) / 2.0) * by.torpedoSpreadDeg, deg = heading + side * (90 + by.torpedoTiltBackDeg) + fan, b = deg * System.Math.PI / 180;
+        return new Round { x = x, y = y, dx = System.Math.Sin(b), dy = System.Math.Cos(b), nose = deg, maxUnits = maxUnits, speed = by.torpedoLaunchSpeedUnits,
                            torpedo = true, warhead = warheadIndex, line = Laid(path, x, y, heading + fan, arc % 180 == 0 && side < 0) };
     }
 
-    // Owner 2026-11-01: a torpedo flies straight out of its launcher, slowing. True once it is clear of that and can steer.
-    // Owner 2026-11-02: with a line drawn out of the launcher it flies down the line instead, slowing the same way, and is clear at its end.
-    bool Clear(Round r, double dt)
+    // Owner 2026-11-10 (drop, drift, flare): a torpedo is pushed out of its launcher and drifts cold, slowing fast at first, while its nose
+    // swings onto the target (SteerAt). When the drift ends its motor bursts on. With a line drawn out of the launcher (owner 2026-11-02)
+    // it drifts down the line instead, slowing the same way, and its motor lights at the line's end.
+    void Drift(Round r, double dt)
     {
+        if (r.motor) return;
         var by = r.by ?? stats;
-        if (r.line == null && r.coasted >= by.torpedoCoastSeconds) return true;
+        if (r.line == null && r.coasted >= by.torpedoCoastSeconds) { Light(r); return; }
         r.coasted = System.Math.Min(by.torpedoCoastSeconds, r.coasted + dt);
-        r.speed = by.torpedoLaunchSpeedUnits + (by.torpedoCoastSpeedUnits - by.torpedoLaunchSpeedUnits) * r.coasted / by.torpedoCoastSeconds;
-        if (r.line == null) return false;
+        double left = 1 - r.coasted / by.torpedoCoastSeconds;
+        r.speed = by.torpedoCoastSpeedUnits + (by.torpedoLaunchSpeedUnits - by.torpedoCoastSpeedUnits) * left * left;
+        if (r.line == null) return;
         // it heads for the spot one step further down the line; past the end the line is done and it turns from there
         r.along += r.speed * dt;
         Vector2 next;
         if (!Along(r.line, r.along, out next, out _)) { r.line = null; r.coasted = by.torpedoCoastSeconds; }
         double gx = next.x - r.x, gy = next.y - r.y, d = System.Math.Sqrt(gx * gx + gy * gy);
-        if (d > 1e-6) { r.dx = gx / d; r.dy = gy / d; }
-        return false;
+        if (d > 1e-6) { r.dx = gx / d; r.dy = gy / d; r.nose = System.Math.Atan2(r.dx, r.dy) * 180 / System.Math.PI; }
     }
 
-    // Its motor lights, or stays on: it speeds up to full speed.
+    // Its motor bursts on: it flies where its nose points from now on (owner 2026-11-10).
+    void Light(Round r)
+    {
+        r.motor = true; r.litX = r.x; r.litY = r.y;
+        double n = r.nose * System.Math.PI / 180;
+        r.dx = System.Math.Sin(n); r.dy = System.Math.Cos(n);
+    }
+
+    // Its motor on: it speeds up to full speed.
     void Burn(Round r, double dt)
     {
         var by = r.by ?? stats;
-        r.motor = true;
+        r.lit += dt;
         r.speed = System.Math.Min(by.torpedoSpeedUnits, r.speed + by.torpedoBurnUnits * dt);
     }
 
-    // A clear torpedo curves onto its target, and then its motor lights. With no target left its motor lights anyway and it flies on.
+    // A torpedo turns onto its target. With no target left it drifts on, then its motor lights anyway and it flies on.
     void Steer(Round r, double dt)
     {
         var t = ship.TrackOf(r.targetKey);
-        if (t == null || !t.hasWorld || t.wreck) Burn(r, dt);
-        else SteerAt(r, t.worldX, t.worldY, dt);
+        if (t != null && t.hasWorld && !t.wreck) SteerAt(r, t.worldX, t.worldY, dt);
+        else if (r.motor) Burn(r, dt);
     }
 
-    // Owner 2026-11-02: it turns as a fighter does. The turn builds up, then eases off as it lines up. Its motor lights once it is within this of lined up, degrees.
-    const double MotorLinedUpDeg = 3;
-
+    // Owner 2026-11-02: it turns as a fighter does. The turn builds up, then eases off as it lines up.
+    // Owner 2026-11-10: while it drifts cold only its nose turns. With its motor on it flies where it points.
     void SteerAt(Round r, double x, double y, double dt)
     {
         var by = r.by ?? stats;
-        double now = System.Math.Atan2(r.dx, r.dy) * 180 / System.Math.PI;
+        double now = r.motor ? System.Math.Atan2(r.dx, r.dy) * 180 / System.Math.PI : r.nose;
         double off = ((System.Math.Atan2(x - r.x, y - r.y) * 180 / System.Math.PI - now) % 360 + 540) % 360 - 180;
         double most = r.motor ? by.torpedoTurnDegPerS : by.torpedoCurveDegPerS, build = System.Math.Max(0.01, by.torpedoTurnBuildSeconds);
         double want = System.Math.Max(-most, System.Math.Min(most, off / build)), change = most / build * dt;
         r.turn += System.Math.Max(-change, System.Math.Min(change, want - r.turn));
-        double head = (now + r.turn * dt) * System.Math.PI / 180;
-        r.dx = System.Math.Sin(head); r.dy = System.Math.Cos(head);
-        if (r.motor || System.Math.Abs(off) <= MotorLinedUpDeg) Burn(r, dt);
+        double head = now + r.turn * dt;
+        if (!r.motor) { r.nose = head; return; }
+        r.dx = System.Math.Sin(head * System.Math.PI / 180); r.dy = System.Math.Cos(head * System.Math.PI / 180);
+        Burn(r, dt);
     }
 
     // ---- enemy torpedoes and our point defence (Step 55, owner 2026-10-24) -----------------------
@@ -859,11 +917,11 @@ public class WeaponSystem : MonoBehaviour
     /// flies straight out, or down the line drawn out of its launcher, then homes on our ship. by: the enemy's numbers, which its torpedoes fly and hit by.</summary>
     public void LaunchAt(Stats by, double x, double y, double heading, int arc, int n, int warheadIndex, double maxUnits, Vector2[] path = null)
     {
+        // ponytail: they all leave from where its launcher was on firing; the enemy moves ~10 units between them. Pass its ship in if that shows.
         for (int i = 0; i < n; i++)
         {
-            var r = NewTorpedo(by, x, y, heading, arc, i, n, maxUnits, warheadIndex, path);
-            r.by = by;
-            Incoming.Add(r);
+            int k = i;
+            Queue(i * by.torpedoRippleSeconds, () => { var r = NewTorpedo(by, x, y, heading, arc, k, n, maxUnits, warheadIndex, path); r.by = by; return r; }, true);
         }
     }
 
@@ -900,7 +958,7 @@ public class WeaponSystem : MonoBehaviour
     // One step of an enemy round. False once it has hit us or run out of range.
     bool IncomingStep(Round r, double dt, double gone)
     {
-        if (r.torpedo && Clear(r, dt)) SteerAt(r, ship.nav.x, ship.nav.y, dt);
+        if (r.torpedo) { Drift(r, dt); SteerAt(r, ship.nav.x, ship.nav.y, dt); }
         double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
         string side;
         if (ReachesUs(r, step, dt, out _, out side))

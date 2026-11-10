@@ -244,7 +244,7 @@ document, and do not quietly design around them.
 | **No broadside cannon** | The board has none. Since Step 170 (owner 2026-11-08) our ship has a spinal railgun: one gun fixed on the nose, aimed by turning the ship (`docs/SNIPER_PLAN.md`). The Garuda keeps its two swivel railguns. Soham's old `Weapons/BroadsideCannon.cs` and `Weapons/Railgun.cs` are kept as old code. The board does not use them. |
 | **Two railgun turrets** | RG-A covers 090° ±45° from the bow, RG-B 270° ±45°. One in the middle of each long side, on hard points you drag on the Hard Points tab of Starwolf → Tuning. A solid bar turns slowly onto the target inside each cone, and the shot flies down the bar. Reach 2,000 units, 22 rounds each. One shot per arming. The slug flies at 300 units/s, so it takes about 7 s to reach 2,000 units. |
 | **Four PDC groups** | One at each corner of the ship, each covering 270°, so three cover any bearing. Reach 600 units, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy torpedoes entering its arc, with a 70% chance to kill each one. They are the only answer to a torpedo salvo. |
-| **Torpedoes** | Two launchers, VLS-A and VLS-B, one on each side, 8 torpedoes each. They fire in any direction, two to a salvo. The launcher on the target's side fires. A torpedo leaves the ship's side tilted 15° toward the stern and slows. It curves onto the target, then its motor lights and it zips to full speed. Reach 3,000 units, top speed 250 units/s: always slower than a slug. |
+| **Torpedoes** | Two launchers, VLS-A and VLS-B, one on each side, 8 torpedoes each. They fire in any direction, two to a salvo. A salvo leaves one torpedo at a time, 0.3 game seconds apart, from both launchers by turns, starting with the one on the target's side. A torpedo is pushed out of the ship's side, tilted 30° toward the stern. It drifts about 300 units with its motor off, slowing, while its nose swings onto the target. Then its motor bursts on with a flare, and it speeds up to full speed (Step 184). Reach 3,000 units, top speed 250 units/s: always slower than a slug. |
 | **A volley is a consequence, not a mode** | There is no salvo button, no spread control, no fire pattern menu. Arm several turrets on the same bearing and they converge. Arm them on different bearings and you get a fan. The width of the fan is the difference between the numbers you typed. |
 | **Density over time compression** | The empty-board problem is solved with a smaller, debris-dense arena, not by fast-forwarding. Modest play-rate range only. Collision is gameplay, not an error. |
 | **Ten reactor units, four buses** | ENG · WEP · SEN · AUX, five units each at most. Ten units means **you can fully run two.** A bus on DRAW gains one unit per game second. A bus on VENT loses one. Every unit on a bus makes you louder. |
@@ -341,8 +341,9 @@ Do not treat any of these as decided. Ask the owner.
   bus vents.
 - The plot shows 760 px per 1,000 units at zoom 1 (`PlotGrid.cs`, `pxPer1000Units`).
 - PDC groups have fixed arcs and fire by themselves on AUTO. Torpedoes fire from the Fire Control
-  panel, and the launcher on the target's side picks itself.
-- Each level sets its battle space with a Battle Space box (Starwolf → Level, Step 91). Every level is 20,000 × 20,000 units (Step 130). Without one it is 100,000 × 100,000 units (`ShipState.arenaWidthUnits`).
+  panel, and the launcher on the target's side picks itself. A salvo uses the other launcher too, by
+  turns (Step 184).
+- Each level sets its battle space with a Battle Space box (Starwolf → Level, Step 91). Every level is 20,000 × 20,000 units (Step 130), except LONG SHOT at 40,000 × 40,000 (Step 170). Without one it is 100,000 × 100,000 units (`ShipState.arenaWidthUnits`).
 - Ammunition is a real count in the ship stats files.
 - The aft armour is 50.
 - The Engineering panel is built (`Assets/Scripts/UI/Panels/EngineeringPanel.cs`).

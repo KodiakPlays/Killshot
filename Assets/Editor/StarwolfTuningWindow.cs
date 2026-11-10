@@ -353,7 +353,7 @@ public class StarwolfTuningWindow : EditorWindow
     {
         bool drawn = dot.path != null && dot.path.Length > 0;
         EditorGUILayout.LabelField("Line out of it", drawn ? WeaponSystem.LengthOf(new[] { Vector2.zero }.Concat(dot.path).ToArray()).ToString("0") + " units long"
-                                                           : "None: they fly straight out. Shift-drag out of the dot to draw one.");
+                                                           : "None: they leave straight out of the side. Shift-drag out of the dot to draw one.");
         if (drawn && GUILayout.Button("Clear the line"))
         {
             Undo.RecordObject(file, "Clear a launch line");

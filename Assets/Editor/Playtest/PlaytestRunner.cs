@@ -1015,7 +1015,8 @@ public static class PlaytestRunner
         float hull0 = hull(dummyShip);
         board.Click("rate", "1"); // the slow-down shows at x1: one tick at x10 is longer than it lasts
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "launch (HE salvo of 2)", "fc.lever")) yield break;
-        Check("A salvo of two leaves the launcher", s.weapons.Rounds.FindAll(r => r.torpedo).Count == 2 && s.weapons.vlsCells == cells0 - 2, s.weapons.vlsCells + " cells left");
+        yield return (Func<bool>)(() => s.weapons.Rounds.FindAll(r => r.torpedo).Count == 2); // owner 2026-11-10: a ripple, one at a time
+        Check("A salvo of two leaves the launchers, one after the other", s.weapons.Rounds.FindAll(r => r.torpedo).Count == 2 && s.weapons.vlsCells == cells0 - 2, s.weapons.vlsCells + " cells left");
         var fan = s.weapons.Rounds.FindAll(r => r.torpedo);
         Func<WeaponSystem.Round, float> tiltBack = r => Mathf.Abs(Mathf.DeltaAngle(s.nav.heading, (float)(System.Math.Atan2(r.dx, r.dy) * 180 / System.Math.PI))) - 90f;
         Check("Each torpedo leaves a side tilted toward the stern (owner 2026-11-02)", fan.Count == 2 && fan.TrueForAll(r => Mathf.Abs(tiltBack(r) - (float)s.weapons.stats.torpedoTiltBackDeg) <= s.weapons.stats.torpedoSpreadDeg / 2 + 1),
@@ -1027,8 +1028,9 @@ public static class PlaytestRunner
         board.Click("rate", "10");
         yield return bothIn;
         yield return bothIn;
-        Check("A torpedo flies out, slowing, then its motor takes it to full speed (owner 2026-11-01)",
-              slowest == s.weapons.stats.torpedoCoastSpeedUnits && fastest == s.weapons.stats.torpedoSpeedUnits, slowest + " then " + fastest + " units/s");
+        // owner 2026-11-10: it slows all through the drift, so a tick lands near its end speed, not on it
+        Check("A torpedo drifts out, slowing, then its motor takes it to full speed (owner 2026-11-01, 2026-11-10)",
+              slowest <= s.weapons.stats.torpedoCoastSpeedUnits + 10 && fastest == s.weapons.stats.torpedoSpeedUnits, slowest + " then " + fastest + " units/s");
         Check("Both home in on the moving GARUDA and the HE does damage", s.weapons.lastShotHit && s.weapons.shotReport.Contains(" · HE") && hull(dummyShip) < hull0,
               "\"" + s.weapons.shotReport + "\", armour + integrity " + hull0 + " → " + hull(dummyShip));
         //     EMP: no hull damage, its power goes down and it slows.
@@ -1218,6 +1220,7 @@ public static class PlaytestRunner
         dummyShip.damage.TakeSlug("PROW", s.weapons.stats);
         yield return (Func<bool>)(() => s.weapons.Incoming.Count > 0);
         float salvo1At = board.MissionSeconds;
+        yield return (Func<bool>)(() => s.weapons.Incoming.Count >= 2); // owner 2026-11-10 (Step 184): a salvo ripples out, one at a time
         Check("Hit, GARUDA fires a salvo of two back at us", s.weapons.Incoming.Count == 2 && dummyShip.weapons.vlsCells == enemyCells - 2, s.weapons.Incoming.Count + " incoming, its cells " + enemyCells + " → " + dummyShip.weapons.vlsCells);
         yield return (Func<bool>)(() => alarmWords.gameObject.activeInHierarchy && alarmWords.text.StartsWith("INCOMING")); // PDCs on AUTO can shoot them down soon after
         Check("The alarm strip warns of them, with their bearing (owner 2026-10-28)", alarmWords.gameObject.activeInHierarchy && alarmWords.text.StartsWith("INCOMING TORPEDOES · BRG "), "\"" + alarmWords.text + "\"");

@@ -2603,8 +2603,14 @@ MonoBehaviour:
   hitFlash: {fileID: 1142910112094376467, guid: 05a0fd40663f74752ae62dbbff5d2d48, type: 3}
   killBlast: {fileID: 4685710031669286314, guid: 41f334e56c0894ca7b03864350b24a97, type: 3}
   wreckLook: {fileID: 2100000, guid: e3c120e16a21e4f64a9a000fc4140f61, type: 2}
+  torpedoLook: {fileID: 2100000, guid: cffd692828d1e45a7b89c9eee7070f24, type: 2}
   slugWidthUnits: 6
   torpedoWidthUnits: 11
+  torpedoBodyUnits: 14
+  torpedoBodyInk: {r: 0.87, g: 0.9, b: 0.93, a: 0.7}
+  torpedoFlareUnits: 60
+  torpedoFlareSeconds: 0.6
+  torpedoRingPx: 16
   ourShotGlow: {r: 0.5, g: 0.75, b: 1, a: 1}
   theirShotGlow: {r: 1, g: 0.35, b: 0.15, a: 1}
   cloudImage: {fileID: 3679405572040343172}
