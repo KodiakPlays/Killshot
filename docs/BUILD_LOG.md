@@ -5412,7 +5412,7 @@ at gain 2 does not hear it, at gain 4 it does (range 2,907, interference 3,500).
 **Still open for MILK RUN:**
 - The Mission Setup Tool chat: the checkpoints (the old rings are in the wrong places now), the
   corvette's flight, the can't-be-destroyed switch, railgun off. Then Codex writes the words.
-- The group's small shuttles going out to the escape pods: not built.
+- ~~The group's small shuttles going out to the escape pods.~~ **Built:** three shuttles (h1 to h3, Friendly, class SHUTTLE, `Assets/Ships/Shuttle.asset`) under Station Area / Shuttles. Each waits until we are within 4,000, then ferries at 20 between the group's waiting point and one of the three nearest pods (`EnemyBrain` Patrol Route and Wait For Us Units, set in the level). Checked in play. Committed with the scene by the Mission Setup Tool chat.
 - The station picture's side corners are clipped a little: its camera frame fits its length, not its
   corner-to-corner width.
 
