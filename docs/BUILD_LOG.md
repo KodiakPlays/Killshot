@@ -5509,8 +5509,11 @@ at gain 2 does not hear it, at gain 4 it does (range 2,907, interference 3,500).
   hit damages once a side is open, and what comes after a wrecked room. One open question for the
   owner, in the plan.~~ **Done, Step 180.** Later, its own talk: a separate setup for conditions
   (fire, vacuum, radiation), owner 2026-11-09.
-- **A playtest check for a moved room** (Steps 180 and 186). Still to add. The check: give a room another row, and a
-  side hit at that row's spot damages it. Step 186 changed the starboard hangar check to aim at row 4.
+- ~~**A playtest check for a moved room** (Steps 180 and 186).~~ **Added 2026-11-10:** just after the starboard
+  hangar check, the magazine moves to row 5 and the engine room to row 1; a STBD hit near the stern must go to the
+  magazine, a PROW hit to the engine room. It asks only which room the next hit would damage, so nothing is hurt
+  and no dice are rolled. Compiled with no errors outside Unity; not run yet (Unity was booked). It runs in the
+  next full playtest.
 - ~~**Player 1 runs the fight sums again** (Step 180). Hits now go past a wrecked room, and the bridge
   and habitation can be hit. Fights will be shorter. Not run yet. First, the fight sums
   (`docs/scale-sim/scalesim.py`, `BEHIND`) and their README still use the old fixed room per side.
@@ -5559,17 +5562,17 @@ at gain 2 does not hear it, at gain 4 it does (range 2,907, interference 3,500).
      two commits, the rooms, then the fight program.
      `docs/scale-sim/scalesim.py` also holds the Step 184 torpedo flight (the Ship Visual Artefact chat's lines;
      its commit 46e1cda left them out). Commit them with the Step 186 sim changes.
-- **LONG SHOT at x5 fell to 23% wins with the box** (Step 186; it was 55% under Step 180). At x5 our
-  shots land behind the middle of the moving Garuda: half of them between 0.6 and 0.78 of the way
-  from bow to stern. So they hit habitation, the hangar and the engine room before its reactor.
-  First check in the game whether the lock's lead at x5 really lands that far aft. Change nothing
-  before that.
+- ~~**LONG SHOT at x5 fell to 23% wins with the box**~~ (Step 186; it was 55% under Step 180). At x5 our shots
+  land behind the middle of the moving Garuda. **Closed, owner 2026-11-10:** "I don't really care about longshot… I
+  care about the actual tutorial level. If longshot is not making sense, remember you can always pause the game."
 - **Owner's idea: exposed rooms take a condition by chance** (2026-11-10). Once a side's armour is
   gone, the rooms behind it could catch a fire, lose air or take radiation by random chance. For the
   conditions talk. Not built.
 - **Owner's idea: active scanning improves the hit** (2026-11-10). Scanning over time could improve
   the odds, or allow a hit aimed at one room, such as the bridge. Owner: "That becomes the value of
   active scanning." A talk first. Not built.
+  Owner, later the same day, unsure: "If you do a scan on a ship, then you should be able to target a room. I don't
+  know. I'm just thinking out loud." Not to build until the owner says so.
 
 ### The small number box on the Hangar panel: closed (Step 149, 2026-11-02)
 

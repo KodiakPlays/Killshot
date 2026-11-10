@@ -1623,6 +1623,14 @@ public static class PlaytestRunner
         s.damage.Comp("hab").integ = habWas;
         Check("A slug through the open starboard side breaches the hangar: half its crew die", slugHit.EndsWith(" · BREACH") && s.damage.Comp("hgr").vented && !s.damage.Comp("hgr").doorsShut && s.damage.Comp("hgr").crew == hgrCrew - Mathf.CeilToInt(hgrCrew * s.damage.stats.breachCrewLoss),
               "\"" + slugHit + "\", crew " + hgrCrew + " → " + s.damage.Comp("hgr").crew);
+        //     A moved room takes the hits at its new row (Step 186): the magazine in row 5, the engine room in row 1. It only
+        //     asks which room the next hit would damage, so nothing is hurt and no dice are rolled.
+        var roomRowsWas = s.damage.stats.roomRow;
+        s.damage.stats.roomRow = new[] { 5, 2, 4, 4, 3, 1 };
+        var movedSide = s.damage.NextRoom(1, 0.9f); var movedBow = s.damage.NextRoom(0);
+        s.damage.stats.roomRow = roomRowsWas;
+        Check("A moved room takes the hits at its new row: the magazine near the stern, the engine room at the bow", movedSide == s.damage.Comp("mag") && movedBow == s.damage.Comp("eng"),
+              (movedSide != null ? movedSide.tag : "none") + " near the stern on STBD, " + (movedBow != null ? movedBow.tag : "none") + " through the PROW");
         if (!Click("eng.pick", "hgr", "HGR cell")) yield break;
         Check("REPAIR waits until the doors are shut", s.damage.EngBlock("party") == "SEAL THE DOORS FIRST", s.damage.EngBlock("party") ?? "open");
         s.orders.auxCharge = 100; // stand-in, as above: SEAL and two REPAIRs follow
