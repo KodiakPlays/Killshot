@@ -5461,11 +5461,11 @@ pictures as they are now. Set-up: `docs/BOARD_UI.md`, "How to change a panel's a
 - **Look at Starwolf → Art by eye.** The owner opened it on 2026-11-10 and saw the small pictures.
   Still to check: whether each box has a **Select** button for picking from a list. Dropping a
   picture onto a box was tested and works.
-- **Six picture files have sRGB on.** Every other board picture has it off. Their colours may look
-  paler or darker than the art. Check each by eye before changing it: `Plot/GasCloud.png`,
-  `Plot/JumpPoint.png`, `Plot/DradisContactBar.png`, `Briefing/OperationalMapConsole.png`,
-  `Briefing/CompletedMissionNode.png` (both on the sector map; leave the sector map alone until the
-  owner says), and `Assets/UI/Sprite/triangle-128.png`.
+- ~~**Six picture files have sRGB on.**~~ **Resolved 2026-11-10, no change.** Four are plain white
+  shapes the game colours (`Plot/GasCloud.png`, `Plot/JumpPoint.png`, `Plot/DradisContactBar.png`,
+  `Assets/UI/Sprite/triangle-128.png`): sRGB does not change plain white. The other two
+  (`Briefing/OperationalMapConsole.png`, `Briefing/CompletedMissionNode.png`) are on the sector map,
+  which does not draw through the board's colour screen, so sRGB on is right for them.
 - **Waiting for art.** 10 stand-ins on the board (tick **Waiting for art** in the window to see
   them). 6 empty slots in the ship's rooms: the BRIDGE, ENGINEERING and QUARTERS paintings, and the
   XO, CHIEF ENGINEER and MARINE SERGEANT pictures (the HANGAR's two came from the Codex art test).
