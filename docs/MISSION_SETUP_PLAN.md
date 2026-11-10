@@ -45,9 +45,14 @@ run, checkpoints 12 to 23, and new places for rings 2 and 3.
 
 **The tools, in order (owner, 2026-11-11: "I'm okay with starting like this. Then we'll evaluate,
 and it builds as we go").** First, MILK RUN's play-through fixes and the player build. Then:
-1. A Starwolf → Mission window. The campaign's missions on the left (name, briefing, map dot). The
-   open mission's checkpoints on the right, as cards: lines (speaker and words), the order, done
-   when, the ring. A Names page: our ship, the battle group, the enemy and the title word.
+1. A Starwolf → Mission window. The open mission's checkpoints, as cards: lines (speaker and
+   words), the order, done when, the ring. They are saved in the level's Mission object. A Names
+   page: our ship, the battle group, the enemy and the title word, kept once on Campaign.asset.
+   Owner, later on 2026-11-11 (via the Campaign Flow chat): the flow is 1 Level window = the map,
+   2 Mission window = the mission inside it, 3 saved in the level file, 4 Starwolf → Campaign
+   window = put it in the campaign. The Campaign window (Campaign Flow chat) does the mission list:
+   order, add or remove, on or off, name, level, briefing, map dot and the closing line. The
+   Mission window picks a mission from that same list. There is one list.
 2. The Level window draws and places ships, stations and wrecks, the numbered checkpoint rings and
    the group's route.
 3. Play from checkpoint N.
