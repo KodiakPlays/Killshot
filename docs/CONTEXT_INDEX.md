@@ -80,7 +80,7 @@ pages, and most of it has been overtaken.
 | What the board's scripts are and what they are wired to | `docs/BUILD_LOG.md`, section 3 |
 | What is built in the tactical scene, and the traps already hit | `docs/BUILD_LOG.md`. The traps are in section 5. |
 | What is left to do, sorted | `docs/BUILD_LOG.md`, section 8, "Triage" |
-| A ship's numbers: speed, power, weapons, armour, crew per room | `Assets/Ships/Asura.asset` (our ship), `Assets/Ships/Garuda.asset` (the enemy cruiser) and `Assets/Ships/Frigate.asset` (the Naga-class frigates). Edit them in **Starwolf → Tuning**, on the Ship and Enemy tabs. |
+| A ship's numbers: speed, power, weapons, armour, crew per room | `Assets/Ships/Asura.asset` (our ship), `Assets/Ships/Garuda.asset` (the enemy cruiser) and `Assets/Ships/Frigate.asset` (the Naga-class frigates). Edit them in **Starwolf → Tuning**, on the Ship and Enemy tabs. Each room's row from bow to stern (Step 186), and each side's armour, are also on the Hard Points tab → ROOMS. |
 | The keys, and how to change them | `README.md`, Controls. Change them on the Keys tab of **Starwolf → Tuning**. |
 | How damage works: armour, rooms, fire, vacuum, radiation | `docs/DAMAGE_README.md` |
 | How boarding works: the assault boats and their orders | `docs/BOARDING_README.md` |
@@ -93,6 +93,7 @@ pages, and most of it has been overtaken.
 | FLIGHT DRILL: its 14 steps, and how to change one | `docs/BUILD_LOG.md`, section 2, `FlightDrill`. The notes, rings and amounts are in the Mission box in `Assets/Scenes/Levels/FlightDrill.unity`. |
 | What ENG does to the ship's movement, and the side thrusters | `docs/TACTICAL_BOARD_SPEC.md` §4.2 and §4.3. The numbers are in each ship's stats file in `Assets/Ships`. |
 | The sniper ship: the spinal railgun on the nose (built, Step 170), the flare, sensor drones, the sight in fire control (planned) | `docs/SNIPER_PLAN.md` |
+| Where each ship's rooms are: a row from bow to stern per room, set in Tuning's Hard Points tab → ROOMS (built, Step 186) | `docs/ROOM_LAYOUT_PLAN.md`. The rules for a hit are in `docs/DAMAGE_README.md`. |
 | The training levels and how they were built; the plan to split WEAPONS FREE | `docs/FTUE_PLAN.md` §0 |
 | The later tutorial mission, with the XO walking you through each station. It is a plan only | `docs/FTUE_PLAN.md` §1 to §9 |
 | Where a panel's prefab and art are, and how to swap its art | `docs/BOARD_UI.md` |
@@ -220,7 +221,9 @@ game's C#. Git has it: `git show 218acc8:docs/reference-sim/<file>` (`weapons.ts
 
 A small Python script that plays whole fights with the board's rules and numbers. It reports how long
 a win takes and how many shots are traded. It set the 5× speed scale in Step 63 and checked the designer's table in Step 130. Re-run it after any
-change to speeds, ranges, weapons or the enemy.
+change to speeds, ranges, weapons or the enemy. Step 180's room hit rule and the rooms in a row from bow to stern (Step 186), side by side
+(2026-11-10): the "Room hits" tab of the Google Sheet
+[Starwolf Tuning and Roadmap](https://docs.google.com/spreadsheets/d/1jSI0Y1bzp3S412vM--h7_IBPSifXZ_-lRuxFVhAW_tQ/edit).
 
 ### `Tools/notebooklm/README.md`
 

@@ -3,6 +3,89 @@
 Built on 2026-11-09, in Step 180 (the owner said yes to the six steps below). The idea is the owner's. Lines
 marked "my pick" are my calls. Any of them can change.
 
+## Step 186: the rooms are in a row (2026-11-10)
+
+**This replaces the Step 180 layout below, where each room had a side and an order.** Owner,
+2026-11-10: "think of the four plates of armour as a box… Everything is aligned in a row. If you hit
+the side of the thing, then you will see the pieces that are aligned to the side. If you hit the top
+and you destroy the top, then the thing that comes after it is the next item." The owner agreed to
+every point on the design page "Ship Room Layout"
+(https://claude.ai/artifact/6biZNa9s9NcQeXHjSBNQJ1): "I agree with everything you said. You may
+proceed."
+
+**The rule.**
+
+- Each room has one number: its row, from bow to stern (**Room Row**). Row 1 is right behind the
+  PROW plate. Rooms with the same number are side by side. Every row is the same length. There is no
+  midships setting: a room in the middle row is midships (owner: "maybe I don't need a midships").
+- Armour first, on each of the four plates.
+- **A PROW hit** goes to the front room still standing, then the next one back, all the way down the
+  row. **An AFT hit** does the same from the back.
+- **A STBD or PORT hit** goes to the room behind the spot where the shot lands. If that room is
+  wrecked, it goes to the nearest room still standing. A lock aims at the middle of the ship.
+- A wrecked room lets the hit through. Ties (same row, or same distance): more integrity first, then
+  the one higher in the list. So rooms on the same row take turns, from every direction.
+- Fighter runs and crashes hit the middle of a side. Fighters on DISABLE go for the end of the ship
+  the engine room is nearer (PROW or AFT).
+
+**The layout,** on all six ships (layout B on the page; owner: "let's do B. It's very smart. Reactor
+should be midships"):
+
+| Row | Room |
+|---|---|
+| 1 | Magazine |
+| 2 | Bridge |
+| 3 | Reactor |
+| 4 | Habitation and hangar bay, side by side |
+| 5 | Engine room |
+
+No ship file has a Room Row saved yet. They use this layout from the code. The old Room Side and
+Room Order lines left in the Asura, Garuda and Frigate files are no longer read.
+
+**In Tuning:** Starwolf → Tuning → Hard Points → ROOMS shows one Row number per room (1 to 6) and
+the four armour numbers. The picture draws the rows top to bottom, with side-by-side rooms split. The
+Side column is gone. The Ship tab → Damage shows Room Row.
+
+**Slug hits to destroy** (the fight sums, hit by hit):
+
+| | Bow | Stern | Side, at the middle | Side, shots spread along it |
+|---|---|---|---|---|
+| The Garuda, by our slugs | 12 | 14 | 6 | about 15 |
+| Our ship, by the Garuda's | 8 | 9 | 4 | about 9 |
+
+Step 180 had: the Garuda STBD 9, PORT 6, bow and stern never. Our ship STBD 6, PORT 4, bow and stern
+never. We have 12 slugs. The Garuda has 44.
+
+**Fights, Step 180 → the box.** Every level with a fight or chase, 3 kinds of player, each first
+move, x1 and x5, 24 fights a case. Both rules ran on the same ship files and dice, with the new
+torpedo flight. Average wins:
+
+| Level | x1 | x5 |
+|---|---|---|
+| Wolf Hunt | 42% → 52% | 0% → 0% |
+| LONG SHOT | 100% → 99% | 55% → 23% |
+| COLD RUN | 34% → 38% | 20% → 27% |
+| INTERCEPT | 33% → 37% | 21% → 27% |
+
+Wolf Hunt x1: experts 92–100%, good players 38–67%. WEAPONS FREE, NO PEEKING and FINDERS KEEPERS: no
+change.
+
+- **LONG SHOT at x5 got harder.** At x5 our shots land behind the middle of the moving Garuda: half
+  of them between 0.6 and 0.78 of the way from bow to stern. So they hit habitation, the hangar and
+  the engine room before its reactor. Under Step 180, any STBD hit went on to the reactor once the
+  hangar was wrecked. It is an open item in `BUILD_LOG.md` §8.
+- **The chases got easier.** The Garuda's hits on us spread along our side. They wreck other rooms
+  before our reactor.
+
+Full numbers: the "Room hits" tab of the Google Sheet
+[Starwolf Tuning and Roadmap](https://docs.google.com/spreadsheets/d/1jSI0Y1bzp3S412vM--h7_IBPSifXZ_-lRuxFVhAW_tQ/edit)
+(parts 1 and 2: the layout and the hits to destroy; part 3: which face a shot lands on; part 4: the
+fights), and the rows tagged rooms-box in `docs/team-reports/numbers.csv`.
+
+## Step 180: each room on a side (replaced by Step 186)
+
+Everything below is the Step 180 plan, kept as history.
+
 ## Summary
 
 Each ship has six rooms: the magazine, bridge, habitation, hangar bay, reactor and engine room. You
@@ -84,7 +167,7 @@ Today the bridge and habitation are inside the ship and are never hit. Here they
 So with the steps above they can now be hit. Today a wrecked room takes every later hit, and
 nothing behind it is hurt. This changes fights: Player 1 runs the fight sums again after the build.
 
-## Fight sums (2026-11-10)
+## Fight sums (2026-11-10): the fixed rooms against Step 180
 
 The fight sums (`docs/scale-sim/scalesim.py`) now play the six steps. Every fight was run twice on
 the same ship files, levels and dice: once with the old rule, once with the six steps. The full

@@ -1616,7 +1616,11 @@ public static class PlaytestRunner
         //     A slug through our open starboard side breaches the hangar: half its crew die, and vacuum spreads.
         s.damage.SideArmour[1] = 0f; s.weapons.stats.breachChanceSlug = 1f;
         int hgrCrew = s.damage.Comp("hgr").crew;
-        string slugHit = s.damage.TakeSlug("STBD", s.weapons.stats);
+        //     The hangar shares row 4 of 5 with habitation (owner 2026-11-10): the slug lands at row 4's middle, 0.7 of the
+        //     way from bow to stern, and habitation is set to 0 for the shot, so the hangar takes it.
+        int habWas = s.damage.Comp("hab").integ; s.damage.Comp("hab").integ = 0;
+        string slugHit = s.damage.TakeSlug("STBD", s.weapons.stats, 0.7f);
+        s.damage.Comp("hab").integ = habWas;
         Check("A slug through the open starboard side breaches the hangar: half its crew die", slugHit.EndsWith(" · BREACH") && s.damage.Comp("hgr").vented && !s.damage.Comp("hgr").doorsShut && s.damage.Comp("hgr").crew == hgrCrew - Mathf.CeilToInt(hgrCrew * s.damage.stats.breachCrewLoss),
               "\"" + slugHit + "\", crew " + hgrCrew + " → " + s.damage.Comp("hgr").crew);
         if (!Click("eng.pick", "hgr", "HGR cell")) yield break;

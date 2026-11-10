@@ -249,8 +249,9 @@ public class PeriscopePanel : Panel
 
     static readonly string[] FaceNames = { "BOW", "STBD", "AFT", "PORT" };
 
-    /// <summary>"BOW 100 · STBD ▸ HGR 3 · AFT 50 · PORT 50": armour per face in %, and through an open face (▸, as the
-    /// engineering lines use it) the room behind it and its integrity (DAMAGE_README.md). A wreck or a prize says so.</summary>
+    /// <summary>"BOW 100 · STBD ▸ RCT 3 · AFT 50 · PORT 50": armour per face in %, and through an open face (▸, as the
+    /// engineering lines use it) the room the next hit would damage and its integrity; on a side, the room at the middle
+    /// of the ship, where a lock aims (DAMAGE_README.md). A wreck or a prize says so.</summary>
     public static string HullLine(ShipState ship)
     {
         if (ship.destroyed) return "WRECK";
@@ -259,7 +260,7 @@ public class PeriscopePanel : Panel
         for (int i = 0; i < 4; i++)
         {
             float a = ship.damage.SideArmour[i];
-            var room = ship.damage.Comp(DamageSystem.RoomBehind(i));
+            var room = ship.damage.NextRoom(i);
             parts[i] = a > 0f ? FaceNames[i] + " " + ShipState.JsRound(a / ship.damage.stats.sideArmourMax[i] * 100f)
                               : FaceNames[i] + " ▸ " + (room != null ? room.tag + " " + room.integ : "OPEN");
         }

@@ -1,6 +1,8 @@
 # Damage and damage control
 
-**Summary.** Once the armour on one face of a ship is gone, hits land in the room behind it (a penetrator gets through anyway). Rooms
+**Summary.** Each ship's six rooms are in a row from bow to stern, inside a box of four armour
+plates. Once the armour on one plate is gone, hits land in the room behind it (a penetrator gets
+through anyway). A wrecked room lets the next hit through. Rooms
 can catch fire, lose their air (vacuum), or take radiation, and all three spread to neighbouring
 rooms. Engineering handles them with the design's existing buttons. A reactor at 0 destroys any
 ship, ours included. This is built one step at a time, in the order at the bottom.
@@ -12,22 +14,58 @@ Every rate is per game second, so x10 runs everything ten times as fast.
 
 ---
 
-## Faces and rooms (audit §09.4)
+## Rooms in a row (Step 186)
 
-| Face | Room behind it | What is lost |
+**The four armour plates make a box. The six rooms are in a row inside it, from bow to stern.** Each
+room has one number, its row. Row 1 is right behind the PROW plate. Rooms with the same number are
+side by side. Every row is the same length. Change the rows in **Starwolf → Tuning**, on the Hard
+Points tab → ROOMS. The Ship tab → Damage shows the same list, as Room Row. The plan, with the
+owner's words, is `ROOM_LAYOUT_PLAN.md`.
+
+**A hit through a plate** follows these steps. They are the same for every ship, ours and the enemy's.
+
+1. **Armour.** While the plate has armour, the hit damages only the armour.
+2. **PROW:** the front room still standing. **AFT:** the back room still standing.
+3. **STBD or PORT:** the room behind the spot where the shot lands. If it is wrecked, the nearest
+   room still standing. A lock aims at the middle of the ship.
+4. **A wrecked room is a hole.** A room at 0 integrity lets the hit through.
+5. **Ties** (same row, or same distance): the one with more integrity is hit first. If they are
+   level, the one higher in the list (MAG, BRI, HAB, HGR, RCT, ENG). No dice. So rooms on the same
+   row take turns.
+
+One hit damages one room. Damage left over is lost. The hit can start a condition in the room it
+damages.
+
+**The layout,** on all six ships (no ship file has a Room Row saved yet, so they use the code's):
+
+| Row | Room | What is lost |
 |---|---|---|
-| Bow | MAG magazine | arming ladder, ordnance |
-| Stern | ENG engine room | thrust |
-| Port | RCT reactor | power units; at 0 the ship is destroyed |
-| Starboard | HGR hangar bay | launch |
+| 1 | MAG magazine | arming ladder, ordnance |
+| 2 | BRI bridge | the plot computer |
+| 3 | RCT reactor | power units; at 0 the ship is destroyed |
+| 4 | HAB habitation | no system |
+| 4 | HGR hangar bay | launch |
+| 5 | ENG engine room | thrust |
 
-- **One fixed room per face**, with no random pick, so you can learn the ship and turn to protect it.
-- **Bridge (BRI) and habitation (HAB) are inside.** They are never hit directly; only conditions
-  spreading in can hurt them.
-- **A hit on a wrecked room** (integrity 0) does no more structural damage, but it can still start a
-  condition there.
+So every plate can lead to a kill. PROW hits wreck the magazine, then the bridge, then the reactor.
+A side hit at the middle goes to the reactor. Slug hits to destroy each ship are in the "Room hits"
+tab of the Google Sheet
+[Starwolf Tuning and Roadmap](https://docs.google.com/spreadsheets/d/1jSI0Y1bzp3S412vM--h7_IBPSifXZ_-lRuxFVhAW_tQ/edit)
+(fight sums, 2026-11-10).
+
+- Fighter runs and crashes hit the middle of a side. The Garuda's fighters on DISABLE go for the end
+  of the ship the engine room is nearer (PROW or AFT).
+- The targeting computer's hull line ("STBD ▸ RCT 3") shows the room the next hit will damage. On a
+  side it names the room at the middle, where a lock aims. With no room left to hit, it reads
+  "▸ OPEN".
+- **Before Step 186**, each room had a side and an order number (Step 180). **Before Step 180**,
+  each side had one fixed room: magazine PROW, hangar STBD, engine room AFT, reactor PORT (audit
+  §09.4).
 
 ## Deck plan (owner's choice)
+
+Fire, vacuum and radiation spread by this fixed list of which rooms touch. Moving a room in Tuning
+doesn't change it. A separate setup for conditions is to be talked through later (owner 2026-11-09).
 
 ```
           BOW

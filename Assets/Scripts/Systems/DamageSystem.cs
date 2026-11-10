@@ -27,6 +27,10 @@ public class DamageSystem : MonoBehaviour
         [Tooltip("Crew in each room at the start: MAG, BRI, HAB, HGR, RCT, ENG (owner 2026-10-29: a tuning number, per ship). "
                + "Breaches, VENT and radiation kill them.")]
         public int[] crew = { 4, 9, 18, 7, 6, 8 };
+        [Tooltip("Each room's row in the ship, counted from the bow: 1 is right behind the PROW plate. In the same room "
+               + "order as Crew: MAG, BRI, HAB, HGR, RCT, ENG (owner 2026-11-10). Rooms with the same number are side by "
+               + "side. The rows share the ship's length equally. Set it in Starwolf → Tuning → Hard Points → ROOMS.")]
+        public int[] roomRow = { 1, 2, 4, 4, 3, 5 };
         [Tooltip("A crash into debris or another ship at Crash Full Speed: armour off the side that touched.")]
         public float collisionArmourDamage = 25f;
         [Tooltip("The same crash with that side open: integrity off the room behind it.")]
@@ -171,18 +175,38 @@ public class DamageSystem : MonoBehaviour
     // The same model for every ship, ours included (the enemy is our ship with other stats).
 
     public static readonly string[] Sides = { "PROW", "STBD", "AFT", "PORT" };
-    // Step 58 (owner 2026-10-24, design audit §09.4): one fixed room behind each face — bow magazine,
-    // starboard hangar, stern engines, port reactor. Bridge and habitation sit inboard and are never hit
-    // directly. Replaces the 18 Oct map (FTUE_PLAN §4.4). DAMAGE_README.md.
-    static readonly string[] BehindSide = { "mag", "hgr", "eng", "rct" };
-    /// <summary>The room behind face i (PROW, STBD, AFT, PORT).</summary>
-    public static string RoomBehind(int i) => BehindSide[i];
+
+    // Where the rooms are (owner 2026-11-10, ROOM_LAYOUT_PLAN.md): the four plates make a box, and the rooms are in a
+    // row inside it, from bow to stern. Each room's row is in the ship's file.
+    int RowOf(int i) => i < stats.roomRow.Length ? Mathf.Max(1, stats.roomRow[i]) : 1;
+    int Rows { get { int n = 1; for (int i = 0; i < compartments.Length; i++) n = Mathf.Max(n, RowOf(i)); return n; } }
+
+    /// <summary>The room the next hit through open plate s (PROW, STBD, AFT, PORT) damages, or null when every room
+    /// is wrecked. PROW: the front room still standing; AFT: the back one. STBD or PORT: the room behind the spot it
+    /// landed (fromBow: 0 at the bow, 1 at the stern; the rows share the length equally), else the nearest room still
+    /// standing. A wrecked room lets the hit through. Ties: more integrity, then the one higher in the list.</summary>
+    public Compartment NextRoom(int s, float fromBow = 0.5f)
+    {
+        int rows = Rows;
+        Compartment best = null;
+        float bestKey = 0f;
+        for (int i = 0; i < compartments.Length; i++)
+        {
+            var c = compartments[i];
+            if (c.integ <= 0) continue;
+            float key = s == 0 ? RowOf(i) : s == 2 ? -RowOf(i)
+                      : Mathf.Round(Mathf.Abs((RowOf(i) - 0.5f) / rows - fromBow) * 10000f); // rounded, so equal distances tie
+            if (best == null || key < bestKey || (key == bestKey && c.integ > best.integ)) { best = c; bestKey = key; }
+        }
+        return best;
+    }
     [System.NonSerialized] private float[] sideArmour;
     public float[] SideArmour => sideArmour ?? (sideArmour = (float[])stats.sideArmourMax.Clone());
 
-    /// <summary>A slug strikes this ship's side. Armour first; once the side is open, the room behind it
-    /// loses integrity. by: the firing ship's numbers. Returns the report's tail (" OPEN", " · RCT −2").</summary>
-    public string TakeSlug(string side, WeaponSystem.Stats by)
+    /// <summary>A slug strikes this ship's side. Armour first; once the side is open, the next room (NextRoom)
+    /// loses integrity. by: the firing ship's numbers. fromBow: where along the ship it landed, 0 the bow to 1 the
+    /// stern. Returns the report's tail (" OPEN", " · RCT −2").</summary>
+    public string TakeSlug(string side, WeaponSystem.Stats by, float fromBow = 0.5f)
     {
         int i = System.Array.IndexOf(Sides, side);
         if (i < 0 || ship.destroyed) return "";
@@ -192,15 +216,15 @@ public class DamageSystem : MonoBehaviour
             armour[i] = Mathf.Max(0f, armour[i] - by.slugArmourDamage);
             return armour[i] <= 0f ? " OPEN" : " ARMOUR " + ShipState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%";
         }
-        return Behind(i, by.slugCompartmentDamage, "slug", by);
+        return Behind(i, fromBow, by.slugCompartmentDamage, "slug", by);
     }
 
-    /// <summary>One fighter's attack run on this ship (Step 54). DESTROY: the side facing it, then the room
-    /// behind. DISABLE: always the stern, so the engine room (Step 58).</summary>
+    /// <summary>One fighter's attack run on this ship (Step 54). DESTROY: the side facing it, then the next room, at
+    /// the middle of a side. DISABLE: the end of the ship the engine room is nearer, PROW or AFT.</summary>
     public string TakeFighterRun(string side, bool disable, float armourDamage, int compartmentDamage)
     {
         if (ship.destroyed) return "";
-        int i = disable ? 2 : System.Array.IndexOf(Sides, side);
+        int i = disable ? (RowOf(CompIndex("eng")) - 0.5f > Rows / 2f ? 2 : 0) : System.Array.IndexOf(Sides, side);
         if (i < 0) return "";
         var armour = SideArmour;
         if (armour[i] > 0f)
@@ -208,7 +232,7 @@ public class DamageSystem : MonoBehaviour
             armour[i] = Mathf.Max(0f, armour[i] - armourDamage);
             return " " + Sides[i] + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + ShipState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%");
         }
-        return " " + Sides[i] + Behind(i, compartmentDamage, "fighter", null);
+        return " " + Sides[i] + Behind(i, 0.5f, compartmentDamage, "fighter", null);
     }
 
     /// <summary>The ship crashes into debris or another ship (TacticalWorld) at this speed: the side that touched, then
@@ -220,15 +244,15 @@ public class DamageSystem : MonoBehaviour
         return TakeFighterRun(side, false, stats.collisionArmourDamage * share, Mathf.CeilToInt(stats.collisionCompartmentDamage * share));
     }
 
-    // The room behind side i loses the damage given. A wrecked room takes no more, but the hit can still start
-    // a condition there (Step 59). The ship is destroyed when its reactor's structure reaches 0 (any ship, ours
-    // too: owner 2026-10-24). by: the firing ship's numbers (none for a fighter).
-    string Behind(int i, int damage, string weapon, WeaponSystem.Stats by)
+    // The next room through side i (NextRoom, at fromBow on a side) loses the damage given, and the hit can start a
+    // condition there (Step 59). Damage left over does not carry on. With nothing left, the hit does nothing more. The
+    // ship is destroyed when its reactor's structure reaches 0 (any ship, ours too: owner 2026-10-24). by: the firing
+    // ship's numbers (none for a fighter).
+    string Behind(int i, float fromBow, int damage, string weapon, WeaponSystem.Stats by)
     {
-        var hit = Comp(BehindSide[i]);
+        var hit = NextRoom(i, fromBow);
         if (hit == null) return "";
         string started = Strike(hit, weapon, by);
-        if (hit.integ <= 0) return " · " + hit.tag + " WRECKED" + started;
         hit.integ = Mathf.Max(0, hit.integ - damage);
         if (Comp("rct").integ <= 0) ship.destroyed = true;
         return " · " + hit.tag + " −" + damage + started;
@@ -308,8 +332,9 @@ public class DamageSystem : MonoBehaviour
 
     /// <summary>A torpedo's warhead strikes this ship (Step 53, owner 2026-10-23). HE hits the armour hard,
     /// then what is behind it; PENETRATOR goes straight to a compartment behind the side; EMP does no
-    /// hull damage but knocks the power out. by: the firing ship's numbers.</summary>
-    public string TakeWarhead(string side, string warheadName, WeaponSystem.Stats by)
+    /// hull damage but knocks the power out. by: the firing ship's numbers. fromBow: where along the ship it landed,
+    /// 0 the bow to 1 the stern.</summary>
+    public string TakeWarhead(string side, string warheadName, WeaponSystem.Stats by, float fromBow = 0.5f)
     {
         if (ship.destroyed) return "";
         if (warheadName == "EMP")
@@ -327,7 +352,7 @@ public class DamageSystem : MonoBehaviour
             return " · HE" + (armour[i] <= 0f ? " OPEN" : " ARMOUR " + ShipState.JsRound(armour[i] / stats.sideArmourMax[i] * 100f) + "%");
         }
         string w = warheadName == "PENETRATOR" ? "PEN" : warheadName;
-        return " · " + w + Behind(i, by.slugCompartmentDamage, w, by);
+        return " · " + w + Behind(i, fromBow, by.slugCompartmentDamage, w, by);
     }
 
     // The side of a ship whose bow points bowDeg that faces a bearing fromDeg (both clockwise from north).

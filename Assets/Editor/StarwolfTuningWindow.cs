@@ -13,7 +13,8 @@ using UnityEngine;
 /// - Board: every value marked [Tune("Section")] on the open scene's other components (the plot, sounds, the
 ///   clock), grouped by section, as before (owner, 2026-10-17).
 /// - Keys: the board's keys, the values marked [Tune("Keys")] (owner, 2026-10-29).
-/// - Hard Points: a ship as a rectangle, with its hard points as dots to drag (owner, 2026-11-01).
+/// - Hard Points: a ship as a rectangle, with its hard points as dots to drag (owner, 2026-11-01). Its ROOMS view:
+///   each room's row from bow to stern, and each side's armour (owner, 2026-11-09 and 2026-11-10).
 /// - Ranges: every system's reach as a ring round a ship, to drag (owner, 2026-11-01).
 /// A stats file edit is kept, in play mode too, and the running game takes it at once. A Board or Keys edit made
 /// in play mode is lost when play stops, unless "Keep play-mode changes" is ticked.
@@ -116,7 +117,8 @@ public class StarwolfTuningWindow : EditorWindow
     static readonly Color HangarInk = new Color(0.4f, 0.85f, 0.5f);
     const int LinePoints = 32; // a drawn line is kept as this many points, evenly spaced
     ShipStats[] hullFiles;
-    [SerializeField] int hullFile, hullDot, hullMarks = 4, lineSmoothing = 4;
+    [SerializeField] int hullFile, hullDot, hullMarks = 4, lineSmoothing = 4, hullView;
+    static readonly string[] HullViews = { "WEAPONS", "ROOMS" };
     List<Vector2> stroke; // the line being drawn, units from its dot
 
     // The ship as a rectangle, nose up, its hard points and hangar dots to drag; under it, the selected dot's gun and cone.
@@ -124,6 +126,8 @@ public class StarwolfTuningWindow : EditorWindow
     {
         if (hullFiles == null) hullFiles = AssetDatabase.FindAssets("t:ShipStats").Select(g => AssetDatabase.LoadAssetAtPath<ShipStats>(AssetDatabase.GUIDToAssetPath(g))).ToArray();
         if (hullFiles.Length == 0) { EditorGUILayout.HelpBox("No ship stats files in Assets/Ships.", MessageType.Info); return; }
+        hullView = GUILayout.Toolbar(hullView, HullViews);
+        if (hullView == 1) { DrawRooms(); return; }
         EditorGUILayout.HelpBox("The top of the picture is the nose. The rectangle is the ship's solid box: shots and crashes hit it. Drag a dot: it stays on the edge, and its weapon points straight out of that side. Dotted lines show where a weapon can fire. The solid line is a railgun at rest. Green dots: the hangar, one on each long side.\n\nTo draw how torpedoes or fighters leave the ship, hold Shift and drag out of a torpedo launcher or a hangar dot. The line smooths when you let go. In the game they fly along the line, then turn onto the target. Fighters use the hangar dot on the side facing the target, and they start just outside the ship's picture.", MessageType.None);
         hullFile = EditorGUILayout.Popup("Ship", hullFile, hullFiles.Select(f => f.name).ToArray());
         var file = hullFiles[hullFile];
@@ -199,6 +203,81 @@ public class StarwolfTuningWindow : EditorWindow
                 if (IsHangar(file, hullDot)) ArrayUtility.RemoveAt(ref file.hangar.dots, hullDot - file.weapons.hardPoints.Length);
                 else ArrayUtility.RemoveAt(ref file.weapons.hardPoints, hullDot);
                 SaveHull(file);
+            }
+        }
+    }
+
+    // ---- the ROOMS view of the Hard Points tab (owner 2026-11-09 and 2026-11-10, docs/ROOM_LAYOUT_PLAN.md)
+
+    // In the room order of the stats file's Crew and Room Row (DamageSystem.Stats).
+    static readonly string[] RoomTags = { "MAG", "BRI", "HAB", "HGR", "RCT", "ENG" };
+    static readonly string[] RoomNames = { "Magazine", "Bridge", "Habitation", "Hangar bay", "Reactor", "Engine room" };
+    const float RoomsTallPx = 300f, RoomsWidePx = 200f;
+
+    // Each room's row, and each side's armour, with the ship drawn above them.
+    void DrawRooms()
+    {
+        EditorGUILayout.HelpBox("The top of the picture is the nose. The four armour plates make a box, and the rooms are in a row inside it, from bow to stern. Each room has a row number: 1 is right behind the PROW plate. Rooms with the same number are side by side.\n\nA hit through the PROW damages the front room still standing; through the AFT, the back one. A hit through a side damages the room behind the spot it lands, or the nearest room still standing. A wrecked room lets the hit through.", MessageType.None);
+        hullFile = EditorGUILayout.Popup("Ship", hullFile, hullFiles.Select(f => f.name).ToArray());
+        var file = hullFiles[hullFile];
+        var d = file.damage;
+        int n = Mathf.Min(RoomTags.Length, d.roomRow.Length);
+        Rect area = GUILayoutUtility.GetRect(10f, RoomsTallPx + 2f * HullPad + 20f, GUILayout.ExpandWidth(true));
+        if (Event.current.type == EventType.Repaint) PaintRooms(d, n, area);
+
+        var rows = (int[])d.roomRow.Clone();
+        var armour = (float[])d.sideArmourMax.Clone();
+        EditorGUI.BeginChangeCheck();
+        using (new EditorGUILayout.HorizontalScope())
+        {
+            EditorGUILayout.LabelField("Room", EditorStyles.boldLabel, GUILayout.Width(110f));
+            EditorGUILayout.LabelField(new GUIContent("Row", "1 is right behind the PROW plate. The same number: side by side."), EditorStyles.boldLabel, GUILayout.Width(50f));
+        }
+        for (int i = 0; i < n; i++)
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField(RoomNames[i], GUILayout.Width(110f));
+                rows[i] = Mathf.Clamp(EditorGUILayout.IntField(rows[i], GUILayout.Width(50f)), 1, n);
+            }
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("Armour", EditorStyles.boldLabel);
+        for (int s = 0; s < armour.Length; s++) armour[s] = Mathf.Max(0f, EditorGUILayout.FloatField(DamageSystem.Sides[s], armour[s]));
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(file, "Rooms and armour");
+            d.roomRow = rows;
+            d.sideArmourMax = armour;
+            SaveHull(file);
+        }
+    }
+
+    // The ship nose up, each side's armour outside it, and the rooms in their rows from bow to stern: each row an equal
+    // band of the length, rooms with the same number side by side in it.
+    void PaintRooms(DamageSystem.Stats d, int n, Rect area)
+    {
+        EditorGUI.DrawRect(area, new Color(0.1f, 0.11f, 0.12f));
+        var hull = new Rect(area.center.x - RoomsWidePx / 2f, area.center.y - RoomsTallPx / 2f, RoomsWidePx, RoomsTallPx);
+        Handles.DrawSolidRectangleWithOutline(hull, HullFill, HullEdge);
+        var tag = new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter, normal = { textColor = HullEdge } };
+        var rowInk = new GUIStyle(EditorStyles.miniLabel) { normal = { textColor = HullEdge } };
+        var armourInk = new GUIStyle(EditorStyles.miniBoldLabel) { alignment = TextAnchor.MiddleCenter, normal = { textColor = Gun } };
+        GUI.Label(new Rect(hull.center.x - 60f, hull.yMin - 18f, 120f, 16f), "PROW " + d.sideArmourMax[0], armourInk);
+        GUI.Label(new Rect(hull.center.x - 60f, hull.yMax + 2f, 120f, 16f), "AFT " + d.sideArmourMax[2], armourInk);
+        GUI.Label(new Rect(hull.xMax + 4f, hull.center.y - 8f, 70f, 16f), "STBD " + d.sideArmourMax[1], armourInk);
+        GUI.Label(new Rect(hull.xMin - 74f, hull.center.y - 8f, 70f, 16f), "PORT " + d.sideArmourMax[3], armourInk);
+        int rows = Enumerable.Range(0, n).Select(i => Mathf.Max(1, d.roomRow[i])).DefaultIfEmpty(1).Max();
+        float band = hull.height / rows;
+        for (int r = 1; r <= rows; r++)
+        {
+            float top = hull.yMin + (r - 1) * band;
+            if (r > 1) EditorGUI.DrawRect(new Rect(hull.xMin, top, hull.width, 1f), HullEdge);
+            GUI.Label(new Rect(hull.xMin + 3f, top + 1f, 20f, 14f), r.ToString(), rowInk);
+            var inRow = Enumerable.Range(0, n).Where(i => Mathf.Max(1, d.roomRow[i]) == r).ToList();
+            float wide = hull.width / Mathf.Max(1, inRow.Count);
+            for (int k = 0; k < inRow.Count; k++)
+            {
+                if (k > 0) EditorGUI.DrawRect(new Rect(hull.xMin + k * wide, top, 1f, band), HullEdge);
+                GUI.Label(new Rect(hull.xMin + k * wide, top + band / 2f - 9f, wide, 18f), RoomTags[inRow[k]], tag);
             }
         }
     }

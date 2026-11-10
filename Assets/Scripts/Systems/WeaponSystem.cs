@@ -785,7 +785,8 @@ public class WeaponSystem : MonoBehaviour
         {
             // Step 49: the struck ship takes the hit on its own model (its side, then what is behind it)
             var victim = ship.ShipOf != null ? ship.ShipOf(struck.key) : null;
-            string damage = victim == null ? "" : r.torpedo ? victim.damage.TakeWarhead(side, warheads[r.warhead], stats) : victim.damage.TakeSlug(side, stats);
+            string damage = victim == null ? "" : r.torpedo ? victim.damage.TakeWarhead(side, warheads[r.warhead], stats, 1f - breakAt)
+                                                              : victim.damage.TakeSlug(side, stats, 1f - breakAt);
             if (victim != null && victim.destroyed) ship.Kill(struck, breakAt);
             else { shotReport = "HIT · " + ship.NameOf(struck) + (ship.Scanned(struck) ? " · " + side + damage : ""); lastShotHit = true; shotResults++; } // Step 61: detail once scanned
             return false;
@@ -829,7 +830,7 @@ public class WeaponSystem : MonoBehaviour
     public double StepAhead(Round r, double dt)
     {
         double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled), at;
-        bool hits = r.by != null ? ReachesUs(r, step, 0, out at, out _) : FirstStruck(r, step / r.speed, out _, out at, out _) != null;
+        bool hits = r.by != null ? ReachesUs(r, step, 0, out at, out _, out _) : FirstStruck(r, step / r.speed, out _, out at, out _) != null;
         return hits ? step * at : step;
     }
 
@@ -961,10 +962,10 @@ public class WeaponSystem : MonoBehaviour
         if (r.torpedo) { Drift(r, dt); SteerAt(r, ship.nav.x, ship.nav.y, dt); }
         double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
         string side;
-        if (ReachesUs(r, step, dt, out _, out side))
+        if (ReachesUs(r, step, dt, out _, out side, out float breakAt))
         {
-            incomingReport = r.torpedo ? "TORPEDO HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead], r.by)
-                                       : "SLUG HIT · " + side + ship.damage.TakeSlug(side, r.by);
+            incomingReport = r.torpedo ? "TORPEDO HIT · " + side + ship.damage.TakeWarhead(side, warheads[r.warhead], r.by, 1f - breakAt)
+                                       : "SLUG HIT · " + side + ship.damage.TakeSlug(side, r.by, 1f - breakAt);
             hitsTaken++;
             return false;
         }
@@ -972,8 +973,9 @@ public class WeaponSystem : MonoBehaviour
         return r.travelled < r.maxUnits - 1e-6;
     }
 
-    // Does enemy round r reach our box on a step of `step` units? `ago`: game seconds our ship has already moved of it
-    bool ReachesUs(Round r, double step, double ago, out double at, out string side)
+    // Does enemy round r reach our box on a step of `step` units? `ago`: game seconds our ship has already moved of it.
+    // breakAt: where along our ship it strikes, 0 the stern to 1 the nose (as FirstStruck)
+    bool ReachesUs(Round r, double step, double ago, out double at, out string side, out float breakAt)
     {
         double fx, fy, mx, my;
         if (r.torpedo) { fx = r.x - ship.nav.x; fy = r.y - ship.nav.y; mx = r.dx * step; my = r.dy * step; }
@@ -985,7 +987,10 @@ public class WeaponSystem : MonoBehaviour
             mx = (r.dx * r.speed - ship.nav.vx) * flight; my = (r.dy * r.speed - ship.nav.vy) * flight;
         }
         Vector2 half = r.by.HitHalf(ship.nav.BoxHalf);
-        return ShipState.EntersBox(fx, fy, fx + mx, fy + my, ship.nav.heading, half.x, half.y, out at, out side);
+        bool hit = ShipState.EntersBox(fx, fy, fx + mx, fy + my, ship.nav.heading, half.x, half.y, out at, out side);
+        double bow = ship.nav.heading * System.Math.PI / 180;
+        breakAt = 0.5f + (float)(((fx + mx * at) * System.Math.Sin(bow) + (fy + my * at) * System.Math.Cos(bow)) / (2 * half.y));
+        return hit;
     }
 
     // A PDC group on AUTO, loaded and powered, gets one chance at each enemy torpedo inside its arc and range.
