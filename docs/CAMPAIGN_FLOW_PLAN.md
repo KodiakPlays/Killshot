@@ -16,18 +16,19 @@ https://claude.ai/artifact/UhfPpB8aJoY8zJj3RziEa4
 | 1. The Escape menu | Built (Step 190). |
 | 2. The end card, and the percent on the save slot | Built (Step 194). Since Step 203 the end card always opens after the last win. The closing line in `Assets/Campaign/Campaign.asset` → Closing Line stays empty for now (owner 2026-11-11), so the end card goes straight to the title, where only STARWOLF flickers in. |
 | 3. Supplies carry over, and the travel bar | Done. Part 1 built (Step 196): supplies and crew are kept between missions. Part 2 built (Step 198): the travel bar and the actions in each room. |
+| A test mission after MILK RUN | Built (Step 204), throwaway. Mission 2, TEST MISSION, is won 5 game seconds after time starts. A MILK RUN win now opens the ship's rooms and the travel bar. **Take it out before the player build:** delete the second entry in `Assets/Campaign/Campaign.asset` → Missions. Its scene, `Assets/Scenes/Levels/TestMission.unity`, stays. |
 
 **Step 2, as built (Step 194).** Win the campaign's last mission and press MISSION SELECT. The
 screen goes black. The closing line types in, in the middle, in the sector map's green Share Tech
 Mono. It stays up for 5 seconds. Then the title loads, and only STARWOLF flickers in. Any key or
 click shows the whole line at once. Another one goes straight to the title. The scene is
-`Assets/Scenes/Tactical/EndCard.unity`. Today the campaign has one mission, MILK RUN. The closing
-line is empty. Since Step 203 an empty line goes straight to the title, so a campaign win of MILK
-RUN goes to STARWOLF and the title. The ship's rooms and the travel bar don't show until a second
-mission is added. (Before Step 203, an empty line opened the rooms.) A used save slot reads
-"CAMPAIGN · 1 OF 10 · 10%", or "CAMPAIGN COMPLETE · 100%" when every mission in the Campaign file
-is won. Old test levels don't count. After a campaign win of MILK RUN it reads CAMPAIGN COMPLETE ·
-100%.
+`Assets/Scenes/Tactical/EndCard.unity`. Today the campaign has MILK RUN and a throwaway TEST
+MISSION (Step 204). The closing line is empty. Since Step 203 an empty line goes straight to the
+title. Since Step 204 a campaign win of MILK RUN opens the ship's rooms and the travel bar again. A
+win of TEST MISSION goes to STARWOLF and the title. (Before Step 203, an empty line opened the
+rooms.) A used save slot reads "CAMPAIGN · 1 OF 10 · 10%", or "CAMPAIGN COMPLETE · 100%" when every
+mission in the Campaign file is won. Old test levels don't count. After a campaign win of MILK RUN
+it reads CAMPAIGN · 1 OF 2 · 50%. After TEST MISSION it reads CAMPAIGN COMPLETE · 100%.
 
 **Step 3 part 1, as built (Step 196).** Win a campaign mission and press MISSION SELECT. The next
 mission starts with what our ship had left: the rounds in each gun and launcher, the marines aboard

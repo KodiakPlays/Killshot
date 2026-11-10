@@ -15,5 +15,14 @@ MonoBehaviour:
   missions:
   - title: MILK RUN
     level: Orientation
-    brief: "We'll take on supplies at the station before we start our patrol. Merchant crews have reported pirate activity along the border. Once we've loaded stores, we'll head out together and check those reports."
+    brief: We'll take on supplies at the station before we start our patrol. Merchant
+      crews have reported pirate activity along the border. Once we've loaded stores,
+      we'll head out together and check those reports.
     at: {x: 196.17, y: -312.52}
+  - title: TEST MISSION
+    level: TestMission
+    brief: 'A test mission, only here so the ship''s rooms and the travel bar show
+      after MILK RUN. Nothing to do: it is won after 5 seconds. Take it out of the
+      campaign before the player build.'
+    at: {x: 470, y: -40}
+  closingLine: 

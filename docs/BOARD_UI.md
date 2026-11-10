@@ -1449,7 +1449,10 @@ Ask a technical artist before you change these:
 Scene: `Assets/Scenes/Tactical/SectorMap.unity`. Script: **Sector Map**, on `Sector Map Script`.
 It is the campaign's map of missions. SAVE SLOTS opens it. So does SECTOR MAP › in the ship's
 rooms. Each mission is a dot. Win a mission, and the next dot shows. Codex made the look (Step
-172). Since Step 178 the map has one mission: 1 ORIENTATION. More story missions come later.
+172). Since Step 178 the map has one story mission. It was 1 ORIENTATION; it is now 1 MILK RUN. More story missions come later.
+For now a second dot, 2 TEST MISSION, follows it (Step 204). It is a throwaway test, won 5 game
+seconds after time starts. It comes out before the player build: delete the second entry in
+`Assets/Campaign/Campaign.asset` → Missions.
 
 How it plays:
 - A painted console fills the screen. On the left is the BRIEFING screen. Under MISSION RECORD it
@@ -1534,9 +1537,9 @@ was already written at the win.
 The closing line is in the Campaign file: `Assets/Campaign/Campaign.asset` → **Closing Line**.
 Select the file in the Project window and type it there. It stays empty for now (owner
 2026-11-11). With the line empty, the end card goes straight on to the title, where only STARWOLF
-flickers in, in the middle of the screen (Step 203). Today the campaign has one mission, MILK RUN,
-so a campaign win of MILK RUN goes to the title. The ship's rooms and the travel bar don't show
-until a second mission is added.
+flickers in, in the middle of the screen (Step 203). Today the last mission is the throwaway TEST
+MISSION (Step 204). A campaign win of MILK RUN opens the ship's rooms and the travel bar. A win of
+TEST MISSION goes to the end card and the title.
 
 A rule for later (owner 2026-11-11): STARWOLF must never be in the bottom half of the screen. An
 end card with a closing line must not put STARWOLF below the line.
