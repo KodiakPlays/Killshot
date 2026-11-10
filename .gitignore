@@ -111,3 +111,6 @@ Starwolf_Demo_Build_v0.3.zip
 /References/**/*.jpeg
 /References/**/*.webp
 /References/**/*.gif
+
+# Zip files never go in git (owner, 2026-11-10)
+*.zip
