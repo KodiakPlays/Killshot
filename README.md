@@ -70,10 +70,15 @@ campaign. A used slot continues its campaign. The SECTOR MAP opens: a console
 with a BRIEFING screen on the left and a star chart on the right. Each mission
 is a dot. The newest dot is already picked. Click LAUNCH. Win the mission, and
 the next dot shows. A finished mission's dot shows a tick. Click it: DEBRIEF
-shows MISSION COMPLETE, and REPLAY MISSION plays it again.
+shows MISSION COMPLETE. Its LAUNCH is greyed out: a won mission can't be
+played again.
 After a won mission, the ship's rooms show before the map. Damage stays on the
-ship between campaign missions until REPAIR ALL in ENGINEERING. The rounds,
-torpedoes, marines and crew left after a win stay too. Nothing restocks them yet.
+ship between campaign missions. The rounds, torpedoes, marines and crew left
+after a win stay too. Each win gives a travel bar of 10 units, at the top right
+of the rooms. Each room's actions fill it: repairs in ENGINEERING, torpedoes and
+ammo in HANGAR, marines in QUARTERS. Each action costs units and gives back a
+share. When the bar is full, the actions lock and SECTOR MAP flashes. SECTOR MAP
+works any time; units left are lost.
 The game saves after each win. DELETE on a used slot empties it.
 
 SKIRMISH plays WOLF HUNT straight away. In a skirmish, MISSION SELECT goes

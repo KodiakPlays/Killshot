@@ -17,15 +17,17 @@
 // - When the map opens, the newest dot is picked. Picking a dot shows its number, name and
 //   briefing on the left screen.
 // - BRIEFING shows the mission text. DEBRIEF works only on a won mission and adds MISSION COMPLETE
-//   above the text. LAUNCH reads REPLAY MISSION on a won mission.
+//   above the text. LAUNCH is greyed out on a won mission: no replays for now.
 // - LAUNCH asks ScreenFlow to play the mission's level.
+// - Opening the map shuts the ship's rooms' travel bar. Units left there are lost.
 //
 // Technical:
 // - Data: campaign is the Campaign file. picked is the dot shown, from 0. fresh is the new dot,
 //   its name and its line.
 // - Start sets SaveGame.campaign first, even when it then leaves for SaveSlots.
 // - Wins are counted in order from mission 1. The first mission not won stops the count.
-// - Each opening writes dotsShown and calls SaveGame.Save.
+// - Each opening writes dotsShown, sets travelOpen to false and calls SaveGame.Save.
+// - A greyed-out DEBRIEF or LAUNCH also has its words dimmed.
 // - Dots and lines are copies of dotTemplate and lineTemplate, made inside map. A dot's place is
 //   its mission's at, in px.
 // - Each dot's click calls Pick, set up in code. The scene's Buttons call ShowBriefing,
@@ -58,7 +60,7 @@ public class SectorMap : MonoBehaviour
     [SerializeField] private GameObject box;
     [Tooltip("On the left screen: the mission's number and name (Box Title), and its text (Box Brief).")]
     [SerializeField] private TMP_Text boxTitle, boxBrief;
-    [Tooltip("The LAUNCH button's text. It reads REPLAY MISSION on a finished mission.")]
+    [Tooltip("The LAUNCH button's text. Its button is greyed out on a won mission: no replays for now (owner 2026-11-11).")]
     [SerializeField] private TMP_Text launchLabel;
     [Tooltip("DEBRIEF. It works only on a finished mission.")]
     [SerializeField] private Button debriefButton;
@@ -90,6 +92,7 @@ public class SectorMap : MonoBehaviour
         int shown = Mathf.Min(open + 1, missions.Length);
         bool isNew = save.dotsShown < shown; // the newest dot shows for the first time
         save.dotsShown = shown;
+        save.travelOpen = false; // the ship's rooms' travel bar shuts here, however the rooms were left: units left are lost
         SaveGame.Save();
 
         for (int i = 0; i < shown; i++)
@@ -142,8 +145,16 @@ public class SectorMap : MonoBehaviour
         picked = index;
         boxTitle.text = (index + 1) + "  " + missions[index].title;
         ShowBriefing();
-        if (debriefButton) debriefButton.interactable = SaveGame.Current.done.Contains(missions[index].level);
-        if (launchLabel) launchLabel.text = SaveGame.Current.done.Contains(missions[index].level) ? "REPLAY MISSION" : "LAUNCH";
+        bool won = SaveGame.Current.done.Contains(missions[index].level);
+        if (debriefButton)
+        {
+            debriefButton.interactable = won;
+            var words = debriefButton.GetComponentInChildren<TMP_Text>(true);
+            if (words) words.alpha = won ? 1f : 0.35f;
+        }
+        var launch = launchLabel ? launchLabel.GetComponentInParent<Button>(true) : null; // true: the box is still off when the map opens
+        if (launch) launch.interactable = !won; // owner 2026-11-11: no replays for now
+        if (launchLabel) launchLabel.alpha = won ? 0.35f : 1f;
         box.SetActive(true);
     }
 
@@ -163,6 +174,6 @@ public class SectorMap : MonoBehaviour
     /// <summary>The box's LAUNCH. Safe to call from a Button's onClick.</summary>
     public void Launch()
     {
-        if (picked >= 0) flow.Play(missions[picked].level);
+        if (picked >= 0 && !SaveGame.Current.done.Contains(missions[picked].level)) flow.Play(missions[picked].level);
     }
 }

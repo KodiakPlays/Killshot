@@ -1320,15 +1320,52 @@ MARINE SERGEANT in QUARTERS.
 
 ENGINEERING shows a DAMAGE REPORT beside the CHIEF ENGINEER. In a campaign, our ship keeps its
 damage after a won mission. The next campaign mission starts with it. The report lists each part
-that is not whole, with what is left and the most it can be: PROW ARMOUR 25 / 100, MAGAZINE 3 / 5.
-With no damage it reads ALL PARTS WHOLE. REPAIR ALL, under the report, makes the ship whole and
-saves at once. It shows only while there is damage. Repairs cost nothing for now. The armour on
+that is not whole as a REPAIR button, with what is left and the most it can be: REPAIR PROW ARMOUR
+25 / 100, REPAIR MAGAZINE 3 / 5. Each repair fills the travel bar (see below). With no damage it
+reads ALL PARTS WHOLE. The armour on
 each side and each room's integrity stay. Fires, radiation, vented rooms and crew losses end with
 the mission. A room that ends at 0 is kept at 1. A win's damage goes into the save when you press
 MISSION SELECT; RESTART MISSION on the win screen replays from the damage before it. A lost mission
 keeps nothing. A skirmish always starts whole. The panel is
-Damage report, in Room · ENGINEERING. Ship Rooms fills it through Damage Report and Repair All,
-under Repairs.
+Damage report, in Room · ENGINEERING. Ship Rooms writes ALL PARTS WHOLE in it through Damage
+Report, under Repairs. The REPAIR buttons go in its `Actions`.
+
+**The travel bar and the actions** (Step 198). In a campaign, the rooms show a travel bar at the
+top right: TRAVEL 0 / 10. Each won mission gives a fresh bar of 10 units. Each room shows its
+actions as buttons, in a box at the top right, in the damage report's style. A button reads what it
+does, how it stands, what it gives and its cost: REPAIR REACTOR   1 / 5   +2   COST 3.
+- ENGINEERING, in the DAMAGE REPORT: one REPAIR button for each damaged part. The reactor costs 3
+  and gives back 2 of its 5 points. Another room costs 2 and gives back 2 points. One side's armour
+  costs 1 and gives back a quarter of that side's full armour.
+- HANGAR, in the STORES box: RESTOCK TORPEDOES shows both launchers together, for example 7 / 16.
+  It costs 2 and gives 4 torpedoes, to the emptiest launcher first. EXTRA AMMO shows the railgun's
+  rounds and the PDC groups' rounds. It costs 1. It gives the railgun and each PDC group 20% of its
+  full rounds, rounded down: 2 slugs, and 480 rounds a group.
+- QUARTERS, in the MARINES box: HEAL MARINES costs 2 and gives 6 marines.
+- BRIDGE: talk only.
+
+Each click adds its cost to the bar and saves at once. A button that doesn't fit in the bar is
+greyed out. HANGAR's and QUARTERS' buttons always show, greyed out when full. The stock can still
+be read on them. When the bar is full, every action locks. The SECTOR MAP › tab flashes amber, once
+a second. SECTOR MAP › works any time. Any units left are lost. After a lost mission, the bar shows
+10 / 10, locked. A new campaign starts with the bar shut. The first bar comes with the first win.
+
+The numbers, on the Board tab of **Starwolf → Tuning**, under Travel bar, with `Ship.unity` open:
+- **Travel Units** (10): the units in the bar.
+- **Reactor Cost** (3), **Room Cost** (2), **Armour Cost** (1), **Ammo Cost** (1), **Torpedo Cost**
+  (2) and **Marine Cost** (2): what each action costs.
+- **Room Points** (2): the points one repair gives a room or the reactor, out of 5.
+- **Armour Share** (0.25): the share of a side's full armour one repair gives back.
+- **Ammo Share** (0.2): the share of full rounds one EXTRA AMMO gives the railgun and each PDC
+  group, rounded down.
+- **Torpedoes** (4) and **Marines** (6): what one RESTOCK TORPEDOES and one HEAL MARINES give.
+- **Flash Per Second** (1): how fast SECTOR MAP › flashes once the bar is full.
+
+The parts, under `Ship`:
+- `Travel bar`: the bar. Its `Fill` grows from the left as the bar fills.
+- `Damage report` (ENGINEERING), `Stores` (HANGAR) and `Marines` (QUARTERS): the three boxes. Each
+  has an `Actions` inside, where its buttons go.
+- `Action`: switched off. Every action button is a copy of it. It was the REPAIR ALL button.
 
 To give it art, use the Art list on `Ship`. It has one slot per room painting: BRIDGE painting,
 ENGINEERING painting, HANGAR painting and QUARTERS painting. It has one slot per person: XO
@@ -1340,7 +1377,8 @@ Texture) off. With it on, the painting looks too dark. Escape opens the Escape m
 SAVE SLOTS and the SECTOR MAP (see Escape menu, below).
 
 To change the words, use the **Rooms** list on Ship Rooms:
-- Each room has a **Name**, a **View** (the painting), a **Tab** and **People**.
+- Each room has a **Name**, a **View** (the painting), a **Tab**, **People** and **Actions** (where
+  its action buttons go; empty means no actions in that room).
 - Each person has a **Name**, a **Picture** (the box you click) and **Lines**. The talk starts at
   the first line.
 - Each line has a **Text** and up to three **Replies**.
@@ -1358,6 +1396,12 @@ Ask a technical artist before you change these:
 - **Talk Box**, **Talk Picture**, **Talk Name**, **Talk Line** and **Reply Buttons** are the talk
   box parts the script fills, shows and hides.
 - **Tab Picked** and **Tab Not** are the tab colours. The script sets them.
+- **Our Ship** (`Assets/Ships/Asura.asset`) tells the saved torpedoes, railgun slugs and PDC rounds
+  apart.
+- **Travel Fill**, **Travel Text** and **Action Template** are the bar's fill, its words and the
+  button every action copies.
+- The actions find their room by its **Name**: ENGINEERING, HANGAR, QUARTERS. Rename a room, and it
+  loses its actions.
 
 ### Sector map
 
@@ -1374,7 +1418,7 @@ How it plays:
 - The MISSION ARCHIVE box on the map has three buttons. BRIEFING shows the mission's briefing
   text. DEBRIEF works only on a finished mission. It shows MISSION COMPLETE above the briefing
   text. LAUNCH shows INITIALISING... and opens the board with the mission's level. On a finished
-  mission it reads REPLAY MISSION and plays the mission again.
+  mission LAUNCH is greyed out and does nothing: no replays for now (owner 2026-11-11, Step 198).
 - A finished mission's dot is a tick picture. The open mission's dot is a plain green dot. It keeps
   one size (Step 176). A new dot, its name and its line fade in the first time they show.
 - Escape opens the Escape menu (see Escape menu, below).

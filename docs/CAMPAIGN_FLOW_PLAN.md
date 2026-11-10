@@ -15,7 +15,7 @@ https://claude.ai/artifact/UhfPpB8aJoY8zJj3RziEa4
 | Missions set up in the Campaign file | Built (Step 183). |
 | 1. The Escape menu | Built (Step 190). |
 | 2. The end card, and the percent on the save slot | Built (Step 194). The end card shows only once the owner writes the closing line, in `Assets/Campaign/Campaign.asset` → Closing Line. Until then, MISSION SELECT after the last mission opens the ship's rooms, as before. |
-| 3. Supplies carry over, and the travel bar | Part 1 built (Step 196): supplies and crew are kept between missions. Part 2 is next: the travel bar and the actions in each room. |
+| 3. Supplies carry over, and the travel bar | Done. Part 1 built (Step 196): supplies and crew are kept between missions. Part 2 built (Step 198): the travel bar and the actions in each room. |
 
 **Step 2, as built (Step 194).** Win the campaign's last mission and press MISSION SELECT. The
 screen goes black. The closing line types in, in the middle, in the sector map's green Share Tech
@@ -32,10 +32,26 @@ mission starts with what our ship had left: the rounds in each gun and launcher,
 and each room's crew. Marines still out on boats count as home; only marines killed are lost. Nothing goes above the full numbers in
 `Assets/Ships/Asura.asset`. Fires, air loss and radiation are not kept. Armour and room damage are
 kept, as before. The save is written only at MISSION SELECT. RESTART MISSION on the win screen
-replays from the save before. Nothing restocks yet; that is part 2. Saved numbers match by name, so
+replays from the save before. Part 2 (Step 198) restocks them. Saved numbers match by name, so
 renaming a gun's label or a room loses what was saved for it. The code is in `SaveGame.cs`.
-Open, for the owner: a ship with no torpedoes or marines left can't win a mission that needs them.
-Until part 2's restock actions are built, nothing refills them.
+HANGAR and QUARTERS now restock torpedoes, ammo and marines (part 2, Step 198).
+
+**Step 3 part 2, as built (Step 198).** Win a campaign mission and press MISSION SELECT. The ship's
+rooms show a travel bar at the top right: TRAVEL 0 / 10. A won mission gives a fresh bar of 10
+units. ENGINEERING's DAMAGE REPORT lists each damaged part as a REPAIR button, with its cost: the
+reactor 3, another room 2, one side's armour 1. HANGAR has a STORES box: RESTOCK TORPEDOES (cost 2)
+and EXTRA AMMO (cost 1). Torpedoes go to the emptiest launcher first. Ammo rounds down. QUARTERS has
+a MARINES box: HEAL MARINES (cost 2). BRIDGE has talk only. What each action gives is in the table
+under "Settled for step 3". Each click adds its cost to the bar and saves at once. A button that
+doesn't fit in the bar is greyed out. HANGAR's and QUARTERS' buttons always show, greyed out when
+full. When the bar is full, every action locks. SECTOR MAP flashes amber, once a second. SECTOR MAP
+works any time. Any units left are lost: the sector map shuts the bar whenever it opens, however the rooms were left. After a lost mission, the bar shows 10 / 10, locked. A new
+campaign starts with the bar shut. The first bar comes with the first win. The free REPAIR ALL is
+gone. The numbers are on the Board tab of Starwolf → Tuning, under Travel bar, with `Ship.unity`
+open. The code is in `ShipRooms.cs`, `SaveGame.cs` and `SectorMap.cs`. Actions find their room by
+its name: ENGINEERING, HANGAR, QUARTERS. A renamed room loses its actions. My calls, to report to
+the owner: torpedoes to the emptiest launcher first, ammo rounding down, the stock always showing,
+the boxes at the top right in the damage report's style, and no bar after a lost mission.
 
 ## The owner's answers, 2026-11-10
 
@@ -76,6 +92,9 @@ owns damage. It matters here because repairs give those steps back.
 - The campaign has 10 missions. After the last one, the end card, then the title.
 - The save slot reads CAMPAIGN COMPLETE and 100%.
 - Escape on the save slots, the map and the rooms opens RESUME, MAIN MENU, QUIT GAME.
+- Replays are off for now (owner 2026-11-11). A won mission's LAUNCH on the sector map is greyed
+  out. Owner: "You're not going to get a better result or new assets or new anything." If replays
+  come back, they are just for fun and give no travel bar.
 
 My own calls, told to the owner: SECTOR MAP stays usable any time, and leaving early loses the unused
 bar. When the bar is full, the actions lock and the SECTOR MAP tab flashes. The free REPAIR ALL goes.

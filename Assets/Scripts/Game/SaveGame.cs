@@ -20,15 +20,17 @@
 // - On a win it also keeps the rounds left in each gun and launcher, the marines and each room's
 //   crew. Marines still out on boats count as home. The next mission starts with those. Nothing goes
 //   above the stats file's numbers.
-// - REPAIR ALL in the ship rooms clears the saved damage and saves.
+// - A win also opens a fresh travel bar for the ship's rooms. The sector map shuts it when it
+//   opens.
+// - The rooms' actions raise the saved damage and supplies, then save.
 // - Delete removes a slot's file and its copies. Outside the campaign, every save step does
 //   nothing.
 // - The sector map hands it the Campaign file. FinishedWith tells the end screen when the last
 //   mission is won. Then the end card comes next.
 //
 // Technical:
-// - Data: SaveGame.Data has version, savedAt, done, dotsShown, damage and stores. done lists won
-//   levels by scene name.
+// - Data: SaveGame.Data has version, savedAt, done, dotsShown, damage, stores, travelOpen and
+//   travelUsed. done lists won levels by scene name.
 // - damage and stores are lists of Part: a name, now and most. stores names each gun or launcher
 //   by its label, then MARINES, then each room's name plus CREW.
 // - Files: slot1.json to slot3.json in Application.persistentDataPath, written with JsonUtility.
@@ -38,14 +40,14 @@
 // - Slot is -1 outside the campaign. Every save step checks InCampaign first.
 // - Callers: SaveSlots (Read, Play, Delete), SectorMap (campaign, Current, Save) and QuestSystem
 //   (PutDamage, KeepDamage, Won).
-// - More callers: EndScreenPanel (FinishedWith, KeepWonDamage), ShipRooms (Repair), EndCard and
+// - More callers: EndScreenPanel (FinishedWith, KeepWonDamage), ShipRooms (Current, Save), EndCard and
 //   ScreenFlow (Leave).
 // - KeepDamage takes full rounds, marines and crew from Ship.statsFile. Full armour comes from
 //   DamageSystem.stats. PutDamage never raises rounds, marines or crew. Marines on boats
 //   (HangarSystem.Flights) count as aboard.
 // - Traps: parts match by name. A renamed room or gun label loses what was saved for it.
 // - Trap: a win's damage and stores wait in memory until KeepWonDamage. PutDamage drops them. So
-//   does quitting. REPAIR ALL clears the damage only.
+//   does quitting.
 // =================================================================================================
 
 using System.Collections.Generic;
@@ -67,6 +69,10 @@ public static class SaveGame
         public List<Part> damage = new List<Part>();
         [Tooltip("Owner 2026-11-10: what our ship had left after the last mission won: each gun's and launcher's rounds (by its label), the marines, each room's crew. Empty when all are full.")]
         public List<Part> stores = new List<Part>();
+        [Tooltip("Owner 2026-11-09: the travel bar in the ship's rooms. Open from a win kept until the player leaves for the sector map.")]
+        public bool travelOpen;
+        [Tooltip("Units of the travel bar spent on actions since that win.")]
+        public int travelUsed;
     }
 
     /// <summary>One part of our ship: a side's armour, a room's integrity (0 to 5), a gun's rounds, the marines or a room's crew.</summary>
@@ -178,13 +184,15 @@ public static class SaveGame
         wonStores = stores.Exists(p => p.now < p.most) ? stores : new List<Part>();
     }
 
-    /// <summary>MISSION SELECT after a win: the win's damage, supplies and crew go into the save.</summary>
+    /// <summary>MISSION SELECT after a win: the win's damage, supplies and crew go into the save, and a fresh travel bar opens.</summary>
     public static void KeepWonDamage()
     {
         if (!InCampaign || wonDamage == null) return;
         Current.damage = wonDamage;
         if (wonStores != null) Current.stores = wonStores;
         wonDamage = wonStores = null;
+        Current.travelOpen = true;
+        Current.travelUsed = 0;
         Save();
     }
 
@@ -209,14 +217,6 @@ public static class SaveGame
             if (w) foreach (var m in w.stats.mounts) if (m.label == p.name) m.ammo = Mathf.Min(m.ammo, left);
             foreach (var c in d.compartments) if (c.name + Crew == p.name) c.crew = Mathf.Min(c.crew, left);
         }
-    }
-
-    /// <summary>ENGINEERING's REPAIR ALL: the ship is whole again, and saved.</summary>
-    public static void Repair()
-    {
-        if (!InCampaign) return;
-        Current.damage.Clear();
-        Save();
     }
 
     /// <summary>A mission won in the campaign: noted and saved. Outside the campaign it does nothing.</summary>
