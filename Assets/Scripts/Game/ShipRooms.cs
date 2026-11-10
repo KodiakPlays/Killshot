@@ -40,7 +40,8 @@
 //   Each action calls SaveGame.Save. Outside the campaign there are no actions and the bar is full.
 // - Action buttons are copies of actionTemplate (the switched-off Action), made in the room's
 //   actions list each time a room shows. The bar's fill is stretched; its right edge moves.
-// - A save that kept no stores means all are full. Then the numbers come from ourShip.
+// - Each gun, launcher and the marines use their saved part. With none saved, they are full, read
+//   from ourShip.
 // - ourShip (the Asura stats file) tells torpedoes (MS), slugs (RG) and PDC rounds (PD) apart.
 // - Costs and what each action gives are [Tune("Travel bar")] numbers. They show in the Tuning
 //   window only with this scene open.
@@ -237,14 +238,16 @@ public class ShipRooms : MonoBehaviour
         }
     }
 
-    // The saved supplies. A save with none kept means all are full: read them from our stats file.
+    // Our ship's supplies: the saved part where there is one, else full from our stats file (a save keeps none when all are full).
     System.Collections.Generic.List<SaveGame.Part> Stores()
     {
-        if (SaveGame.Current.stores.Count > 0 || !ourShip) return SaveGame.Current.stores;
-        var full = new System.Collections.Generic.List<SaveGame.Part>();
-        foreach (var m in ourShip.weapons.mounts) full.Add(new SaveGame.Part { name = m.label, now = m.ammo, most = m.ammo });
-        full.Add(new SaveGame.Part { name = SaveGame.Marines, now = ourShip.hangar.marines, most = ourShip.hangar.marines });
-        return full;
+        var saved = SaveGame.Current.stores;
+        if (!ourShip) return saved;
+        var all = new System.Collections.Generic.List<SaveGame.Part>();
+        foreach (var m in ourShip.weapons.mounts)
+            all.Add(saved.Find(p => p.name == m.label) ?? new SaveGame.Part { name = m.label, now = m.ammo, most = m.ammo });
+        all.Add(saved.Find(p => p.name == SaveGame.Marines) ?? new SaveGame.Part { name = SaveGame.Marines, now = ourShip.hangar.marines, most = ourShip.hangar.marines });
+        return all;
     }
 
     // One action's button: what, how it stands, what it gives, its cost. Greyed out when not needed or it doesn't fit in the bar.
