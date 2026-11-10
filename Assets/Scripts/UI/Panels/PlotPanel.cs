@@ -817,7 +817,8 @@ public class PlotPanel : Panel
                 double b = t.bearing * System.Math.PI / 180.0, px = t.rangeUnits / UnitsPerPx * Controls.ZoomExact;
                 at = OwnAt + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
             }
-            Color ink = t.wreck ? wreckInk : known && t.friendly ? Palette.ownForce : known || locked ? alarm : caution; // owner 2026-11-09: our battle group is blue once scanned
+            // owner 2026-11-09: our battle group is blue once scanned; owner 2026-11-10: and in sight, scanned or not ("they should be blue wireframes")
+            Color ink = t.wreck ? wreckInk : t.friendly && (known || inSight) ? Palette.ownForce : known || locked ? alarm : caution;
             float age = current || !t.hasWorld ? 0f : Controls.MissionSeconds - t.seenAt;
             float fresh = Mathf.Lerp(1f, staleAlpha, age / Mathf.Max(1f, staleSeconds));
             var view = inSight ? ViewOf(t.key) : null;
@@ -857,7 +858,7 @@ public class PlotPanel : Panel
                 labelPush = px * view.ShipFill / 2f;
             }
             else if (t.wreck) continue; // no picture: a wreck keeps its dim dot (below); an unknown in sight is an amber dot (Step 99)
-            else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = fresh * (inSight ? 1f - closeUp : 1f), ink = known && t.friendly ? ink.gamma : default });
+            else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = fresh * (inSight ? 1f - closeUp : 1f), ink = t.friendly && (known || inSight) ? ink.gamma : default });
             if (t.wreck) continue; // a wreck carries no label (Step 49)
             if (locked)
             {
