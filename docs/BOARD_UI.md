@@ -1300,7 +1300,7 @@ when the mission is won or lost. It says MISSION COMPLETE or SHIP LOST, and why.
 target, our ship and the time taken. Its two buttons are RESTART MISSION and MISSION SELECT.
 RESTART MISSION plays the level again. In a skirmish, MISSION SELECT goes back to the title. In a
 campaign it opens the ship's rooms (see Ship rooms, below). After a win of the campaign's last
-mission, it opens the end card instead, once the closing line is written (see End card, below).
+mission, it opens the end card instead (see End card, below).
 
 It is the pause menu too. In a level, Escape stops the game and opens it. The title says PAUSED in
 white. The reason line is empty. The target, our ship and the time are hidden. Two more buttons
@@ -1532,10 +1532,14 @@ line at once. Another one goes straight to the title. The end card leaves the ca
 was already written at the win.
 
 The closing line is in the Campaign file: `Assets/Campaign/Campaign.asset` → **Closing Line**.
-Select the file in the Project window and type it there. It is empty now. The end card shows only
-once it is written. While it is empty, MISSION SELECT after the last mission opens the ship's
-rooms, as before. Today the campaign has one mission, MILK RUN, so a campaign win of MILK RUN opens
-the rooms.
+Select the file in the Project window and type it there. It stays empty for now (owner
+2026-11-11). With the line empty, the end card goes straight on to the title, where only STARWOLF
+flickers in, in the middle of the screen (Step 203). Today the campaign has one mission, MILK RUN,
+so a campaign win of MILK RUN goes to the title. The ship's rooms and the travel bar don't show
+until a second mission is added.
+
+A rule for later (owner 2026-11-11): STARWOLF must never be in the bottom half of the screen. An
+end card with a closing line must not put STARWOLF below the line.
 
 Two numbers, on the Board tab of **Starwolf → Tuning**, under End card, with `EndCard.unity` open:
 - **Letters Per Second** (30): how fast the line types in.

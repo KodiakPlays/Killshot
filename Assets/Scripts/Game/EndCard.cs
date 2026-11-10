@@ -22,8 +22,8 @@
 // - Update shows more letters through maxVisibleCharacters, at lettersPerSecond. It times with
 //   Time.time.
 // - GoOn loads titleScene. The going flag stops a second load.
-// - EndScreenPanel loads this scene by name (its endCardScene, "EndCard"). It does so only when
-//   the Campaign file has a closing line and the scene is in the build.
+// - EndScreenPanel loads this scene by name (its endCardScene, "EndCard"), after the last
+//   mission is won. It does so only when the scene is in the build.
 // - lettersPerSecond and holdSeconds are [Tune("End card")] numbers. They show in the Tuning
 //   window only with this scene open.
 // =================================================================================================

@@ -14,7 +14,7 @@ https://claude.ai/artifact/UhfPpB8aJoY8zJj3RziEa4
 | Save slots, sector map, ship rooms | Built (Steps 167 to 172). |
 | Missions set up in the Campaign file | Built (Step 183). |
 | 1. The Escape menu | Built (Step 190). |
-| 2. The end card, and the percent on the save slot | Built (Step 194). The end card shows only once the owner writes the closing line, in `Assets/Campaign/Campaign.asset` → Closing Line. Until then, MISSION SELECT after the last mission opens the ship's rooms, as before. |
+| 2. The end card, and the percent on the save slot | Built (Step 194). Since Step 203 the end card always opens after the last win. The closing line in `Assets/Campaign/Campaign.asset` → Closing Line stays empty for now (owner 2026-11-11), so the end card goes straight to the title, where only STARWOLF flickers in. |
 | 3. Supplies carry over, and the travel bar | Done. Part 1 built (Step 196): supplies and crew are kept between missions. Part 2 built (Step 198): the travel bar and the actions in each room. |
 
 **Step 2, as built (Step 194).** Win the campaign's last mission and press MISSION SELECT. The
@@ -22,7 +22,9 @@ screen goes black. The closing line types in, in the middle, in the sector map's
 Mono. It stays up for 5 seconds. Then the title loads, and only STARWOLF flickers in. Any key or
 click shows the whole line at once. Another one goes straight to the title. The scene is
 `Assets/Scenes/Tactical/EndCard.unity`. Today the campaign has one mission, MILK RUN. The closing
-line is empty, so a campaign win of MILK RUN opens the ship's rooms. A used save slot reads
+line is empty. Since Step 203 an empty line goes straight to the title, so a campaign win of MILK
+RUN goes to STARWOLF and the title. The ship's rooms and the travel bar don't show until a second
+mission is added. (Before Step 203, an empty line opened the rooms.) A used save slot reads
 "CAMPAIGN · 1 OF 10 · 10%", or "CAMPAIGN COMPLETE · 100%" when every mission in the Campaign file
 is won. Old test levels don't count. After a campaign win of MILK RUN it reads CAMPAIGN COMPLETE ·
 100%.
@@ -95,6 +97,9 @@ owns damage. It matters here because repairs give those steps back.
 - Replays are off for now (owner 2026-11-11). A won mission's LAUNCH on the sector map is greyed
   out. Owner: "You're not going to get a better result or new assets or new anything." If replays
   come back, they are just for fun and give no travel bar.
+- STARWOLF must never be in the bottom half of the screen (owner 2026-11-11). On the title it is in
+  the middle. An end card with a closing line must not put STARWOLF below the line. The design
+  page drew it below the line; that is ruled out.
 
 My own calls, told to the owner: SECTOR MAP stays usable any time, and leaving early loses the unused
 bar. When the bar is full, the actions lock and the SECTOR MAP tab flashes. The free REPAIR ALL goes.

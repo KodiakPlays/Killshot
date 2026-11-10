@@ -20,8 +20,8 @@
 //   of its full side armour, or LOST. Last comes the time taken, in hours, minutes and seconds.
 // - RESTART MISSION loads the same scene again. MISSION SELECT tells SaveGame to keep the damage
 //   from a won campaign mission. Then it loads the Ship scene in the campaign, or 00_Start outside
-//   it. After the campaign's last mission is won, it loads the EndCard scene instead. That needs
-//   the Campaign file's closing line to be written. Until then it loads the Ship scene.
+//   it. After the campaign's last mission is won, it loads the EndCard scene instead. With no
+//   closing line written, the end card goes straight to the title: just STARWOLF (owner 2026-11-11).
 // - Escape comes in from BoardManager. It stops time and shows the screen titled PAUSED. This has
 //   RESUME and QUIT GAME, and no rows. Escape or RESUME closes it and puts time back to
 //   running or paused, as before. Escape does nothing once the mission is over.
@@ -45,8 +45,8 @@
 //   Inspector on the End Screen prefab.
 // - Trap: PlaytestRunner reads the private title, reason and values fields by name. Renaming them
 //   breaks the playtest.
-// - Trap: the end card loads only if the EndCard scene is in the build and
-//   SaveGame.campaign.closingLine is filled in. The delay counts real seconds (Time.unscaledTime).
+// - Trap: the end card loads only if the EndCard scene is in the build. The delay counts real
+//   seconds (Time.unscaledTime).
 // =================================================================================================
 
 using TMPro;
@@ -125,7 +125,6 @@ public class EndScreenPanel : Panel
         {
             SaveGame.KeepWonDamage();
             bool finished = quest != null && quest.Stage == QuestStage.MissionComplete && SaveGame.FinishedWith(TacticalWorld.chosenLevel)
-                         && !string.IsNullOrEmpty(SaveGame.campaign.closingLine) // no closing line written yet: the rooms, as before
                          && Application.CanStreamedLevelBeLoaded(endCardScene); // no end card scene in the build: the rooms, as before
             SceneManager.LoadScene(!SaveGame.InCampaign ? menuScene : finished ? endCardScene : campaignScene);
             return true;
