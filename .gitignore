@@ -94,3 +94,20 @@ Starwolf_Demo_Build_v0.3.zip
 # Old builds live in ~/Documents/GitHub/Killshot-Builds (owner, 2026-10-29)
 /Starwolf_Demo_Build_*
 /node_modules/
+
+# Videos and screenshots never go in git (owner, 2026-11-10)
+*.mp4
+*.mov
+*.webm
+*.avi
+*.mkv
+/docs/**/*.png
+/docs/**/*.jpg
+/docs/**/*.jpeg
+/docs/**/*.webp
+/docs/**/*.gif
+/References/**/*.png
+/References/**/*.jpg
+/References/**/*.jpeg
+/References/**/*.webp
+/References/**/*.gif
