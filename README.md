@@ -125,7 +125,7 @@ Set Architecture to Intel 64-bit and click Build again. The check is in
 4. On the right, set **Architecture** to **Intel 64-bit**. Not ARM 64-bit. Not
    Intel 32-bit.
 5. Leave **Development Build** off.
-6. Check the scene list at the top. All twelve scenes are ticked, and
+6. Check the scene list at the top. Every scene in it is ticked, and
    `Tactical/00_Start` is first. The game starts from the first scene.
 7. Delete the old `Killshot-Builds/Windows/Starwolf-Win-64bit` folder and the old
    `Starwolf-Win-64bit.zip`. Old files left in the folder can end up in the new zip.
