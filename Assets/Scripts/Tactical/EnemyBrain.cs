@@ -83,9 +83,17 @@ public class EnemyBrain : MonoBehaviour
     [Tune("Battle group")] [SerializeField] private Vector2 slotUnits;
     [Tooltip("The formation's centre flies its route at this speed, units/s. Ours tops out at 50.")]
     [Tune("Battle group")] [SerializeField] private float groupSpeedUnits = 15f;
-    [Tooltip("It drifts round its place by up to this much, units, once every Sway Seconds, so it never looks parked.")]
-    [Tune("Battle group")] [SerializeField] private float swayUnits = 150f;
-    [Tune("Battle group")] [SerializeField] private float swaySeconds = 60f;
+    [Tooltip("Owner 2026-11-10: the group waits where it starts until we come this close to its centre, units. Then it sets off.")]
+    [Tune("Battle group")] [SerializeField] private float joinUnits = 800f;
+    [Tooltip("The formation turns onto each new leg of its route this fast, degrees a game second, so its ships swing round smoothly.")]
+    [Tune("Battle group")] [SerializeField] private float groupTurnDeg = 4f;
+    [Tooltip("While the group moves, each ship steers at a point this far ahead of its place, units: it flies along with the group, "
+           + "nose forward, instead of chasing its place.")]
+    [Tune("Battle group")] [SerializeField] private float leadUnits = 400f;
+    [Tooltip("While the group flies, a ship turns at most this far off the group's course to close on its place, degrees.")]
+    [Tune("Battle group")] [SerializeField] private float mostOffCourseDeg = 30f;
+    [Tooltip("Further than this from its place, units, a ship flies straight for it instead of keeping to the group's course.")]
+    [Tune("Battle group")] [SerializeField] private float rejoinUnits = 1500f;
     [Tooltip("It keeps at least this far from our ship, units, and goes round us to reach its place.")]
     [Tune("Battle group")] [SerializeField] private float keepClearUnits = 500f;
     [Tooltip("Too close to our ship, it moves away at no less than this share of its top speed.")]
@@ -97,8 +105,9 @@ public class EnemyBrain : MonoBehaviour
     private Mission mission;
     private bool lookedForMission;
     private Vector2 group;
-    private float groupAt = -1f;
-    private int leg, groupHeading;
+    private float groupAt = -1f, groupHeading;
+    private int leg;
+    private bool joined;
 
     /// <summary>How aware it is of us. It goes back down only when it gives up.</summary>
     public Awareness Level { get; private set; }
@@ -312,37 +321,59 @@ public class EnemyBrain : MonoBehaviour
     // and waits at its last point; each ship flies to its place round that centre, turned the way the group flies.
     void Escort(ShipState ship, ShipState us, Vector2 at, Vector2 ours, float now)
     {
-        if (groupAt < 0f) { group = ours; groupAt = now; groupHeading = us.nav.heading; }
+        if (groupAt < 0f) { groupAt = now; groupHeading = ship.nav.heading; group = at - Turn(slotUnits, groupHeading); } // it starts in its place
         if (!lookedForMission) { lookedForMission = true; mission = FindAnyObjectByType<Mission>(); }
         var route = mission ? mission.groupRoute : null;
         float dt = Mathf.Max(0f, now - groupAt), moved = 0f;
         groupAt = now;
-        if (route != null && leg < route.Length)
+        if (!joined && (ours - group).magnitude <= joinUnits) joined = true; // owner 2026-11-10: we catch up with them, then they set off
+        if (joined && route != null && leg < route.Length)
         {
             Vector2 to = route[leg] - group;
             moved = Mathf.Min(to.magnitude, groupSpeedUnits * dt);
-            if (to.magnitude > 1f) { group += to / to.magnitude * moved; groupHeading = TacticalWorld.Bearing(to); }
+            if (to.magnitude > 1f) { group += to / to.magnitude * moved; groupHeading = Mathf.MoveTowardsAngle(groupHeading, TacticalWorld.Bearing(to), groupTurnDeg * dt); }
             else leg++;
         }
-        float rad = groupHeading * Mathf.Deg2Rad, sin = Mathf.Sin(rad), cos = Mathf.Cos(rad);
-        float t = now * 2f * Mathf.PI / Mathf.Max(1f, swaySeconds) + slotUnits.x;
-        Vector2 slot = slotUnits + new Vector2(Mathf.Sin(t), Mathf.Cos(t * 0.7f)) * swayUnits;
-        Vector2 place = group + new Vector2(slot.x * cos + slot.y * sin, slot.y * cos - slot.x * sin); // x right, y ahead, the way the group flies
-        float top = (float)ship.nav.stats.topSpeedUnits, off = (place - at).magnitude;
-        float speed = Mathf.Min(top, (dt > 0f ? moved / dt : 0f) + off * catchUpPerUnit); // the group's pace, plus a little to close on its place
-        int heading = off < inPlaceUnits ? groupHeading : TacticalWorld.Bearing(place - at);
+        // Owner 2026-11-10: the ships fly nose forward with the group, never drifting about. Each steers at a point ahead of its
+        // place while the group moves; it speeds up when behind its place and eases off when ahead (it used to speed up either
+        // way, overshoot and turn back, and drifted round a moving sway point: the wobble).
+        Vector2 dir = Turn(Vector2.up, groupHeading), place = group + Turn(slotUnits, groupHeading);
+        float top = (float)ship.nav.stats.topSpeedUnits, off = (place - at).magnitude, behind = Vector2.Dot(place - at, dir);
+        float pace = dt > 0f ? moved / dt : 0f;
+        bool flying = pace > 0f && off < rejoinUnits;
+        float speed = Mathf.Clamp(pace + catchUpPerUnit * (flying ? behind : off), 0f, top);
+        int heading;
+        if (flying)
+        {
+            // while the group flies it keeps near the group's course: it closes on its place sideways by turning at most
+            // Most Off Course Deg (the inside ship of a turn used to wheel hard round, a playtest 2026-11-10)
+            float sideways = Vector2.Dot(place - at, Turn(Vector2.right, groupHeading));
+            heading = Heading(groupHeading + Mathf.Clamp(Mathf.Atan2(sideways, leadUnits) * Mathf.Rad2Deg, -mostOffCourseDeg, mostOffCourseDeg));
+        }
+        else heading = off < inPlaceUnits ? Heading(groupHeading) : TacticalWorld.Bearing(place - at);
         // our ship is in its way: it goes round us, on the side it is already on; too close, it makes room first
         // (a playtest: Indra crossed our bow to its new place as we turned, and the two boxes pinned each other)
         Vector2 way = off > 0f ? (place - at) / off : Vector2.zero, toUs = ours - at;
         float along = Vector2.Dot(toUs, way), across = way.x * toUs.y - way.y * toUs.x; // across > 0: we are to its left
-        if (toUs.magnitude < keepClearUnits) { heading = TacticalWorld.Bearing(-toUs); speed = Mathf.Max(speed, top * makeRoomShare); }
+        // owner 2026-11-10: too close, it keeps its course (turning away and back made the corvette swing about): it drops back
+        // when we are ahead of it, and goes on ahead when we are behind it
+        if (toUs.magnitude < keepClearUnits) { heading = Heading(groupHeading); speed = Vector2.Dot(toUs, dir) > 0f ? 0f : Mathf.Max(speed, top * makeRoomShare); }
         else if (along > 0f && along < off && Mathf.Abs(across) < keepClearUnits)
-            heading = TacticalWorld.Bearing(ours + new Vector2(way.y, -way.x) * (across > 0f ? 1f : -1f) * keepClearUnits - at);
+            // it passes us on its own side of the formation (choosing by where we were flipped it side to side when we were dead ahead)
+            heading = TacticalWorld.Bearing(ours + new Vector2(way.y, -way.x) * (slotUnits.x < 0f ? -1f : 1f) * keepClearUnits - at);
         if (!world) world = FindAnyObjectByType<TacticalWorld>();
-        heading = world ? world.ClearHeading(ship.nav, heading, avoidLookUnits) : heading;
+        heading = world ? world.ClearHeading(ship.nav, heading, avoidLookUnits, us.nav) : heading;
         ship.nav.orderedHeading = KeepInside(us, at, heading);
         ship.nav.throttle = Mathf.Clamp(Mathf.RoundToInt(speed / top * 100f), 0, ship.nav.ThrottleCap);
     }
+
+    // v turned to a heading (0 north, clockwise): x to the right of it, y ahead
+    static Vector2 Turn(Vector2 v, float heading)
+    {
+        float rad = heading * Mathf.Deg2Rad, sin = Mathf.Sin(rad), cos = Mathf.Cos(rad);
+        return new Vector2(v.x * cos + v.y * sin, v.y * cos - v.x * sin);
+    }
+    static int Heading(float deg) => (Mathf.RoundToInt(deg) % 360 + 360) % 360;
 
     // Owner 2026-11-02: it can't leave the battle space either. Its edge band is our edge warning band (arenaWarnUnits):
     // in the band it drops the outward part of its heading and runs along the edge, even chasing us; past the edge it

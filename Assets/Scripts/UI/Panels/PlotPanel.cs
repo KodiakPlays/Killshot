@@ -193,7 +193,6 @@ public class PlotPanel : Panel
     private RawImage wreckBackHalf; // a copy of contactShipImage, made at the first break
     private bool wreckPictured;
     Color wreckInk => Palette.secondary;
-    private ShipView[] shipViews;
     /// <summary>A contact's ship picture is on the plot (the playtest reads it).</summary>
     public bool ContactShipShown => contactShipImage && contactShipImage.enabled;
     [Tune("Plot & our ship")]
@@ -786,8 +785,8 @@ public class PlotPanel : Panel
             }
             rockEchoMarks.Set(echoes);
         }
-        int n = 0;
-        string pictured = null; // the one contact picture's track
+        int n = 0, extra = 0;
+        string pictured = null; // the first contact picture's track (it can be a wreck, cut in two)
         float closeUp = CloseUp;
         notInCloseUp.Clear();
         foreach (var t in s.tracks) if (!t.own && t.nav && (t.wreck || !s.sensors.InSight(t))) notInCloseUp.Add(t.nav);
@@ -842,6 +841,21 @@ public class PlotPanel : Panel
                 pictured = t.key;
                 labelPush = px * view.ShipFill / 2f;
             }
+            else if (contactShipImage && view && view.Texture && !t.wreck)
+            {
+                // owner 2026-11-10: every ship in sight shows its line picture, never a dot (the battle group too)
+                var img = ExtraShipImage(extra++);
+                img.texture = view.Texture;
+                var picInk = ink.gamma;
+                picInk.a *= 1f - closeUp;
+                img.color = picInk;
+                float px = ShipPx(view) / view.ShipFill;
+                img.uvRect = new Rect(0f, 0f, 1f, 1f);
+                img.rectTransform.sizeDelta = new Vector2(px, px);
+                Put(img.rectTransform, at, 0f);
+                img.enabled = true;
+                labelPush = px * view.ShipFill / 2f;
+            }
             else if (t.wreck) continue; // no picture: a wreck keeps its dim dot (below); an unknown in sight is an amber dot (Step 99)
             else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = fresh * (inSight ? 1f - closeUp : 1f), ink = known && t.friendly ? ink.gamma : default });
             if (t.wreck) continue; // a wreck carries no label (Step 49)
@@ -861,6 +875,7 @@ public class PlotPanel : Panel
         }
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
         if (contactShipImage && pictured == null) contactShipImage.enabled = false;
+        for (int i = extra; i < extraShipImages.Count; i++) extraShipImages[i].enabled = false;
         if (wreckBackHalf) wreckBackHalf.enabled = wreckPictured;
         if (world) // owner 2026-11-02: past visual range DRADIS shows a gas cloud as a hollow circle, about the cloud's size
             foreach (var c in world.Clouds)
@@ -1030,11 +1045,26 @@ public class PlotPanel : Panel
         Put(image.rectTransform, at + new Vector2(Mathf.Sin(rad), -Mathf.Cos(rad)) * along, spin - hdg);
     }
 
-    // The ShipView watching a contact's model, if there is one.
+    // More contact pictures, copies of the first, made as they are needed (owner 2026-11-10)
+    private readonly List<RawImage> extraShipImages = new List<RawImage>();
+    RawImage ExtraShipImage(int i)
+    {
+        while (extraShipImages.Count <= i)
+        {
+            var img = Instantiate(contactShipImage, contactShipImage.transform.parent);
+            img.name = contactShipImage.name + " " + (extraShipImages.Count + 2);
+            img.transform.SetSiblingIndex(contactShipImage.transform.GetSiblingIndex() + 1);
+            var fade = img.GetComponent<CanvasGroup>(); // made during the grid's fade-in, the copy has its fade at 0: it must fade in too
+            if (fade) { if (fading != null) fading.Add(fade); else Destroy(fade); }
+            extraShipImages.Add(img);
+        }
+        return extraShipImages[i];
+    }
+
+    // The ShipView watching a contact's model, if there is one. Level ships get theirs when they join (ShipView.Give).
     ShipView ViewOf(string key)
     {
-        if (shipViews == null) shipViews = FindObjectsByType<ShipView>(FindObjectsSortMode.None);
-        foreach (var v in shipViews)
+        foreach (var v in ShipView.All)
         {
             var wc = v && v.Target ? v.Target.GetComponentInParent<WorldContact>() : null;
             if (wc && wc.trackKey == key) return v;

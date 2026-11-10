@@ -168,7 +168,10 @@ public class SensorSystem : MonoBehaviour
     public bool InSight(ShipState.Track t)
     {
         if (!t.hasWorld) return false;
-        if (!t.rockOnLine && t.rangeUnits <= stats.visualRangeUnits) return true;
+        // owner 2026-11-10: in sight once its near side is in visual range, not its middle: a station thousands of units across
+        // showed as a dot while we were beside it. The near side is its smaller half-size (a ship's half width, a few tens of units).
+        float near = t.nav ? Mathf.Min(t.nav.BoxHalf.x, t.nav.BoxHalf.y) : 0f;
+        if (!t.rockOnLine && t.rangeUnits - near <= stats.visualRangeUnits) return true;
         return ship.hangar && ship.hangar.SeesShip(t.worldX, t.worldY, stats.visualRangeUnits); // Step 101: our fighters scout
     }
 

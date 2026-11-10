@@ -409,7 +409,7 @@ public class TacticalWorld : MonoBehaviour
 
     /// <summary>Owner 2026-11-01: rocks and ships are solid, so an enemy steers round them. The heading nearest the one
     /// it wants with its way clear for `look` units. All blocked: the one it wants, or, touching something, straight away from it.</summary>
-    public int ClearHeading(NavSystem nav, int wanted, float look)
+    public int ClearHeading(NavSystem nav, int wanted, float look, NavSystem ignore = null) // owner 2026-11-10: our battle group passes ours by its own rules
     {
         var at = new Vector2((float)nav.x, (float)nav.y);
         float clear = nav.BoxHalf.magnitude;
@@ -421,7 +421,7 @@ public class TacticalWorld : MonoBehaviour
                 int heading = ((wanted + side * off) % 360 + 360) % 360;
                 float rad = heading * Mathf.Deg2Rad;
                 var ahead = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad));
-                if (WayClear(nav, at, ahead, look, clear)) return heading;
+                if (WayClear(nav, at, ahead, look, clear, ignore)) return heading;
             }
         return Away(nav, at, clear, wanted);
     }
@@ -441,12 +441,12 @@ public class TacticalWorld : MonoBehaviour
         return from == at ? wanted : Bearing(at - from);
     }
 
-    bool WayClear(NavSystem nav, Vector2 at, Vector2 ahead, float look, float clear)
+    bool WayClear(NavSystem nav, Vector2 at, Vector2 ahead, float look, float clear, NavSystem ignore = null)
     {
         foreach (var p in ruins)
             if (p.r && InTheWay(p.at - at, ahead, look, p.reach + clear)) return false;
         foreach (var ship in bodies)
-            if (ship.nav != nav && InTheWay(new Vector2((float)ship.nav.x, (float)ship.nav.y) - at, ahead, look, ship.nav.BoxHalf.magnitude + clear)) return false;
+            if (ship.nav != nav && ship.nav != ignore && InTheWay(new Vector2((float)ship.nav.x, (float)ship.nav.y) - at, ahead, look, ship.nav.BoxHalf.magnitude + clear)) return false;
         return true;
     }
 
@@ -552,11 +552,12 @@ public class TacticalWorld : MonoBehaviour
     }
 
     // A ship that wasn't on the board at the start joins the world: its own track, run and measured like the rest from the next tick.
-    void Join(WorldContact c)
+    void Join(WorldContact c, bool fromLevel = false)
     {
         string name, klass;
         int dot = c.name.IndexOf(" · ");
-        if (c.friendly && dot > 0) { name = c.name.Substring(0, dot).ToUpperInvariant(); klass = c.name.Substring(dot + 3).ToUpperInvariant(); } // "Indra · Carrier" -> INDRA, CARRIER
+        // owner 2026-11-10: a level's own ships are named by their object, the pirate corvette too: "Indra · Carrier" -> INDRA, CARRIER
+        if ((c.friendly || fromLevel) && dot > 0) { name = c.name.Substring(0, dot).ToUpperInvariant(); klass = c.name.Substring(dot + 3).ToUpperInvariant(); }
         else
         {
             // "Naga-class frigate" -> NAGA 1, FRIGATE
@@ -569,6 +570,7 @@ public class TacticalWorld : MonoBehaviour
         System.Array.Resize(ref contacts, contacts.Length + 1); contacts[contacts.Length - 1] = c;
         System.Array.Resize(ref brains, brains.Length + 1); brains[brains.Length - 1] = c.GetComponent<EnemyBrain>();
         StartShip(c);
+        ShipView.Give(c.GetComponent<Ship>()); // owner 2026-11-10: in sight it shows its line picture, never a dot
         Sync();
     }
 
@@ -578,7 +580,7 @@ public class TacticalWorld : MonoBehaviour
         if (!scene.isLoaded || !scene.path.StartsWith(LevelFolder + "/")) return;
         foreach (var root in scene.GetRootGameObjects())
             foreach (var c in root.GetComponentsInChildren<WorldContact>())
-                if (System.Array.IndexOf(contacts, c) < 0) Join(c);
+                if (System.Array.IndexOf(contacts, c) < 0) Join(c, true);
     }
 
     private void OnDestroy() { if (board) board.Ticked -= OnTick; SceneManager.sceneLoaded -= OnSceneLoaded; }

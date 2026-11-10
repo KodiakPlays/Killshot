@@ -26,6 +26,44 @@ public class ShipView : MonoBehaviour
     /// <summary>The ship whose model it watches (its stats give the length the plot draws).</summary>
     public Ship Ship { get; private set; }
 
+    /// <summary>Every ship view now open.</summary>
+    public static readonly System.Collections.Generic.List<ShipView> All = new System.Collections.Generic.List<ShipView>();
+
+    /// <summary>Owner 2026-11-10: a ship in sight shows its line picture, never a dot. A ship a level brings (the battle group)
+    /// has no camera of its own in the board scene, so it gets a copy of a contact's camera, watching it.</summary>
+    public static void Give(Ship ship)
+    {
+        if (!ship) return;
+        ShipView model = null;
+        foreach (var v in All)
+        {
+            if (v.target == ship.transform) return;
+            if (!model && v.target && v.target.GetComponentInParent<WorldContact>()) model = v;
+        }
+        if (!model) return;
+        var copy = Instantiate(model, model.transform.parent);
+        copy.name = "Contact View Camera · " + ship.name;
+        copy.target = ship.transform;
+        copy.Ship = ship;
+        copy.WreckHeading = null;
+        copy.Sharpen(ship.Stats.length);
+    }
+
+    [Tooltip("Owner 2026-11-10: a big ship or a station gets a sharper picture: one pixel for every this many units of its length "
+           + "(never below Resolution, at most 2,048 px). A station 3,000 units long was blocky at 256 px.")]
+    [Tune("Plot & our ship")]
+    [SerializeField] private float unitsPerPx = 4f;
+
+    void Sharpen(float length)
+    {
+        int px = Mathf.Clamp(Mathf.NextPowerOfTwo(Mathf.CeilToInt(length / Mathf.Max(0.1f, unitsPerPx))), resolution, 2048);
+        if (!cam || (rt && rt.width >= px)) return;
+        cam.targetTexture = null;
+        if (rt) { rt.Release(); Destroy(rt); }
+        rt = new RenderTexture(px, px, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear) { name = "ShipView (" + name + ")", hideFlags = HideFlags.DontSave, antiAliasing = 4 };
+        cam.targetTexture = rt;
+    }
+
     /// <summary>The view of our own ship: the one whose target is not a contact (there may be contact views too).</summary>
     public static ShipView Own()
     {
@@ -40,6 +78,7 @@ public class ShipView : MonoBehaviour
 
     private void Awake()
     {
+        All.Add(this);
         cam = GetComponent<Camera>();
         rt = new RenderTexture(resolution, resolution, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear)
         { name = "ShipView (" + (target ? target.name : "none") + ")", hideFlags = HideFlags.DontSave, antiAliasing = 4 };
@@ -82,6 +121,7 @@ public class ShipView : MonoBehaviour
 
     private void OnDestroy()
     {
+        All.Remove(this);
         UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= OnlyOurShip;
         UnityEngine.Rendering.RenderPipelineManager.endCameraRendering -= EveryShip;
         if (cam) cam.targetTexture = null;

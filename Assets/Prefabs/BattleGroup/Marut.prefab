@@ -57,6 +57,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WorldContact
   trackKey: f3
   friendly: 1
+  cannotBeDestroyed: 0
 --- !u!114 &354358909434537704
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -93,10 +94,13 @@ MonoBehaviour:
   fireBackSalvo: 2
   fireBackSeconds: 120
   escorts: 1
-  slotUnits: {x: 0, y: -700}
+  slotUnits: {x: 0, y: -900}
   groupSpeedUnits: 15
-  swayUnits: 150
-  swaySeconds: 60
+  joinUnits: 800
+  groupTurnDeg: 4
+  leadUnits: 400
+  mostOffCourseDeg: 30
+  rejoinUnits: 1500
   keepClearUnits: 500
   makeRoomShare: 0.3
   catchUpPerUnit: 0.05
