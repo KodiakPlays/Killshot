@@ -256,6 +256,7 @@ public class FireControlPanel : Panel
             {
                 r.hint.text = on ? "SET" : open ? new[] { "ROUND IN RAIL", "ELEV SET", "ON AXIS", "ARM READY" }[i]
                     : i == 0 && !s.weapons.OnDot(s.weapons.mount) ? "NO HARD POINT"
+                    : i == 0 && s.weapons.sys == "RG" && s.orders.railgunHold ? "RAILGUN HOLD" // owner 2026-11-10, MILK RUN
                     : i == 0 && !s.orders.WeaponsReleased ? "NOT RELEASED"
                     : i == 0 && !s.damage.MagOk ? "MAGAZINE HIT"
                     : i == 0 && !s.weapons.WepReady ? "NO WEP BUS"
@@ -292,6 +293,7 @@ public class FireControlPanel : Panel
             else if (!s.weapons.FixedGun && tid == null && !manual) t = "NO LOCK — USE THE TARGETING COMPUTER";
             else if (!s.weapons.FixedGun && !s.damage.BriOk) t = "BRIDGE DAMAGED — PLOT COMPUTER OFFLINE";
             else if (!s.weapons.FixedGun && !sol.set) t = "NO LOCK — USE THE TARGETING COMPUTER";
+            else if (s.weapons.sys == "RG" && s.orders.railgunHold) t = "RAILGUN HOLD"; // owner 2026-11-10, MILK RUN: torpedoes only
             else if (!s.orders.WeaponsReleased) t = s.orders.weaponsHold ? "WEAPONS HOLD" : "WEAPONS NOT RELEASED — CONDITION 2 REQUIRED";
             else if (!s.damage.MagOk) t = "MAGAZINE DAMAGED — NO ROUNDS STRUCK UP";
             else if (s.weapons.sys == "PD" && !s.weapons.loaders) t = "PDC AUTOLOADERS OFF";

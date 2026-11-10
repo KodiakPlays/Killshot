@@ -13,16 +13,7 @@ MonoBehaviour:
   m_Name: Campaign
   m_EditorClassIdentifier: Assembly-CSharp::Campaign
   missions:
-  - title: ORIENTATION
+  - title: MILK RUN
     level: Orientation
-    brief: 'COMBAT BRIEFING.
-
-      Commander, welcome to the battle group. INDRA,
-      VARUNA and MARUT are with you.
-
-
-      A quick mop-up patrol. Standard thing.
-      Before we move, run the orientation checklist: flying, sensors, power. Each
-      part you finish opens more of the patrol area. Then take point to the target
-      zone.'
+    brief: "We'll take on supplies at the station before we start our patrol. Merchant crews have reported pirate activity along the border. Once we've loaded stores, we'll head out together and check those reports."
     at: {x: 196.17, y: -312.52}

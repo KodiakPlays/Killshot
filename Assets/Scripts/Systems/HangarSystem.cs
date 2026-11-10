@@ -1,3 +1,40 @@
+// =================================================================================================
+// HangarSystem.cs
+//
+// What it does:
+// One ship's hangar: its fighters and assault boats, the launch steps, and the craft in flight.
+// Every ship has one. The Hangar panel on the board shows our ship's hangar. Our ship's stats file
+// gives it no fighters. Its hangar starts on the assault boats.
+//
+// How it works:
+// - There are two squadrons: up to six fighters and four assault boats. The ship's stats file sets
+//   the number of fighters and marines.
+// - A launch needs six steps in order: CREW, FUEL, ORDNANCE, EVAC, DOORS and CATAPULT. Each one
+//   fills up over game time and needs the one before it full. A step is refused at CONDITION 3,
+//   with weapons off, or with no AUX power. It is refused with the bay doors shut, or with the
+//   hangar bay or magazine damaged.
+// - The launch itself is refused with no craft ready, no marines, or, for boats, a target not
+//   scanned. The craft leave from the side facing fire control's target. If the hangar dot has a
+//   drawn line, they fly along it (Tuning window, Hard Points). Then they turn smoothly to the
+//   target.
+// - Every board step the craft fly on. Near the target, each fighter makes an attack run every so
+//   often and DamageSystem takes the hit. DESTROY hits the side facing them. DISABLE hits the end
+//   of the ship nearer its engine room. ESCORT stays near our ship.
+// - Assault boats dock only once the target has an open side and has nearly stopped. The marines
+//   fight aboard for a set time. Their chance to win is their number against the enemy defenders.
+// - On a win the marines follow the order: DESTROY blows up the ship, DISABLE wrecks its engine
+//   room and magazine, SECURE captures it. A ship that cannot be destroyed is captured on
+//   DESTROY. A loss kills the marines.
+// - Boats only chase a target in range of our ship. On the way back, a clock runs while our ship
+//   is out of their range. At its end the boats and their marines are lost. BoardManager plays
+//   an alert for each warning.
+// - A squadron flies back to our ship when its target is gone, or on RECALL. Once back, its
+//   marines go aboard again and the launch steps clear.
+// - Our fighters see what is near them. SensorSystem uses this for ships. A rock in the way
+//   blocks the view. TacticalWorld uses it to show rocks and gas clouds.
+// - It writes each squadron's status line for the Hangar panel.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -323,12 +360,14 @@ public class HangarSystem : MonoBehaviour
         f.boardT += (float)dt;
         if (f.boardT < stats.boardSeconds) return;
         int defenders = Mathf.CeilToInt(enemy.damage.TotalCrew * stats.defenderShare);
-        bool won = f.marines > 0 && (defenders == 0 || ship.Roll(f.marines / (double)(f.marines + defenders)));
+        // owner 2026-11-10: a mission piece that can't be destroyed can't fight off our marines either (MILK RUN's capture always works)
+        bool won = f.marines > 0 && (defenders == 0 || enemy.cannotBeDestroyed || ship.Roll(f.marines / (double)(f.marines + defenders)));
         if (won)
         {
             enemy.damage.KillCrew(defenders);
             f.marines = Mathf.Max(0, f.marines - Mathf.RoundToInt(defenders * stats.marineLossPerDefender));
-            if (f.order == "destroy") { enemy.damage.Comp("rct").integ = 0; enemy.destroyed = true; ship.Kill(t); f.outcome = ship.NameOf(t) + " SCUTTLED"; }
+            // owner 2026-11-10: a ship that can't be destroyed falls through to SECURE
+            if (f.order == "destroy" && !enemy.cannotBeDestroyed) { enemy.damage.Comp("rct").integ = 0; enemy.destroyed = true; ship.Kill(t); f.outcome = ship.NameOf(t) + " SCUTTLED"; }
             else if (f.order == "disable") { enemy.damage.Comp("eng").integ = 0; enemy.damage.Comp("mag").integ = 0; f.outcome = ship.NameOf(t) + " DISABLED"; }
             else { enemy.captured = true; t.captured = true; t.hostile = false; f.outcome = ship.NameOf(t) + " SECURED"; }
         }

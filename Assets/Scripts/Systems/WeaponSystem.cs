@@ -535,7 +535,8 @@ public class WeaponSystem : MonoBehaviour
     public bool RungGated(int i)
     {
         bool pd = sys == "PD", free = pd || FixedGun;
-        return (i == 0 && (!WepReady || Empty || !OnDot(mount) || (pd ? !loaders : !FixedGun && !Sol.set)))
+        // owner 2026-11-10, MILK RUN: a level's Railgun Off stops only the railgun's ladder; the PDCs on AUTO still fire
+        return (i == 0 && (!WepReady || Empty || !OnDot(mount) || (pd ? !loaders : !FixedGun && !Sol.set) || (sys == "RG" && ship.orders.railgunHold)))
             || (i == 1 && !free && !InArc) || (i == 2 && !free && !OnBearing) || (i == 3 && wepCharge < ShotCost);
     }
 

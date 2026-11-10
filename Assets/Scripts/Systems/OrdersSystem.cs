@@ -1,3 +1,25 @@
+// =================================================================================================
+// OrdersSystem.cs
+//
+// What it does:
+// One ship's orders station: its alert condition, its AUX charge, and the repair orders paid from
+// that charge. Every ship has one. The Orders panel on the board shows our ship's orders station.
+//
+// How it works:
+// - The alert condition steps CONDITION 3, 2, 1, then back to 3, on a click.
+// - Weapons and flight operations are released at CONDITION 2 or 1. A level with weapons off
+//   keeps them locked at every condition. A level can keep the railgun off for the whole level.
+//   Torpedoes, PDCs and flight operations still follow the alert condition.
+// - The AUX charge goes from 0 to 100. It fills each board step. The fill per game second is the
+//   units on the AUX bus times a rate. The rate is in the ship's stats file.
+// - Three orders cost charge: REPAIR, SEAL and VENT. Their costs are in the ship's stats file.
+// - Running an order checks the charge and DamageSystem's reasons first. A refused order shows
+//   for a moment and is counted. BoardManager plays the refusal sound.
+// - An order that runs spends the charge. DamageSystem then does the order on the picked room.
+// - A thrown rocker, here or on the Engineering panel, flicks back after a short time.
+//   BoardManager lets the rockers fall back each frame.
+// =================================================================================================
+
 using UnityEngine;
 
 /// <summary>
@@ -95,4 +117,6 @@ public class OrdersSystem : MonoBehaviour
     [System.NonSerialized] public bool weaponsHold;
     public bool FlightOpsReleased => alert >= 1 && !weaponsHold;
     public bool WeaponsReleased => alert >= 1 && !weaponsHold;
+    /// <summary>Owner 2026-11-10, MILK RUN: the railgun stays off for the whole level; torpedoes, PDCs and flight ops still follow the alert.</summary>
+    [System.NonSerialized] public bool railgunHold;
 }

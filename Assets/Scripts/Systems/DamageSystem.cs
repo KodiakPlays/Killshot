@@ -1,3 +1,38 @@
+// =================================================================================================
+// DamageSystem.cs
+//
+// What it does:
+// One ship's damage: its armour, its rooms, its crew, fires, air loss and radiation, and its
+// repairs. Our ship has one, and every other ship has one too. The Engineering panel on the board
+// shows our ship's damage and gives the repair orders.
+//
+// How it works:
+// - The ship has six rooms: magazine, bridge, habitation, hangar bay, reactor and engine room.
+//   Each room has a strength from 0 to 5 and its crew. A room can have fire, radiation or no air.
+// - Four armour plates make a box round the rooms: PROW, STBD, AFT and PORT. The armour and the
+//   crew come from the ship's stats file (the Tuning window). So does each room's row from bow to
+//   stern.
+// - A hit takes armour off the side it struck. Once that side is open, the next hit damages the
+//   room behind it. For PROW that is the front room, and for AFT the back room. For a side it is
+//   the room at that spot along the ship. A wrecked room lets the hit through to the next one.
+// - WeaponSystem sends railgun slugs and torpedoes. HE torpedoes strip armour hard. PENETRATOR
+//   torpedoes go straight to a room. EMP torpedoes knock the power out for a while.
+// - A hit on a room can start a fire, or blow out its air and kill crew. A hit on the reactor can
+//   leak radiation. HangarSystem sends fighter runs and marine boarding losses. TacticalWorld
+//   sends crashes; a faster crash does more damage.
+// - Every board step, fires wear their rooms down and radiation kills crew. Fire, air loss and
+//   radiation can spread to the rooms next door. Radiation fades once the reactor is repaired
+//   or vented.
+// - The ship is destroyed when its reactor room reaches 0. A ship marked cannot be destroyed keeps
+//   its reactor at 1 instead.
+// - Repair orders, on the picked room: REPAIR sends a team. After a few game seconds the team puts
+//   out a fire, or brings the air back, or repairs. At CONDITION 1 it repairs twice as much.
+// - SEAL shuts an airless room's doors. VENT dumps a room's air, puts out its fire and kills
+//   everyone inside. REBOOT adds 1 strength. RECALL calls the team back.
+// - An order is refused, with a reason, when it cannot run or the AUX charge is too low. The
+//   charge comes from OrdersSystem. SaveGame reads and writes the armour and room strength.
+// =================================================================================================
+
 using UnityEngine;
 
 /// <summary>
@@ -254,7 +289,7 @@ public class DamageSystem : MonoBehaviour
         if (hit == null) return "";
         string started = Strike(hit, weapon, by);
         hit.integ = Mathf.Max(0, hit.integ - damage);
-        if (Comp("rct").integ <= 0) ship.destroyed = true;
+        if (Comp("rct").integ <= 0) { if (ship.cannotBeDestroyed) Comp("rct").integ = 1; else ship.destroyed = true; } // owner 2026-11-10: a mission piece keeps 1
         return " · " + hit.tag + " −" + damage + started;
     }
 
@@ -326,7 +361,7 @@ public class DamageSystem : MonoBehaviour
             if (leaking) c.fadeT = 0;
             else if ((c.fadeT += dt) >= stats.radFadeSeconds) { c.rad = false; c.radT = 0; c.fadeT = 0; }
         }
-        if (rct != null && rct.integ <= 0) ship.destroyed = true;
+        if (rct != null && rct.integ <= 0) { if (ship.cannotBeDestroyed) rct.integ = 1; else ship.destroyed = true; } // owner 2026-11-10: a mission piece keeps 1
         SyncCond();
     }
 

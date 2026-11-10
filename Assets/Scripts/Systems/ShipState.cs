@@ -1,3 +1,34 @@
+// =================================================================================================
+// ShipState.cs
+//
+// What it does:
+// The shared state of one ship in a fight. BoardManager keeps one for our ship, and every panel on
+// the board reads it. WorldContact makes one for each other ship. It joins the ship's eight systems
+// together. It keeps what is not in any one system: contacts, plot marks, the periscope and the
+// battle space.
+//
+// How it works:
+// - Each ship gets its systems (NavSystem, PowerSystem, SensorSystem, CommsSystem, WeaponSystem,
+//   HangarSystem, DamageSystem, OrdersSystem). Most systems can then reach the others through it.
+// - Contacts: the list of other ships. Each has a bearing, range, speed, the bands it gives off and
+//   its place in the world. TacticalWorld keeps only the real ones and writes their places.
+// - A contact shows as BOGEY plus its key until it is scanned, then by its name.
+// - Plot marks: POINT drops a mark with the mission time. RULER and COMPASS draw a line or a ring
+//   while dragging. A RULER from one POINT to a later POINT gives a course and a speed.
+//   WeaponSystem uses that for a firing solution.
+// - Periscope: its bearing, its zoom (1 to 8), and turning it by dragging. Turning it drops the
+//   BEARING and ARM switches unless a lock is on. It says how full the sight's brackets are.
+// - Battle space: a box round the middle of the map. Its size is set in the Tuning window. A
+//   level's BattleSpace can change it. Near the edge a warning shows. Outside it, a countdown runs.
+//   If the ship is still outside at the end, it is lost. Only our ship is checked.
+// - A ship marked cannot-be-destroyed by its WorldContact never dies. DamageSystem and
+//   HangarSystem read this.
+// - It marks a contact as a wreck when its ship is destroyed, and counts the kill.
+// - Each ship has a set of dice with a fixed start, for damage chances and the PDCs.
+// - It works out where a straight shot path meets a ship's box, and the side it goes through.
+// - It has number helpers that round the same way as the web page version of the board.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -328,6 +359,8 @@ public class ShipState
     /// <summary>Destroyed: its reactor is at zero (the kill condition, FTUE §4.4), or it stayed
     /// outside the battle space too long (deserted).</summary>
     [System.NonSerialized] public bool destroyed;
+    /// <summary>Owner 2026-11-10: a mission piece that can't be destroyed (set from its WorldContact). DamageSystem keeps its reactor at 1 or more.</summary>
+    [System.NonSerialized] public bool cannotBeDestroyed;
     /// <summary>Taken by our marines (SECURE): it stops fighting and is a prize.</summary>
     [System.NonSerialized] public bool captured;
     [System.NonSerialized] private System.Random dice;

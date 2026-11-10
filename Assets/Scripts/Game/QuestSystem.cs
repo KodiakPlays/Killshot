@@ -1,3 +1,36 @@
+// =================================================================================================
+// QuestSystem.cs
+//
+// What it does:
+// Decides when a mission is won or lost. It is on the battle board. It checks the mission once
+// per board step, after the ships have moved and fired. It shows the help bubble that says what
+// to do in a level.
+//
+// How it works:
+// - At the start it notes the mission clock. In the campaign it puts back our ship's damage from
+//   the last mission, through SaveGame.
+// - Each step: if our ship is destroyed, or lost at the battle space's edge, the mission is lost.
+// - The target is a ship picked by its track key (the Garuda). Scanning it moves the mission on
+//   from "find" to "destroy".
+// - Wolf Hunt: destroy or capture the target. A jump point then opens near the battle space edge
+//   farthest from our ship. Reaching it wins. The alarm strip shows its bearing and distance.
+// - Wolf Hunt has reinforcements. When an enemy finds us, a 180 game second countdown starts.
+//   Then 2 enemy frigates arrive at random edges, then one more every 120 game seconds. They are
+//   told roughly where we are. The numbers are in the Tuning window, Board tab, Mission.
+// - A level's Mission can set another goal. Destroy: destroy or capture the target. Capture:
+//   capture it; destroying it loses. Hit unseen: hit it once; a scan or a lock loses. Find by
+//   signal: read a radio message, then hear the target on DRADIS. Jump point: reach it.
+// - Flight drill: the steps run in order. Each step's note replaces the last and a soft tone
+//   plays. A step can grow the map from the middle over 3 real seconds. A step can end the
+//   level's weapons-off. When a step asks us to close on a ship, the alarm strip shows its
+//   bearing and distance once DRADIS hears it. A step that names a ship the level lacks logs a
+//   warning, since it can never finish.
+// - The help bubble waits until the plot grid has formed. A click closes it. A small icon on the
+//   board opens it again.
+// - At the end it pauses the board and clears its line on the alarm strip. On a win it saves the
+//   damage and the win through SaveGame. EndScreenPanel reads how the mission ended.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -173,9 +206,9 @@ public class QuestSystem : MonoBehaviour
     public void PlaceJumpPoint(Vector2 at) { ExitAt = at; exitPlaced = exitSet = true; }
 
     // the alarm strip's line to the ring on the plot
-    void Point(Vector2 d)
+    void Point(Vector2 d, string name = null)
     {
-        board.missionAlarm = ExitName + " · BRG " + TacticalWorld.Bearing(d).ToString("000") + "° · "
+        board.missionAlarm = (name ?? ExitName) + " · BRG " + TacticalWorld.Bearing(d).ToString("000") + "° · "
                            + Mathf.RoundToInt(d.magnitude).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " KM";
         board.missionCount = "!";
     }
@@ -184,7 +217,7 @@ public class QuestSystem : MonoBehaviour
     [Tooltip("In a flight drill the briefing box is this tall, board px.")]
     [Tune("Mission")] [SerializeField] private float drillNoteHeight = 230f;
     private DrillStep[] drill;
-    private float slideHeld;
+    private float slideHeld, stepStartedAt;
     /// <summary>The drill's step now, counted from 0.</summary>
     public int DrillAt { get; private set; }
     DrillStep Ring => drill != null && !Over && drill[DrillAt].ringUnits > 0f ? drill[DrillAt] : null;
@@ -199,8 +232,18 @@ public class QuestSystem : MonoBehaviour
         box.anchoredPosition += Vector2.down * (box.sizeDelta.y - drillNoteHeight);
         helpText.rectTransform.sizeDelta -= Vector2.up * (box.sizeDelta.y - drillNoteHeight);
         box.sizeDelta = new Vector2(box.sizeDelta.x, drillNoteHeight);
-        ShowHelp(drill[0].note);
-        GrowMap(drill[0].mapUnits);
+        StepStarts(drill[0]);
+    }
+
+    // A step starts: its note, the map it opens, and (owner 2026-11-10, MILK RUN) the end of the level's weapons-off
+    void StepStarts(DrillStep s)
+    {
+        stepStartedAt = board.State.missionNow;
+        ShowHelp(s.note);
+        GrowMap(s.mapUnits);
+        if (s.weaponsFree) board.State.orders.weaponsHold = false;
+        if (!string.IsNullOrEmpty(s.track) && board.State.TrackOf(s.track) == null)
+            Debug.LogWarning("Drill step " + (DrillAt + 1) + " names track '" + s.track + "', which this level doesn't have. The step can't finish."); // a typo would stall the drill silently
     }
 
     // Owner 2026-11-09: each part of the checklist done opens more of the map. It grows from the middle, in real seconds, as the grid forms at the start.
@@ -229,18 +272,22 @@ public class QuestSystem : MonoBehaviour
         if (drill == null) return;
         var step = drill[DrillAt];
         var d = step.ringAt - new Vector2((float)us.nav.x, (float)us.nav.y);
-        if (step.ringUnits > 0f) Point(d); else board.missionAlarm = board.missionCount = null;
+        var near = step.check == DrillCheck.Near ? us.TrackOf(step.track) : null; // owner 2026-11-10: the strip leads you to the ship you are told to close on
+        if (step.ringUnits > 0f) Point(d);
+        else if (near != null && near.hasWorld && us.sensors.Heard(near)) Point(new Vector2((float)(near.worldX - us.nav.x), (float)(near.worldY - us.nav.y)), us.NameOf(near));
+        else board.missionAlarm = board.missionCount = null;
         if (!Passed(step, us, d.magnitude)) return;
         if (DrillAt + 1 >= drill.Length) { End(QuestStage.MissionComplete, MissionFailReason.None); return; }
         slideHeld = 0f;
-        ShowHelp(drill[++DrillAt].note);
-        GrowMap(drill[DrillAt].mapUnits);
+        StepStarts(drill[++DrillAt]);
         board.Chime();
     }
 
     bool Passed(DrillStep s, ShipState us, float toRing)
     {
         var eng = us.power.buses[0];
+        bool named = !string.IsNullOrEmpty(s.track);
+        var t = named ? us.TrackOf(s.track) : null;
         switch (s.check)
         {
             case DrillCheck.EngHeld: return eng.fill > 0 && eng.fill <= s.amount && eng.mode == PowerSystem.BusMode.Standby;
@@ -257,9 +304,21 @@ public class QuestSystem : MonoBehaviour
             case DrillCheck.StopAt: return toRing <= s.ringUnits && us.nav.SpeedUnits <= s.amount;
             case DrillCheck.ActiveOn: return us.sensors.Listening && us.sensors.active; // owner 2026-11-02: a ping is what shows rocks past sight
             case DrillCheck.Scanned: // owner 2026-11-09: scan a battle group ship to see its name (the list can hold keys with no ship)
-                int named = 0;
-                foreach (var t in us.tracks) if (!t.own && us.sensors.identified.Contains(t.key)) named++;
-                return named >= s.amount;
+                if (named) return us.sensors.identified.Contains(s.track); // owner 2026-11-10: or one ship or station, by its track
+                int count = 0;
+                foreach (var k in us.tracks) if (!k.own && us.sensors.identified.Contains(k.key)) count++;
+                return count >= s.amount;
+            // Owner 2026-11-10, MILK RUN: boost DRADIS, take the alert up, lock, close in, open its armour, capture it
+            case DrillCheck.GainAt: return us.sensors.senBoost >= s.amount;
+            case DrillCheck.ConditionAt: return us.orders.alert >= s.amount;
+            case DrillCheck.Locked: return named && us.weapons.LockedOn(s.track);
+            case DrillCheck.Near: return t != null && t.hasWorld && t.rangeUnits <= s.amount;
+            case DrillCheck.Breached:
+                var ship = named && us.ShipOf != null ? us.ShipOf(s.track) : null;
+                if (ship != null) foreach (var a in ship.damage.SideArmour) if (a <= 0f) return true;
+                return false;
+            case DrillCheck.Captured: return t != null && t.captured;
+            case DrillCheck.Wait: return us.missionNow - stepStartedAt >= s.amount;
         }
         return false;
     }

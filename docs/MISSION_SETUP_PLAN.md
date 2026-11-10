@@ -1,7 +1,56 @@
 # Mission setup plan
 
-Talked through with the owner on 2026-11-09 and 2026-11-10, in the Mission Setup Tool chat. **Not
-built.** Lines marked "my pick" are my calls. Any of them can change.
+Talked through with the owner on 2026-11-09 and 2026-11-10, in the Mission Setup Tool chat. The
+window is **not built**. MILK RUN's flow is built: see below. Lines marked "my pick" are my calls.
+Any of them can change.
+
+## MILK RUN, built 2026-11-10
+
+Mission 1, MILK RUN, now plays the owner's whole flow (Step 192 in `docs/BUILD_LOG.md`). The level
+file is `Assets/Scenes/Levels/Orientation.unity`. Its 23 checkpoints are on the Mission object, on
+the Drill list.
+
+1. Power: ENG on STANDBY.
+2. Fly into the ring at (−1,650, −2,950).
+3. Come round into the ring at (300, −2,000).
+4. Slide left for 3 s.
+5. Slide right for 3 s.
+6. Zoom out to x0.2.
+7. Zoom in to x0.8.
+8. Zoom out to x0.12. The map grows to 16,000.
+9. DRADIS on.
+10. ACTIVE SCAN on.
+11. Scan one ship of the group.
+12. ENG to 5. The map grows to 24,000.
+13. Speed 45.
+14. Fly into the ring at (300, 1,900), at the rocks.
+15. Go through the rocks. Stop in the ring at (0, 5,900), at the station.
+16. Scan the station, s1.
+17. Turn DRADIS gain up to 4. Until then the pirate corvette, p1, is hidden in the wreckage.
+18. Scan p1. It runs.
+19. Condition 2. This checkpoint frees the weapons. COMMAND: "You pursue that immediately, Captain.
+    We'll stay here to take care of survivors."
+20. Lock p1.
+21. Open one side of p1's armour with torpedoes. It stops dead.
+22. The marines capture p1.
+23. Wait 20 s with the last note. Then MISSION COMPLETE.
+
+The railgun is off for the whole mission. Fire Control reads RAILGUN HOLD. p1 can't be destroyed.
+Its crew can't fight off our marines (my call; the owner can say no).
+
+**Who did what.** Codex: the name, the briefing, and the words of checkpoints 1 to 11. The Tutorial
+Mission Manager chat: the station, the wrecks, the escape pods, p1's place, the group's path and our
+new spawn. This chat: the new checks, Weapons Free, Railgun Off, Cannot Be Destroyed, the corvette's
+run, checkpoints 12 to 23, and new places for rings 2 and 3.
+
+**Still open.**
+- Codex rewrites the words of checkpoints 12 to 23. The ones there now are stand-ins.
+- Nobody has played it through. A script checked the parts. Not checked: a real lock, a real
+  torpedo hit, a real boarding.
+- The group's shuttles to the escape pods: not built.
+- The call signs and our ship's name (see "Names").
+- The checkpoints are still on the level. They move into the Campaign file with the window (see
+  "Steps").
 
 ## Summary
 
@@ -46,7 +95,8 @@ its **checkpoints**, in order. Each checkpoint has:
 - **Order:** what the player must do, in plain words.
 - **Done when:** what finishes it (today's checks: ENG on STANDBY, ENG at, inside the ring, speed
   at, slide left or right, zoom out or in to, DRADIS on, stop in the ring, ACTIVE SCAN on, ships
-  scanned).
+  scanned; since Step 192 also DRADIS gain at, condition at, locked, near a ship, armour breached,
+  captured, and a wait in game seconds).
 - **Ring:** where it is and its size, or none.
 - **Map grows to:** a size, or no change.
 
@@ -67,7 +117,7 @@ mission list.
 
 | Words | Where |
 |---|---|
-| Checkpoint messages (16) | `Assets/Scenes/Levels/Orientation.unity`, the Mission object, Drill list, each step's Note box. Each starts "COMMAND ·". |
+| Checkpoint messages (23) | `Assets/Scenes/Levels/Orientation.unity`, the Mission object, Drill list, each step's Note box. Each line starts with who speaks, like "COMMAND ·". |
 | Mission name and briefing | `Assets/Campaign/Campaign.asset` → Missions → Element 0 → Title and Brief |
 | STARWOLF | The Title Text box on the intro in `00_Start`, `01_Briefing` and `SectorMap`. Every letter, 0 to 9, the colon and the dash can be drawn (Step 181). |
 | INDRA, VARUNA, MARUT | The names of the three ships in `Assets/Prefabs/BattleGroup`, written like "Indra · Carrier" |
@@ -91,7 +141,8 @@ mission list.
   patrol. Merchant crews have reported pirate activity along the border. Once we've loaded stores,
   we'll head out together and check those reports." Checkpoints 1 and 2 have new talk (CAPTAIN,
   COMMAND, then a POWER or HELM order). Checkpoints 3 to 16 are unchanged; checkpoint 12 still names
-  INDRA, VARUNA and MARUT. Codex is still working on the lines.
+  INDRA, VARUNA and MARUT. Codex is still working on the lines. Later that day Codex's words covered
+  checkpoints 1 to 11, and no checkpoint names INDRA, VARUNA or MARUT now.
 
 ## Keep true when rewriting mission 1
 
@@ -101,17 +152,18 @@ From the owner's story (`campaign-story-arc`, passed on by the Tutorial chat):
   commander… quick mop-up operation… orientation checklist".
 - You learn to fly, scan and manage power. Each part finished makes the map bigger.
 - The group flies its own path at 15. You follow them; they never follow you (step 2, THROTTLE).
-- The group stops south of the rock field (step 12, TAKE POINT).
+- The group goes round the rocks to the station. We take the short way through (checkpoints 14 and
+  15). Before Step 192 the group stopped south of the rock field (step 12, TAKE POINT).
 - Steps 8 and 12 grow the map (16,000 and 24,000). Step 11 is the scan check.
 
 ## Steps
 
 1. **Owner picks** our ship's call sign, the others' call signs (or OKs stand-ins), and mission 1's
    name.
-2. **Owner tells** how mission 1 goes, in their own words.
+2. **Owner tells** how mission 1 goes, in their own words. Done 2026-11-10. Built in Step 192.
 3. **Build** (ask once more before making the window: it is a new script). Add the names and the
    people who talk to `Campaign.cs`. Add checkpoints with talk lines to each mission. Move mission
-   1's 16 checkpoints in, words unchanged. Make the board show the lines one by one. Make the
+   1's 23 checkpoints in, words unchanged. Make the board show the lines one by one. Make the
    Starwolf → Mission window.
 4. **Write** mission 1's talk for every checkpoint, and its briefing. The owner edits in the window.
 5. **Swap the names in** for the battle group's ship names and GARUDA in code. Message the Ship

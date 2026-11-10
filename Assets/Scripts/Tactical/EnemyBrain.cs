@@ -1,3 +1,46 @@
+// =================================================================================================
+// EnemyBrain.cs
+//
+// What it does:
+// This is the mind of a computer-run ship: the Garuda, the ships of our battle group, and a ship
+// that runs from us, like the pirate corvette. It
+// listens for our ship, decides where to go and fires its weapons. It only sets its ship's
+// ordered heading and throttle. The ship then moves by the same rules as ours.
+//
+// How it works:
+// - TacticalWorld calls it each time the board steps the game forward. Its numbers are in the
+//   Tuning window, under Enemy and Battle group.
+// - How aware it is only goes up: COLD, UNEASY, SEARCHING, ALERT. After 90 game seconds without
+//   hearing us, it calms down to COLD. Then it goes back to its patrol.
+// - Inside its sight range it sees us and goes ALERT. A rock in the way blinds it. A gas cloud
+//   around us cuts its sight. Past that, it hears us by its DRADIS reach times our signal, less
+//   any interference from rocks. Its gain goes up as it gets more aware.
+// - The clearer it hears us, the more aware it gets and the better it guesses where we are. A
+//   hit makes it ALERT and tells it roughly where the shot came from. It can hear our fighters.
+// - When hit, or ALERT with a recent fix on us, it fires torpedo salvos. They come from a
+//   launcher in reach. With a fix its railguns fire too. Each fires when in reach and reloaded,
+//   with us in its cone. It aims where we will be, a little off. Each shot pushes it back a
+//   little, as ours does. A damaged magazine stops it
+//   firing and sends its repair team.
+// - Steering: ALERT with a fix, it closes in, then turns a side to us and slows. Otherwise it goes
+//   to where it last heard us and searches round it.
+// - When COLD, it hunts random points across the map. The points drift from its half toward ours.
+//   If its level spawn gives it a patrol route, it follows that instead.
+// - On a patrol route it may turn back at any point. Without a route it changes course halfway
+//   between its radio messages.
+// - A level spawn can make it send radio messages to our comms. Each gives its bearing, heading
+//   and speed. It sends the next only after the last is read or lost.
+// - It steers round rocks and ships ahead of it. It keeps out of the battle space's edge band. If
+//   it gets outside, it heads for the middle.
+// - With the battle group setting on, it steers by the formation instead. The group waits where it
+//   starts until our ship comes close. Then it flies the Mission's group route and turns smoothly
+//   onto each new leg. Each ship keeps its place, nose forward, and keeps clear of our ship. The
+//   group waits at the route's end.
+// - With the runs-from-us setting on, it sits still until our ship scans it. Then it runs straight
+//   away from us, round rocks and inside the map, at a set share of its top speed. Once one side
+//   of its armour is gone, it stops dead.
+// =================================================================================================
+
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -75,6 +118,14 @@ public class EnemyBrain : MonoBehaviour
     [Tooltip("When we hit it before it is ALERT: at most one salvo this often, game seconds.")]
     [Tune("Enemy")] [SerializeField] private float fireBackSeconds = 120f;
 
+    [Header("Runs from us (owner 2026-11-10, MILK RUN's pirate corvette)")]
+    [Tooltip("It sits still until we scan it. Then it runs straight away from us, round rocks and inside the map. "
+           + "Once one side of its armour is gone it gives up and stops dead, and our marines can board it. Turn Hunts and Fires Back off with it.")]
+    [Tune("Enemy")] public bool flees;
+    [Tooltip("Running, its throttle as a share of its top speed. The corvette's top is 60, ours 50: at 0.6 it runs at 36 and we can catch it.")]
+    [Tune("Enemy")] [SerializeField] private float fleeSpeedShare = 0.6f;
+    private string ownKey; // its track key, from its WorldContact
+
     [Header("Battle group (owner 2026-11-09)")]
     [Tooltip("One of our battle group: it flies in a loose formation along the level's Group Route (on its Mission), at the group's "
            + "speed, and waits at the last point. It never follows us: we follow them. Our place is the formation's centre.")]
@@ -128,6 +179,12 @@ public class EnemyBrain : MonoBehaviour
     private float firstSignalSeconds, signalSeconds, onAirSeconds, nextSignal, nextCourse;
     /// <summary>A level's spawn gives it a patrol route (owner 2026-11-02).</summary>
     public void Patrol(Vector2[] points) { route = points; }
+    [Tooltip("Owner 2026-11-10: a route set here in the level (a shuttle's run between the battle group and the escape pods). "
+           + "It flies it point to point and back at Cruise Units. Empty: none, or the one its spawn gives it.")]
+    [SerializeField] private Vector2[] patrolRoute;
+    [Tooltip("Owner 2026-11-10: it stays still until we come this close, units (the shuttles start as we arrive). 0: it starts at once.")]
+    [Tune("Enemy")] [SerializeField] private float waitForUsUnits;
+    private bool launched;
     private Vector2[] route;
     private int routeAt, routeWay = 1;
     bool OnRoute => route != null && route.Length > 1;
@@ -274,9 +331,26 @@ public class EnemyBrain : MonoBehaviour
         return (System.Math.Atan2(tx + vx * t, ty + vy * t) * 180 / System.Math.PI + 360) % 360;
     }
 
+    // Owner 2026-11-10 (MILK RUN): hidden until scanned, then it runs; a broken side and it stops dead
+    void Flee(ShipState ship, ShipState us, Vector2 at, Vector2 ours)
+    {
+        bool open = false;
+        foreach (var a in ship.damage.SideArmour) if (a <= 0f) open = true;
+        if (ownKey == null) ownKey = GetComponent<WorldContact>().trackKey;
+        if (open || !us.sensors.identified.Contains(ownKey)) { ship.nav.throttle = 0; return; }
+        int heading = TacticalWorld.Bearing(at - ours);
+        if (!world) world = FindAnyObjectByType<TacticalWorld>();
+        heading = world ? world.ClearHeading(ship.nav, heading, avoidLookUnits) : heading;
+        ship.nav.orderedHeading = KeepInside(us, at, heading);
+        ship.nav.throttle = Mathf.Clamp(Mathf.RoundToInt(fleeSpeedShare * 100f), 0, ship.nav.ThrottleCap);
+    }
+
     void Steer(ShipState ship, ShipState us, Vector2 at, Vector2 ours, float dist, float now, bool fix)
     {
         if (escorts) { Escort(ship, us, at, ours, now); return; }
+        if (flees) { Flee(ship, us, at, ours); return; }
+        if (!launched) { if (waitForUsUnits > 0f && dist > waitForUsUnits) { ship.nav.throttle = 0; return; } launched = true; }
+        if (route == null && patrolRoute != null && patrolRoute.Length > 1) { route = patrolRoute; BackToRoute(at); }
         if (!hunts && cruiseUnits <= 0f) { ship.nav.throttle = 0; return; } // Step 130: a level's still target stays as it spawned, the side it shows included
         float top = (float)ship.nav.stats.topSpeedUnits, speed = cruiseUnits;
         if (Level > Awareness.Cold && now - lastHeardAt > giveUpSeconds)
