@@ -23,11 +23,11 @@ Deliberately **not** here, because it would rot:
 
 ## Orientation
 
-**Building on the tactical board? Start with `Assets/Scenes/Tactical/BUILD_LOG.md`.** It is the
+**Building on the tactical board? Start with `docs/BUILD_LOG.md`.** It is the
 pickup point: what exists, what is wired to what, which step we are on, and what to do next. It is
 kept current as the single living record — do not start a second status document.
 
-**For anything else, start with `Assets/CONTEXT_INDEX.md`.** It routes you to the right document for
+**For anything else, start with `docs/CONTEXT_INDEX.md`.** It routes you to the right document for
 the question you have.
 
 **A new chat for one piece of work?** Read `BUILD_LOG.md` section 1 (where we are) and section 8
@@ -53,11 +53,11 @@ Read what's relevant before non-trivial work. These sources are **rolling** — 
 | What | Where |
 |---|---|
 | **What the game is, how to run it, the controls** | `README.md` |
-| **Tactical board pickup point** — state, next step, traps | `Assets/Scenes/Tactical/BUILD_LOG.md` |
-| **Start here** — routes you to everything else | `Assets/CONTEXT_INDEX.md` |
-| **The specification** (how the game works) | `Assets/TACTICAL_BOARD_SPEC.md` |
-| **Verified code baseline** (every script read line by line) | `Assets/CODEBASE_BASELINE.md` |
-| **Prototype baseline** (the playable build, read line by line) | `Assets/PROTOTYPE_BASELINE.md` |
+| **Tactical board pickup point** — state, next step, traps | `docs/BUILD_LOG.md` |
+| **Start here** — routes you to everything else | `docs/CONTEXT_INDEX.md` |
+| **The specification** (how the game works) | `docs/TACTICAL_BOARD_SPEC.md` |
+| **Verified code baseline** (every script read line by line) | `docs/CODEBASE_BASELINE.md` |
+| **Prototype baseline** (the playable build, read line by line) | `docs/PROTOTYPE_BASELINE.md` |
 | Engine version | `ProjectSettings/ProjectVersion.txt` |
 | Packages & render pipeline | `Packages/manifest.json` |
 | Input backend, serialization mode | `ProjectSettings/ProjectSettings.asset`, `ProjectSettings/EditorSettings.asset` |
@@ -95,6 +95,7 @@ Docs may lag the code. **Code and live Editor state win.**
 - **Don't** commit or edit generated and machine-local directories: `Library/`, `Temp/`, `Logs/`, `obj/`, `UserSettings/`, `Build*/`.
 - **Don't** edit `Assembly-CSharp.csproj`, `Assembly-CSharp-Editor.csproj`, or `Killshot.slnx`. Unity regenerates them. Git ignores the `.csproj` files; it tracks `Killshot.slnx`.
 - **Don't** commit build outputs or archives. They belong outside the repo.
+- **Don't** put a `.md` note inside `Assets/` (owner, 2026-11-10). Notes go in `docs/`. Add to a note that exists before making a new one.
 
 ## C# conventions
 

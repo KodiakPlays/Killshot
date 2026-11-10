@@ -6,7 +6,7 @@ describe design intent.
 
 Each ship's numbers are in its stats file: `Assets/Ships/Asura.asset` (our ship) and
 `Assets/Ships/Garuda.asset` (the enemy). Change them with **Starwolf → Tuning**. The owner's
-decisions are in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 4.
+decisions are in `docs/BUILD_LOG.md`, section 4.
 
 ---
 
@@ -1209,7 +1209,7 @@ six drawers, the helm, the orders station and the periscope are set into the fra
 but the battle space is always there. Everything you do reads back on the plot.
 
 **How it's built.** A fixed 1920 × 1080 layout from the Claude Design handoff. Each panel is a
-prefab. The prefabs, their art and their layout are described in `Assets/UI/Board/README.md`.
+prefab. The prefabs, their art and their layout are described in `docs/BOARD_UI.md`.
 
 ### 11.1 Layout
 
@@ -1503,7 +1503,7 @@ their air and leak radiation.
 
 **How it's built.** Four armour values and six rooms. Each room has integrity 0 to 5, crew and air.
 A hit strikes the side facing where it came from. The numbers are in each ship's stats file, under
-damage. The full rules are in `Assets/Scenes/Tactical/DAMAGE_README.md`.
+damage. The full rules are in `docs/DAMAGE_README.md`.
 
 ### 13.1 No shields
 
@@ -1744,7 +1744,7 @@ does not listen for us and does not fire. Any level is also lost as §14 says.
 | 8 | LONG SHOT | `LongShot` | It is destroyed or captured | §14 only | Patrolling east and west, 9,000 units north of our start, at 22 units/s. It doesn't hunt us |
 
 INTERCEPT and Wolf Hunt send real radio messages. In the other six the radio shows NO TRAFFIC (§10).
-The levels' numbers are in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 2.
+The levels' numbers are in `docs/BUILD_LOG.md`, section 2.
 
 **COLD RUN and INTERCEPT** have the mission goal JumpPoint. The jump point shows from the start, and
 reaching it wins. The end screen says GARUDA EVADED · JUMPED OUT. Weapons off (`Mission.weaponsOff`) is
@@ -2041,7 +2041,7 @@ look.
 
 **How it's built.** One drawer slot. A drawer slides 376 px out from behind the metal frame over
 0.42 s, and fades in over 0.3 s. What you set in a drawer is the ship's state, so it stays when the
-drawer closes. Each panel is a prefab (`Assets/UI/Board/README.md`).
+drawer closes. Each panel is a prefab (`docs/BOARD_UI.md`).
 
 ### 19.1 How a drawer behaves
 
@@ -2187,7 +2187,7 @@ Four rockers, thrown in order:
 | ARM | The capacitor has the shot's charge: railgun 70, torpedo 40, PDC 25 |
 
 For a fixed gun, such as our spinal railgun, LOAD needs no solution, and ANGLE and BEARING are free (Rule
-8.3.e). Step 3 of `Assets/Scenes/Tactical/SNIPER_PLAN.md` takes ANGLE and BEARING away.
+8.3.e). Step 3 of `docs/SNIPER_PLAN.md` takes ANGLE and BEARING away.
 
 > **Rule 20.1.b** Each rocker needs the one before it. Releasing a rocker releases it and every one
 > after it.

@@ -200,7 +200,7 @@ does a few things.
 To change a board key, open the Keys tab of **Starwolf → Tuning** in the Unity editor. The keys do
 nothing while you type in a text box, except `Esc`. It still opens the menu.
 
-What each panel's switches do is in `Assets/UI/Board/README.md`.
+What each panel's switches do is in `docs/BOARD_UI.md`.
 
 **Engine power sets your top speed, thrust and turn rate.** One unit on the ENG
 bus allows 25 units a second, and five units allow 50. Five units also give
@@ -220,9 +220,9 @@ selected.
 
 | You want | Read |
 |---|---|
-| What is built, what is left, and every trap hit | `Assets/Scenes/Tactical/BUILD_LOG.md` |
-| Which document answers your question | `Assets/CONTEXT_INDEX.md` |
-| How the game is meant to work | `Assets/TACTICAL_BOARD_SPEC.md` |
+| What is built, what is left, and every trap hit | `docs/BUILD_LOG.md` |
+| Which document answers your question | `docs/CONTEXT_INDEX.md` |
+| How the game is meant to work | `docs/TACTICAL_BOARD_SPEC.md` |
 | Rules for working in this repo | `CLAUDE.md` |
 
 ## A note on the sources

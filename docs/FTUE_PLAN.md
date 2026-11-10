@@ -24,7 +24,7 @@ to 99): the Garuda hunts us, hears us, searches, and fights back with railguns a
 - **The mission ends at the jump point.** Killing or capturing the Garuda opens a jump point.
   Reaching it wins.
 
-How both work is in `Assets/TACTICAL_BOARD_SPEC.md` §5.3, §5.4 and §15.2. The rest of this plan
+How both work is in `docs/TACTICAL_BOARD_SPEC.md` §5.3, §5.4 and §15.2. The rest of this plan
 stands until the owner says otherwise.
 
 **Changed by the owner (2026-10-29): training levels come first.** The first version of the tutorial
@@ -243,7 +243,7 @@ copy. That is fine.
 > **Built in Step 97, differently from the table below.** COLD hunts the map instead of patrolling
 > a loop. The brain does not change its bus modes or go active; it raises its DRADIS gain as it
 > grows more aware. Inside its visual range it sees us, and a hit puts it on ALERT. What is built is
-> in `Assets/TACTICAL_BOARD_SPEC.md` §5.3. The table is the plan as written.
+> in `docs/TACTICAL_BOARD_SPEC.md` §5.3. The table is the plan as written.
 
 The spec's ladder stays (§5.3). What changes is **how** each rung is reached: not a fixed distance,
 but **its own sensors hearing our signal**, with the same rules ours use.

@@ -27,8 +27,8 @@ gather, act, get found, break away, gather again.
 **What is built today** is seven levels on a MISSIONS list: the training levels FLIGHT DRILL, COLD RUN, WEAPONS
 FREE, NO PEEKING and FINDERS KEEPERS, then INTERCEPT, then the full mission, **Wolf Hunt**. In Wolf Hunt a
 Garuda-class cruiser hunts you. You find it, destroy it or capture it, then fly to a jump point to
-win. What each level asks of you is in `Assets/TACTICAL_BOARD_SPEC.md` §15.5. How Wolf Hunt plays is
-in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 6, "Steps 94 to 101".
+win. What each level asks of you is in `docs/TACTICAL_BOARD_SPEC.md` §15.5. How Wolf Hunt plays is
+in `docs/BUILD_LOG.md`, section 6, "Steps 94 to 101".
 
 ---
 
@@ -68,35 +68,35 @@ pages, and most of it has been overtaken.
 | To know… | Read |
 |---|---|
 | Why the game exists, the fantasy, the tone | `References/Starwolf GDD.pdf` |
-| What a system does and what number it uses | `Assets/TACTICAL_BOARD_SPEC.md`, then `References/starwolf-prototype.html` |
+| What a system does and what number it uses | `docs/TACTICAL_BOARD_SPEC.md`, then `References/starwolf-prototype.html` |
 | What the board looks like — colour, type, spacing, markers | `Assets/UI/Board/Design/README.md`, then the older handoff zip's `README.md`. Two of the first README's rules are wrong in this project: sprites are imported with sRGB **off**, and colours are not typed onto an image as the token's hex. The token's hex goes in the palette file, `Assets/UI/Board/Palette.asset`. |
 | How each control on the new board behaves, state by state | `Assets/UI/Board/Design/reference/UIStateSpec.md` and `Assets/UI/Board/Design/reference/board-logic.js` |
 | Where every element is on the new board, in pixels | `Assets/UI/Board/Design/layout/layout.json` |
-| What the handoff package left out | `Assets/Scenes/Tactical/HANDOFF_GAPS.md` |
-| What Claude Design must still provide, verified | `Assets/Scenes/Tactical/CLAUDE_DESIGN_NEEDS.md` |
-| How the prototype actually behaves, without opening 4,472 lines | `Assets/PROTOTYPE_BASELINE.md` |
+| What the handoff package left out | `docs/HANDOFF_GAPS.md` |
+| What Claude Design must still provide, verified | `docs/CLAUDE_DESIGN_NEEDS.md` |
+| How the prototype actually behaves, without opening 4,472 lines | `docs/PROTOTYPE_BASELINE.md` |
 | What the game is, how to run it, the controls | `README.md` (repo root) |
-| What Soham's older scripts do, read line by line as of 2026-09-01 | `Assets/CODEBASE_BASELINE.md` |
-| What the board's scripts are and what they are wired to | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 3 |
-| What is built in the tactical scene, and the traps already hit | `Assets/Scenes/Tactical/BUILD_LOG.md`. The traps are in section 5. |
-| What is left to do, sorted | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 8, "Triage" |
+| What Soham's older scripts do, read line by line as of 2026-09-01 | `docs/CODEBASE_BASELINE.md` |
+| What the board's scripts are and what they are wired to | `docs/BUILD_LOG.md`, section 3 |
+| What is built in the tactical scene, and the traps already hit | `docs/BUILD_LOG.md`. The traps are in section 5. |
+| What is left to do, sorted | `docs/BUILD_LOG.md`, section 8, "Triage" |
 | A ship's numbers: speed, power, weapons, armour, crew per room | `Assets/Ships/Asura.asset` (our ship), `Assets/Ships/Garuda.asset` (the enemy cruiser) and `Assets/Ships/Frigate.asset` (the Naga-class frigates). Edit them in **Starwolf → Tuning**, on the Ship and Enemy tabs. |
 | The keys, and how to change them | `README.md`, Controls. Change them on the Keys tab of **Starwolf → Tuning**. |
-| How damage works: armour, rooms, fire, vacuum, radiation | `Assets/Scenes/Tactical/DAMAGE_README.md` |
-| How boarding works: the assault boats and their orders | `Assets/Scenes/Tactical/BOARDING_README.md` |
+| How damage works: armour, rooms, fire, vacuum, radiation | `docs/DAMAGE_README.md` |
+| How boarding works: the assault boats and their orders | `docs/BOARDING_README.md` |
 | The design audit the damage model is built on | `References/Star Wolf - Design Audit.dc.html` |
 | How to make or change a level | Menu **Starwolf → Level** (`Assets/Editor/LevelWindow.cs`). The levels are in `Assets/Scenes/Levels/`. |
 | Whether a change to speeds, ranges or weapons still gives a fight of the right length | `docs/scale-sim/README.md` |
 | How to turn the repo into NotebookLM sources | `Tools/notebooklm/README.md` |
 | How the green phosphor screen works (intro, welcome page, INITIALISING), and how to put it on a new screen | `Assets/StarwolfIntro/README.md` |
-| The seven levels: what each one asks, and how to win or lose it | `Assets/TACTICAL_BOARD_SPEC.md` §15.5. Each level's numbers are in `BUILD_LOG.md`, section 2. |
-| FLIGHT DRILL: its 14 steps, and how to change one | `Assets/Scenes/Tactical/BUILD_LOG.md`, section 2, `FlightDrill`. The notes, rings and amounts are in the Mission box in `Assets/Scenes/Levels/FlightDrill.unity`. |
-| What ENG does to the ship's movement, and the side thrusters | `Assets/TACTICAL_BOARD_SPEC.md` §4.2 and §4.3. The numbers are in each ship's stats file in `Assets/Ships`. |
-| The sniper ship: the spinal railgun on the nose (built, Step 170), the flare, sensor drones, the sight in fire control (planned) | `Assets/Scenes/Tactical/SNIPER_PLAN.md` |
-| The training levels and how they were built; the plan to split WEAPONS FREE | `Assets/Scenes/Tactical/FTUE_PLAN.md` §0 |
-| The later tutorial mission, with the XO walking you through each station. It is a plan only | `Assets/Scenes/Tactical/FTUE_PLAN.md` §1 to §9 |
-| Where a panel's prefab and art are, and how to swap its art | `Assets/UI/Board/README.md` |
-| The campaign's SECTOR MAP and ship's rooms: their parts, and how to change their art | `Assets/UI/Board/README.md`, "Sector map" and "Ship rooms". The steps are 167 to 169 and 172 in `Assets/Scenes/Tactical/BUILD_LOG.md`. |
+| The seven levels: what each one asks, and how to win or lose it | `docs/TACTICAL_BOARD_SPEC.md` §15.5. Each level's numbers are in `BUILD_LOG.md`, section 2. |
+| FLIGHT DRILL: its 14 steps, and how to change one | `docs/BUILD_LOG.md`, section 2, `FlightDrill`. The notes, rings and amounts are in the Mission box in `Assets/Scenes/Levels/FlightDrill.unity`. |
+| What ENG does to the ship's movement, and the side thrusters | `docs/TACTICAL_BOARD_SPEC.md` §4.2 and §4.3. The numbers are in each ship's stats file in `Assets/Ships`. |
+| The sniper ship: the spinal railgun on the nose (built, Step 170), the flare, sensor drones, the sight in fire control (planned) | `docs/SNIPER_PLAN.md` |
+| The training levels and how they were built; the plan to split WEAPONS FREE | `docs/FTUE_PLAN.md` §0 |
+| The later tutorial mission, with the XO walking you through each station. It is a plan only | `docs/FTUE_PLAN.md` §1 to §9 |
+| Where a panel's prefab and art are, and how to swap its art | `docs/BOARD_UI.md` |
+| The campaign's SECTOR MAP and ship's rooms: their parts, and how to change their art | `docs/BOARD_UI.md`, "Sector map" and "Ship rooms". The steps are 167 to 169 and 172 in `docs/BUILD_LOG.md`. |
 | How to set up a campaign mission: its name, level, briefing and dot on the sector map | `Assets/Campaign/Campaign.asset`. Select it in the Project window. In Missions, add a mission and drag its level scene into Level. The level itself (checklist steps, rings, help text, battle group path) is made in its scene in `Assets/Scenes/Levels/`, with **Starwolf → Level** and the Mission part on it. Step 183 in `BUILD_LOG.md`. |
 | Spoken orders, and how an outside program (or Claude) could drive the built game — an idea, not built | `docs/voice-command-exploration.md` |
 | Ship silhouettes, class size table, obstacle tiers | `References/Starwolf_ Art Spec.pdf` |
@@ -147,7 +147,7 @@ instruments are stations not a HUD, information costs time, uncertainty is drawn
 The newer handoff, and the one built into `02.1_Grid`. It came as the full board cut into images,
 fonts and measurements. The art the board uses is in `Assets/UI/Board/Art/`. The fonts are in
 `Assets/UI/Fonts/`. The rest of the export is deleted (Step 89). Its reference files are in
-`Assets/UI/Board/Design/`. Read them, but don't change them. See `Assets/UI/Board/README.md`.
+`Assets/UI/Board/Design/`. Read them, but don't change them. See `docs/BOARD_UI.md`.
 
 - `README.md` — what the package is and how to use it.
 - `asset-map.csv` — every piece of art in the package. `tokens.json` — the design's colours and sizes.
@@ -162,14 +162,14 @@ fonts and measurements. The art the board uses is in `Assets/UI/Board/Art/`. The
 
 **`CLAUDE.md`** (repo root) — how to work in this repo: Unity MCP rules, C# conventions, repo hygiene. Not design.
 
-**`Assets/TACTICAL_BOARD_SPEC.md`** — ~2,000 lines. **The specification.** What the game does, system
+**`docs/TACTICAL_BOARD_SPEC.md`** — ~2,000 lines. **The specification.** What the game does, system
 by system, with numbered rules. Start at "Summary" and "How it plays"; jump to a system after that.
 *Not good for:* why. It deliberately omits reasoning.
 
-**`Assets/PROTOTYPE_BASELINE.md`** — ~335 lines. The prototype read line by line, so you do not have
+**`docs/PROTOTYPE_BASELINE.md`** — ~335 lines. The prototype read line by line, so you do not have
 to open the 4,472-line HTML.
 
-**`Assets/CODEBASE_BASELINE.md`** — ~1,700 lines. Soham's older scripts read line by line, as they
+**`docs/CODEBASE_BASELINE.md`** — ~1,700 lines. Soham's older scripts read line by line, as they
 were on 2026-09-01. The board's code in `Assets/Scripts/Systems/`, `Tactical/`, `UI/`, `Game/` and
 `Assets/StarwolfIntro/` is newer and is not in it. `BUILD_LOG.md` section 3 describes the board's code.
 
@@ -241,7 +241,7 @@ document, and do not quietly design around them.
 | **No boarding pods** | Boarding runs through the **hangar**: two assault boats with marines, each with a target and a job. A target must have been scanned first. The pod-as-a-weapon is dropped. |
 | **No EXECUTE, no emergency abort** | The only time controls are **PAUSE** and **PLAY RATE**. There is no commit step and no order queue. Orders take effect as you give them. |
 | **Real time with optional pause** | Pause is a convenience, not the core verb. The handoff's paused-time framing is wrong for this game. |
-| **No broadside cannon** | The board has none. Since Step 170 (owner 2026-11-08) our ship has a spinal railgun: one gun fixed on the nose, aimed by turning the ship (`Assets/Scenes/Tactical/SNIPER_PLAN.md`). The Garuda keeps its two swivel railguns. Soham's old `Weapons/BroadsideCannon.cs` and `Weapons/Railgun.cs` are kept as old code. The board does not use them. |
+| **No broadside cannon** | The board has none. Since Step 170 (owner 2026-11-08) our ship has a spinal railgun: one gun fixed on the nose, aimed by turning the ship (`docs/SNIPER_PLAN.md`). The Garuda keeps its two swivel railguns. Soham's old `Weapons/BroadsideCannon.cs` and `Weapons/Railgun.cs` are kept as old code. The board does not use them. |
 | **Two railgun turrets** | RG-A covers 090° ±45° from the bow, RG-B 270° ±45°. One in the middle of each long side, on hard points you drag on the Hard Points tab of Starwolf → Tuning. A solid bar turns slowly onto the target inside each cone, and the shot flies down the bar. Reach 2,000 units, 22 rounds each. One shot per arming. The slug flies at 300 units/s, so it takes about 7 s to reach 2,000 units. |
 | **Four PDC groups** | One at each corner of the ship, each covering 270°, so three cover any bearing. Reach 600 units, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy torpedoes entering its arc, with a 70% chance to kill each one. They are the only answer to a torpedo salvo. |
 | **Torpedoes** | Two launchers, VLS-A and VLS-B, one on each side, 8 torpedoes each. They fire in any direction, two to a salvo. The launcher on the target's side fires. A torpedo leaves the ship's side tilted 15° toward the stern and slows. It curves onto the target, then its motor lights and it zips to full speed. Reach 3,000 units, top speed 250 units/s: always slower than a slug. |
@@ -255,7 +255,7 @@ document, and do not quietly design around them.
 | **Everything runs in units and game seconds** | Ranges, speeds and the battle space are in units. At x1 a game second is a real second (Step 130). Every rate runs per game second, so x10 runs everything ten times as fast. |
 
 The weapon, power and armour rows above match the ship stats files in `Assets/Ships/`.
-The owner's rulings since 2026-10-04 are in `Assets/Scenes/Tactical/BUILD_LOG.md`, section 4.
+The owner's rulings since 2026-10-04 are in `docs/BUILD_LOG.md`, section 4.
 
 ---
 
@@ -274,7 +274,7 @@ work the same way: swappable, nothing hard-wired. Each ship has one stats file i
 frigates (`ShipStats`, read through `Ship.cs`). Edit them in **Starwolf → Tuning**, on the Ship and
 Enemy tabs. The board's numbers are fields marked `[Tune]` on its scripts, on the Board tab. The keys
 are on the Keys tab of **Starwolf → Tuning**. Each panel prefab has an **Art** list with its sprites (see
-`Assets/UI/Board/README.md`).
+`docs/BOARD_UI.md`).
 
 **Do not invent design to fill a gap.** If a document is silent, say it is open and stop. Mark it
 `TBD` or put it in an "Open" list. Guessing and writing it down as if it were decided is the worst
@@ -296,11 +296,11 @@ in `01_Briefing`. The Mac app is built at `~/Documents/GitHub/Killshot-Builds/Ma
 `02_Grid` board has been deleted. At play the board loads the picked level on top of itself, from `Assets/Scenes/Levels/`.
 For the current step, read section 1 of `BUILD_LOG.md`.
 
-**Read `Assets/Scenes/Tactical/BUILD_LOG.md` before you touch that scene.** The owner builds one step
+**Read `docs/BUILD_LOG.md` before you touch that scene.** The owner builds one step
 at a time and checks each step on screen before the next one starts. Do one step, show it, wait.
 
 The rest of the Unity build is an older attempt at a different UI — a six-screen 3D cockpit. It
-decides nothing about design. `Assets/CODEBASE_BASELINE.md` describes those older scripts, as they were
+decides nothing about design. `docs/CODEBASE_BASELINE.md` describes those older scripts, as they were
 on 2026-09-01.
 
 There was also a web prototype in TypeScript. It was abandoned and deleted. Its simulation core was

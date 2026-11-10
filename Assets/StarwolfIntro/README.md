@@ -6,7 +6,7 @@ script puts it on the screen and decides what it shows. A text material gives no
 green glow. To use the look on a new screen, add the script to an object, pick a mode, and put any
 normal text on a canvas above it.
 
-What changed, step by step, and why, is in `Assets/Scenes/Tactical/BUILD_LOG.md` (Steps 27, 56, 70,
+What changed, step by step, and why, is in `docs/BUILD_LOG.md` (Steps 27, 56, 70,
 71, 94, 106, 174, 181). This file only says how it works and how to use it.
 
 ---

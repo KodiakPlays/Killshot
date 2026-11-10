@@ -5,7 +5,7 @@
 > the numbers here. The prototype is authoritative; this document is derived.
 
 **What this is.** A reference for `References/starwolf-prototype.html` (4,472 lines), the **playable
-build**. Companion to `Assets/CODEBASE_BASELINE.md`, which documents Soham's older Unity scripts.
+build**. Companion to `docs/CODEBASE_BASELINE.md`, which documents Soham's older Unity scripts.
 The tactical board's code is in neither file.
 
 **Authority.** The prototype is the owner's design expressed as working code. Where it and the GDD

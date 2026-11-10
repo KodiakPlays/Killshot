@@ -5,7 +5,7 @@ board's code is newer and is not in this file: `Assets/Scripts/Systems/`, `Asset
 `Assets/Scripts/UI/`, `Assets/Scripts/Game/` and `Assets/StarwolfIntro/`. The board's editor tools
 are not in this file either: `LevelWindow`, `StarwolfTuningWindow`, `DebrisFieldEditor` and
 `Playtest/PlaytestRunner` in `Assets/Editor/`.
-`Assets/Scenes/Tactical/BUILD_LOG.md` section 3 describes the board's code.
+`docs/BUILD_LOG.md` section 3 describes the board's code.
 
 **Changes to Soham's scripts since 2026-09-01.** There are four:
 
@@ -111,7 +111,7 @@ Consequences worth knowing:
 
 This table is as of 2026-09-01. The board's scenes are newer: `Tactical/00_Start`, `Tactical/01_Briefing`,
 `Tactical/02.1_Grid` and `Levels/Level_01`. The working scene is now `Tactical/02.1_Grid`. See
-`Assets/Scenes/Tactical/BUILD_LOG.md` section 2.
+`docs/BUILD_LOG.md` section 2.
 
 | Scene | Contents | Role |
 |---|---|---|
@@ -1593,7 +1593,7 @@ bindings, and `UIController` is on the player ship prefab. `TestUIKeyControler` 
 ## 15. Documentation inventory
 
 This section is as of 2026-09-01. There are many more documents now, and the newest source wins. For
-the current list and which source wins, see `Assets/CONTEXT_INDEX.md`. The four markdown files below
+the current list and which source wins, see `docs/CONTEXT_INDEX.md`. The four markdown files below
 (`DOCUMENTATION.md`, `STAKEHOLDER_DOCUMENTATION.md` and the two weapon READMEs) were deleted on
 2026-10-27 (owner). Git history has them.
 
@@ -1679,4 +1679,4 @@ Recorded as facts, not as defects — several are likely deliberate.
   in §3 was done by reading YAML with the Editor closed.
 
 **Not covered by this document:** `References/starwolf-prototype.html`. It is read line by line in
-`Assets/PROTOTYPE_BASELINE.md`.
+`docs/PROTOTYPE_BASELINE.md`.
