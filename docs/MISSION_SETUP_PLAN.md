@@ -60,11 +60,20 @@ a mission, Codex's words included. Codex helps with the writing. The chat checks
 changes them when a mission needs it, and says what it changed.
 
 **Still open.**
-- Codex rewrites the words of checkpoints 12 to 23. The ones there now are stand-ins.
-- Nobody has played it through. A script checked the parts. Not checked: a real lock, a real
-  torpedo hit, a real boarding.
-- The group's shuttles to the escape pods: not built.
+- ~~Codex rewrites the words of checkpoints 12 to 23.~~ **Done:** Codex rewrote all 23 as COMMAND
+  lines, each with an order. No CAPTAIN lines. Committed in 49f9f74 (Step 200 in
+  `docs/BUILD_LOG.md`).
+- ~~Nobody has played it through.~~ **Done on 2026-11-11, and passed (Step 200):** a script played
+  all 23 checkpoints with the board's own controls, to MISSION COMPLETE. A real lock, a torpedo hit
+  and a boarding all worked. Four fixes came out of it: every note stays up at least 4 game
+  seconds, the corvette runs slower (24 units/s), checkpoints 20 and 22 give clear power orders, and
+  checkpoint 23 ends with the intel. Not checked: what shows after MISSION COMPLETE (the ship's
+  rooms).
+- ~~The group's shuttles to the escape pods: not built.~~ **Built** (see `docs/BUILD_LOG.md`,
+  section 8, "Open after Step 178").
+- The player build. It ends with MILK RUN.
 - The call signs and our ship's name (see "Names").
+- The Starwolf → Mission window (see "The tools, in order" above).
 - The checkpoints are still on the level. They move into the Campaign file with the window (see
   "Steps").
 
