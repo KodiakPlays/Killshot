@@ -42,18 +42,12 @@ public class SectorMap : MonoBehaviour
     [SerializeField] private Color openInk = new Color(0.635f, 0.976f, 0.627f, 1f);
     [SerializeField] private Color doneInk = new Color(0.635f, 0.976f, 0.627f, 0.45f);
     [SerializeField] private Color lineInk = new Color(0.635f, 0.976f, 0.627f, 0.35f);
-    [Tooltip("The open dot grows and shrinks this often, seconds.")]
-    [SerializeField] private float pulseSeconds = 1.6f;
-    [Tooltip("How much the open dot grows, as a share of its size.")]
-    [SerializeField] private float pulseSize = 0.25f;
     [Tooltip("With no slot picked (play mode started on this scene), this scene opens instead: the map never touches a save by itself.")]
     [SerializeField] private string slotsScene = "SaveSlots";
     [Tooltip("A new dot and its line fade in over this many seconds.")]
     [SerializeField] private float fadeInSeconds = 1.5f;
 
     private readonly List<Graphic> fresh = new List<Graphic>(); // the new dot, its name and its line
-    private RectTransform openDot;
-    private Vector2 dotSize;
     private int picked = -1;
 
     private void Start()
@@ -97,7 +91,6 @@ public class SectorMap : MonoBehaviour
             int index = i;
             dot.onClick.AddListener(() => Pick(index));
             dot.gameObject.SetActive(true);
-            if (!done) { openDot = dot.image.rectTransform; dotSize = openDot.sizeDelta; } // its picture grows; its name stays
             if (newest) { fresh.Add(dot.image); fresh.Add(name); }
         }
         foreach (var g in fresh) g.canvasRenderer.SetAlpha(0f);
@@ -108,7 +101,6 @@ public class SectorMap : MonoBehaviour
     private void Update()
     {
         float t = Time.timeSinceLevelLoad;
-        if (openDot) openDot.sizeDelta = dotSize * (1f + pulseSize * Mathf.Sin(t * Mathf.PI * 2f / pulseSeconds));
         float a = Mathf.Clamp01(t / Mathf.Max(0.01f, fadeInSeconds));
         foreach (var g in fresh) g.canvasRenderer.SetAlpha(a);
     }
