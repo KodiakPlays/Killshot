@@ -164,6 +164,10 @@ public class WeaponSystem : MonoBehaviour
         public double torpedoSpreadDeg = 3;
         [Tooltip("Owner 2026-11-10 (ripple salvo): game seconds between one torpedo of a salvo leaving and the next. They leave from both sides by turns.")]
         public double torpedoRippleSeconds = 0.3;
+        [Tooltip("Owner 2026-11-10 (railgun C2): a railgun shot pushes its ship back at this speed, units/s, for Railgun Kick Seconds. Then the thrusters stop the push over Railgun Kick Stop Seconds.")]
+        public double railgunKickUnits = 40, railgunKickSeconds = 0.4, railgunKickStopSeconds = 0.4;
+        [Tooltip("Owner 2026-11-10 (PDCs, E2): game seconds a PDC stream takes to walk onto an enemy torpedo before it goes down.")]
+        public double pdcStreamSeconds = 0.5;
         [Tooltip("Rounds one PDC group spends on each go at an enemy torpedo (owner 2026-10-27).")]
         public int pdcRoundsPerGo = 100;
         [Tooltip("A shot from this ship, slug or torpedo, hits a ship if it touches the ship's box made this much bigger, percent (owner 2026-11-01; was a 100-unit circle round the ship's centre).")]
@@ -341,6 +345,8 @@ public class WeaponSystem : MonoBehaviour
         public double turn;
         [Tooltip("Owner 2026-11-10: where its nose points while it drifts cold, degrees. Then where its motor lit, and game seconds since.")]
         public double nose, litX, litY, lit;
+        [System.NonSerialized] public bool spent; // owner 2026-11-10 (far shot): a slug that hit a ship nobody watched; it flies on, hitting nothing
+        [System.NonSerialized] public double downIn; [System.NonSerialized] public string downBy; // owner 2026-11-10 (E2): game seconds until a PDC stream downs it, and which PDC
         [System.NonSerialized] public Vector2[] line; // owner 2026-11-02: its launcher's drawn line, laid in the world; null once flown, or with none drawn
         [System.NonSerialized] public double along; // how far down the line it is, units
         [System.NonSerialized] public Stats by; // the firing ship's numbers: how close is a hit, and what the hit does
@@ -639,6 +645,7 @@ public class WeaponSystem : MonoBehaviour
             // Owner 2026-11-08: the bow to the fraction of a degree, for the spinal railgun; the slug keeps the ship's motion
             Vector2 gun = HardPointOffset(m.id, ship.nav.heading);
             Rounds.Add(Slug(ship.nav.x + gun.x, ship.nav.y + gun.y, ship.nav.TrueHeading + m.arc + m.aimDeg, stats.slugSpeedUnits, ship.nav.vx, ship.nav.vy, m.rangeUnits));
+            ship.nav.Kick(ship.nav.TrueHeading + m.arc + m.aimDeg, stats); // owner 2026-11-10 (railgun C2): the shot pushes us back
             m.ammo--;
             shotReport = null;
             ship.sensors.signal = Mathf.Min(100f, ship.sensors.signal + stats.fireSignalSpike);
@@ -857,24 +864,32 @@ public class WeaponSystem : MonoBehaviour
         if (r.torpedo) { Drift(r, dt); Steer(r, dt); }
         double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled);
         double flight = r.speed > 0 ? step / r.speed : 0; // seconds of this tick the round is flying
-        string side;
-        float breakAt; // where along the ship it struck, 0 the stern to 1 the nose
-        var struck = FirstStruck(r, flight, out side, out _, out breakAt, gone);
+        string side = null;
+        float breakAt = 0.5f; // where along the ship it struck, 0 the stern to 1 the nose
+        var struck = r.spent ? null : FirstStruck(r, flight, out side, out _, out breakAt, gone);
         if (struck != null)
         {
             // Step 49: the struck ship takes the hit on its own model (its side, then what is behind it)
             var victim = ship.ShipOf != null ? ship.ShipOf(struck.key) : null;
             string damage = victim == null ? "" : r.torpedo ? victim.damage.TakeWarhead(side, warheads[r.warhead], stats, 1f - breakAt)
                                                               : victim.damage.TakeSlug(side, stats, 1f - breakAt);
+            // owner 2026-11-10 (far shot, D2): a slug that hits a ship nobody watches gives no report. It flies on, drawn as
+            // before, and at the end of its reach the report is "IMPACT ?", the same as a miss out there.
+            bool seen = r.torpedo || Watched(struck);
             if (victim != null && victim.destroyed) ship.Kill(struck, breakAt);
-            else { shotReport = "HIT · " + ship.NameOf(struck) + (ship.Scanned(struck) ? " · " + side + damage : ""); lastShotHit = true; shotResults++; } // Step 61: detail once scanned
-            return false;
+            else if (seen) { shotReport = "HIT · " + ship.NameOf(struck) + (ship.Scanned(struck) ? " · " + side + damage : ""); lastShotHit = true; shotResults++; } // Step 61: detail once scanned
+            if (seen || (victim != null && victim.destroyed)) return false;
+            r.spent = true;
         }
         r.x += r.dx * step; r.y += r.dy * step; r.travelled += step;
         if (r.travelled < r.maxUnits - 1e-6) return true;
-        shotReport = "MISS"; lastShotHit = false; shotResults++;
+        var aimed = ship.TrackOf(target);
+        shotReport = r.spent || (!r.torpedo && aimed != null && !Watched(aimed)) ? "IMPACT ?" : "MISS"; lastShotHit = false; shotResults++;
         return false;
     }
+
+    // Owner 2026-11-10 (far shot, D2): something sees this ship: it is in sight, heard on DRADIS, or locked.
+    bool Watched(ShipState.Track t) => ship.sensors.InSight(t) || ship.sensors.Heard(t) || LockedOn(t.key);
 
     // The first ship's box round r reaches in `flight` seconds, the side it comes through, and how far along that flight.
     // gone: game seconds of this tick already flown, which ships have also moved through
@@ -908,8 +923,8 @@ public class WeaponSystem : MonoBehaviour
     /// as the box it reaches first, so the plot's dot touches the ship as the hit lands. Drawing only.</summary>
     public double StepAhead(Round r, double dt)
     {
-        double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled), at;
-        bool hits = r.by != null ? ReachesUs(r, step, 0, out at, out _, out _) : FirstStruck(r, step / r.speed, out _, out at, out _) != null;
+        double step = System.Math.Min(r.speed * dt, r.maxUnits - r.travelled), at = 1;
+        bool hits = r.by != null ? ReachesUs(r, step, 0, out at, out _, out _) : !r.spent && FirstStruck(r, step / r.speed, out _, out at, out _) != null; // a spent slug flies on through
         return hits ? step * at : step;
     }
 
@@ -1033,6 +1048,7 @@ public class WeaponSystem : MonoBehaviour
             var r = list[i];
             if ((r.torpedo && PdcStops(r, r.speed * dt)) || !InFlight(r, dt, IncomingStep)) list.RemoveAt(i);
         }
+        Release(dt, true); // owner 2026-11-10 (ripple salvo): the enemy's next torpedoes leave when their turn comes
     }
 
     // One step of an enemy round. False once it has hit us or run out of range.
@@ -1076,6 +1092,13 @@ public class WeaponSystem : MonoBehaviour
     // Each go spends stats.pdcRoundsPerGo; a group too low for another go drops off AUTO (owner 2026-10-27).
     bool PdcStops(Round r, double step)
     {
+        if (r.downIn > 0) // owner 2026-11-10 (E2): the stream walks onto it, then it is down
+        {
+            r.downIn -= step / System.Math.Max(1, r.speed);
+            if (r.downIn > 0) return false;
+            pdcReport = r.downBy + " · TORPEDO DOWN"; pdcKills++;
+            return true;
+        }
         if (!loaders || !WepReady) return false;
         // the point of this tick's flight closest to our ship: at x5 a torpedo can cross the PDCs' reach inside one tick
         double along = System.Math.Max(0, System.Math.Min(step, (ship.nav.x - r.x) * r.dx + (ship.nav.y - r.y) * r.dy));
@@ -1093,11 +1116,20 @@ public class WeaponSystem : MonoBehaviour
             m.ammo -= stats.pdcRoundsPerGo;
             if (m.ammo < stats.pdcRoundsPerGo) { pdcAuto[g] = false; if (g == PdcGroup) ClearSwitches(); }
             bool down = ship.NextDie() < stats.pdcKillChance;
-            pdcReport = m.shortName + (down ? " · TORPEDO DOWN" : " · MISSED");
-            if (down) { pdcKills++; return true; }
+            Bursts.Add(new PdcBurst { gun = m.id, r = r, x = px, y = py, down = down });
+            if (Bursts.Count > 16) Bursts.RemoveAt(0); // the plot ages and drops them; this keeps the list short when it isn't drawing
+            if (!down) { pdcReport = m.shortName + " · MISSED"; continue; }
+            r.downIn = System.Math.Max(1e-6, stats.pdcStreamSeconds); r.downBy = m.shortName; // down once the stream has walked onto it
+            return false;
         }
         return false;
     }
+
+    /// <summary>Owner 2026-11-10 (PDCs, E2): one PDC go, a stream of rounds walked onto an enemy torpedo: which gun, at what, where it
+    /// was, and whether it goes down. The plot draws each one and ages it (game seconds).</summary>
+    public class PdcBurst { public string gun; public Round r; public double x, y; public bool down; public float age; }
+    [System.NonSerialized] private System.Collections.Generic.List<PdcBurst> bursts;
+    public System.Collections.Generic.List<PdcBurst> Bursts => bursts ?? (bursts = new System.Collections.Generic.List<PdcBurst>());
 
     // ---- the tick — weapons capacitor: +5 per WEP unit per game second up to 100, bleeds 3 with no WEP --
 

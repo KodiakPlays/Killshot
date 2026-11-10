@@ -21,8 +21,8 @@
 // - Q and E push the ship sideways with the nose kept still. A tap gives a small push. Held, the
 //   push grows over a short time. Let go, and the slide fades.
 // - With no power on the ENG bus there is no thrust and no braking. The ship drifts on.
-//   A railgun shot pushes the ship back (Kick). The thrusters stop the push soon after. With no
-//   ENG power the push stays as drift.
+//   A railgun shot pushes the ship back (Kick). The thrusters stop the push soon after, with or
+//   without ENG power.
 // - Between board steps the model glides on along its speed and its turn. It uses BoardManager's
 //   time from the last step. It places the model every frame.
 // - It gives the ship's box size for crashes and the plot, and its speed and course. It gives the
@@ -41,7 +41,8 @@
 //   StepApproachRange. It sets slide, slideTaps and fineTurn from the keys. EnemyBrain sets
 //   orderedHeading and throttle itself, held to ThrottleCap.
 // - WeaponSystem sets aimHeading while the railgun is locked. NaN means no lock. WeaponSystem and
-//   EnemyBrain call Kick on each railgun shot.
+//   EnemyBrain call Kick on each railgun shot. KickGone works out the push exactly, so it moves
+//   the ship the same distance at every game speed.
 // - It reads the ENG bus (PowerSystem) and the engine room (DamageSystem). Speed, push and turn
 //   rise in equal steps from ENG 1 to full ENG. turnBank keeps the part degrees between steps.
 //   Slow rates then turn at the right speed.
@@ -160,8 +161,48 @@ public class NavSystem : MonoBehaviour
     // ponytail: straight-line guess, so a speeding-up ship settles back a little each tick; predict the next tick if that shows
     double Ahead => board ? board.SinceTick : 0;
     /// <summary>Where the ship is drawn now, units: its true spot, carried on by the time since the last tick.</summary>
-    public double DrawnX => x + vx * Ahead;
-    public double DrawnY => y + vy * Ahead;
+    public double DrawnX => x + vx * Ahead + KickAhead(kickX);
+    public double DrawnY => y + vy * Ahead + KickAhead(kickY);
+
+    // Owner 2026-11-10 (railgun C2): the push back from a railgun shot, units/s; game seconds before the thrusters stop it;
+    // how fast they do, units/s each game second. Kept apart from the throttle's speed, so the engines don't fight it.
+    [System.NonSerialized] double kickX, kickY, kickHold, kickStop;
+
+    /// <summary>Owner 2026-11-10 (railgun C2): a railgun shot fired on bearing shotDeg pushes the ship back, away from it.</summary>
+    public void Kick(double shotDeg, WeaponSystem.Stats by)
+    {
+        double b = shotDeg * System.Math.PI / 180;
+        kickX = -System.Math.Sin(b) * by.railgunKickUnits;
+        kickY = -System.Math.Cos(b) * by.railgunKickUnits;
+        kickHold = by.railgunKickSeconds;
+        kickStop = by.railgunKickUnits / System.Math.Max(0.01, by.railgunKickStopSeconds);
+    }
+
+    // How far the push carries the ship in t game seconds: full speed until kickHold runs out, then slowing evenly to a stop.
+    // Worked out exactly, so the push is the same at every game speed. left: the push's speed after; holdLeft: kickHold after.
+    double KickGone(double t, out double left, out double holdLeft)
+    {
+        double k = System.Math.Sqrt(kickX * kickX + kickY * kickY), held = System.Math.Min(t, System.Math.Max(0, kickHold));
+        double slow = kickStop > 0 ? System.Math.Min(t - held, k / kickStop) : 0;
+        holdLeft = kickHold - held;
+        left = System.Math.Max(0, k - kickStop * slow);
+        return k * held + (k + left) / 2 * slow;
+    }
+    // part: kickX or kickY. The push's share of the drawn spot, so the model glides as far as the next tick will move it.
+    double KickAhead(double part)
+    {
+        double k = System.Math.Sqrt(kickX * kickX + kickY * kickY);
+        return k == 0 ? 0 : part / k * KickGone(Ahead, out _, out _);
+    }
+
+    // The push moves the ship. After kickHold the thrusters take it off.
+    void Recoil(double dt)
+    {
+        if (kickX == 0 && kickY == 0) return;
+        double k = System.Math.Sqrt(kickX * kickX + kickY * kickY), gone = KickGone(dt, out double left, out kickHold);
+        x += kickX / k * gone; y += kickY / k * gone;
+        kickX *= left / k; kickY *= left / k;
+    }
     /// <summary>The bow as drawn now, degrees: still swinging toward the ordered heading.</summary>
     public double DrawnHeading
     {
@@ -237,6 +278,7 @@ public class NavSystem : MonoBehaviour
         heading = orderedHeading = headingDeg;
         fine = 0;
         throttle = 0;
+        kickX = kickY = kickHold = 0; // a ship put somewhere new carries no railgun push from before
         PlaceModel();
     }
 
@@ -296,7 +338,7 @@ public class NavSystem : MonoBehaviour
     {
         if (dt <= 0) return;
         // owner 2026-10-29: with no power on the ENG bus there is no thrust and no braking: the ship drifts on
-        if (ship.power.BusUnits("eng") == 0) { slideTaps = 0; slideHeld = 0; x += vx * dt; y += vy * dt; return; }
+        if (ship.power.BusUnits("eng") == 0) { slideTaps = 0; slideHeld = 0; x += vx * dt; y += vy * dt; Recoil(dt); return; }
         double h = heading * System.Math.PI / 180;
         double nx = System.Math.Sin(h), ny = System.Math.Cos(h); // the nose
         double fwd = vx * nx + vy * ny, side = vx * ny - vy * nx; // side: to starboard
@@ -319,6 +361,7 @@ public class NavSystem : MonoBehaviour
         vy = fwd * ny - side * nx;
         x += vx * dt;
         y += vy * dt;
+        Recoil(dt);
     }
 
     static double Toward(double v, double target, double step) => System.Math.Abs(target - v) <= step ? target : v + System.Math.Sign(target - v) * step;

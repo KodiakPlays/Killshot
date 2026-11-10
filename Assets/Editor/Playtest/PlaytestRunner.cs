@@ -874,6 +874,10 @@ public static class PlaytestRunner
         var t07Hit = s.weapons.stats.HitHalf(t07Half);
         float nearSure = t07Hit.x, nearNever = t07Hit.magnitude;
         bool expectHit = predicted <= nearSure;
+        // owner 2026-11-10 (far shot, D2): a shot at a ship we can't see, hear or lock reports IMPACT ?, hit or miss.
+        // Its armour tells whether it really hit.
+        Func<float> t07Armour = () => { float a = 0; foreach (var v in t07Ship.damage.SideArmour) a += v; return a; };
+        Func<bool> t07Watched = () => { var tk = s.TrackOf("t07"); return tk != null && (s.sensors.InSight(tk) || s.sensors.Heard(tk) || s.weapons.LockedOn(tk.key)); };
         Check("Turret A can't bear on it: ANGLE is out of arc", s.weapons.mount == "RGA" && !s.weapons.InArc, "REL BRG " + s.weapons.Sol.brg + "°, heading " + s.nav.heading + "°");
         if (!Click("fc.mount", null, "turret selector (RG-B)")) yield break;
         Check("Turret B bears", s.weapons.mount == "RGB" && s.weapons.InArc, "");
@@ -890,6 +894,7 @@ public static class PlaytestRunner
         int slugs0 = rgb.ammo;
         yield return (Func<bool>)(() => s.weapons.GunSettled); // owner 2026-11-01: the bar turns slowly; a shot flies down it
         Check("The selected gun's bar turned onto the solution", Mathf.Abs(rgb.aimDeg) > 0.01f || Mathf.Abs(Mathf.DeltaAngle(s.nav.heading + rgb.arc, (float)s.weapons.LeadBearing())) < 0.01f, rgb.aimDeg.ToString("0.0") + "° from the cone's middle");
+        float armourBefore = t07Armour();
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever", "fc.lever")) yield break;
         Check("The lever fires one slug and releases ARM", s.weapons.Rounds.Count == 1 && !s.weapons.sw[3], s.weapons.Rounds.Count + " in flight");
         Check("Firing spikes our signal", Mathf.Approximately(s.sensors.signal, sig0 + s.weapons.stats.fireSignalSpike), sig0.ToString("0") + " → " + s.sensors.signal.ToString("0"));
@@ -924,12 +929,15 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0); // 15 s each; the flight is about 2 s at x1
         bool marginal = predicted > nearSure && predicted < nearNever; // either way is right this close
-        if (marginal) expectHit = s.weapons.shotReport == "HIT · BOGEY T07";
-        Check("The slug lands as the aim says: " + (expectHit ? "a HIT, no detail on a ship we have not scanned" : "a MISS") + (marginal ? " (a marginal aim)" : ""),
-              expectHit ? s.weapons.shotReport == "HIT · BOGEY T07" : s.weapons.shotReport == "MISS",
-              "\"" + s.weapons.shotReport + "\"; the aim passes " + predicted.ToString("N0") + " units from its centre (box half " + t07Half + ", hit area " + s.weapons.stats.hitMarginPercent + "% bigger)");
+        bool struck = t07Armour() < armourBefore, t07Seen = t07Watched();
+        if (marginal) expectHit = struck;
+        string wantReport = !t07Seen ? "IMPACT ?" : expectHit ? "HIT · BOGEY T07" : "MISS";
+        Check("The slug lands as the aim says: " + (expectHit ? "a hit" : "a miss") + (t07Seen ? (expectHit ? ", HIT with no detail on a ship we have not scanned" : ", MISS")
+                                                                                         : ", reported IMPACT ? (we can't see or hear it: owner 2026-11-10, D2)") + (marginal ? " (a marginal aim)" : ""),
+              s.weapons.shotReport == wantReport && struck == expectHit,
+              "\"" + s.weapons.shotReport + "\", armour " + armourBefore.ToString("0") + " → " + t07Armour().ToString("0") + "; the aim passes " + predicted.ToString("N0") + " units from its centre (box half " + t07Half + ", hit area " + s.weapons.stats.hitMarginPercent + "% bigger)");
         yield return 0.3f;
-        Check("Fire control reports it, with its cue", board.LastSound == (expectHit ? "hit" : "miss"), "last cue \"" + board.LastSound + "\"");
+        Check("Fire control reports it, with its cue", board.LastSound == (t07Seen && expectHit ? "hit" : "miss"), "last cue \"" + board.LastSound + "\"");
         Shot("28_hit");
         yield return 0.2f; // the shot lands at the end of the frame, before the next action
         //     A second shot 2° off: a miss.
@@ -938,10 +946,12 @@ public static class PlaytestRunner
         yield return (Func<bool>)(() => s.weapons.wepCharge >= s.weapons.ShotCost);
         for (int i = 0; i < 4; i++) { if (!Click("fc.flip", i.ToString(), "arming rocker " + (i + 1) + " (again)")) yield break; yield return 0.2f; }
         yield return (Func<bool>)(() => s.weapons.GunSettled);
+        float armourBefore2 = t07Armour();
         if (!PlotDrag(board, leverAt, leverAt + new Vector2(240, 0), "pull the fire lever (again)", "fc.lever")) yield break;
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
         yield return (Func<bool>)(() => s.weapons.Rounds.Count == 0);
-        Check("2° off, it misses", s.weapons.shotReport == "MISS", "\"" + s.weapons.shotReport + "\"");
+        Check("2° off, it misses" + (t07Watched() ? "" : " (reported IMPACT ?: we can't see or hear it)"),
+              s.weapons.shotReport == (t07Watched() ? "MISS" : "IMPACT ?") && t07Armour() == armourBefore2, "\"" + s.weapons.shotReport + "\", armour " + armourBefore2.ToString("0") + " → " + t07Armour().ToString("0"));
         //     Out of slugs (owner 2026-10-27). Stand-in: turret B down to its last one.
         int slugsWas = rgb.ammo;
         rgb.ammo = 1;
@@ -1211,29 +1221,34 @@ public static class PlaytestRunner
         Vector2 hLeverAt = board.BoardPoint(RectTransformUtility.WorldToScreenPoint(hLever.GetComponentInParent<Canvas>().rootCanvas.worldCamera,
                                             hLever.transform.TransformPoint(((RectTransform)hLever.transform).rect.center)));
         if (!PlotDrag(board, hLeverAt, hLeverAt + new Vector2(240, 0), "pull the launch lever", "hangar.lever")) yield break;
+        // owner 2026-11-10 (B3): the catapult throws them so fast that the straight run is over in half a second, so read how they leave now
+        float leftAt = s.hangar.Flights.Count > 0 ? (float)s.hangar.Flights[0].hdg : float.NaN;
+        double runAt = s.hangar.Flights.Count > 0 ? s.hangar.Flights[0].runLeft : 0;
         yield return 0.6f;
         Check("Six interceptors take off: six triangles on the plot", s.hangar.Flights.Count == 1 && s.hangar.Flights[0].craft == 6 && plotPanel.FightersShown == 6 && s.hangar.Launched(s.hangar.CurrentSquad),
               s.hangar.Flights.Count + " flight, " + (s.hangar.Flights.Count > 0 ? s.hangar.Flights[0].craft : 0) + " craft, " + plotPanel.FightersShown + " drawn");
         var flight = s.hangar.Flights.Count > 0 ? s.hangar.Flights[0] : null;
         if (flight == null) yield break;
-        float launchAngle = Mathf.DeltaAngle(s.nav.heading, (float)flight.hdg), targetAngle = Mathf.DeltaAngle(s.nav.heading, (float)(System.Math.Atan2(t07.worldX - s.nav.x, t07.worldY - s.nav.y) * 180 / System.Math.PI));
+        float launchAngle = Mathf.DeltaAngle(s.nav.heading, leftAt), targetAngle = Mathf.DeltaAngle(s.nav.heading, (float)(System.Math.Atan2(t07.worldX - s.nav.x, t07.worldY - s.nav.y) * 180 / System.Math.PI));
         bool facesTarget = launchAngle * targetAngle > 0 || Mathf.Abs(targetAngle) < 5f || Mathf.Abs(targetAngle) > 175f; // on the nose or the tail, either side will do
         bool drawnLine = false; // Step 162: with a line drawn out of a hangar dot, they fly the line, not the stern tilt
         foreach (var d in s.hangar.stats.dots) if (d.path != null && d.path.Length > 1) drawnLine = true;
         Check("They leave from the side facing GARUDA, " + (drawnLine ? "along the hangar dot's drawn line" : "tilted toward the stern"),
-              flight.runLeft > 0 && facesTarget && (drawnLine || Mathf.Abs(Mathf.Abs(launchAngle) - 90f - (float)s.hangar.stats.launchTiltBackDeg) < 1f),
-              "they leave at " + launchAngle.ToString("0") + " degrees from the nose, GARUDA is at " + targetAngle.ToString("0") + ", " + flight.runLeft.ToString("0") + " units of straight flight left");
-        double fx0 = flight.x, fy0 = flight.y; float ft0 = board.MissionSeconds;
-        yield return 1f; // at x1: a few game seconds, well before they arrive
-        double flown = System.Math.Sqrt((flight.x - fx0) * (flight.x - fx0) + (flight.y - fy0) * (flight.y - fy0)), took = board.MissionSeconds - ft0;
+              runAt > 0 && facesTarget && (drawnLine || Mathf.Abs(Mathf.Abs(launchAngle) - 90f - (float)s.hangar.stats.launchTiltBackDeg) < 1f),
+              "they leave at " + launchAngle.ToString("0") + " degrees from the nose, GARUDA is at " + targetAngle.ToString("0") + ", " + runAt.ToString("0") + " units of straight flight at launch");
         double sharpest = 0; // the sharpest turn in any tick, degrees per game second
         yield return (Func<bool>)(() =>
         {
             sharpest = System.Math.Max(sharpest, Mathf.Abs(Mathf.DeltaAngle((float)flight.fromHdg, (float)flight.hdg)) / board.TickGameSeconds);
-            return flight.runLeft <= 0 && Mathf.Abs(Mathf.DeltaAngle((float)flight.hdg, (float)(System.Math.Atan2(t07.worldX - flight.x, t07.worldY - flight.y) * 180 / System.Math.PI))) < 3f;
+            return flight.runLeft <= 0 && flight.boost <= 0 && Mathf.Abs(Mathf.DeltaAngle((float)flight.hdg, (float)(System.Math.Atan2(t07.worldX - flight.x, t07.worldY - flight.y) * 180 / System.Math.PI))) < 3f;
         });
-        Check("They turn onto GARUDA gradually, " + s.hangar.stats.turnDegPerS + " degrees a second at the sharpest", sharpest > 0 && sharpest <= s.hangar.stats.turnDegPerS + 1,
+        // owner 2026-11-10 (B3): thrown out by the catapult, they break hard onto GARUDA, then fly on at their own speed
+        double sharpestAllowed = System.Math.Max(s.hangar.stats.turnDegPerS, s.hangar.stats.breakDegPerS);
+        Check("They break hard onto GARUDA, " + sharpestAllowed + " degrees a second at the sharpest", sharpest > 0 && sharpest <= sharpestAllowed + 1,
               sharpest.ToString("0.0") + " degrees a second, at x" + board.Rate);
+        double fx0 = flight.x, fy0 = flight.y; float ft0 = board.MissionSeconds;
+        yield return 1f; // at x1: a few game seconds, well before they arrive; the catapult's push is over
+        double flown = System.Math.Sqrt((flight.x - fx0) * (flight.x - fx0) + (flight.y - fy0) * (flight.y - fy0)), took = board.MissionSeconds - ft0;
         board.Click("rate", "10");
         Check("They fly toward GARUDA at " + s.hangar.stats.fighterSpeedUnits + " km/s", took > 0 && System.Math.Abs(flown / took - s.hangar.stats.fighterSpeedUnits) < 0.5 && interlockText().StartsWith("OUTBOUND TO GARUDA"),
               (flown / took).ToString("0.00") + " km/s; \"" + interlockText() + "\"");
@@ -1288,7 +1303,8 @@ public static class PlaytestRunner
         float salvo1At = board.MissionSeconds;
         yield return (Func<bool>)(() => s.weapons.Incoming.Count >= 2); // owner 2026-11-10 (Step 184): a salvo ripples out, one at a time
         Check("Hit, GARUDA fires a salvo of two back at us", s.weapons.Incoming.Count == 2 && dummyShip.weapons.vlsCells == enemyCells - 2, s.weapons.Incoming.Count + " incoming, its cells " + enemyCells + " → " + dummyShip.weapons.vlsCells);
-        yield return (Func<bool>)(() => alarmWords.gameObject.activeInHierarchy && alarmWords.text.StartsWith("INCOMING")); // PDCs on AUTO can shoot them down soon after
+        // the strip changes on the board's next step: wait for it to count both (PDCs on AUTO can shoot one down soon after)
+        yield return (Func<bool>)(() => alarmWords.gameObject.activeInHierarchy && (alarmWords.text.StartsWith("INCOMING TORPEDOES") || s.weapons.Incoming.Count < 2));
         Check("The alarm strip warns of them, with their bearing (owner 2026-10-28)", alarmWords.gameObject.activeInHierarchy && alarmWords.text.StartsWith("INCOMING TORPEDOES · BRG "), "\"" + alarmWords.text + "\"");
         board.Click("rate", "10");
         yield return (Func<bool>)(() => s.weapons.Incoming.Count == 0 || System.Math.Sqrt((s.weapons.Incoming[0].x - s.nav.x) * (s.weapons.Incoming[0].x - s.nav.x) + (s.weapons.Incoming[0].y - s.nav.y) * (s.weapons.Incoming[0].y - s.nav.y)) < 4600);
@@ -1978,6 +1994,9 @@ public static class PlaytestRunner
         double exact = (Math.Atan2(spinalTarget.nav.x - nose.x, spinalTarget.nav.y - (-15000 + nose.y)) * 180 / Math.PI + 360) % 360;
         board.Click("rate", "10");
         string[] spinalReports = new string[2];
+        // owner 2026-11-10 (D2): 15,000 away it is out of sight, so a hit and a miss both report IMPACT ?. Its armour tells which.
+        Func<float> spinalArmour = () => { float a = 0; foreach (var v in spinalTarget.damage.SideArmour) a += v; return a; };
+        float[] armourAt = new float[3]; armourAt[0] = spinalArmour();
         for (int k = 0; k < 2; k++)
         {
             double aim = k == 0 ? Math.Round(exact) : exact; // first the nearest whole degree, then to the part of a degree
@@ -1988,9 +2007,14 @@ public static class PlaytestRunner
             s.weapons.Fire();
             yield return (Func<bool>)(() => s.weapons.shotResults > landed);
             spinalReports[k] = s.weapons.shotReport;
+            armourAt[k + 1] = spinalArmour();
         }
-        Check("Rounded to the whole degree the spinal railgun misses; aimed to the part of a degree it hits, 15,000 away",
-              spinalReports[0] == "MISS" && spinalReports[1] != null && spinalReports[1].StartsWith("HIT"), "bearing " + exact.ToString("0.000") + "°: \"" + spinalReports[0] + "\", then \"" + spinalReports[1] + "\"");
+        var spinalTrack = s.TrackOf("t07");
+        bool spinalSeen = spinalTrack != null && (s.sensors.InSight(spinalTrack) || s.sensors.Heard(spinalTrack) || s.weapons.LockedOn("t07"));
+        Check("Rounded to the whole degree the spinal railgun misses; aimed to the part of a degree it hits, 15,000 away" + (spinalSeen ? "" : " (both report IMPACT ?: out of sight)"),
+              armourAt[1] == armourAt[0] && armourAt[2] < armourAt[1]
+              && (spinalSeen ? spinalReports[0] == "MISS" && spinalReports[1] != null && spinalReports[1].StartsWith("HIT") : spinalReports[0] == "IMPACT ?" && spinalReports[1] == "IMPACT ?"),
+              "bearing " + exact.ToString("0.000") + "°: \"" + spinalReports[0] + "\", then \"" + spinalReports[1] + "\"; armour " + armourAt[0].ToString("0") + " → " + armourAt[1].ToString("0") + " → " + armourAt[2].ToString("0"));
         board.Pause(true);
         if (freshBrain) freshBrain.enabled = true;
         runGuns.mounts = mountsWas; runGuns.hardPoints = dotsWas; runGuns.slugSpeedUnits = slugWas; s.weapons.sys = sysWas; s.weapons.KeepSelection();

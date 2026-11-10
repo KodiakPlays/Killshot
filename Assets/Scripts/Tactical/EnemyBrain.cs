@@ -323,7 +323,9 @@ public class EnemyBrain : MonoBehaviour
         int rel = ShipState.JsRound(((lead - ship.nav.heading) % 360 + 360) % 360) % 360;
         if (ShipState.AngDiff(rel, m.arc) > m.halfArc) return;
         Vector2 gun = ship.weapons.HardPointOffset(id, ship.nav.heading);
-        us.weapons.ShootAt(ship.weapons.stats, ship.nav.x + gun.x, ship.nav.y + gun.y, ship.nav.vx, ship.nav.vy, lead + (ship.NextDie() * 2 - 1) * aimErrorDeg, m.rangeUnits);
+        double shotBrg = lead + (ship.NextDie() * 2 - 1) * aimErrorDeg;
+        us.weapons.ShootAt(ship.weapons.stats, ship.nav.x + gun.x, ship.nav.y + gun.y, ship.nav.vx, ship.nav.vy, shotBrg, m.rangeUnits);
+        ship.nav.Kick(shotBrg, ship.weapons.stats); // owner 2026-11-10: the same push back as ours
         m.ammo--;
         nextShot[id] = now + railgunReloadSeconds + (float)ship.NextDie() * railgunJitterSeconds;
     }

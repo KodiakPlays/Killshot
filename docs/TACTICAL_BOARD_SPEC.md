@@ -426,7 +426,8 @@ all speed      × 0.997502
 
 > **Rule 4.3.b** With no units on the ENG bus there is no thrust and no braking. The ship drifts on
 > at the same speed and direction (owner, 2026-10-29). This is true of every ship, so an EMP leaves
-> a ship drifting too.
+> a ship drifting too. The one exception is a railgun's push back: the thrusters always stop it
+> (Rule 8.4.c).
 
 > **Rule 4.3.c** `Q` slides the ship to port and `E` to starboard (owner, 2026-11-01). The nose
 > stays where it is. On our ship the slide reaches 20 units/s at ENG 5 and 10 at ENG 1, in equal
@@ -903,7 +904,8 @@ Every slug, ours and the Garuda's:
 
 - A shot hits if it touches the target's box made **25% longer and 25% wider** (owner, 2026-11-01;
   Step 128). That is 437.5 × 125 on the Garuda. It is the same rule for torpedoes.
-- A slug that reaches its gun's reach without a hit counts as a miss.
+- A slug that reaches its gun's reach without a hit counts as a miss. A hit on a ship we can't see,
+  hear or lock is reported the same way (Rule 8.4.d).
 - Each shot spends 70 charge from the weapons capacitor and adds 25 to our signal.
 - A hand-dialled bearing is in whole degrees. At 2,000 units one degree is about 35 units sideways.
 - When the solution has a course, the shot is aimed where the target will be when the slug arrives
@@ -927,6 +929,29 @@ with no WEP units: charge − 3 per game second
 
 > **Rule 8.4.b** **One shot per arming.** Firing releases ARM. Throw ARM again to fire again, once
 > the capacitor has the charge.
+
+> **Rule 8.4.c** **Push back** (owner, 2026-11-10, C2 on the Ship Actions page; Step 197). Each
+> railgun shot pushes the ship backwards, away from the shot. The push is 40 units/s for 0.4 game
+> seconds. Then the thrusters stop it over 0.4 game seconds. The ship moves 24 units in all. It is the
+> same at every game speed (x0.25, x1, x5), and with or without ENG power: the thrusters always stop
+> it (the one exception to Rule 4.3.b). The push is kept apart from the throttle, so the engines
+> don't fight it. The Garuda's railguns push it back the same way, away from each shot. Railgun Kick
+> Units, Railgun Kick Seconds and Railgun Kick Stop Seconds are in each ship's stats file, on the
+> Ship tab of Starwolf → Tuning, under Weapons.
+
+> **Rule 8.4.d** **The far shot** (owner, 2026-11-10, D2: "That thing shot away, but you're not sure
+> if the impact happened"; Step 197). If our slug hits a ship that we can't see (§9.3), can't hear on
+> DRADIS and haven't locked, the hit still does its damage. No HIT is reported. The slug flies on to
+> the end of its reach, hitting nothing more, and the report is `IMPACT ?`, the same as a miss. A
+> miss aimed at a ship we can't see or hear also reports `IMPACT ?`. A hit we can see still reports
+> `HIT · …`. Torpedoes always report as before. D3, where a drone watching shows the hit, waits on
+> the drones.
+
+The look of a railgun shot (Step 197): in the close-up, a charge glow at the gun's mouth while it is
+armed, a flash and two puffs of vent gas when it fires. Nothing glows along the ship: the ship is
+built around the gun. On the table, our shot leaves a line from the gun to the slug that fades over
+5 game seconds (C3). The enemy's shots leave no line; the owner hasn't answered that yet. A POINT
+near the slug's path counts down to it (§18.2). How each one looks is in `docs/BOARD_UI.md`, Plot.
 
 ### 8.5 Torpedo
 
@@ -958,7 +983,9 @@ rules.
   launchers by turns, starting with the one on the target's side. With one launcher empty, the other
   fires them all. Torpedoes from the same launcher fan 20° apart. With our ship facing 000, a salvo of
   2 leaves on headings 120 (right side) and 240 (left side). A launcher on the centre line, as on the
-  Garuda, sends them out of each side by turns.
+  Garuda, sends them out of each side by turns. An enemy salvo leaves the same way, one at a time.
+  From Step 184 until Step 197, only the first torpedo of an enemy salvo left; the rest used up
+  their cells and never launched (a bug, now fixed).
 - A torpedo needs a target identified by an active scan (§9.4).
 - Each torpedo uses one cell. The salvo size is set in the stats file. The salvo knob is not drawn
   yet.
@@ -982,6 +1009,12 @@ A PDC group shoots at enemy torpedoes by itself once it is on **AUTO**. You neve
   Releasing the ladder takes it off. Both groups can be on AUTO at once.
 - A group on AUTO gets one go at each enemy torpedo inside its arc and 600 units. Each go has a
   70% chance to shoot the torpedo down, and spends 100 rounds.
+- Each go is a stream of rounds you can see (owner, 2026-11-10, E2; Step 197). It starts 60 units
+  off the torpedo. On a kill, it walks onto the torpedo, and the torpedo goes down 0.5 game seconds
+  later. The report reads `PDC-A · TORPEDO DOWN`. On a miss, the stream stays off the torpedo. The
+  torpedo keeps flying while the stream walks on, so one first caught very close could still hit
+  us in that time. Pdc Stream Seconds (0.5) is in each ship's stats file, on the Ship tab under
+  Weapons. How the stream looks is in `docs/BOARD_UI.md`, Plot.
 - A group with fewer than 100 rounds left drops off AUTO.
 - PDCs need their autoloaders on. They also need what every weapon needs: at least 2 WEP units,
   the magazine at integrity 3 or more, and weapons released (§6.1). The LOADERS button is not drawn
@@ -1280,7 +1313,7 @@ The tool rail: CURSOR, POINT, RULER, COMPASS and ERASE (§18). The systems rail:
 | Our ship | Its 3D model seen from above, in white. It glides and never blinks (owner, 2026-10-25). |
 | A contact | A red bar on the DRADIS circle, a dot with its range, or its model (§9.6) |
 | Our fighters | Small white triangles in a V, 10 px, nose pointing the way they fly, with no labels. The V is shut where they appear beside our ship. It opens as they fly out and closes as they land (owner, 2026-11-02). Zoomed in, each is a small 3D model, 10 units long, and its triangle fades out. The models' V spreads so they never overlap (owner, 2026-11-11, Step 199) |
-| Our slugs and torpedoes | A white dot with a fading trail: 120 px on a slug, less on anything slower, so a torpedo's grows as its motor lights |
+| Our slugs and torpedoes | A white dot with a fading trail: 120 px on a slug, less on anything slower, so a torpedo's grows as its motor lights. Our slug also leaves a line from the gun that fades over 5 game seconds (Step 197) |
 | Enemy torpedoes | A red dot with a short trail |
 | A ship our marines secured | A dot |
 | DRADIS | The hearing circle and the sweep; with ACTIVE on, the scan cone |
@@ -1479,14 +1512,18 @@ A squadron, fighters or assault boats, then flies like this (owner, 2026-11-02):
 2. It flies straight out, tilted 15° toward the stern, for 200 units, at every zoom. Only an ESCORT
    can fly further: if the small circle round our ship is bigger at the current zoom, the ESCORT
    flies out past that circle. A squadron always flies its full distance, even after RECALL or with
-   its target in reach.
-3. It turns onto where it is going. The turn builds up, reaches at most 90° a game second, and
-   eases off as it lines up.
+   its target in reach. The catapult throws it out at 560 units/s, and it slows to its own speed
+   over 1.2 game seconds (owner, 2026-11-10, B3: for every craft, assault boats too, "regardless of
+   the weight"; Step 197).
+3. At the end of the straight run, it breaks hard onto the target (B3). The break builds at
+   2,000° a game second each game second, up to 240° a game second. Within 8° of the target it goes
+   back to the normal turn: it builds up, reaches at most 90° a game second, and eases off as it
+   lines up. A squadron heading home doesn't break.
 4. It lands, docks or attacks as soon as it is within reach, at every game speed.
 
 Owner, 2026-11-02: it leaves from the hangar dot on that side, level with the dot along the ship. If
 a line is drawn out of that dot on the Hard Points tab of Starwolf → Tuning, it flies the line's
-shape in place of step 2.
+shape in place of step 2. It breaks hard at the line's end.
 
 All its flying uses these turns, on the way back too. RECALL turns it back. It lands when it
 reaches the small circle round our ship.
@@ -1496,8 +1533,12 @@ as the squadron flies out and closes as it lands. No craft is drawn over our shi
 smooth curve between ticks. The rules still step on the tick (Rule 9.6.a).
 
 The numbers are in each ship's stats file, under hangar: `launchSideGapUnits` 10,
-`launchTiltBackDeg` 15, `launchRunUnits` 200, `turnDegPerS` 90 and `turnEase` 180. Boats use the
-same numbers.
+`launchTiltBackDeg` 15, `launchRunUnits` 200, `turnDegPerS` 90, `turnEase` 180, `catapultUnits` 560,
+`catapultSeconds` 1.2, `breakDegPerS` 240, `breakEase` 2,000 and `breakEndDeg` 8 (the break ends within
+this many degrees of the target). Boats use the same numbers.
+
+In the close-up, a craft leaves a light streak while the catapult's push lasts, and a thruster
+flash shows on the outside of its break. How they look is in `docs/BOARD_UI.md`, Plot.
 
 ---
 
@@ -1595,7 +1636,8 @@ there.
 > white.
 
 > **Rule 13.5.b** A hit report names the side and what the hit did, once the target is identified:
-> `HIT · GARUDA · STBD ARMOUR 50%`. Before that it reads `HIT · BOGEY T07`.
+> `HIT · GARUDA · STBD ARMOUR 50%`. Before that it reads `HIT · BOGEY T07`. A slug's hit on a ship
+> we can't see, hear or lock reads `IMPACT ?`, the same as a far miss (Rule 8.4.d).
 
 ### 13.6 Damage control
 
@@ -1879,6 +1921,13 @@ time.
 
 > **Rule 18.2.a** Points record a timestamp. That is what makes a target's speed measurable — see
 > §18.3.
+
+> **Rule 18.2.d** **The far shot's countdown** (owner, 2026-11-10, D2; Step 197). A POINT within
+> 500 units of our slug's path shows a countdown in place of its time: `IMPACT 4 S` … `IMPACT 1 S`.
+> Then `IMPACT ?` blinks for 3 game seconds, and the POINT shows its time again. The count runs to
+> the end even when we saw the slug hit a ship before it reached the POINT. Torpedoes don't count
+> down. Impact Near Units (500) and Impact Blink Seconds (3) are on the Board tab of Starwolf →
+> Tuning, under Plot & our ship.
 
 #### RULER
 
@@ -2217,7 +2266,7 @@ a salvo. For a PDC group the lever does nothing.
 > DAMAGED — NO ROUNDS STRUCK UP` → `PDC AUTOLOADERS OFF` → `ARMING SEQUENCE INCOMPLETE`
 >
 > The first two are skipped for a hand-dialled solution. For a fixed gun the first four are skipped.
-> With the ladder set it reads `SOLUTION LOCKED — MOUNT READY`, or `MOUNT READY` for a fixed gun. After a shot it reads `ROUNDS AWAY`, then `HIT · …` or `MISS`. A PDC group
+> With the ladder set it reads `SOLUTION LOCKED — MOUNT READY`, or `MOUNT READY` for a fixed gun. After a shot it reads `ROUNDS AWAY`, then `HIT · …`, `MISS` or `IMPACT ?` (Rule 8.4.d). A PDC group
 > on AUTO reads `PDC-A AUTO — WATCHING ITS ARC`, then its last result.
 
 ### 20.2 What the panel puts on the plot
@@ -2230,6 +2279,8 @@ Per §19.2.a, everything here draws on the plot too.
 | A PDC group on AUTO | Its arc, a dashed sector off our hull |
 | Shot fired | The slug in flight, at true speed: a white dot with a short trail, white like our ship and our fighters (owner 2026-10-26). The dot can go up to twice that speed just after firing, and it can slow before a hit (§9.6) |
 | Torpedo salvo fired | Each torpedo in flight, also a white dot with a short trail |
+| Railgun shot fired (Step 197) | A line from the gun to the slug, fading over 5 game seconds; a ring that closes in at the gun while it is armed, and one that opens as it fires. In the close-up: the charge glow, the flash and the vent gas (Rule 8.4.c) |
+| A PDC go at an enemy torpedo (Step 197) | A dotted line from the gun, walking onto the torpedo on a kill and staying off it on a miss (§8.6) |
 
 ### 20.3 State and persistence
 

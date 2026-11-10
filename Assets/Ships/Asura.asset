@@ -162,6 +162,10 @@ MonoBehaviour:
     torpedoTurnDegPerS: 140
     torpedoSpreadDeg: 20
     torpedoRippleSeconds: 0.3
+    railgunKickUnits: 40
+    railgunKickSeconds: 0.4
+    railgunKickStopSeconds: 0.4
+    pdcStreamSeconds: 0.5
     pdcRoundsPerGo: 100
     hitMarginPercent: 25
     slugArmourDamage: 50
@@ -256,6 +260,10 @@ MonoBehaviour:
       - {x: 167.00002, y: 113.33332}
     turnDegPerS: 90
     turnEase: 180
+    catapultUnits: 560
+    catapultSeconds: 1.2
+    breakDegPerS: 240
+    breakEase: 2000
     boatSpeedUnits: 75
     fighters: 0
     marines: 18

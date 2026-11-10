@@ -769,7 +769,7 @@ in the Lighting window, under Environment Lighting. The line pictures do not cha
 
 In the close-up, every shot in flight is a glowing streak. Ours are blue-white. The enemy's are red.
 A torpedo's streak is wider than a railgun slug's. The flat dot and trail still draw on top. PDC fire
-has no streak yet. Flashes and blasts run in game time: they stop when the board is paused.
+is a thin stream (below). Flashes and blasts run in game time: they stop when the board is paused.
 
 A torpedo drifting with its motor off is a small metal cylinder along its nose, with no glow (Step
 184). Its metal is **Torpedo Look** on the Plot panel (`Assets/Art/Close Up/Ship Metal.mat`, the same
@@ -777,6 +777,47 @@ as the ships). When its motor bursts on, a big soft flare grows and fades: blue-
 red for the enemy's. Then the torpedo is a streak with the cylinder on it. Zoomed in, the table's
 white dot and trail fade out for torpedoes, so the cylinder shows. On the table, a small amber ring
 grows and fades where the motor lit.
+
+**Our railgun** (Step 197; owner 2026-11-10, C2 and C3 on the Ship Actions page). Nothing glows along
+our ship: the ship is built around the gun. In the close-up:
+- While the railgun is armed, a blue-white charge glow pulses at the gun's mouth. It grows over
+  about a second. **Muzzle Charge Units** (30) is its size across when full.
+- When it fires, a bright flash shows at the mouth and fades. **Muzzle Flash Units** (90) is its
+  size across. **Muzzle Flash Seconds** (0.3) is how long it lasts, in game seconds.
+- At the same time, two puffs of pale grey vent gas blow out of the sides of the bow, spread and
+  fade. **Vent Gas Seconds** (1.1) is how long they last. Their size follows Muzzle Charge Units.
+
+On the table, at every zoom:
+- A white ring closes in on the gun's mouth while it is armed, and a ring opens there as it fires.
+  Their size follows **Torpedo Ring Px**.
+- Our shot leaves a thin white line from where it left the gun to the slug. The line fades over
+  **Shot Line Seconds** (5) game seconds. The owner: "part of the charm". The enemy's shots leave
+  no line. The owner hasn't answered whether they should.
+
+**The far shot's countdown** (Step 197; owner 2026-11-10, D2). A POINT near our slug's path shows a
+countdown in place of its time: `IMPACT 4 S`, `IMPACT 3 S`… down to `IMPACT 1 S`. Then `IMPACT ?`
+blinks, and the POINT shows its time again. **Impact Near Units** (500) is how close to the slug's
+path a POINT must be. **Impact Blink Seconds** (3) is how long `IMPACT ?` blinks, in game seconds.
+The rule for when a hit is reported is in `docs/TACTICAL_BOARD_SPEC.md`, Rule 8.4.d.
+
+**Our boats and fighters leaving** (Step 197; owner 2026-11-10, B3). In the close-up, a light
+blue-white streak trails our squadron's leader while the catapult's push lasts. It shrinks as the
+craft slows. **Craft Streak Units** (60) is its length at full push. When the craft breaks hard
+onto its target, a thruster flash shows on the outside of the turn. **Break Flash Units** (40) is
+its size across. **Break Flash Seconds** (0.3) is how long it lasts. Only our ship launches craft;
+no other ship has a hangar that launches.
+
+**PDC streams** (Step 197; owner 2026-11-10, E2). When a PDC group fires at an enemy torpedo, a
+stream of rounds runs from the gun toward it. On the table it is a white dotted line. In the
+close-up it is a thin blue-white line, brightest at the torpedo's end. It starts **Pdc Walk Units**
+(60) off the torpedo. On a kill it walks onto the torpedo, the torpedo goes down, and the hit flash
+shows. On a miss it stays off. The stream lasts **Pdc Stream Seconds** (0.5) game seconds, plus a
+short fade. That number is in each ship's stats file, on the Ship tab of **Starwolf → Tuning**,
+under Weapons, because it also sets when the torpedo goes down.
+
+Every value in these four parts, except Pdc Stream Seconds, is on the Board tab of **Starwolf →
+Tuning**, under Plot & our ship. They need no art: the glows use the same `Glow.mat` as the shots,
+and the table marks are drawn by code. Every change is in `docs/TUNING_LOG.md`.
 
 Where a shot hits a ship, there is a flash: a burst of orange sparks with a white centre. The same
 flash shows when a torpedo is shot down. It shows only in the close-up.

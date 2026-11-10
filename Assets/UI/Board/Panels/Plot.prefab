@@ -2611,6 +2611,17 @@ MonoBehaviour:
   torpedoFlareUnits: 60
   torpedoFlareSeconds: 0.6
   torpedoRingPx: 16
+  muzzleChargeUnits: 30
+  muzzleFlashUnits: 90
+  muzzleFlashSeconds: 0.3
+  ventGasSeconds: 1.1
+  shotLineSeconds: 5
+  impactNearUnits: 500
+  impactBlinkSeconds: 3
+  craftStreakUnits: 60
+  breakFlashUnits: 40
+  breakFlashSeconds: 0.3
+  pdcWalkUnits: 60
   ourShotGlow: {r: 0.5, g: 0.75, b: 1, a: 1}
   theirShotGlow: {r: 1, g: 0.35, b: 0.15, a: 1}
   cloudImage: {fileID: 3679405572040343172}

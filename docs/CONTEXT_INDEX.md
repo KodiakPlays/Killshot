@@ -99,6 +99,7 @@ pages, and most of it has been overtaken.
 | The training levels and how they were built; the plan to split WEAPONS FREE | `docs/FTUE_PLAN.md` §0 |
 | The later tutorial mission, with the XO walking you through each station. It is a plan only | `docs/FTUE_PLAN.md` §1 to §9 |
 | Where a panel's prefab and art are, and how to swap its art | `docs/BOARD_UI.md` |
+| How a shot looks on the plot and in the close-up: the railgun's charge glow, flash and vent gas, the shot line, the far shot's IMPACT countdown, craft leaving, PDC streams (Steps 184 and 197), and which Tuning value changes each | `docs/BOARD_UI.md`, Plot. The rules are in `docs/TACTICAL_BOARD_SPEC.md` §8.4 (push back, far shot), §8.6 (PDC streams), §12.3 (catapult and hard break) and §18.2 (the countdown). The owner's picks are on the "Ship Actions Lab" page, https://claude.ai/artifact/KXZhwnSU7hoG7aaEqThx6g |
 | The campaign's SECTOR MAP and ship's rooms: their parts, and how to change their art | `docs/BOARD_UI.md`, "Sector map" and "Ship rooms". The steps are 167 to 169 and 172 in `docs/BUILD_LOG.md`. |
 | How to set up a campaign mission: its name, level, briefing and dot on the sector map | `Assets/Campaign/Campaign.asset`. Select it in the Project window. In Missions, add a mission and drag its level scene into Level. The level itself (checklist steps, rings, help text, battle group path) is made in its scene in `Assets/Scenes/Levels/`, with **Starwolf → Level** and the Mission part on it. Step 183 in `BUILD_LOG.md`. |
 | The Escape menu on SAVE SLOTS, the sector map and the ship's rooms: its prefab, and how to change its look | `Assets/UI/Menus/Escape Menu.prefab`. See `docs/BOARD_UI.md`, "Escape menu". Step 190 in `docs/BUILD_LOG.md`. |
@@ -251,7 +252,7 @@ document, and do not quietly design around them.
 | **Real time with optional pause** | Pause is a convenience, not the core verb. The handoff's paused-time framing is wrong for this game. |
 | **No broadside cannon** | The board has none. Since Step 170 (owner 2026-11-08) our ship has a spinal railgun: one gun fixed on the nose, aimed by turning the ship (`docs/SNIPER_PLAN.md`). The Garuda keeps its two swivel railguns. Soham's old `Weapons/BroadsideCannon.cs` and `Weapons/Railgun.cs` are kept as old code. The board does not use them. |
 | **Two railgun turrets** | RG-A covers 090° ±45° from the bow, RG-B 270° ±45°. One in the middle of each long side, on hard points you drag on the Hard Points tab of Starwolf → Tuning. A solid bar turns slowly onto the target inside each cone, and the shot flies down the bar. Reach 2,000 units, 22 rounds each. One shot per arming. The slug flies at 300 units/s, so it takes about 7 s to reach 2,000 units. |
-| **Four PDC groups** | One at each corner of the ship, each covering 270°, so three cover any bearing. Reach 600 units, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy torpedoes entering its arc, with a 70% chance to kill each one. They are the only answer to a torpedo salvo. |
+| **Four PDC groups** | One at each corner of the ship, each covering 270°, so three cover any bearing. Reach 600 units, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy torpedoes entering its arc, with a 70% chance to kill each one. Each go is a stream of rounds that walks onto the torpedo on a kill (Step 197). They are the only answer to a torpedo salvo. |
 | **Torpedoes** | Two launchers, VLS-A and VLS-B, one on each side, 8 torpedoes each. They fire in any direction, two to a salvo. A salvo leaves one torpedo at a time, 0.3 game seconds apart, from both launchers by turns, starting with the one on the target's side. A torpedo is pushed out of the ship's side, tilted 30° toward the stern. It drifts about 300 units with its motor off, slowing, while its nose swings onto the target. Then its motor bursts on with a flare, and it speeds up to full speed (Step 184). Reach 3,000 units, top speed 250 units/s: always slower than a slug. |
 | **A volley is a consequence, not a mode** | There is no salvo button, no spread control, no fire pattern menu. Arm several turrets on the same bearing and they converge. Arm them on different bearings and you get a fan. The width of the fan is the difference between the numbers you typed. |
 | **Density over time compression** | The empty-board problem is solved with a smaller, debris-dense arena, not by fast-forwarding. Modest play-rate range only. Collision is gameplay, not an error. |
@@ -344,7 +345,8 @@ Do not treat any of these as decided. Ask the owner.
 
 **Settled by the code since this list was first written:**
 
-- Firing a railgun spends 70 of the weapon charge and adds 25 to our signal. Nothing vents.
+- Firing a railgun spends 70 of the weapon charge and adds 25 to our signal. Nothing vents. Each shot
+  pushes the firing ship back 24 units, ours and the Garuda's (Step 197).
 - A bus on DRAW takes units the reactor has spare. With all ten units placed, it waits until another
   bus vents.
 - The plot shows 760 px per 1,000 units at zoom 1 (`PlotGrid.cs`, `pxPer1000Units`).

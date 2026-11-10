@@ -93,8 +93,8 @@
 //   fire control" and "Hangar & fighters". Keys are on the Keys tab.
 // - Trap: every redraw writes HangarSystem's launch and landing distances. They come from the
 //   small circle as drawn, in screen px. They change with zoom.
-// - Trap: the rail shot lines, PDC streams and muzzle timers grow by the frame time on each redraw.
-//   A frame with two redraws counts it twice.
+// - The rail shot lines, PDC streams and muzzle timers take each frame's time once (FrameDt), so a
+//   frame with two redraws doesn't run them fast.
 // - Trap: the sight cut takes at most four circles: our ship and three fighter flights. Labels say
 //   "km" for numbers in units.
 // =================================================================================================
@@ -187,8 +187,22 @@ public class PlotPanel : Panel
     [Tooltip("Owner 2026-11-10 (drop, drift, flare): a torpedo's body in the close-up, along its nose, this long in units, and its colour. It drifts cold before its motor lights.")]
     [Tune("Plot & our ship")] [SerializeField] private float torpedoBodyUnits = 14f;
     [Tune("Plot & our ship")] [SerializeField] private Color torpedoBodyInk = new Color(0.87f, 0.9f, 0.93f, 0.7f);
-    [Tooltip("Its motor bursts on with a flare this big across in the close-up, units. It grows and fades over Torpedo Flare Seconds (game seconds). On the table a ring grows by Torpedo Ring Px where it lit.")]
+    [Tooltip("Its motor bursts on with a flare this big across in the close-up, units. It grows and fades over Torpedo Flare Seconds (game seconds). On the table a ring grows by Torpedo Ring Px where it lit. The railgun's muzzle rings use the same size.")]
     [Tune("Plot & our ship")] [SerializeField] private float torpedoFlareUnits = 60f, torpedoFlareSeconds = 0.6f, torpedoRingPx = 16f;
+    [Tooltip("Owner 2026-11-10 (railgun C2): in the close-up, the charge that builds at the railgun's muzzle while it is armed (units across), the flash when it fires (units across) and how long it lasts, and how long the vent gas shows (game seconds). Nothing glows along the ship.")]
+    [Tune("Plot & our ship")] [SerializeField] private float muzzleChargeUnits = 30f, muzzleFlashUnits = 90f, muzzleFlashSeconds = 0.3f, ventGasSeconds = 1.1f;
+    [Tooltip("Owner 2026-11-10 (railgun C3): our railgun shot leaves a line on the table, from the muzzle to the slug, gone in this many game seconds.")]
+    [Tune("Plot & our ship")] [SerializeField] private float shotLineSeconds = 5f;
+    class RailShot { public WeaponSystem.Round r; public double x0, y0, x1, y1; public float age; }
+    private readonly List<RailShot> railShots = new List<RailShot>();
+    private float railArmedFor, railFiredAgo = 99f; // game seconds our railgun has been armed, and since it last fired
+    [Tooltip("Owner 2026-11-10 (far shot, D2): a POINT this close to our slug's path, units, counts down to when the slug gets there. Then it blinks IMPACT ? for this many game seconds.")]
+    [Tune("Plot & our ship")] [SerializeField] private float impactNearUnits = 500f, impactBlinkSeconds = 3f;
+    private readonly Dictionary<int, float> impactAt = new Dictionary<int, float>(); // a POINT's id, and the mission second a slug reaches it
+    [Tooltip("Owner 2026-11-10 (B3): in the close-up, the streak behind a craft thrown out by the catapult, units long at full push; the thruster flash on the outside of its hard break, units across, and how long it lasts, game seconds.")]
+    [Tune("Plot & our ship")] [SerializeField] private float craftStreakUnits = 60f, breakFlashUnits = 40f, breakFlashSeconds = 0.3f;
+    [Tooltip("Owner 2026-11-10 (PDCs, E2): how far off the torpedo a PDC stream starts, units, before it walks on. A miss stays off. The stream shows for the time the ship file gives it, plus a short tail.")]
+    [Tune("Plot & our ship")] [SerializeField] private float pdcWalkUnits = 60f;
     [Tooltip("The colour of our shots' streaks, then the enemy's. The Glow material makes them brighter still.")]
     [Tune("Plot & our ship")] [SerializeField] private Color ourShotGlow = new Color(0.5f, 0.75f, 1f), theirShotGlow = new Color(1f, 0.35f, 0.15f);
     const float EffectZ = -100f; // in front of the hulls, toward the close-up camera
@@ -680,7 +694,7 @@ public class PlotPanel : Panel
             Paint(label, m.kind == "ruler" ? data : ownForce); // owner 2026-11-01: the distance is the point of a ruler: white, to stand off the blue line
             label.alpha = alpha;
             Vector2 at;
-            if (m.kind == "point") { label.text = Clock(m.t); label.alignment = TextAlignmentOptions.Left; at = a + pointLabelOffset; }
+            if (m.kind == "point") { label.text = ImpactLabel(m) ?? Clock(m.t); label.alignment = TextAlignmentOptions.Left; at = a + pointLabelOffset; }
             else
             {
                 double dx = m.x2 - s.MarkX(m), dy = m.y2 - s.MarkY(m); // units, y north
@@ -728,6 +742,7 @@ public class PlotPanel : Panel
         // our slugs and torpedoes in flight (Step 48): a dot with a trail fading behind it, no label;
         // white like our ship, not the marks' blue (owner 2026-10-26)
         var slugInk = ownShipColor.gamma;
+        TrackRailShots(s, shapes, slugInk);
         foreach (var r in s.weapons.Rounds)
         {
             Vector2 tail, at = ShotAt(r, out tail, true);
@@ -1001,6 +1016,7 @@ public class PlotPanel : Panel
             dots.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = tail, alpha = 0.8f * seen });
             AddLightRing(dots, r);
         }
+        TrackPdcBursts(dots);
         if (contactMarks) contactMarks.Set(dots);
         ShowShotsAndBlasts();
 
@@ -1522,6 +1538,9 @@ public class PlotPanel : Panel
             flare.a = f;
             Streak(used++, shot.head - along * (size / 2f), shot.head + along * (size / 2f), size, flare, flare, 1f);
         }
+        if (on) used = ShowRailgun(used);
+        if (on && State.hangar) foreach (var f in State.hangar.Flights) used = ShowCraft(f, used);
+        if (on) foreach (var b in State.weapons.Bursts) used = ShowPdcStream(b, used);
         for (int i = used; i < streaks.Count; i++) streaks[i].enabled = false;
         for (int i = models; i < torpedoModels.Count; i++) torpedoModels[i].gameObject.SetActive(false);
         flying.Clear();
@@ -1587,6 +1606,173 @@ public class PlotPanel : Panel
         line.endWidth = width;
         line.startColor = tailInk;
         line.endColor = headInk;
+    }
+
+    // Owner 2026-11-10 (railgun C2, C3): on the table, our railgun shot's line, fading from the moment it fires; a ring that closes
+    // in at the muzzle while the gun is armed, and one that opens as it fires. Also keeps the times the close-up's charge uses.
+    // A frame's game time, given once per frame to each timer (seen: the last frame it was given): a step or a drag redraws twice.
+    float FrameDt(ref int seen)
+    {
+        if (seen == Time.frameCount) return 0f;
+        seen = Time.frameCount;
+        return Controls.Paused ? 0f : Time.unscaledDeltaTime * Controls.Rate; // ponytail: a game second is a real second at x1 (Step 130)
+    }
+    private int railFrame = -1, pdcFrame = -1;
+
+    void TrackRailShots(ShipState s, List<MarksGraphic.Shape> shapes, Color ink)
+    {
+        float dt = FrameDt(ref railFrame);
+        railFiredAgo += dt;
+        foreach (var r in s.weapons.Rounds)
+            if (!r.torpedo && !railShots.Exists(k => k.r == r))
+            {
+                double x0 = r.x - r.dx * r.travelled, y0 = r.y - r.dy * r.travelled; // where it left the gun
+                railShots.Add(new RailShot { r = r, x0 = x0, y0 = y0, x1 = x0, y1 = y0 });
+                railFiredAgo = 0f;
+            }
+        for (int i = railShots.Count - 1; i >= 0; i--)
+        {
+            var k = railShots[i];
+            if ((k.age += dt) >= shotLineSeconds) { railShots.RemoveAt(i); continue; }
+            if (s.weapons.Rounds.Contains(k.r)) { bool drawn = k.r.drawn.at > 0f; k.x1 = drawn ? k.r.drawn.x : k.r.x; k.y1 = drawn ? k.r.drawn.y : k.r.y; }
+            shapes.Add(new MarksGraphic.Shape { kind = "line", a = Screen(k.x0, k.y0), b = Screen(k.x1, k.y1), alpha = 0.55f * (1f - k.age / shotLineSeconds), ink = ink });
+        }
+        bool armed = s.weapons.sys == "RG" && s.weapons.AllSet;
+        railArmedFor = armed ? railArmedFor + dt : 0f;
+        Vector3 at, along;
+        if (!Muzzle(out at, out along)) return;
+        var c = Screen(at.x, at.y);
+        if (armed) { float p = Mathf.Clamp01(railArmedFor); shapes.Add(new MarksGraphic.Shape { kind = "circle", a = c, b = c + new Vector2(3f + torpedoRingPx * (1f - p), 0f), alpha = 0.3f + 0.6f * p, ink = ink }); }
+        if (railFiredAgo < muzzleFlashSeconds) { float f = railFiredAgo / muzzleFlashSeconds; shapes.Add(new MarksGraphic.Shape { kind = "circle", a = c, b = c + new Vector2(4f + torpedoRingPx * f, 0f), alpha = 1f - f, ink = ink }); }
+    }
+
+    // Owner 2026-11-10 (far shot, D2): "That thing shot away, but you're not sure if the impact happened." A POINT on our slug's
+    // path counts down to when the slug gets there, then blinks IMPACT ?. Null when no slug is on its way to it.
+    string ImpactLabel(ShipState.Mark m)
+    {
+        float now = Controls.MissionSeconds, soonest = float.MaxValue;
+        foreach (var r in State.weapons.Rounds)
+        {
+            if (r.torpedo || r.speed <= 0) continue;
+            double px = m.x - r.x, py = m.y - r.y, along = px * r.dx + py * r.dy, off = System.Math.Abs(px * r.dy - py * r.dx);
+            if (along > 0 && off <= impactNearUnits) soonest = Mathf.Min(soonest, (float)(along / r.speed));
+        }
+        if (soonest < float.MaxValue) { impactAt[m.id] = now + soonest; return "IMPACT " + Mathf.CeilToInt(soonest) + " S"; }
+        if (!impactAt.TryGetValue(m.id, out float at)) return null;
+        if (now < at) return "IMPACT " + Mathf.CeilToInt(at - now) + " S"; // its slug is gone, but the count goes on
+        if (now - at >= impactBlinkSeconds) { impactAt.Remove(m.id); return null; }
+        return Mathf.FloorToInt(Time.unscaledTime * 3f) % 2 == 0 ? "IMPACT ?" : "";
+    }
+
+    // Owner 2026-11-10 (B3): in the close-up, a streak behind a craft while the catapult's push lasts, and a thruster flash on the
+    // outside of its hard break. Drawn at the squadron's leader.
+    int ShowCraft(HangarSystem.Flight f, int used)
+    {
+        double x, y;
+        float hdg = FlightAt(f, out x, out y) * Mathf.Deg2Rad;
+        var along = new Vector3(Mathf.Sin(hdg), Mathf.Cos(hdg), 0f);
+        var at = new Vector3((float)x, (float)y, EffectZ);
+        var ink = Color.Lerp(ourShotGlow, Color.white, 0.5f);
+        float push = Mathf.Clamp01((float)(f.boost / System.Math.Max(1.0, State.hangar.stats.catapultUnits)));
+        if (push > 0.02f) { var c = ink; c.a = 0.7f * push; Streak(used++, at - along * (craftStreakUnits * push), at, slugWidthUnits, new Color(c.r, c.g, c.b, 0f), c); }
+        if (f.breakT >= 0 && f.breakT < breakFlashSeconds)
+        {
+            float fade = 1f - (float)f.breakT / breakFlashSeconds, size = breakFlashUnits * fade;
+            var outside = new Vector3(-along.y, along.x, 0f) * (f.turn >= 0 ? 1f : -1f); // to port when it turns to starboard
+            var c = ink; c.a = fade;
+            var p = at + outside * (breakFlashUnits * 0.25f);
+            Streak(used++, p - along * (size / 2f), p + along * (size / 2f), size, c, c, 1f);
+        }
+        return used;
+    }
+
+    // Owner 2026-11-10 (PDCs, E2): a PDC go is a stream of rounds from the gun, walked onto the torpedo. The gun end and the aim
+    // point, now; false once the stream is over. p: how far through it is, 0 to 1.
+    bool PdcStream(WeaponSystem.PdcBurst b, out Vector3 gun, out Vector3 aim, out float p)
+    {
+        var w = State.weapons; var nav = State.nav;
+        float life = (float)w.stats.pdcStreamSeconds + 0.2f; // a short tail after the last rounds
+        gun = aim = Vector3.zero; p = b.age / Mathf.Max(0.01f, (float)w.stats.pdcStreamSeconds);
+        if (b.age >= life) return false;
+        if (w.Incoming.Contains(b.r)) { b.x = b.r.x; b.y = b.r.y; } // it flies on until it is down
+        Vector2 off = w.HardPointOffset(b.gun, nav.DrawnHeading);
+        gun = new Vector3((float)(nav.DrawnX + off.x), (float)(nav.DrawnY + off.y), EffectZ);
+        var to = new Vector3((float)b.x, (float)b.y, EffectZ);
+        var side = Vector3.Cross((to - gun).normalized, Vector3.forward);
+        float walk = pdcWalkUnits * (b.down ? 1f - Mathf.Clamp01(p) : 0.6f + 0.4f * Mathf.Clamp01(p));
+        aim = to + side * walk;
+        return true;
+    }
+
+    // On the table: each PDC stream as a dotted line onto the torpedo, fading at its end. Ages the streams (game seconds).
+    void TrackPdcBursts(List<MarksGraphic.Shape> dots)
+    {
+        float dt = FrameDt(ref pdcFrame);
+        var list = State.weapons.Bursts;
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            var b = list[i];
+            b.age += dt;
+            Vector3 gun, aim; float p;
+            if (!PdcStream(b, out gun, out aim, out p)) { list.RemoveAt(i); continue; }
+            dots.Add(new MarksGraphic.Shape { kind = "dots", a = Screen(gun.x, gun.y), b = Screen(aim.x, aim.y), alpha = p < 1f ? 0.9f : 0.9f * (1f - (p - 1f) * 5f), ink = ownShipColor.gamma });
+        }
+    }
+
+    // In the close-up: the same stream as a thin glowing line, brightest at the torpedo's end.
+    int ShowPdcStream(WeaponSystem.PdcBurst b, int used)
+    {
+        Vector3 gun, aim; float p;
+        if (!PdcStream(b, out gun, out aim, out p)) return used;
+        var c = Color.Lerp(ourShotGlow, Color.white, 0.4f); c.a = p < 1f ? 1f : Mathf.Clamp01(1f - (p - 1f) * 5f);
+        Streak(used++, gun, aim, slugWidthUnits * 0.5f, new Color(c.r, c.g, c.b, 0.15f * c.a), c, 1f);
+        return used;
+    }
+
+    // Where our railgun's muzzle is drawn now (its hard point), and the way it points.
+    bool Muzzle(out Vector3 at, out Vector3 along)
+    {
+        var ids = State.weapons.MountIds("RG");
+        at = along = Vector3.zero;
+        if (ids.Length == 0) return false;
+        var nav = State.nav;
+        double h = nav.DrawnHeading;
+        Vector2 off = State.weapons.HardPointOffset(ids[0], h);
+        along = new Vector3(Mathf.Sin((float)h * Mathf.Deg2Rad), Mathf.Cos((float)h * Mathf.Deg2Rad), 0f);
+        at = new Vector3((float)(nav.DrawnX + off.x), (float)(nav.DrawnY + off.y), EffectZ);
+        return true;
+    }
+
+    // Owner 2026-11-10 (railgun C2): in the close-up, the charge builds at the muzzle while the gun is armed. Nothing glows along
+    // the ship: it is built round the gun. When it fires, a white flash, and gas out of the vents either side.
+    int ShowRailgun(int used)
+    {
+        Vector3 at, along;
+        if (!Muzzle(out at, out along)) return used;
+        var side = new Vector3(along.y, -along.x, 0f);
+        if (railArmedFor > 0f)
+        {
+            float p = Mathf.Clamp01(railArmedFor), size = muzzleChargeUnits * (0.3f + 0.7f * p) * (1f + 0.12f * Mathf.Sin(Time.unscaledTime * 40f));
+            var c = ourShotGlow; c.a = 0.3f + 0.6f * p;
+            Streak(used++, at - along * (size / 2f), at + along * (size / 2f), size, c, c, 1f);
+        }
+        if (railFiredAgo < muzzleFlashSeconds)
+        {
+            float f = 1f - railFiredAgo / muzzleFlashSeconds, size = muzzleFlashUnits * (1.5f - f);
+            var c = Color.Lerp(ourShotGlow, Color.white, 0.6f); c.a = f;
+            Streak(used++, at - along * (size / 2f), at + along * (size / 2f), size, c, c, 1f);
+        }
+        if (railFiredAgo < ventGasSeconds)
+        {
+            float age = railFiredAgo / ventGasSeconds, size = muzzleChargeUnits * (0.7f + 2f * age);
+            var gas = new Color(0.8f, 0.83f, 0.88f, 0.45f * (1f - age));
+            for (int sx = -1; sx <= 1; sx += 2)
+            {
+                var c = at - along * (muzzleChargeUnits * 0.6f) + side * (sx * muzzleChargeUnits * (0.5f + 2.5f * age));
+                Streak(used++, c - along * (size / 2f), c + along * (size / 2f), size, gas, gas, 1f);
+            }
+        }
+        return used;
     }
 
     // Owner 2026-11-10: torpedo models for the close-up, made as needed and kept for the next frame.

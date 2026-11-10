@@ -97,6 +97,12 @@ public class HangarSystem : MonoBehaviour
         public double turnDegPerS = 90;
         [Tooltip("How fast a turn builds up and eases off, degrees per game second gained each game second. Lower is gentler.")]
         public double turnEase = 180;
+        [Tooltip("Owner 2026-11-10 (B3, catapult): craft are thrown out of the side at this speed, units/s, and slow to their own speed over Catapult Seconds.")]
+        public double catapultUnits = 560, catapultSeconds = 1.2;
+        [Tooltip("Owner 2026-11-10 (B3, hard break): at the end of the straight run they break hard onto the target. The sharpest that first turn gets, degrees per game second, and how fast it builds, degrees per game second gained each game second.")]
+        public double breakDegPerS = 240, breakEase = 2000;
+        [Tooltip("Owner 2026-11-10 (B3): the hard break ends, and the normal turn takes over, once the craft points within this many degrees of the target.")]
+        public double breakEndDeg = 8;
         [Header("Assault boats (Step 60, BOARDING_README.md)")]
         [Tooltip("Assault boat speed, units/s (Step 63: x5).")]
         [FormerlySerializedAs("boatSpeedKms")] public double boatSpeedUnits = 30;
@@ -202,6 +208,10 @@ public class HangarSystem : MonoBehaviour
         [System.NonSerialized] public double fromX, fromY, fromHdg; // where it was at the last tick: the plot draws the curve from there
         [System.NonSerialized] public Vector2[] line; // owner 2026-11-02: its hangar dot's drawn line, laid in the world; null once flown, or with none drawn
         [System.NonSerialized] public double along; // how far down the line it is, units
+        // owner 2026-11-10 (B3): speed over its own from the catapult, units/s, and how fast that falls; game seconds since its hard
+        // break began (-1: not yet); whether it is still in that break
+        [System.NonSerialized] public double boost, boostFall, breakT = -1;
+        [System.NonSerialized] public bool breaking;
     }
     [System.NonSerialized] private System.Collections.Generic.List<Flight> flights;
     public System.Collections.Generic.List<Flight> Flights => flights ?? (flights = new System.Collections.Generic.List<Flight>());
@@ -332,14 +342,17 @@ public class HangarSystem : MonoBehaviour
         const double step = 0.05;
         for (double left = dt; left > 0; left -= step)
         {
-            double h = System.Math.Min(left, step), dx = gx - f.x, dy = gy - f.y;
+            double h = System.Math.Min(left, step), dx = gx - f.x, dy = gy - f.y, v = speed + f.boost;
+            f.boost = System.Math.Max(0, f.boost - f.boostFall * h); // owner 2026-11-10: the catapult's push falls away
+            if (f.breakT >= 0) f.breakT += h;
             if (f.runLeft > 0)
             {
-                f.runLeft -= speed * h;
+                f.runLeft -= v * h;
+                if (f.runLeft <= 0 && f.breakT < 0 && !f.returning) { f.breakT = 0; f.breaking = true; } // the run is over: break hard
                 if (f.line != null)
                 {
                     // owner 2026-11-02: down its hangar dot's drawn line; past the end it flies on straight, or turns
-                    f.along += speed * h;
+                    f.along += v * h;
                     Vector2 at; double way;
                     if (!WeaponSystem.Along(f.line, f.along, out at, out way)) f.line = null;
                     f.x = at.x; f.y = at.y; f.hdg = way;
@@ -350,13 +363,14 @@ public class HangarSystem : MonoBehaviour
             {
                 if (dx * dx + dy * dy <= reach * reach) return true;
                 double off = ((System.Math.Atan2(dx, dy) * 180 / System.Math.PI - f.hdg) % 360 + 540) % 360 - 180;
-                double most = stats.turnDegPerS, ease = stats.turnEase;
+                if (System.Math.Abs(off) <= stats.breakEndDeg) f.breaking = false; // owner 2026-11-10: the hard break ends once it is nearly lined up
+                double most = f.breaking ? stats.breakDegPerS : stats.turnDegPerS, ease = f.breaking ? stats.breakEase : stats.turnEase;
                 double want = System.Math.Max(-most, System.Math.Min(most, off * ease / most));
                 f.turn += System.Math.Max(-ease * h, System.Math.Min(ease * h, want - f.turn));
                 f.hdg = (f.hdg + f.turn * h + 360) % 360;
             }
             double b = f.hdg * System.Math.PI / 180;
-            f.x += System.Math.Sin(b) * speed * h; f.y += System.Math.Cos(b) * speed * h;
+            f.x += System.Math.Sin(b) * v * h; f.y += System.Math.Cos(b) * v * h;
         }
         return false;
     }
@@ -504,6 +518,9 @@ public class HangarSystem : MonoBehaviour
         var f = new Flight { squad = q.key, order = order, targetKey = ship.weapons.target, craft = SquadReady(q), x = x, y = y, hdg = hdg,
                              fromX = x, fromY = y, fromHdg = hdg, runLeft = order == "escort" ? System.Math.Max(run, launchClearUnits) : run, line = line };
         if (q.key == "ih") { f.marines = Mathf.Min(marines, f.craft * stats.marinesPerBoat); marines -= f.marines; } // Step 60: the boats take marines
+        // owner 2026-11-10 (B3): thrown out by the catapult, then slowing to its own speed
+        f.boost = System.Math.Max(0, stats.catapultUnits - (q.key == "ih" ? stats.boatSpeedUnits : stats.fighterSpeedUnits));
+        f.boostFall = f.boost / System.Math.Max(0.01, stats.catapultSeconds);
         Flights.Add(f);
     }
 
