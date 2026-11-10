@@ -72,8 +72,9 @@ is a dot. The newest dot is already picked. Click LAUNCH. Win the mission, and
 the next dot shows. A finished mission's dot shows a tick. Click it: DEBRIEF
 shows MISSION COMPLETE, and REPLAY MISSION plays it again.
 After a won mission, the ship's rooms show before the map. Damage stays on the
-ship between campaign missions until REPAIR ALL in ENGINEERING. The game saves
-after each win. DELETE on a used slot empties it.
+ship between campaign missions until REPAIR ALL in ENGINEERING. The rounds,
+torpedoes, marines and crew left after a win stay too. Nothing restocks them yet.
+The game saves after each win. DELETE on a used slot empties it.
 
 SKIRMISH plays WOLF HUNT straight away. In a skirmish, MISSION SELECT goes
 back to the title.

@@ -18,7 +18,7 @@
 //   damage goes into the save when the player picks MISSION SELECT.
 // - A room always comes back with at least 1 point. Fires, air loss and radiation are not kept.
 // - On a win it also keeps the rounds left in each gun and launcher, the marines and each room's
-//   crew. Marines still out on boats are lost. The next mission starts with those. Nothing goes
+//   crew. Marines still out on boats count as home. The next mission starts with those. Nothing goes
 //   above the stats file's numbers.
 // - REPAIR ALL in the ship rooms clears the saved damage and saves.
 // - Delete removes a slot's file and its copies. Outside the campaign, every save step does
@@ -41,7 +41,8 @@
 // - More callers: EndScreenPanel (FinishedWith, KeepWonDamage), ShipRooms (Repair), EndCard and
 //   ScreenFlow (Leave).
 // - KeepDamage takes full rounds, marines and crew from Ship.statsFile. Full armour comes from
-//   DamageSystem.stats. PutDamage only lowers the ship's numbers.
+//   DamageSystem.stats. PutDamage never raises rounds, marines or crew. Marines on boats
+//   (HangarSystem.Flights) count as aboard.
 // - Traps: parts match by name. A renamed room or gun label loses what was saved for it.
 // - Trap: a win's damage and stores wait in memory until KeepWonDamage. PutDamage drops them. So
 //   does quitting. REPAIR ALL clears the damage only.
@@ -64,9 +65,11 @@ public static class SaveGame
         public int dotsShown; // dots the sector map has shown: a newer one fades in the first time
         [Tooltip("Owner 2026-11-08: our ship's damage after the last mission won, kept for the next one; empty when it is whole.")]
         public List<Part> damage = new List<Part>();
+        [Tooltip("Owner 2026-11-10: what our ship had left after the last mission won: each gun's and launcher's rounds (by its label), the marines, each room's crew. Empty when all are full.")]
+        public List<Part> stores = new List<Part>();
     }
 
-    /// <summary>One part of our ship: a side's armour, or a room's integrity (0 to 5).</summary>
+    /// <summary>One part of our ship: a side's armour, a room's integrity (0 to 5), a gun's rounds, the marines or a room's crew.</summary>
     [System.Serializable]
     public class Part
     {
@@ -142,10 +145,12 @@ public static class SaveGame
     }
 
     /// <summary>Owner 2026-11-08: in the campaign, damage stays on the ship from one mission to the next until it is repaired.
-    /// A won mission keeps our ship's armour and rooms as they ended (fires and crew don't stay). The level list's levels
-    /// still start whole.</summary>
-    // A win's damage waits here until MISSION SELECT: RESTART MISSION on the win screen replays from the damage before it.
-    private static List<Part> wonDamage;
+    /// A won mission keeps our ship's armour and rooms as they ended (fires, air loss and radiation don't stay). Since
+    /// 2026-11-10 it also keeps the rounds left, the marines and each room's crew. The level list's levels still start whole.</summary>
+    // A win's damage and stores wait here until MISSION SELECT: RESTART MISSION on the win screen replays from those before it.
+    private static List<Part> wonDamage, wonStores;
+
+    public const string Marines = "MARINES", Crew = " CREW";
 
     public static void KeepDamage(DamageSystem d)
     {
@@ -154,27 +159,55 @@ public static class SaveGame
         for (int i = 0; i < DamageSystem.Sides.Length; i++) parts.Add(new Part { name = DamageSystem.Sides[i] + " ARMOUR", now = d.SideArmour[i], most = d.stats.sideArmourMax[i] });
         foreach (var c in d.compartments) parts.Add(new Part { name = c.name, now = Mathf.Max(1, c.integ), most = 5 }); // a room comes back at 1 at least: a reactor at 0 is a lost ship
         wonDamage = parts.Exists(p => p.now < p.most) ? parts : new List<Part>();
+
+        // Owner 2026-11-10: supplies and crew carry over ("if you lose crew, you lose crew"). Full is the stats file's number.
+        var file = d.GetComponent<Ship>() ? d.GetComponent<Ship>().statsFile : null;
+        var w = d.GetComponent<WeaponSystem>();
+        var h = d.GetComponent<HangarSystem>();
+        var stores = new List<Part>();
+        if (file && w) for (int i = 0; i < w.stats.mounts.Length && i < file.weapons.mounts.Length; i++)
+            stores.Add(new Part { name = w.stats.mounts[i].label, now = w.stats.mounts[i].ammo, most = file.weapons.mounts[i].ammo });
+        if (file && h)
+        {
+            int marines = h.marines;
+            foreach (var f in h.Flights) marines += f.marines; // out on boats or aboard the prize: they come home; only the dead are lost
+            stores.Add(new Part { name = Marines, now = marines, most = file.hangar.marines });
+        }
+        for (int i = 0; i < d.compartments.Length; i++)
+            stores.Add(new Part { name = d.compartments[i].name + Crew, now = d.compartments[i].crew, most = file && i < file.damage.crew.Length ? file.damage.crew[i] : d.compartments[i].crew });
+        wonStores = stores.Exists(p => p.now < p.most) ? stores : new List<Part>();
     }
 
-    /// <summary>MISSION SELECT after a win: the win's damage goes into the save.</summary>
+    /// <summary>MISSION SELECT after a win: the win's damage, supplies and crew go into the save.</summary>
     public static void KeepWonDamage()
     {
         if (!InCampaign || wonDamage == null) return;
         Current.damage = wonDamage;
-        wonDamage = null;
+        if (wonStores != null) Current.stores = wonStores;
+        wonDamage = wonStores = null;
         Save();
     }
 
-    /// <summary>A campaign mission starts with the damage kept from the last one.</summary>
+    /// <summary>A campaign mission starts with the damage, supplies and crew kept from the last one.</summary>
     public static void PutDamage(DamageSystem d)
     {
-        wonDamage = null; // a mission starting (or started again) drops a win's damage not yet kept
+        wonDamage = wonStores = null; // a mission starting (or started again) drops a win's damage not yet kept
         if (!InCampaign || d == null) return;
         foreach (var p in Current.damage)
         {
             int side = System.Array.IndexOf(DamageSystem.Sides, p.name.Replace(" ARMOUR", ""));
             if (side >= 0) { d.SideArmour[side] = Mathf.Min(p.now, d.stats.sideArmourMax[side]); continue; }
             foreach (var c in d.compartments) if (c.name == p.name) c.integ = Mathf.Clamp(Mathf.RoundToInt(p.now), 1, 5);
+        }
+        // Supplies and crew: never more than the ship starts with.
+        var w = d.GetComponent<WeaponSystem>();
+        var h = d.GetComponent<HangarSystem>();
+        foreach (var p in Current.stores)
+        {
+            int left = Mathf.Max(0, Mathf.RoundToInt(p.now));
+            if (p.name == Marines) { if (h) h.marines = Mathf.Min(h.marines, left); continue; }
+            if (w) foreach (var m in w.stats.mounts) if (m.label == p.name) m.ammo = Mathf.Min(m.ammo, left);
+            foreach (var c in d.compartments) if (c.name + Crew == p.name) c.crew = Mathf.Min(c.crew, left);
         }
     }
 

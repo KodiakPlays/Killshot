@@ -15,7 +15,7 @@ https://claude.ai/artifact/UhfPpB8aJoY8zJj3RziEa4
 | Missions set up in the Campaign file | Built (Step 183). |
 | 1. The Escape menu | Built (Step 190). |
 | 2. The end card, and the percent on the save slot | Built (Step 194). The end card shows only once the owner writes the closing line, in `Assets/Campaign/Campaign.asset` → Closing Line. Until then, MISSION SELECT after the last mission opens the ship's rooms, as before. |
-| 3. Supplies carry over, and the travel bar | Next. The points under "Still to settle" come first. |
+| 3. Supplies carry over, and the travel bar | Part 1 built (Step 196): supplies and crew are kept between missions. Part 2 is next: the travel bar and the actions in each room. |
 
 **Step 2, as built (Step 194).** Win the campaign's last mission and press MISSION SELECT. The
 screen goes black. The closing line types in, in the middle, in the sector map's green Share Tech
@@ -26,6 +26,16 @@ line is empty, so a campaign win of MILK RUN opens the ship's rooms. A used save
 "CAMPAIGN · 1 OF 10 · 10%", or "CAMPAIGN COMPLETE · 100%" when every mission in the Campaign file
 is won. Old test levels don't count. After a campaign win of MILK RUN it reads CAMPAIGN COMPLETE ·
 100%.
+
+**Step 3 part 1, as built (Step 196).** Win a campaign mission and press MISSION SELECT. The next
+mission starts with what our ship had left: the rounds in each gun and launcher, the marines aboard
+and each room's crew. Marines still out on boats count as home; only marines killed are lost. Nothing goes above the full numbers in
+`Assets/Ships/Asura.asset`. Fires, air loss and radiation are not kept. Armour and room damage are
+kept, as before. The save is written only at MISSION SELECT. RESTART MISSION on the win screen
+replays from the save before. Nothing restocks yet; that is part 2. Saved numbers match by name, so
+renaming a gun's label or a room loses what was saved for it. The code is in `SaveGame.cs`.
+Open, for the owner: a ship with no torpedoes or marines left can't win a mission that needs them.
+Until part 2's restock actions are built, nothing refills them.
 
 ## The owner's answers, 2026-11-10
 
@@ -72,12 +82,29 @@ bar. When the bar is full, the actions lock and the SECTOR MAP tab flashes. The 
 Restock drones stays hidden until drones are built. The save slot's percent is missions won out of
 the missions in the Campaign file.
 
-## Still to settle, before step 3
+## Settled for step 3 (owner, 2026-11-10)
 
-- How much each fix gives back: the share of ammo, of armour, of a room's integrity.
-- Which conditions carry over between missions (fires, breaches, radiation), and what removing each
-  one costs.
-- How much the torpedo restock gives back, if it is not to full either.
+- **Fires, radiation and hull breaches do not carry over.** Owner: "I don't think you should come
+  into a level leaking something." They end with the mission. The room damage they did stays. So
+  there are no actions to clear them between missions. This replaces answer 2's "remove a
+  condition, repair a breach".
+- **Crew losses carry over.** Owner: "If you lose crew, you lose crew." The crew in each room come
+  back as they ended. Only the marines can be healed.
+- **What one action gives back** (my starting numbers; the owner didn't change them). All are
+  Tuning numbers, logged when built:
+
+| Action | Cost | Gives back |
+|---|---|---|
+| Repair the reactor | 3 | 2 of its 5 points |
+| Repair another room | 2 | 2 of its 5 points |
+| Repair one side's armour | 1 | A quarter of that side's full armour |
+| Extra ammo | 1 | 20% of full: 2 railgun slugs, 480 rounds per PDC group |
+| Restock torpedoes | 2 | 4 torpedoes (16 carried) |
+| Heal the marines | 2 | 6 marines, one boat's worth (18 carried) |
+| Restock drones | 1 | Hidden until drones are built |
+
+Step 3 is built in two parts: first the supplies and crew carry over, then the travel bar and the
+actions in the rooms.
 
 ## The rooms' art
 
