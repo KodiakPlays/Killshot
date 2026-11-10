@@ -434,17 +434,35 @@ public class BoardManager : MonoBehaviour
         return new Vector2(local.x + rt.rect.width / 2f, rt.rect.height / 2f - local.y);
     }
 
+    /// <summary>A screen point in the panel's own 1920x1080 layout. On a screen that isn't 16:9 the board grows,
+    /// and each panel's sheet is pinned to an edge and moves with it (owner 2026-11-10). This takes that move
+    /// off, so a panel's fixed spots (the comms dial, the throttle well) still match the mouse.</summary>
+    Vector2 PanelPoint(Panel p, Vector2 screen)
+    {
+        var board = (RectTransform)transform;
+        Vector2 grow = board.rect.size - new Vector2(1920f, 1080f), shift = Vector2.zero;
+        var path = new System.Collections.Generic.List<RectTransform>();
+        for (var t = p.transform as RectTransform; t && t != board; t = t.parent as RectTransform) path.Add(t);
+        for (int i = path.Count - 1; i >= 0; i--)
+        {
+            var r = path[i];
+            shift += new Vector2(r.anchorMin.x * grow.x, (1f - r.anchorMax.y) * grow.y);
+            grow = Vector2.Scale(grow, r.anchorMax - r.anchorMin);
+        }
+        return BoardPoint(screen) - shift;
+    }
+
     private double dragZoom0;
 
     public void Down(string action, string arg, Vector2 screen)
     {
         if (action == "zoom") { dragZoom0 = zoomExact; return; }
-        foreach (var p in panels) if (p.Down(action, arg, BoardPoint(screen))) { RefreshPanels(); return; }
+        foreach (var p in panels) if (p.Down(action, arg, PanelPoint(p, screen))) { RefreshPanels(); return; }
     }
 
     public void Up(string action, string arg, Vector2 screen)
     {
-        foreach (var p in panels) if (p.Up(action, arg, BoardPoint(screen))) { RefreshPanels(); return; }
+        foreach (var p in panels) if (p.Up(action, arg, PanelPoint(p, screen))) { RefreshPanels(); return; }
     }
 
     // scaleDown: zoom = z0 x 10^((x - x0) / 160), measured from the press, not frame to frame —
@@ -453,7 +471,7 @@ public class BoardManager : MonoBehaviour
     {
         if (action != "zoom")
         {
-            foreach (var p in panels) if (p.Drag(action, arg, BoardPoint(screen))) { RefreshPanels(); return; }
+            foreach (var p in panels) if (p.Drag(action, arg, PanelPoint(p, screen))) { RefreshPanels(); return; }
             return;
         }
         float px = sincePress.x / (canvas ? canvas.scaleFactor : 1f); // board px

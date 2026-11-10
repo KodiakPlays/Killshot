@@ -195,8 +195,10 @@ public class PlotPanel : Panel
     [Tooltip("A passive label shows only while its contact is heard and not identified (passives).")]
     [SerializeField] private bool passiveVisibility = true;
 
-    [Header("Plot space (§8.4): the scale is the grid's (owner 2026-10-29: at x1 a small square is 50 units)")]
-    [SerializeField] private Vector2 plotCentre = new Vector2(960, 545);
+    // Plot space (§8.4): the scale is the grid's (owner 2026-10-29: at x1 a small square is 50 units).
+    // The plot's middle in board px. It was a fixed (960, 545). The plot now grows with screens that aren't 16:9
+    // (owner 2026-11-10), so the middle comes from the grid's size.
+    Vector2 plotCentre => (marks ? marks.origin : new Vector2(104, 100)) + (grid ? grid.rectTransform.rect.size / 2f : new Vector2(856, 445));
 
     // Step 41 (owner 2026-10-18): the grid stays put and our ship moves across it. The plot shows the
     // world around a view centre, which starts on our ship. Drag the empty grid, or hold the arrow

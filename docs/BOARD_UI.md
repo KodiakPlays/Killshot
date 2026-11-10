@@ -101,9 +101,12 @@ A part lower in the Hierarchy draws on top of the parts above it.
 
 ### Board pixels
 
-The board is 1920 × 1080 pixels. The helm, the orders station, every drawer and every frame piece
-are the size of the whole board. Every group in them is that size too. In these, a part's Rect
-Transform gives its place on the board:
+On a 16:9 screen the board is 1920 × 1080 pixels. On other screens it is bigger. See
+[Screens of other shapes](#screens-of-other-shapes).
+
+The helm, the orders station, every drawer and every frame piece are drawn on a 1920 × 1080
+sheet. Every group in them is that size too. In these, a part's Rect Transform gives its place on
+the sheet. On a 16:9 screen the sheet is the whole board:
 - Pos X is the board x of the part's centre.
 - Pos Y is the board y of the part's centre, as a minus number.
 
@@ -113,8 +116,8 @@ those two, Pos X is off by that much.
 The periscope and the plot are smaller. Their parts' positions count from the panel's top-left
 corner. Their sections below give that corner.
 
-Some script fields are positions in board pixels too. In those, y counts down from the top edge,
-without the minus.
+Some script fields are positions in board pixels too. They count on the panel's own sheet. In
+those, y counts down from the top edge, without the minus.
 
 ### On the board
 
@@ -131,6 +134,95 @@ The board is in the scene `Assets/Scenes/Tactical/02.1_Grid.unity`, under `Board
   `Console`, `AlarmStrip` and `SignalBox`.
 - `PlotRing`, a dark rounded shape behind the plot, is an image on `Tactical Board`, outside every
   prefab. `ReferenceOverlay` is the design's picture, switched off.
+
+### Screens of other shapes
+
+The battle board fills any screen: a Mac, a Windows PC, a 16:9 monitor, a 16:10 laptop or a wide
+21:9 monitor. There are no black bands. This is new on 2026-11-10. The owner played a Mac build on
+the MacBook and saw black space above and below the board.
+
+What the player sees:
+- On a 16:9 screen the board looks the same as before.
+- On a 16:10 screen, such as 2880 × 1800, the plot is taller. It is 1712 × 1010 board pixels. At
+  16:9 it is 1712 × 890.
+- On a wide 21:9 screen, such as 3440 × 1440, the plot is wider. It is 2372 × 890 board pixels.
+- Panels, buttons and text keep their size. The plot and the frame round it grow. More of the map
+  shows. On a 21:9 screen a second bogey showed. At 16:9 it was off the edge.
+
+How it works:
+- The board's canvas is `Board` in `02.1_Grid`. Its settings are the same as before: Scale With
+  Screen Size, 1920 × 1080, Screen Match Mode Expand. On a screen that isn't 16:9, Expand makes
+  the canvas bigger than 1920 × 1080 one way: taller on 16:10, wider on 21:9.
+- `Tactical Board` stretches to fill the canvas.
+- Each panel is a 1920 × 1080 sheet. The panel is drawn on one part of it. Each sheet is tied
+  (anchored) to the edge of the board where its panel is. When the board grows, each sheet moves
+  with its edge. Nothing inside a sheet moves.
+
+| Edge | Sheets tied to it |
+|---|---|
+| Top left | `TimeControl`, `Briefing Icon`, `Help Bubble` |
+| Top middle | `AlarmStrip`, `Periscope`, `State · periscope` |
+| Top right | `SignalBox` |
+| Left middle | `ToolRail` |
+| Right middle | `SystemsRail`, and the six drawers under `Drawers` |
+| Bottom left | `Orders` |
+| Bottom middle | `Helm` |
+| Bottom right | `Console` |
+
+These grow with the board:
+- The plot. It keeps the same gaps to the board's edges: 104 px left, 100 top, 104 right and 90
+  bottom. Its layers that were 1712 × 890 stretch with it. Its four edge lines are tied to their own
+  sides. The code sizes the sensor sweep and the 3D views every frame.
+- `PlotRing`, the dark shape behind the plot.
+- `Drawers`. It is a clip box. It hides a drawer until the drawer slides out past the frame. Its
+  padding (RectMask2D: 98 left, 84 bottom, 98 right, 94 top) matches the plot opening at any size.
+- The frame and its `Black backing`. The frame is `Frame` (see [Frame pieces](#frame-pieces)). The
+  plot is drawn over it.
+
+The frame grows without pulling anything painted longer (owner 2026-11-10: "repeat, don't
+stretch"). Corners and fixed parts keep their size. Short plain pieces of the edges repeat along
+each side. At 16:9 every part is exactly where it was.
+- The metal sheet, `Steel frame`, shows `Art/Frame/steel_frame_1920x1080.png`. At 16:9 it fits
+  exactly once. On a bigger screen its four big corner pieces stay as drawn. Across, a 200 px piece
+  from the middle repeats. Up and down, a strip only 4 px tall repeats (rows 543 to 547 of the
+  picture). The metal's grain runs up and down. The strip continues with no step in shade. Its
+  sprite border is 860 left, 533 bottom, 860 right and 543 top. Its Image Type is Tiled.
+- The four corner bolts, under `Corner bolts`: each one is tied to its own corner.
+- The left pipe and its two bolts, under `Conduits`: tied to the left edge, middle height, beside
+  the tool rail.
+- The right pipe and its two bolts: tied to the right edge, middle height, beside the systems rail.
+- The middle pipe runs along the bottom, between ORDERS and the console. It is tied to the bottom.
+  It is 1398 px long at 16:9 and 2058 px at 21:9. Its two ends stay as drawn. Its middle repeats,
+  two clamp spaces at a time. The clamps keep the same spacing at any length. Its picture is
+  `conduit_mid.png`: sprite border 16 left and 1324 right, Image Type Tiled.
+- The stencil words, under `Stencils`. BUS A-14 is on the left pipe. It is tied to the left edge,
+  middle height. VENT PLENUM 3 is tied to the bottom right, near the middle pipe's right end.
+
+The plot's middle moves as the plot grows. The code works it out from the plot grid's size: half
+its width and half its height, counted from the plot's top-left corner. At 16:9 the middle is at
+board x 960, y 545. At 2880 × 1800 it is at x 960, y 605.
+
+The drawers:
+- The drawers slide in and out from the right. The code for that is in `BoardMotion.cs`.
+- Open is x 0. Shut is x 376 (**Drawer Travel Px**).
+- Each drawer sheet has its pivot at (1, 0.5) and its position at (0, 0). At x 0 the drawer's
+  right side is on the board's right edge.
+- A new drawer under `Drawers` needs the same anchor (right middle) and the same pivot (1, 0.5).
+
+Controls you drag:
+- Some controls turn or slide around a fixed point written in their code: the comms tuning dial
+  (centre 1590, 422.5), the helm's throttle well, and the sensors dial and gain fader. These points
+  are on the panel's own sheet. When the sheet moves to its edge, the points move with it.
+- The code for this is `PanelPoint`, in `BoardManager.cs`. It turns the mouse point into a point
+  on the panel's own 1920 × 1080 sheet. Mouse down, mouse up and drag all go through it.
+- A new control of this kind needs `PanelPoint` too.
+
+Not done yet:
+- The other screens still show dark bands on screens that aren't 16:9: the title, SAVE SLOTS,
+  SECTOR MAP, the ship's rooms and the MISSIONS list.
+- There is no limit for screens wider than 21:9. On those, the plot keeps getting wider.
+- The test scene `Fire Control Codex` was not changed. Its board is still a fixed 1920 × 1080 box.
+- No person has dragged a control with a real mouse on a 16:10 or wide screen yet.
 
 ## How to change a panel's art
 
@@ -201,6 +293,8 @@ Hierarchy, stand-in parts have names that start with `STAND-IN`.
 - Colours that change in play, such as lamps lighting up. The code takes them from the palette
   (see [Colours](#colours)). A colour you set on the image is replaced in play.
 - Links to objects outside the prefab. Only the sensors drawer has these.
+- The anchor and pivot of a panel's sheet on the board. Each sheet is tied to a board edge (see
+  [Screens of other shapes](#screens-of-other-shapes)).
 
 ## Panel by panel
 
@@ -377,8 +471,9 @@ made with the plot tools.
 Most of what the plot shows is drawn by code while the game runs. Parts named `… (drawn)` are
 drawn this way.
 
-The plot is 1712 × 890 px. Its top-left corner is at board x 104, y 100. Its parts' positions
-count from that corner.
+On a 16:9 screen the plot is 1712 × 890 px. On other screens it is bigger (see
+[Screens of other shapes](#screens-of-other-shapes)). Its top-left corner is at board x 104, y 100.
+Its parts' positions count from that corner.
 
 The prefab has these parts, from back to front:
 - `Ground`, `Grid` and `Glow`: the plot's background, the grid and its glow. `Nebula far`, `Stars`,
@@ -703,8 +798,11 @@ prefab has **Friendly** ticked on its World Contact. Its Enemy Brain has **Hunts
 Ask a technical artist before you change these:
 - The code copies four templates in play: `Passive label template`, `Fighter (template)`,
   `Contact label (template)` and `Mark label (template)`. Keep them switched off.
-- Two fields place everything the code draws: **Plot Centre** (960, 545, in board pixels) and
-  **Px Per 1000 Units** (760, on `PlotGrid`). Moving or resizing the plot means changing them.
+- Two things place everything the code draws: the plot's middle and **Px Per 1000 Units** (760,
+  on `PlotGrid`). The code works out the middle from the plot grid's size, counted from the plot's
+  top-left corner. At 16:9 it is at board x 960, y 545. Until 2026-11-10 it was a fixed field,
+  **Plot Centre**. It is no longer in the inspector. Changing the plot's gaps to the board's edges
+  (104, 100, 104, 90) means changing the code.
 - The code sizes our ship's picture: **Own Ship Px At Full Zoom**, **Own Ship Min Px** and
   **Own Ship Max Px**.
 - The code sizes and spaces the fighters: **Fighter Px** (10) and **Fighter Gap Px** (10).
