@@ -22,6 +22,17 @@ public class Campaign : ScriptableObject
 
     [Tooltip("The missions, in order. Each opens when the one before it is won.")]
     public Mission[] missions;
+
+    [Tooltip("The story's closing line. After the last mission is won, the end card shows it, then the STARWOLF title.")]
+    [TextArea(2, 6)] public string closingLine;
+
+    /// <summary>How many of the missions are in this list of levels won.</summary>
+    public int Won(System.Collections.Generic.List<string> done)
+    {
+        int n = 0;
+        foreach (var m in missions) if (done.Contains(m.level)) n++;
+        return n;
+    }
 }
 
 /// <summary>On a text field: the inspector shows a slot to drag a scene into, and keeps the scene's name.</summary>

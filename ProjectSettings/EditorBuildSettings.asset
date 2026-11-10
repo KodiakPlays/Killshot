@@ -50,5 +50,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Levels/Orientation.unity
     guid: e8095fc79760047e4a1fa59c5faa65ba
+  - enabled: 1
+    path: Assets/Scenes/Tactical/EndCard.unity
+    guid: 5e3a0c3161232446aa53ffbc8e9f1ec0
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

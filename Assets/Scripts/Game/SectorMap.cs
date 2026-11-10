@@ -52,6 +52,7 @@ public class SectorMap : MonoBehaviour
 
     private void Start()
     {
+        SaveGame.campaign = campaign; // the end screen reads it to know the last mission
         if (!SaveGame.InCampaign) { UnityEngine.SceneManagement.SceneManager.LoadScene(slotsScene); return; }
         var save = SaveGame.Current;
         int open = 0;

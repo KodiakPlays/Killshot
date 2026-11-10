@@ -15,7 +15,18 @@ public class SaveSlots : MonoBehaviour
     [SerializeField] private TMP_Text[] deletes;
     [Tooltip("Picking a slot opens this scene.")]
     [SerializeField] private string mapScene = "SectorMap";
+    [Tooltip("The Campaign file: a used slot shows how many of its missions are won, as a percent (owner 2026-11-09).")]
+    [SerializeField] private Campaign campaign;
     private int asking = -1; // the slot whose DELETE asks to be clicked again
+
+    // "CAMPAIGN · 4 OF 10 · 40%", or "CAMPAIGN COMPLETE · 100%" once every mission is won. Old test levels don't count.
+    string Progress(SaveGame.Data save)
+    {
+        int total = campaign ? campaign.missions.Length : 0;
+        if (total == 0) return "CAMPAIGN · " + save.done.Count + (save.done.Count == 1 ? " MISSION DONE" : " MISSIONS DONE");
+        int won = campaign.Won(save.done);
+        return won >= total ? "CAMPAIGN COMPLETE · 100%" : "CAMPAIGN · " + won + " OF " + total + " · " + Mathf.FloorToInt(100f * won / total) + "%";
+    }
 
     private void Start() => Show();
 
@@ -24,7 +35,7 @@ public class SaveSlots : MonoBehaviour
         for (int i = 0; i < rows.Length; i++)
         {
             var save = SaveGame.Read(i);
-            rows[i].text = (i + 1) + "  " + (save == null ? "EMPTY" : "CAMPAIGN · " + save.done.Count + (save.done.Count == 1 ? " MISSION DONE" : " MISSIONS DONE"))
+            rows[i].text = (i + 1) + "  " + (save == null ? "EMPTY" : Progress(save))
                          + "\n<size=26><alpha=#B0>   " + (save == null ? "START A NEW CAMPAIGN." : "SAVED " + save.savedAt + ".") + "</size>";
             if (i >= deletes.Length) continue;
             deletes[i].transform.parent.gameObject.SetActive(save != null);

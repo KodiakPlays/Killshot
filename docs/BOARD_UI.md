@@ -1243,7 +1243,8 @@ Ask a technical artist before you change these:
 when the mission is won or lost. It says MISSION COMPLETE or SHIP LOST, and why. It shows the
 target, our ship and the time taken. Its two buttons are RESTART MISSION and MISSION SELECT.
 RESTART MISSION plays the level again. In a skirmish, MISSION SELECT goes back to the title. In a
-campaign it opens the ship's rooms (see Ship rooms, below).
+campaign it opens the ship's rooms (see Ship rooms, below). After a win of the campaign's last
+mission, it opens the end card instead, once the closing line is written (see End card, below).
 
 It is the pause menu too. In a level, Escape stops the game and opens it. The title says PAUSED in
 white. The reason line is empty. The target, our ship and the time are hidden. Two more buttons
@@ -1420,6 +1421,34 @@ Ask a technical artist before you change these:
 - The buttons' On Click calls: **ShowBriefing**, **ShowDebrief** and **Launch** on Sector Map.
 - **Slots Scene** (`SaveSlots`): with no save slot picked, the map opens this scene instead.
 - **Map Scene** (`SectorMap`) on Ship Rooms is the scene SECTOR MAP › loads. See Ship rooms, above.
+
+### End card
+
+Scene: `Assets/Scenes/Tactical/EndCard.unity`. Script: **End Card** (Step 194). It shows after a win
+of the campaign's last mission, when you press MISSION SELECT. The screen is black. The story's
+closing line types in, in the middle, in the sector map's green Share Tech Mono. The whole line
+stays up, then the title loads, where only STARWOLF flickers in. Any key or click shows the whole
+line at once. Another one goes straight to the title. The end card leaves the campaign. The save
+was already written at the win.
+
+The closing line is in the Campaign file: `Assets/Campaign/Campaign.asset` → **Closing Line**.
+Select the file in the Project window and type it there. It is empty now. The end card shows only
+once it is written. While it is empty, MISSION SELECT after the last mission opens the ship's
+rooms, as before. Today the campaign has one mission, MILK RUN, so a campaign win of MILK RUN opens
+the rooms.
+
+Two numbers, on the Board tab of **Starwolf → Tuning**, under End card, with `EndCard.unity` open:
+- **Letters Per Second** (30): how fast the line types in.
+- **Hold Seconds** (5): how long the whole line stays up before the title.
+
+The save slot: on SAVE SLOTS, a used slot reads "CAMPAIGN · 1 OF 10 · 10%". That is missions won,
+out of the missions in the Campaign file, and the percent. With every mission won it reads
+"CAMPAIGN COMPLETE · 100%". Old test levels don't count.
+
+Ask a technical artist before you change these:
+- **End Card Scene** (`EndCard`) on the End Screen Panel is the scene MISSION SELECT loads after
+  the last win. If that scene is not in the build's scene list, MISSION SELECT opens the rooms.
+- **Campaign** on Save Slots, in `SaveSlots.unity`, is the file the percent is counted from.
 
 ### Escape menu
 

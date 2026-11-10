@@ -22,6 +22,8 @@ public class EndScreenPanel : Panel
     [SerializeField] private string menuScene = "00_Start";
     [Tooltip("Owner 2026-11-08: in the campaign, MISSION SELECT loads this scene instead: the ship's rooms, then the sector map.")]
     [SerializeField] private string campaignScene = "Ship";
+    [Tooltip("Owner 2026-11-09: after the campaign's last mission is won, MISSION SELECT loads this scene instead: the end card, then the title.")]
+    [SerializeField] private string endCardScene = "EndCard";
     [Tooltip("Pause menu only: RESUME and QUIT GAME.")]
     [SerializeField] private GameObject resumeButton, quitButton;
     [Tooltip("The target, our ship and the time, with their labels. Hidden on the pause menu.")]
@@ -75,7 +77,15 @@ public class EndScreenPanel : Panel
     public override bool Click(string action, string arg)
     {
         if (action == "end.restart") { SceneManager.LoadScene(gameObject.scene.name); return true; } // the board loads its level again
-        if (action == "end.menu") { SaveGame.KeepWonDamage(); SceneManager.LoadScene(SaveGame.InCampaign ? campaignScene : menuScene); return true; }
+        if (action == "end.menu")
+        {
+            SaveGame.KeepWonDamage();
+            bool finished = quest != null && quest.Stage == QuestStage.MissionComplete && SaveGame.FinishedWith(TacticalWorld.chosenLevel)
+                         && !string.IsNullOrEmpty(SaveGame.campaign.closingLine) // no closing line written yet: the rooms, as before
+                         && Application.CanStreamedLevelBeLoaded(endCardScene); // no end card scene in the build: the rooms, as before
+            SceneManager.LoadScene(!SaveGame.InCampaign ? menuScene : finished ? endCardScene : campaignScene);
+            return true;
+        }
         if (action == "end.pause") // Escape, and RESUME
         {
             if (quest && quest.Over) return true; // the end screen has its own buttons

@@ -41,6 +41,16 @@ public static class SaveGame
     public static Data Current { get; private set; }
     public static bool InCampaign => Slot >= 0 && Current != null;
 
+    /// <summary>The Campaign file. The sector map hands it over when it opens; the end screen reads it.</summary>
+    public static Campaign campaign;
+
+    /// <summary>True when this level is the campaign's last mission and every mission is won: the end card comes next.</summary>
+    public static bool FinishedWith(string level)
+    {
+        if (!InCampaign || campaign == null || campaign.missions.Length == 0) return false;
+        return campaign.missions[campaign.missions.Length - 1].level == level && campaign.Won(Current.done) == campaign.missions.Length;
+    }
+
     static string PathOf(int slot) => Path.Combine(Application.persistentDataPath, "slot" + (slot + 1) + ".json");
     public static bool Exists(int slot) => File.Exists(PathOf(slot));
 

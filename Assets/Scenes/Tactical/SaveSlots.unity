@@ -157,6 +157,7 @@ MonoBehaviour:
   - {fileID: 1944871505}
   - {fileID: 658572332}
   mapScene: SectorMap
+  campaign: {fileID: 11400000, guid: 66602c6e776fb4cdaa721b1be2ed8907, type: 2}
 --- !u!4 &50007301
 Transform:
   m_ObjectHideFlags: 0

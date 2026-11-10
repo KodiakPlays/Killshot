@@ -14,8 +14,18 @@ https://claude.ai/artifact/UhfPpB8aJoY8zJj3RziEa4
 | Save slots, sector map, ship rooms | Built (Steps 167 to 172). |
 | Missions set up in the Campaign file | Built (Step 183). |
 | 1. The Escape menu | Built (Step 190). |
-| 2. The end card, and the percent on the save slot | Next to build. |
-| 3. Supplies carry over, and the travel bar | Planned. Some numbers to settle before building. |
+| 2. The end card, and the percent on the save slot | Built (Step 194). The end card shows only once the owner writes the closing line, in `Assets/Campaign/Campaign.asset` → Closing Line. Until then, MISSION SELECT after the last mission opens the ship's rooms, as before. |
+| 3. Supplies carry over, and the travel bar | Next. The points under "Still to settle" come first. |
+
+**Step 2, as built (Step 194).** Win the campaign's last mission and press MISSION SELECT. The
+screen goes black. The closing line types in, in the middle, in the sector map's green Share Tech
+Mono. It stays up for 5 seconds. Then the title loads, and only STARWOLF flickers in. Any key or
+click shows the whole line at once. Another one goes straight to the title. The scene is
+`Assets/Scenes/Tactical/EndCard.unity`. Today the campaign has one mission, MILK RUN. The closing
+line is empty, so a campaign win of MILK RUN opens the ship's rooms. A used save slot reads
+"CAMPAIGN · 1 OF 10 · 10%", or "CAMPAIGN COMPLETE · 100%" when every mission in the Campaign file
+is won. Old test levels don't count. After a campaign win of MILK RUN it reads CAMPAIGN COMPLETE ·
+100%.
 
 ## The owner's answers, 2026-11-10
 
@@ -32,8 +42,11 @@ https://claude.ai/artifact/UhfPpB8aJoY8zJj3RziEa4
 5. **Each action lives in its room.** Owner: "That's the whole point." ENGINEERING has the repairs.
    HANGAR has torpedoes, ammo and drones. QUARTERS has the marines. BRIDGE has talk.
 6. **The end card uses the game's own intro.** After the story's closing line, the STARWOLF intro
-   plays exactly as at the start: "Same flicker, same everything. Don't change that." Then the title
-   menu.
+   plays: "Same flicker, same everything. Don't change that." Then the title menu. The owner also
+   told the Loading Screen chat (2026-11-10): "ensure that the end campaign screen also loads just
+   the Starwolf logo flickering in." Since Step 188, every return to the title shows only STARWOLF
+   flickering in, not SECTION 36. So the end card loads the title scene, `00_Start`, and gets that
+   flicker unchanged.
 7. **Build order:** the Escape menu, then the end card and the save slot percent, then supplies
    carrying over with the travel bar. Owner: "Build order is perfectly fine."
 
