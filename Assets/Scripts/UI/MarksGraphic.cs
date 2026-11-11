@@ -13,7 +13,8 @@
 // - POINT is a dot. RULER is a thick line with a dot at each end. COMPASS is a dashed ring with a
 //   line from the middle.
 // - Other kinds: a plain line, a line that fades out, and dashed and dotted lines. More kinds: a
-//   solid or dashed ring, a filled circle, and a slice of a ring for the scan cone.
+//   solid or dashed ring, a filled circle, and a slice of a ring for the scan cone. A contact out
+//   of sight can be a filled triangle (a scanned enemy) or a hollow square (a ship we can't name).
 // - A slice of ring can show a picture, bent along the slice.
 // - Sizes are in screen px. They stay the same at every zoom. The sizes are in the Tuning window,
 //   Board tab, Plot tools.
@@ -22,7 +23,9 @@
 // Technical:
 // - Data: a list of Shape. Each has a kind name, points a and b in board px (y down), alpha and
 //   ink. A "sector" adds inner (px) and half (degrees).
-// - Kinds: point, ruler, circle, disc, fade, dash, dots, dashring, sector and line.
+// - Kinds: point, ruler, circle, disc, fade, dash, dots, dashring, sector, line, tri and box.
+//   tri is a filled triangle with equal sides, point up; box a hollow square. Both are a contact's
+//   mark, 2 x |b - a| wide, and never turn (owner 2026-11-11, information hierarchy).
 // - Set(list) swaps in new shapes and redraws. PlotPanel calls it for each layer.
 // - World(board) gives a board px point in world space.
 // - origin is the board px of the layer's top-left corner.
@@ -100,8 +103,35 @@ public class MarksGraphic : MaskableGraphic
             // owner 2026-10-26: the active scan cone — a faint slice of ring round a, and its two edge lines
             else if (s.kind == "sector") Sector(s.a, s.b, s.inner, s.half, c);
             else if (s.kind == "line") Line(s.a, s.b, c);
+            // owner 2026-11-11 (information hierarchy): a contact's mark, half as wide as a to b; it never turns
+            else if (s.kind == "tri") Tri(s.a, (s.b - s.a).magnitude, c);
+            else if (s.kind == "box") Box(s.a, (s.b - s.a).magnitude, c);
             else { Line(s.a, s.b, c); Ring(s.a, (s.b - s.a).magnitude, c); }
         }
+    }
+
+    // a filled triangle with equal sides, 2 * half wide, point up, centred on at
+    void Tri(Vector2 at, float half, Color c)
+    {
+        Vector2 p = L(at);
+        float r = half * 2f / Mathf.Sqrt(3f); // centre to corner
+        int i = vh.currentVertCount;
+        for (int k = 0; k < 3; k++)
+        {
+            float a = (90f + 120f * k) * Mathf.Deg2Rad;
+            vh.AddVert(p + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r, c, Vector2.zero);
+        }
+        vh.AddTriangle(i, i + 1, i + 2);
+    }
+
+    // a hollow square, 2 * half wide, centred on at; the top and bottom run past the sides to close the corners
+    void Box(Vector2 at, float half, Color c)
+    {
+        float e = lineWidth / 2f;
+        Line(at + new Vector2(-half - e, -half), at + new Vector2(half + e, -half), c);
+        Line(at + new Vector2(-half - e, half), at + new Vector2(half + e, half), c);
+        Line(at + new Vector2(-half, -half), at + new Vector2(-half, half), c);
+        Line(at + new Vector2(half, -half), at + new Vector2(half, half), c);
     }
 
     void Line(Vector2 a, Vector2 b, Color c) => Line(a, b, c, c);

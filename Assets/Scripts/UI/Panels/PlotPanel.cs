@@ -30,9 +30,12 @@
 //   place. A ship under the ACTIVE scan cone gets scanned and a beep. It asks TacticalWorld to ping
 //   the rocks in the cone.
 // - A ship in visual range shows as a top-down picture of its model, from its ShipView camera. It
-//   is red once identified, blue for our battle group, and amber while unknown. Out of sight, a
-//   scanned ship is a dot at its last fixed place. The dot dims over 60 game seconds, and after 10
-//   seconds its label says how long ago. Labels give the name (or BOGEY) and range.
+//   is red once identified, blue for our battle group, and amber while unknown, locked or not. Out
+//   of sight, a ship is a mark at its last fixed place: a scanned enemy is a filled red triangle,
+//   point up, that never turns; a ship we can't name is a hollow amber square; ours are filled blue
+//   circles (owner 2026-11-11, information hierarchy). The mark dims over 60 game seconds, and after
+//   10 seconds its label says how long ago. Labels give the name and class once scanned (GARUDA ·
+//   CRUISER), or BOGEY, and the range.
 // - A locked ship gets white corners and LOCKED. A heard ship not yet identified shows as a red bar
 //   on the DRADIS circle. The bar points at it and shows its bearing. The bar is brighter while the
 //   periscope is on it.
@@ -404,6 +407,8 @@ public class PlotPanel : Panel
     [Tune("Sensors")] [SerializeField] private float staleLabelSeconds = 10f;
     [Tooltip("Owner 2026-11-02: past visual range a rock shows only as a clean hollow circle, where the ACTIVE SCAN cone passed it. It fades away over this many game seconds.")]
     [Tune("Sensors")] [SerializeField] private float rockEchoSeconds = 30f;
+    [Tooltip("Owner 2026-11-11 (information hierarchy): out of sight, a scanned enemy is a filled triangle with equal sides, point up, this wide (px). A ship we can't name is a hollow square this wide (px). One of ours is a filled circle this wide (px).")]
+    [Tune("Sensors")] [SerializeField] private float enemyMarkPx = 14f, unknownMarkPx = 12f, friendMarkPx = 11f;
     [Tooltip("Owner 2026-11-02: the circle blinks. It is bright as the ping passes, and drops to the dim share over this many game seconds.")]
     [Tune("Sensors")] [SerializeField] private float rockEchoBlinkSeconds = 1f;
     [Tooltip("How bright the circle stays between blinks, 0 to 1.")]
@@ -939,7 +944,8 @@ public class PlotPanel : Panel
                 at = OwnAt + new Vector2((float)(System.Math.Sin(b) * px), (float)(-System.Math.Cos(b) * px));
             }
             // owner 2026-11-09: our battle group is blue once scanned; owner 2026-11-10: and in sight, scanned or not ("they should be blue wireframes")
-            Color ink = t.wreck ? wreckInk : t.friendly && (known || inSight) ? Palette.ownForce : known || locked ? alarm : caution;
+            // owner 2026-11-11 (information hierarchy): amber means we can't name it, locked or not; the corners show the lock
+            Color ink = t.wreck ? wreckInk : t.friendly && (known || inSight) ? Palette.ownForce : known ? alarm : caution;
             float age = current || !t.hasWorld ? 0f : Controls.MissionSeconds - t.seenAt;
             float fresh = Mathf.Lerp(1f, staleAlpha, age / Mathf.Max(1f, staleSeconds));
             var view = inSight ? ViewOf(t.key) : null;
@@ -979,7 +985,15 @@ public class PlotPanel : Panel
                 labelPush = px * view.ShipFill / 2f;
             }
             else if (t.wreck) continue; // no picture: a wreck keeps its dim dot (below); an unknown in sight is an amber dot (Step 99)
-            else dots.Add(new MarksGraphic.Shape { kind = "point", a = at, b = at, alpha = fresh * (inSight ? 1f - closeUp : 1f), ink = t.friendly && (known || inSight) ? ink.gamma : default });
+            else
+            {
+                // owner 2026-11-11 (information hierarchy): a scanned enemy is a filled triangle, point up, that never turns;
+                // a ship we can't name is a hollow amber square; one of ours is a filled blue circle
+                bool ours = t.friendly && (known || inSight);
+                string mark = ours ? "disc" : known ? "tri" : "box";
+                float size = mark == "tri" ? enemyMarkPx : mark == "box" ? unknownMarkPx : friendMarkPx;
+                dots.Add(new MarksGraphic.Shape { kind = mark, a = at, b = at + new Vector2(size / 2f, 0f), alpha = fresh * (inSight ? 1f - closeUp : 1f), ink = mark == "tri" ? default : ink.gamma });
+            }
             if (t.wreck) continue; // a wreck carries no label (Step 49)
             if (locked)
             {
@@ -992,7 +1006,8 @@ public class PlotPanel : Panel
             cl.alpha = fresh;
             cl.raycastTarget = false; // owner 2026-10-29: clicking a contact does nothing; the periscope picks the target
             float rng = current ? t.rangeUnits : t.seenRangeUnits;
-            cl.text = (known ? t.name : "BOGEY " + t.key.ToUpperInvariant()) + (locked ? " · LOCKED" : "") + "\nRNG " + ShipState.JsRound(rng).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km" + (age >= staleLabelSeconds ? " · " + Duration(age) + " AGO" : "");
+            // owner 2026-11-10: GARUDA · CRUISER once scanned
+            cl.text = (known ? t.name + (string.IsNullOrEmpty(t.klass) ? "" : " · " + t.klass) : "BOGEY " + t.key.ToUpperInvariant()) + (locked ? " · LOCKED" : "") + "\nRNG " + ShipState.JsRound(rng).ToString("N0", System.Globalization.CultureInfo.InvariantCulture) + " km" + (age >= staleLabelSeconds ? " · " + Duration(age) + " AGO" : "");
             Place(cl.rectTransform, at + contactLabelOffset + new Vector2(labelPush, 0f), 0f);
         }
         for (int i = n; i < contactLabels.Count; i++) contactLabels[i].gameObject.SetActive(false);
