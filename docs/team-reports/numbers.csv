@@ -1,0 +1,937 @@
+date,source,level,map_units,rate,player,opening,fights,win_pct,first_contact_s,scan_s,kill_s,killed_s,end_s,longest_dead_s,shots,hits,dodge_pct,settings
+2026-11-08,maths,ColdRun,20000,x1,new,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x1,new,scan,24,38,958,970,,1497,1669,603,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x1,new,plot,24,8,958,1025,,1127,1241,572,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,new,close,24,8,958,,,1092,1118,567,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,new,quiet,72,17,924,,,1208,1319,544,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,good,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x1,good,scan,24,96,939,944,,1065,1700,570,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x1,good,plot,24,46,939,988,,1329,1542,570,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,good,close,72,24,910,,,944,1046,542,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,good,quiet,72,43,910,,,1048,1337,548,0.0,0.0,3,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,expert,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x1,expert,scan,24,100,932,935,,,1726,570,0.0,0.0,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x1,expert,plot,24,75,932,965,,1583,1813,570,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,expert,close,72,24,905,,,938,1041,543,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x1,expert,quiet,72,44,905,,,1009,1340,551,0.0,0.0,4,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,new,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x5,new,scan,24,12,1046,1102,,1497,1598,565,0.0,0.0,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x5,new,plot,24,4,1046,1272,,1303,1308,532,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,new,close,24,12,1046,,,1204,1243,532,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,new,quiet,24,25,1046,,,1475,1574,548,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,good,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x5,good,scan,24,38,995,1022,,1487,1674,579,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x5,good,plot,72,21,958,1019,,1095,1199,524,0.0,0.0,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,good,close,24,17,995,,,1077,1232,555,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,good,quiet,24,50,995,,,1351,1514,555,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,expert,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x5,expert,scan,24,54,968,982,,1384,1595,563,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,ColdRun,20000,x5,expert,plot,24,46,968,1014,,1452,1731,563,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,expert,close,24,17,968,,,1082,1135,563,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,ColdRun,20000,x5,expert,quiet,24,25,968,,,1153,1339,563,0.0,0.0,3,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,new,fighter,24,100,1,,143,,143,29,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,new,scan,24,100,1,42,173,,173,29,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,new,fire,24,100,1,,167,,167,29,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,new,plot,24,100,1,102,230,,230,60,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,new,close,24,100,1,,167,,167,29,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,new,quiet,24,100,1,,167,,167,29,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,good,fighter,24,100,1,,156,,156,26,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,good,scan,24,100,1,21,90,,90,14,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,good,fire,24,100,1,,86,,86,14,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,good,plot,24,100,1,66,132,,132,45,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,good,close,24,100,1,,86,,86,14,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,good,quiet,24,100,1,,86,,86,14,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,expert,fighter,24,100,1,,149,,149,30,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,expert,scan,24,100,1,12,58,,58,10,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,expert,fire,24,100,1,,55,,55,10,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,expert,plot,24,100,1,42,86,,86,30,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,expert,close,24,100,1,,55,,55,10,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x1,expert,quiet,24,100,1,,55,,55,10,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,new,fighter,24,100,0,,372,,372,151,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,new,scan,24,100,0,212,703,,703,151,7.4,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,new,fire,24,100,0,,669,,669,151,7.4,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,new,plot,24,71,0,273,719,,772,158,8.1,6.8,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,new,close,24,100,0,,669,,669,151,7.4,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,new,quiet,24,100,0,,669,,669,151,7.4,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,good,fighter,24,100,0,,241,,241,76,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,good,scan,24,100,0,107,316,,316,76,6.6,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,good,fire,24,100,0,,298,,298,76,6.6,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,good,plot,24,100,0,151,306,,306,76,6.1,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,good,close,24,100,0,,298,,298,76,6.6,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,good,quiet,24,100,0,,298,,298,76,6.6,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,expert,fighter,24,100,0,,197,,197,42,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,expert,scan,24,100,0,61,172,,172,42,6.2,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,expert,fire,24,100,0,,162,,162,42,6.2,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,expert,plot,24,100,0,92,178,,178,42,6.0,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,expert,close,24,100,0,,162,,162,42,6.2,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,FirstShot,20000,x5,expert,quiet,24,100,0,,162,,162,42,6.2,6.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,new,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x1,new,scan,24,29,958,970,,1534,1617,120,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x1,new,plot,24,21,958,1023,,1445,1690,120,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,new,close,24,8,958,,,1092,1118,120,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,new,quiet,24,17,958,,,1239,1336,120,0.0,0.0,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,good,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x1,good,scan,24,92,939,944,,1370,1705,120,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x1,good,plot,24,62,939,994,,1731,1875,120,0.0,0.0,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,good,close,72,24,910,,,944,1046,120,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,good,quiet,72,42,910,,,1054,1335,120,0.0,0.0,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,expert,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x1,expert,scan,24,100,932,935,,,1732,120,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x1,expert,plot,24,71,932,965,,1836,1994,120,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,expert,close,24,29,932,,,947,1074,120,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x1,expert,quiet,24,50,932,,,997,1344,120,0.0,0.0,4,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,new,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x5,new,scan,24,12,1046,1102,,1497,1598,122,0.0,0.0,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x5,new,plot,24,4,1046,1272,,1303,1308,122,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,new,close,24,12,1046,,,1204,1243,122,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,new,quiet,24,25,1046,,,1475,1588,122,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,good,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x5,good,scan,24,33,995,1022,,1472,1681,122,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x5,good,plot,24,33,995,1092,,1350,1581,122,0.0,0.0,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,good,close,24,17,995,,,1077,1232,122,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,good,quiet,24,50,995,,,1351,1584,122,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,expert,fighter,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x5,expert,scan,24,54,968,982,,1431,1547,122,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug300 torp250 top50 gtop35 rg2000 aim3 weapons off
+2026-11-08,maths,Intercept,20000,x5,expert,plot,24,42,968,1014,,1469,1776,122,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,expert,close,24,17,968,,,1082,1135,122,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Intercept,20000,x5,expert,quiet,24,25,968,,,1153,1339,122,0.0,0.0,3,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,new,fighter,24,0,212,,570,623,623,107,1.3,1.1,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,new,scan,24,0,212,222,,345,345,106,0.3,0.3,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,new,fire,24,0,212,,,802,802,106,2.8,2.8,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,new,plot,24,0,212,284,,619,619,106,1.2,1.2,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,new,close,24,0,212,,408,779,779,107,3.1,3.1,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,new,quiet,24,0,212,,459,713,713,107,2.3,2.3,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,good,fighter,24,4,236,,846,927,916,120,20.4,20.4,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,good,scan,24,25,236,241,580,980,903,120,9.8,9.7,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,good,fire,24,33,236,,489,850,808,120,18.8,18.2,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,good,plot,24,21,236,287,490,993,941,120,18.3,17.9,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,good,close,24,38,236,,474,968,882,120,18.0,17.7,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,good,quiet,24,50,236,,532,945,861,120,15.9,15.5,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,expert,fighter,24,29,233,,564,869,819,120,14.8,9.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,expert,scan,24,42,233,236,407,806,773,120,11.9,8.9,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,expert,fire,72,47,229,,356,909,769,120,11.5,8.5,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,expert,plot,24,25,233,266,421,909,902,120,15.2,11.2,2,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,expert,close,24,50,233,,393,953,834,121,9.8,8.3,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x1,expert,quiet,24,29,233,,518,893,828,120,13.0,9.3,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,new,fighter,24,0,307,,,711,711,122,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,new,scan,24,0,307,365,,761,761,122,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,new,fire,24,0,307,,,779,779,122,0.0,0.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,new,plot,24,0,307,426,,745,745,122,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,new,close,24,0,307,,,867,867,122,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,new,quiet,24,0,307,,,695,695,122,0.0,0.0,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,good,fighter,24,0,285,,1017,1013,1013,119,0.9,0.5,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,good,scan,24,0,285,312,,1002,1002,119,2.7,1.8,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,good,fire,24,0,285,,,976,976,119,3.2,1.8,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,good,plot,24,0,285,358,876,975,975,119,2.7,1.5,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,good,close,24,0,285,,706,1003,1003,119,2.8,1.6,0,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,good,quiet,24,4,285,,869,1014,1022,119,2.3,1.5,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,expert,fighter,24,33,262,,688,939,898,114,5.0,4.4,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,expert,scan,24,38,262,276,563,931,882,115,8.0,6.5,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,expert,fire,24,38,262,,566,963,898,116,9.7,8.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,expert,plot,24,54,262,310,559,856,797,117,8.5,7.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,expert,close,72,47,258,,598,905,862,114,8.9,7.0,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Level_01,20000,x5,expert,quiet,72,42,258,,647,923,892,114,8.7,7.3,1,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,new,fighter,24,62,1,79,,,228,30,1.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,new,scan,24,62,1,42,,,227,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,new,fire,24,62,1,43,,,226,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,new,plot,24,62,1,102,,,284,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,new,close,24,62,1,43,,,226,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,new,quiet,24,62,1,43,,,227,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,good,fighter,24,62,1,58,,,240,30,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,good,scan,24,62,1,21,,,179,60,4.0,4.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,good,fire,24,62,1,22,,,178,60,4.0,4.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,good,plot,24,62,1,66,,,217,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,good,close,24,62,1,22,,,178,60,4.0,4.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,good,quiet,24,62,1,22,,,178,60,4.0,4.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,expert,fighter,24,62,1,48,,,233,30,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,expert,scan,24,62,1,12,,,153,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,expert,fire,24,62,1,13,,,151,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,expert,plot,24,62,1,42,,,175,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,expert,close,24,62,1,13,,,151,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x1,expert,quiet,24,62,1,13,,,151,60,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,new,fighter,24,62,0,307,,,504,151,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,new,scan,24,62,0,212,,,763,151,4.4,3.3,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,new,fire,24,62,0,214,,,761,151,4.4,3.3,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,new,plot,24,62,0,273,,,766,151,4.4,3.2,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,new,close,24,62,0,214,,,761,151,4.4,3.3,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,new,quiet,24,62,0,214,,,761,151,4.4,3.3,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,good,fighter,24,62,0,157,,,334,76,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,good,scan,24,62,0,107,,,389,76,3.7,3.2,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,good,fire,24,62,0,109,,,387,76,3.7,3.2,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,good,plot,24,62,0,151,,,370,76,3.2,3.2,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,good,close,24,62,0,109,,,387,76,3.7,3.2,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,good,quiet,24,62,0,109,,,387,76,3.7,3.2,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,expert,fighter,24,62,0,103,,,283,42,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,expert,scan,24,62,0,61,,,254,59,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,expert,fire,24,62,0,63,,,252,59,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,expert,plot,24,62,0,92,,,265,59,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,expert,close,24,62,0,63,,,252,59,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,Prize,20000,x5,expert,quiet,24,62,0,63,,,252,59,3.0,3.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,new,fighter,24,62,1,,,,457,30,1.3,0.6,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,new,scan,24,0,1,42,,,42,29,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,new,fire,24,100,1,,,,124,67,1.3,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,new,plot,24,100,1,102,,,145,60,2.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,new,close,24,100,1,,,,121,49,1.1,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,new,quiet,24,100,1,,,,246,171,1.2,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,good,fighter,24,38,1,,,,648,30,1.2,0.4,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,good,scan,24,0,1,21,,,21,14,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,good,fire,24,100,1,,,,99,66,1.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,good,plot,24,100,1,66,,,117,46,2.2,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,good,close,24,100,1,,,,102,56,1.8,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,good,quiet,24,100,1,,,,218,171,1.9,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,expert,fighter,24,38,1,,,,630,30,0.9,0.4,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,expert,scan,24,0,1,12,,,12,8,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,expert,fire,24,100,1,,,,90,65,2.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,expert,plot,24,100,1,42,,,98,36,2.8,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,expert,close,24,100,1,,,,91,56,2.2,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x1,expert,quiet,24,100,1,,,,206,171,2.2,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,new,fighter,24,100,0,,,,506,151,2.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,new,scan,24,0,0,212,,,212,151,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,new,fire,24,79,0,,,,560,152,3.6,0.8,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,new,plot,24,100,0,273,,,379,151,1.2,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,new,close,24,100,0,,,,353,151,1.4,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,new,quiet,24,100,0,,,,461,187,1.8,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,good,fighter,24,46,0,,,,692,76,1.1,0.5,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,good,scan,24,0,0,107,,,107,76,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,good,fire,24,100,0,,,,196,83,1.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,good,plot,24,100,0,151,,,214,76,1.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,good,close,24,100,0,,,,206,79,1.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,good,quiet,24,100,0,,,,308,167,1.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,expert,fighter,24,46,0,,,,656,42,1.1,0.5,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,expert,scan,24,0,0,61,,,61,42,0.0,0.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,expert,fire,24,100,0,,,,139,72,1.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,expert,plot,24,100,0,92,,,151,44,1.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,expert,close,24,100,0,,,,145,64,1.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-08,maths,SilentShot,20000,x5,expert,quiet,24,100,0,,,,255,173,1.0,1.0,,slug300 torp250 top50 gtop35 rg2000 aim3
+2026-11-09,maths,ColdRun,20000,x1,new,scan,24,42,958,970,,1457,1659,603,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,ColdRun,20000,x1,new,plot,24,4,958,1025,,1167,1183,567,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,new,close,24,8,958,,,1086,1114,567,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,new,quiet,72,17,924,,,1205,1317,544,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,good,scan,24,96,939,944,,1065,1705,570,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,ColdRun,20000,x1,good,plot,24,42,939,988,,1383,1557,570,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,good,close,72,24,910,,,945,1047,542,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,good,quiet,72,42,910,,,1059,1335,548,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,expert,scan,24,100,932,935,,,1724,570,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,ColdRun,20000,x1,expert,plot,24,75,932,965,,1583,1813,570,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,expert,close,72,24,905,,,938,1040,543,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x1,expert,quiet,72,44,905,,,1008,1340,551,0.0,0.0,5,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,new,scan,24,8,1046,1102,,1518,1678,595,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,ColdRun,20000,x5,new,plot,24,4,1046,1272,,1288,1365,542,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,new,close,24,12,1046,,,1201,1241,532,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,new,quiet,24,29,1046,,,1404,1540,548,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,good,scan,24,33,995,1022,,1519,1679,579,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,ColdRun,20000,x5,good,plot,72,22,958,1040,,1090,1214,524,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,good,close,24,17,995,,,1077,1232,555,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,good,quiet,24,46,995,,,1418,1520,555,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,expert,scan,24,50,968,982,,1438,1598,563,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,ColdRun,20000,x5,expert,plot,24,42,968,1014,,1490,1732,563,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,expert,close,24,17,968,,,1082,1135,563,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,ColdRun,20000,x5,expert,quiet,24,21,968,,,1200,1347,563,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,new,scan,24,100,1,42,147,,147,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,new,fire,24,100,1,,140,,140,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,new,plot,24,100,1,102,206,,206,60,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,new,close,24,100,1,,140,,140,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,new,quiet,24,100,1,,140,,140,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,good,scan,24,100,1,21,80,,80,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,good,fire,24,100,1,,76,,76,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,good,plot,24,100,1,66,124,,124,45,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,good,close,24,100,1,,76,,76,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,good,quiet,24,100,1,,76,,76,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,expert,scan,24,100,1,12,55,,55,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,expert,fire,24,100,1,,51,,51,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,expert,plot,24,100,1,42,84,,84,30,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,expert,close,24,100,1,,51,,51,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x1,expert,quiet,24,100,1,,51,,51,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,new,scan,24,100,0,212,657,,657,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,new,fire,24,100,0,,624,,624,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,new,plot,24,71,0,273,749,,793,151,6.3,6.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,new,close,24,100,0,,624,,624,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,new,quiet,24,100,0,,624,,624,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,good,scan,24,100,0,107,494,,494,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,good,fire,24,100,0,,374,,374,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,good,plot,24,100,0,151,443,,443,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,good,close,24,100,0,,374,,374,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,good,quiet,24,100,0,,374,,374,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,expert,scan,24,100,0,61,326,,326,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,expert,fire,24,100,0,,265,,265,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,expert,plot,24,100,0,92,311,,311,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,expert,close,24,100,0,,265,,265,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,FirstShot,20000,x5,expert,quiet,24,100,0,,265,,265,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,new,scan,24,33,958,970,,1501,1607,120,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,Intercept,20000,x1,new,plot,24,17,958,1023,,1453,1626,120,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,new,close,24,8,958,,,1086,1114,120,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,new,quiet,72,18,924,,,1195,1315,120,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,good,scan,24,92,939,944,,1370,1709,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,Intercept,20000,x1,good,plot,24,62,939,994,,1725,1873,120,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,good,close,72,24,910,,,945,1047,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,good,quiet,72,40,910,,,1065,1333,120,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,expert,scan,24,100,932,935,,,1731,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,Intercept,20000,x1,expert,plot,24,71,932,965,,1836,1994,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,expert,close,72,24,905,,,938,1040,120,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x1,expert,quiet,72,43,905,,,1017,1337,120,0.0,0.0,5,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,new,scan,24,8,1046,1102,,1518,1678,122,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,Intercept,20000,x5,new,plot,24,4,1046,1272,,1288,1365,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,new,close,24,12,1046,,,1201,1241,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,new,quiet,24,29,1046,,,1404,1554,122,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,good,scan,24,38,995,1022,,1434,1674,122,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,Intercept,20000,x5,good,plot,24,33,995,1092,,1343,1509,122,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,good,close,24,17,995,,,1077,1232,122,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,good,quiet,24,46,995,,,1418,1590,122,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,expert,scan,24,50,968,982,,1476,1551,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off
+2026-11-09,maths,Intercept,20000,x5,expert,plot,24,42,968,1014,,1470,1776,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,expert,close,24,17,968,,,1082,1135,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Intercept,20000,x5,expert,quiet,24,21,968,,,1200,1347,122,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,new,scan,24,0,212,222,,713,713,106,1.2,1.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,new,fire,24,0,212,,,718,718,106,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,new,plot,24,0,212,284,,689,689,106,0.9,0.8,4,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,new,close,24,0,212,,,718,718,106,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,new,quiet,24,0,212,,,775,775,106,1.1,1.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,good,scan,24,21,236,241,480,736,810,120,12.3,12.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,good,fire,24,4,236,,518,804,795,120,15.5,15.2,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,good,plot,72,7,234,285,604,849,846,120,10.6,10.4,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,good,close,24,12,236,,553,785,764,120,17.5,17.1,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,good,quiet,24,4,236,,723,865,867,120,12.7,12.5,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,expert,scan,24,25,233,236,612,852,844,121,20.9,19.5,0,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,expert,fire,24,46,233,,543,765,737,120,26.9,26.6,2,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,expert,plot,24,38,233,266,574,901,900,121,22.0,21.6,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,expert,close,24,38,233,,559,766,744,120,26.9,26.7,2,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,expert,quiet,24,21,233,,635,874,858,120,26.8,26.6,1,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,new,scan,24,0,307,365,,667,667,122,0.0,0.0,5,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,new,fire,24,0,307,,,732,732,122,0.0,0.0,4,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,new,plot,24,0,307,426,,690,690,122,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,new,close,24,0,307,,,752,752,122,0.0,0.0,5,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,new,quiet,24,0,307,,,752,752,122,0.0,0.0,5,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,good,scan,24,0,285,312,,774,774,119,0.0,0.0,5,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,good,fire,24,0,285,,,796,796,119,0.5,0.5,4,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,good,plot,24,0,285,358,,840,840,119,0.1,0.1,4,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,good,close,24,0,285,,,796,796,119,0.4,0.4,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,good,quiet,24,0,285,,,881,881,119,0.2,0.2,4,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,expert,scan,24,0,262,276,,871,910,115,0.5,0.5,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,expert,fire,24,0,262,,,819,819,114,1.0,1.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,expert,plot,24,0,262,310,,897,897,114,0.5,0.5,4,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,expert,close,24,0,262,,,799,799,114,1.1,1.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x5,expert,quiet,24,0,262,,,874,874,114,0.5,0.4,4,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,new,scan,24,100,203,215,710,,710,294,10.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,new,fire,24,0,203,,,,3600,155,28.0,25.5,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,new,plot,24,96,203,275,829,,944,377,10.1,6.1,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,new,close,24,0,203,,,,3600,155,28.0,24.4,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,new,quiet,24,0,203,,,,3600,155,28.0,27.5,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,good,scan,24,100,231,236,744,,744,429,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,good,fire,24,0,231,,,,3600,202,28.0,26.9,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,good,plot,24,100,231,281,861,,861,477,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,good,close,24,0,231,,,,3600,202,28.0,26.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,good,quiet,24,0,231,,,,3600,202,28.0,27.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,expert,scan,24,100,226,229,805,,805,488,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,expert,fire,24,0,226,,,,3600,202,28.0,27.7,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,expert,plot,24,100,226,259,893,,893,481,6.2,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,expert,close,24,0,226,,,,3600,202,28.0,27.7,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x1,expert,quiet,24,0,226,,,,3600,202,28.0,26.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,new,scan,72,54,300,359,1371,,2393,382,10.4,10.4,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,new,fire,24,0,300,,,,3601,151,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,new,plot,24,0,300,420,,,3601,1500,6.5,5.7,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,new,close,24,0,300,,,,3601,151,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,new,quiet,24,0,300,,,,3601,153,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,good,scan,24,100,277,307,1173,,1173,468,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,good,fire,24,0,277,,,,3601,202,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,good,plot,72,22,277,351,1309,,3092,919,9.1,9.1,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,good,close,24,0,277,,,,3601,202,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,good,quiet,24,0,277,,,,3601,202,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,expert,scan,24,100,252,269,1092,,1092,506,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,expert,fire,24,0,252,,,,3601,204,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,expert,plot,24,62,252,300,1226,,2117,714,7.2,7.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,expert,close,24,0,252,,,,3601,204,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,LongShot,40000,x5,expert,quiet,24,0,252,,,,3601,204,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,new,scan,24,62,1,42,,,283,61,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,new,fire,24,62,1,43,,,231,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,new,plot,24,62,1,102,,,335,67,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,new,close,24,62,1,43,,,231,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,new,quiet,24,62,1,43,,,231,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,good,scan,24,62,1,21,,,226,63,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,good,fire,24,62,1,22,,,168,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,good,plot,24,62,1,66,,,273,75,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,good,close,24,62,1,22,,,168,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,good,quiet,24,62,1,22,,,168,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,expert,scan,24,62,1,12,,,205,63,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,expert,fire,24,62,1,13,,,147,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,expert,plot,24,62,1,42,,,258,82,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,expert,close,24,62,1,13,,,147,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x1,expert,quiet,24,62,1,13,,,147,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,new,scan,24,62,0,212,,,683,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,new,fire,24,62,0,214,,,630,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,new,plot,24,62,0,273,,,745,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,new,close,24,62,0,214,,,630,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,new,quiet,24,62,0,214,,,630,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,good,scan,24,62,0,107,,,498,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,good,fire,24,62,0,109,,,389,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,good,plot,24,62,0,151,,,512,88,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,good,close,24,62,0,109,,,389,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,good,quiet,24,62,0,109,,,389,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,expert,scan,24,62,0,61,,,389,67,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,expert,fire,24,62,0,63,,,296,59,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,expert,plot,24,62,0,92,,,407,78,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,expert,close,24,62,0,63,,,296,59,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Prize,20000,x5,expert,quiet,24,62,0,63,,,296,59,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,new,scan,24,0,1,42,,,42,29,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,new,fire,24,83,1,,,,252,184,0.8,0.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,new,plot,24,100,1,102,,,213,100,1.2,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,new,close,24,100,1,,,,112,35,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,new,quiet,24,100,1,,,,215,138,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,good,scan,24,0,1,21,,,21,14,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,good,fire,24,100,1,,,,28,14,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,good,plot,24,100,1,66,,,209,129,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,good,close,24,100,1,,,,48,15,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,good,quiet,24,100,1,,,,167,123,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,expert,scan,24,0,1,12,,,12,8,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,expert,fire,24,100,1,,,,18,8,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,expert,plot,24,100,1,42,,,211,153,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,expert,close,24,100,1,,,,30,10,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x1,expert,quiet,24,100,1,,,,149,122,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,new,scan,24,0,0,212,,,212,151,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,new,fire,24,21,0,,,,767,437,1.6,0.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,new,plot,72,61,0,273,,,757,164,2.6,0.6,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,new,close,24,96,0,,,,518,151,2.2,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,new,quiet,24,88,0,,,,585,170,2.2,0.9,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,good,scan,24,0,0,107,,,107,76,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,good,fire,24,96,0,,,,194,129,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,good,plot,24,100,0,151,,,367,141,1.2,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,good,close,24,100,0,,,,205,76,1.4,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,good,quiet,24,100,0,,,,314,121,1.5,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,expert,scan,24,0,0,61,,,61,42,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,expert,fire,24,100,0,,,,75,42,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,expert,plot,24,100,0,92,,,289,165,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,expert,close,24,100,0,,,,101,42,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,SilentShot,20000,x5,expert,quiet,24,100,0,,,,212,125,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3
+2026-11-09,maths,Level_01,20000,x1,good,scan,24,12,216,224,598,734,728,120,15.5,15.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,Level_01,20000,x1,good,fire,24,8,216,,620,729,735,120,18.2,17.8,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,Level_01,20000,x1,good,plot,24,17,216,267,582,774,783,120,15.8,15.6,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,Level_01,20000,x1,good,close,24,8,216,,625,727,734,120,18.3,17.9,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,Level_01,20000,x1,good,quiet,24,4,216,,701,840,833,120,16.9,16.5,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,Level_01,20000,x1,expert,scan,24,33,212,215,584,848,845,120,19.8,18.7,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,Level_01,20000,x1,expert,fire,24,25,212,,536,728,711,123,26.2,25.9,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,Level_01,20000,x1,expert,plot,24,38,212,246,572,913,896,120,23.9,23.5,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,Level_01,20000,x1,expert,close,24,29,212,,539,720,706,123,26.2,26.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,Level_01,20000,x1,expert,quiet,24,25,212,,621,812,799,120,26.0,25.5,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,LongShot,40000,x1,good,scan,24,100,205,211,792,,792,489,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,LongShot,40000,x1,good,fire,24,0,205,,,,3600,190,28.0,27.1,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,LongShot,40000,x1,good,plot,24,100,205,256,923,,923,538,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,LongShot,40000,x1,good,close,24,0,205,,,,3600,190,28.0,27.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,LongShot,40000,x1,good,quiet,24,0,205,,,,3600,190,28.0,27.4,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,LongShot,40000,x1,expert,scan,24,100,200,204,852,,852,529,7.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,LongShot,40000,x1,expert,fire,24,0,200,,,,3600,192,28.0,28.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,LongShot,40000,x1,expert,plot,24,100,200,234,973,,973,548,6.9,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,LongShot,40000,x1,expert,close,24,0,200,,,,3600,192,28.0,27.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,LongShot,40000,x1,expert,quiet,24,0,200,,,,3600,192,28.0,27.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000
+2026-11-09,maths,Level_01,20000,x1,good,scan,24,12,190,196,626,831,820,120,14.6,13.6,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,Level_01,20000,x1,good,fire,24,12,190,,612,729,727,120,23.0,22.3,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,Level_01,20000,x1,good,plot,24,29,190,241,599,753,754,120,20.8,20.2,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,Level_01,20000,x1,good,close,24,4,190,,610,702,699,120,23.0,22.3,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,Level_01,20000,x1,good,quiet,24,8,190,,716,778,787,120,21.9,21.4,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,Level_01,20000,x1,expert,scan,24,42,186,188,581,819,845,121,21.6,19.8,4,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,Level_01,20000,x1,expert,fire,24,38,186,,469,656,631,123,24.1,23.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,Level_01,20000,x1,expert,plot,24,33,186,219,570,807,773,121,25.1,24.7,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,Level_01,20000,x1,expert,close,24,42,186,,471,702,657,122,23.5,22.2,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,Level_01,20000,x1,expert,quiet,24,29,186,,609,786,770,121,26.4,26.1,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,LongShot,40000,x1,good,scan,24,100,181,187,829,,829,578,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,LongShot,40000,x1,good,fire,24,0,181,,,,3600,166,28.0,27.5,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,LongShot,40000,x1,good,plot,24,100,181,232,986,,986,636,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,LongShot,40000,x1,good,close,24,0,181,,,,3600,166,28.0,27.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,LongShot,40000,x1,good,quiet,24,0,181,,,,3600,166,28.0,27.5,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,LongShot,40000,x1,expert,scan,24,100,176,180,898,,898,625,7.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,LongShot,40000,x1,expert,fire,24,0,176,,,,3600,168,28.0,28.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,LongShot,40000,x1,expert,plot,24,96,176,210,1041,,1147,640,7.8,6.9,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,LongShot,40000,x1,expert,close,24,0,176,,,,3600,168,28.0,28.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,LongShot,40000,x1,expert,quiet,24,0,176,,,,3600,168,28.0,27.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500
+2026-11-09,maths,Level_01,20000,x1,good,scan,24,21,164,170,536,711,705,120,18.2,16.8,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,Level_01,20000,x1,good,fire,24,8,164,,587,688,690,120,24.8,24.2,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,Level_01,20000,x1,good,plot,24,25,164,214,590,769,752,120,20.1,19.5,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,Level_01,20000,x1,good,close,24,21,164,,564,674,676,120,23.1,22.3,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,Level_01,20000,x1,good,quiet,24,0,164,,699,769,769,120,22.3,21.8,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,Level_01,20000,x1,expert,scan,24,17,159,163,618,821,774,120,23.6,22.5,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,Level_01,20000,x1,expert,fire,24,21,159,,447,671,637,121,24.4,23.5,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,Level_01,20000,x1,expert,plot,24,38,159,193,509,778,816,120,23.0,22.5,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,Level_01,20000,x1,expert,close,24,29,159,,419,674,621,122,23.4,22.5,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,Level_01,20000,x1,expert,quiet,24,17,159,,619,772,776,120,27.7,26.8,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,Level_01,20000,x1,expert,scan,24,33,159,163,657,945,887,120,19.1,17.3,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,fire,24,21,159,,566,725,728,119,28.0,26.9,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,plot,24,38,159,193,719,994,1021,120,20.5,19.8,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,close,24,21,159,,566,725,728,119,28.0,26.9,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,quiet,24,4,159,,645,786,786,120,27.8,26.9,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,scan,24,100,153,156,1008,,1008,690,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,fire,24,0,153,,,,3600,144,28.0,28.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,plot,24,88,153,186,1108,,1420,685,8.8,8.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,close,24,0,153,,,,3600,144,28.0,28.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,quiet,24,0,153,,,,3600,144,28.0,27.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis10000 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,scan,24,25,112,116,662,932,885,113,21.8,19.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,fire,24,0,112,,506,602,652,97,27.0,22.2,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,plot,24,29,112,146,600,859,1059,116,17.0,15.5,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,close,24,0,112,,506,602,652,97,27.0,22.2,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,quiet,24,12,112,,611,777,767,99,26.8,23.9,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,scan,24,100,107,110,1065,,1065,670,7.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,fire,24,4,107,,536,,3473,160,27.6,26.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,plot,24,83,107,141,1189,,1591,734,10.2,8.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,close,24,4,107,,532,,3472,418,26.2,24.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,quiet,24,12,107,,689,,3236,962,22.1,17.4,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis12500 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,scan,24,8,59,62,756,894,877,96,21.8,18.8,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,fire,24,4,59,,501,600,593,66,27.1,21.5,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,plot,24,21,59,92,586,881,1094,110,16.0,14.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,close,24,4,59,,501,600,593,66,27.1,21.5,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000 gain5
+2026-11-09,maths,Level_01,20000,x1,expert,quiet,24,12,59,,582,720,711,82,26.7,21.9,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000 gain5
+2026-11-09,maths,LongShot,40000,x1,good,scan,24,100,157,163,883,,883,656,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,LongShot,40000,x1,good,fire,24,0,157,,,,3600,142,28.0,27.5,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,LongShot,40000,x1,good,plot,24,96,157,208,1035,,1142,701,6.9,6.9,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,LongShot,40000,x1,good,close,24,0,157,,,,3600,142,28.0,27.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,LongShot,40000,x1,good,quiet,24,0,157,,,,3600,142,28.0,27.6,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,LongShot,40000,x1,expert,scan,24,100,153,156,997,,997,690,7.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,LongShot,40000,x1,expert,fire,24,0,153,,,,3600,144,28.0,28.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,LongShot,40000,x1,expert,plot,24,88,153,186,1097,,1410,685,9.6,8.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,LongShot,40000,x1,expert,close,24,0,153,,,,3600,144,28.0,28.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,LongShot,40000,x1,expert,quiet,24,0,153,,,,3600,144,28.0,27.7,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000
+2026-11-09,maths,LongShot,40000,x1,expert,scan,24,100,62,66,1201,,1201,740,7.2,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,fire,24,0,62,,,,3600,200,28.0,27.1,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,plot,24,62,62,96,1231,,2120,1119,9.2,7.7,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,close,24,0,62,,,,3600,192,28.0,27.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000 gain5
+2026-11-09,maths,LongShot,40000,x1,expert,quiet,24,0,62,,,,3600,573,26.0,23.6,,slug1500 torp250 top50 gtop35 rg30000nose aim3 dradis15000 gain5
+2026-11-10,maths,ColdRun,20000,x1,new,scan,24,42,957,968,,1289,1507,566,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,new,plot,24,0,957,1023,,1194,1194,566,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,new,close,24,17,957,,,1034,1096,566,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,new,quiet,24,8,957,,,1241,1307,567,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,good,scan,24,67,936,942,,998,1657,567,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,good,plot,24,17,936,987,,1415,1657,567,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,good,close,24,21,936,,,997,1075,567,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,good,quiet,24,29,936,,,1188,1336,568,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,expert,scan,24,75,930,933,,1234,1689,568,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,expert,plot,24,79,930,963,,1501,1656,567,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,expert,close,24,25,930,,,973,1073,567,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,expert,quiet,24,29,930,,,1186,1332,568,0.0,0.0,4,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,new,scan,24,8,1044,1101,,1437,1434,531,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,new,plot,24,8,1044,1263,,1174,1234,531,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,new,close,24,8,1044,,,1152,1185,531,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,new,quiet,24,17,1044,,,1319,1456,546,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,good,scan,24,33,993,1020,,1301,1539,552,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,good,plot,24,21,993,1072,,1149,1217,552,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,good,close,24,12,993,,,1125,1160,552,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,good,quiet,24,29,993,,,1448,1476,552,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,expert,scan,24,29,966,980,,1272,1429,579,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,expert,plot,24,46,966,1008,,1480,1673,561,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,expert,close,24,8,966,,,1076,1104,561,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x5,expert,quiet,24,4,966,,,1294,1318,561,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,new,scan,24,100,1,42,147,,147,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,new,fire,24,100,1,,140,,140,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,new,plot,24,100,1,102,206,,206,60,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,new,close,24,100,1,,140,,140,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,new,quiet,24,100,1,,140,,140,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,good,scan,24,100,1,21,80,,80,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,good,fire,24,100,1,,76,,76,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,good,plot,24,100,1,66,124,,124,45,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,good,close,24,100,1,,76,,76,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,good,quiet,24,100,1,,76,,76,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,expert,scan,24,100,1,12,55,,55,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,expert,fire,24,100,1,,51,,51,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,expert,plot,24,100,1,42,84,,84,30,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,expert,close,24,100,1,,51,,51,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x1,expert,quiet,24,100,1,,51,,51,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,new,scan,24,100,0,212,657,,657,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,new,fire,24,100,0,,624,,624,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,new,plot,24,71,0,273,748,,792,151,6.3,6.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,new,close,24,100,0,,624,,624,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,new,quiet,24,100,0,,624,,624,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,good,scan,24,100,0,107,494,,494,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,good,fire,24,100,0,,374,,374,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,good,plot,24,100,0,151,443,,443,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,good,close,24,100,0,,374,,374,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,good,quiet,24,100,0,,374,,374,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,expert,scan,24,100,0,61,326,,326,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,expert,fire,24,100,0,,265,,265,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,expert,plot,24,100,0,92,311,,311,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,expert,close,24,100,0,,265,,265,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,FirstShot,20000,x5,expert,quiet,24,100,0,,265,,265,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,new,scan,24,33,957,968,,1358,1443,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,Intercept,20000,x1,new,plot,24,12,957,1022,,1405,1476,120,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,new,close,24,17,957,,,1034,1096,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,new,quiet,24,8,957,,,1247,1312,120,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,good,scan,24,54,936,942,,1205,1552,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,Intercept,20000,x1,good,plot,24,29,936,992,,1456,1858,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,good,close,24,21,936,,,997,1075,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,good,quiet,24,29,936,,,1188,1336,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,expert,scan,24,79,930,933,,1128,1684,120,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,Intercept,20000,x1,expert,plot,24,71,930,963,,1824,1770,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,expert,close,24,25,930,,,973,1073,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x1,expert,quiet,24,29,930,,,1185,1332,120,0.0,0.0,5,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,new,scan,24,17,1044,1101,,1380,1438,122,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,Intercept,20000,x5,new,plot,24,8,1044,1263,,1174,1234,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,new,close,24,8,1044,,,1152,1185,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,new,quiet,24,17,1044,,,1318,1455,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,good,scan,24,25,993,1020,,1385,1526,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,Intercept,20000,x5,good,plot,24,38,993,1072,,1402,1575,122,0.0,0.0,4,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,good,close,24,12,993,,,1125,1160,122,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,good,quiet,24,29,993,,,1448,1533,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,expert,scan,24,29,966,980,,1272,1429,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-step180
+2026-11-10,maths,Intercept,20000,x5,expert,plot,24,46,966,1008,,1580,1787,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,expert,close,24,8,966,,,1076,1104,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Intercept,20000,x5,expert,quiet,24,4,966,,,1294,1318,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,new,scan,24,0,214,224,,719,719,106,1.3,1.2,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,new,fire,24,0,214,,,679,679,106,0.2,0.2,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,new,plot,24,0,214,286,,721,721,106,0.7,0.6,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,new,close,24,0,214,,,680,680,106,0.0,0.0,4,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,new,quiet,24,0,214,,,723,723,106,1.4,1.2,4,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,good,scan,24,38,239,245,527,712,709,120,10.0,9.6,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,good,fire,24,38,239,,446,684,669,120,13.4,12.7,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,good,plot,24,21,239,290,489,834,803,120,9.1,8.8,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,good,close,24,38,239,,459,726,702,120,14.0,13.5,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,good,quiet,24,54,239,,516,809,750,120,11.4,10.6,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,expert,scan,24,83,236,239,461,1147,765,120,18.5,16.9,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,expert,fire,24,71,236,,386,743,624,120,25.2,22.9,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,expert,plot,24,92,236,270,441,822,664,120,16.2,14.7,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,expert,close,24,83,236,,385,733,600,120,24.6,22.1,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x1,expert,quiet,24,92,236,,459,899,670,121,17.9,15.5,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,new,scan,24,0,307,366,,573,573,122,0.0,0.0,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,new,fire,24,0,307,,,659,659,122,0.0,0.0,4,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,new,plot,24,0,307,425,,522,522,122,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,new,close,24,0,307,,,646,646,122,0.0,0.0,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,new,quiet,24,0,307,,,661,661,122,0.0,0.0,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,good,scan,24,0,285,315,,748,748,120,0.1,0.1,5,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,good,fire,24,0,285,,,753,753,120,0.5,0.5,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,good,plot,24,0,285,359,,756,756,120,0.1,0.1,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,good,close,24,0,285,,,731,731,120,0.2,0.2,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,good,quiet,24,0,285,,,819,819,120,0.2,0.2,5,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,expert,scan,24,0,263,280,,861,861,114,0.5,0.5,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,expert,fire,24,0,263,,,781,781,114,1.1,1.1,4,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,expert,plot,24,0,263,311,,804,804,114,0.1,0.1,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,expert,close,24,0,263,,,785,785,114,1.1,1.1,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Level_01,20000,x5,expert,quiet,24,0,263,,,836,836,114,0.4,0.4,5,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,new,scan,24,100,203,215,662,,662,292,9.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,new,fire,24,100,203,,448,,448,155,12.0,9.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,new,plot,24,100,203,275,835,,835,369,9.3,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,new,close,24,100,203,,469,,469,155,12.0,9.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,new,quiet,24,100,203,,522,,522,155,9.0,9.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,good,scan,24,100,231,236,741,,741,426,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,good,fire,24,100,231,,344,,344,202,9.0,9.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,good,plot,24,100,231,281,854,,854,473,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,good,close,24,100,231,,371,,371,202,9.0,9.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,good,quiet,24,100,231,,442,,442,202,9.0,9.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,expert,scan,24,100,226,229,801,,801,486,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,expert,fire,24,100,226,,298,,298,202,9.0,9.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,expert,plot,24,100,226,260,888,,888,480,6.4,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,expert,close,24,100,226,,307,,307,202,10.0,9.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x1,expert,quiet,24,100,226,,413,,413,202,10.0,9.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,new,scan,24,0,300,359,,,3601,378,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,new,fire,24,54,300,,1184,,2292,151,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,new,plot,24,0,300,420,,,3601,1419,7.0,6.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,new,close,24,0,300,,,,3601,151,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,new,quiet,24,0,300,,,,3601,153,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,good,scan,24,100,277,307,1169,,1169,464,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,good,fire,24,83,277,,756,,1230,202,10.3,10.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,good,plot,24,25,277,351,1422,,3057,1018,8.7,8.7,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,good,close,24,71,277,,815,,1628,202,11.1,11.1,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,good,quiet,24,54,277,,953,,2167,202,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,expert,scan,24,100,252,269,1075,,1075,494,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,expert,fire,24,100,252,,585,,585,204,9.5,9.5,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,expert,plot,24,88,252,300,1331,,1615,710,7.0,7.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,expert,close,24,96,252,,601,,726,204,9.8,9.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,LongShot,40000,x5,expert,quiet,24,54,252,,792,,2080,204,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,new,scan,24,62,1,42,,,283,61,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,new,fire,24,62,1,43,,,231,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,new,plot,24,62,1,102,,,334,66,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,new,close,24,62,1,43,,,231,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,new,quiet,24,62,1,43,,,231,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,good,scan,24,62,1,21,,,226,63,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,good,fire,24,62,1,22,,,168,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,good,plot,24,62,1,66,,,273,75,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,good,close,24,62,1,22,,,168,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,good,quiet,24,62,1,22,,,168,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,expert,scan,24,62,1,12,,,205,63,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,expert,fire,24,62,1,13,,,147,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,expert,plot,24,62,1,42,,,258,82,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,expert,close,24,62,1,13,,,147,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x1,expert,quiet,24,62,1,13,,,147,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,new,scan,24,62,0,212,,,683,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,new,fire,24,62,0,214,,,630,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,new,plot,24,62,0,273,,,743,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,new,close,24,62,0,214,,,630,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,new,quiet,24,62,0,214,,,630,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,good,scan,24,62,0,107,,,498,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,good,fire,24,62,0,109,,,389,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,good,plot,24,62,0,151,,,512,88,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,good,close,24,62,0,109,,,389,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,good,quiet,24,62,0,109,,,389,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,expert,scan,24,62,0,61,,,389,67,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,expert,fire,24,62,0,63,,,296,59,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,expert,plot,24,62,0,92,,,407,78,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,expert,close,24,62,0,63,,,296,59,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,Prize,20000,x5,expert,quiet,24,62,0,63,,,296,59,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,new,scan,24,0,1,42,,,42,29,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,new,fire,24,83,1,,,,251,182,0.8,0.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,new,plot,24,100,1,102,,,211,100,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,new,close,24,100,1,,,,112,35,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,new,quiet,24,100,1,,,,215,138,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,good,scan,24,0,1,21,,,21,14,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,good,fire,24,100,1,,,,28,14,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,good,plot,24,100,1,66,,,207,126,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,good,close,24,100,1,,,,48,15,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,good,quiet,24,100,1,,,,167,123,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,expert,scan,24,0,1,12,,,12,8,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,expert,fire,24,100,1,,,,18,8,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,expert,plot,24,100,1,42,,,209,152,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,expert,close,24,100,1,,,,30,10,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x1,expert,quiet,24,100,1,,,,149,122,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,new,scan,24,0,0,212,,,212,151,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,new,fire,24,21,0,,,,767,436,1.6,0.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,new,plot,24,58,0,273,,,779,163,2.7,0.6,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,new,close,24,92,0,,,,539,151,2.4,0.9,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,new,quiet,24,88,0,,,,585,170,2.2,0.9,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,good,scan,24,0,0,107,,,107,76,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,good,fire,24,96,0,,,,194,129,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,good,plot,24,100,0,151,,,368,139,1.2,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,good,close,24,100,0,,,,205,76,1.4,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,good,quiet,24,100,0,,,,314,121,1.5,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,expert,scan,24,0,0,61,,,61,42,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,expert,fire,24,100,0,,,,75,42,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,expert,plot,24,100,0,92,,,287,163,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,expert,close,24,100,0,,,,101,42,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,SilentShot,20000,x5,expert,quiet,24,100,0,,,,212,125,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-step180
+2026-11-10,maths,ColdRun,20000,x1,new,scan,24,29,957,968,,1312,1489,566,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,ColdRun,20000,x1,new,plot,24,8,957,1029,,1223,1252,566,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,new,close,24,4,957,,,1119,1129,566,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,new,quiet,24,21,957,,,1336,1407,567,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,good,scan,24,75,936,942,,1010,1689,567,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,ColdRun,20000,x1,good,plot,24,33,936,987,,1484,1716,567,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,good,close,24,21,936,,,1078,1129,567,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,good,quiet,24,42,936,,,1321,1415,568,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,expert,scan,24,75,930,933,,1226,1687,568,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,ColdRun,20000,x1,expert,plot,24,79,930,963,,1562,1667,567,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,expert,close,24,25,930,,,1055,1125,567,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x1,expert,quiet,24,46,930,,,1249,1410,568,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,new,scan,24,12,1044,1101,,1456,1473,531,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,ColdRun,20000,x5,new,plot,24,17,1044,1268,,1244,1309,531,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,new,close,24,12,1044,,,1239,1263,531,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,new,quiet,24,12,1044,,,1432,1503,546,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,good,scan,24,38,993,1020,,1365,1591,552,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,ColdRun,20000,x5,good,plot,24,29,993,1058,,1290,1325,552,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,good,close,24,12,993,,,1186,1207,552,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,good,quiet,24,50,993,,,1398,1512,552,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,expert,scan,24,25,966,980,,1323,1465,579,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,ColdRun,20000,x5,expert,plot,24,50,966,1008,,1576,1710,561,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,expert,close,24,17,966,,,1099,1146,561,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,ColdRun,20000,x5,expert,quiet,24,50,966,,,1388,1489,561,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,new,scan,24,100,1,42,147,,147,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,new,fire,24,100,1,,140,,140,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,new,plot,24,100,1,102,206,,206,60,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,new,close,24,100,1,,140,,140,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,new,quiet,24,100,1,,140,,140,29,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,good,scan,24,100,1,21,80,,80,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,good,fire,24,100,1,,76,,76,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,good,plot,24,100,1,66,124,,124,45,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,good,close,24,100,1,,76,,76,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,good,quiet,24,100,1,,76,,76,14,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,expert,scan,24,100,1,12,55,,55,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,expert,fire,24,100,1,,51,,51,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,expert,plot,24,100,1,42,84,,84,30,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,expert,close,24,100,1,,51,,51,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x1,expert,quiet,24,100,1,,51,,51,10,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,new,scan,24,100,0,212,657,,657,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,new,fire,24,100,0,,624,,624,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,new,plot,24,79,0,273,753,,784,151,6.2,6.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,new,close,24,100,0,,624,,624,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,new,quiet,24,100,0,,624,,624,151,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,good,scan,24,100,0,107,494,,494,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,good,fire,24,100,0,,374,,374,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,good,plot,24,100,0,151,443,,443,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,good,close,24,100,0,,374,,374,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,good,quiet,24,100,0,,374,,374,76,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,expert,scan,24,100,0,61,326,,326,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,expert,fire,24,100,0,,265,,265,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,expert,plot,24,100,0,92,311,,311,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,expert,close,24,100,0,,265,,265,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,FirstShot,20000,x5,expert,quiet,24,100,0,,265,,265,42,6.0,6.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,new,scan,24,21,957,968,,1372,1429,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,Intercept,20000,x1,new,plot,24,21,957,1022,,1410,1478,120,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,new,close,24,4,957,,,1119,1129,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,new,quiet,24,21,957,,,1341,1428,120,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,good,scan,24,62,936,942,,1270,1589,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,Intercept,20000,x1,good,plot,24,46,936,992,,1543,1929,120,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,good,close,24,21,936,,,1078,1129,120,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,good,quiet,24,38,936,,,1342,1423,120,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,expert,scan,24,79,930,933,,1127,1684,120,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,Intercept,20000,x1,expert,plot,24,62,930,963,,1612,1753,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,expert,close,24,25,930,,,1055,1125,120,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x1,expert,quiet,24,46,930,,,1275,1415,120,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,new,scan,24,21,1044,1101,,1390,1471,122,0.0,0.0,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,new,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,Intercept,20000,x5,new,plot,24,17,1044,1268,,1244,1309,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,new,close,24,12,1044,,,1239,1263,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,new,quiet,24,12,1044,,,1432,1503,122,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,good,scan,24,29,993,1020,,1439,1573,122,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,good,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,Intercept,20000,x5,good,plot,24,29,993,1058,,1466,1573,122,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,good,close,24,12,993,,,1186,1207,122,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,good,quiet,24,50,993,,,1398,1558,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,expert,scan,24,25,966,980,,1323,1466,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,expert,fire,0,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,n/a,slug1500 torp250 top50 gtop35 rg30000nose aim3 weapons off rooms-box
+2026-11-10,maths,Intercept,20000,x5,expert,plot,24,46,966,1008,,1616,1798,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,expert,close,24,17,966,,,1099,1146,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Intercept,20000,x5,expert,quiet,24,50,966,,,1378,1528,122,0.0,0.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,new,scan,24,0,214,224,,482,482,106,1.5,1.2,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,new,fire,24,0,214,,,456,456,106,1.6,1.3,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,new,plot,24,0,214,286,,483,483,106,1.2,1.1,5,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,new,close,24,0,214,,,446,446,106,1.0,0.8,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,new,quiet,24,0,214,,,563,563,106,1.5,1.3,4,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,good,scan,24,54,239,245,497,610,661,120,11.6,10.4,2,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,good,fire,24,62,239,,415,510,572,120,11.4,11.1,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,good,plot,24,38,239,290,471,611,634,120,9.3,9.0,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,good,close,24,67,239,,433,572,609,120,13.5,12.7,4,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,good,quiet,24,62,239,,497,622,661,120,11.3,9.9,1,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,expert,scan,24,92,236,239,467,623,692,120,15.8,14.1,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,expert,fire,24,100,236,,367,,556,120,19.9,17.8,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,expert,plot,24,100,236,270,440,,648,121,16.6,14.6,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,expert,close,24,100,236,,364,,554,120,19.4,17.1,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x1,expert,quiet,24,100,236,,448,,637,122,15.0,13.6,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,new,scan,24,0,307,366,,499,499,122,0.0,0.0,8,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,new,fire,24,0,307,,,565,565,122,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,new,plot,24,0,307,427,,527,527,122,0.0,0.0,0,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,new,close,24,0,307,,,501,501,122,0.0,0.0,3,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,new,quiet,24,0,307,,,592,592,122,0.0,0.0,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,good,scan,24,0,285,315,,630,630,120,0.1,0.1,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,good,fire,24,0,285,,,613,613,120,0.5,0.5,7,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,good,plot,24,0,285,359,,597,597,120,0.2,0.2,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,good,close,24,0,285,,,593,593,120,0.2,0.2,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,good,quiet,24,0,285,,,670,670,120,0.2,0.2,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,expert,scan,24,0,263,280,,710,710,114,0.5,0.5,5,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,expert,fire,24,0,263,,,622,622,114,1.1,1.1,6,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,expert,plot,24,0,263,311,,634,634,114,0.1,0.1,5,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,expert,close,24,0,263,,,624,624,114,1.1,1.1,8,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Level_01,20000,x5,expert,quiet,24,0,263,,,694,694,114,0.4,0.4,5,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,new,scan,24,96,203,215,739,,858,292,14.2,10.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,new,fire,24,100,203,,517,,517,155,15.8,12.6,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,new,plot,24,96,203,275,913,,1025,369,14.8,10.5,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,new,close,24,96,203,,566,,693,155,17.8,13.9,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,new,quiet,24,100,203,,608,,608,155,14.2,13.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,good,scan,24,100,231,236,766,,766,426,7.6,7.6,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,good,fire,24,100,231,,355,,355,202,10.1,10.1,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,good,plot,24,100,231,281,892,,892,473,9.4,9.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,good,close,24,100,231,,370,,370,202,9.4,9.4,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,good,quiet,24,100,231,,477,,477,202,11.2,10.7,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,expert,scan,24,100,226,229,803,,803,486,6.4,6.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,expert,fire,24,100,226,,313,,313,202,11.3,11.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,expert,plot,24,100,226,260,951,,951,480,13.1,11.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,expert,close,24,100,226,,355,,355,202,14.4,11.9,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x1,expert,quiet,24,100,226,,405,,405,202,8.8,8.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,new,scan,24,0,300,359,,,3601,378,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,new,fire,24,0,300,,,,3601,151,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,new,plot,24,0,300,420,,,3601,1419,7.0,6.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,new,close,24,0,300,,,,3601,151,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,new,quiet,24,0,300,,,,3601,153,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,good,scan,24,0,277,307,,,3601,464,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,good,fire,24,54,277,,630,,1992,202,9.3,9.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,good,plot,24,4,277,351,1249,,3503,1018,9.3,9.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,good,close,24,0,277,,,,3601,202,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,good,quiet,24,0,277,,,,3601,202,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,expert,scan,24,33,252,269,1148,,2784,494,10.6,10.6,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,expert,fire,24,96,252,,543,,671,204,8.3,8.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,expert,plot,24,67,252,300,1329,,2087,710,8.5,8.5,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,expert,close,24,92,252,,546,,801,204,8.3,8.3,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,LongShot,40000,x5,expert,quiet,24,0,252,,,,3601,204,12.0,12.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,new,scan,24,62,1,42,,,283,61,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,new,fire,24,62,1,43,,,231,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,new,plot,24,62,1,102,,,334,66,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,new,close,24,62,1,43,,,231,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,new,quiet,24,62,1,43,,,231,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,good,scan,24,62,1,21,,,226,63,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,good,fire,24,62,1,22,,,168,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,good,plot,24,62,1,66,,,273,75,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,good,close,24,62,1,22,,,168,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,good,quiet,24,62,1,22,,,168,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,expert,scan,24,62,1,12,,,205,63,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,expert,fire,24,62,1,13,,,147,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,expert,plot,24,62,1,42,,,258,82,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,expert,close,24,62,1,13,,,147,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x1,expert,quiet,24,62,1,13,,,147,60,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,new,scan,24,62,0,212,,,683,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,new,fire,24,62,0,214,,,630,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,new,plot,24,62,0,273,,,743,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,new,close,24,62,0,214,,,630,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,new,quiet,24,62,0,214,,,630,151,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,good,scan,24,62,0,107,,,498,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,good,fire,24,62,0,109,,,389,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,good,plot,24,62,0,151,,,512,88,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,good,close,24,62,0,109,,,389,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,good,quiet,24,62,0,109,,,389,76,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,expert,scan,24,62,0,61,,,389,67,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,expert,fire,24,62,0,63,,,296,59,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,expert,plot,24,62,0,92,,,407,78,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,expert,close,24,62,0,63,,,296,59,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,Prize,20000,x5,expert,quiet,24,62,0,63,,,296,59,3.0,3.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,new,scan,24,0,1,42,,,42,29,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,new,fire,24,83,1,,,,251,182,0.8,0.8,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,new,plot,24,100,1,102,,,211,100,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,new,close,24,100,1,,,,112,35,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,new,quiet,24,100,1,,,,215,138,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,good,scan,24,0,1,21,,,21,14,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,good,fire,24,100,1,,,,28,14,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,good,plot,24,100,1,66,,,207,126,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,good,close,24,100,1,,,,48,15,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,good,quiet,24,100,1,,,,167,123,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,expert,scan,24,0,1,12,,,12,8,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,expert,fire,24,100,1,,,,18,8,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,expert,plot,24,100,1,42,,,209,152,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,expert,close,24,100,1,,,,30,10,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x1,expert,quiet,24,100,1,,,,149,122,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,new,scan,24,0,0,212,,,212,151,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,new,fire,24,21,0,,,,767,436,1.6,0.2,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,new,plot,24,58,0,273,,,779,163,2.7,0.6,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,new,close,24,92,0,,,,539,151,2.4,0.9,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,new,quiet,24,88,0,,,,585,170,2.2,0.9,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,good,scan,24,0,0,107,,,107,76,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,good,fire,24,96,0,,,,194,129,1.1,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,good,plot,24,100,0,151,,,368,139,1.2,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,good,close,24,100,0,,,,205,76,1.4,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,good,quiet,24,100,0,,,,314,121,1.5,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,expert,scan,24,0,0,61,,,61,42,0.0,0.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,expert,fire,24,100,0,,,,75,42,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,expert,plot,24,100,0,92,,,287,163,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,expert,close,24,100,0,,,,101,42,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box
+2026-11-10,maths,SilentShot,20000,x5,expert,quiet,24,100,0,,,,212,125,1.0,1.0,,slug1500 torp250 top50 gtop35 rg30000nose aim3 rooms-box

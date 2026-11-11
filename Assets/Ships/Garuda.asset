@@ -19,15 +19,19 @@ MonoBehaviour:
     headingKeyStep: 3
     turnRate: 14
     baseTurnRate: 7
+    fineTurnDegPerS: 2
     topSpeedUnits: 35
     baseSpeedUnits: 17.5
     accelUnits: 1.4
     baseAccelUnits: 0.7
     brakeUnits: 2.6
+    reverseShare: 0.42
     driftKeepPerS: 0.9143
     dragKeepPerS: 0.99406
     sideSpeedUnits: 14
     sideAccelUnits: 2.8
+    sideTapUnits: 2
+    sideRampSeconds: 2
   power:
     reactorUnits: 10
     busMax: 5
@@ -51,7 +55,6 @@ MonoBehaviour:
     cloudInsideShare: 0.9
     cloudSignalShare: 0.3
     cloudSeenUnits: 400
-    bearingTrailSeconds: 120
   weapons:
     mounts:
     - id: RGA
@@ -97,16 +100,22 @@ MonoBehaviour:
     hardPoints:
     - at: {x: 0, y: 175}
       mount: 
+      path: []
     - at: {x: 50, y: 0}
       mount: RGA
+      path: []
     - at: {x: -50, y: 0}
       mount: RGB
+      path: []
     - at: {x: 50, y: -87.5}
       mount: PDA
+      path: []
     - at: {x: -50, y: -87.5}
       mount: PDB
+      path: []
     - at: {x: 0, y: -175}
       mount: VLS
+      path: []
     gunTurnDegPerSecond: 3
     lockSeconds: 10
     lockFallSeconds: 5
@@ -147,10 +156,13 @@ MonoBehaviour:
     fighterArmourDamage: 10
     fighterCompartmentDamage: 1
     launchTiltBackDeg: 15
+    launchSideGapUnits: 10
     launchRunUnits: 200
+    dots: []
     turnDegPerS: 90
     turnEase: 180
     boatSpeedUnits: 75
+    fighters: 6
     marines: 0
     marinesPerBoat: 6
     dockUnits: 50
@@ -168,6 +180,8 @@ MonoBehaviour:
     - 75
     - 150
     crew: 040000000900000012000000070000000600000008000000
+    roomSide: 000000000000000002000000010000000300000002000000
+    roomOrder: 010000000200000002000000010000000100000001000000
     collisionArmourDamage: 25
     collisionCompartmentDamage: 1
     crashFullSpeed: 50
