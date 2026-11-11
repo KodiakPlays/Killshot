@@ -870,16 +870,19 @@ A fixed gun, such as our spinal railgun, has no cone (Step 170). Its bar runs fr
 nose out to its full reach, 30,000. The reach ring still shows.
 
 **Ship marks past visual range** (Step 202). Past visual range, a ship on the plot is a small mark.
-Its shape tells you what we know about it. The colours are the same as the old dots.
+Its shape and colour tell you what we know about it.
 
 - A scanned enemy is a filled red triangle with equal sides, point up. It never turns with the ship's course.
-- A ship we can't name yet is a hollow square. A bogey locked without a scan is one.
-- Our own ships are blue dots.
+- A ship we can't name yet is a hollow amber square, locked or not. Amber means we can't name it.
+- Our own ships are filled blue circles.
 
-The lock's white corners go round the mark. An old contact keeps its shape as it fades. **Enemy Mark Px** (14)
-is the triangle's width. **Unknown Mark Px** (12) is the square's width. Both are on the Board tab of
-**Starwolf → Tuning**, under Sensors. `MarksGraphic.cs` draws the shapes. `PlotPanel.Refresh` picks one for each
-ship. Inside visual range, ships show their outline picture.
+The lock's white corners go round the mark. An old contact keeps its shape as it fades. An unnamed ship is
+amber everywhere: its mark, its label and its outline picture in visual range. A scanned ship's label gives
+its name and class, such as `GARUDA · CRUISER` or `GARUDA · CRUISER · LOCKED`. The class comes from the
+ship's track. **Enemy Mark Px** (14) is the triangle's width. **Unknown Mark Px** (12) is the square's width.
+**Friend Mark Px** (11) is the blue circle's width. All three are on the Board tab of **Starwolf → Tuning**,
+under Sensors. `MarksGraphic.cs` draws the shapes. `PlotPanel.Refresh` picks one for each ship. Inside visual
+range, ships show their outline picture.
 
 A locked ship has white corners round it on the plot, the same as the targeting computer's box. A contact out of
 sight is a marker where it was last seen. It fades as it gets old, and its label says how old it is. **Stale
