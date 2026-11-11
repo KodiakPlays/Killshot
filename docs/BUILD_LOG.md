@@ -941,7 +941,7 @@ with its list, and the new chats start (Playtest Update, then Plain English Rewr
 | M32 | A mission needs torpedoes or marines, but the ship has none left after repairs | none | waiting for the owner | Campaign Flow | Owner: a minimum at the start, or the player's problem? | Campaign Flow chat |
 | M33 | Room art and people (Bridge, Engineering, Quarters); the FLIGHT LEADER still talks about fighters | the owner makes the art | waiting for the owner | the owner | none | "Open after Step 185: art" |
 | | **Information on the plot** | | | | | |
-| M34 | The information hierarchy, the rest: "hold the scan to learn more" (a single click scans, holding learns more); blue circles next to grey rock circles; when a ship becomes a bogey; ACTIVE SCAN as a long narrow telescope | the owner's main priority (2026-11-10). 2026-11-11: "I like the 'hold scan to learn more.'"; the enemy triangle "is not necessary… a diamond is okay… I like the bar" | the scan hold picked; the rest waiting for the owner | Information Hierarchy | Plan the scan hold now; build it after the zips, on top of Sniper Plan's E-SIG lines | "Open: the information hierarchy" |
+| M34 | The information hierarchy, the rest: "hold the scan to learn more" (a click gives a grey circle; holding the cone gives BOGEY, an amber square, then the name; about 1 s close in, 5 s at the DRADIS edge; Tuning, 0 = instant); blue circles next to grey rock circles; when a ship becomes a bogey past visual range | the owner's main priority (2026-11-10). 2026-11-11: "I like the 'hold scan to learn more.' Yeah, I think that's absolutely fine. That is the cost… It's not a bad cost."; the enemy triangle "is not necessary… a diamond is okay… I like the bar" (the triangle stays) | the scan hold picked and planned; the rest waiting for the owner | Information Hierarchy | Build the scan hold after the zips, on top of Sniper Plan's E-SIG lines. ACTIVE SCAN as a telescope past DRADIS went to Sniper Plan (2026-11-11) | "Open: the information hierarchy" |
 | M35 | Look back at old comms messages | the owner was unhappy it was left behind (2026-10-29) | not started | Information Hierarchy (Producer, 2026-11-11) | After the scan hold | "Comms intercepts" |
 | | **Fire Control** | | | | | |
 | M36 | Codex's Fire Control: does it replace the board's? Does the periscope lower itself? The FLIGHT LEADER's words? Unpack the Hangar package? | "Make a new scene for this… It doesn't have to be in the flow" (2026-11-10) | waiting for the owner | none (parked; the Fire Control Codex chat is done) | Owner decides after the build | "Codex's Fire Control test" |
@@ -1085,7 +1085,30 @@ built (Step 202).** Build nothing more until the owner says go.
   - A long ping is loud and can give us away.
   - A far find is a red triangle that fades until the next ping.
   - It would give LONG SHOT a way to see past DRADIS, beside drones.
-  - Next: take it to the Sniper Plan chat with the drones decision.
+  - **Handed to the Sniper Plan chat (2026-11-11)**, with the owner's words: "maybe we just call it
+    the scanner plan… You scan something, and then it scans you, but do you want to scan close
+    enough to get a bit of a heat signature? We'll think about it, right?" The owner also said the
+    E-SIG circle isn't visible. That chat is adding it.
+- **Hold the scan to learn more: picked, planned, not built (owner 2026-11-11):** "I like the 'hold
+  scan to learn more.' Yeah, I think that's absolutely fine. That is the cost… It's not a bad cost."
+  On shapes: the enemy triangle "is not necessary. If you want to have a diamond, it's okay… but I
+  like the bar." The triangle stays: it is in the build.
+  - A click, or the DRADIS sweep crossing the cone, still scans. It gives a grey circle at the
+    ship's spot: something is there. It looks like a rock echo.
+  - Keep the cone on the ship and it becomes BOGEY, a hollow amber square, at about 40% of the hold.
+  - At the full hold it gets its name and the red triangle (GARUDA · CRUISER).
+  - The hold grows with range: about 1 game second close in, about 5 at the edge of DRADIS. If the
+    cone leaves the ship, the count starts again.
+  - The hold times go in each ship's file, on Tuning's Ship tab. 0 gives today's instant naming: the
+    owner wants "an option".
+  - The scan board's existing RESOLVING word shows during the hold.
+  - Where: `SensorSystem.NoteScan`, `ResolveLit` and `Identify`, the sweep in `PlotPanel.Update`, and
+    `PlotPanel.Refresh`'s contact loop. The playtest's scan check (section 22, "let go: GARUDA is
+    identified") must wait for the hold.
+  - MILK RUN's three scan notes already say to hold the cone until the name appears (Mission Setup
+    Tool checked). Unscanned battle group ships in sight still read BOGEY.
+  - When: after the MILK RUN zips (Producer's order), on top of Sniper Plan's E-SIG commit in
+    `SensorSystem.cs`.
 - **What the plot does today** (found by this talk, in `PlotPanel.Refresh`):
   - A ship is never an unknown ping. One scan names it at once.
   - A ship that is heard but not scanned shows only a red bar on the DRADIS circle, with BRG.
