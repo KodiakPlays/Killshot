@@ -20,8 +20,8 @@ MonoBehaviour:
     turnRate: 20
     baseTurnRate: 10
     fineTurnDegPerS: 2
-    topSpeedUnits: 50
-    baseSpeedUnits: 25
+    topSpeedUnits: 60
+    baseSpeedUnits: 30
     accelUnits: 2
     baseAccelUnits: 1
     brakeUnits: 3.75
@@ -283,6 +283,7 @@ MonoBehaviour:
     - 50
     - 100
     crew: 040000000900000012000000070000000600000008000000
+    roomRow: 010000000200000004000000040000000300000005000000
     collisionArmourDamage: 25
     collisionCompartmentDamage: 1
     crashFullSpeed: 50
