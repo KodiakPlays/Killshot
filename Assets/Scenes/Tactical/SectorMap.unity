@@ -334,6 +334,7 @@ MonoBehaviour:
   watermark: Shagun Shah
   watermarkSize: 10
   watermarkColour: {r: 0.45, g: 0.88, b: 0.54, a: 0.5}
+  watermarkPlace: {x: 80, y: 60}
 --- !u!4 &158073076
 Transform:
   m_ObjectHideFlags: 0
@@ -948,6 +949,78 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 220000206}
+  m_CullTransparentMesh: 1
+--- !u!1 &249200468
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 249200469}
+  - component: {fileID: 249200471}
+  - component: {fileID: 249200470}
+  m_Layer: 0
+  m_Name: Scanlines (map)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &249200469
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249200468}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1602095125}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 292.1739, y: -72.52172}
+  m_SizeDelta: {x: 993.39124, y: 788.8695}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &249200470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249200468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RawImage
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 2800000, guid: bed19ccc86f6746bca1670327e27bc7f, type: 3}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 262.9565
+--- !u!222 &249200471
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249200468}
   m_CullTransparentMesh: 1
 --- !u!1 &251360596
 GameObject:
@@ -1628,7 +1701,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 2800000, guid: 742757f969af4f5899f02c1aea0a601e, type: 3}
+  m_Texture: {fileID: 2800000, guid: 5d7ff6d0f82cc4a0790118e2dfc11626, type: 3}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -1835,6 +1908,7 @@ MonoBehaviour:
   watermark: Shagun Shah
   watermarkSize: 10
   watermarkColour: {r: 0.45, g: 0.88, b: 0.54, a: 0.5}
+  watermarkPlace: {x: 80, y: 60}
 --- !u!4 &976202082
 Transform:
   m_ObjectHideFlags: 0
@@ -2061,6 +2135,8 @@ RectTransform:
   - {fileID: 370252753}
   - {fileID: 1476759750}
   - {fileID: 263870700}
+  - {fileID: 249200469}
+  - {fileID: 2037361106}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2474,8 +2550,8 @@ MonoBehaviour:
   debriefButton: {fileID: 220000203}
   flow: {fileID: 1675068442}
   completedNode: {fileID: 21300000, guid: 33640915f2464e5098e96b8968544b1b, type: 3}
-  openInk: {r: 0.3, g: 0.84, b: 0.65, a: 1}
-  doneInk: {r: 0.54, g: 0.78, b: 0.7, a: 1}
+  openInk: {r: 0.635, g: 0.976, b: 0.627, a: 1}
+  doneInk: {r: 0.635, g: 0.976, b: 0.627, a: 0.45}
   lineInk: {r: 0.635, g: 0.976, b: 0.627, a: 0.35}
   slotsScene: SaveSlots
   fadeInSeconds: 1.5
@@ -2494,6 +2570,78 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2037361105
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2037361106}
+  - component: {fileID: 2037361108}
+  - component: {fileID: 2037361107}
+  m_Layer: 0
+  m_Name: Scanlines (briefing)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2037361106
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2037361105}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1602095125}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -618.26086, y: -70.434784}
+  m_SizeDelta: {x: 410.08694, y: 692.86957}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2037361107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2037361105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RawImage
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 2800000, guid: bed19ccc86f6746bca1670327e27bc7f, type: 3}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 230.95653
+--- !u!222 &2037361108
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2037361105}
+  m_CullTransparentMesh: 1
 --- !u!1 &2072359924
 GameObject:
   m_ObjectHideFlags: 0
