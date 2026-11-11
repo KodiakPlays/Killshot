@@ -890,6 +890,9 @@ at a time, and each chat says "free" to the next and to Producer:
 5. Tutorial Mission Setup: its MILK RUN turn (M5, M47), commit.
 6. Mission Setup Tool: the check after MISSION COMPLETE (M4), the full playtest as it is, TEST MISSION
    off, "To be continued." (M2), the dated zips (M1), TEST MISSION back on, commit.
+**Memory Cleanup always goes first today** (owner, 2026-11-11: "memory cleanup has to get priority
+always in today's conversations"). If it needs Unity, the docs or a chat's time, it goes ahead of this
+order.
 No Unity and no code left on disk until the zips are made: Information Hierarchy (plans the scan
 hold). Owner questions not answered by then (M9, M10, M11, M12) ship as they are today. After the
 zips: Sniper Plan goes on with E-SIG, Information Hierarchy builds the scan hold, Bug Fixes goes on
@@ -913,7 +916,7 @@ with its list, and the new chats start (Playtest Update, then Plain English Rewr
 | M48 | Uncommitted: Player 1's report, 420 rows in `numbers.csv` and the fight program's changes. (Our ship's speed 60 and base 30, with their tuning rows, were committed in de3779d.) | owner rule: commit your finished work before you stop (2026-11-11) | built, not committed | Ship Visual Artefact | Commit its own lines | `git status` |
 | M12 | Call signs for the carrier, the battleship, the corvette and our ship | "English with an Indic feel" (2026-11-10) | waiting for the owner | Mission Setup Tool | Owner picks from the list | `MISSION_SETUP_PLAN.md` "Names"; "Open after Step 178" |
 | | **The sniper plan (being built)** | | | | | |
-| M13 | The E-SIG circle round each ship, and the hit rule: a hit from outside it tells only the direction | "It's how much the eSig expands"; 2,500 to 20,000, +25 a shot, cools 2 a second (2026-11-09) | designed; being built | Sniper Plan | Build it, with four numbers in Tuning | `SNIPER_PLAN.md` "The E-SIG circle". The "15,000 waits for a yes" line in "The sniper ship and weapons" is out of date |
+| M13 | The E-SIG circle round each ship, and the hit rule: a hit from outside it tells only the direction | "It's how much the eSig expands"; 2,500 to 20,000, +25 a shot, cools 2 a second (2026-11-09) | part built: checked in LONG SHOT (the ring shows; a hit from outside sends the Garuda down the shot's line), then taken off disk as a patch until the zips are made | Sniper Plan | Put the patch back after the zips, finish, commit. Owner (2026-11-11, via Information Hierarchy): the E-SIG circle isn't visible to the player | `SNIPER_PLAN.md` "The E-SIG circle". The "15,000 waits for a yes" line in "The sniper ship and weapons" is out of date |
 | M14 | Sensor drones in the hangar's INTERCEPTOR row. They unlock D3 (a far hit shows when a drone watches) and restock drones | "we're replacing interceptors with drones that need to be deployed" (2026-11-09) | waiting for the owner: how you deploy them (a design page is coming) | Sniper Plan | Owner picks on the page; then build | `SNIPER_PLAN.md` "Sensor drones" |
 | M15 | Lasers on the two side dots | "you get in, you zap things" (2026-11-09); the sides "are going to be lasers again" (2026-11-11) | designed; the owner sees the look first | Sniper Plan | After the drones | `SNIPER_PLAN.md` "Lasers" |
 | M16 | DRADIS reaches further, and a lock covers all of DRADIS (the MAG cap rises with it) | DRADIS "does need to reach a little further" (2026-11-09) | waiting for the owner: the number | Sniper Plan | Ask with the drones | "The sniper ship and weapons" |
