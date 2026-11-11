@@ -1,4 +1,4 @@
-"""Phosphor sector map: makes the experiment's copy of the sector map picture.
+"""Phosphor sector map: makes the green sector map picture the game uses.
 
 What it does:
 Takes the Codex sector map picture (OperationalMapConsole.png, left untouched) and makes a copy
@@ -7,8 +7,9 @@ screens: green lines with a soft glow, darker edges. The painted words on them a
 written again in our letters: the big ones in the square-block letters of the intro's title, the
 small ones in Share Tech Mono. Some are rubbed out with nothing written back (STARWOLF and the
 DESTROYER lines: the game does not use the name STARWOLF, owner 2026-11-11).
-It also makes Scanlines.png, the strip laid over the map screen in the test scene
-Sector Map Phosphor.unity. Both pictures go next to the original.
+It also makes Scanlines.png, the strip laid over both screens. Both pictures go next to the
+original. The real SectorMap scene uses them (since 2026-11-11, the MILK RUN build), and so does the
+test copy Sector Map Phosphor.unity: running this changes the game's sector map.
 
 How it works:
 - Only the two screens' glass is changed. The metal and cables stay as painted.

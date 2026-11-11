@@ -68,7 +68,7 @@ Art/Frame/         the metal frame: the steel texture and the conduits
 Art/ToolRail/      the tool rail's icons and its selected-key frame
 Art/SystemsRail/   the systems rail's icons
 Art/TimeControl/   the time control's plate, pause key and rate keys
-Art/Briefing/      the briefing icon, the sector map's console picture and tick picture, and the phosphor test's map picture and scanline strip
+Art/Briefing/      the briefing icon, the sector map's console picture and tick picture, and the green map picture and scanline strip used by the sector map
 Art/Console/       the console's casting and lamp bezel
 Art/AlarmStrip/    the alarm strip
 Art/Rails/         the rail frame, for both rails
@@ -1571,11 +1571,14 @@ The pictures are in `Art/Briefing/`:
   STARWOLF and DESTROYER / OPERATIONS are not on it. The green picture is made by
   `docs/sector-map-experiment/make_phosphor_map.py`: run it again to change the look. Codex's
   original picture, below, is kept but no longer used.
-- `OperationalMapConsole.png` (1840 x 1035), Codex's original, is the whole console. It is in the Texture slot of
-  `Operational Map Console`, a Raw Image that fills the 1920 x 1080 screen. These are painted
-  into it: the BRIEFING and OPERATIONAL MAP plates, STARWOLF / DESTROYER / OPERATIONS, MISSION
-  RECORD, CAMPAIGN ARCHIVE, STARWOLF / SECTOR PLOT, the star chart, MISSION ARCHIVE and the three
-  empty button frames. To change any of these words, change the picture.
+- `OperationalMapConsole Phosphor.png` (3680 x 2070) is the whole console, in green. It is in the
+  Texture slot of `Operational Map Console`, a Raw Image that fills the 1920 x 1080 screen. The
+  BRIEFING and OPERATIONAL MAP plates, the star chart and the three empty button frames are Codex's
+  paint. The tool writes the words: SECTOR PLOT, MISSION ARCHIVE and MISSION RECORD in block
+  letters; NAV FIX 03, PRIMARY, OUTER DRIFT, RELATIVE BEARING and CAMPAIGN ARCHIVE in thin letters.
+  There are no STARWOLF or DESTROYER lines. To change any of these words, change WORDS in the tool
+  and run it again (see The green map, at the end of this section).
+- `OperationalMapConsole.png` (1840 x 1035) is Codex's original. It is kept but not used.
 - `CompletedMissionNode.png` (44 x 44) is the tick on a finished dot. It is in **Completed Node**
   on the script. With the slot empty, a finished dot is a dimmer round dot with a ✓ after its name.
 - To change the art, replace a PNG with one of the same name. Its import settings stay: sRGB
@@ -1633,14 +1636,15 @@ Ask a technical artist before you change these:
 - **Campaign** (`Campaign.asset`): the file the map reads its missions from.
 - **Map Scene** (`SectorMap`) on Ship Rooms is the scene SECTOR MAP › loads. See Ship rooms, above.
 
-**The phosphor test (Step 201).** A test copy of the map is in
-`Assets/Scenes/Tactical/Sector Map Phosphor.unity`. Both its screens are phosphor green, like the
-intro, with our letters, faint scanlines and green dots. It is not in the build list, and nothing in the
-game opens it. With no save slot picked, Play goes to SAVE SLOTS, the same as the real map, and a
-slot picked there opens the real map. What is different from the real scene:
+**The green map (Step 201).** Both screens of the sector map are phosphor green, like the intro,
+with our letters, faint scanlines and green dots. The game uses it from the MILK RUN build on (owner
+2026-11-11: "I would indeed like the green map in today's milkrun build"). The test scene
+`Assets/Scenes/Tactical/Sector Map Phosphor.unity` is a copy of the real one. Use it for tries. It
+is not in the build list, and nothing in the game opens it. With no save slot picked, Play goes to
+SAVE SLOTS, and a slot picked there opens the real map. What makes the map green:
 - `Operational Map Console` shows `Art/Briefing/OperationalMapConsole Phosphor.png` (3680 x 2070).
   It is twice the size of Codex's picture. The block letters need that size to keep their squares.
-  Codex's picture is unchanged. The top of the map reads only SECTOR PLOT, in block letters.
+  The top of the map reads only SECTOR PLOT, in block letters.
   DESTROYER NAVIGATION is rubbed out, with no new words (owner 2026-11-11: "we're not using the
   name STARWOLF in the actual game ... I don't think I need 'Destroyer Navigation' as text").
   On the left screen, STARWOLF and DESTROYER / OPERATIONS are rubbed out, with nothing written back
@@ -1649,13 +1653,14 @@ slot picked there opens the real map. What is different from the real scene:
 - `Scanlines (map)` and `Scanlines (briefing)` repeat `Art/Briefing/Scanlines.png` (a 1 x 4 px strip)
   over each screen's glass. They are the last two under `Sector Map` and draw over the dots, the
   briefing text and the three keys. They do not take clicks.
-- **Open Ink** and **Done Ink** are the intro's green. Done Ink is faded (A 0.45). In the real scene
-  they are teal.
+- **Open Ink** and **Done Ink** are the intro's green. Done Ink is faded (A 0.45). They were teal
+  before Step 201.
 
 A tool makes both pictures: `docs/sector-map-experiment/make_phosphor_map.py`. Run it from the repo
 root with `uv run --with pillow --with numpy --with opencv-python-headless python
 docs/sector-map-experiment/make_phosphor_map.py`. It starts from Codex's picture each time and
-writes over the two test pictures. The numbers to change are at the top of the file:
+writes over the green picture and the scanline strip. These are the game's pictures. Running it
+changes the real sector map too. The numbers to change are at the top of the file:
 - **GLASSES**: each screen's glass, in pixels of Codex's picture: a box, and how round its corners
   are. The map is (724, 209, 1676, 965), with square corners. The briefing screen is (131, 253, 524,
   917), rounded 12. Only these boxes change. The rounded corners keep the frame's paint.
