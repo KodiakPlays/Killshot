@@ -20,8 +20,9 @@
 //   fades. After a turn the ship slides, then lines up. All speed fades a little.
 // - Q and E push the ship sideways with the nose kept still. A tap gives a small push. Held, the
 //   push grows over a short time. Let go, and the slide fades.
-// - With no power on the ENG bus there is no thrust and no braking. The ship drifts on.
-//   A railgun shot pushes the ship back (Kick). The thrusters stop the push soon after, with or
+// - With no power on the ENG bus there is no thrust and no braking. The ship drifts on, and it
+//   can only turn very slowly, 1 degree a second unless Tuning says otherwise. The same goes
+//   under an EMP and for every ship. A railgun shot pushes the ship back (Kick). The thrusters stop the push soon after, with or
 //   without ENG power.
 // - Between board steps the model glides on along its speed and its turn. It uses BoardManager's
 //   time from the last step. It places the model every frame.
@@ -44,16 +45,16 @@
 //   EnemyBrain call Kick on each railgun shot. KickGone works out the push exactly, so it moves
 //   the ship the same distance at every game speed.
 // - It reads the ENG bus (PowerSystem) and the engine room (DamageSystem). Speed, push and turn
-//   rise in equal steps from ENG 1 to full ENG. turnBank keeps the part degrees between steps.
-//   Slow rates then turn at the right speed.
+//   rise in equal steps from ENG 1 to full ENG. At ENG 0 (NoEng) the turn is noEngTurnRate, and
+//   the slow aiming turn is held to it. turnBank keeps the part degrees between steps. Slow
+//   rates then turn at the right speed.
 // - DrawnX, DrawnY and DrawnHeading move the ship on by BoardManager.SinceTick. PlotPanel,
 //   PeriscopePanel and HelmPanel read them. Update places the model every frame.
 // - TacticalWorld calls PlaceAt to start a ship. It uses BoxHalf, wasX and wasY for crashes.
 //   BoxHalf comes from the length and width in the stats file.
 // - Numbers: NavSystem.Stats, the navigation part of each ship's stats file. The kick numbers are
 //   in the weapons part.
-// - Traps: the drawn spot is a straight-line guess between steps. Steer has no ENG check. With ENG
-//   at 0 the bow still turns, at the ENG 1 rate.
+// - Traps: the drawn spot is a straight-line guess between steps.
 // =================================================================================================
 
 using UnityEngine;
@@ -100,6 +101,8 @@ public class NavSystem : MonoBehaviour
         public float baseTurnRate = 10f;
         [Tooltip("Owner 2026-11-08: the slow turn for aiming the spinal railgun, Shift held with A or D, degrees per game second. It turns in fractions of a degree.")]
         public float fineTurnDegPerS = 2f;
+        [Tooltip("Owner 2026-11-11: with no ENG power the ship can barely turn (\"very, very limited mobility and turning\"). The swing at ENG 0, degrees per game second. The slow aiming turn is held to it too. 0: no turn at all.")]
+        public float noEngTurnRate = 1f;
         // Step 41 (owner 2026-10-18): actual chases commanded at capped rates; the hull turns, the velocity
         // follows, and the sideways part bleeds off (the ship slides). The prototype's numbers (MAX_SPEED 240,
         // ACCEL_RATE 80, BRAKE_RATE 150, DRIFT_DECAY .988, SPACE_DRAG .9992 per 1/60 s) were slowed to a 2.5 units/s
@@ -208,7 +211,7 @@ public class NavSystem : MonoBehaviour
     {
         get
         {
-            if (fineTurn != 0 && ship != null) return heading + fine + fineTurn * stats.fineTurnDegPerS * Ahead;
+            if (fineTurn != 0 && ship != null) return heading + fine + fineTurn * FineTurnPerS * Ahead;
             int d = TurnLeft;
             if (d == 0 || ship == null) return heading + fine;
             // owner 2026-11-09: from the part of a degree already turned, and from the moment of the order, so a turn starts and runs smoothly
@@ -235,8 +238,12 @@ public class NavSystem : MonoBehaviour
     double Accel => stats.baseAccelUnits + (stats.accelUnits - stats.baseAccelUnits) * EngStep;
     /// <summary>The share of full thrust ENG gives now. Slowing down and the side thrusters use it.</summary>
     double Thrust => stats.accelUnits > 0 ? Accel / stats.accelUnits : 1;
-    /// <summary>Degrees the bow swings per game second now (the design's per-tick swing at x1).</summary>
-    double TurnPerS => System.Math.Max(1, ShipState.JsRound((stats.baseTurnRate + (stats.turnRate - stats.baseTurnRate) * EngStep) * EngineRoom));
+    /// <summary>No power on the ENG bus (none drawn, or an EMP): no thrust, and the bow barely turns.</summary>
+    bool NoEng => ship.power.BusUnits("eng") == 0;
+    /// <summary>Degrees the bow swings per game second now (the design's per-tick swing at x1). Owner 2026-11-11: ENG 0 gives noEngTurnRate.</summary>
+    double TurnPerS => NoEng ? stats.noEngTurnRate : System.Math.Max(1, ShipState.JsRound((stats.baseTurnRate + (stats.turnRate - stats.baseTurnRate) * EngStep) * EngineRoom));
+    /// <summary>The slow aiming turn now, degrees per game second: never faster than the ENG 0 turn while ENG is at 0.</summary>
+    double FineTurnPerS => NoEng ? System.Math.Min(stats.fineTurnDegPerS, stats.noEngTurnRate) : stats.fineTurnDegPerS;
     /// <summary>The share of top speed the ENG bus allows: ENG 1 gives baseSpeedUnits, full ENG topSpeedUnits, in equal steps; ENG 0 nothing.</summary>
     double EngShare
     {
@@ -299,7 +306,7 @@ public class NavSystem : MonoBehaviour
         if (fineTurn != 0)
         {
             // owner 2026-11-08: the slow turn for aiming. Whole degrees pass into the heading, the order follows the bow, and the autopilot lets go
-            fine += fineTurn * stats.fineTurnDegPerS * dt;
+            fine += fineTurn * FineTurnPerS * dt;
             int whole = (int)System.Math.Floor(fine + 0.5);
             heading = ((heading + whole) % 360 + 360) % 360;
             fine -= whole;
@@ -317,7 +324,7 @@ public class NavSystem : MonoBehaviour
             if (heading == orderedHeading)
             {
                 turnBank = 0;
-                double want = aimHeading - whole, most = stats.fineTurnDegPerS * dt;
+                double want = aimHeading - whole, most = FineTurnPerS * dt;
                 fine = System.Math.Abs(want - fine) <= most ? want : fine + System.Math.Sign(want - fine) * most;
                 return;
             }
@@ -338,7 +345,7 @@ public class NavSystem : MonoBehaviour
     {
         if (dt <= 0) return;
         // owner 2026-10-29: with no power on the ENG bus there is no thrust and no braking: the ship drifts on
-        if (ship.power.BusUnits("eng") == 0) { slideTaps = 0; slideHeld = 0; x += vx * dt; y += vy * dt; Recoil(dt); return; }
+        if (NoEng) { slideTaps = 0; slideHeld = 0; x += vx * dt; y += vy * dt; Recoil(dt); return; }
         double h = heading * System.Math.PI / 180;
         double nx = System.Math.Sin(h), ny = System.Math.Cos(h); // the nose
         double fwd = vx * nx + vy * ny, side = vx * ny - vy * nx; // side: to starboard
