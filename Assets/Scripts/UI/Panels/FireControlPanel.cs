@@ -107,6 +107,22 @@ public class FireControlPanel : Panel
     [SerializeField] private RectTransform leverSlot, leverCap, leverFill;
     [SerializeField] private float capLeftPct = 2f, capTravelPct = 72f, leverTravelPx = 210f, slotMargin = 4f, capMargin = 12f;
 
+    [Header("Contact monitor (Fire Control - Codex only; empty on the board's own panel)")]
+    [Tooltip("The target's name: BOGEY until it is scanned, then its name.")]
+    [SerializeField] private TMP_Text contactName;
+    [Tooltip("The target's picture. Shown only once the target is scanned and its name starts with Profile Name.")]
+    [SerializeField] private Image contactProfile;
+    [SerializeField] private string profileName = "GARUDA";
+
+    [Header("FIRE button (Fire Control - Codex only; it takes the lever's place)")]
+    [Tooltip("The button. It drops by Track Press Px while held, and one press fires once.")]
+    [SerializeField] private RectTransform fireKey;
+    [SerializeField] private Image fireFace, fireGlow;
+    [Tooltip("FIRE FIRE FIRE when a press would fire; FIRE, dim, when not.")]
+    [SerializeField] private TMP_Text fireLabel;
+    [Tooltip("One glow pulse while ready to fire, real seconds.")]
+    [Tune("Motion")] [SerializeField] private float fireGlowSeconds = 0.8f;
+
     Color nominal => Palette.nominal;
     Color caution => Palette.caution;
     Color alarm => Palette.alarm;
@@ -122,8 +138,8 @@ public class FireControlPanel : Panel
     Color cellUnlit => Palette.cellUnlit;
 
     private float knobX0, leverX0, leverV0;
-    private bool leverHeld, shotThisPull, trackHeld;
-    private Vector2 trackHome, trackLampHome;
+    private bool leverHeld, shotThisPull, trackHeld, fireHeld;
+    private Vector2 trackHome, trackLampHome, fireHome;
     private float capMarkX0 = float.NaN;
 
     public override bool Click(string action, string arg)
@@ -136,6 +152,7 @@ public class FireControlPanel : Panel
             case "fc.mount": if (s.weapons.sys == "MS") s.weapons.CycleWarhead(); else s.weapons.CycleMount(); return true; // Step 53: the launcher picks itself, so the knob picks the warhead
             case "fc.track": s.weapons.ComputeSol(); return true;
             case "fc.flip": s.weapons.Flip(int.Parse(arg)); return true;
+            case "fc.fire": s.weapons.Fire(); return true; // the same rules as the lever: one shot per arming
         }
         return false;
     }
@@ -143,6 +160,7 @@ public class FireControlPanel : Panel
     public override bool Down(string action, string arg, Vector2 board)
     {
         if (action == "fc.track") { PressTrack(true); return true; }
+        if (action == "fc.fire") { PressFire(true); return true; }
         if (action == "fc.knob") { knobX0 = board.x; return true; }
         if (action == "fc.lever") { leverHeld = true; shotThisPull = false; leverX0 = board.x; leverV0 = State.weapons.fireLever; return true; }
         return false;
@@ -171,6 +189,7 @@ public class FireControlPanel : Panel
     public override bool Up(string action, string arg, Vector2 board)
     {
         if (action == "fc.track") { PressTrack(false); return true; }
+        if (action == "fc.fire") { PressFire(false); return true; }
         if (action != "fc.lever") return false;
         leverHeld = false;
         State.weapons.fireLever = 0f; // springs back
@@ -192,6 +211,23 @@ public class FireControlPanel : Panel
         if (solLamp) solLamp.rectTransform.anchoredPosition = trackLampHome + drop;
     }
 
+    void PressFire(bool down)
+    {
+        if (!fireKey || down == fireHeld) return;
+        fireHeld = down;
+        if (down) fireHome = fireKey.anchoredPosition;
+        fireKey.anchoredPosition = fireHome + (down ? new Vector2(0f, -trackPressPx) : Vector2.zero);
+    }
+
+    // the FIRE button's glow breathes while a press would fire
+    private void Update()
+    {
+        if (!fireGlow || !fireGlow.gameObject.activeInHierarchy) return;
+        var c = fireGlow.color;
+        c.a = 0.35f + 0.65f * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 2f * Mathf.PI / Mathf.Max(0.05f, fireGlowSeconds)));
+        fireGlow.color = c;
+    }
+
     public override void Refresh()
     {
         var s = State;
@@ -199,6 +235,15 @@ public class FireControlPanel : Panel
         var m = s.weapons.MountOf(s.weapons.mount) ?? s.weapons.stats.mounts[0];
         var tgt = s.TrackOf(s.weapons.target);
         bool scopeDown = Controls.Motion && Controls.Motion.ScopeDown;
+
+        bool known = tgt != null && s.Scanned(tgt);
+        if (contactName) { contactName.text = tgt != null ? s.NameOf(tgt) : "NO TARGET"; Paint(contactName, known ? caution : stencil); }
+        Show(contactProfile, known && tgt.name.StartsWith(profileName) && !scopeDown); // the periscope's view takes the monitor while it is down
+
+        bool canFire = s.weapons.ReadyToFire;
+        if (fireLabel) { fireLabel.text = canFire ? "FIRE  FIRE  FIRE" : "FIRE"; Paint(fireLabel, canFire ? data : stencilDim); }
+        Paint(fireFace, canFire ? alarm : lampOffPanel);
+        Show(fireGlow, canFire);
 
         if (mountShort) mountShort.text = m.shortName;
         Paint(sightLamp, scopeDown ? nominal : lampOffPanel); Paint(sightGlow, nominal); Show(sightGlow, scopeDown);

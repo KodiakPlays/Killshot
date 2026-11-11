@@ -624,16 +624,20 @@ public class WeaponSystem : MonoBehaviour
             || (i == 1 && !free && !InArc) || (i == 2 && !free && !OnBearing) || (i == 3 && wepCharge < ShotCost);
     }
 
+    /// <summary>Whether a pull of the lever (or a press of the FIRE button) would fire now.</summary>
+    public bool ReadyToFire =>
+        sys != "PD" // Step 55: PDCs on AUTO fire by themselves; the lever does nothing
+        && AllSet // moveSlew fires on every new pull while allSet() holds; the panel's per-pull latch stops repeats (Step 33g verification)
+        && !RungGated(0) && !RungGated(1) // a gate failed since its rung was thrown (TickCharge drops it on the next tick)
+        && wepCharge >= ShotCost && !Empty
+        && (sys != "MS" || TorpedoReady);
+
     /// <summary>The lever passing 0.9 with the ladder set: rounds away, charge spent (drawWep).
     /// Step 48: refused below the shot's cost; firing releases ARM, one shot per arming (spec 8.4.b);
     /// a railgun shot is a slug that flies (TickRounds); firing spikes our signal (GDD p.42).</summary>
     public void Fire()
     {
-        if (sys == "PD") return; // Step 55: PDCs on AUTO fire by themselves; the lever does nothing
-        if (!AllSet) return; // moveSlew fires on every new pull while allSet() holds; the panel's per-pull latch stops repeats (Step 33g verification)
-        if (RungGated(0) || RungGated(1)) return; // a gate failed since its rung was thrown (TickCharge drops it on the next tick)
-        if (wepCharge < ShotCost || Empty) return;
-        if (sys == "MS" && !TorpedoReady) return;
+        if (!ReadyToFire) return;
         fired = true;
         wepCharge = Mathf.Max(0f, wepCharge - ShotCost);
         sw[3] = false;

@@ -1169,6 +1169,75 @@ Ask a technical artist before you change these:
 - The code sets the colours of the lamps, selector labels, readouts, capacitor cells and the
   rockers' hints.
 
+### Fire Control - Codex (test panel)
+
+`Panels/Fire Control - Codex.prefab`. Codex's art for the fire control drawer (owner,
+2026-11-10). It is a prefab variant of `Fire Control.prefab`. It uses the same script, **Fire
+Control Panel**, and the same controls and wiring. It is only in the test scene
+`Assets/Scenes/Tactical/Fire Control Codex.unity`. The real board still uses `Fire Control.prefab`.
+The owner has not decided yet whether this one replaces it.
+
+How it plays:
+- Press FIRE on the systems rail. The drawer slides in from the right, like the other drawers.
+  Press FIRE again, and it slides out.
+- The top window reads FIRE CONTROL and TARGETING COMPUTER. The small window on its right shows the
+  mount's short name.
+- The big window under it is the monitor. Top left is the target's name: BOGEY T07 until it is
+  scanned, then its name in amber, such as GARUDA. With no target it reads NO TARGET. Top right is
+  the SIGHT key.
+- Press SIGHT. The periscope comes down, and its round red view shows in the middle of the monitor.
+  The SLEW key is on its left. The MAG knob is on its right.
+- With SIGHT up, a scanned Garuda shows as a pale wireframe picture. It shows only once the ship is
+  scanned, and only for a ship whose name starts with GARUDA.
+- Under the view is PERISCOPE BEARING, with the bearing and offset. Then the tracking ID, such as
+  TK-014-T07, and where the track comes from, such as SCANNED, NOT LOCKED.
+- The firing solution window shows RANGE in km, REL BRG and TGT SPD. Under them is the ready line,
+  such as WEAPONS NOT RELEASED — CONDITION 2 REQUIRED, MOUNT READY or ROUNDS AWAY.
+- The control bank has four sections. Their numbers, 1 to 4, are in the small windows on the right
+  edge:
+  - 01 WEAPON SYSTEM: the system and mount knobs, then the mount's name, arc, range and slugs.
+  - 02 FIRING SOLUTION: the RANGE, BEARING and SPEED knobs, and the TRACK key.
+  - 03 CAPACITOR: ten cells, the shot-cost mark, the charge %, the note and % PER SHOT.
+  - 04 ARMING SEQUENCE: the LOAD, ANGLE, BEARING and ARM switches, drawn at three quarters size.
+    Under them is the FIRE button.
+- The FIRE button is in the drag lever's place. While a press would not fire, it is dark, with a
+  dim FIRE. When a press would fire, it turns bright red, glows and reads FIRE  FIRE  FIRE. It drops
+  1 px while it is pressed.
+- One press fires one shot. The rules are the same as the lever's: the four switches set, enough
+  charge, not PDC, and a target for torpedoes. Firing drops ARM. A second press does nothing until
+  ARM is thrown again.
+
+The art:
+- The housing is one picture: `Art/Fire Control/InspectorHousing.png` (403 × 1080). Its windows are
+  see-through glass. It is in `Housing`. The base prefab's frame, latch, screens, label plates,
+  rocker housings and fire lever are switched off. The picture draws them.
+- The Garuda's wireframe is `Art/Fire Control/Garuda-profile.png`, in `Contact profile`.
+- Both pictures use the board's sprite import settings.
+- The drawer is 890 px tall, the same as the plot. On the 1920 × 1080 board it is drawn from x 1484
+  to 1816 and from y 100 to 990.
+- The variant adds `Housing`, `Contact name`, `Contact profile`, `Fire button` (with `Fire glow` and
+  `Label`), the four `Tab` windows, and labels for the knobs and windows.
+
+The test scene is a copy of `02.1_Grid`. It is not in Build Settings or in the game flow. Wolf Hunt
+(Level_01) loads on top, as usual. It differs from `02.1_Grid` in three ways:
+- The fire control drawer is `Fire Control - Codex`. The old one is removed.
+- The periscope is inside the fire control drawer, scaled to fit the monitor. Its housing bar,
+  readouts, slew bar, subject and convergence bar are switched off. Its round rim is see-through.
+  The LOWERED label at the top of the board is switched off. Nothing shows at the top of the board
+  where the periscope was.
+- The **Rockers** list on `Tactical Board` points at the new drawer's four switches.
+
+Ask a technical artist before you change these:
+- **Contact Name**, **Contact Profile** and **Profile Name** (GARUDA) fill the monitor. The
+  picture shows only for a scanned ship whose name starts with Profile Name.
+- **Fire Key**, **Fire Face**, **Fire Glow** and **Fire Label** are the FIRE button's parts. The
+  code moves, colours and writes them. The button sends the click `fc.fire`.
+- These fields are empty on `Fire Control.prefab`. With them empty, the panel works as before.
+- **Fire Glow Seconds** (0.8) is how long one pulse of the glow takes. It is on the Board tab of
+  **Starwolf → Tuning**, under Motion, with the test scene open.
+- The button's glow and `WeaponSystem.Fire()` both read `WeaponSystem.ReadyToFire`. It is the one
+  list of the fire rules. Change the rules there.
+
 ### Hangar
 
 `Panels/Hangar.prefab`. Script: **Hangar Panel**, on `Hangar`. The hangar drawer launches and
@@ -1354,8 +1423,17 @@ It shows their picture, their name in gold and what they say. Up to three answer
 right. An answer leads to another line, or ends the talk. A line with no answers shows LEAVE.
 Picking another tab closes the talk.
 
-The paintings are stand-ins: dark coloured panels with the room's name in faint letters. The
-people are grey boxes with their name under them. The people and their lines are stand-ins too:
+The BRIDGE, ENGINEERING and QUARTERS paintings are stand-ins: dark coloured panels with the room's
+name in faint letters. The people there are grey boxes with their name under them.
+
+The HANGAR has Codex's art (2026-11-10). The painting is `Assets/UI/Rooms/HangarRoom.png` (1672 ×
+941). The FLIGHT LEADER's picture is `Assets/UI/Rooms/FlightLeader.png` (305 × 392). It is cut
+from the painting at left 30, top 344. They are in the Art list slots HANGAR painting and FLIGHT
+LEADER picture. Both use the board's sprite import settings. The painting keeps its shape in the
+1712 × 890 room, with thin dark bars left and right. The FLIGHT LEADER button is exactly over her
+in the painting. Click her, and her talk opens with her picture. GOOD closes it. A click anywhere
+else on the painting does nothing. The grey stand-in title HANGAR is switched off in this room. The
+talk box picture keeps its shape for every person. The people and their lines are stand-ins too:
 the XO on the BRIDGE, the CHIEF ENGINEER in ENGINEERING, the FLIGHT LEADER in the HANGAR and the
 MARINE SERGEANT in QUARTERS.
 
@@ -1617,7 +1695,19 @@ come from the palette.
 The prefabs:
 - `Frame`: the metal frame. Its parts are `Steel frame`, `Black backing`, `Conduits`,
   `Corner bolts` and `Stencils` (two painted labels, BUS A-14 and VENT PLENUM 3). The art files
-  are in `Art/Frame`. The Art list has 5 entries.
+  are in `Art/Frame`. The Art list has 5 entries. It is the frame in `02.1_Grid` and in the ship's
+  rooms (`Ship.unity`).
+- `Frame - Fire Control`: Codex's frame, a prefab variant of `Frame` (2026-11-10). It is the frame
+  in the test scene `Fire Control Codex` only. The owner keeps `02.1_Grid` on `Frame` (2026-11-10). Its `Steel frame` shows
+  `Art/Frame/FireControlSurround.png`: one 1920 × 1080 picture of a heavy metal casting with pipes.
+  It has a see-through hole for the plot, 1712 × 890 at 16:9, at (104, 100). The pipes and bolts are
+  in the picture. `Conduits` and `Corner bolts` are switched off. The frame stretches with the board.
+  The image is set to Tiled, with Fill Center off. The picture's sprite border is 860 left, 440
+  bottom, 860 right and 450 top. The corners stay the same size. Short pieces from the middle of
+  each edge repeat. `Black backing` stretches too. The two stencil words are tied to corners:
+  BUS A-14 bottom left, VENT PLENUM 3 bottom right. The Art list's Steel frame entry names
+  `FireControlSurround.png`. Change the picture there. In Codex's file as delivered, that entry
+  named the old steel picture, and the new picture did not show.
 - `ToolRail`: the keys for the plot tools, SEL (cursor), PNT (point), RUL (ruler), CMP (compass)
   and ERS (erase), with their
   lamps, plates, icons and labels. The art files are in `Art/ToolRail` and `Art/Rails`. The Art
