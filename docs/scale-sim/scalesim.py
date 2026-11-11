@@ -5,7 +5,9 @@ Run:  python3 docs/scale-sim/scalesim.py              every level, player type a
       python3 docs/scale-sim/scalesim.py --csv FILE   also append one row per case to FILE (numbers.csv columns)
       python3 docs/scale-sim/scalesim.py --tweaks     changed numbers, Wolf Hunt only
       python3 docs/scale-sim/scalesim.py --longshot   long shots with the spinal railgun: flight, hit chance by range, drift, stop and turn
+      python3 docs/scale-sim/scalesim.py --torpedo    torpedo flight (Step 184) and the PDC stream (Step 197): reach, time, hits let through
       python3 docs/scale-sim/scalesim.py --hand       one fight step by step, to check by hand
+      ... --jobs N   cores to use (default: all); ... --label WORDS   added to the settings column
       python3 docs/scale-sim/scalesim.py --check      the game numbers it reads, and the ones still copied by hand
 Plain Python, no packages. It reads Assets/Ships/*.asset, Assets/Scenes/Levels/*.unity and the enemy, mission and
 board settings in Assets/Scenes/Tactical/02.1_Grid.unity itself, and never writes to them. README.md says what it
@@ -46,7 +48,30 @@ def read_yaml(text):
         return out, i
     return block(0, 0)[0]
 
-def ship_file(name): return read_yaml(open(P('Assets/Ships', name + '.asset'), encoding='utf-8').read())['MonoBehaviour']
+_DEFAULTS = {}
+def code_defaults(rel):
+    """The code's own numbers (the Stats class of a system), used where a ship file has none saved: plain numbers and int lists."""
+    if rel not in _DEFAULTS:
+        t = open(P('Assets/Scripts/Systems', rel + '.cs'), encoding='utf-8').read()
+        body = t[t.index('public class Stats'):]; body = body[:body.index('\n    }\n')]; out = {}
+        for line in body.split('\n'):
+            m = re.search(r'public (?:float|double|int) ([^;]*);', line)
+            if m: out.update((k, float(v)) for k, v in re.findall(r'(\w+) = (-?[\d.]+)f?', m.group(1)))
+            m = re.search(r'public int\[\] (\w+) = \{([^}]*)\}', line)
+            if m: out[m.group(1)] = [int(x) for x in m.group(2).split(',')]
+        _DEFAULTS[rel] = out
+    return _DEFAULTS[rel]
+SHIP_PARTS = (('weapons', 'WeaponSystem'), ('hangar', 'HangarSystem'), ('damage', 'DamageSystem'))
+def ship_file(name):
+    """A ship's stats file; any number it leaves out takes the code's default (as the game does until the file is saved)."""
+    st = read_yaml(open(P('Assets/Ships', name + '.asset'), encoding='utf-8').read())['MonoBehaviour']
+    for part, rel in SHIP_PARTS:
+        for k, v in code_defaults(rel).items(): st[part].setdefault(k, v)
+    return st
+def from_code(name):
+    """The numbers a ship file leaves out, so the code's default is used: {part: [names]}."""
+    st = read_yaml(open(P('Assets/Ships', name + '.asset'), encoding='utf-8').read())['MonoBehaviour']
+    return {part: sorted(k for k in code_defaults(rel) if k not in st[part]) for part, rel in SHIP_PARTS}
 def _guid(rel): return re.search(r'guid: (\w+)', open(P(rel + '.meta')).read()).group(1)
 def _docs(path):
     out = []
@@ -158,7 +183,6 @@ def side_at(from_deg, bow):
     return 0 if rel < 45 or rel >= 315 else 1 if rel < 135 else 2 if rel < 225 else 3
 SIDES = ('PROW', 'STBD', 'AFT', 'PORT')
 ROOMS = ('mag', 'bri', 'hab', 'hgr', 'rct', 'eng')
-ROOM_ROW = (1, 2, 4, 4, 3, 5)   # DamageSystem.Stats.roomRow default (Step 186), for ship files with no Room Row saved
 NEIGH = dict(mag=('bri', 'rct', 'hgr'), bri=('mag', 'hab', 'rct', 'hgr'), hab=('bri', 'eng', 'rct', 'hgr'),
              eng=('hab', 'rct', 'hgr'), rct=('mag', 'bri', 'hab', 'eng'), hgr=('mag', 'bri', 'hab', 'eng'))
 
@@ -251,14 +275,25 @@ class Ship:
         s.armour = [float(a) for a in s.dm['sideArmourMax']]; s.comp = dict.fromkeys(ROOMS, 5)
         crew = _hexints(s.dm['crew']) if isinstance(s.dm['crew'], str) else [4, 9, 18, 7, 6, 8]
         s.crew = dict(zip(ROOMS, crew))
-        def rooms(key, dflt): v = s.dm.get(key); return dict(zip(ROOMS, _hexints(v) if isinstance(v, str) and v else dflt))
-        s.room_row = rooms('roomRow', ROOM_ROW); s.rows = max(s.room_row.values())
+        v = s.dm['roomRow']; s.room_row = dict(zip(ROOMS, _hexints(v) if isinstance(v, str) else v)); s.rows = max(s.room_row.values())
         s.vented, s.shut, s.fire, s.party = set(), set(), {}, None
         s.dead = s.captured = False
         s.mounts = {m['id']: m for m in s.wp['mounts']}; s.ammo = {m['id']: int(m['ammo']) for m in s.wp['mounts']}
         s.dots = {h['mount']: (h['at']['x'], h['at']['y']) for h in s.wp['hardPoints'] if h.get('mount')}
         s.in_cloud, s.signal = False, 0.0
         s.fine, s.aim, s.null_slide, s.on_aim = 0.0, None, False, False      # NavSystem.fine (the part of a degree) and aimHeading (a lock's turn, or the person's Shift turn)
+        s.kx = s.ky = s.khold = s.kstop = s.pushed = 0.0                      # NavSystem's railgun push back (Step 197)
+    def kick(s, shot_deg, by):
+        """NavSystem.Kick (Rule 8.4.c): a railgun shot pushes the ship back, away from the shot. Kept apart from its speed."""
+        b = math.radians(shot_deg); s.kx, s.ky = -math.sin(b) * by['railgunKickUnits'], -math.cos(b) * by['railgunKickUnits']
+        s.khold, s.kstop = by['railgunKickSeconds'], by['railgunKickUnits'] / max(0.01, by['railgunKickStopSeconds'])
+    def recoil(s, dt):
+        """NavSystem.Recoil and KickGone: the full push until its hold runs out, then slowing evenly to a stop. Exact at any tick length."""
+        k = math.hypot(s.kx, s.ky)
+        if k == 0: return
+        held = min(dt, max(0.0, s.khold)); slow = min(dt - held, k / s.kstop) if s.kstop > 0 else 0
+        s.khold -= held; left = max(0.0, k - s.kstop * slow); gone = k * held + (k + left) / 2 * slow
+        s.x += s.kx / k * gone; s.y += s.ky / k * gone; s.pushed += gone; s.kx, s.ky = s.kx * left / k, s.ky * left / k
     def true_hdg(s): return (s.hdg + s.fine) % 360
     def roll(s, p): return s.rnd.random() < p
     def health(s, k): return 0 if k in s.vented else s.comp[k]
@@ -292,7 +327,7 @@ class Ship:
                 s.bank -= step; d = (s.ord - s.hdg + 540) % 360 - 180
                 s.hdg = s.ord if abs(d) <= step else (s.hdg + (1 if d > 0 else -1) * step) % 360
         else: s.bank = 0
-        if s.eng == 0: s.x += s.vx * dt; s.y += s.vy * dt; return
+        if s.eng == 0: s.x += s.vx * dt; s.y += s.vy * dt; s.recoil(dt); return
         h = math.radians(s.hdg); nx, ny = math.sin(h), math.cos(h)
         fwd, side = s.vx * nx + s.vy * ny, s.vx * ny - s.vy * nx
         keep = n['dragKeepPerS'] ** dt; fwd *= keep; side *= keep * n['driftKeepPerS'] ** dt
@@ -303,7 +338,7 @@ class Ship:
         acc = s.accel(); rate = n['brakeUnits'] * acc / n['accelUnits'] if not up else acc * n['reverseShare'] if target < 0 else acc
         fwd = target if abs(target - fwd) <= rate * dt else fwd + math.copysign(rate * dt, target - fwd)
         s.vx, s.vy = fwd * nx + side * ny, fwd * ny - side * nx
-        s.x += s.vx * dt; s.y += s.vy * dt
+        s.x += s.vx * dt; s.y += s.vy * dt; s.recoil(dt)
     # damage, as DamageSystem: armour first, then the next room (NextRoom); a reactor at 0 destroys the ship
     def take_slug(s, side, by, at=0.5):
         if s.dead: return
@@ -367,11 +402,13 @@ class Ship:
 # ---------------------------------------------------------------- shots in flight (WeaponSystem rounds)
 
 class Round:
-    __slots__ = ('x', 'y', 'dx', 'dy', 'speed', 'gone', 'maxu', 'by', 'torp', 'coast', 'motor', 'turn', 'target', 'tried', 'shooter', 'fired', 'cf', 'nose', 'wait')
+    __slots__ = ('x', 'y', 'dx', 'dy', 'speed', 'gone', 'maxu', 'by', 'torp', 'coast', 'motor', 'turn', 'target', 'tried', 'shooter', 'fired', 'cf', 'nose', 'wait',
+                 'spent', 'down_in')
     def __init__(r, x, y, b, speed, maxu, by, torp=False, target=None, shooter=None, fired=0.0, cf=None):
         r.x, r.y, r.dx, r.dy = x, y, math.sin(math.radians(b)), math.cos(math.radians(b))
         r.speed, r.gone, r.maxu, r.by, r.torp, r.target, r.shooter, r.fired, r.cf = speed, 0.0, maxu, by, torp, target, shooter, fired, cf
         r.coast, r.motor, r.turn, r.tried, r.nose, r.wait = 0.0, False, 0.0, 0, b, 0.0
+        r.spent, r.down_in = False, 0.0      # Step 197: a far shot's slug flies on after an unreported hit; a PDC stream's time left
 
 def slug(x, y, b, speed, vx, vy, maxu, by, **kw):
     """WeaponSystem.Slug (owner 2026-11-08): a slug leaves on bearing b at its speed, plus the firing ship's motion."""
@@ -383,7 +420,7 @@ def margin(by): return 1 + by['hitMarginPercent'] / 100
 def slug_step(r, dt, targets):
     """One tick of a slug: the first ship box its whole path reaches (against each ship's own motion), or None; 'miss' at its reach."""
     step = min(r.speed * dt, r.maxu - r.gone); flight = step / r.speed; best = None
-    for t in targets:
+    for t in ([] if r.spent else targets):
         if t.dead or t.captured: continue
         fx, fy = r.x - t.x, r.y - t.y; mx, my = (r.dx * r.speed - t.vx) * flight, (r.dy * r.speed - t.vy) * flight
         m = margin(r.by); e = enters_box(fx, fy, fx + mx, fy + my, t.hdg, t.half[0] * m, t.half[1] * m)
@@ -506,8 +543,9 @@ class Brain:
         rel = jsround((lead - s.hdg) % 360) % 360
         if angdiff(rel, m['arc']) > m['halfArc']: return
         gx, gy = s.gun_at(mid)
-        r = slug(gx, gy, lead + (b.rnd.random() * 2 - 1) * b.c['aimErrorDeg'], s.wp['slugSpeedUnits'], s.vx, s.vy, m['rangeUnits'], s.wp, shooter=s, fired=now,
-                 cf=(us.x, us.y, us.vx, us.vy, us.hdg))
+        shot = lead + (b.rnd.random() * 2 - 1) * b.c['aimErrorDeg']
+        r = slug(gx, gy, shot, s.wp['slugSpeedUnits'], s.vx, s.vy, m['rangeUnits'], s.wp, shooter=s, fired=now, cf=(us.x, us.y, us.vx, us.vy, us.hdg))
+        s.kick(shot, s.wp)      # EnemyBrain.Shoot: the same push back as ours
         sim.incoming.append(r); s.ammo[mid] -= 1; sim.their_shots += 1; sim.event(now, 'slug in')
         b.next_shot[mid] = now + b.c['railgunReloadSeconds'] + b.rnd.random() * b.c['railgunJitterSeconds']
     def steer(b, us, dist, now, fix, sim):
@@ -578,7 +616,9 @@ DECODE = dict(new=30, good=15, expert=8)   # real seconds to lock and decode a r
 FIGHT_RANGE = 1500   # inside the Garuda's 0.8 x 2,000, so it turns side-on instead of charging
 
 class Fighter:
-    def __init__(f, x, y, n, order, target): f.x, f.y, f.n, f.order, f.target, f.next_run, f.attacking, f.aboard, f.board_t = x, y, n, order, target, 0.0, False, False, 0.0
+    def __init__(f, x, y, n, order, target, boost=0.0, fall=0.0):
+        f.x, f.y, f.n, f.order, f.target, f.next_run, f.attacking, f.aboard, f.board_t = x, y, n, order, target, 0.0, False, False, 0.0
+        f.boost, f.fall = boost, fall       # HangarSystem.LaunchSquad (Step 197, B3): the catapult's speed over its own, and how fast that falls
 
 class Player:
     def __init__(p, sim, kind, opening, rate):
@@ -620,8 +660,12 @@ class Player:
         return d <= p.dradis_range(us) - i
     def in_sight(p, e):
         us = p.sim.us; d = math.hypot(e.x - us.x, e.y - us.y); _, on = p.sim.interf_us(e)
-        if not on and d <= us.st['sensors']['visualRangeUnits']: return True
+        if not on and d - min(e.half) <= us.st['sensors']['visualRangeUnits']: return True      # its near side in visual range
         return any(math.hypot(f.x - e.x, f.y - e.y) <= us.st['sensors']['visualRangeUnits'] for f in p.sim.fighters)
+
+    def watched(p, e):
+        """WeaponSystem.Watched (Rule 8.4.d): something sees this ship: in sight, heard on DRADIS, or locked."""
+        return p.in_sight(e) or p.heard(e) or (p.lock_left > 0 and e is p.sim.enemy)
 
     def mark(p, e, now):
         err = p.k['plot_err'] if p.in_sight(e) else p.k['plot_err'] * 1.5   # a DRADIS dot is coarser than the ship in sight (guess)
@@ -737,7 +781,8 @@ class Player:
         p.charge -= sim.B['shot']['RG']; us.ammo[p.gun] -= 1; p.armed = False
         sim.m['shots_lock' if p.lock_left > 0 or p.aim_ready else 'shots_hand'] += 1
         gx, gy = us.gun_at(p.gun)
-        sim.ours.append(slug(gx, gy, us.true_hdg() + m['arc'] + p.bar[p.gun], us.wp['slugSpeedUnits'], us.vx, us.vy, m['rangeUnits'], us.wp, shooter=us, fired=now))
+        shot = us.true_hdg() + m['arc'] + p.bar[p.gun]
+        sim.ours.append(slug(gx, gy, shot, us.wp['slugSpeedUnits'], us.vx, us.vy, m['rangeUnits'], us.wp, shooter=us, fired=now)); us.kick(shot, us.wp)
         us.signal = min(100.0, us.signal + us.wp['fireSignalSpike']); sim.m['shots'] += 1; sim.event(now, 'shot')
         if sim.m['first_shot_s'] is None: sim.m['first_shot_s'] = now
         return True
@@ -761,7 +806,7 @@ class Player:
             r = torp_launch(us.wp, gx, gy, us.hdg, int(l['arc']), k, of, l['rangeUnits'], e, us, now); r.wait = i * us.wp['torpedoRippleSeconds']; sim.ours.append(r)
             us.ammo[l['id']] -= 1
         p.charge -= sim.B['shot']['MS']; us.signal = min(100.0, us.signal + us.wp['fireSignalSpike'])
-        sim.m['shots'] += n; sim.event(now, 'torpedoes out'); p.armed = False
+        sim.m['shots'] += n; sim.m['torps_out'] += n; sim.event(now, 'torpedoes out'); p.armed = False
         if sim.m['first_shot_s'] is None: sim.m['first_shot_s'] = now
         return True
 
@@ -882,8 +927,8 @@ class Player:
             est = p.est(now)
             if d <= p.engage + 300: p.set_power('fight')
             if est is None or sim.brain.level == ALERT or (d <= p.engage and not p.fixed): p.mode = 'fight'; p.set_power('fight'); return
-            # a still target already showing its port side, in range: no need to go round (a moving one would pass and show its stern)
-            shows_port = side_at(brg(us.x - e.x, us.y - e.y), e.hdg) == 3 and math.hypot(est[2], est[3]) < 3
+            # a still target already showing a side, in range: no need to go round (a moving one would pass and show its stern)
+            shows_port = side_at(brg(us.x - e.x, us.y - e.y), e.hdg) in (1, 3) and math.hypot(est[2], est[3]) < 3
             if p.fixed and ((d <= p.engage and shows_port) or p.port_point(now, est, d)): p.mode = 'fight'; p.set_power('fight')
             return
         # the fight
@@ -918,11 +963,14 @@ class Player:
         us = p.sim.us; left = any(us.ammo.get(m, 0) > 0 for m in ('MSA', 'MSB'))
         return left and (p.sim.torp_first and p.sim.identified or us.ammo[p.gun] <= 0)
     def port_point(p, now, est, d):
-        """Head for a point off its port side (where its reactor is), as far off as the fight. True once there."""
+        """Head for a point off its nearer side, as far off as the fight. True once there. Since Step 186 (rooms in a row) a hit at
+        the middle of either side reaches the reactor, so the person no longer goes round to its port side."""
         us, e = p.sim.us, p.sim.enemy; ex, ey, vx, vy = est; tau = d / max(20, us.nv['topSpeedUnits'] * us.eng_share())
-        c = math.atan2(vx, vy) if vx * vx + vy * vy > 1 else math.radians(e.hdg); port = c - math.pi / 2
+        c = math.atan2(vx, vy) if vx * vx + vy * vy > 1 else math.radians(e.hdg)
         off = p.engage if p.fixed else FIGHT_RANGE
-        px, py = ex + vx * tau + math.sin(port) * off, ey + vy * tau + math.cos(port) * off
+        fx, fy = ex + vx * tau, ey + vy * tau
+        side = min((c - math.pi / 2, c + math.pi / 2), key=lambda a: math.hypot(fx + math.sin(a) * off - us.x, fy + math.cos(a) * off - us.y))
+        px, py = fx + math.sin(side) * off, fy + math.cos(side) * off
         if p.fixed and math.hypot(px - us.x, py - us.y) < 600: return True
         p.steer_to(px, py, 100); return False
     def nose_fight(p, now, d):
@@ -1171,14 +1219,14 @@ class Sim:
         sim.B_hold = asura['weapons']['lockHoldSeconds']
         sim.units = [0, 0, 0, 0]; sim.bank = 0.0
         sim.ours, sim.incoming, sim.fighters, sim.boats = [], [], [], []
-        sim.identified = False; sim.their_shots = 0
+        sim.identified = False; sim.their_shots = 0; sim.seen_hit = False
         sim.exit = lv['jump'] if lv['goal'] == 'JumpPoint' else None
         sim.alarm_at = None; sim.next_arrival = None; sim.arrived = 0
         sim._interf = {}
         sim.m = dict(first_contact_s=None, scan_s=None, kill_s=None, killed_s=None, end_s=None, win=False, shots=0, hits=0, reactor_hits=0,
                      their_shots=0, their_hits=0, dodged=0, torps_in=0, torps_hit=0, pdc_kills=0, damage=0.0, found=False, found_s=None,
                      dead_s=0.0, dead_after=0.0, first_shot_s=None, last_event=0.0, why='', contact_d=None, heard_s=None, heard_d=None, found_d=None,
-                     shots_lock=0, shots_hand=0)
+                     shots_lock=0, shots_hand=0, blind_hits=0, stream_hits=0, torps_out=0, torps_out_hit=0, torps_out_miss=0, pushed=0.0, their_pushed=0.0)
         sim.p = Player(sim, player, opening, rate); sim.p.was_heard = False; sim.p.setup_done = False; sim.p.gun_picked = False
         sim.now = 0.0
     def event(sim, now, what):
@@ -1201,12 +1249,14 @@ class Sim:
         key = (id(e), int(sim.now))
         if key not in sim._interf: sim._interf = {key: sim.world.interference(sim.us.x, sim.us.y, e.x, e.y)}
         return sim._interf[key]
+    def catapult(sim, own):
+        hg = sim.us.st['hangar']; b = max(0.0, hg['catapultUnits'] - own); return b, b / max(0.01, hg['catapultSeconds'])
     def launch_fighters(sim, now):
         us = sim.us; hg = us.st['hangar']
-        sim.fighters.append(Fighter(us.x, us.y, 6, 'destroy', sim.enemy)); sim.event(now, 'fighters launched')
+        sim.fighters.append(Fighter(us.x, us.y, 6, 'destroy', sim.enemy, *sim.catapult(hg['fighterSpeedUnits']))); sim.event(now, 'fighters launched')
     def launch_boats(sim, now):
-        us = sim.us
-        sim.boats.append(Fighter(us.x, us.y, 4, 'secure', sim.enemy)); sim.boats[-1].marines = int(us.st['hangar']['marines']); sim.event(now, 'boats launched')
+        us = sim.us; hg = us.st['hangar']
+        sim.boats.append(Fighter(us.x, us.y, 4, 'secure', sim.enemy, *sim.catapult(hg['boatSpeedUnits']))); sim.boats[-1].marines = int(hg['marines']); sim.event(now, 'boats launched')
     def tick_flights(sim, dt, now):
         hg = sim.us.st['hangar']
         for f in sim.fighters + sim.boats:
@@ -1215,7 +1265,8 @@ class Sim:
             reach = hg['dockUnits'] if boat else hg['fighterAttackUnits']; sp = hg['boatSpeedUnits'] if boat else hg['fighterSpeedUnits']
             d = math.hypot(t.x - f.x, t.y - f.y)
             if d > reach and not f.aboard:
-                mv = min(sp * dt, d - reach * 0.9); f.x += (t.x - f.x) / d * mv; f.y += (t.y - f.y) / d * mv
+                tb = min(dt, f.boost / f.fall) if f.fall > 0 else 0.0; extra = (2 * f.boost - f.fall * tb) / 2 * tb; f.boost = max(0.0, f.boost - f.fall * dt)
+                mv = min(sp * dt + extra, d - reach * 0.9); f.x += (t.x - f.x) / d * mv; f.y += (t.y - f.y) / d * mv
                 continue
             if f.aboard: f.x, f.y = t.x, t.y
             if boat: sim.board(f, t, dt, now); continue
@@ -1274,11 +1325,16 @@ class Sim:
                 res = torp_step(r, dt, r.target) if r.torp else slug_step(r, dt, [o for o in sim.ships if o is not us])
                 if res is None: continue
                 sim.ours.remove(r)
-                if res == 'miss': sim.event(now, 'MISS'); p.missed = True; continue   # the person sees MISS and plots again
+                if res == 'miss':
+                    if r.torp: m['torps_out_miss'] += 1
+                    sim.event(now, 'IMPACT ?' if r.spent else 'MISS'); p.missed = True; continue   # the person sees MISS (or IMPACT ?) and plots again
                 ship, side, at = res
                 (ship.take_he if r.torp else ship.take_slug)(side, us.wp, at); m['hits'] += 1
                 if ship is e and side == 3: m['reactor_hits'] += 1
-                sim.event(now, 'HIT ' + SIDES[side]); p.last_hit = True
+                if r.torp: m['torps_out_hit'] += 1
+                elif not ship.dead and not p.watched(ship):      # Rule 8.4.d, the far shot: the damage is done, no report; the slug flies on
+                    m['blind_hits'] += 1; r.spent = True; sim.ours.append(r); continue
+                sim.seen_hit = True; sim.event(now, 'HIT ' + SIDES[side]); p.last_hit = True
             sim.tick_flights(dt, now)
             for r in list(sim.incoming):
                 if r.torp and p.pdc_stops(r, dt, now): sim.incoming.remove(r); continue
@@ -1292,7 +1348,7 @@ class Sim:
                     if not r.torp and dodge_check(r, us): m['dodged'] += 1
                     continue
                 ship, side, at = res
-                if r.torp: us.take_he(side, r.by, at); m['torps_hit'] += 1
+                if r.torp: us.take_he(side, r.by, at); m['torps_hit'] += 1; m['stream_hits'] += r.down_in > 0     # hit while a PDC stream walked onto it
                 else: us.take_slug(side, r.by, at); m['their_hits'] += 1
                 sim.event(now, 'we are hit ' + SIDES[side])
             us.tick_party(dt); us.tick_conditions(dt)
@@ -1324,11 +1380,11 @@ class Sim:
                 m['win'] = e.captured; m['end_s'] = now; m['why'] = m['why'] or ('captured' if e.captured else 'destroyed it'); break
             if goal == 'HitUnseen':
                 if sim.identified or p.lock_left > 0: m['end_s'] = now; m['why'] = 'scanned or locked'; break
-                if m['hits'] > 0: m['win'] = True; m['end_s'] = now; break
+                if sim.seen_hit: m['win'] = True; m['end_s'] = now; break      # QuestSystem wins on lastShotHit: a hit someone saw
             sim.now += dt
         if m['end_s'] is None: m['end_s'] = sim.now; m['why'] = m['why'] or 'time'
         sim.event(m['end_s'], 'end')
-        m['their_shots'] = sim.their_shots; m['damage'] = us.damage_taken()
+        m['their_shots'] = sim.their_shots; m['damage'] = us.damage_taken(); m['pushed'] = us.pushed; m['their_pushed'] = e.pushed
         return m
 
 def dodge_check(r, us):
@@ -1339,9 +1395,15 @@ def dodge_check(r, us):
     e = enters_box(fx, fy, fx + (r.dx * r.speed - vx) * t_end, fy + (r.dy * r.speed - vy) * t_end, hdg, us.half[0] * m, us.half[1] * m)
     return e is not None
 
-def pdc_stops(p, r, dt, now):
-    """WeaponSystem.PdcStops: each PDC group on AUTO, loaded and powered, gets one chance at each torpedo in its arc and reach."""
+def pdc_stops(p, r, dt, now, stream=True):
+    """WeaponSystem.PdcStops: each PDC group on AUTO, loaded and powered, gets one chance at each torpedo in its arc and reach.
+    Step 197 (Rule 8.6): on a kill the stream walks onto it and it goes down Pdc Stream Seconds later, checked once a board tick;
+    it flies on meanwhile. stream=False plays the rule before Step 197 (down at once), for --torpedo only."""
     us = p.sim.us
+    if r.down_in > 0:
+        r.down_in -= r.speed * dt / max(1, r.speed)
+        if r.down_in > 0: return False
+        p.sim.m['pdc_kills'] += 1; p.sim.event(now, 'PDC: torpedo down'); return True
     if not p.wep_ready() or not p.pdc: return False
     step = r.speed * dt
     along = clamp((us.x - r.x) * r.dx + (us.y - r.y) * r.dy, 0, step); px, py = r.x + r.dx * along, r.y + r.dy * along
@@ -1351,7 +1413,9 @@ def pdc_stops(p, r, dt, now):
         rel = jsround((brg(px - gx, py - gy) - us.hdg) % 360) % 360
         if (px - gx) ** 2 + (py - gy) ** 2 > m['rangeUnits'] ** 2 or angdiff(rel, int(m['arc'])) > m['halfArc']: continue
         r.tried |= 1 << g; us.ammo[mid] -= int(us.wp['pdcRoundsPerGo'])
-        if us.roll(us.wp['pdcKillChance']): p.sim.m['pdc_kills'] += 1; p.sim.event(now, 'PDC: torpedo down'); return True
+        if us.roll(us.wp['pdcKillChance']):
+            if not stream: p.sim.m['pdc_kills'] += 1; p.sim.event(now, 'PDC: torpedo down'); return True
+            r.down_in = max(1e-6, us.wp['pdcStreamSeconds']); return False
     return False
 Player.pdc_stops = pdc_stops
 
@@ -1360,9 +1424,9 @@ def apply_tweak(st, tw):
     for path, v in tw.items():
         d = st; keys = path.split('.')
         for k in keys[:-1]: d = d[k] if not isinstance(d, list) else d[int(k)]
-        if keys[-1] == '*rangeRG':
+        if keys[-1] in ('*rangeRG', '*rangeMS'):
             for m in st['weapons']['mounts']:
-                if m['kind'] == 'RG': m['rangeUnits'] = v
+                if m['kind'] == keys[-1][-2:]: m['rangeUnits'] = v
             continue
         d[keys[-1]] = d[keys[-1]] * float(v[1:]) if isinstance(v, str) and v.startswith('x') else v
     return st
@@ -1409,91 +1473,115 @@ def avg(rows, k, only=None):
 
 def summary(rows):
     n = len(rows); g = lambda k, f=None: avg(rows, k, f)
-    shots_in = sum(r['their_shots'] for r in rows)
+    shots_in = sum(r['their_shots'] for r in rows); t_out = sum(r['torps_out'] for r in rows)
     return dict(fights=n, win_pct=100 * sum(r['win'] for r in rows) / n, first_contact_s=g('first_contact_s'), scan_s=g('scan_s'),
                 kill_s=g('kill_s'), killed_s=g('killed_s'), end_s=g('end_s'), longest_dead_s=g('dead_s'), dead_after_s=g('dead_after'), shots=g('shots'), hits=g('hits'),
                 reactor_hits=g('reactor_hits'), their_shots=g('their_shots'), their_hits=g('their_hits'), torps_in=g('torps_in'),
                 torps_hit=g('torps_hit'), pdc_kills=g('pdc_kills'), damage=g('damage'),
                 dodge_pct=100 * sum(r['dodged'] for r in rows) / shots_in if shots_in else None,
                 found_pct=100 * sum(r['found'] for r in rows) / n, killed_pct=100 * sum(r['killed_s'] is not None for r in rows) / n,
-                first_shot_s=g('first_shot_s'))
+                first_shot_s=g('first_shot_s'), blind_hits=g('blind_hits'), stream_hits=g('stream_hits'), torps_out=g('torps_out'),
+                torp_hit_pct=100 * sum(r['torps_out_hit'] for r in rows) / t_out if t_out else None, pushed=g('pushed'), their_pushed=g('their_pushed'))
 
 def fmt(v, w=6, d=0):
     return f"{'-':>{w}}" if v is None else f"{v:>{w}.{d}f}"
 
-def settings_label(tw=None):
-    a, gd = ship_file('Asura'), ship_file('Garuda')
+def settings_label(extra=None, tweak=None, label=None):
+    """The settings column: the main numbers as read (after any change a run made), then any words."""
+    a = apply_tweak(ship_file('Asura'), (tweak or {}).get('us', {})); gd = apply_tweak(ship_file('Garuda'), (tweak or {}).get('them', {}))
     return (f"slug{a['weapons']['slugSpeedUnits']:.0f} torp{a['weapons']['torpedoSpeedUnits']:.0f} top{a['navigation']['topSpeedUnits']:.0f} "
-            f"gtop{gd['navigation']['topSpeedUnits']:.0f} rg{a['weapons']['mounts'][0]['rangeUnits']:.0f}{'nose' if a['weapons']['mounts'][0]['halfArc'] == 0 else ''} aim{BOARD['Garuda']['aimErrorDeg']:.0f}"
-            + (' ' + tw if tw else ''))
+            f"gtop{gd['navigation']['topSpeedUnits']:.0f} rg{a['weapons']['mounts'][0]['rangeUnits']:.0f}{'nose' if a['weapons']['mounts'][0]['halfArc'] == 0 else ''} "
+            f"aim{BOARD['Garuda']['aimErrorDeg']:.0f}" + ''.join(' ' + w for w in (extra, label) if w))
 
-def all_cases(nf, csv_path=None):
-    seeds_a, seeds_b = list(range(1, nf + 1)), list(range(1001, 1001 + nf))
-    rows_csv = []
-    print(f"Every case: {nf} fights with seeds 1-{nf} (A) and {nf} with seeds 1001-{1000 + nf} (B). Times in game seconds from the start.")
-    hdr = (f"{'level':10} {'map':>6} {'rate':>4} {'player':6} {'open':7} | {'win%':>5} {'A/B':>9} | {'contact':>7} {'scan':>5} {'1stshot':>7} {'kill':>5} {'killed':>6} "
-           f"{'end':>5} {'dead':>5} | {'shots':>5} {'hits':>4} {'rct':>4} | {'in':>4} {'hit':>4} {'dodge%':>6} {'dmg':>5} {'found%':>6} {'died%':>5} {'dead2':>5}")
-    print(hdr)
-    for level in FIGHT_LEVELS:
-        lv = LEVELS[level]
+JOBS = os.cpu_count() or 1
+def run_many(jobs):
+    """Play many play(...) argument lists on every core, one fight per task. Forked, so the workers share what is loaded
+    (and any change a driver made)."""
+    one = [(j[0], j[1], j[2], j[3], [sd]) + tuple(j[5:]) for j in jobs for sd in j[4]]
+    if JOBS <= 1 or len(one) < 2: flat = [play(*j)[0] for j in one]
+    else:
+        import multiprocessing as mp
+        with mp.get_context('fork').Pool(min(JOBS, len(one))) as pool: flat = [r[0] for r in pool.starmap(play, one, chunksize=2)]
+    out, i = [], 0
+    for j in jobs: out.append(flat[i:i + len(j[4])]); i += len(j[4])
+    return out
+
+def all_cases(nf, csv_path=None, tweak=None, label=None, levels=None):
+    """Every case, two seed sets; a case whose sets differ by more than 25 points gets 48 more fights (seeds 2001-2048)."""
+    seeds_a, seeds_b, seeds_c = list(range(1, nf + 1)), list(range(1001, 1001 + nf)), list(range(2001, 2049))
+    rows_csv, cases = [], []
+    print(f"Every case: {nf} fights with seeds 1-{nf} (A) and {nf} with seeds 1001-{1000 + nf} (B); 48 more (2001-2048) where A and B differ by over 25 points. Game seconds.")
+    for level in levels or FIGHT_LEVELS:
         for rate in (1, 5):
             for player in PLAYERS:
                 for op in OPENINGS:
-                    if not applies(level, op):
-                        if op == 'fighter' and int(ship_file('Asura')['hangar'].get('fighters', 6)) <= 0: continue      # no fighters on our ship: no row
-                        rows_csv.append([TODAY, 'maths', level, int(lv['w']), f'x{rate}', player, op, 0] + ['n/a'] * 10 + [settings_label('weapons off')])
-                        continue
-                    A = play(level, player, op, rate, seeds_a); Bb = play(level, player, op, rate, seeds_b)
-                    sa, sb, s = summary(A), summary(Bb), summary(A + Bb)
-                    flag = ' *' if abs(sa['win_pct'] - sb['win_pct']) > 25 else ''
-                    print(f"{level:10} {lv['w']:6.0f} {'x' + str(rate):>4} {player:6} {op:7} | {s['win_pct']:5.0f} {sa['win_pct']:4.0f}/{sb['win_pct']:<4.0f}{flag:2}| "
-                          f"{fmt(s['first_contact_s'], 7)} {fmt(s['scan_s'], 5)} {fmt(s['first_shot_s'], 7)} {fmt(s['kill_s'], 5)} {fmt(s['killed_s'], 6)} {fmt(s['end_s'], 5)} "
-                          f"{fmt(s['longest_dead_s'], 5)} | {fmt(s['shots'], 5, 1)} {fmt(s['hits'], 4, 1)} {fmt(s['reactor_hits'], 4, 1)} | {fmt(s['their_shots'], 4, 1)} "
-                          f"{fmt(s['their_hits'], 4, 1)} {fmt(s['dodge_pct'], 6)} {fmt(s['damage'], 5)} {fmt(s['found_pct'], 6)} {fmt(s['killed_pct'], 5)} {fmt(s['dead_after_s'], 5)}")
-                    rows_csv.append([TODAY, 'maths', level, int(lv['w']), f'x{rate}', player, op, s['fights'], round(s['win_pct']),
-                                     *[('' if s[k] is None else round(s[k])) for k in ('first_contact_s', 'scan_s', 'kill_s', 'killed_s', 'end_s', 'longest_dead_s')],
-                                     ('' if s['shots'] is None else round(s['shots'], 1)), ('' if s['hits'] is None else round(s['hits'], 1)),
-                                     ('' if s['dodge_pct'] is None else round(s['dodge_pct'])), settings_label()])
-            print()
+                    if applies(level, op): cases.append((level, rate, player, op))
+                    elif not (op == 'fighter' and int(ship_file('Asura')['hangar'].get('fighters', 6)) <= 0):
+                        lv = LEVELS[level]; rows_csv.append([TODAY, 'maths', level, int(lv['w']), f'x{rate}', player, op, 0] + ['n/a'] * 10 + [settings_label('weapons off', tweak, label)])
+    res = run_many([(lv, pl, op, rt, sd, tweak) for lv, rt, pl, op in cases for sd in (seeds_a, seeds_b)])
+    got = {c: (res[2 * i], res[2 * i + 1]) for i, c in enumerate(cases)}
+    wide = [c for c in cases if abs(summary(got[c][0])['win_pct'] - summary(got[c][1])['win_pct']) > 25]
+    more = dict(zip(wide, run_many([(lv, pl, op, rt, seeds_c, tweak) for lv, rt, pl, op in wide])))
+    hdr = (f"{'level':10} {'map':>6} {'rate':>4} {'player':6} {'open':7} | {'win%':>5} {'A/B':>9} | {'contact':>7} {'scan':>5} {'1stshot':>7} {'kill':>5} {'killed':>6} "
+           f"{'end':>5} {'dead':>5} | {'shots':>5} {'hits':>4} {'port':>4} {'blind':>5} | {'in':>4} {'hit':>4} {'dodge%':>6} {'dmg':>5} {'found%':>6} {'died%':>5} {'dead2':>5} "
+           f"| {'torpIn':>6} {'torpHit':>7} {'stream':>6} {'pdc':>4} | {'tOut':>4} {'tHit%':>5} {'push':>4}")
+    print(hdr); last = None
+    for c in cases:
+        level, rate, player, op = c; lv = LEVELS[level]
+        if last and last != (level, rate): print()
+        last = (level, rate)
+        A, Bb = got[c]; sa, sb, s = summary(A), summary(Bb), summary(A + Bb + more.get(c, []))
+        flag = ' +' if c in more else ''
+        print(f"{level:10} {lv['w']:6.0f} {'x' + str(rate):>4} {player:6} {op:7} | {s['win_pct']:5.0f} {sa['win_pct']:4.0f}/{sb['win_pct']:<4.0f}{flag:2}| "
+              f"{fmt(s['first_contact_s'], 7)} {fmt(s['scan_s'], 5)} {fmt(s['first_shot_s'], 7)} {fmt(s['kill_s'], 5)} {fmt(s['killed_s'], 6)} {fmt(s['end_s'], 5)} "
+              f"{fmt(s['longest_dead_s'], 5)} | {fmt(s['shots'], 5, 1)} {fmt(s['hits'], 4, 1)} {fmt(s['reactor_hits'], 4, 1)} {fmt(s['blind_hits'], 5, 2)} | {fmt(s['their_shots'], 4, 1)} "
+              f"{fmt(s['their_hits'], 4, 1)} {fmt(s['dodge_pct'], 6)} {fmt(s['damage'], 5)} {fmt(s['found_pct'], 6)} {fmt(s['killed_pct'], 5)} {fmt(s['dead_after_s'], 5)} "
+              f"| {fmt(s['torps_in'], 6, 2)} {fmt(s['torps_hit'], 7, 2)} {fmt(s['stream_hits'], 6, 2)} {fmt(s['pdc_kills'], 4, 1)} | {fmt(s['torps_out'], 4, 1)} {fmt(s['torp_hit_pct'], 5)} {fmt(s['pushed'], 4)}")
+        rows_csv.append([TODAY, 'maths', level, int(lv['w']), f'x{rate}', player, op, s['fights'], round(s['win_pct']),
+                         *[('' if s[k] is None else round(s[k])) for k in ('first_contact_s', 'scan_s', 'kill_s', 'killed_s', 'end_s', 'longest_dead_s')],
+                         ('' if s['shots'] is None else round(s['shots'], 1)), ('' if s['hits'] is None else round(s['hits'], 1)),
+                         ('' if s['dodge_pct'] is None else round(s['dodge_pct'])), settings_label(None, tweak, label)])
     if csv_path:
         new = not os.path.exists(csv_path)
         with open(csv_path, 'a') as f:
             if new: f.write('date,source,level,map_units,rate,player,opening,fights,win_pct,first_contact_s,scan_s,kill_s,killed_s,end_s,longest_dead_s,shots,hits,dodge_pct,settings\n')
             for r in rows_csv: f.write(','.join(str(x) for x in r) + '\n')
+    return got, more
 
 TODAY = __import__('datetime').date.today().isoformat()
 
 TWEAKS = [
     ('as the game is', {}),
+    ('our top speed 50, base 25 (as committed)', {'us': {'navigation.topSpeedUnits': 50, 'navigation.baseSpeedUnits': 25}}),
+    ('torpedo drift 2 s (was 3.5), both', {'us': {'weapons.torpedoCoastSeconds': 2}, 'them': {'weapons.torpedoCoastSeconds': 2}}),
+    ('torpedo reach 3,500 (was 3,000), both', {'us': {'weapons.*rangeMS': 3500}, 'them': {'weapons.*rangeMS': 3500}}),
+    ('PDC stream 2 s (was 0.5)', {'us': {'weapons.pdcStreamSeconds': 2}}),
     ('Garuda aim error 1 deg (was 3)', {'brain': {'aimErrorDeg': 1}}),
     ('Garuda aim error 6 deg', {'brain': {'aimErrorDeg': 6}}),
-    ('lock holds 20 s (was 10)', {'us': {'weapons.lockHoldSeconds': 20}}),
-    ('lock fills in 5 s (was 10)', {'us': {'weapons.lockSeconds': 5}}),
-    ('gun turns 6 deg/s (was 3)', {'us': {'weapons.gunTurnDegPerSecond': 6}}),
-    ('our slug 600/s (was 300)', {'us': {'weapons.slugSpeedUnits': 600}}),
-    ('Garuda slug 600/s (was 300)', {'them': {'weapons.slugSpeedUnits': 600}}),
-    ('railguns reach 3,000 (both)', {'us': {'weapons.*rangeRG': 3000}, 'them': {'weapons.*rangeRG': 3000}}),
-    ('Garuda top speed 50 (was 35)', {'them': {'navigation.topSpeedUnits': 50}}),
+    ('Garuda railgun reaches 3,000 (was 2,000)', {'them': {'weapons.*rangeRG': 3000}}),
     ('Garuda reloads in 20-25 s (was 12-17)', {'brain': {'railgunReloadSeconds': 20}}),
-    ('Garuda sees 1,500 (was 2,000)', {'them': {'sensors.visualRangeUnits': 1500}}),
-    ('our top speed 35 (was 50)', {'us': {'navigation.topSpeedUnits': 35}}),
+    ('Garuda top speed 50 (was 35)', {'them': {'navigation.topSpeedUnits': 50}}),
+    ('lock holds 20 s (was 10)', {'us': {'weapons.lockHoldSeconds': 20}}),
     ('our slug damage 75 armour, 3 room', {'us': {'weapons.slugArmourDamage': 75, 'weapons.slugCompartmentDamage': 3}}),
-    ('Garuda armour x0.67 (100/100/50/100)', {'them': {'damage.sideArmourMax': [100, 100, 50, 100]}}),
+    ('push back 120 units a shot (was 24), both', {'us': {'weapons.railgunKickUnits': 120, 'weapons.railgunKickSeconds': 1.0, 'weapons.railgunKickStopSeconds': 1.0},
+                                                    'them': {'weapons.railgunKickUnits': 120, 'weapons.railgunKickSeconds': 1.0, 'weapons.railgunKickStopSeconds': 1.0}}),
     ('map 30,000 (x1.5)', {'map': 1.5}),
     ('map 12,000 (x0.6)', {'map': 0.6}),
 ]
 
-def tweaks(nf):
+def tweaks(nf, ops=('fire', 'scan', 'plot'), players=('good', 'expert')):
     seeds = list(range(1, nf + 1)) + list(range(1001, 1001 + nf))
-    ops = ('fire', 'scan', 'quiet')
-    print(f"Changed numbers on Wolf Hunt (Level_01), good player, {2 * nf} fights per cell. win% x1 / x5, and kill time at x1 (game s)")
-    print(f"{'change':38} | " + ' | '.join(f"{op:^15}" for op in ops))
+    print(f"Changed numbers on Wolf Hunt (Level_01), {2 * nf} fights per cell. win% x1 / x5, and kill time at x1 (game s)")
+    jobs = [('Level_01', pl, op, rt, seeds, tw) for name, tw in TWEAKS for pl in players for op in ops for rt in (1, 5)]
+    res = iter(run_many(jobs))
+    print(f"{'change':44} | " + ' | '.join(f"{pl + ' ' + op:^17}" for pl in players for op in ops))
     for name, tw in TWEAKS:
         cells = []
-        for op in ops:
-            r1, r5 = summary(play('Level_01', 'good', op, 1, seeds, tw)), summary(play('Level_01', 'good', op, 5, seeds, tw))
-            cells.append(f"{r1['win_pct']:3.0f}/{r5['win_pct']:<3.0f} {fmt(r1['kill_s'], 4)}s")
-        print(f"{name:38} | " + ' | '.join(cells))
+        for pl in players:
+            for op in ops:
+                r1, r5 = summary(next(res)), summary(next(res))
+                cells.append(f"{r1['win_pct']:3.0f}/{r5['win_pct']:<3.0f} {fmt(r1['kill_s'], 4)}s")
+        print(f"{name:44} | " + ' | '.join(cells))
 
 def extras(nf):
     seeds = list(range(1, nf + 1)) + list(range(1001, 1001 + nf))
@@ -1523,6 +1611,10 @@ def check():
         print(f"  {nm:8} top {n['topSpeedUnits']:.0f} acc {n['accelUnits']} brake {n['brakeUnits']} turn {n['turnRate']:.0f} box {st['width']:.0f}x{st['length']:.0f} "
               f"armour {[int(x) for x in d['sideArmourMax']]} slug {w['slugSpeedUnits']:.0f} dmg {w['slugArmourDamage']:.0f}/{w['slugCompartmentDamage']:.0f} HE {w['heArmourDamage']:.0f} "
               f"mounts {[(m['id'], int(m['ammo'])) for m in w['mounts']]}")
+    print("Not in the ship file, so the code's default is used (WeaponSystem.cs, HangarSystem.cs, DamageSystem.cs):")
+    for nm in ('Asura', 'Garuda', 'Frigate'):
+        miss = from_code(nm); st = ship_file(nm)
+        print(f"  {nm:8} " + '; '.join(f"{part}: " + ', '.join(f"{k} {st[part][k]:g}" if isinstance(st[part][k], float) else f"{k} {st[part][k]}" for k in ks) for part, ks in miss.items() if ks))
     print("Read from the board scene:")
     for k, v in BOARD.items(): print(f"  {k}: {v}")
     print("Launch stages:", LAUNCH_STAGES, "total", round(sum(100 / s['rate'] for s in LAUNCH_STAGES), 1), "game s")
@@ -1608,15 +1700,93 @@ def longshot(n=4000):
         print(f"  ENG {eng} ({sp0:.1f} a second): brake to under 0.5 in {tb:.0f} s, then turn on in {tt - tb:.0f} s: {tt:.0f} s. Turn first: on in {t2:.0f} s but "
               f"sliding {side:.0f} a second; Q and E stop it in {t3 - t2:.0f} s more ({t3:.0f} s); left to bleed, under 0.5 takes {math.log(0.5 / max(side, 0.5)) / math.log(keep):.0f} s.")
 
+# ---------------------------------------------------------------- torpedoes (Step 184) and the PDC stream (Step 197)
+
+def torpedo_table(n=600):
+    """Our salvo against a still, cruising or running target, by range; then the Garuda's salvo against our PDCs at x1 and x5,
+    with the PDC rule before Step 197 (down at once) and after it (down when the stream ends, flying on meanwhile)."""
+    a = ship_file('Asura'); w = a['weapons']; tick = BOARD['board']['tickSeconds']
+    T, v0, v1 = w['torpedoCoastSeconds'], w['torpedoLaunchSpeedUnits'], w['torpedoCoastSpeedUnits']
+    print(f"Drift by hand: {v1:.0f} x {T} s + ({v0:.0f} - {v1:.0f}) x {T} / 3 = {v1 * T + (v0 - v1) * T / 3:.0f} units, with the motor off. "
+          f"Then {w['torpedoBurnUnits']:.0f} a second each second up to {w['torpedoSpeedUnits']:.0f}. Reach {max(m['rangeUnits'] for m in w['mounts'] if m['kind'] == 'MS'):.0f}, the drift included.")
+    rnd = random.Random(5)
+    def our_salvo(R, kind, rate):
+        """One salvo of ours from a still ship. The target is at a random bearing; kind: still, cruise (22, any heading), away (35, running
+        straight away), corvette (MILK RUN's runner, 120 x 80: dead ahead of us, running straight away at 24). Returns [(hit, seconds)] for each torpedo.
+        A torpedo doesn't keep the ship's motion (Rule 8.5), so our own speed changes only where it starts."""
+        sim = Sim('FirstShot', 'expert', 'fire', rate, rnd.randrange(10 ** 6)); us, e, p = sim.us, sim.enemy, sim.p; us.x = us.y = 0.0
+        if kind == 'corvette':
+            c = ship_file('Corvette'); e.half = (c['width'] / 2, c['length'] / 2)
+        b = 0.0 if kind == 'corvette' else rnd.uniform(0, 360); e.x, e.y = math.sin(math.radians(b)) * R, math.cos(math.radians(b)) * R   # MILK RUN: dead ahead
+        hdg, spd = {'still': (rnd.uniform(0, 360), 0), 'cruise': (rnd.uniform(0, 360), 22), 'away': (b, 35), 'corvette': (b, 24)}[kind]
+        e.hdg = int(hdg) % 360; e.vx, e.vy = math.sin(math.radians(hdg)) * spd, math.cos(math.radians(hdg)) * spd
+        sim.units = [3, 4, 3, 0]; p.charge = 100; p.scan = (hdg, spd, 0.0); p.sol = dict(x=e.x, y=e.y, t=0, course=hdg, spd=spd, lock=True)
+        p.fire_torps(0.0); out, t, dt = [], 0.0, tick * rate
+        while sim.ours and t < 60:
+            e.x += e.vx * dt; e.y += e.vy * dt; t += dt
+            for r in list(sim.ours):
+                res = torp_step(r, dt, e)
+                if res is not None: sim.ours.remove(r); out.append((res != 'miss', t))
+        return out
+    print("\nOur salvo of two (both launchers by turns), fired from a still ship at a target on any bearing. Hit chance per torpedo, and seconds to hit.")
+    print(f"{'range':>6} | {'still':>13} | {'cruising 22':>13} | {'running 35':>13} | {'corvette ahead':>14} | x5: still / running 35")
+    for R in (1000, 1500, 2000, 2400, 2600, 2800, 3000):
+        cells = []
+        for kind in ('still', 'cruise', 'away', 'corvette'):
+            res = [x for _ in range(n // 2) for x in our_salvo(R, kind, 1)]; hit = [t for h, t in res if h]
+            cells.append(f"{100 * len(hit) / len(res):4.0f}% {sum(hit) / len(hit) if hit else 0:5.1f} s")
+        x5 = [100 * sum(h for h, _ in r) / len(r) for r in ([x for _ in range(n // 4) for x in our_salvo(R, k, 5)] for k in ('still', 'away'))]
+        print(f"{R:>6} | " + ' | '.join(f"{c:>13}" for c in cells[:3]) + f" | {cells[3]:>14} | {x5[0]:3.0f}% / {x5[1]:3.0f}%")
+    def their_salvo(R, groups, rate, stream, moving, seed):
+        """The Garuda fires a salvo of two (Brain: fireBackSalvo) from its stern launcher at our ship, R away. It faces any way.
+        We are still, or moving at 30 on any heading. Our PDC groups on AUTO: 0, 2 (A and D, as a good player) or 4."""
+        sim = Sim('FirstShot', 'expert', 'fire', rate, seed); us, e, p = sim.us, sim.enemy, sim.p; rr = random.Random(seed); us.x = us.y = 0.0
+        us.hdg = us.ord = rr.randrange(360); b = rr.uniform(0, 360); e.x, e.y, e.hdg = math.sin(math.radians(b)) * R, math.cos(math.radians(b)) * R, rr.randrange(360)
+        if moving: us.eng = 3; us.thr = 60; us.vx, us.vy = math.sin(math.radians(us.hdg)) * 30, math.cos(math.radians(us.hdg)) * 30
+        sim.units = [3, 4, 3, 0]; p.pdc = set(PDC_ORDER[:groups])
+        vls = next(m for m in e.wp['mounts'] if m['kind'] == 'MS'); gx, gy = e.gun_at(vls['id']); k = int(sim.B['Garuda']['fireBackSalvo'])
+        inc = []
+        for i in range(k):
+            r = torp_launch(e.wp, gx, gy, e.hdg, int(vls['arc']), i, k, vls['rangeUnits'], us, e, 0.0); r.wait = i * e.wp['torpedoRippleSeconds']; inc.append(r)
+        hits = through = 0; t, dt = 0.0, tick * rate
+        while inc and t < 60:
+            us.tick(dt); t += dt
+            for r in list(inc):
+                if pdc_stops(p, r, dt, t, stream): inc.remove(r); continue
+                res = torp_step(r, dt, us)
+                if res is None: continue
+                inc.remove(r)
+                if res != 'miss': hits += 1; through += r.down_in > 0
+        return hits, through, k
+    print("\nThe Garuda's salvo of two at our ship (its launcher is at its stern, on the centre line). Hits per 100 torpedoes.")
+    print("PDC groups on AUTO: none, two (A and D), four. 'before' = down at once (until Step 197); 'now' = down when the 0.5 s stream ends,")
+    print("checked once a board tick (0.42 game s at x1, 2.1 at x5), flying on meanwhile. In brackets: hits by a torpedo already doomed.")
+    for moving in (False, True):
+        print(f"{'range':>6} | {'no PDC':>6} | {'2 groups x1 before / now':>26} | {'4 x1 before / now':>22} | {'2 groups x5 before / now':>26} | {'4 x5 before / now':>22}   (our ship {'moving at 30' if moving else 'still'})")
+        for R in (800, 1200, 1600, 2000, 2400, 2800):
+            def cell(groups, rate):
+                out = []
+                for stream in (False, True):
+                    h = th = k = 0
+                    for sd in range(n):
+                        a_, b_, c_ = their_salvo(R, groups, rate, stream, moving, sd); h += a_; th += b_; k += c_
+                    out.append((100 * h / k, 100 * th / k))
+                return out
+            none = cell(0, 1)[0][0]; c21, c41, c25, c45 = cell(2, 1), cell(4, 1), cell(2, 5), cell(4, 5)
+            f = lambda c: f"{c[0][0]:5.1f} / {c[1][0]:5.1f} ({c[1][1]:4.1f})"
+            print(f"{R:>6} | {none:5.0f}% | {f(c21):>26} | {f(c41):>22} | {f(c25):>26} | {f(c45):>22}")
+
 # ---------------------------------------------------------------- main
 
 if __name__ == '__main__':
     args = sys.argv[1:]
     load()
     nf = int(args[args.index('--fights') + 1]) if '--fights' in args else 12
+    if '--jobs' in args: JOBS = int(args[args.index('--jobs') + 1])
     if '--check' in args: check()
     elif '--hand' in args: hand()
     elif '--longshot' in args or '--sniper' in args: longshot()
+    elif '--torpedo' in args: torpedo_table()
     elif '--tweaks' in args: tweaks(nf)
     elif '--extras' in args: extras(nf)
-    else: all_cases(nf, args[args.index('--csv') + 1] if '--csv' in args else None)
+    else: all_cases(nf, args[args.index('--csv') + 1] if '--csv' in args else None, label=args[args.index('--label') + 1] if '--label' in args else None)

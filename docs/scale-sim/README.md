@@ -11,7 +11,7 @@ scale in Step 63. Re-run it after any change to speeds, ranges, weapons, damage 
 
 | Command | What it does | Time |
 |---|---|---|
-| `python3 docs/scale-sim/scalesim.py` | every case, two seed sets of 12 fights | about 10 minutes |
+| `python3 docs/scale-sim/scalesim.py` | every case, two seed sets of 12 fights, on every core; 48 more fights for a case whose two sets differ by over 25 points | 10 to 20 minutes, by how busy the Mac is |
 | `... --fights 4` | the same, fewer fights | about 3 minutes |
 | `... --csv FILE` | also appends one row per case (the `numbers.csv` columns) | |
 | `... --check` | prints every number it read, and the rules still copied by hand | instant |
@@ -19,10 +19,16 @@ scale in Step 63. Re-run it after any change to speeds, ranges, weapons, damage 
 | `... --tweaks` | Wolf Hunt with changed numbers | about 5 minutes |
 | `... --extras` | torpedoes first; backing onto the Garuda's port side | about 2 minutes |
 | `... --longshot` | long shots with the spinal railgun: flight time, hit chance by range, drift, stopping and turning | 1 second |
+| `... --torpedo` | torpedo flight (Step 184): hit chance and time by range against a still, cruising, running target and MILK RUN's corvette; the Garuda's salvo against our PDCs at x1 and x5, before and after the stream (Step 197) | about 5 minutes |
+| `... --jobs N` | use N cores (default: all) | |
+| `... --label WORDS` | add words to the settings column of the `--csv` rows | |
 
 All times are game seconds; at x1 a game second is a real second. The table's last columns: found% (the
 Garuda went ALERT), died%, and dead2 (the longest dead time after first contact). A `*` marks a case whose two
-seed sets differ by more than 25 points: play more fights for it.
+seed sets differ by more than 25 points; since 2026-11-11 it marks a `+` and plays 48 more fights for it by itself.
+New columns (2026-11-11): port (our hits on the Garuda's PORT face; it was called rct), blind (our slug hits nobody saw, so no report), torpIn and torpHit (enemy torpedoes fired at us and hits),
+stream (hits by an enemy torpedo a PDC stream was already walking onto), pdc (torpedoes our PDCs shot down), tOut and tHit% (our
+torpedoes and the share that hit), push (units our ship was pushed back by its own railgun).
 
 ## What it reads from the game
 
@@ -31,6 +37,10 @@ seed sets differ by more than 25 points: play more fights for it.
   points, the lock, the gun's turn, slug and torpedo flight, damage, armour, crew, conditions, the hangar (and how many
   fighters it carries: Hangar → Fighters; our ship has none since Step 170, so the fighter first move is dropped). A railgun
   with Half Arc 0 is played as a fixed gun (our spinal railgun); the slow turn's speed is Fine Turn Deg Per S.
+- **The code's defaults** (since 2026-11-11): a number a ship file leaves out takes the default written in the code, as the game
+  does until the file is saved. The calculator reads them from the Stats part of `WeaponSystem.cs`, `HangarSystem.cs` and
+  `DamageSystem.cs`. Today the Garuda and the frigate take the push back, the PDC stream, the catapult, the hard break and the
+  room rows this way (`--check` lists them).
 - **The board scene** `Assets/Scenes/Tactical/02.1_Grid.unity`: the Garuda's and the frigate's brain
   settings (`EnemyBrain`, as set in the scene, not the code's defaults: cruise 22, aim error 3°, reload
   12–17 s and so on), the mission (`QuestSystem`: jump point, reinforcements), the rock interference,
@@ -56,18 +66,28 @@ length at each rate (0.42 game s at x1, 2.1 at x5):
   reads its course and speed. The lock (`WeaponSystem.TickLock`): fill 10 s, hold 10 s, then drop and
   start again; the lock's lead uses the newest scan or plot, however old. A lock starts only on a ship DRADIS hears that
   fills the sight's brackets (`ShipState.ScopeFits`): at MAG 8 that is 8 × 1,000 / 0.85 = 9,412 units at most.
+- **Push back** (`NavSystem.Kick`, `Recoil`, Step 197): each railgun shot, ours and the enemy's, moves the ship back along the
+  shot, 40 a second for 0.4 s, then slowing to a stop over 0.4 s: 24 units, worked out exactly at any tick length. It moves the ship
+  only; its speed is untouched.
 - **Our guns:** a turret's bar turns 3° a second inside its cone. The spinal railgun (`WeaponSystem.FixedGun`) fires
   along the nose, to the part of a degree, with no target, lock or solution; ARM needs only the charge. While a lock
   holds, the ship turns itself onto the lead. The lead allows for our own motion (`LeadBearing`). Every slug keeps its
   ship's motion (`WeaponSystem.Slug`). The box hit test (`ShipState.EntersBox`) with the shooter's 25% margin; which
   face it enters. A held lock running out clears the switches (`DropLock`).
+- **The far shot** (`WeaponSystem.Watched`, Step 197): a slug hit on a ship nobody sees (in sight from its near side, heard on
+  DRADIS, or locked) still does its damage, but no HIT is reported; the slug flies on to its reach and reports IMPACT ?, as a miss.
+  NO PEEKING is won only by a hit that is reported (`QuestSystem`: `lastShotHit`). Torpedoes always report.
 - **Plot shots:** POINT, POINT, RULER, TRACK (`WeaponSystem.ComputeSol`): a straight-line reckoning from
   the newest POINT. TRACK clears the switches.
 - **Torpedoes** (`WeaponSystem.NewTorpedo`, `Drift`, `SteerAt`, Step 184): out of the side, tilted back; drift with
   the motor off, slowing fast at first, while only the nose swings onto the target; the motor lights when the drift
   ends; then it flies where its nose points and turns onto the target, in 0.05 s steps. A salvo ripples, one torpedo
   every Torpedo Ripple Seconds. Ours use the two launchers by turns, starting with the target's side. A torpedo
-  waiting its turn waits at its launch spot (the game lets it out from where its launcher is by then). Our four PDC groups (`PdcStops`), one 70% chance each, arc and reach checked.
+  waiting its turn waits at its launch spot (the game lets it out from where its launcher is by then). Every torpedo of an
+  enemy salvo leaves (the game launched only the first from Step 184 until Step 197; the calculator never had that fault).
+  Our four PDC groups (`PdcStops`), one 70% chance each, arc and reach checked. Step 197: on a kill the stream walks onto the
+  torpedo and it goes down Pdc Stream Seconds (0.5) later, counted once a board tick, so 0.84 game s at x1 and 2.1 at x5; it flies
+  on meanwhile and can still hit us.
 - **Damage** (`DamageSystem`): armour per face, then the next room (`NextRoom`, Step 186, the box): each room's row
   from bow to stern comes from the ship file (Hard Points → ROOMS; files with none saved get the code's layout). PROW: the
   front room still standing; AFT: the back one; STBD or PORT: the room at the spot the shot landed (the hit test gives it),
@@ -81,7 +101,9 @@ length at each rate (0.42 game s at x1, 2.1 at x5):
   position and speed, led on our motion less its own, its slug keeping its own motion (Step 170), torpedoes when hit and every 90 s with a fix, any loss of hull counted as a hit,
   magazine repair, rock and ship avoidance, the edge band. Reinforcement frigates 180 s after its alarm.
 - **Fighters and boats** (`HangarSystem`): six launch stages (34.4 game s), fighters at 100 a second, a
-  run every 30 s by each craft on the face toward them; boats, boarding odds.
+  run every 30 s by each craft on the face toward them; boats, boarding odds. Step 197: the catapult throws craft out at 560 a
+  second, falling to their own speed over 1.2 s (about 290 units gained). They fly straight at the target; the straight run out
+  of the side and the hard break are left out.
 
 ## The person
 
@@ -93,8 +115,9 @@ they plot with POINT and RULER and aim by hand. Careful players arm before the l
 ladder), lets the lock turn the nose, and fires once the nose is on and the ship isn't sliding (Q and E stop a slide).
 Quick hands (arming in 5 game s or less) also fire once on the aim the lock left. NO PEEKING allows no lock: the nose is
 turned by hand with Shift, which moves once a board tick (0.84° steps at x1, 4.2° at x5), to within the person's click
-error. When the slugs run out the person fires torpedoes. Players who read the hit reports won't fire where nothing
-is left to hit; they go round to its port side. The six first moves on contact are scripted: fighter,
+error. When the slugs run out the person fires torpedoes (from 2,600; they launch at 2,900 or closer). Scan and plot first
+moves head for a point off the Garuda's nearer side at the stand-off range (since 2026-11-11; before, always its port side,
+which since Step 186 gains nothing: a hit at the middle of either side reaches the reactor). The six first moves on contact are scripted: fighter,
 scan, fire, plot, close, quiet. Chases (COLD RUN, INTERCEPT) follow a path round the rocks that prefers
 gas clouds.
 
@@ -110,6 +133,10 @@ gas clouds.
 - The Garuda's PDCs: the game never fires them, so neither does the calculator.
 - Step 171's tap-and-hold keys: Q and E push at full strength at once (no 2 s build-up, no taps); the throttle is set,
   not counted up. After a shot only ARM needs setting again; the calculator charges the whole arming time.
+- POINT is placed on the Garuda even when rocks hide its dot (the person script never asks whether the dot shows).
+- An incoming torpedo's hit test allows for our ship's motion; the game's (`ReachesUs`) uses our spot only. A few units.
+- MILK RUN (mission 1): its corvette chase is a checklist with a ship that can't be destroyed. Only its torpedo shot is
+  played (`--torpedo`, the corvette row).
 
 ## History
 
@@ -126,4 +153,7 @@ gas clouds.
   on that side. Old rule against new rule, same files and dice: the "Room hits" tab of the Starwolf Tuning and Roadmap sheet.
 - **2026-11-10 (Step 186, the box):** rooms in a row from bow to stern; each shot hits the room at the spot it landed.
   The Step 180 rule against the box, same files, dice and torpedo flight: the same sheet tab.
-- **2026-11-10 (Step 184):** the torpedo flight: drop, drift and flare, and the ripple salvo. Not run again since.
+- **2026-11-10 (Step 184):** the torpedo flight: drop, drift and flare, and the ripple salvo.
+- **2026-11-11 (Step 197):** the push back, the far shot, the PDC stream, the catapult; numbers a ship file leaves out come from
+  the code; the person goes to the Garuda's nearer side, not always its port side; every core; `--torpedo`. Results in
+  `docs/team-reports/player-1/2026-11-11.md`.
