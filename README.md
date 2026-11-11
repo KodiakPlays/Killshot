@@ -97,14 +97,18 @@ Builds go outside the repo, in `~/Documents/GitHub/Killshot-Builds/`:
 
 | Game | Folder |
 |---|---|
-| Mac | `Killshot-Builds/Mac/Starwolf.app` |
-| Windows | `Killshot-Builds/Windows/Starwolf-Win-64bit.zip` (only the zip is kept) |
+| Mac | `Killshot-Builds/Mac/Starwolf-Mac-dd-mm-yyyy.zip` (only the zip is kept) |
+| Windows | `Killshot-Builds/Windows/Starwolf-Win-64bit-dd-mm-yyyy.zip` (only the zip is kept) |
+
+**Every build's name ends with the day it was made, as dd-mm-yyyy** (owner, 10 November
+2026). A Windows build made on 10 November 2026 is `Starwolf-Win-64bit-10-11-2026.zip`. In
+the commands below, `$(date +%d-%m-%Y)` puts in today's date by itself.
 
 ### The Windows game must be Intel 64-bit
 
 Almost every Windows PC has an Intel or AMD chip. The Windows game must be built
-for those chips. In Unity this is called **Intel 64-bit**. The folder and the zip
-are named `Starwolf-Win-64bit` to show it.
+for those chips. In Unity this is called **Intel 64-bit**. The folder's and the
+zip's names start `Starwolf-Win-64bit` to show it.
 
 On a Mac with an Apple chip, Unity sets the Windows game to **ARM 64-bit** by
 itself. An ARM game opens only on rare ARM laptops. On a normal PC, Windows
@@ -137,14 +141,14 @@ Set Architecture to Intel 64-bit and click Build again. The check is in
 5. Leave **Development Build** off.
 6. Check the scene list at the top. Every scene in it is ticked, and
    `Tactical/00_Start` is first. The game starts from the first scene.
-7. Delete the old `Killshot-Builds/Windows/Starwolf-Win-64bit` folder and the old
-   `Starwolf-Win-64bit.zip`. Old files left in the folder can end up in the new zip.
-8. Click **Build**. Pick the `Killshot-Builds/Windows/Starwolf-Win-64bit` folder and
-   name the file `Starwolf.exe`.
+7. If a build from today is already there, delete its folder and its zip first. Old
+   files left in the folder can end up in the new zip.
+8. Click **Build**. Pick the `Killshot-Builds/Windows/Starwolf-Win-64bit-dd-mm-yyyy`
+   folder (today's date) and name the file `Starwolf.exe`.
 9. Check the chip. In Terminal, run:
 
    ```
-   file ~/Documents/GitHub/Killshot-Builds/Windows/Starwolf-Win-64bit/Starwolf.exe
+   file ~/Documents/GitHub/Killshot-Builds/Windows/Starwolf-Win-64bit-$(date +%d-%m-%Y)/Starwolf.exe
    ```
 
    It must say **x86-64**. If it says **Aarch64**, the game is ARM 64-bit and
@@ -154,22 +158,23 @@ Set Architecture to Intel 64-bit and click Build again. The check is in
 
     ```
     cd ~/Documents/GitHub/Killshot-Builds/Windows
-    zip -r -X Starwolf-Win-64bit.zip Starwolf-Win-64bit -x "*DoNotShip*" -x "*.DS_Store"
+    B=Starwolf-Win-64bit-$(date +%d-%m-%Y)
+    zip -r -X $B.zip $B -x "*DoNotShip*" -x "*.DS_Store"
     ```
 
-11. Delete the `Starwolf-Win-64bit` folder. Keep only the zip. The folder is the
-    same game unzipped, and it takes up disk space. In Terminal:
+11. Delete the build folder. Keep only the zip. The folder is the same game
+    unzipped, and it takes up disk space. In Terminal:
 
     ```
-    rm -rf ~/Documents/GitHub/Killshot-Builds/Windows/Starwolf-Win-64bit
+    rm -rf ~/Documents/GitHub/Killshot-Builds/Windows/Starwolf-Win-64bit-$(date +%d-%m-%Y)
     ```
 
-12. Upload `Starwolf-Win-64bit.zip` to the team's Google Drive, in
+12. Upload the zip to the team's Google Drive, in
     Hunter Puzzle Sim - "Starwolf" → Builds.
 
 ### What testers do on Windows
 
-1. Unzip the whole zip. Keep every file together in the `Starwolf-Win-64bit` folder.
+1. Unzip the whole zip. Keep every file together in its `Starwolf-Win-64bit-…` folder.
    `Starwolf.exe` does not work on its own.
 2. Double-click `Starwolf.exe`.
 3. Windows may show "Windows protected your PC", because the game is not signed.
@@ -181,6 +186,17 @@ The Mac game is built for Apple chips only (**Apple silicon** in
 Build Profiles → macOS → Architecture). Older Macs with Intel chips can't open it.
 To make one game that opens on both kinds of Mac, pick
 **Intel 64-bit + Apple silicon**. The game file gets about twice as big.
+
+To build it: in Build Profiles click **macOS** (Switch Platform if needed), then Build.
+Pick the `Killshot-Builds/Mac/Starwolf-Mac-dd-mm-yyyy` folder (today's date) and name
+the game `Starwolf.app`. Then zip it and delete the folder. `ditto` keeps the app's
+inside links working, where `zip` can break them:
+
+```
+cd ~/Documents/GitHub/Killshot-Builds/Mac
+B=Starwolf-Mac-$(date +%d-%m-%Y)
+ditto -c -k --keepParent $B/Starwolf.app $B.zip && rm -rf $B
+```
 
 ## Controls
 
@@ -226,10 +242,29 @@ approach modes lower it more. Nothing else in the game reads it so far.
 **Clear the board** by pressing ERASE a second time while it is already
 selected.
 
+## Ruled out
+
+The owner has decided against these. Don't suggest them again.
+
+- No cockpit and no view out of a window.
+- No shields. The armour on the hull's four sides is the only protection.
+- No boarding pods. Marines go by assault boat from the hangar.
+- No EXECUTE button and no emergency abort. Pause and the time rate are the only time controls.
+- No broadside cannon.
+- No dodge button.
+- The enemy is our ship with different numbers and a brain. It never gets its own movement, sensor
+  or weapon rules.
+- The same rules apply in every level. Only a training level may switch a system off.
+- No clicking the plot to aim.
+- No standing text on the plot, like the ship's name or speed.
+- Our ship never blinks or fades.
+- The sensor is DRADIS. Never call it radar.
+
 ## Where to read next
 
 | You want | Read |
 |---|---|
+| What the study agents found, and when to run them | `docs/team-reports/README.md` |
 | What is built, what is left, and every trap hit | `docs/BUILD_LOG.md` |
 | Which document answers your question | `docs/CONTEXT_INDEX.md` |
 | How the game is meant to work | `docs/TACTICAL_BOARD_SPEC.md` |
