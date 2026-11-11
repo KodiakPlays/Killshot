@@ -5099,7 +5099,7 @@ triage below.
   Nobody has played a full campaign win through the real win screen yet. **Built in Step 190:** Escape on SAVE SLOTS, the map and
   the rooms opens a small menu: RESUME, MAIN MENU, QUIT GAME. MAIN MENU goes back to the title, and
   no slot is picked until you pick one again (`SaveGame.Leave()`, which before ran only on DELETE).
-  space". Mission 1, ORIENTATION (to be renamed, owner 2026-11-10), and SKIRMISH are built (Step 178). Missions 2 to 10 are not. The old
+- *The old wording of part of "The story" (BUILD_LOG section 8, "Campaign: still to do"), kept as it was:* "…space". Mission 1, ORIENTATION (to be renamed, owner 2026-11-10), and SKIRMISH are built (Step 178). Missions 2 to 10 are not. The old…"
 - **LONG SHOT is not on the sector map** (Step 170). Since Step 178 the map shows one mission,
   ORIENTATION, so this waits for the story missions.
 
@@ -5224,7 +5224,7 @@ triage below.
   countdown on the strip: not fixed". The Count box in `AlarmStrip.prefab` is 7 px wide, so two
   digits run into the words. The battle space edge's 30-second countdown has the same fault
   ("30EXITING…"). MILK RUN: the edge countdown.
-  MILK RUN: the rooms after MISSION COMPLETE. See "Brought up to date on 2026-11-09", "Codex art test".
+- *The old ending of the FLIGHT LEADER bug (BUILD_LOG section 8, "Bug list"), kept as it was:* "…MILK RUN: the rooms after MISSION COMPLETE. See "Brought up to date on 2026-11-09", "Codex art test"."
 
 ### The small number box on the Hangar panel: closed (Step 149, 2026-11-02)
 
