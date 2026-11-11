@@ -1622,7 +1622,8 @@ The missions are in the Campaign file, `Assets/Campaign/Campaign.asset` (Step 18
 **Campaign** slot has this file in it. The scene has no mission list of its own. To set up a
 mission, open **Starwolf → Campaign** (Step 205). It edits this file. The missions are in play
 order. Drag a row to move it. + adds a mission, and − removes the picked one. Each mission has an
-On switch. A mission switched off gets no dot, and the save slot's count skips it. A
+On switch. To see a screen or a mission in play mode straight away, use **Test: play from here**
+at the bottom of the window (Step 207). A mission switched off gets no dot, and the save slot's count skips it. A
 mission's dot shows only after the mission before it is won. Each mission has a name (**Title**), a
 **Level** slot, a briefing (**Brief**, the text on the left screen) and an **At**. Drag the level's
 scene into Level. The slot keeps the scene's name and adds the scene to the build's scene list. At

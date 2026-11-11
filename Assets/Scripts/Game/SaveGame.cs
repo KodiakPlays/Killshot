@@ -45,6 +45,8 @@
 // - KeepDamage takes full rounds, marines and crew from Ship.statsFile. Full armour comes from
 //   DamageSystem.stats. PutDamage never raises rounds, marines or crew. Marines on boats
 //   (HangarSystem.Flights) count as aboard.
+// - Editor only: TestStart starts play mode on the hidden TestSlot (slot9.json) when the
+//   Starwolf > Campaign window asks. It sets campaign and TacticalWorld.chosenLevel too.
 // - Traps: parts match by name. A renamed room or gun label loses what was saved for it.
 // - Trap: a win's damage and stores wait in memory until KeepWonDamage. PutDamage drops them. So
 //   does quitting.
@@ -219,6 +221,25 @@ public static class SaveGame
             foreach (var c in d.compartments) if (c.name + Crew == p.name) c.crew = Mathf.Min(c.crew, left);
         }
     }
+
+#if UNITY_EDITOR
+    /// <summary>Starwolf > Campaign's PLAY FROM HERE buttons use this hidden slot (the file slot9.json), never a real one.</summary>
+    public const int TestSlot = 8;
+    /// <summary>Editor session keys the Campaign window sets before play: a test is on, the Campaign file, the level to play.</summary>
+    public const string TestKey = "Starwolf.Test", TestCampaignKey = "Starwolf.Test.Campaign", TestLevelKey = "Starwolf.Test.Level";
+
+    // A test from the Campaign window: play mode starts on the test slot, before the first scene loads.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void TestStart()
+    {
+        string file = UnityEditor.SessionState.GetString(TestCampaignKey, "");
+        if (!UnityEditor.SessionState.GetBool(TestKey, false) || file == "") return; // the title and save slots test the real slots
+        Play(TestSlot);
+        campaign = UnityEditor.AssetDatabase.LoadAssetAtPath<Campaign>(file);
+        string level = UnityEditor.SessionState.GetString(TestLevelKey, "");
+        if (level != "") TacticalWorld.chosenLevel = level;
+    }
+#endif
 
     /// <summary>A mission won in the campaign: noted and saved. Outside the campaign it does nothing.</summary>
     public static void Won(string level)

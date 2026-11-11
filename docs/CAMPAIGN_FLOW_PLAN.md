@@ -18,6 +18,7 @@ https://claude.ai/artifact/UhfPpB8aJoY8zJj3RziEa4
 | 3. Supplies carry over, and the travel bar | Done. Part 1 built (Step 196): supplies and crew are kept between missions. Part 2 built (Step 198): the travel bar and the actions in each room. |
 | A test mission after MILK RUN | Built (Step 204), throwaway. Mission 2, TEST MISSION, is won 5 game seconds after time starts. A MILK RUN win now opens the ship's rooms and the travel bar. **Take it out before the player build:** in Starwolf → Campaign, switch TEST MISSION off (Step 205). Do not delete it. Its scene, `Assets/Scenes/Levels/TestMission.unity`, stays. It is still on today. |
 | The Campaign window | Built (Step 205). **Starwolf → Campaign** edits `Assets/Campaign/Campaign.asset`: the missions in play order, an On switch for each, each mission's name, level, briefing and map dot, and the closing line. A mission switched off is skipped on the sector map, in the save slot's count and percent, and for the end card. See "Making a mission", below. |
+| The testing tool | Built (Step 207). At the bottom of **Starwolf → Campaign**, **Test: play from here** starts play mode at one point: TITLE, SAVE SLOTS, END CARD, or, for the mission picked, SECTOR MAP, PLAY IT and SHIP ROOMS AFTER IT. A test uses a hidden save, slot 9, made fresh on each click and deleted when play stops. The owner's saves are never touched. |
 
 **Step 2, as built (Step 194).** Win the campaign's last mission and press MISSION SELECT. The
 screen goes black. The closing line types in, in the middle, in the sector map's green Share Tech
