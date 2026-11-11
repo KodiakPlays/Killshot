@@ -165,11 +165,11 @@ The setup from Step 28:
 Added in Step 34:
 
 - `World` — a root object, **outside** the Board canvas, with `TacticalWorld` on it. Children:
-  - `OwnShip` at (0, 0, 0): our ship. It has a `Ship` (pointing at `Assets/Ships/Asura`) and the
+  - `OwnShip` at (0, 0, 0): our ship. It has a `Ship` (pointing at `Assets/Ships/Asura.asset`) and the
     eight ship parts. Its `Model` child is `StarWolf_Destroyer_PlayerShip.fbx`, same model and
     placement as the old `Prefabs/PlayerShip.prefab`. At play it moves to the level's Player Spawn.
   - `Garuda · Cruiser` at (18058.42, 16259.87, 0): the enemy. It has `WorldContact` (trackKey
-    `t07`), `EnemyBrain`, a `Ship` (pointing at `Assets/Ships/Garuda`) and the eight ship parts.
+    `t07`), `EnemyBrain`, a `Ship` (pointing at `Assets/Ships/Garuda.asset`) and the eight ship parts.
     Its `Model` child is `3D Assets/UpdatedStarships/StarWolf_Cruiser_mesh.fbx`. At play it moves
     to the level's `Enemy Spawn · Garuda`.
   - `Contact View Camera · Garuda`: a `ShipView` camera that draws the Garuda's model for the plot.
@@ -427,7 +427,7 @@ Soham's code. Keep it until the owner decides.
 | `WorldBoundary` | Not used. |
 | `PowerManager` | No tactical scene uses it. Its five systems clash with the new board's four buses. **Not revived for `02.1_Grid`** (decision 16). Its class for one power bar is `PowerChannel`. |
 | UI shaders: `UI_PowerArrow`, `UI_ShipHack`, `ScanLines`, `UI_GradeDisplay*` | Not used. |
-| Rail icons in `Assets/Art/Icons/` | 23 icons from the old board. The board doesn't use them. |
+| Rail icons that were in `Assets/Art/Icons/` | Deleted on 2026-10-29 with the owner's yes (cca9051). They were 23 icons from the old board, and the board didn't use them. |
 
 Checked 2026-11-11: Soham wrote 42 of the 109 scripts. None of them is in any scene the game uses,
 and none of the newer scripts calls them. This was checked against git history, the game's scenes
@@ -621,8 +621,8 @@ These are settled. Do not reopen them.
     home out of range, a clock runs with a warning; you must close in to collect them. If the
     clock runs out, the boats and their marines are lost. Details in Step 79. Now: the boats go no
     further than 4,000 units (Step 130).
-45. **Each ship's numbers are in its own stats file** (owner, 2026-10-27). `Assets/Ships/Asura`
-    (ours) and `Assets/Ships/Garuda`. **Starwolf → Tuning** has six tabs: **Ship** (our file),
+45. **Each ship's numbers are in its own stats file** (owner, 2026-10-27). `Assets/Ships/Asura.asset`
+    (ours) and `Assets/Ships/Garuda.asset`. **Starwolf → Tuning** has six tabs: **Ship** (our file),
     **Enemy** (the Garuda's file), **Board** (the plot, sounds and clock), **Keys** (Step 108), **Hard
     Points** and **Ranges** (Step 121). A ship's file is
     grouped by ship part: navigation, power, sensors, weapons, hangar, damage, orders. Change a
