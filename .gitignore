@@ -114,3 +114,10 @@ Starwolf_Demo_Build_v0.3.zip
 
 # Zip files never go in git (owner, 2026-11-10)
 *.zip
+
+# Screenshots the Unity tool saves (clean-up, 2026-11-11)
+/Assets/Screenshots/
+/Assets/Screenshots.meta
+
+# Python leftovers
+__pycache__/

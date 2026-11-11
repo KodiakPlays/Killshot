@@ -24,11 +24,12 @@ you as friendly and **all of them are passive at the start**. The game is about 
 that lie going, and picking the moment to drop it. Detection is not failure. It is the rhythm: hide,
 gather, act, get found, break away, gather again.
 
-**What is built today** is seven levels on a MISSIONS list: the training levels FLIGHT DRILL, COLD RUN, WEAPONS
-FREE, NO PEEKING and FINDERS KEEPERS, then INTERCEPT, then the full mission, **Wolf Hunt**. In Wolf Hunt a
-Garuda-class cruiser hunts you. You find it, destroy it or capture it, then fly to a jump point to
-win. What each level asks of you is in `docs/TACTICAL_BOARD_SPEC.md` §15.5. How Wolf Hunt plays is
-in `docs/BUILD_LOG.md`, section 6, "Steps 94 to 101".
+**What is built today** is a campaign. NEW GAME opens the save slots and a sector map with one real
+mission so far, **MILK RUN**, and a throwaway TEST MISSION after it. SKIRMISH plays **Wolf Hunt**, where a
+Garuda-class cruiser hunts you. The old training levels (FLIGHT DRILL, COLD RUN, WEAPONS FREE, NO
+PEEKING, FINDERS KEEPERS and INTERCEPT) are switched off and kept. Where the game is today, and what
+comes next, is in `docs/BUILD_LOG.md`, section 1. How Wolf Hunt was built is in
+`docs/BUILD_HISTORY.md`, "Steps 94 to 101".
 
 ---
 
@@ -72,8 +73,8 @@ pages, and most of it has been overtaken.
 | What the board looks like — colour, type, spacing, markers | `Assets/UI/Board/Design/README.md`, then the older handoff zip's `README.md`. Two of the first README's rules are wrong in this project: sprites are imported with sRGB **off**, and colours are not typed onto an image as the token's hex. The token's hex goes in the palette file, `Assets/UI/Board/Palette.asset`. |
 | How each control on the new board behaves, state by state | `Assets/UI/Board/Design/reference/UIStateSpec.md` and `Assets/UI/Board/Design/reference/board-logic.js` |
 | Where every element is on the new board, in pixels | `Assets/UI/Board/Design/layout/layout.json` |
-| What the handoff package left out | `docs/HANDOFF_GAPS.md` |
-| What Claude Design must still provide, verified | `docs/CLAUDE_DESIGN_NEEDS.md` |
+| What the handoff package left out | `docs/finished-plans/HANDOFF_GAPS.md` |
+| What Claude Design must still provide, verified | `docs/finished-plans/CLAUDE_DESIGN_NEEDS.md` |
 | How the prototype actually behaves, without opening 4,472 lines | `docs/PROTOTYPE_BASELINE.md` |
 | What the game is, how to run it, the controls | `README.md` (repo root) |
 | What Soham's older scripts do, read line by line as of 2026-09-01 | `docs/CODEBASE_BASELINE.md` |
@@ -81,8 +82,11 @@ pages, and most of it has been overtaken.
 | What any C# script does | `docs/SCRIPT_LIST.md` lists all 109. Each script also starts with a note in plain English on what it does and how it works. The rules for those notes are in `docs/script-notes/BRIEF.md`. |
 | How the systems and the scripts connect | Two maps on one page: https://claude.ai/artifact/Tk285DVMpwzAfb44Ph2Abr. "Systems map" shows the board's systems as the player meets them, and what changes what. "Code map" shows every script and which other scripts it uses. The page is private until the owner shares it. |
 | What is built in the tactical scene, and the traps already hit | `docs/BUILD_LOG.md`. The traps are in section 5. |
-| What is left to do, sorted | `docs/BUILD_LOG.md`, section 8, "Triage" |
+| What is left to do, sorted | `docs/BUILD_LOG.md`, section 8. It starts with the MILK RUN build checklist. |
 | Every known bug that is not fixed | `docs/BUILD_LOG.md`, section 8, "Bug list" |
+| Every finished step, and closed items, with their full write-ups | `docs/BUILD_HISTORY.md` |
+| Plans that are finished (room layout, the Claude Design gap lists, the 2026-11-09 tuning audit) | `docs/finished-plans/` |
+| How the architecture map page is rebuilt (its builder and the weekly job) | `docs/architecture-map/` (`WEEKLY.md`) |
 | A ship's numbers: speed, power, weapons, armour, crew per room | `Assets/Ships/Asura.asset` (our ship), `Assets/Ships/Garuda.asset` (the enemy cruiser) and `Assets/Ships/Frigate.asset` (the Naga-class frigates). Edit them in **Starwolf → Tuning**, on the Ship and Enemy tabs. Each room's row from bow to stern (Step 186), and each side's armour, are also on the Hard Points tab → ROOMS. |
 | The keys, and how to change them | `README.md`, Controls. Change them on the Keys tab of **Starwolf → Tuning**. |
 | How damage works: armour, rooms, fire, vacuum, radiation | `docs/DAMAGE_README.md` |
@@ -92,19 +96,21 @@ pages, and most of it has been overtaken.
 | Whether a change to speeds, ranges or weapons still gives a fight of the right length | `docs/scale-sim/README.md` |
 | How to turn the repo into NotebookLM sources | `Tools/notebooklm/README.md` |
 | How the green phosphor screen works (intro, welcome page, INITIALISING), and how to put it on a new screen | `Assets/StarwolfIntro/README.md` |
-| The seven levels: what each one asks, and how to win or lose it | `docs/TACTICAL_BOARD_SPEC.md` §15.5. Each level's numbers are in `BUILD_LOG.md`, section 2. |
-| FLIGHT DRILL: its 14 steps, and how to change one | `docs/BUILD_LOG.md`, section 2, `FlightDrill`. The notes, rings and amounts are in the Mission box in `Assets/Scenes/Levels/FlightDrill.unity`. |
+| The seven levels: what each one asks, and how to win or lose it | `docs/TACTICAL_BOARD_SPEC.md` §15.5. Each level's numbers are in `BUILD_LOG.md`, section 2 (MILK RUN, Wolf Hunt), and in `docs/BUILD_HISTORY.md`, section 2 (the old training levels). |
+| FLIGHT DRILL: its 14 steps, and how to change one | `docs/BUILD_HISTORY.md`, section 2, `FlightDrill`. The notes, rings and amounts are in the Mission box in `Assets/Scenes/Levels/FlightDrill.unity`. |
 | What ENG does to the ship's movement, and the side thrusters | `docs/TACTICAL_BOARD_SPEC.md` §4.2 and §4.3. The numbers are in each ship's stats file in `Assets/Ships`. |
 | The sniper ship: the spinal railgun on the nose (built, Step 170), the flare, sensor drones, the sight in fire control (planned) | `docs/SNIPER_PLAN.md` |
-| Where each ship's rooms are: a row from bow to stern per room, set in Tuning's Hard Points tab → ROOMS (built, Step 186) | `docs/ROOM_LAYOUT_PLAN.md`. The rules for a hit are in `docs/DAMAGE_README.md`. |
+| Where each ship's rooms are: a row from bow to stern per room, set in Tuning's Hard Points tab → ROOMS (built, Step 186) | `docs/finished-plans/ROOM_LAYOUT_PLAN.md`. The rules for a hit are in `docs/DAMAGE_README.md`. |
 | The training levels and how they were built; the plan to split WEAPONS FREE | `docs/FTUE_PLAN.md` §0 |
 | The later tutorial mission, with the XO walking you through each station. It is a plan only | `docs/FTUE_PLAN.md` §1 to §9 |
+| Mission setup: writing a mission's words (name, briefing, checkpoint talk, ship call signs) in a Starwolf → Mission window. It is a plan only | `docs/MISSION_SETUP_PLAN.md` |
 | Where a panel's prefab and art are, and how to swap its art | `docs/BOARD_UI.md` |
 | How a shot looks on the plot and in the close-up: the railgun's charge glow, flash and vent gas, the shot line, the far shot's IMPACT countdown, craft leaving, PDC streams (Steps 184 and 197), and which Tuning value changes each | `docs/BOARD_UI.md`, Plot. The rules are in `docs/TACTICAL_BOARD_SPEC.md` §8.4 (push back, far shot), §8.6 (PDC streams), §12.3 (catapult and hard break) and §18.2 (the countdown). The owner's picks are on the "Ship Actions Lab" page, https://claude.ai/artifact/KXZhwnSU7hoG7aaEqThx6g |
 | Reference clips for how weapon fire should feel (The Expanse, Battlestar Galactica, real navy footage), each watched, with a GIF of the moment | The "Ship Actions Lab" page, Learning map tab: https://claude.ai/artifact/KXZhwnSU7hoG7aaEqThx6g (34 clips, 2026-11-11) |
-| The campaign's SECTOR MAP and ship's rooms: their parts, and how to change their art | `docs/BOARD_UI.md`, "Sector map" and "Ship rooms". The steps are 167 to 169 and 172 in `docs/BUILD_LOG.md`. |
+| The campaign's SECTOR MAP and ship's rooms: their parts, and how to change their art | `docs/BOARD_UI.md`, "Sector map" and "Ship rooms". The steps are 167 to 169 and 172 in `docs/BUILD_HISTORY.md`. |
+| The green sector map (in the game since 2026-11-11, first tried as a test): the green map picture and how to remake it | `Assets/Scenes/Tactical/Sector Map Phosphor.unity`. The picture is made by `docs/sector-map-experiment/make_phosphor_map.py`. See `docs/BOARD_UI.md`, "Sector map", at its end. Step 201 in `docs/BUILD_LOG.md`. |
+| The Escape menu on SAVE SLOTS, the sector map and the ship's rooms: its prefab, and how to change its look | `Assets/UI/Menus/Escape Menu.prefab`. See `docs/BOARD_UI.md`, "Escape menu". Step 190 in `docs/BUILD_HISTORY.md`. |
 | How to set up a campaign mission: its name, level, briefing and dot on the sector map, its order, and switching it on or off | Menu **Starwolf → Campaign** (`Assets/Editor/CampaignWindow.cs`). It edits `Assets/Campaign/Campaign.asset`. Press + to add a mission and drag its level scene into Level. Drag a row to change the order. Switch a mission off to keep it out of the game; do not delete it. The level itself (checklist steps, rings, help text, battle group path) is made in its scene in `Assets/Scenes/Levels/`, with **Starwolf → Level** and the Mission part on it. The owner's four-step flow is in `docs/CAMPAIGN_FLOW_PLAN.md`, "Making a mission". Steps 183 and 205 in `BUILD_LOG.md`. |
-| The Escape menu on SAVE SLOTS, the sector map and the ship's rooms: its prefab, and how to change its look | `Assets/UI/Menus/Escape Menu.prefab`. See `docs/BOARD_UI.md`, "Escape menu". Step 190 in `docs/BUILD_LOG.md`. |
 | Between missions: the travel bar, repairs and restocks, the end card, the Escape menu, the ship rooms. The owner's answers and the build order | `docs/CAMPAIGN_FLOW_PLAN.md` |
 | Where to write the campaign's closing line, and the end card | The line: **Starwolf → Campaign**, under the missions. It is saved in `Assets/Campaign/Campaign.asset` → Closing Line. The end card: `Assets/Scenes/Tactical/EndCard.unity`. MISSION SELECT after the last mission always opens it. With the line empty (as now), it goes straight to the title, where only STARWOLF flickers in. See `docs/BOARD_UI.md`, "End card". Steps 194 and 203 in `docs/BUILD_LOG.md`. |
 | Spoken orders, and how an outside program (or Claude) could drive the built game — an idea, not built | `docs/voice-command-exploration.md` |
@@ -184,13 +190,14 @@ were on 2026-09-01. The board's code in `Assets/Scripts/Systems/`, `Tactical/`, 
 
 ### The tactical scene — `Assets/Scenes/Tactical/`
 
-**`BUILD_LOG.md`** — ~5,700 lines. The build history of the tactical board, step by step: what exists,
-what is wired to what, which step we are on, what to do next. Section 5 lists the traps already hit.
-Section 8 is what is left, sorted in its "Triage" list. **Read it before touching that scene.**
+**`BUILD_LOG.md`** — about 1,700 lines. Where the game is today (section 1), what exists and what is
+wired to what (sections 2 and 3), the decisions (section 4), the traps already hit (section 5) and
+what is left (section 8, starting with the MILK RUN build checklist). **Read it before touching that
+scene.** The finished steps and closed items are in **`BUILD_HISTORY.md`**.
 
-**`HANDOFF_GAPS.md`** — 106 rows of what the handoff package left out.
+**`docs/finished-plans/HANDOFF_GAPS.md`** — 106 rows of what the handoff package left out.
 
-**`CLAUDE_DESIGN_NEEDS.md`** — the verified, bucketed list of everything Claude Design must still
+**`docs/finished-plans/CLAUDE_DESIGN_NEEDS.md`** — the verified, bucketed list of everything Claude Design must still
 provide. Checked against every source. The basis for the Claude Design request.
 
 **`DAMAGE_README.md`** — how damage works. Armour on each face, the rooms behind it, fire, vacuum and
@@ -253,7 +260,7 @@ document, and do not quietly design around them.
 | **No EXECUTE, no emergency abort** | The only time controls are **PAUSE** and **PLAY RATE**. There is no commit step and no order queue. Orders take effect as you give them. |
 | **Real time with optional pause** | Pause is a convenience, not the core verb. The handoff's paused-time framing is wrong for this game. |
 | **No broadside cannon** | The board has none. Since Step 170 (owner 2026-11-08) our ship has a spinal railgun: one gun fixed on the nose, aimed by turning the ship (`docs/SNIPER_PLAN.md`). The Garuda keeps its two swivel railguns. Soham's old `Weapons/BroadsideCannon.cs` and `Weapons/Railgun.cs` are kept as old code. The board does not use them. |
-| **Two railgun turrets** | RG-A covers 090° ±45° from the bow, RG-B 270° ±45°. One in the middle of each long side, on hard points you drag on the Hard Points tab of Starwolf → Tuning. A solid bar turns slowly onto the target inside each cone, and the shot flies down the bar. Reach 2,000 units, 22 rounds each. One shot per arming. The slug flies at 300 units/s, so it takes about 7 s to reach 2,000 units. |
+| **The Garuda's two railgun turrets** | Our ship has one fixed spinal railgun instead (row above). On the Garuda, RG-A covers 090° ±45° from the bow, RG-B 270° ±45°. One in the middle of each long side, on hard points you drag on the Hard Points tab of Starwolf → Tuning. A solid bar turns slowly onto the target inside each cone, and the shot flies down the bar. Reach 2,000 units, 22 rounds each. One shot per arming. The slug flies at 300 units/s, so it takes about 7 s to reach 2,000 units. |
 | **Four PDC groups** | One at each corner of the ship, each covering 270°, so three cover any bearing. Reach 600 units, 2,400 rounds each. ARM puts a group on AUTO. It then fires by itself at enemy torpedoes entering its arc, with a 70% chance to kill each one. Each go is a stream of rounds that walks onto the torpedo on a kill (Step 197). They are the only answer to a torpedo salvo. |
 | **Torpedoes** | Two launchers, VLS-A and VLS-B, one on each side, 8 torpedoes each. They fire in any direction, two to a salvo. A salvo leaves one torpedo at a time, 0.3 game seconds apart, from both launchers by turns, starting with the one on the target's side. A torpedo is pushed out of the ship's side, tilted 30° toward the stern. It drifts about 300 units with its motor off, slowing, while its nose swings onto the target. Then its motor bursts on with a flare, and it speeds up to full speed (Step 184). Reach 3,000 units, top speed 250 units/s: always slower than a slug. |
 | **A volley is a consequence, not a mode** | There is no salvo button, no spread control, no fire pattern menu. Arm several turrets on the same bearing and they converge. Arm them on different bearings and you get a fan. The width of the fan is the difference between the numbers you typed. |
@@ -298,64 +305,19 @@ ceiling.
 
 ## 6 · Where the work is right now
 
-**The current effort is the Unity tactical board, in `Assets/Scenes/Tactical/`.**
+Where the game is today, and what comes next, is in `docs/BUILD_LOG.md`, section 1. This file does
+not keep a status of its own.
 
-The flow is `00_Start` → `01_Briefing` → `02.1_Grid`. The new Claude Design handoff is fully built
-into `02.1_Grid` and passed its final QA. Every control is clickable and shows its states. Wiring to
-game systems started in Step 34 and is ongoing. All seven levels are playable, from the MISSIONS list
-in `01_Briefing`. The Mac app is built at `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`. The older
-`02_Grid` board has been deleted. At play the board loads the picked level on top of itself, from `Assets/Scenes/Levels/`.
-For the current step, read section 1 of `BUILD_LOG.md`.
+**Read `docs/BUILD_LOG.md` before you touch the tactical scene.** The owner builds one step at a time
+and checks each step on screen before the next one starts. Do one step, show it, wait.
 
-**Read `docs/BUILD_LOG.md` before you touch that scene.** The owner builds one step
-at a time and checks each step on screen before the next one starts. Do one step, show it, wait.
-
-The rest of the Unity build is an older attempt at a different UI — a six-screen 3D cockpit. It
+The rest of the Unity build is an older attempt at a different UI, a six-screen 3D cockpit. It
 decides nothing about design. `docs/CODEBASE_BASELINE.md` describes those older scripts, as they were
 on 2026-09-01.
-
-There was also a web prototype in TypeScript. It was abandoned and deleted. Its simulation core was
-kept at `docs/reference-sim/` until 2026-10-29, when it was deleted too (git has it at 218acc8).
-
-Placeholder hull art exists at `Assets/Art/Hulls/` — white with alpha, tinted per allegiance in
-engine. Placeholder. Replace before ship.
 
 ---
 
 ## 7 · What is genuinely still open
 
-Do not treat any of these as decided. Ask the owner.
-
-**Blocking**
-
-1. **Enemy AI beyond Wolf Hunt.** `Assets/Scripts/Tactical/EnemyBrain.cs` drives the Garuda. It
-   hunts the map, hears us by our signal, searches, then turns a side to us and fires railguns and
-   torpedoes (Step 97). It never leaves the battle space (Step 155). Anything past that one brain is still unspecified in every document, including
-   the GDD.
-2. **What happens when stability reaches zero.** Four sections spend numbers on it; none says what it
-   is for. On the board, stability is a meter on the helm, and nothing else reads it.
-
-**Not blocking**
-
-3. Squadron size and fuel. Whether fighters need orders beyond a target. Whether craft must be
-   recovered to rearm. Whether losses persist between missions.
-4. Whether starbase hulks are destructible, and whether terrain blocks DRADIS.
-5. Whether a dry trigger pull should wake the alert net.
-6. Who draws the real hulls. Two tiers per class — a detailed silhouette and a separately drawn
-   plot glyph — is the largest art commitment in the project. The broken starbase
-   (`Assets/Prefabs/Terrain/BaseHusk.prefab`) is placeholder shapes. No level uses it since Step 107.
-
-**Settled by the code since this list was first written:**
-
-- Firing a railgun spends 70 of the weapon charge and adds 25 to our signal. Nothing vents. Each shot
-  pushes the firing ship back 24 units, ours and the Garuda's (Step 197).
-- A bus on DRAW takes units the reactor has spare. With all ten units placed, it waits until another
-  bus vents.
-- The plot shows 760 px per 1,000 units at zoom 1 (`PlotGrid.cs`, `pxPer1000Units`).
-- PDC groups have fixed arcs and fire by themselves on AUTO. Torpedoes fire from the Fire Control
-  panel, and the launcher on the target's side picks itself. A salvo uses the other launcher too, by
-  turns (Step 184).
-- Each level sets its battle space with a Battle Space box (Starwolf → Level, Step 91). Every level is 20,000 × 20,000 units (Step 130), except LONG SHOT at 40,000 × 40,000 (Step 170). Without one it is 100,000 × 100,000 units (`ShipState.arenaWidthUnits`).
-- Ammunition is a real count in the ship stats files.
-- The aft armour is 50.
-- The Engineering panel is built (`Assets/Scripts/UI/Panels/EngineeringPanel.cs`).
+The open design questions are in `docs/BUILD_LOG.md`, section 8, "Open design questions". Do not treat
+any of them as decided. Ask the owner.

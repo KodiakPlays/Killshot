@@ -68,7 +68,7 @@ Art/Frame/         the metal frame: the steel texture and the conduits
 Art/ToolRail/      the tool rail's icons and its selected-key frame
 Art/SystemsRail/   the systems rail's icons
 Art/TimeControl/   the time control's plate, pause key and rate keys
-Art/Briefing/      the briefing icon, and the sector map's console picture and tick picture
+Art/Briefing/      the briefing icon, the sector map's console picture and tick picture, and the phosphor test's map picture and scanline strip
 Art/Console/       the console's casting and lamp bezel
 Art/AlarmStrip/    the alarm strip
 Art/Rails/         the rail frame, for both rails
@@ -439,7 +439,6 @@ Ask a technical artist before you change these:
   others sideways has no effect.
 - The code sets the colours of the lamps, the attitude keys, the range keys, the mode rows, the
   stability cells, and the turn and G load text.
-- **Campaign** (`Campaign.asset`): the file the map reads its missions from.
 
 ### Orders
 
@@ -791,8 +790,13 @@ On the table, at every zoom:
 - A white ring closes in on the gun's mouth while it is armed, and a ring opens there as it fires.
   Their size follows **Torpedo Ring Px**.
 - Our shot leaves a thin white line from where it left the gun to the slug. The line fades over
-  **Shot Line Seconds** (5) game seconds. The owner: "part of the charm". The enemy's shots leave
-  no line. The owner hasn't answered whether they should.
+  **Shot Line Seconds** (5) game seconds. The owner: "part of the charm".
+- An enemy slug we can see leaves a faint red line too (Step 206; owner 2026-11-11: "Only ones we
+  can see"). We see it when it is inside our visual range, or inside DRADIS's range while DRADIS is
+  listening. The line runs only along the part of its path we saw: from where it first came into
+  sight to where it left. So it never shows where an unseen ship fired from. It fades over the same
+  **Shot Line Seconds**, counted from when we first saw it. Shot Line Seconds now sets both lines.
+  Enemy torpedoes leave no line. A rock between us and the slug doesn't hide it yet.
 
 **The far shot's countdown** (Step 197; owner 2026-11-10, D2). A POINT near our slug's path shows a
 countdown in place of its time: `IMPACT 4 S`, `IMPACT 3 S`… down to `IMPACT 1 S`. Then `IMPACT ?`
@@ -864,6 +868,18 @@ While Fire Control is open, each railgun shows a soft dotted cone and a solid ba
 they are. Where the guns are on the ship is set on the Hard Points tab of **Starwolf → Tuning**.
 A fixed gun, such as our spinal railgun, has no cone (Step 170). Its bar runs from its dot on the
 nose out to its full reach, 30,000. The reach ring still shows.
+
+**Ship marks past visual range** (Step 202). Past visual range, a ship on the plot is a small mark.
+Its shape tells you what we know about it. The colours are the same as the old dots.
+
+- A scanned enemy is a filled red triangle with equal sides, point up. It never turns with the ship's course.
+- A ship we can't name yet is a hollow square. A bogey locked without a scan is one.
+- Our own ships are blue dots.
+
+The lock's white corners go round the mark. An old contact keeps its shape as it fades. **Enemy Mark Px** (14)
+is the triangle's width. **Unknown Mark Px** (12) is the square's width. Both are on the Board tab of
+**Starwolf → Tuning**, under Sensors. `MarksGraphic.cs` draws the shapes. `PlotPanel.Refresh` picks one for each
+ship. Inside visual range, ships show their outline picture.
 
 A locked ship has white corners round it on the plot, the same as the targeting computer's box. A contact out of
 sight is a marker where it was last seen. It fades as it gets old, and its label says how old it is. **Stale
@@ -1545,8 +1561,14 @@ How it plays:
   one size (Step 176). A new dot, its name and its line fade in the first time they show.
 - Escape opens the Escape menu (see Escape menu, below).
 
-The pictures are both in `Art/Briefing/`:
-- `OperationalMapConsole.png` (1840 x 1035) is the whole console. It is in the Texture slot of
+The pictures are in `Art/Briefing/`:
+- **In the game:** the owner asked for the green map in the MILK RUN build (2026-11-11). The real
+  SectorMap scene now uses the green picture, `OperationalMapConsole Phosphor.png`, the two
+  scanline overlays (Scanlines (map), Scanlines (briefing)) and green dots (Open Ink and Done Ink).
+  STARWOLF and DESTROYER / OPERATIONS are not on it. The green picture is made by
+  `docs/sector-map-experiment/make_phosphor_map.py`: run it again to change the look. Codex's
+  original picture, below, is kept but no longer used.
+- `OperationalMapConsole.png` (1840 x 1035), Codex's original, is the whole console. It is in the Texture slot of
   `Operational Map Console`, a Raw Image that fills the 1920 x 1080 screen. These are painted
   into it: the BRIEFING and OPERATIONAL MAP plates, STARWOLF / DESTROYER / OPERATIONS, MISSION
   RECORD, CAMPAIGN ARCHIVE, STARWOLF / SECTOR PLOT, the star chart, MISSION ARCHIVE and the three
@@ -1560,6 +1582,10 @@ The pictures are both in `Art/Briefing/`:
 The game writes these over the picture: the mission's number, name and text on the left screen,
 the three button words, and the dots, their names and the lines between them. All of it uses
 Share Tech Mono.
+
+`Sector Map` has an Art list (Step 189). It has two empty entries: **Button** (BRIEFING, DEBRIEF
+and LAUNCH) and **Mission box**. The Mission box's image is switched off. Switch it on to see a
+picture there. Both entries also show in **Starwolf → Art**.
 
 The parts, and the script slot for each. All are under `Sector Map` in the Hierarchy, except
 `SECTOR MAP card` and `ScreenFlow`, which are on their own at the top:
@@ -1584,8 +1610,6 @@ The parts, and the script slot for each. All are under `Sector Map` in the Hiera
 The colours and timings are under Look on the script:
 - **Open Ink**: the open dot and its name. **Done Ink**: a finished dot's name, and the dot when
   Completed Node is empty. **Line Ink**: the lines.
-- **Pulse Seconds** (1.6) and **Pulse Size** (0.25): how often the open dot grows and shrinks, and
-  how much it grows, as a share of its size.
 - **Fade In Seconds** (1.5): how long a new dot, its name and its line take to fade in.
 
 The missions are in the Campaign file, `Assets/Campaign/Campaign.asset` (Step 183). The script's
@@ -1603,7 +1627,45 @@ name inside the screen and off the box.
 Ask a technical artist before you change these:
 - The buttons' On Click calls: **ShowBriefing**, **ShowDebrief** and **Launch** on Sector Map.
 - **Slots Scene** (`SaveSlots`): with no save slot picked, the map opens this scene instead.
+- **Campaign** (`Campaign.asset`): the file the map reads its missions from.
 - **Map Scene** (`SectorMap`) on Ship Rooms is the scene SECTOR MAP › loads. See Ship rooms, above.
+
+**The phosphor test (Step 201).** A test copy of the map is in
+`Assets/Scenes/Tactical/Sector Map Phosphor.unity`. Both its screens are phosphor green, like the
+intro, with our letters, faint scanlines and green dots. It is not in the build list, and nothing in the
+game opens it. With no save slot picked, Play goes to SAVE SLOTS, the same as the real map, and a
+slot picked there opens the real map. What is different from the real scene:
+- `Operational Map Console` shows `Art/Briefing/OperationalMapConsole Phosphor.png` (3680 x 2070).
+  It is twice the size of Codex's picture. The block letters need that size to keep their squares.
+  Codex's picture is unchanged. The top of the map reads only SECTOR PLOT, in block letters.
+  DESTROYER NAVIGATION is rubbed out, with no new words (owner 2026-11-11: "we're not using the
+  name STARWOLF in the actual game ... I don't think I need 'Destroyer Navigation' as text").
+  On the left screen, STARWOLF and DESTROYER / OPERATIONS are rubbed out, with nothing written back
+  (owner 2026-11-11: "yes, please make that green if you don't mind"). MISSION RECORD is in block
+  letters. CAMPAIGN ARCHIVE is in the thin letters.
+- `Scanlines (map)` and `Scanlines (briefing)` repeat `Art/Briefing/Scanlines.png` (a 1 x 4 px strip)
+  over each screen's glass. They are the last two under `Sector Map` and draw over the dots, the
+  briefing text and the three keys. They do not take clicks.
+- **Open Ink** and **Done Ink** are the intro's green. Done Ink is faded (A 0.45). In the real scene
+  they are teal.
+
+A tool makes both pictures: `docs/sector-map-experiment/make_phosphor_map.py`. Run it from the repo
+root with `uv run --with pillow --with numpy --with opencv-python-headless python
+docs/sector-map-experiment/make_phosphor_map.py`. It starts from Codex's picture each time and
+writes over the two test pictures. The numbers to change are at the top of the file:
+- **GLASSES**: each screen's glass, in pixels of Codex's picture: a box, and how round its corners
+  are. The map is (724, 209, 1676, 965), with square corners. The briefing screen is (131, 253, 524,
+  917), rounded 12. Only these boxes change. The rounded corners keep the frame's paint.
+- **WORDS**: one line per painted word: the box to rub out, the new words, block or thin, and which
+  edge they line up with. The rub-out fills the whole box from the picture round it. Empty words
+  ("") rub the box out and write nothing.
+- **CELL** and **GAP** (2 and 1): the size of each block-letter square and the gap between squares,
+  in pixels of the new picture.
+- **LETTER_GAP** (2): squares between block letters. The intro uses 4.
+
+The greens come from the intro's `glyphs.json` (phosphor #A2F9A0, rim #3CA050, glow #1AFF2E). The
+glow, the darker edges and the scanlines are set further down the file, in recolour, write_words and
+scanlines.
 
 ### End card
 
@@ -1671,10 +1733,6 @@ Its Art list is on `Escape Menu`, the prefab's top object (Step 191). It also sh
 The box and the buttons are set to Image Type Sliced. They match the pause menu. The box is the
 pause menu plate's grey (0.31, 0.34, 0.36). The buttons are the pause menu's grey (0.40, 0.42,
 0.44).
-
-`Sector Map` has an Art list (Step 189). It has two empty entries: **Button** (BRIEFING, DEBRIEF
-and LAUNCH) and **Mission box**. The Mission box's image is switched off. Switch it on to see a
-picture there. Both entries also show in **Starwolf → Art**.
 
 Ask a technical artist before you change these:
 - Each button's On Click calls ScreenFlow in the same scene: **Resume**, **MainMenu** or **Quit**.

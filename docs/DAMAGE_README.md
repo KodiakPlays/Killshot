@@ -20,7 +20,7 @@ Every rate is per game second, so x10 runs everything ten times as fast.
 room has one number, its row. Row 1 is right behind the PROW plate. Rooms with the same number are
 side by side. Every row is the same length. Change the rows in **Starwolf → Tuning**, on the Hard
 Points tab → ROOMS. The Ship tab → Damage shows the same list, as Room Row. The plan, with the
-owner's words, is `ROOM_LAYOUT_PLAN.md`.
+owner's words, is `docs/finished-plans/ROOM_LAYOUT_PLAN.md`.
 
 **A hit through a plate** follows these steps. They are the same for every ship, ours and the enemy's.
 

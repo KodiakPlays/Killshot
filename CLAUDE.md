@@ -25,7 +25,8 @@ Deliberately **not** here, because it would rot:
 
 **Building on the tactical board? Start with `docs/BUILD_LOG.md`.** It is the
 pickup point: what exists, what is wired to what, which step we are on, and what to do next. It is
-kept current as the single living record — do not start a second status document.
+kept current as the single living record — do not start a second status document. Finished steps
+and closed items are in `docs/BUILD_HISTORY.md`. Read it only when you need the past.
 
 **For anything else, start with `docs/CONTEXT_INDEX.md`.** It routes you to the right document for
 the question you have.
@@ -41,7 +42,9 @@ themselves. Other chats share this Unity Editor: message them before you compile
 GDD  →  HTML prototype  →  Silent Shark  →  the spec
 ```
 
-- **`References/Starwolf GDD.pdf`** — the original vision. **What the game is and why.** Nothing overrides it on intent. Read it before designing anything. (`pdftotext` is not installed; use `uv run --with pypdf python`.)
+**Newest wins.** What the owner says now beats everything. The prototype beats the GDD on how things behave and on every number. Never "correct" a newer choice back to an older source.
+
+- **`References/Starwolf GDD.pdf`** — the oldest document, the original vision. **Read it for why the game exists, never for numbers.** Read it before designing anything. (`pdftotext` is not installed; use `uv run --with pypdf python`.)
 - **`References/starwolf-prototype.html`** — that vision as working code. **How systems behave**, with real numbers.
 - **Silent Shark** — a released tactical submarine sim the team is adapting toward. **How the game should be presented.** Not a change of direction; the GDD already asks for a control-panel game with no outside view.
 - **The Unity build** — a partial, older attempt. It tells you what exists. **It decides nothing.**
@@ -54,6 +57,8 @@ Read what's relevant before non-trivial work. These sources are **rolling** — 
 |---|---|
 | **What the game is, how to run it, the controls** | `README.md` |
 | **Tactical board pickup point** — state, next step, traps | `docs/BUILD_LOG.md` |
+| Finished steps and closed items | `docs/BUILD_HISTORY.md` |
+| Finished plans | `docs/finished-plans/` |
 | **Start here** — routes you to everything else | `docs/CONTEXT_INDEX.md` |
 | **The specification** (how the game works) | `docs/TACTICAL_BOARD_SPEC.md` |
 | **Verified code baseline** (every script read line by line) | `docs/CODEBASE_BASELINE.md` |
@@ -69,7 +74,7 @@ Docs may lag the code. **Code and live Editor state win.**
 
 ### `References/`
 
-`References/` holds prototypes, key art, and loose design notes the owner drops in.
+`References/` holds prototypes, key art, the owner's hand-offs for Codex, and loose design notes the owner drops in.
 
 **Killshot is not a port.** The HTML prototype is a starting point — it establishes core feel and mechanics, and getting it into Unity is an early step, not the goal. The finished game goes far beyond it. Read these references as a **floor, not a ceiling.**
 
@@ -97,6 +102,14 @@ Docs may lag the code. **Code and live Editor state win.**
 - **Don't** edit `Assembly-CSharp.csproj`, `Assembly-CSharp-Editor.csproj`, or `Killshot.slnx`. Unity regenerates them. Git ignores the `.csproj` files; it tracks `Killshot.slnx`.
 - **Don't** commit build outputs or archives. They belong outside the repo.
 - **Don't** put a `.md` note inside `Assets/` (owner, 2026-11-10). Notes go in `docs/`. Add to a note that exists before making a new one.
+
+## Keeping the project tidy (owner, 2026-11-11)
+
+- **Do** commit your own finished work before you stop, using explicit paths (`git commit -- <paths>`). Several chats share one working folder, so never use a plain `git commit` and never leave finished files loose overnight.
+- **Do** delete a job's working folders when the job ends (lists, verdicts, before and after copies). Keep only what the owner asked to keep.
+- **Do** keep `BUILD_LOG.md` section 1, "Where we are", to one screen that is true today. When a step or an open item is finished, move its write-up to `docs/BUILD_HISTORY.md` in the same edit.
+- **Do** move a finished plan doc to `docs/finished-plans/` and fix the links to it in `docs/CONTEXT_INDEX.md`.
+- **Do** keep Claude's memory notes for the owner's lasting rules and decisions only. Build history goes in `BUILD_HISTORY.md`, not in memory. Add to a note that exists before making a new one, and keep `MEMORY.md` under its size limit.
 
 ## C# conventions
 

@@ -1,0 +1,5779 @@
+# Tactical Scenes — Build History
+
+This file has the finished steps and closed items, moved out of `docs/BUILD_LOG.md` on 2026-11-11.
+Nothing in it is open work. Open work, known bugs and the steps not finished yet are in `docs/BUILD_LOG.md`.
+
+---
+
+## Where we are, as it stood up to 2026-11-11
+
+Last updated: 2026-11-11 (Step 205: a new window, Starwolf → Campaign, sets up the campaign's missions and its closing line; each mission has an On switch, and TEST MISSION is switched off there for the player build. Step 204: a throwaway TEST MISSION after MILK RUN, to see the ship's rooms and the travel bar again; it comes out before the player build. Step 203: after the campaign's last win, the end card always opens; with no closing line it goes straight to STARWOLF on the title. Step 200: MILK RUN played through, and its four fixes. Step 199: our craft show as 3D models in the close-up. Step 198: the travel bar and the actions in each of the ship's rooms, and no replays of a won mission). Unity 6000.5.10f1. Editor instance `Killshot@99ec1537206126d5`.
+
+**Every step in the table below is done.**
+
+The battle board fills any screen shape: Mac, Windows, 16:9, 16:10 or wide (Step 182). The panels
+are pinned to the screen edges. The plot grows to fill the middle. The frame repeats its pattern and
+never stretches.
+
+**The board refactor is mostly done** (section 8, "Board refactor"). All eight ship parts are
+systems in `Assets/Scripts/Systems`. Each ship's numbers are in its stats file in `Assets/Ships`.
+All eleven panels and seven frame pieces are prefabs in `Assets/UI/Board/Panels`. The board's colours
+are in one palette file. The fonts are in `Assets/UI/Fonts`, with a Fonts list on each panel (Step
+89). The "Handoff" names are gone (Step 90). Left: the Test Runner (refactor step 2), moving the last
+scripts out of `Scripts/Tactical` (step 5) and the clock move (step 8). The order of all the remaining work is in the
+owner-approved plan: settle, finish the refactor (new features paused), then the Tuning and Level
+tools, then the mission scripter, then features.
+
+The game now opens on the SECTION 36 intro, which runs itself through to a menu: NEW GAME, SKIRMISH
+and SETTINGS (Step 178). The intro and loading screens have the richer green and every letter and number, and the loading screen has the corner text (Step 181). NEW GAME opens SAVE SLOTS, then the SECTOR MAP, where each mission is a dot and a win
+shows the next dot (Step 167). After a campaign mission, the ship's rooms show, then the map
+(Step 168). On SAVE SLOTS, the map and the rooms, Escape opens a small menu: RESUME, MAIN MENU and
+QUIT GAME (Step 190). After the campaign's last mission, MISSION SELECT opens the end card, then the title. The closing line is empty for now, so it goes straight to the title, where only STARWOLF flickers in (Step 203). Each used save slot shows how much of the campaign is won, as a percent (Step 194). After a campaign win, the next mission starts with the rounds, torpedoes, marines and crew our ship had left (Step 196). After a win, repairs and restocks in the ship's rooms fill a travel bar of 10 units. A won mission can't be played again (Step 198). The game will be about 10 story missions, plus SKIRMISH (owner 2026-11-09). The map has
+one so far: 1 MILK RUN (Step 178, called ORIENTATION until 2026-11-10; its whole flow is Step 192). For now a throwaway test, 2 TEST MISSION, follows it (Step 204). The map's missions are in the Campaign file,
+`Assets/Campaign/Campaign.asset` (Step 183). Set them up in **Starwolf → Campaign**: the order, an On switch for each, the name, level, briefing and map dot, and the closing line (Step 205). SKIRMISH plays Wolf Hunt straight away. The MISSIONS list and
+the other old test levels are off every list. Their scene files are kept and switched off. They are never deleted (owner).
+
+The board looks and clicks right, and you can fight on it. Our ship is the Asura-class destroyer.
+It starts at the level's Player Spawn. The enemy is the Garuda-class cruiser, `Garuda · Cruiser` in
+the scene. It starts at a random point in its spawn box in `Level_01`, hunts us, and fights back
+with railguns and missiles (Step 97). You can hear it on DRADIS, plot it and scan it. Our ship has
+one big gun on its nose, the spinal railgun. You aim it by turning the ship (Step 170). You can also
+fire torpedoes at the Garuda, and the PDCs shoot down its torpedoes. You can launch assault boats at
+it. Our ship carries no fighters. You can destroy the Garuda or capture it. It can kill
+our ship. Every firing look the owner picked on the "Ship Actions Lab" page is built (Steps 184 and
+197): torpedoes drop, drift and flare; a railgun shot pushes the ship back, flashes and vents gas,
+and leaves a line on the table; a far shot counts down on a POINT and reports IMPACT ?; boats are
+thrown out and break hard; PDCs fire streams you can see. Only D3, a drone showing the hit, waits
+on the drones. Zoomed in, our craft in flight show as small 3D models; zoomed out, as triangles (Step 199). The first mission, Wolf Hunt, is playable (Steps 92 to 107). **Starwolf → Tuning** edits each ship's stats file and
+the board's own values. Each step's detail is in section 6.
+
+**Changed direction on 2026-10-04.** A new Claude Design handoff arrived. Its
+reference files are now in `Assets/UI/Board/Design`. It is fully built into `02.1_Grid`, and the final QA
+passed. Every control is clickable and shows its states. The flow is `00_Start` → `01_Briefing` →
+`02.1_Grid`, with `Level_01` loaded on top of the board. The full record is
+`Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md` (deleted; `git show 12ccdd1:Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`).
+
+**Checked on 2026-11-01 (Step 143).** Everything built up to Step 142 has now been played on the final numbers, in the running game, by a script using the board's controls. Step 143 in the table has each result. Nobody pressed a key: keys 1 to 6, P, W, A, S, D and Escape are for the owner to try. Full playtests have run since. For where the playtest and the play checks stand now, see section 8, "Brought up to date on 2026-11-09". Pressing against a rock with the throttle on grinds: repeated small hits, one every 3 game seconds. The white corners stay (owner 2026-11-01).
+
+**Smooth movement (Step 138), measured 2026-11-01.** The shots' dots were measured frame by frame. Nobody has watched them yet. A slug's dot never stops, and it reaches the hit area within 2 units as the hit lands, at x1 and at x5. Just after firing it goes about 340 units a second, then about 300. In the last tick before a hit it slows to 60 to 75. That slow last tick is the one thing to judge by eye. Fighters fly and land. A scanned ship under the ACTIVE SCAN cone moves on every frame, stops when ACTIVE SCAN goes off, then hops every 4.9 s. A ship not scanned showed as a bearing line, and the line hopped every 4.9 s. Since Step 161 it is a red bar on the DRADIS circle, and the bar turns on every frame. A short fight video is at `Logs/FightVideo/fight.mp4`: 16.5 seconds, no sound, Wolf Hunt, at x1. The `Logs/` folder is ignored by git, so the video is on this machine only and is not in the repo. A script staged the fight. It put the two ships 1,300 units apart, turned the power on, set Condition 1 and marked the Garuda as scanned. The script added our slugs, missiles and fighters. They were not fired through the switches. The Garuda chose its own moves and fired back by itself, and the hits, the damage and the kill came from the game's own rules. The Garuda dies 14 seconds in and splits in two on screen. The missiles are shown as they were before the owner's new missile changes. The script was run once in the Editor and is not saved in the repo. Nobody has watched the video yet.
+
+**Next up:** everything left is in **section 8, Open items**. It was brought up to date on 2026-11-09,
+after an audit of the whole log. Start with its first section, "Brought up to date on 2026-11-09".
+The owner's order of work is in the triage further down section 8. Every known bug is in section 8,
+"Bug list".
+
+**Agreed on 2026-10-25, not built:** the combat autopilot. W/S throttle was built in Step 106. It is in section 8,
+with the owner's ruling on Soham's old scripts.
+
+The owner is building this one step at a time and checking each step before starting the next one.
+Do not run ahead. Do one step, show it, wait.
+
+---
+
+## Finished steps
+
+Every step in this table is done. Steps that are not finished yet are in `docs/BUILD_LOG.md`, section 1.
+Steps 6 to 28 and 34 to 118 are written up in full further down this file, under section 6.
+
+| Step | What it is | Status |
+|---|---|---|
+| 1 | Folder, three empty scenes, Build Settings | **Done** |
+| 2 | Build `00_Start` — camera, canvas, title, START GAME control | **Done** — checked on screen |
+| 3 | Build `01_Briefing` — same canvas, work-in-progress text, "Press Enter" prompt | **Done** — checked on screen |
+| 4 | Write `ScreenFlow.cs`, wire both intro scenes, test the chain in play mode | **Done** — ran twice in play mode |
+| 5 | Build `02_Grid` — the tactical grid surface | **Done** — checked on screen |
+| 6 | Corner panels fixed and verified | **Done** — checked in play mode |
+| 7 | Linear colour space fix on the grid | **Done** |
+| 8 | Art profile ScriptableObject created | **Done** |
+| 9 | Tool icons corrected to the handoff | **Done** |
+| 10 | Grid turned amber, with a third tier of lines | **Done** |
+| 11 | The orange panel bug, and the layer that fixes it | **Done** |
+| 12 | The two icon rails | **Done** |
+| 13 | Power controls brought over from the cockpit | **Done** |
+| 14 | The board's data layer, and the targeting drawer | **Done** — checked in play mode |
+| 15 | The outer metal frame | **Done** |
+| 16 | Frame thinned | **Done** |
+| 17 | Engine power and WASD movement | **Done** — power verified, keys not |
+| 18 | Three bugs on the plot, and the plot camera | **Done** |
+| 19 | Tuning asset | **Done** |
+| 20 | Why the power bars never moved | **Done** — checked in play mode |
+| 21 | Plot layer, part one: camera, zoom range and input | **Done** |
+| 22 | Own ship glyph: minimum size instead of constant size | **Done** |
+| 23 | Plot layer, part two: annotation rendering and the tools | **Done** — every tool checked in play mode |
+| 24 | Cut to five tools, MOUSE as default, active-tool highlight | **Done** — checked on screen |
+| 25 | Plot labels — measurements shown on the board | **Done** — checked in play mode |
+| 26 | Ship readout — speed and heading | **Done** — checked in play mode |
+| 27 | Intro and menu wired into the flow, and four rendering bugs in the intro package | **Done** — flow checked in play mode; CRT treatment not yet seen on screen |
+| 28 | New scene `02.1_Grid` for the new handoff, wired after the briefing | **Done** — flow checked in play mode |
+| 29–33 | The new handoff built into `02.1_Grid`: import, builder, static board, movement, clickable controls (33a–33j), final QA | **Done** — FINAL QA: PASS. Detail in `UI_INTEGRATION_LOG.md` |
+| 34 | Wiring begins: the dummy enemy exists and the board reads it | **Done** — verified (STEP 34: VERIFIED on the second pass) |
+| 35 | Power makes the ship loud (signal), and nothing real changes while paused | **Done** — verified (STEP 35: VERIFIED, first pass) |
+| 36 | Plot tools: marks stay put in space | **Done** — verified (STEP 36: VERIFIED, third pass) |
+| 37 | Our ship on the plot, as the 3D model seen from above | **Done** — verified (STEP 37: VERIFIED, second pass) |
+| 38 | Every tunable value in one window (Starwolf → Tuning) | **Done** — checked; one defect fixed and re-checked |
+| 39 | Nothing standing on the plot | **Done** — checked after a rebuild and a playtest |
+| 40 | Press and click: switches slide, refuse, and click | **Done** — playtest 48/48, slide measured in play |
+| 41 | The helm: our ship moves, and the plot pans | **Done** — playtest 57/57 |
+| 42 | The sensor circle: DRADIS's hearing range around our ship | **Done** — playtest 60/60 |
+| 43 | The radar sweep | **Done** — playtest 62/62 |
+| 44 | Hearing the enemy: bearing lines, the alert strip, the tracked blink | **Done** — playtest 68/68 |
+| 45 | The bearing trail: plotting a passive contact's range | **Done** — playtest 70/70 |
+| 46 | Intercept helpers: time to reach, tracks, weapon reach | **Done** — playtest 76/76 |
+| 47 | The firing solution dialled by hand | **Done** — playtest 81/81 |
+| 48 | Fire and hit: the railgun slug | **Done** — playtest 93/93 |
+| 49 | Damage: armour, compartments, the kill | **Done** — playtest 99/99 |
+| 50 | Engineering's ship diagram | **Done** — playtest 103/103 |
+| 51 | The enemy moves: TRACK 07 patrols | **Done** — playtest 107/107 |
+| 52 | Leading a moving target | **Done** — playtest 113/113 |
+| 53 | Missiles: the launcher, homing, three warheads | **Done** — playtest 121/121 |
+| 54 | Fighters: launch, fly out, attack runs, recall | **Done** — playtest 130/130 |
+| 55 | PDCs, and the enemy fires back | **Done** — playtest 138/138 |
+| 56 | The intro: flat black, typed in place, straight cuts | **Done** — checked in play mode |
+| 57 | Everything in game time | **Done** — playtest 138/138 |
+| 58 | The audit's side map; our ship can die | **Done** — playtest 139/139 |
+| 59 | Conditions: fire, vacuum, radiation | **Done** — playtest 153/153 |
+| 60 | Boarding: the assault boats | **Done** — playtest 160/160 |
+| 61 | Scan to know what you hit; smoothing; heading 000 | **Done** — playtest 161/161 |
+| 62 | Weapon reach, the sweep's inner circle, the enemy's picture | **Done** — playtest passed with Step 63 |
+| 63 | Scale: everything that moves 5× faster; ACTIVE scans; the gain comes back (undone in Step 64) | **Done** — playtest 163/163 |
+| 64 | Lose power, lose the setting | **Done** — playtest 163/163 |
+| 65 | The battle space: a map with edges, the grid resizing inside it | **Done** — playtest 163/163 |
+| 66 | Our ship stops blinking; drawers slide out from behind the frame | **Done** — playtest 163/163 |
+| 67 | The Level tool: each level is a scene; the enemy spawn box | **Done** — playtest 163/163; spawn checked in play mode |
+| 68 | The signal alarm: a box in the frame's top-right, and the alert tone | **Done** — playtest 165/165 |
+| 69 | Each DRADIS sweep pass beeps | **Done** — its check passed; full run still to re-run |
+| 70 | Intro colour: drawn through a Canvas (no double encode); dark green field | **Done** — measured in play mode against the reference shots |
+| 71 | Welcome page on the phosphor screen (DEMO title); loading bar under INITIALISING | **Done** — checked on screen and by the owner; playtest not run (owner) |
+| 72 | Mission clock and signal box lined up with the plot edges | **Done** — measured on screen |
+| 73 | Ruins in the level: the starbase husk and a debris belt; a Player Spawn at the bottom, the enemy's at the top | **Done** — playtest 168/168 |
+| 74 | Engineering's ship picture shows side armour; the room rings change colour | **Done** — playtest 168/168 |
+| 75 | Ships glide between ticks; DRADIS shows a contact where the sweep last touched it; in sight (10,000 km) its model shows; wrecks stay, grey; engineering's hull redrawn; weapons and DRADIS reach 30,000 km | **Done** — playtest 170/170 |
+| 76 | Axis numbers are distances from our ship; the axis titles and the frame stencils TCB-1 and ACC 07 are gone | **Done** — playtest 171/171 |
+| 77 | The debris scatter tool: a Debris Field in a level (shape, pieces, count, size, gap, spread; Scatter and Reshuffle) | **Done** — layout check ok; tried in `Level_01` (not saved); playtest not needed (nothing runs at play) |
+| 78 | The active scan cone on the plot: two bright edges and a faint fill, from the small circle round our ship out to the scan's range | **Done** — checked by screenshot; playtest not needed (visual only) |
+| 79 | Ammunition is a real count; boarding goes on while the target moves; the boats' 15,000 km range | **Done** — playtest 191/191 |
+| 80 | The Tuning window's tabs (Ship, Enemy, Board) and a stats file per ship | **Done** — playtest 191/191 |
+| 81 | The Level window shows the level from above, with a preview of the picked debris field; the railgun slug at 2,500 km/s | **Done** — playtest 191/191 after the fixes |
+| 82 | DRADIS needs SEN power: no unit on SEN, no hearing, no circle, no sweep | **Done** — playtest 193/193 |
+| 83 | Enter on the briefing always leads on, even if INITIALISING can't start | **Done** — playtest 193/193 |
+| 84 | Prototype Dev off the build list | **Done** — playtest 193/193 |
+| 85 | Win, loss and restart: the mission script, the end screen, RESTART MISSION and MAIN MENU; SHIP LOST clears | **Done** — playtest 201/201 |
+| 86 | The playtest checks the battle space's edge: zoom limit, axis numbers, pan limit, `C`, the warning, the x1 drop, the countdown | **Done** — playtest 209/209 |
+| 87 | The Mac app | **Done**: the owner played the app on 2026-10-28. |
+| 88 | A shot hits within 100 km of any ship; a hit's damage comes from the weapon that fired it | **Done** — playtest 209/209 |
+| 89 | UI restructure steps 1 to 5: fonts in `Assets/UI/Fonts` with a Fonts list per panel; materials; two stencils and the plot's mock-up deleted; the old export's reference files kept, the rest of `UI2` deleted | **Done** — 0 pixels changed by the fonts; playtest 209/209 |
+| 90 | UI restructure step 6: "Handoff" is gone from every script name; the board's root object is `Tactical Board` | **Done** — no missing scripts; playtest 209/209 |
+| 91 | Each level has its own battle space: a Battle Space box, set in the Level window | **Done** — quick check in play mode |
+| 92 | Ruins and debris on the plot: inside the DRADIS circle with DRADIS on, else within 10,000 km; line art on top of the circles | **Done** — playtest 209/209 (2026-10-28_012951) |
+| 93 | Debris you can fly through: Level_01's crowded belts thinned out; running into a piece damages the ship, no push-out | **Done** — playtest 209/209 (2026-10-28_012951) |
+| 94 | Wolf Hunt: WOLF HUNT, then INITIALISING, then the board; the DEMO page gone | **Done** — playtest 210/210 |
+| 95 | Wolf Hunt: the Garuda starts at a random point in its spawn box | **Done** — playtest 210/210 |
+| 96 | Wolf Hunt: the Garuda bigger, slower, tougher, harder-hitting, shorter reach | **Done** — playtest 210/210 |
+| 97 | Wolf Hunt: the Garuda's mind: it hunts the map, hears us by our signal, searches, fights side-on with railguns and missiles | **Done** — checked in play mode; playtest 210/210 |
+| 98 | Wolf Hunt: the jump point at the kill; reaching it wins | **Done** — playtest 210/210 |
+| 99 | Wolf Hunt: the alarm, the 3:00 countdown, Naga frigates at the edges; click a contact to target it (undone in Step 106: the periscope picks the target) | **Done** — checked in play mode |
+| 100 | Ruler: distance only, larger text; compass: graded 0–359 ring with the bearing; the jump point on the plot | **Done** — screenshot; playtest 210/210 |
+| 101 | Fighters scout: ships and ruins near them show on our plot | **Done** — playtest 210/210 |
+| 102 | Test every system, fix what is not fun | **Done** as Steps 105 to 107 |
+| 103 | The Mac app of Wolf Hunt | **Done**: the owner played the app on 2026-10-28. |
+| 104 | TextMesh Pro's example files deleted (owner's yes); its missing shader file `TMPro.cginc` put back: the 3 build errors are gone | **Done** — the shaders compile clean |
+| 105 | A real play-through of Wolf Hunt in the Editor, and four fixes: a hit puts the Garuda on ALERT; "HOSTILE SET HAS YOUR RANGE" tells the truth; the alarm strip shows enemy fire coming and what just hit us, debris too | **Done** — checked in play mode; playtest 211/211 |
+| 106 | The owner's play report: W/S throttle, P pause, the 10,000 km visual ring, MISSION ONE then WOLF HUNT, TRACK takes the plot, the periscope picks the target; bugs 7 and 8; the plot follows our ship; PDCs in two halves; drift with no ENG power; Level_02 gone; the bundle ID; with killshot-a2's 60,000 km Level_01 and bug 6 | **Done** — checked in play mode; playtest 214/214 |
+| 107 | Wolf Hunt's level made smaller (60,000 km, the husk gone, 136 pieces); engineering pays AUX for its orders (bug 6); crew numbers in each ship's stats file | **Done** — playtest 214/214 (in Step 106's run); crew checked in play, COMPLEMENT 52 (7e82b40) |
+| 108 | Keys 1–6 open the six drawers; Starwolf → Keys lists every board key and changes it | **Done** — compiled clean; drawers checked in play mode; the key presses themselves not yet pressed by a person |
+| 109 | The periscope shows the enemy ship: the plot's top-down picture, level, pointing left or right the way it heads; zoom until it fills the brackets, then CLASS | **Done**. Checked in play mode (before and after shots: the red lines are unchanged); playtest 215/216 (2026-10-29_015659; my check passes; the one failure is #56 RECALL, frame timing, not this work) |
+| 110 | The plot zooms out to x0.1; the grid carries on past the battle space, with a heavier line at its edge | **Done**. Compiled clean; checked in play mode at x0.1, white and amber (`Logs/GridCheck`); playtest section 25b updated, not run |
+| 111 | Units: at x1.0 a small square is 50 units and our ship (100 units) is two squares long; the Garuda is 150; the plot zooms out to x0.01 | **Done**. Compiled clean; checked in play mode at x1.0 and x0.01 (`Logs/UnitsCheck`); playtest 218/218 (2026-10-29_021252) |
+| 112 | Turning after TRACK no longer spoils the aim: the firing solution is a point in space; RNG and BRG follow the bow; ANGLE drops if the turn takes the target out of arc | **Done**. Compiled clean; checked in play mode (a still and a crossing target, both hit after a turn; the old way missed); full playtest not run |
+| 113 | Everything in the game's workings is in units: every km name in the code is now units (range, speed, battle space and the rest); the numbers are the same; the screen still shows km | **Done**. Compiled clean; every saved value carried over (94 checked); playtest 213/218 (2026-10-29_100527): #205–206 the zoom was moved off x1.0 during the run (rechecked in play mode, holds), #89 and #111 follow Step 112's new aim, #56 the old RECALL timing |
+| 114 | Training levels: NEW GAME opens the MISSIONS list (FIRST SHOT, SILENT SHOT, PRIZE, WOLF HUNT); each level has a Mission box with its goal; in the training levels the Garuda doesn't hunt | **Done**. Compiled clean; every goal's win and loss checked in play mode (`Logs/LevelListCheck`); playtest 217/218 (2026-10-29_110455): #5, the new list check, was wrong itself (fixed, rechecked in play mode); not yet played through by hand |
+| 115 | The training levels renamed: WEAPONS FREE, NO PEEKING, FINDERS KEEPERS; a placeholder help bubble on the board says what to do in each level, Wolf Hunt too | **Done**. Compiled clean; checked in play mode (`Logs/HelpBubbleCheck`): the list, the bubble in Wolf Hunt and WEAPONS FREE, the longest text fits, a click closes it; playtest not run |
+| 116 | Training-level play-through fixes: the Garuda no longer fires back in the training levels (two missile salvos had wrecked our magazine, so WEAPONS FREE could not be won); the bubbles no longer say "turn on DRADIS" (it starts on, so that switched it off); the mouse over a list row picks it (two rows were lit); the DRADIS sweep line is unseen (owner: it spins wildly at x10; Sensors tab, sweep opacity 0, still works) | **Done**. Compiled clean; WEAPONS FREE played through the real switches to two hits (found the bugs); after the fix a hit drew no missiles in 80 game s; NO PEEKING and FINDERS KEEPERS not yet played through; full playtest not run |
+| 117 | A QUIT · ESC key on the board and the MISSIONS list. **Removed the same day** (owner: "I don't want any other quit feature"): Escape alone quits, as built before Step 116 | Removed; the board and the list are as before Step 117. Playtest check #5 still counts only the level rows |
+| 118 | DRADIS starts off: the player turns it on (owner); the bubbles say "turn on DRADIS" again | **Done**. Compiled clean; checked in play mode (ours off, the Garuda's on, no circle, the bubble's line); playtest: a new check that it starts off; not run |
+| 119 | The railgun turrets' cones on the plot while Fire Control is open (owner: "the guns need cones… they are not visible… I can't figure out how to shoot"): each turret's arc as a dashed sector out to its reach, the selected one bright, the other dimmer (PlotPanel railArcAlpha 1 / 0.45, on the Periscope & fire control tab; written into Plot.prefab with sweepOpacity 0). WEAPONS FREE filmed: Logs/LevelVideos/WeaponsFree.mp4, 2:23, x5 throughout, fly in, port beam, six hits, MISSION COMPLETE (before the cones) | **Done**. Compiled clean; cones seen in play mode (`Logs/LevelPlay/31_turret_cones_bright.png`); full playtest not run |
+| 120 | The grid forms as the board appears (owner approved the look 2026-10-26; asked for again 2026-11-01, slower): the plot starts empty, the big-square lines glide in, vertical lines in turn from the top and bottom, horizontal lines from the left and right, then the small lines; then our ship, the axis numbers and the rest of the plot fade in. The briefing box waits until this is done. Grid Form Seconds 4 and Plot Fade Seconds 1.5, on the Board tab of Starwolf → Tuning, under Plot & our ship | **Done**. Compiled clean; seen in play mode (`Logs/GridForm`); see Step 125 for the playtest |
+| 121 | Railguns redone (owner 2026-11-01: the cones were "too wide, too weird"). Each ship has hard points on its rectangle, in its stats file (`WeaponSystem.Stats.hardPoints`), units from the centre. RG-A is in the middle of the right side, RG-B the middle of the left side, and the dot on the nose is empty. Each gun has a 90° firing arc straight out of its side (was 160°), a soft dotted cone on the plot. Inside it a solid bar shows the gun. After TRACK the selected gun's bar turns at 3° a game second onto the target (Gun Turn Deg Per Second, in the stats file). The switches work as before. The shot flies down the bar from the hard point, so firing early misses. The Garuda and the frigate have the same layout. New tools: **Starwolf → Hard Points** (the ship as a rectangle, dots to drag, marks on each side, add and remove dots, what is on each dot, its direction and cone width, ship width) and **Starwolf → Ranges** (every reach as a ring to drag, with the plot's view at any zoom and the battle space to compare). Both are tabs of the Tuning window. WEAPONS FREE and NO PEEKING tell you to turn your side to the target | **Done**. Compiled clean; cones and bar seen in play mode, the bar turned 30° in 10 game s; the owner dragged dots in the tool; see Step 125 for the playtest |
+| 122 | Any number of weapons (owner 2026-11-01). Each weapon in a ship's stats file has a kind: railgun, PDC or missile launcher. **Starwolf → Hard Points** makes new ones (New railgun, New PDC, New missile launcher: a copy of the first of its kind, on an empty dot), edits any weapon (name, short name, reach, ammunition, direction, cone) and deletes one. Every weapon fires from its dot: slugs, missiles and PDC arcs. A weapon on no dot can't fire: the drawer says NO HARD POINT. On the Asura, PDC-A and PDC-B went on the owner's dots at the back of each side, and the VLS on a new dot at the back centre; the Garuda and the frigate got the same layout. The Fire Control knob has two places: with more weapons they show the pair the selected one is in. The Garuda's brain uses all its weapons | Built, compiled clean; a new railgun checked in play, on and off a dot; see Step 125 |
+| 123 | Ships are solid boxes (owner 2026-11-01). Every ship is a rectangle round its model, length by width from its stats file, turning with it: Asura 100 x 64, Garuda 150 x 75, frigate 75 x 37 (measured from the models; the owner's dots moved out with the edges). Shots hit the box, on the side they reach, within Hit Margin Units (25; was a 100-unit circle round the centre). Nothing passes through a ship or a piece of debris: ours, the enemies, ship against ship. A ship that touches something is pushed clear, bounces, keeps 30% of its speed, and takes damage on the side that touched, by its speed. Both ships take damage in a ship crash. Pieces are checked as their box seen from above, and a moving ship is checked every 20 units of its way, so it can't skip through at x10. The Garuda looks 600 units ahead and steers round rocks and ships. New values: Crashes on the Board tab, Avoid Look Units under Enemy, Crash Full Speed and Crash Nudge Speed in the stats file, Show Ship Boxes under Plot & our ship draws the boxes on the plot | Built, compiled clean; 21 checks of the sums pass in the editor; crashes and the Garuda's steering seen in play (Step 125's checks) |
+| 124 | The grid fades, and our ship is 200 units (owner 2026-11-01, from a designer's brief). A small square is always 50 units and a big square always 10 x 10 of them, 500 units. The lines are counted from the world's centre. Zooming out, the small lines fade from x0.43 to x0.21 and the big ones stay; zooming in brings them back. A big line no longer has a small line under it, and White Major and Amber Major were raised to the same brightness as before. Small Full Px (16) and Small Gone Px (8) set the fade, on the Board tab under Plot & our ship. Zoom Out Limit is x0.1. The edge numbers are one per big square; from x0.26 to x0.16 every second number fades out (Axis All Numbers Px 100, Axis Half Numbers Px 60), leaving one per 1,000 units at x0.1. Our ship (`Asura.asset`) is 200 x 128, four small squares at x1, and all nine of the owner's dots moved out with it. Hits and crashes use that box (Step 123), so the ship is a bigger target. The ship picture's limit went from 120 to 240 px. The Garuda (150) and the frigate (75) are unchanged until the owner sets them | **Done**. Compiled clean. Play mode: 12 zooms in and out, 635 lines checked while panning: every line on its 50-unit mark, none doubled; ship 4.0 squares at x1; no new errors; `Logs/GridFade`. Playtest section 25b updated; full playtest not run; no fight played with the bigger ship |
+| 125 | The targeting computer lock (owner 2026-11-01; flow agreed with the owner). **Scan** tells you what a ship is and aims nothing. **Lock**: lower the targeting computer, get the ship in the sights and zoom until it fits the target box, now 120 px at the sight's centre. The sight says SLEW LEFT, SLEW RIGHT, ZOOM IN, ZOOM OUT, TOO FAR, LOCKING with a percentage, and LOCKED, and beeps as the ship fits and as the lock comes on. The bar under the sight (it was the design's convergence bar, which only showed range) fills over Lock Seconds, 10 game seconds; out of the sights it falls back over Lock Fall Seconds, 5. The selected gun turns toward the ship as it fills. **Locked**: the ship is the target, tracked on the plot with a ring and LOCKED on its label, and the firing solution stays up to date with no TRACK and no SLEW TO. The lock stays while DRADIS hears the ship or it is in sight, with the periscope up or down. **Fire**: the four switches and the lever; next shot, ARM and the lever. BEARING now means the lock is still on. Hand dials and TRACK remain for a shot from the plot. CLASS is gone: its button is switched off in `Periscope.prefab`, and a scan gives the class. A lock is as loud as ACTIVE SCAN, and in NO PEEKING a lock loses as a scan does. Missiles fire on a lock too. Save button on the Board and Keys tabs of Starwolf → Tuning | **Done in play**: WEAPONS FREE played through the switches: DRADIS, lock, turn, four switches, hit from the gun's dot. Red lines unchanged. Crash into a rock (bounce, 12 to 3.6 units/s, front armour 100 to 76%), ship against ship (both damaged, right sides), a new railgun on and off a dot, and the Garuda across the rock field at x10 with no crash all seen in play. Full playtest 221 of 222 (`Logs/Playtests/2026-11-01_173816`, covering Steps 120 to 125). The one failure was the test's own drag, too short at the current zoom; the drag is lengthened and that one check has not been run again. A run plays by fixed numbers on the ships' running copies, so the owner's tuning can't fail a check; the files are untouched, and its waits now go by the game clock because filming holds the game behind real time. Crashes are not in the playtest: it switches them off, and they were checked by hand in play |
+| 126 | Ship sizes set (owner 2026-11-01): our ship 200 x 50, four small squares long; the Garuda 350 x 100, trial numbers that may change; the frigate stays 75 x 37 for now. Each ship's hard points moved to the new edges, every weapon on the same dot. The ship picture's limit went from 240 to 300 px, as the Garuda is 266 px at x1. The picture is still the old model shape, so it is wider than the box: about 128 units on our ship, about 175 on the Garuda. Show Ship Boxes draws the real box | **Done**. Compiled clean; values read back; playtest check updated to 350; not seen in play mode. Asura's VLS has no hard point (it had one when Step 124 ran; not removed by this work), so our missiles can't fire until the owner says what they want |
+| 127 | The frigate is 100 x 25, its hard points moved to the new edges, every weapon on the same dot. Hit Margin Units is 0 on all three ships (owner 2026-11-01: the box is what's important). A shot only counts if it touches the box, so our ship's target is exactly 200 x 50. Shots fired with the targeting computer locked still hit; hand-plotted shots get much harder. **Shots hit within** in Starwolf → Ranges changes it. The owner confirmed the plot picture doesn't need to match the box, and that the missing VLS dot on our ship will be solved later | **Done**. Values read back in play mode. Rammed our ship into the Garuda's side at 60 units a second: it stopped where the boxes touched, and the two ended up apart. Playtest before this change: 221/222 (killshot-e7); the playtest runs on fixed numbers, so it does not test ship sizes, and crashes are off in it |
+| 128 | Hit area 25% bigger than the box (owner 2026-11-01: this replaces Step 127's zero). The box is unchanged. A shot counts if it touches the box made 25% longer and 25% wider: 250 x 62.5 for our ship. Hit Margin Percent (`WeaponSystem.Stats.hitMarginPercent`, was Hit Margin Units) is per firing ship. **Hit area, % bigger than the box** in Starwolf → Ranges changes it, and the file saves at once | **Done**. Compiled clean. Read back in edit mode: our ship 250 x 62.5, the Garuda 437.5 x 125, the frigate 125 x 31.25. No shot fired in the running game. The ship files keep an old unused Hit Margin Units line until they next save |
+| 129 | Gas Clouds (owner 2026-11-01). A cloud is a box in a level with no collider: a ship flies in and takes no damage. `GasCloud.cs` has its width and height. With at least 90% of our ship's box in a cloud, our signal heads for 30% of what it would be, and an enemy sees us only from 400 units or closer. The owner agreed 2,000; 400 keeps the same share of the new 2,000 visual range. Firing from inside still adds the full 25 signal. The three numbers are in each ship's stats file, under Sensors. The signal box says IN GAS CLOUD. On the plot a cloud is a faint soft box behind the ruins, shown by the same rule as debris. Its picture is `Assets/UI/Board/Art/Plot/GasCloud.png`, on the Plot panel's Art list. Cloud Alpha on the Board tab, under Plot & our ship, sets how strong it shows. `Level_01` has three clouds, placed for the 20,000 map (2,400 x 1,400, 2,000 x 1,200 and 1,600 x 1,000). The Level window has a Gas cloud button, and shows clouds on its map as blue boxes; a click picks one. Starwolf → Keys, Hard Points and Ranges are gone from the menu: they are tabs of Starwolf → Tuning. Enemies don't hide in clouds yet, and our DRADIS still hears a ship in a cloud | **Done**. Compiled clean. Play mode: 3 clouds found; fully in, 100% and signal target 35 to 10.5; 10% over the edge, 90% and inside; half over the edge, 50% and outside; the Garuda at 2,995 units stayed COLD, at 378 units it went ALERT; IN GAS CLOUD showed; the cloud showed on the plot. `Logs/GasClouds`. Playtest section 25c added; full playtest not run. The Level window opened with no errors; its map not checked by eye |
+| 130 | The designer's spacing table (owner 2026-11-01). **One clock:** at x1 a game second is a real second, up from 2.38 game seconds a real second. `BoardManager.TickGameSeconds` is the game seconds in one tick, and Game Seconds At X1 (1) is on the Board tab under Board & time. **Speed:** ENG 1 allows 25 units/s and ENG 5 allows 50, in equal steps; ENG 0 is still no thrust. Base Speed Units is new in the stats file, under Navigation. Top speed crosses the map in about 7 minutes and takes 27 s to reach. **DRADIS** 5,000 at gain 1 to 7,500 at gain 5. **Visual range** 2,000. **Railgun** 2,000, **PDC** 600, **missile** 3,000. **Slug** 300 units/s, about 7 s to full reach. **Missile** 400 units/s, turning 120° a second. Slug and missile speeds are their own numbers (owner). **Enemies:** the Garuda and the frigate have our ranges; the Garuda goes 17.5 to 35, the frigate 30 to 60, the same shares of our speed as before. Garuda cruise 22. **Fighters** 100, **boats** 75, boat range 4,000. Crash Full Speed 50. **Map:** every level is 20,000 x 20,000. Level_01's 136 pieces moved to a third of their distance from the centre, same size; our start 0,-8000, the Garuda's 0,8000. Exit, reinforcement and enemy search distances were cut to fit. Scope Fit Units 1000, so MAG 2 fits a ship at railgun reach and MAG 8 at 8,000. **Plot:** Zoom Out Limit x0.058, where the whole map fits the plot's height; every 5,000 units a big line is brighter (Sector Every on `PlotGrid`). **Training levels:** Enemy Spawn has a new Cruise Units value. WEAPONS FREE and FINDERS KEEPERS have no engines, so their Garuda starts 1,500 away and stays still; WEAPONS FREE's shows its reactor side. NO PEEKING starts 4,000 away with the Garuda at 8 units/s. **PDCs** now check the closest point of a missile's flight each tick: at x5 a missile crossed their 600-unit reach inside one tick. The close-range weapon in the table is left out until the owner designs it. A newer designer brief for stepped grid squares is waiting for the owner's yes. Every other time in the game now means real seconds at x1, so these are slower than they were: lock 10 s (was 4), gun 3° a second (was 7), ship turn 20° a second (was 48), power one unit a second (was 2.4), enemy reload 12 to 17 s. Replaces decisions 13, 26, 28, 29, 40, 42, 44, 46, 47 and 50 on those numbers, and Step 63's scale. docs/scale-sim, the spec, `CONTEXT_INDEX.md`, `FTUE_PLAN.md` and the READMEs have the new numbers | **Done**. Compiled clean. Measured in play at x1: 5 s on the clock in 5 real seconds; 50.4 units/s at top speed. Scripted play through the real lock and switches, no person: WEAPONS FREE to MISSION COMPLETE in 48 s, 7 shots, no engines; NO PEEKING heard the Garuda at gain 1; FINDERS KEEPERS started with it in reach; Wolf Hunt first contact at 3:14, frigates exactly 3 minutes after the alarm, PDCs shot down 4 missiles, the jump point opened and flying to it won (the Garuda's reactor was set to 0 by hand for this). In the two Wolf Hunt fights played to the end, the scripted player failed to kill the Garuda: it ran out of slugs once and lost its magazine once, with no repairs and no steering round the reactor side. Full playtest 225 of 225 (`Logs/Playtests/2026-11-01_183621`), which runs on the old numbers and clock, on purpose, so it proves the code and not the balance. No person has played it. x5 and x10 not tuned (owner: x1 first) |
+| 131 | Crash shake and ships that break in two (owner 2026-11-01). **Shake:** a crash or a hit on us jolts the plot by random amounts that die away, as the old UI's `ShipShake` did: Shake Seconds 0.5, Shake Px 7, on the Board tab; a slow crash shakes less. **Break:** a killed ship in sight is cut in two across the ship, where the shot struck (kept between 30% and 70% along it). The halves drift apart and turn slowly: Wreck Drift Units 5, Wreck Spin Deg 3, under Plot & our ship. This cuts the ship's picture on the plot, with no shader and no second model, so it is a clean straight cut. **Fade:** out of sight a wreck is a dim dot, which now fades away over Wreck Dot Fade Seconds, 120 game seconds; back in sight it shows again | **Done**. Compiled clean. Play mode: the Garuda killed from code at 570 units, the halves apart after 8 game s (`Logs/ShipBreak`); shake on, with nothing showing past the plot's edge behind the frame; the dot read 0.45, 0.23, then gone at 120 game s. Not checked: a real slug's cut position, or how it feels at speed. Full playtest not run |
+| 132 | The plot as a command table (owner 2026-11-01). **Corners:** a locked ship has the targeting computer's white corners on the plot, round its length, in place of the ring; only once the lock is full, as a part-filled lock must not give its position away. **Old markers:** a contact out of sight is a marker where it was last fixed. It fades to Stale Alpha (0.35) over Stale Seconds (60 game seconds), and from Stale Label Seconds (10) its label says how old it is: `RNG 3,855 km · 3 MIN AGO`. **Ruler:** line 3 px, end dots 10 px, distance label 17 pt, white, and clear of the line. **Collision warning:** `ROCK AHEAD · 19 S` on the alarm strip with the alert tone, when our ship is on course to hit a rock within Rock Warn Seconds (30 game seconds), by the box's true path. Rocks only: warning of a ship would give away ships we can't see. Also the owner-approved label words NEW CONTACT and NEW CONTACTS, and a fix: POINT times showed fractions of a second after the clock change | **Done**. Played on the final numbers in WEAPONS FREE: lock, corners, a hit from the gun's dot, the warning at 19 s, a crash into a rock (front armour 100 to 69%), the marker at 3 minutes. Full playtest 225 of 225 (`Logs/Playtests/2026-11-01_185428`) |
+| 133 | Military labels and x5 as the top rate (owner 2026-11-01). The signal box reads UNDETECTED, DETECTED BY 1 HOSTILE, DETECTED BY 2 HOSTILES, EMISSIONS DECAYING or EMISSIONS LOW. The alarm strip reads NEW CONTACT or NEW CONTACTS. Fire control reads CAPACITOR CHARGED or CAPACITOR CHARGING +n/S. The ARM switch's hint reads ARM READY, and a switch that can't be thrown reads INTERLOCK. Every other label is unchanged. The x10 key and its label are switched off in `TimeControl.prefab`, which leaves a gap to the right of x5. x10 stays in the rates list and the playtest sets it directly, to keep the run quick | **Done**. Compiled clean. Full playtest 225 of 225 with the labels in (`Logs/Playtests/2026-11-01_185428`), run before the x10 key went. Play mode: three rate keys, x5 sets the rate to 5, the playtest's direct x10 works, and every new label measured no wider than the words it replaced, except INTERLOCK and ARM READY, which are narrower than ROUND IN RAIL in the same size of box. Full playtest not run since the x10 key went |
+| 134 | The briefing icon (owner 2026-11-01). A small amber page, `Briefing Icon` in `02.1_Grid`, next to the time control. It appears with the briefing box and stays on the board. A click opens the box, and another closes it, with the switch sound. A level with no briefing has no icon. The picture is `Assets/UI/Board/Art/Briefing/icon_briefing.png`, generated, in the briefing box's colours. **Calls made without the owner:** its place on the top bar, where nothing covers it, and its 44 px size | **Done**. Compiled clean. Play mode in Wolf Hunt: it appears when the grid has formed, two clicks close and reopen the box, two switch sounds, and it is the top thing under the mouse. `Logs/LabelCheck/briefing_icon_2.png`. Checked by calling the click, not with a real mouse. Full playtest not run; the other three levels not opened |
+| 135 | The grid's squares change size as you zoom (owner 2026-11-01, from a designer's brief; this replaces Step 124's fixed squares). The square on screen is 50 units at x1, then 100 from x0.78, 250 from x0.39, 500 from x0.16 and 1,000 from x0.08. Each size fades as its squares shrink from 35 to 25 px, and the next takes over; the lines are still counted from the world's centre, so a line in both sizes stays solid. 100 to 250 doesn't line up, so those new lines fade in between the old ones. 5,000 is in the list, but by this rule it would only become the square past x0.05, so the 5,000 lines are the brightest lines at every zoom; 500 lines are a little brighter down to about x0.2. The edge numbers use the same sizes with more room: every 100 at x1, every 1,000 at x0.1, every 5,000 at x0.058. Step Units, Big Units, Sector Units, Step Full Px, Step Gone Px, Big Full Px and Big Gone Px are on the Board tab under Plot & our ship; Axis All Numbers Px and Axis Half Numbers Px are now 60 and 40; White Sector and Amber Sector are new colours on `PlotGrid` | **Done in play**. Compiled clean. Swept x1 to x0.058: squares as listed, no solid lines closer than 35 px, at most 81 lines across, the 1,000 and 5,000 lines stayed at full strength. Looked at x0.55, x0.29 and x0.058 (`Logs/Spacing`). The plot formed with no new errors. Playtest section 25b updated; full playtest not run |
+| 136 | The Level window edits on the map (owner 2026-11-01). Click anything to pick it: a spawn, a gas cloud, a debris field, or a rock. Wolf Hunt has no debris fields; its rocks are in plain groups (Asteroid field 1, Wrecks, Debris · far), so a click on a rock picks its group, and Option-click picks that one rock. Drag to move. Drag a white square to resize: a cloud, a spawn box or a debris field changes size, a group's rocks spread out or draw in and keep their own sizes, and one rock grows or shrinks. A resized debris field scatters again on letting go, which replaces hand-moved pieces in that field. The Position numbers and the settings of whatever is picked show under the map, with a Delete button, and everything can be undone. The list above them shows everything in the level. A Save button stays at the top of the window and reads Save Level_01 or Level_01 saved. The map has grid lines with the plot's numbers, every 4,000 units on a 20,000 map. The window no longer pushes spawns 3,000 units in from the edge: the margin is now the board's warning band (1,000) plus 500, so Wolf Hunt's spawns stay at 8,000. The map does not zoom yet (the owner did not ask for it) | **Done**. Compiled clean. Checked in the real window with real mouse events on `Level_01`: rock picks its group; group moved 1,000 units; group spread with rock sizes unchanged; Option-click moved one rock and no other; cloud moved and resized; settings and Delete shown; Delete and five undos put everything back; Save cleared the unsaved state; spawns stay at 8,000. Resizing a debris field and its re-scatter not tried: Wolf Hunt has none. Full playtest not run. `Logs/GasClouds` |
+| 137 | Real radio messages, first version, in one new level (owner 2026-11-01: "start building it"; plan of 2026-10-29). New level **INTERCEPT**, row 4 on the MISSIONS list; WOLF HUNT is row 5. The Garuda starts at a random point beyond DRADIS and cruises at 20. It sends a message 15 game seconds in, then about once a minute. Each message is written from where it really is: "GARUDA NORTH OF YOU HEADING SOUTHWEST SPEED TWENTY". A soft tone plays and the alarm strip says INCOMING SIGNAL with the seconds left to lock it. Each message has a new band, a new frequency and a new code. Tune, LOCK, then turn the four dials until it starts GARUDA. Not locked in 60 game seconds, it is lost. The wait for the next starts when the last is read or lost. Read one, then hear the Garuda on DRADIS: level won. Three new values on **Enemy Spawn**: Signal Seconds (0 is no messages), First Signal Seconds and On Air Seconds. Signal Sound is on the Sound tab of Starwolf → Tuning. Every other level, Wolf Hunt too, keeps the old fixed signal | **Done in play**, with the board's own clicks: 1st message matched the Garuda's real direction, heading and speed; a lock 2 off was refused and one on the signal held; two dials read "GA", four read it all; the 2nd message had a new band, frequency and code and said NORTHWEST as the Garuda had moved; ignored, it was lost; 2,996 units away with DRADIS on, MISSION COMPLETE, GARUDA FOUND BY SIGNAL; the row opens the level. `Logs/CommsSignals`. The tuning knob's drag and flying there were not played by hand. Playtest section 25d added; see Step 140 for the run |
+| 138 | Smooth movement on the plot (owner 2026-11-01). Shots and missiles, ours and the enemy's, no longer jump every 0.42 s. Each frame the dot slides toward where the rules will put it at the next tick (`BoardManager.Slide`, `WeaponSystem.StepAhead`, `PlotPanel.ShotAt`), and it reaches a ship as the hit lands. Just after firing it can go up to twice its true speed while it catches up, and it can slow in the last tick before a hit. Fighters slide up to one tick behind their flight. **A scanned ship out of sight**, while the ACTIVE SCAN cone covers it, moves smoothly and shows where it is now. With ACTIVE SCAN off it stops there and hops each time the sweep touches it (owner's choice). A ship not scanned still hops or shows a bearing line, a ship in sight or locked is smooth as before, and a ship no sensor reaches stops and fades as in Step 132. Only the drawing changed; hits, damage and every rule are the same. The hit tests moved out of `TickRounds` and `TickIncoming` into `FirstStruck` and `ReachesUs`, and the plot uses them too | **Done in play**. Compiled clean. Measured frame by frame in Wolf Hunt (`Logs/SmoothMotion`), with the shots added from code: slug at x1 steady at 300 units/s, at x5 touching the Garuda's hit box as the hit landed; enemy missile 406 and fighters 102 units/s (true 400 and 100); no still frames in any of them; an enemy slug stopped on the edge of our hit box, SLUG HIT; a scanned ship moved on all 291 frames with ACTIVE SCAN on and four times in 11 s with it off. Screenshot shows the slug, its trail, the fighters and the red enemy slug. Not fired through the real switches here. One new playtest check, in the slug section, not yet run; full playtest not run. Enemy missiles hitting us are drawn the same way but their hit report was not read |
+| 139 | A big square is 5 x 5 again (owner 2026-11-01: "revert to the 5x5 grid instead of that 10x10"), and the grid is quieter. The squares still fade from size to size as in Step 135, now 50, 100, 200, 500 and 1,000 units: 200 replaces the designer's 250, so the big lines are round numbers. Big lines are every fifth line at every zoom, 250 units at x1, then 500, 1,000, 2,500 and 5,000, and they fade across with the squares. There are two strengths only, so the 5,000 lines are no longer a third, brighter level; Sector Units, Big Units, Big Full Px, Big Gone Px and the two sector colours are gone. Big Every (5) is on the Board tab. First-try strengths, killshot-dd's suggestion, for the owner to judge: White Minor 8% (was 13%), White Major 24% (was 36%), the amber pair in the same proportion | **Done in play**. Compiled clean. Swept x1 to x0.058: squares 50, 100, 200, 500, 1,000 from x1, x0.78, x0.39, x0.19 and x0.08; big squares 190 to 367 px at each change; the 5,000 line stayed at full strength. Before and after at x1 and x0.1 are in `Logs/Spacing`. No new errors. Full playtest not run since Step 135 |
+| 140 | Real radio messages in Wolf Hunt (owner 2026-11-01: "60s"). On `Level_01`'s Enemy Spawn: Signal Seconds 60, First Signal Seconds 15, On Air Seconds 60. The reinforcement frigates send nothing. INCOMING SIGNAL is now the last line on the alarm strip, under the mission's lines and NEW CONTACT, so it never hides a danger or the jump point. A message not locked in time now goes off the air even if the Garuda is dead. The playtest turns messages off for its run, as a tone would upset its sound checks; section 25d checks them on a spare radio | **Done in play**, Wolf Hunt from the board: first message "GARUDA NORTH OF YOU HEADING SOUTH SPEED TWENTY", tone and strip with the seconds left; a mission line stayed on top of it; with the Garuda dead it was still lost on time. Direction and speed matched; the Garuda had turned by the time its heading was read. Full playtest 235 of 235 (`Logs/Playtests/2026-11-01_194534`), section 25d included, but on the old "NORTH OF YOU" wording and with messages off in Wolf Hunt, as a run has them off. The new wording was seen decoded in play in INTERCEPT (`Logs/CommsSignals`, picture 6); 25d's new text has not run. A fight with messages coming in has not been played |
+| 141 | Scan, plot and lock (owner 2026-11-01). **A lock is short:** it lasts 10 game seconds (Lock Hold Seconds, in each ship's stats file, under Weapons). The sight's bar runs down, the sight counts the seconds, and fire control's source line counts them too. Then a tone sounds and the lock drops, with its firing solution and the switches, and the bar starts again from empty. **A lock gives no course:** it gives exact range and bearing. A scan gives course and speed at that moment, and each sweep pass over a ship in the cone is a new scan. A plotted track gives them too. The lock takes the newer. Fire control reads `LOCK 7 S · SCAN COURSE`, `· PLOT COURSE` or `· NO COURSE`. With no course the shot goes where the ship is now. **No scan, no boarding:** the hangar refuses an unscanned target, TARGET NOT SCANNED, for the boats only. WEAPONS FREE's briefing now has you bring the Garuda inside a gun's cone before you lock (owner: the ship doesn't need to be side-on, only to have the Garuda inside the arc; the first wording said to turn your side, and that was wrong); FINDERS KEEPERS and WOLF HUNT say the new rules; "throw" is gone from the briefings (owner). `QuestSystem` is unchanged: a lock still loses NO PEEKING. **Calls made without the owner:** the wording of the source line, the refused tone for a lost lock, the newer of scan and plot winning, fighters needing no scan | Compiled clean. Full playtest 235 of 235 (`Logs/Playtests/2026-11-01_194534`), six new checks: no course with neither, the scan's course used even when it's out of date, a newer plot taking over, a lock running out, its tone, the boats refused. The run uses a long stand-in lock outside those checks. Played on the real numbers, driving the game's own controls from code (no mouse): in WEAPONS FREE a lock came on, ran 10 s, dropped and refilled; side-on first, the switches and a shot fit inside the 10 s and it hit; locked first and turned after, the lock had 1.6 s left with the gun still turning. In NO PEEKING a lock ended the level, MISSION FAILED. **Open, for the owner: a missing course doesn't yet change a shot at the Garuda.** WEAPONS FREE's and FINDERS KEEPERS' Garuda doesn't move (Step 130, Cruise Units 0), and that stays: each training level tests one thing, and not every level is a full fight (owner). A moving Garuda travels along its own length when it crosses, and its hit area is 437 long: with cruise 22 set by hand, a NO COURSE shot from 1,945 units hit. By the sums, a shot with no course misses the Garuda only past 2,980 units at cruise 22 (the gun reaches 2,000) and past 1,875 at top speed 35. A frigate is 125 long, so it misses past 625 at 30 and past 310 at 60. The slug stays at 300 (owner: about 7 seconds to full reach, and the railgun is the fastest thing on the board), so the fix has to be something else. Glancing hits were put to the owner and turned down, and nothing was built: a hit strikes a side, breaks through its armour, then damages the systems behind it, as built |
+| 142 | The message wording and a Garuda that keeps changing direction (owner 2026-11-01). It is an intercepted message, so it doesn't speak to us: "GARUDA HEADING NORTHEAST SPEED TWENTY BEARING NORTHWEST". The bearing is the Garuda's from our ship, one of the eight words. In a level with messages, the Garuda takes a new course halfway to its next message, so the heading is true when it is sent and the next message differs. That runs in INTERCEPT, and in Wolf Hunt only while the Garuda is COLD. In INTERCEPT we start in the middle of the map, and the Garuda starts anywhere in a box round us, at least 8,000 away (Away From Us Units on Enemy Spawn, new). The owner rejected that start, and Step 145 took it out | **Done in play**: six messages in a row in INTERCEPT said SOUTHEAST, EAST, NORTHEAST, NORTH, NORTH, WEST, each matching its real heading; the bearing went from SOUTHWEST to WEST as it moved, with our ship standing still. The test used the real 60-second gap with On Air Seconds cut to 5. 5,000 starts landed on all eight sides, never closer than 8,000; the corners come up about twice as often as north, south, east and west. The new wording seen decoded on the drawer (`Logs/CommsSignals`, picture 6). The new text in the briefing not seen on screen. Wolf Hunt's course change not seen in play. Full playtest not run since |
+| 143 | Hygiene pass (owner 2026-11-01: everything built must be done and checked before a new level). **Missiles fire again:** choosing MISSILE now picks the first launcher on a dot, VLS-A. It fires to the left side only, and no control picks VLS-B yet. **NO PEEKING's** bubble says "Set the four switches". **Playtest:** check #225 puts power on before it reads, so it reads 30 to 9 in place of 0 to 0. Only the newest two runs keep video and shots, and every report stays (tried on spare folders; the next run clears the old ones). **`Level_02`** came off the build list; the file stays until the owner says. **Not bugs:** WEAPONS FREE's switches stayed off in one script because it never clicked the alert from C3 to C2. A fighter's hit doesn't lead the Garuda to us: after a hit its last fix was 0 units from the fighters and 5,227 from our ship | **Done**. Compiled clean. Played on the final numbers by a script using the board's controls; no key pressed. **Slug** at x1 and x5: no still frame, about 300 units a second, the dot within 2 units of the hit area at the hit. **VLS-A:** two missiles left its dot and hit. **Fighters:** launched through the switches and lever, hit, came home on RECALL, four ready, none left on the plot. **Enemy missile:** the strip read `MISSILE HIT · STBD · HE · HGR −3 · FIRE`. **Crash shake:** 1.9 px at 10 units a second, 3.0 at 25, 5.4 at 50. **A slug kill's cut:** 0.637 along the ship, as worked out; the end screen covered the picture, so the number is checked and the picture is not. **Save** on the Board and Keys tabs wrote to the file, pressed with sent mouse events. **Briefing icon** works in all five levels. **Debris field** in FirstShot, sent mouse events: radius 1,250 to 3,170, all 40 pieces scattered again inside it, one undo put everything back, not saved. **NO PEEKING** won with two POINTs, a RULER, TRACK and the switches. **FINDERS KEEPERS** won by boarding: four slugs opened the right side, fighters on DISABLE, boats on SECURE, `GARUDA SECURED`. **INTERCEPT** won start to end: tuned, locked, decoded by reading the text, flown along the bearing, heard at 4,912. The longest message fits in four rows. The briefing fits at the smallest text size. **Wolf Hunt:** the Garuda killed from a fresh start with no help, 8 missiles then 8 slugs. The first salvo wrecked its magazine and it never fired again, so that fight was cheap. **Messages:** a tone each time; INCOMING SIGNAL shows with its seconds in a quiet moment; in a fight the danger lines stay on top. A new course 32 s after a message while COLD, none after. **Garuda across rocks at x1:** 9,175 units, steering round them, 0 armour lost. The crash between ships and the rocks at x5 were checked the same day. **Found, for the owner:** in NO PEEKING, from about 1,220 to 1,650 units, SIGHT and SLEW TO with MAG untouched starts a lock by itself; at 1,500 the level was lost after 10.5 game seconds. Once reinforcements are on the strip, INCOMING SIGNAL doesn't show: only the tone says a message came. Full playtest not run |
+| 144 | **FLIGHT DRILL**, a new level that teaches flying only (owner 2026-11-01). Scene `FlightDrill`. It is row 1 on the MISSIONS list and the first pick. The rows are renumbered 1 to 6 and are 118 px apart (was 136). There is nothing to fight: the Garuda is parked still and silent at the far corner. A briefing note changes at each of 13 steps, with a soft tone. The end screen reads MISSION COMPLETE, FLIGHT DRILL PASSED. Section 2 lists the steps. **Side thrusters, in every level:** press and keep down `Q` and the ship slides to port, `E` to starboard, with the nose still. Let go, and the thrusters stop the slide. The keys are on the Keys tab of Starwolf → Tuning. Side Speed Units and Side Accel Units are in each ship's stats file: 20 and 4 on our ship at full ENG. Enemy ships have the numbers, and nothing slides them yet. **ENG now raises acceleration, braking, turn rate and side thrust**, on top of top speed. Base Accel Units and Base Turn Rate in the stats file give the ENG 1 numbers. Our ship, ENG 1 to ENG 5: acceleration 1 to 2, braking 1.875 to 3.75, turn 10 to 20° a second, side speed 10 to 20. ENG 0 still turns at the ENG 1 rate and has no thrust. Enemies run at full ENG, and their numbers don't change. **New mission goal Flight:** the steps are a list on the Mission box, in its inspector. A step's ring is the jump point's ring on the plot, labelled CHECKPOINT, with its bearing and distance on the alarm strip. Rings are not drawn on the Level window's map. Their numbers are typed in the Mission box. **Alarm strip:** its text is now left-aligned in `02.1_Grid`. Long lines ran over the lamp, JUMP POINT's too. **Briefing box:** 230 px tall in a flight drill (Drill Note Height, Board tab, Mission). The other levels keep 370. **Calls made without the owner** are in section 8, "FLIGHT DRILL: calls for the owner to check" | **Done in play**, by script. Played from the list row, through the board's real power, DRADIS and rate controls, with steering, throttle, zoom and the slide set from code: two full runs at x5. Second run: 13 steps, MISSION COMPLETE, 4 min 50 s of game time, no crashes, 0 armour lost (`Logs/FlightDrill`). No person has played it. `Q` and `E` have not been pressed on a real keyboard: a script can't press keys. The playtest has two new checks: full ENG gives twice ENG 1's acceleration and turn rate, and `Q` slides the ship with its nose still and the slide stops. Full playtest 237 of 237 (`Logs/Playtests/2026-11-01_212814`), with both new checks, the six-level list, the new radio wording and Step 143's check on the gas cloud's signal. It ran before four small changes, each checked in play: the first note gained "Press P to start the clock" (the board opens paused; pressed P, ENG 2 on STANDBY, step 2 opened); Accel Units 0 no longer breaks the ship; the zoom-in step passes at exactly x0.80; a slide cut off by a power loss no longer starts again when power returns. The code review found no serious bugs |
+| 145 | INTERCEPT's start put back (owner 2026-11-01: we will not start in the middle of the map, and the Garuda will not start on any side; the course changes stay). It now starts like Wolf Hunt: us at (0, −8,000) facing north, the Garuda's box 8,000 × 2,400 at (0, 8,000). Away From Us Units and its retry are gone from `EnemySpawn`. The briefing no longer says "on any side of you". Wolf Hunt's start was not changed. With this start the first message always says BEARING NORTH; later ones change as the Garuda moves | **Done in play**. Compiled, with no errors from `EnemySpawn`. We started at (0, −8,000), the Garuda at (3,959, 7,803). The first message, 15 s in: GARUDA HEADING SOUTHWEST SPEED FIFTEEN BEARING NORTH. 46 s in, its real heading and bearing still matched, and its speed had reached 20. The whole briefing shows inside its box at the smallest text size, though the text is 4 px taller than its area (`Logs/CommsSignals`, picture 7). Decoding, the win and later messages not tried again on this start. Full playtest not run since |
+| 146 | **COLD RUN**, the sneak level (owner 2026-11-01). It is row 2 on the MISSIONS list, after FLIGHT DRILL. The scene is `Assets/Scenes/Levels/ColdRun.unity`. Weapons are off. We start bottom left facing east. The jump point is top right and shows from the start. Win by coming within 700 units of it. Lose when our ship is destroyed. The map is 20,000 x 20,000 and shaped like an S: three lanes split by two winding rock walls. The Garuda patrols the corridor at 22 units/s and hunts us if it finds us. The level has 10 gas clouds, 13 route points on the enemy spawn, 6 wall Debris Fields (3 South Wall, 3 North Wall), 2 wall end fields, 4 Big Rocks fields and about 480 rocks. The jump point is an instance of `Assets/Prefabs/JumpPoint.prefab`, and the Mission's Jump Point box points at it (`Mission.jumpPoint`, which replaces the typed `jumpPointAt`). The prefab is sized for the 700-unit ring. The MISSIONS list has seven rows now, 100 tall and 106 apart, in `01_Briefing.unity`. The Level window shows J for the jump point and you can drag it. It draws the enemy's route as a red line with dots. Click the enemy and the route points become white squares to drag. The jump point is also in the "In this level" list. Add or remove route points in the enemy spawn's settings. The patrol route, weapons off and rocks blocking sensors have their own entries | Checked in play, picked from the real list. The Garuda flew to the third lane, found us and destroyed us. The win shows GARUDA EVADED · JUMPED OUT. All 4,000 test lines across the walls were blocked, under the full block that Step 148 replaced. Not played by hand with the real controls. Full playtest not run |
+| 147 | Squadrons leave from the side and curve (owner 2026-11-02). **Leaving:** a squadron, fighters or assault boats, starts at the hull, on the side of our ship facing fire control's target. With no target, or a target with no position, it starts on the starboard side. It flies straight out, tilted 15° toward the stern, for 200 units, or further if the small circle round our ship is bigger at the current zoom. **Turning:** then it turns onto where it is going. The turn builds up, reaches at most 90° a game second, and eases off as it lines up. All its flying uses these turns, on the way back too. **The plot:** the V opens as the squadron leaves our ship and closes as it lands. The plot draws a smooth curve between ticks. The rules still step on the tick. **New numbers** in each ship's stats file, under Hangar: `launchTiltBackDeg` 15, `launchRunUnits` 200, `turnDegPerS` 90, `turnEase` 180. Boats use the same numbers. **Fault fixed:** a squadron used to stop short of its goal each tick. At high game speed it could chase a moving ship without ever landing. It now lands or attacks as soon as it is within reach. **The launch bearing box** no longer changes where they go. Its 60° refusal, BEARING OUTSIDE LAUNCH CONE, is still in the game. Whether to remove the box is an open question (section 8) | Built. A throwaway path test passed from every direction, at x1, x2, x5 and x10, ship still or moving. In a play check in `02.1_Grid`, the fighters left at heading 105 with the ship facing 000 and curved onto the target. The drawn heading changed by at most 0.54° a frame. A recall at x5 with our ship at 50 units/s landed. Two playtest checks were changed: launch side and tilt, and gradual turn at x1. They compile but have not been run. Full playtest not run |
+| 148 | Rocks and sensors, the enemy giving up, INTERCEPT on the sneak map, and the radio in every level (owner 2026-11-01 and 2026-11-02). **Rocks:** one rule in every level, the same for us and the enemy. Rocks make interference for DRADIS and scans only. Comms is not touched. Each rock on the straight line between a sensor and a ship, and each rock close round that ship, takes Rock Interference Units (500) off the reach. Close means within Rock Close Units (500) of the rock's edge. A large cluster therefore makes a ship very hard to pick up. More power means more reach, so it pierces interference. It also makes the ship louder. A rock on the line also blocks eyes fully, for our ship, the enemy and fighters. Interference does nothing else to eyes. This replaces Step 146's rocks, which blocked sensors outright. **False dots:** as the DRADIS sweep passes a rock in reach, it may throw a false dot near that rock. The chance is False Dot Chance (0.15) divided by the gain squared. A false dot lasts False Dot Seconds (8) and fades. False dots show on the plot only, as red dots with no label. Whether the enemy is fooled by them is an open question (section 8). **The enemy:** it gives up after Give Up Seconds (90) of hearing nothing, in every level. It goes calm and back to its patrol. On a patrol route, Turn Back Chance (25%) is the chance at each point that it turns back. These numbers are on the Board tab of Starwolf → Tuning, under Sensors and Enemy. **Levels:** every rule is the same in all levels. A level sets only its map, route, goal and which tools the tutorial takes away. Weapons off (`Mission.weaponsOff`) is only a tutorial restriction. It stops guns, missiles, PDCs and flight ops. **INTERCEPT** is now a copy of COLD RUN's map (Step 146) with the radio on (section 2). You sneak past the Garuda to the jump point and use the radio to work out where it is going. This replaced its first goal of finding the Garuda on DRADIS. `MissionGoal.FindBySignal` still exists but no level uses it now. **Radio:** the old fixed signal is gone from play. Every level uses real signals, and a level whose Garuda sends none shows NO TRAFFIC. The bearing in a message is always a direction word such as NORTHWEST, never a number | Compiled clean before the last two small edits (false dot chance, radio in every level). Those two are not compiled yet. INTERCEPT scripted run: the first message at 15 s read GARUDA HEADING WEST SPEED TWENTY BEARING NORTHEAST and matched the real position. A later one read HEADING EAST after the Garuda turned back at a route point. Tuned, locked and decoded by script, through the comms controls. The strip showed INCOMING SIGNAL, then JUMP POINT · BRG 046° after reading. Reaching the jump point gave MISSION COMPLETE. Measured with interference at 500: across a wall, lane to lane 4,000 apart, 600 lines: heard on 15 at gain 1, 28 at gain 3, 103 at gain 5. 45 to 47 false dots at once at gain 1 with 220 rocks in reach, seen on the plot (`Logs/CommsSignals`, picture 10). That was before the change to gain squared, so gain 5's count is not measured. Full playtest 242 of 245 (`Logs/Playtests/2026-11-02_004234`). The three failures are the new torpedo and fighter checks (#127, #128, #145), which belong to that work. The rock checks and the seven-row list passed. That run used 2,000 per rock, because the board scene had saved the old number. It is 500 in the scene now. Two later full playtests ran at 500, both 245 of 245: `Logs/Playtests/2026-11-02_005126` and `Logs/Playtests/2026-11-02_005945`. Not done: no person has played it. Fighters' eyes against rocks not tried in play |
+| 149 | Photon torpedoes (owner 2026-11-02). **The name:** the owner calls these weapons photon torpedoes, so "missile" is now "torpedo" on the board: on screen (TORPEDO on the Fire Control selector, TORPEDO VLS A, INCOMING TORPEDO, TORPEDO DOWN, TORPEDO HIT), in the board's code and in each ship's stats file. "Launcher" still means the thing that fires them. Soham's old scripts in `Assets/Scripts/Weapons` (`Missile.cs`, `MissileLauncher.cs`), `Assets/Prefabs/Missile.prefab`, `Assets/Scripts/ControllerHaptics.cs` and `Assets/Scripts/InternalSubsystems.cs` were left alone on purpose. **How it flies:** it now leaves like the fighters. It leaves the launcher out of the ship's side, tilted 15° toward the stern. A salvo of two fans either side of that line. It still flies out slowing, as the owner asked on 2026-11-01. Then it curves onto the target. The turn builds up, reaches its sharpest and eases off as it lines up, over 0.5 game seconds. Its motor lights once it is within 3° of lined up, and it zips to full speed. It flies in short steps of 0.05 game seconds. The curve is the same at every game speed. Enemy torpedoes follow the same rules. **New numbers** in each ship's stats file, under Weapons: `torpedoTiltBackDeg` 15, `torpedoTurnBuildSeconds` 0.5. All the other numbers were renamed from missile... to torpedo... with the same values. **The small number box on the Hangar panel** can no longer stop a launch. BEARING OUTSIDE LAUNCH CONE no longer exists. The box starts at 62. With the nose facing north, every launch used to be blocked until someone typed a new number. The box and its red number are still on the panel and do nothing else. This closes the question from Step 147 (section 8). **Ship files:** the four fighter numbers from Step 147 are now really in them, under Hangar | Built. A throwaway path test of 10,368 shots hit with 21 misses, all at the frigate at x5 and x10, where the torpedo ran out of range. In a live play check at x1, the salvo left on headings 95 and 115 with the ship facing 000. The lead torpedo slowed to 15 units/s, curved, lit its motor, reached 250 units/s and hit at 11.2 s. The ship files kept every value after the rename (speed 250, coast 2.5). At heading 000 with the box at 62, nothing blocks a launch. On screen the Fire Control panel reads TORPEDO and TORPEDO VLS A. One new playtest check was added: "The salvo leaves the side tilted toward the stern". The full playtest has not been reported yet |
+| 150 | Fighters and boats start at 100% (owner 2026-11-02: they will gain damage from PDCs and ships firing, but they do not start with it). Every fighter and assault boat starts the game at 100% and READY, on our ship and on every enemy ship. Before, their bars on the Hangar panel were uneven (96, 88, 41, 0 and so on) and some were marked REARM or DOWN. The panel now reads 6 OF 6 READY and 4 OF 4 READY. **A launch** now sends 6 interceptors and 4 assault boats (it was 4 and 3). Each fighter does its own attack run. One attack run now takes 60 armour off a side (it was 40). The 4 boats share the same 18 marines. **Still to be built:** nothing damages a fighter yet, and nothing in the game changes those bars yet. The code calls this number fuel and the owner calls it health. The bars show one number. **Correction to Step 147:** a squadron's straight flight out is always 200 units, at every zoom. Only an ESCORT can fly further, past the small circle round our ship | Built. The full playtest passed 245 of 245 with no failures (`Logs/Playtests/2026-11-02_005126/report.md`). #144: six interceptors took off. #148: one attack run took the Garuda's prow from 150 to 90. #168: four boats launched with 18 marines |
+| 151 | The enemy is fooled by false dots too (owner 2026-11-02: "Yeah, obviously"). This answers the question left open in Step 148. While the enemy is calm or uneasy and hears nothing, about every False Look Seconds (120), it picks a rock within its DRADIS reach that it has a clear line to, and goes to look. The wait varies between half and one and a half times that number. It goes UNEASY and the DETECTED line doesn't count it. It does reset the time since it last heard us, so hearing us for real 20 to 60 s later takes it straight to SEARCHING. If it hears nothing for Give Up Seconds (90), it goes calm and back to its patrol. That gives the player a chance to slip past. **The rate:** the enemy's rate is deliberately not the same as our false dot rate. At our rate it would chase rocks all the time. **Levels:** the rule is in every level where the enemy hunts. Hunts is off in the training levels, so the enemy doesn't listen there. False Look Seconds is on the Board tab of **Starwolf → Tuning**, under Enemy | Compiled with no errors. In INTERCEPT at x5 in play, from a script: at 123 s it went UNEASY and headed for a false contact at (1,756, 5,663). At 214 s, 91 s later, it went calm and back to its route point (1,500, 7,000). Full playtest 245 of 245 (`Logs/Playtests/2026-11-02_005945`). It is the first full run with this rule and this code, and it used 500 per rock in the scene. No playtest check covers the false look itself. No person has played it |
+| 152 | The ship in the targeting computer stays flat during a turn (owner's rule since Step 109: always flat, pointing left or right by the way it is going, never tilted, always in the box). **The bug:** the picture was straightened once per game update, every 0.42 seconds. The ship model turned every frame. While a ship turned, the picture tilted and then snapped back flat. On the Garuda the worst tilt was 5.87° at x1 and 29.38° at x5. A ship that was not turning was flat. **The fix:** the picture now turns every frame, in `LateUpdate` in `PeriscopePanel.cs`, from `NavSystem.DrawnHeading`. The model is drawn at the same heading. `Refresh` still picks left or right once per update. **Open, for the owner:** only the Garuda has a camera for this picture (`Contact View Camera · Garuda` in `02.1_Grid`). A Naga frigate shows no ship picture in the sight at all. That comes from reading the files, and was not seen in play. Nothing was changed for it | Compiled with no errors. In play on Wolf Hunt's board: the Garuda was placed 1,500 units away and made to turn through every heading, at x1 and x5. The picture was 0.00° from flat on all 2,124 frames. Before and after shots: the red lines of the sight are unchanged. Full playtest not run: a small change, and the owner's rule is quick checks for small changes. No person has played it |
+| 153 | Two fixes: a freeze no longer uses up SECTION 36, and the MISSIONS list ignores a pick in its first half second (owner 2026-11-02). **SECTION 36, the bug:** the owner pressed play on `00_Start` and SECTION 36 never showed. When play starts in the Editor, the picture freezes for about 4 to 6 seconds on the first frame. The intro's clock kept counting through the freeze. SECTION 36 lasts 4 seconds. It was over before the first picture appeared. **The fix:** each frame now adds at most `Time.maximumDeltaTime` (a third of a second) to the clock, in `Update` in `StarwolfIntroController.cs`. INITIALISING... uses the same clock and gets the same fix. **The playtest:** its check "Intro reaches the menu by itself, after 8.0 s" could not catch this bug. It reads the same clock. **The MISSIONS list, the bug:** the level selector went by, and the game started on COLD RUN with no level picked. On a 1920 x 1080 screen, the COLD RUN row runs from 412 to 512 px down the screen. The menu's NEW GAME click area runs from 404 to 500. A click on NEW GAME could also hit COLD RUN and start that level. COLD RUN became row 2 in Step 146. The log shows COLD RUN was picked in the owner's run. Nobody knows if it took one click or two. **The fix:** the list ignores a pick in its first half second, in `Play` in `ScreenFlow.cs`. The half second counts from when `01_Briefing` loads. **Made without the owner:** half a second for the wait, as a plain number in the code, with no setting in the Tuning window | Compiled with no errors. **SECTION 36, in play:** before the fix, about 6 seconds of a freeze went into the clock. After the fix, in a run with a 4-second freeze, the clock read 13.05 when real time read 17.04. The freeze was left out. In a replay of the intro from its start, a shot at clock 3.00 shows SECTION 36 fully typed, a shot was taken at 7.00 in STARWOLF, and the menu came at 8.00. The shot at 3.00 came from the replay. It was not taken in the first seconds after pressing play. **The MISSIONS list, in play:** the row's click was called from code. At 0.00 s the pick was ignored and the list stayed open. At 1.00 s the pick worked and the board opened on COLD RUN. A real mouse click on NEW GAME has not been tested. Full playtest not run: two small changes, and the owner's rule is quick checks for small changes. No person has seen either fix. A person still needs to confirm both by pressing play |
+| 154 | The end screen's second button is now MISSION SELECT (owner 2026-11-02: "You go back to mission select"). The owner picked the label. It used to say MAIN MENU and load `00_Start`: SECTION 36, STARWOLF, then the menu. Now it loads `01_Briefing`, and the MISSIONS list opens. RESTART MISSION is unchanged. **Files:** Menu Scene is now `01_Briefing`, in `EndScreenPanel.cs` and in `End Screen.prefab`. In the prefab, the button and its Label are renamed MISSION SELECT. Its click action is still `end.menu`. **The playtest:** its end-screen check is now "MISSION SELECT loads the mission list". It waits for `01_Briefing` | Compiled with no errors. In play on Wolf Hunt's board (`02.1_Grid`): RUN was pressed through the board's PAUSE/RUN key. Our reactor was set to 0 from code. SHIP LOST showed, with the buttons RESTART MISSION and MISSION SELECT. The label fits the button. MISSION SELECT was clicked through its click spot with a sent mouse event. The MISSIONS list opened and stayed open, with no level picked. 14 s later, FLIGHT DRILL was picked from code, and the board opened on FLIGHT DRILL. Pictures: `Logs/EndScreen/endscreen_mission_select-1.png` and `Logs/EndScreen/mission_list_after_end.png`. Not done: the changed playtest check has not been run. Full playtest not run: a small change, and the owner's rule is quick checks for small changes. No person has clicked it with a real mouse |
+| 155 | The Garuda can't leave the battle space either (owner 2026-11-02: "the Garuda can also not leave the battle space"). This covers every enemy ship with a mind, the reinforcement frigates too. **Its course:** it never heads for a point in the edge warning band. A hunt point, a route point, where it heard us or a search point moves in to the band's inner edge. **In the band:** it never heads farther out. It runs along the edge instead, even while it chases us or turns a side to us to fire. **Past the edge:** it heads straight for the middle. It does the same in the band if it is heading straight out or into a corner. **The band:** the same band that warns our ship, Arena Warn Units. There is no new setting. `02.1_Grid` sets it to 1,000 units. The default in the code is 2,500. At full speed, at worst, the Garuda drifts about 520 units out while it turns, and a frigate about 750 (worked out from `Garuda.asset` and `Frigate.asset`). **Files:** `KeepInside` and `Inside` in `EnemyBrain.cs`, called at the end of `Steer` | Compiles clean. Played in Wolf Hunt (one-time test, nothing kept): our ship just past the east edge, the Garuda chasing. Heading straight out at full speed, it turned back at the band and came no closer than 684 units to the edge, then turned back and forth just inside the band. Closing in to fight, it turned side-on and ran along the edge, 680 units from it. No errors |
+| 156 | Escape opens a pause menu in a level (owner 2026-11-02: "when I press the Escape button during a level, nothing happens ... when you press Escape, it should pause the game and load that menu to do things like mission select, quit game", then "Escape should not quit at once"). The owner picked the four buttons. **The bug:** Escape on the board called quit. Quit does nothing in the Unity editor. The owner saw nothing happen. **What the player sees now:** in a level, Escape stops the game. The end screen opens over the board, titled PAUSED in white. The reason line is empty. The target, armour and time lines are hidden. It has four buttons. RESUME and QUIT GAME are on the top row. RESTART MISSION and MISSION SELECT are below. Escape again, or RESUME, closes it. Time goes back to how it was: running, or still paused if the player had pressed P before. While the menu is open, P and the drawer keys 1 to 6 do nothing. Clicks can't reach the board behind it. RESTART MISSION plays the level again. MISSION SELECT opens the MISSIONS list (`01_Briefing`). QUIT GAME quits the game. In the Unity editor it stops play mode. On the intro and the MISSIONS list, Escape still quits at once. That code is in `ScreenFlow.cs`, unchanged. **Files:** in `BoardManager.cs`, the key is now **Menu Key** (was Quit Key) on the Keys tab of **Starwolf → Tuning**. It is still Escape. A key set before is kept. Escape sends the click action `end.pause`. `Pause()` can now also set time running again. `EndScreenPanel.cs` is the pause menu too. Its new slots are Resume Button, Quit Button and Rows. Its new click actions are `end.pause` (Escape and RESUME) and `end.quit` (QUIT GAME). `End Screen.prefab` has two new buttons, RESUME and QUIT GAME. They are copies of RESTART MISSION, at y −70 on the Plate, x −160 and +160. Their labels were added to the panel's Barlow Condensed SemiBold font slot. **The end-of-mission screen:** on MISSION COMPLETE or SHIP LOST, Escape does nothing. That screen keeps only RESTART MISSION and MISSION SELECT (owner 2026-11-02: "you just go to mission select. It's okay. Escape doesn't have to do anything there") | Compiled with no errors, in Unity and outside it. In play on Wolf Hunt's board (`02.1_Grid`), with clicks sent from code (the same action Escape sends): with time running, Escape showed the menu. The game paused, Rows was hidden and all four buttons showed. Escape again closed the menu, and the game ran. P to pause, then Escape and RESUME: still paused. QUIT GAME stopped play mode. No errors in the console. One screenshot was taken to check the layout. Nobody has pressed the real Escape key: a script can't press keys. Full playtest not run: a small change, and the owner's rule is quick checks for small changes. No person has played it |
+| 157 | Reverse thrust, rocks seen only in visual range, and no false dots (owner 2026-11-02). **Reverse:** the throttle now runs from -100 (full reverse) to +100 (full ahead). It used to run from 0 to 100. S steps down through 0 into reverse. W steps up. The step is still Throttle Key Step (10). Full reverse is slower than full ahead. **Reverse Share** (0.42, from the HTML prototype) is new in each ship's stats file, under Navigation. Reverse top speed is that share of the top speed. Speeding up backwards uses that share of the acceleration. Slowing down, in either direction, uses the brake rate, as before. **The slider** (HELM, 01 FLIGHT, THRUST): 0 is in the middle, full ahead at the top and full reverse at the bottom. The lit bar runs from the middle to the handle. A press on the slider gives +100 at the top, 0 in the middle and -100 at the bottom. The header shows a negative number in reverse, for example THR -80%. G load counts reverse the same as ahead: -80 gives 1.8 G. Losing ENG power still drops the throttle to 0, in either direction. The ENG cap limits both directions. The enemy never uses reverse. **Rocks:** the owner: "the Dradis only shows signals: dots or triangles or something... to get into visual range is when it renders." Rocks now show on the plot only within visual range (2,000 units) of our ship or of one of our fighter flights. Step 92 showed them out to the DRADIS circle while DRADIS was on. Plain DRADIS doesn't show a rock. Only a ping from ACTIVE SCAN gets an echo off one. As the DRADIS sweep passes a rock inside the ACTIVE SCAN cone, a clean, thin, grey hollow circle shows at the rock. It uses the plot's solid ring line (owner: "At best, they can be clean, hollow circles"). The first build drew a soft dot that faded at the edge. The owner found it too large and too faded, and it was removed. The circle's radius is the rock's half size times Rock Echo Size, from Rock Echo Min Px (3) to Rock Echo Max Px (10). A big rock gives a bigger circle, never a large one. The circle is bright as the ping passes and drops to dim within about a second. With no new ping it fades out over 30 game seconds. The Step 148 interference rule cuts the ping's reach, as it does for ships. The far side of a thick field stays dark unless you add power. A rock across the edge of visual range is cut at the circle. The part inside shows as the rock. The part outside shows only as its blinking hollow circle. Each fighter flight's circle works the same way, up to 3 flights plus our ship. Gas clouds are unchanged by this step. **False dots removed** (owner: "the rock should be silent until you ping... those false red dots don't make sense"). A rock is silent until ACTIVE SCAN pings it. Our plot no longer shows red false dots near rocks (Step 148). The enemy no longer goes to look at a rock (Step 151). False Dot Chance, False Dot Seconds and False Look Seconds are gone from **Starwolf → Tuning**. Rock interference on reach and on eyes is unchanged. False dots from radiation are a later idea (section 8, For later talks). **Tuning:** on the Board tab of **Starwolf → Tuning**, under Sensors: Rock Echo Seconds (30), Rock Echo Blink Seconds (1), Rock Echo Dim (0.45), Rock Echo Size (1, times the rock's half size), Rock Echo Min Px (3), Rock Echo Max Px (10) and Rock Echo Ink (grey 8A959D, alpha B0). **Files:** `NavSystem.cs` (throttle range, `reverseShare`, `GLoad`, `SetThrottle`, `Steer`, `Move`). `HelmPanel.cs` (the S key, the slider). **Track Base** and **Track Span** were deleted from Helm Panel. The tooltip on the throttle's cap explains the slider. `TacticalWorld.cs` (`SeeRuins` uses visual range for rocks, `SweepRocks` records `RockEchoes`). `SensorSystem.cs` (`ConeCovers` for a bearing and range). `PlotPanel.cs` (the hollow circles and `ClipToSight`). The circles are drawn with the "circle" shape on `Rock Echoes`, a copy of `Contacts (drawn)` made at run time, just under the contacts. `MarksGraphic.cs` (`World`, a board point in world space, for `ClipToSight`). `BoardLinearImage.shader` (cut at up to 4 circles). Every other image using that shader is unaffected. False dots: `TacticalWorld.cs` (`FalseDots`, `FalseContact` and the false dot half of `SweepRocks` removed), `EnemyBrain.cs` (`falseLookSeconds` and the false look removed), `PlotPanel.cs` (the false dot drawing removed) | Checked in play on Wolf Hunt at x5. **Reverse:** at -80 with full ENG the ship backed straight astern, heading 000 and course 180. It settled at 16.8 units/s: 0.8 x 50 x 0.42 = 16.8. Screenshots `Logs/RockEchoes/05_reverse_helm.png` and `Logs/RockEchoes/06_fader_crop.png` (the slider). **Rocks:** zoom x0.30, our ship 2,000 west of a large rock, ACTIVE SCAN east, 90° arc, gain 5. This was with the first soft dots. The edge rock was cut at the visual range circle, with its outline inside and a grey glow outside. Echoes showed past the circle to the east, and none to the west outside the cone. Screenshots `Logs/RockEchoes/04_echoes.png` and `Logs/RockEchoes/07_after_fix.png`. One bug found and fixed: `Rock Echoes` is a copy of the contacts layer, and it took the grid's fade-in with it at 0. The echoes were invisible. **Hollow circles:** checked in play, screenshot `Logs/RockEchoes/10_hollow_circles.png`. **False dots removed:** compiled and checked in play. With plain DRADIS, no false dots and no echoes showed (`Logs/RockEchoes/08_passive_silent.png`). With ACTIVE SCAN on, echoes showed (`Logs/RockEchoes/09_active_echoes.png`). **Playtest:** the helm check (section 15) changed. A press in the middle of the slider now sets the throttle to 0. The check tests that, then sets a forward setting with the same rule the press uses. The full playtest passed 246 of 246 (`Logs/Playtests/2026-11-02_224549`). It ran before the change to hollow circles. No person has played it |
+| 158 | Gas clouds look like clouds, and DRADIS shows them as hollow circles (owner 2026-11-02: the clouds looked like "weird light rectangles"; they should look like clouds, and on DRADIS a hollow circle). **Within visual range** (2,000 units of our ship or of one of our fighter flights): the cloud shows as a soft, ragged grey-blue cloud. It fills the cloud's box. The pictures are flipped different ways: left to right, top to bottom, or both. The three Wolf Hunt clouds look different. **Past visual range, DRADIS on:** a cloud inside the DRADIS circle shows as a thin hollow circle at the cloud, in the ruins' grey. Its radius is the average of the cloud's half width and half height. Plain DRADIS is enough. ACTIVE SCAN is not needed. **DRADIS off:** a cloud past visual range does not show. **Inside a cloud:** unchanged. The game still uses the cloud's box: at least 90% of our ship's box in it. The picture fills that box. The edge you see is close to the real edge. **Art:** `Assets/UI/Board/Art/Plot/GasCloud.png` is now a 640 x 384 placeholder cloud, white with soft edges. The plot colours it. Its stretch borders are gone (they were 40 px). The `Gas cloud (copied for each cloud)` image on `Plot.prefab` is now Simple (was Sliced). To change the look, replace the PNG with one of the same name, or swap the sprite on the Gas cloud entry of the Plot panel's Art list. **Tuning:** on the Board tab of **Starwolf → Tuning**. Cloud Alpha, under Plot & our ship, is now 0.45 (was 0.16). At 0.16 the new cloud was almost invisible. New under Sensors: Cloud Ring Alpha (0.5, how strong the circle is) and Cloud Ring Size (1, times the cloud's average half size). The circle is never smaller than 6 px. **Files:** `GasCloud.cs` has a new flag, `inSight`: in visual range now. `seen` still means in the DRADIS circle or in sight. `TacticalWorld.SeeRuins` sets both. `PlotPanel.ShowClouds` shows the picture only when `inSight`. `PlotPanel.Refresh` draws the circle on `Contacts (drawn)`, just before the enemy torpedo dots. **Made without the owner:** the circle shows on plain DRADIS, with no scan. The circle's size is the cloud's average half size. The picture is stand-in art. Cloud Alpha went up to 0.45 | Compiled with no errors. In play on Wolf Hunt, once: our ship was moved by script to (2,000, -3,500), DRADIS on, zoom x0.12 and x0.20. Gas Cloud Middle showed as the cloud picture. Gas Cloud East showed as a hollow circle, in the right place and at the right size. No errors in the console. Screenshots: `Logs/GasClouds/2026-11-02_cloud_and_dradis_ring.png` (Cloud Alpha 0.45) and `Logs/GasClouds/2026-11-02_before_alpha_raise.png` (0.16, too faint). Not checked: COLD RUN's 10 clouds, and a fighter's view. Full playtest not run. No person has played it |
+| 159 | Turning with A and D goes the right way (owner 2026-11-02). **The bug:** with A or D held, the ship swung back and forth and turned the wrong way. Each press moves the ordered heading 3°. The order could get more than halfway round ahead of the bow. The ship then took the shorter way round. That was the other direction. **The fix:** the order now stops 179° ahead of the bow. Hold D and the ship turns to starboard until you let go. Hold A and it turns to port. When you let go, the ship keeps turning until it reaches the order, as before. **The heading ring:** the ring on the helm slides to each new heading over 0.12 s. From 359 to 000 it used to slide the long way, a full spin backwards. Now it turns the short way across north. **Files:** `StepOrderedHeading` in `NavSystem.cs`. The heading ring (**Hdg Ring**) in `HelmPanel.cs` | Tested in play mode. A one-time test held D for 20 s from heading 300. The bow turned to starboard the whole time and crossed north once. The heading ring never jumped. Full playtest not run: a small change, and the owner's rule is quick checks for small changes. No person has played it |
+| 160 | Fighters are small triangles and appear beside the ship (owner 2026-11-02: "fighters should be small triangles, not long dots or those long weird things, and they shouldn't be spawning in the centre of the ship. They should emerge from the side of the ship, maybe 10 units off the side, and then smoothly curve."). **The look:** our fighters on the plot are small white triangles, 10 px, nose pointing the way they fly. They used to be `Assets/Art/Hulls/hull_wedge_filled.png` drawn 8 x 16 px: a long thin streak. The picture is now `Assets/UI/Sprite/triangle-128.png`. It is on the Plot panel's Art list, on the entry now called Fighter triangle (was Fighter wedge). That entry puts it on the `Fighter (template)` image in `Plot.prefab`. **Fighter Px** on the Plot panel is now 10 (was 16). It is the triangle's size on screen. **Fighter Gap Px** is unchanged (10). **Where they appear:** a squadron now appears just beside the ship you see on the plot. Its leader starts past the widest part of the drawn model (the wings), plus half a fighter, plus **Launch Side Gap Units** (10 units). **The bug:** they used to start at the side of the ship's box, 25 units from the centre. The box is 50 units wide. The model's wings are much wider: the wingspan is about 64% of the length. Zoomed out, the plot also draws our ship at least 30 px long, far bigger than its true size. Either way, the fighters appeared inside the ship you see, near the middle. **The V:** the six triangles start on one spot beside the ship. The V opens as they fly out. No triangle is drawn over the ship. It closes again as they land, as before. **Unchanged:** they fly straight out for 200 units, tilted 15° toward the stern, then turn smoothly toward the target (Launch Tilt Back Deg, Launch Run Units, Turn Deg Per S, Turn Ease). **New number:** Launch Side Gap Units, in each ship's stats file, under Hangar (**Starwolf → Tuning**). **Files:** `HangarSystem.cs` (new `launchSideGapUnits` in Stats; `launchSideUnits`, set by the plot each frame; `LaunchSquad` uses both). `PlotPanel.cs` (how far out the side of the drawn ship is; the V opening; each triangle drawn as wide as it is long). `ShipView.cs` (new `WidthShare`: the model's width as a share of its length, measured once from the model). `Plot.prefab` (the Art list entry, the template's picture, Fighter Px). `PlaytestRunner.cs` (the check label now says "six triangles on the plot"). **Made without the owner:** the 10 px size. The 10 units are counted from the side of the ship as drawn, plus half a fighter. Torpedoes were not changed | Compiled with no errors. In play on Wolf Hunt (`02.1_Grid`), fighters were launched from code, with the target ahead to the north. At zoom x1, rate x1: the leader started 80.5 units from our ship's centre. The wing tip is about 64 units out. At zoom x0.10, rate x5: it started 201.9 units out, beside the drawn ship. In both, six small triangles came out beside the right wing, opened into a V and curved north. Screenshots: `Logs/Fighters/01_before_under_wing_x1.png` (first try, still under the wing), `Logs/Fighters/02_launch_zoom_x1.png`, `Logs/Fighters/03_launch_zoom_x0.10_full.png` and `Logs/Fighters/04_launch_zoom_x0.10_close.png`. Full playtest not run: a small change, and the owner's rule is quick checks for small changes. No person has played it |
+| 161 | A heard ship is a red bar on the DRADIS circle, and the bearing trail is gone (owner 2026-11-02: the bearing line was "not a very nice-looking line"; "I'd be very happy if there was a little dot or some kind of small little bar that bordered the circumference of the [DRADIS]"). The owner was offered the plot's edge for when the circle is off the screen. The answer was "Circumference of the Dradis". **What the player sees:** a ship DRADIS hears but we haven't scanned shows as a short red bar, curved along the DRADIS circle, in its direction. Its label, BRG and the angle (for example BRG 053), is just outside the bar. Before, a line ran from our ship toward the contact, with the label partway along it (Step 44). When the DRADIS circle is off the plot, so is the bar. At normal zoom the circle is often off the screen. **Red and curved** (owner: "I guess it should be red"; "The bar should be curved along the edge of the Dradis"). The bar is the board's red (alarm). It is dimmer (0.6) most of the time, and full while the periscope is on that contact. The BRG label keeps its old colours: amber while the periscope is on that contact, dimmer otherwise. The bar bends along the circle, end to end. It covers Passive Bar Deg (6) degrees of the circle. Zoom in and it grows. Zoom out and it shrinks. **It turns in real time** (owner: "That bar will keep rotating... It rotates in real time, so it's not a clicky-clicky thing"). Every frame, it follows the contact's bearing as either ship moves. The BRG number changes with it. The bar still first shows at the sweep's first touch. Before, a heard contact's bearing stayed put until the next sweep (Step 75). That no longer applies to the bar. **The picture** (owner: "this is a UI asset, so figure out where to go"): `Assets/UI/Board/Art/Plot/DradisContactBar.png`, a placeholder white bar with rounded ends, 256 x 32. It is in the Plot panel's **Passive Bar Art** slot, under Passive bearings, in `Plot.prefab`. To change the look, an artist draws a new one in white. The game colours it red. After seeing it, the owner said: "I think it looks pretty good". **The bearing trail is gone (Step 45).** Each sweep used to leave a line from where our ship was. The lines faded over 2 minutes and crossed at the contact. The lines and the code that recorded them are deleted. To find how far away a heard ship is, plot it (POINT, RULER) or scan it. **ERASE** (pressed twice) clears the plot's marks. It used to clear the trail too. **Tuning:** on the Board tab of **Starwolf → Tuning**, under Sensors. New: Passive Bar Deg (6, how many degrees of the circle the bar covers) and Passive Bar Width Px (4, how thick it is). Removed: Passive Label Px and Trail Alpha. The first version had Passive Bar Px (18) and a width of 3. Passive Bar Deg replaced Passive Bar Px. Bearing Trail Seconds is removed from each ship's stats file, Sensors section. **The playtest:** section 18 checked that two trail lines crossed at the Garuda and that a line was gone after two minutes. Now check 82 looks for the bar on `Contact bars (drawn)`, with its picture set. It also checks that no lines are drawn on `Passive bearings (drawn)`. It takes screenshot `23_bearing_bar` (was `23_bearing_trail`). It still runs two minutes at x10 for the checks after it. That is one check fewer. The section 17 check (77) now reads "a bearing bar and label point at it". It compares the label with the live bearing, within 1°. **Files:** `PlotPanel.cs` (the passive bearings block draws a "sector" on the ring at the drawn DRADIS radius; the bearing is worked out each frame from where both ships are drawn; the bars are on their own layer, `Contact bars (drawn)`, a copy of `Passive bearings (drawn)` made while the game runs; the trail drawing is gone; the new settings and the Passive Bar Art slot). `MarksGraphic.cs` (a picture, `art`; the "sector" shape now maps the picture along the slice). `Plot.prefab` (Passive Bar Art). `DradisContactBar.png` (new). `SensorSystem.cs` (`BearingFix`, `BearingFixes`, `LayBearing`, `PruneBearings` and `bearingTrailSeconds` deleted). `BoardManager.cs` (ERASE no longer clears the trail). `PlaytestRunner.cs` (section 18; the `Cross` helper deleted). **Made without the owner:** 6 degrees and 4 px. Both are on Tuning. The 6 px gap between the bar and its label. The gap is a fixed number in `PlotPanel.cs`. The placeholder picture's look. The owner picked red, curved, real time and on the circle only | **First version:** checked in play on Wolf Hunt: our ship about 5,000 units from the Garuda, gain 5, zoom x0.10. A bar showed on the DRADIS circle at BRG 053, with the label next to it, and no lines. Screenshots `Logs/RockEchoes/11_bearing_bar.png` and the close-up `Logs/RockEchoes/12_bar_crop.png`. Its full playtest passed 245 of 245 (`Logs/Playtests/2026-11-02_231040`). Check 77 (BRG 049) and check 82 (one "sector" shape, no lines) passed. **The red, curved bar that turns in real time:** checked in play. Screenshots `Logs/RockEchoes/14_red_bar_east.png` and the close-up `Logs/RockEchoes/15_red_bar_closeup.png`. The full playtest passed 245 of 245 (`Logs/Playtests/2026-11-02_232840`): check 77 (BRG 049) and check 82 (1 bar, picture DradisContactBar, no lines) passed. The owner looked at the screenshots: "I think it looks pretty good". No person has played it |
+| 162 | You can draw the line torpedoes and fighters follow out of the ship (owner 2026-11-02: "having a little path that I can draw in the editor as we're tuning the level, setting radii on the ship and everything. Similarly, I can click on a missile node and literally just draw a small path out of it. That smoothens, which then correctly explains the actual way I want my missile asset to move when it's exiting the ship, and similarly for fighters." Then: "I would like to have a hangar's dots, and I'd like to draw these similar paths for them as well."). **The tool:** on the Hard Points tab of **Starwolf → Tuning**. New green dots labelled HANGAR, one on each long side. On our ship (Asura) they are 50 units back from the middle, at (−25, −50) and (25, −50). Dragged, they stay on the long sides and snap to the marks. New button **Add a hangar dot**: it adds a dot in the middle of the long side that has fewer. **Remove this dot** removes either kind of dot. To draw a line, hold Shift and drag out of a torpedo launcher dot or a hangar dot. When you let go, the line is spaced into 32 even points and smoothed. New slider **Line smoothing** (0 to 12, default 4) sets how much. At 0 the line stays as drawn. The line shows in the dot's colour, with a small dot at its end. For a selected launcher or hangar dot, **Line out of it** shows the line's length in units. With no line it says "None: they fly straight out. Shift-drag out of the dot to draw one." **Clear the line** removes the line. The help text at the top of the tab explains all of this. **Where the data is:** each hard point has a new list, `path`: the line's points, in units from the dot (x right, y forward). It is in `WeaponSystem.HardPoint.path`, in the ship's stats file. The hangar dots are in the stats file's Hangar section, `dots` (`HangarSystem.Stats.dots`). This step drew no lines in the ship files. The owner draws them. **Torpedoes:** a torpedo from a launcher with a line flies along the line. It slows as before: from launch speed to coast speed over the coast seconds. At the end of the line it turns onto its target as before. Then its motor lights. With no line it does what it did before: straight out, tilted 15° toward the stern, then the turn. A launcher on the centre line sends every other torpedo along the mirror of the line. In a salvo, each torpedo's copy of the line is turned by the salvo's fan (Torpedo Spread Deg, 20 in each ship's file). Enemy torpedoes use the lines in their own ship's file. None are drawn there. **Fighters and assault boats:** a squadron leaves from the hangar dot on the side facing the target. With no target, it uses the starboard dot. With only one dot, it uses that dot. It appears beside the ship as drawn on the plot, by the Step 160 rule: past the wing tip, plus half a fighter, plus Launch Side Gap Units. It is level with the dot along the ship. Then it follows the shape of the line. At the end of the line it turns onto the target as before. An ESCORT flies on straight past the end of the line until its whole V is clear of the small circle. With no line it does what it did before: straight out 200 units, tilted 15° back, then the turn. It now starts level with the hangar dot, 50 units back from the middle. **In space:** the line is placed in space at the moment of launch. It is turned to the ship's heading at that moment. Then it stays put. If the ship moves on, the line does not move with it. Launches already worked this way. **Made without the owner:** the hangar dots are 50 units back from the middle. The middle of each side has the railguns. Dots there overlapped them and couldn't be clicked. 32 points, and smoothing 4. The mirror for centre-line launchers. Fighters start beside the drawn ship and keep the line's shape. The line stays fixed in space after launch. Shift-drag draws the line. Without a line, fighters now start 50 units back from the middle, at the hangar dot. **Files:** `WeaponSystem.cs` (`HardPoint.path`; new `Laid`, `Along`, `LengthOf` and `LineOf`; `Round.line` and `Round.along`; `NewTorpedo`, `Clear` and `LaunchAt` take the line). `HangarSystem.cs` (`Stats.dots`; `Flight.line` and `Flight.along`; `LaunchSquad` picks the dot and places the line; `Fly` follows it). `EnemyBrain.cs` (passes its launcher's line). `StarwolfTuningWindow.cs` (the Hard Points tab). `Asura.asset` (the two hangar dots). The file also caught up with fields from Steps 157, 160 and 161 when it was saved: `reverseShare` added, `launchSideGapUnits` added, `bearingTrailSeconds` removed. Their values didn't change | Compiled with no errors. A one-time logic test in the editor (nothing went into the game): a shaky S-shaped stroke was smoothed to 32 points. A torpedo flew it, stayed within 1.1 units of the line, and was clear at its end. A fighter flew it, then turned toward the target. In play on Wolf Hunt (`02.1_Grid`): test lines were put on the play copy only, and the ship file was not changed. The fighters' line went out left and swept back. The torpedoes' line went out left, swung forward, then came back. Both were launched from code. The screenshots were stacked into one picture, `Logs/LaunchLines/04_trail_close.png`. Also `03_trail_all_frames.png` and the frames `seq_00` to `seq_13`. The torpedoes arc out of the left launcher along their line. The fighters come out beside the left wing and sweep back along theirs. The Hard Points tab: mouse events were sent from code. A Shift-drag made a 32-point line. Screenshot `Logs/LaunchLines/05_hard_points_tab.png`. It is upside down, from how it was grabbed. The test line was cleared afterwards. Full playtest not run: a small change, and the owner's rule is quick checks for small changes. Nobody has drawn a line with the real mouse. No person has played it |
+| 163 | The training levels describe the new DRADIS (owner 2026-11-02: "what about the update on FTOE?"; then "yeah, make the fixes, please"). Steps 157 and 161 changed DRADIS. Rocks past visual range show only when ACTIVE SCAN pings them, as grey hollow circles. A heard ship that is not scanned is a red bar on the DRADIS circle. The bearing lines and their trail are gone. Three training levels still described the old DRADIS. The texts are in each level scene, on the Mission box. **FLIGHT DRILL** (`FlightDrill.unity`). The THROTTLE note now reads: "W raises the throttle. S lowers it. Below 0 is reverse. ENG sets the limit. Fly into the CHECKPOINT ring ahead." The DRADIS note now reads: "Rocks ahead. You see rocks only inside your visual ring, 2,000 KM. DRADIS hears ships. Rocks make no sound. Press 3 and put SEN on DRAW. Press 2 and switch DRADIS on." It used to say DRADIS shows rocks out to its circle. A new step 12, ACTIVE SCAN, comes after it: "A ping shows rocks past your visual ring, as grey circles. It also makes you loud. Switch ACTIVE SCAN on. Drag the cone dial to point ahead." It ends when ACTIVE SCAN is on with DRADIS listening. ROCK FIELD and LAST CHECKPOINT are now steps 13 and 14, unchanged. The drill has 14 steps. Section 2, `FlightDrill`, lists them. **New drill check ACTIVE ON** (`DrillCheck.ActiveOn` in `Mission.cs`, checked in `QuestSystem.Passed`). It is added at the end of the list. The checks already saved in the scenes keep their numbers. **WEAPONS FREE** (`FirstShot.unity`), briefing steps 4 and 5 now read: "SENSORS (key 2): turn on DRADIS. Zoom out until you see the DRADIS circle. A red bar on it points at the Garuda. 5. Turn on ACTIVE SCAN. Drag the cone dial onto the bar and let go." Before: wait for a bearing line, then drag the cone onto the line. **NO PEEKING** (`SilentShot.unity`), briefing steps 3 to 5 now read: "SENSORS (key 2): turn on DRADIS. Zoom out until you see the DRADIS circle. A red bar on it points at the Garuda. 4. Fly toward the bar with W, A and D. When the Garuda comes into sight, zoom back in. 5. Put a POINT on the Garuda. A minute later, put another." Steps 6 to 8 (RULER, TRACK, fire) are unchanged. Before, you moved until the bearing lines crossed at the Garuda. Now you follow the red bar until you can see the Garuda. **Files:** `FlightDrill.unity`, `FirstShot.unity`, `SilentShot.unity` (the Mission box), `Mission.cs`, `QuestSystem.cs`. **Made without the owner:** the exact wording. The owner saw a summary and said "I think this is actually pretty good" | Checked in play: FLIGHT DRILL from the DRADIS step. DRADIS on moved it to ACTIVE SCAN. ACTIVE SCAN on moved it to ROCK FIELD. The two briefings were changed by an exact text swap and saved. Full playtest not run: no playtest check covers these texts. No person has played the levels since |
+| 164 | Zoom in close and the ships and rocks show as lit 3D models (owner 2026-11-08: "when you zoom in close enough, you see the actual 3D model of the ship... only when you zoom out it becomes wireframe, and when it leaves the visual range it becomes a signal"; then: "give the ships a shader, a grey metallic shader... a light source somewhere on the map that illuminates from a direction, so you have this sense of light glistening"). **What the player sees:** zoom in on the plot, and the ships and rocks inside visual range turn into real 3D models. Ships are grey metal. Rocks are dark rock. One sun lights them. The bright spots have a soft glow. Zoom out, and they fade back into the line pictures. Past visual range nothing changes: DRADIS shows signals as before. **The fade:** the close-up starts to show at zoom x1, where the plot used to stop. At x1.5 it has fully replaced the line pictures. A level still opens at x1 with the line pictures, red, amber and white as before. Close Up From Zoom (1) and Close Up Full Zoom (1.5) set these. They are on the Board tab of **Starwolf → Tuning**, under Plot & our ship. **Closer zoom:** the plot now zooms in to x4. It used to stop at x1. At x4 our ship is 608 px long. Zoom In Limit (4) is on the Board tab, under Board & time. The SCALE knob now turns from full zoom-out to x4. The scale box shows x1.0 up to x4.0. **The sun:** the sun is the light called Sun in the board scene `02.1_Grid`. It was called Ship Light. It lights ships and rocks. Sun From Deg (300) is the way the sunlight comes from, in degrees clockwise from north. Sun Height Deg (35) is how high it is above the plot. At 90 it shines straight down. Both are on the Board tab, under Plot & our ship. The sun's colour and brightness are on the light itself. It is the board scene's Sun Source (Lighting window). **The look:** the files are in `Assets/Art/Close Up`. `Ship Metal.mat` is the grey metal for every ship. `Rock.mat` is for every rock and wreck piece of the level. `Close Up Look.asset` is the glow. Open it to change the glow's strength. The renderer is `Assets/Settings/Close Up Renderer.asset`. It is a copy of the game's renderer without the line look. It paints ships with Ship Metal and rocks with Rock. It is number 1 in the renderer list on `Assets/Settings/PC_RPAsset.asset`. The Plot panel's Close Up Renderer value (1) points at it. PC_RPAsset now also lets the glow keep the see-through background (Alpha Processing on). **On the plot:** a new picture, `Close-up (3D view)`, in `Plot.prefab`. It is just above `Ground` and under `Grid`. The grid lines, marks, labels, shots, fighters and torpedoes draw on top of it. New values on the Plot panel: Close Up Image and Close Up Look. The close-up is cut at the visual range circles round our ship and our fighter flights, the same way the rocks are cut. It fades in with the rest of the plot when the board appears. **Ship sizes:** the ship models were tiny, about 13 units long. They are now their real length: our Asura 200 units, the Garuda 350, the frigate 100. The model inside each ship object in `02.1_Grid` was scaled. The two cameras that film the line pictures (Ship View Camera and Contact View Camera · Garuda) were moved back by the same amount. Their depth range was widened by the same amount. The line pictures look exactly as before. They were checked side by side. Each of those cameras now films only its own ship: with the models this big, a ship close by showed inside the other's picture. Own Ship Max Px went from 300 to 1200: a ship's drawn size now follows its model up to x4. The small circle round our ship, the start of the scan cone, the labels and the fighters' landing use that size. The close-up is filmed at the screen's pixels, so it is sharp on the 2880 x 1864 screen. **Out of sight stays out:** the close-up shows a ship only when it is in sight by the game's own rule. A ship behind a rock is left out, even inside 2,000 units. **Unchanged:** every ship is the same grey in the close-up. A ship's white, red or amber colour shows only in the line pictures. The name labels and the white lock corners still show. A destroyed ship keeps its line picture, broken in two, at every zoom. The close-up leaves wrecks out. Fighters, shots and torpedoes are still drawn flat on top. Gas clouds are unchanged. **Made without the owner:** the fade zooms x1 and x1.5. The x4 limit. The metal and rock colours. The glow strength. The sun's direction and height. **Files:** `PlotPanel.cs` (`ShowCloseUp`, `CloseUp`, the fades in `Refresh`, `ClipToSight`). `BoardManager.cs` (`zoomInLimit`, `SetZoom`). `PlotGrid.cs` (zoom up to x10). `ShipView.cs` (films only its own ship). `Ship.cs` (`All`, `Models`, `Nav`). `Plot.prefab`. `02.1_Grid.unity`. `PC_RPAsset.asset`. `Close Up Renderer.asset`. `Ship Metal.mat`, `Rock.mat` and `Close Up Look.asset` in `Assets/Art/Close Up`. The old cutscene experiment's camera (an experiment not in git) was moved from renderer 1 to 2 | **Done**. Compiled with no errors. Checked in play on Wolf Hunt, once. Our ship was moved by script next to the Garuda. At x1 both ships showed as lit grey metal (with the first fade numbers, x0.5 to x0.8). At x3 the Garuda's metal caught the light. At x0.65 the two looks were half and half. With the close-up switched off, the line picture of our ship matched the picture from before the change exactly. A destroyed Garuda kept its two broken line halves, with no model behind them. A QA agent then read the code and found six problems: a ship behind a rock showed; the 300 px cap; the sun angle values did nothing (the scene had no Sun Source); the start zoom; a ship close by inside the other's picture; a blurry picture. All six were fixed and checked in play again: the Garuda behind a rock inside 2,000 units was left out (`08_ship_behind_rock_x15`); the Garuda 142 units from our ship, each line picture showed only its own ship (`09_two_ships_close_lines_x08`); the sun turned to the Tuning values. No errors in the console. Screenshots in `Logs/CloseUp/`: `01_before_x1`, `02_closeup_x1`, `03_closeup_x3`, `04_lines_after_x1`, `05_ship_lines_before_after`, `06_wreck_x1`, `07_crossfade_x065`, `08` and `09`. Full playtest not run. No person has played it. Next: a nebula under the ships, then real shots and explosions |
+| 165 | A nebula under the ships in the close-up (owner 2026-11-08: "create maybe some nebula effects at the bottom using some colour, so it looks like a rich, detailed area of space and not just black space". The plan put to the owner, and accepted: a nebula picture under everything, two or three layers at different depths, far ones moving slower as you pan, star dots the same way, and the metal reflecting the nebula's colours. Shown only in the close-up). **What the player sees:** zoom in past x1, and the space under the ships is no longer black. There are soft violet and teal gas clouds, stars, and thin warm and cold wisps of gas. The grid, marks and labels draw on top. Zoom out to x1 and the nebula fades away with the close-up. Past visual range it is cut at the circle, like the ships. **The layers:** three pictures in `Plot.prefab`, back to front: `Nebula far`, `Stars` and `Nebula near`. They are between `Ground` and `Close-up (3D view)`. Each one repeats in every direction. Far layers move less as you pan. At x1, Nebula far moves at 15% of the grid's speed, Stars at 30%, Nebula near at 50%. Zoomed in further they move less again. They also grow less as you zoom. What is at the plot's centre stays put while you zoom. **On the Plot panel:** a new list, Nebula, with one entry per layer. Image is the layer's picture. Depth is how fast it moves with the grid: 0.15, 0.3 and 0.5. At 1 it moves with the grid. Tile Units is how many units across one copy of the picture is at x1: 9,000, 1,300 and 5,000. Alpha is how strongly it shows: 1, 0.9 and 0.8. **The pictures:** stand-in art made by a script for this step. They are 1024 x 1024 and repeat without seams: `Assets/Art/Close Up/Nebula Far.png`, `Stars.png` and `Nebula Near.png`. To change the look, put another picture in the layer's Texture. Or replace the PNG with one of the same name. A new picture must repeat without seams. Its Wrap Mode must be Repeat. Nebula Near and Stars need see-through parts. **The metal reflects the nebula:** the board scene `02.1_Grid` now uses `Assets/Art/Close Up/Nebula Reflection.png` for reflections. It is set in the Lighting window, under Environment Reflections, Source Custom. It is a copy of Nebula Far, imported as a cube. If you change Nebula Far, change this copy too. The scene's ambient light is now a flat dim violet. It is set in the Lighting window, under Environment Lighting. The line pictures do not change. **Made without the owner:** the stand-in pictures and their colours. The three depths, sizes and strengths. The violet ambient light. **Files:** `PlotPanel.cs` (`NebulaLayer`, `nebula`, in `ShowCloseUp` and `Start`). `Plot.prefab`. `02.1_Grid.unity`. The four pictures in `Assets/Art/Close Up` | **Done**. Compiled with no errors. Checked in play on Wolf Hunt, once, at x1.8 beside the Garuda. Stars, gas and wisps showed under both ships, with the grid on top (`Logs/CloseUp/10_nebula_x18.png`). A pan of 500 units moved the layers 15%, 30% and 50% of the grid's move, measured (with the first version of the sums). A QA agent then found the layers slid sideways as you zoomed away from the map's centre. Fixed: zoomed from x1.5 to x4 with the view 9,000 units from the centre, each layer's centre stayed exactly where it was. Tile Units can't go below 1. No errors in the console. Full playtest not run. No person has played it. Next: real shots and explosions in the close-up |
+| 166 | Shots and blasts in the close-up (owner 2026-11-08: "the idea is that when you're firing a beam, it actually looks like a beam that's firing"). **What the player sees:** zoom in past x1, and every shot in flight is a glowing streak. Ours are blue-white. The enemy's are red. A torpedo's streak is wider than a railgun slug's. The flat dot and trail still draw on top. A streak has the same length in units at every zoom. Where a shot hits a ship, there is a flash: a burst of orange sparks with a white centre. The same flash shows when a torpedo is shot down. It shows only in the close-up. Flashes and blasts run in game time: they stop when the board is paused, and run five times as fast at x5. When a ship is destroyed, there is a blast: a big white flash, sparks and slow embers. Its model then splits in two where the shot struck, the same as its line picture. The two halves drift apart and turn slowly. They follow the same rules as the line picture's halves: Wreck Drift Units and Wreck Spin Deg, already on the Board tab. The halves are a duller, darker grey metal. Zoomed out, the broken line picture shows as before. Between x1 and x1.5 the two fade into each other. **Tuning:** four new values on the Board tab of **Starwolf → Tuning**, under Plot & our ship. Slug Width Units (6) and Torpedo Width Units (11) are the streak's width at the front. Our Shot Glow and Their Shot Glow are the two streak colours. **The look:** the files are in `Assets/Art/Close Up`. `Glow.mat` is every streak. Its Colour sets how bright every glow is. It is now 3. `Glow.png` is the soft dot every streak, spark and flash is drawn with. `Glow.shader` is the glow. It adds light. `Hit Flash.prefab` is the hit's sparks and centre flash. `Kill Blast.prefab` is the blast: Flash, sparks and Embers. `Wreck Metal.mat` is the halves. New values on the Plot panel point at them: Glow, Hit Flash, Kill Blast and Wreck Look. **How it is set up:** the shots, blasts and halves are on Unity's TransparentFX layer. Only the close-up camera films it. The Sun in `02.1_Grid` now lights it too. The close-up picture now lets its light add over the nebula. A glow over empty space shows. `Assets/UI/Shader/BoardLinearImage.shader` has a new hidden value for this. Every other picture on the board is unchanged. The model file of the Garuda and the frigate (`Assets/3D Assets/UpdatedStarships/StarWolf_Cruiser_mesh.fbx`) now has Read/Write on. The game reads its shape to cut it. Our ship's model does not need it. A model that can't be read is not cut: that wreck keeps its broken line picture in the close-up. Each half keeps only its own part of the model. Cutting the Garuda took 102 ms, once, on the frame of the kill. The glow in `Close Up Look.asset` is now smoother: High Quality Filtering on, Scatter 0.55, Threshold 0.9. The first blast showed a blocky halo. **Made without the owner:** the streak colours and widths. The look of the flash and the blast. The duller wreck grey. The glow settings. **Not done:** PDC fire has no streak yet. Fighters are still flat triangles. **Files:** `PlotPanel.cs` (`ShotAt`, `ShowShotsAndBlasts`, `Break`, `NewStreak`). `BoardLinearImage.shader`. `Plot.prefab`. `02.1_Grid.unity`. `StarWolf_Cruiser_mesh.fbx.meta`. `Close Up Look.asset`. `Glow.mat`, `Glow.png`, `Glow.shader`, `Hit Flash.prefab`, `Kill Blast.prefab` and `Wreck Metal.mat` in `Assets/Art/Close Up` | **Done**. Compiled with no errors. Checked in play on Wolf Hunt, once. Shots were added by script: three slugs at the Garuda, one of them wide. The slugs showed as blue-white streaks. An enemy torpedo showed as a red streak (`Logs/CloseUp/14_streaks_and_hit.png`). A slug hit showed a flash on the Garuda's side (`11_shots_in_flight.png`). The Garuda was destroyed by script. The blast showed (`15_kill_blast.png`). Then two grey halves drifted apart (`16_wreck_halves.png`). At x1.2 the 3D halves were checked against the line halves twice: at the kill, and 23 seconds later. Both times they had the same turn, 298° and then 180°. Both times they were within about 20 px of the line halves (`18_halves_age0_crossfade.png`, `19_halves_later_crossfade.png`). The effects' clock was slowed for the pictures. Nothing in the game was changed for that. A QA agent then found: a crash on RESTART if a model could not be cut; such a wreck would vanish in the close-up; the halves kept the whole model each; flashes ran in real time; the streak changed shape with zoom; two typed-in numbers; a new list every frame. All fixed. Checked again in play: a hit flash froze when the board was paused (stopped at 0.46 s); the cut halves kept 146,857 and 263,823 points of the model's 410,258 (`20_halves_after_fixes.png`). No errors in the console. Full playtest not run. No person has played it |
+| 167 | A campaign: three save slots and a sector map of missions (owner 2026-11-08: "you click New Game... We'll have a page which says Save Slots. You have three save slots. Then you have a screen which shows a grid or a sector of space, and a little dot appears. You click that, and that's your first mission. Later, when you solve that, you go to the next mission, which is another dot." Owner answers: three slots. The game saves only between missions. The first dots are today's seven levels, in the level list's order. The level list stays for testing, from a second row on the title. Four new scripts OK'd: SaveGame, SaveSlots, SectorMap and ShipRooms. The sector map has a stand-in look until the owner sends a reference). **The title:** the menu now reads NEW GAME, LEVELS, SETTINGS. LEVELS was LOAD GAME, which did nothing. It now opens the MISSIONS list. The title's lettering had no V. A V was added to `Assets/StarwolfIntro/Resources/StarwolfIntro/glyphs.json`. It is built from 2 x 2 blocks, like the other letters. **SAVE SLOTS:** NEW GAME opens it. It has three rows. Each row starts with its number. An empty row reads EMPTY, and under it START A NEW CAMPAIGN. A used row reads CAMPAIGN · 1 MISSION DONE (or MISSIONS DONE), and under it SAVED and the time. Click a row. An empty row starts a new campaign. A used row continues its campaign. Either one opens the SECTOR MAP. A used row has DELETE to its right. The first click turns it into SURE? CLICK AGAIN. The second click empties the slot. Escape quits the game, as on the MISSIONS list. **SECTOR MAP:** the title SECTOR MAP, a faint green grid, and the campaign's missions as dots. At the start one dot shows: 1 FLIGHT DRILL. The open dot slowly grows and shrinks. Click a dot. A box opens with the mission's number and name, its briefing line and LAUNCH. LAUNCH shows INITIALISING... and opens the board with that level, as the MISSIONS list does. Escape quits the game here too. **After a mission:** win it, and the save notes it at once. MISSION SELECT on MISSION COMPLETE goes back to the SECTOR MAP. So does MISSION SELECT on the pause menu. For a level started from the MISSIONS list, both still go to the MISSIONS list. On the map the finished dot is dimmer, with a tick after its name. A line leads to the next dot. The new dot fades in the first time it shows. A finished mission can be played again. Lose, and the dot stays open to try again. **The missions:** the seven levels, in the MISSIONS list's order: FLIGHT DRILL, COLD RUN, WEAPONS FREE, NO PEEKING, FINDERS KEEPERS, INTERCEPT, WOLF HUNT. Each one opens when the one before it is won. The list is on the Sector Map Script object in `SectorMap.unity`. Each mission has a Title, a Level (the level scene's name), a Brief and an At. At is where its dot is, in px from the middle of the 1920 x 1080 screen. **The save files:** one small file per slot, `slot1.json` to `slot3.json`. They are in the folder Unity gives the game. On a Mac it is `~/Library/Application Support/Shagun Shah/Starwolf`. On Windows it is `AppData/LocalLow/Shagun Shah/Starwolf`. The folder's name comes from Company Name and Product Name in Project Settings → Player. Change either, and the game looks in a new, empty folder. A save keeps the missions won and how many dots the map has shown. The game writes the new file beside the old one, then swaps them. It keeps the one before as a .bak. If a file can't be read, the .bak is used. A later build can add things to a save. Older files still load. **Made without the owner:** the second row's name, LEVELS. The V's shape. The wording on the slot rows and SURE? CLICK AGAIN. The map's layout, dot places, grid and box. MISSION SELECT going to the map in a campaign. Playing a finished mission again. Escape quitting on these two screens. **Files:** new `SaveGame.cs` (the save files), `SaveSlots.cs` (the SAVE SLOTS screen) and `SectorMap.cs` (the map), all in `Assets/Scripts/Game`. New scenes `Assets/Scenes/Tactical/SaveSlots.unity` and `SectorMap.unity`. They are copies of `01_Briefing.unity`, with the same green look. Both are in the build list. New picture `Assets/Art/Sector Map/Grid Square.png`, the map's grid (stand-in). Changed: `ScreenFlow.cs` (`Go`). `QuestSystem.cs` (a win is saved). `EndScreenPanel.cs` (Campaign Scene, "SectorMap"). `StarwolfIntroController.cs` (Second Row Text). `00_Start.unity`. `glyphs.json`. `PlaytestRunner.cs` (its step 3 now presses LEVELS; new section 32 checks the campaign: slot 3 opens the map with one dot, a win is saved, the map then shows two, DELETE empties the slot. It skips itself if slot 3 holds a real save). **Also in this step:** the full playtest after Steps 164 to 166 passed 244 of 245 (`Logs/Playtests/2026-11-08_221749`). The one failure was an old check. Step 162 (drawn launch lines) changed how fighters leave the ship. No full playtest ran after it. The check now allows a drawn hangar line | **Done**. Compiled with no errors. Played the real flow once in the editor. The game's buttons were pressed by script. The title showed NEW GAME, LEVEL LIST, SETTINGS (`Logs/Campaign/02_title_menu.png`; the row was renamed LEVELS after QA). NEW GAME opened SAVE SLOTS with three empty rows (`03_save_slots_empty.png`). Slot 3 made `slot3.json` and opened the map with one dot (`04_sector_map_first_dot.png`). The dot opened the box (`05_mission_box.png`). LAUNCH opened the board on FLIGHT DRILL. The mission was ended as won by script (`06_mission_complete.png`). The save then listed FlightDrill. MISSION SELECT opened the map with FLIGHT DRILL ticked and COLD RUN new (`07_sector_map_second_dot.png`). SAVE SLOTS showed slot 3 used. DELETE asked first. The second click emptied the slot and its .bak (`08_save_slots_used_delete_asks.png`). A QA agent then found: a failed save (a full disk, or a file in use) was not caught, and the map came up empty; playing `SectorMap.unity` straight from the editor wrote into the real slot 1; LEVEL LIST was wider than its click area; the pulse size was typed into the code, and the dot's name grew with it. Fixed: a failed save is logged and the game goes on with the old save; the map with no slot picked opens SAVE SLOTS (checked: no file made); the row is now LEVELS; Pulse Size is on the Sector Map Script, and only the dot grows. Not changed: nothing yet marks the end when every mission is done; nothing leads back to the title, so a picked slot stays in play until the game quits. No errors in the console. Full playtest not run since. No person has played it. Next: after a mission, the ship's rooms (BRIDGE, ENGINEERING, HANGAR, QUARTERS), then repairs |
+| 168 | The ship's rooms between missions (owner 2026-11-08: "When you finish the level, we'll use the same border edge of our tactical grid, but we'll have some other tabs there, and you can go to different rooms on the ship. These are 2D pieces of art, and you may click on characters and speak to them. That'll open a panel where they talk to you"; then: "If you click on any of the bridge, engineering, hangar, or quarters, then you can just give me some Unity sprites or boxes. There's no need for final art. I just need a placeholder, or even, in the art manager, if that exists as yet, I need a place where I can put an image in there."). **What the player sees:** in a campaign, MISSION SELECT now opens the ship. It does this on MISSION COMPLETE, on SHIP LOST and on the pause menu. The board's metal frame shows. Along its top are five tabs: BRIDGE, ENGINEERING, HANGAR, QUARTERS and SECTOR MAP ›. The picked tab is gold. The others are grey. BRIDGE shows first. **The rooms:** each room is a stand-in painting. It is a dark coloured panel with the room's name in faint letters. Each room has one person in it: a grey box with their name under it. The XO is on the BRIDGE. The CHIEF ENGINEER is in ENGINEERING. The FLIGHT LEADER is in the HANGAR. The MARINE SERGEANT is in QUARTERS. These names and their lines are stand-ins until the story is written. The owner will plan the story separately. **Talking:** click a person, and the talk box opens at the bottom. It shows their picture, their name in gold and what they say. Up to three answers are on the right. An answer leads to another line, or ends the talk. A line with no answers shows LEAVE. Picking another tab closes the talk. SECTOR MAP › opens the sector map. **The art:** the `Ship` object in `Ship.unity` has an Art List. It has one slot per room painting: BRIDGE painting, ENGINEERING painting, HANGAR painting and QUARTERS painting. It has one slot per person: XO picture, CHIEF ENGINEER picture, FLIGHT LEADER picture and MARINE SERGEANT picture. Put a sprite in a slot, and the room or the person shows it. The talk box shows the same picture as the person in the room. **The words:** the same `Ship` object has the Ship Rooms script, with its Rooms list. Each room has a Name, a View (the painting), a Tab and People. Each person has a Name, a Picture (the box you click) and Lines. Each line has a Text and up to three Replies. Each reply has a Text and a Next. Next is the line it leads to, counting from 0. At -1 it ends the talk. **How it is made:** `Ship.unity` is a copy of the board scene `02.1_Grid.unity`. Only the board's camera, its picture and the `Frame` are kept. The rooms are drawn on top of the frame, where the plot is on the board. The tabs are in the frame's top band. **Made without the owner:** the four people and their stand-in lines. The room colours. The tab look. The talk box's layout. MISSION SELECT going to the ship after a lost mission too. **Files:** new `Assets/Scripts/Game/ShipRooms.cs`. New scene `Assets/Scenes/Tactical/Ship.unity`, in the build list. Changed: `EndScreenPanel.cs` (Campaign Scene is now "Ship"). `End Screen.prefab` | **Done**. Compiled with no errors. Played in the editor. The buttons were pressed by script: SAVE SLOTS, slot 3, the map, LAUNCH on FLIGHT DRILL. The mission was ended as won by script. MISSION SELECT opened the ship. The HANGAR tab showed the HANGAR. The FLIGHT LEADER's talk box opened (`Logs/Campaign/11_ship_after_win_hangar.png`). On the BRIDGE, the XO's answer ANY NEWS? led to the next line. CARRY ON. closed the talk (`10_ship_bridge_talk.png`). SECTOR MAP › opened the map with two dots. Slot 3 was emptied after the test. A QA agent then found: Escape did nothing on this screen; art put on the Art List would be tinted by the stand-in grey; a tab with no text would crash; the scene still loaded the nebula reflection. Fixed: Escape quits, as on SAVE SLOTS and the map (a ScreenFlow object); a room or person with a sprite shows it in its own colours; the tab text is checked; the reflection is cleared. Checked in play again: no errors. Note for art: import paintings with sRGB off, like the board's other art. No errors in the console. Full playtest not run. No person has played it. Next: repairs in ENGINEERING. Damage will stay on the ship between campaign missions |
+| 169 | Repairs in ENGINEERING: damage stays on the ship between campaign missions (owner 2026-11-08: "maybe you can undertake some research, repair actions"; then: "I don't really need research per se. I think repairs are fine." The owner's answers before building: damage stays on the ship between missions in the campaign only. The test levels still start undamaged). **What the player sees:** in a campaign, win a mission, and our ship keeps its damage. The next campaign mission starts with it. On the ship, ENGINEERING shows a DAMAGE REPORT beside the CHIEF ENGINEER. It lists each part that is not whole. Each line shows what is left and the most it can be: PROW ARMOUR 25 / 100, MAGAZINE 3 / 5. With no damage it reads ALL PARTS WHOLE. REPAIR ALL is under the report. It makes the ship whole and saves at once. It shows only while there is damage. **What stays:** each side's armour: PROW, STBD, AFT and PORT. Each room's integrity: MAGAZINE, BRIDGE, HABITATION, HANGAR BAY, REACTOR and ENGINE ROOM. **What ends with the mission:** fires, radiation, vented rooms and crew losses. A room that ends at 0 is kept, and shown, at 1. A reactor at 0 would destroy the ship at once. **When it is kept:** a win's damage goes into the save when you press MISSION SELECT. RESTART MISSION on the win screen replays the mission from the damage it started with. **A lost mission keeps nothing:** the ship is as it was before that mission. Levels from LEVELS (the MISSIONS list) always start whole. **Repairs:** they cost nothing for now and take no time. A question for the owner: should repairs take time, crew or something else? **The save file:** a new list, damage. It has one entry per part, with its name, now and most. Empty means whole. Older saves without it load as whole. **In the scene:** a new panel, Damage report, in Room · ENGINEERING in `Ship.unity`. It has Title (DAMAGE REPORT), Report and REPAIR ALL. Ship Rooms has two new values under Repairs: Damage Report and Repair All. **Made without the owner:** repairs are free and instant. One button repairs everything. Fires, radiation, vented rooms and crew don't stay. A room at 0 comes back at 1. A lost mission keeps nothing. **Files:** `SaveGame.cs` (`KeepDamage`, `PutDamage`, `Repair`, `Part`). `QuestSystem.cs` (a campaign mission starts with the kept damage; a win keeps it). `ShipRooms.cs` (Damage Report, Repair All). `Ship.unity` | **Done**. Compiled with no errors. Played in the editor, once, on slot 3. The buttons were pressed by script. FLIGHT DRILL started whole: PROW 100, MAGAZINE 5. During it, by script, the prow armour was set to 25 and the magazine to 3. The mission was ended as won by script. The save then listed PROW ARMOUR 25/100 and MAGAZINE 3/5. ENGINEERING showed them (`Logs/Campaign/12_engineering_damage_report_b.png`). COLD RUN was launched without a repair. It started with PROW 25 and MAGAZINE 3. It was won. REPAIR ALL then showed ALL PARTS WHOLE, hid the button and emptied the save's damage (`13_engineering_after_repair.png`). WEAPONS FREE then started with PROW 100 and MAGAZINE 5. Slot 3 was emptied after the test. A QA agent then found: RESTART MISSION on the win screen replayed with the win's damage, so each replay started worse; a room at 0 was shown as 0 but came back at 1; armour like 29.7 of 30 showed as 30 / 30. Fixed: the win's damage is kept at MISSION SELECT; a room at 0 is kept as 1; the report rounds down. Checked in play again: after a win with damage, RESTART MISSION started whole (STBD 100, HANGAR BAY 5); won again with STBD 29.7 and HANGAR BAY 0, MISSION SELECT kept them, and ENGINEERING read STBD ARMOUR 29 / 100 and HANGAR BAY 1 / 5. No errors from the game in the console. Full playtest after Steps 167 to 169: 246 of 248 (`Logs/Playtests/2026-11-08_225218`). Every game check passed. The two failures were the new campaign checks (section 32): they waited 0.6 real seconds, and while the playtest records its video the game's clock can run behind, so the half-second click guard on SAVE SLOTS was still shut. The checks now wait in game time. They were then checked by hand in play: slot 3 opened the map with one dot, a win showed two, DELETE emptied the slot. No person has played it |
+| 170 | The spinal railgun: our ship becomes a sniper (owner 2026-11-08: "I think I want to set the starship up into a sniper configuration"; "The railgun will be a spinal weapon, so it'll be at the nose of the ship. It has no swivel… you need to rotate the ship fully to aim it"; "You have to slow the ship completely. It has to be at zero drift"; "an assault destroyer should have boarding capability… But it shouldn't have fighter jets it can deploy"; "maybe we should call it Nuclear Lance". The plan is `docs/SNIPER_PLAN.md`. This is its step 1. Owner 2026-11-09: "please go", and "don't worry about the tuning. You can use your judgement to put a value". Then, the same day: "you can get a target as well… you can ballpark the thing, or you can get into the correct radius range and do all the steps to get a proper target lock. At which point, your ship also just starts auto-adjusting, and then you can fire". On the name, the same day: "it is a spinal railgun… We don't have to call it nuclear lance. We don't want to be stupid. Keep it railgun… it is a spinal railgun in this current configuration. It means it cannot swivel. It just points straight." Then: "the mount does not need to say SPINAL RAILGUN. It will also continue to say RAILGUN."). **What the player sees:** our ship has one gun on its nose, the spinal railgun. The weapon picker still reads RAILGUN. The gun doesn't swivel. It points straight ahead. You aim it by turning the ship. Open fire control, and a thin line runs out of the nose to the railgun's full reach, 30,000. There are two ways to aim. By eye: turn the ship yourself. Hold Shift with A or D, and it turns slowly, 2° a second. With a lock: lock the target with the targeting computer, the usual way. While the lock is on, the ship turns itself onto where the target will be. Then set the four switches and pull the lever. Lay a RULER, and its label also says how long a slug takes to fly it: "18,000 km · SLUG 12 S". The slug leaves the nose and flies straight along the line at 1,500 a second. If the ship is drifting, the slug drifts too, and misses. The hangar has no fighters. A new test level, LONG SHOT, is row 8 on the MISSIONS list. **The spinal railgun:** in our ship's file, `Asura.asset`. One railgun: id SRG, label RAILGUN, short name RG, kind RG, Arc 0, Half Arc 0, reach 30,000, 12 slugs. It is on a new hard point dot at the nose's centre, (0, 100). The side railguns RG-A and RG-B are gone from our ship. Their two dots on the long sides stay, empty, for lasers later. Our slug speed is now 1,500 a second. It was 300. A slug does the same damage as before. A shot still costs 70% of the capacitor. The Garuda's file is unchanged: two railguns that turn, slug speed 300. **The rule:** a railgun with Half Arc 0 is fixed to the hull. It fires straight along its arc, to the part of a degree. It can fire with no target, no lock, no firing solution, no turret turn and no periscope bearing. LOAD, ANGLE and BEARING open with nothing set. ARM still needs the capacitor's charge. The four switches stay for now. Step 3 of the plan takes ANGLE and BEARING away. **The lock turns the ship:** while a lock is on and the railgun is picked, the ship turns itself onto the lead. It turns the whole degrees at its usual turn rate. Then it turns the last part of a degree at the slow turn's 2° a second. The lead uses the lock's course: from a scan or from a plotted track, whichever is newer. With neither, it points at where the target is now (NO COURSE). When the lock runs out after 10 seconds, the ship stops turning itself, and the helm is the player's again. While it turns itself, it clears the helm's attitude key, and A and D can't turn against it. Shift with A or D still works. Only a lock turns the ship. A TRACK solution from the plot does not. **Fire control:** the weapon picker's printed label still reads RAILGUN. The mount screen reads RAILGUN, FIXED 000°, 30,000 km and SLUGS 12. With the four switches set, the ready line reads MOUNT READY. A gun that turns still reads SOLUTION LOCKED — MOUNT READY. For the spinal railgun, the ready line never asks for a target or a lock. It goes on to WEAPONS NOT RELEASED or ARMING SEQUENCE INCOMPLETE. **The plot:** with Fire Control open, the railgun's solid bar runs from the nose dot out to 30,000. A fixed gun has no dotted cone. The reach ring at 30,000 still shows. With the spinal railgun picked, a RULER's label adds the slug's flight time. A ruler from POINT to POINT (a track) still shows course and speed. **The slow turn:** hold Shift with A or D. The ship turns 2° a game second, in parts of a degree. ENG power doesn't change it. The ordered heading follows the bow. It clears the helm's attitude key, as A and D do. A normal A or D turn drops the part of a degree. The helm's HDG still shows whole degrees. The ship on the plot turns by the part of a degree. The speed is Fine Turn Deg Per S (2), on the Ship tab of **Starwolf → Tuning**, under Navigation. The key is Fine Turn Key (LeftShift), on the Keys tab. **Drift:** every slug now keeps the motion of the ship that fired it. This is true for us and for the Garuda. A ship sliding 5 units a second puts a spinal railgun slug 100 units off the line at 30,000. You can fire while moving. You just miss. The Garuda's aim now allows for its own motion. So does our fire control's lead. **Fighters:** a new number in each ship's file: Hangar → Fighters, 0 to 6, default 6. The Asura's is 0. The Garuda's is 6, as before. At load the ship keeps only that many fighters. Nothing is deleted. With none, the hangar starts on the assault boats. The Hangar panel's INTERCEPTOR row shows nothing. Assault boats are unchanged. **LONG SHOT:** `Assets/Scenes/Levels/LongShot.unity`, made from a copy of ColdRun, now in the build list. Battle space 40,000 × 40,000. We start at (0, −14,000), facing north. The Garuda patrols east and west between (−15,000, −5,000) and (15,000, −5,000), at its usual cruise speed. Hunts is off: it doesn't hunt us and doesn't fire. Goal: Destroy. Three gas clouds near our start: (0, −11,000), 2,400 × 1,400; (−7,000, −10,000), 2,000 × 1,200; (7,000, −12,500), 2,000 × 1,400. Four rock groups, ColdRun's Big Rocks moved: (−4,000, −9,000), (5,000, −8,000), (−9,000, 2,000) and (9,000, 3,000). The briefing's eight steps: power up, go to Condition 2, turn on DRADIS, find the Garuda's course (ACTIVE SCAN, or POINT and RULER once it is in sight), stop the ship, open fire control, turn the nose onto where the Garuda will be (Shift with A or D turns slowly), set the four switches and pull the lever. Row 8 on the MISSIONS list reads 8 LONG SHOT, DESTROY THE GARUDA WITH THE SPINAL RAILGUN, FROM FAR AWAY. The list's eight rows are now closer together: 98 px apart, the first at 206. They fit under the title. LONG SHOT is not on the campaign's sector map. There are no sensor drones yet (plan step 4). So you find the Garuda only inside DRADIS reach, 5,000 to 7,500. Long shots past DRADIS come later. **The playtest:** it still plays by its own written numbers: the two side turrets and slug speed 2,500. Its turret checks are unchanged. It puts six fighters back on our ship for its fighter checks. The level list check now expects eight rows, with LONG SHOT. Section 21 stops our ship before its shot. The ruler check zooms out and centres the plot first. New section 25f, "The spinal railgun", checks the gun from the ship's real file: one fixed gun on the nose; LOAD, ANGLE and BEARING open with no solution; Shift with D turns in parts of a degree; a drifting ship's slug drifts; the ruler reads SLUG 10 S for 15,000; a still Garuda, nose on, 15,000 away at bearing 10.45°: aimed at 10° the railgun misses, aimed to the part of a degree it hits; on a lock (a stand-in locked solution, stepped by hand) the ship turns itself onto the target to the part of a degree; with no lock it stops. **Fixed: the ship in the targeting computer tilted** (owner 2026-11-09: "the position of the ships within the targeting computer… Once again, they were tilting up and down." The owner's rule: the ship in the targeting computer always lies flat, bow left or right). The fault was older than this step. When a ship is wrecked, the camera that films it turns with the wreck (`ShipView.WreckHeading`, set by `PlotPanel.ShowBroken` since Step 131). It never turns back. The sight didn't allow for that. The playtest wrecks the Garuda with the marines (21f), then brings it back as a stand-in. Its 28g screenshot has shown the ship pointing up ever since. Now the sight's picture takes the camera's turn off as well (`PeriscopePanel.LateUpdate`). New `PeriscopePanel.PictureBowDeg`: where the bow points in the sight, 90 or 270 when it lies flat. A new playtest check, just before the 28g shot: "The ship in the targeting computer lies flat, bow left or right". **Not changed:** the briefings of WEAPONS FREE and NO PEEKING, and WEAPONS FREE's row on the MISSIONS list, still talk about the railgun, turrets and cones. The owner said all levels are test levels. The sector map lists the first seven levels only. **Made without the owner:** 12 slugs. Slug speed 1,500. The slow turn at 2° a second, on Shift. The spinal railgun can fire with no target or lock. Only a lock turns the ship; a TRACK solution does not. The ready line MOUNT READY. FIXED 000° on the mount screen. The slow turn clears the attitude key, and a normal turn drops the part of a degree. HDG stays in whole degrees. Every slug keeps its ship's motion, the Garuda's too. The Fighters number on each ship. LONG SHOT's layout, its row text, and its Garuda not hunting. The MISSIONS rows moved closer together. **Files:** `WeaponSystem.cs` (`FixedGun`, `LeadBearing`, `TickGuns` sets the lock's turn, a slug leaves with its ship's motion). `NavSystem.cs` (`fineTurnDegPerS`, `fineTurn`, `fine`, `TrueHeading`, `aimHeading`, in `Steer`). `HelmPanel.cs` (`fineTurnKey`). `FireControlPanel.cs` (FIXED, MOUNT READY). `PlotPanel.cs` (no cone for a fixed gun; the ruler's SLUG time). `HangarSystem.cs` (`fighters`, `KeepFighters`). `HangarPanel.cs`. `Ship.cs`. `EnemyBrain.cs` (`LeadOn`). `Asura.asset`. `01_Briefing.unity` (the MISSIONS list). New `Assets/Scenes/Levels/LongShot.unity`. `EditorBuildSettings.asset`. `PeriscopePanel.cs` (`LateUpdate`, `PictureBowDeg`). `PlaytestRunner.cs` (`WrittenNumbers`, section 25f, the ruler check, the flat-sight check before 28g) | **Done**. Compiled with no errors. Played in the editor on LONG SHOT. Fire control showed LANCE, NUCLEAR LANCE, FIXED 000°, 30,000 km and SLUGS 12 (`Logs/SniperCheck/01_lance_line.png`). These checks ran before the owner's name change. The screens still showed the first name, the Nuclear Lance. The line ran from the nose. LOAD opened with no target. A shot left the nose dot going straight north at 1,500. The slow turn went 0.5°, 1.0°, 1.5° in three quarter-second steps. A shot fired while sliding 5 units a second went 0.19° off the line: 100 units at 30,000. The ruler read "18,000 km · LANCE 12 S" (`03_ruler.png`). The hangar started on ASSAULT BOAT, with INTERCEPTOR at 0 craft. A real hit: our ship stopped 6,000 units from a Garuda moving east at 22. The nose was turned by hand to the lead bearing, 337.81°, using the part of a degree. The slug took 4.2 s and reported "HIT · BOGEY T07". The close-up (zoom past x1) still draws (`04_close_up.png`). The MISSIONS list shows all eight rows under the title (`05_level_list.png`). The scale sums, `python3 docs/scale-sim/scalesim.py --sniper` (written by the study team): at slug speed 1,500, aiming in whole degrees, a plotted course gave a 92% hit chance at 15,000 and 65% at 30,000. The slow turn's parts of a degree remove the whole-degree limit. The lock's turn has its own checks in the playtest's section 25f. The new names were checked on screen: the picker read RAILGUN, the ruler read "18,000 km · SLUG 12 S", and LONG SHOT's briefing fits its box (`Logs/SniperCheck/07_spinal_railgun_plot.png`). The sight fix was checked in play: with the Garuda's camera left turned 37°, the sight showed it flat, bow at 270° (`Logs/SniperCheck/10_sight_flat_after_wreck_camera.png`). First full playtest: 254 of 256 (`Logs/Playtests/2026-11-09_004916`). The two failures were checks, not the game. The ruler check read a label that was off the plot; it now zooms out and centres first. Step 171's slide-fade check was fixed by its own session. Second full playtest: 256 of 256 passed (`Logs/Playtests/2026-11-09_005653`). The sight fix and its check came after the second run. They have not been through a full run yet. No person has played it. Next: plan step 2, the flare |
+| 171 | Q, E, W and S: a tap is a small nudge, holding builds up (owner 2026-11-09: tap left and right to steady the ship, most of all when coming to a full stop). **Q and E, the side thrusters:** they slide the ship left or right with the nose still. A tap gives a small sideways push: 2 units/s of side speed at full ENG. The game never misses a tap now. Before, Q and E were only checked about twice a second, and a quick tap often did nothing at all. Taps never push past full side speed. Two taps very close together count as one. Held, the push starts gentle and grows to full over 2 seconds. Our ship reaches full side speed, 20, after about 7.5 seconds. Let go, and the ship keeps drifting. The drift fades by itself, to half in about 8 seconds (Drift Keep Per S, as before). A tap the other way slows it. Before, letting go made the side thrusters stop the slide. With no ENG power, Q and E do nothing, as before. **W and S, the throttle:** a tap moves the throttle 1. It used to move 10. Held, the throttle keeps counting, 1, 2, 3, slowly at first, then faster. It has moved 100 after 2 seconds. It stays where you let go. S still goes past 0 into reverse. It stops at what ENG allows. If the throttle changes some other way while the key is down (power lost, the slider dragged), the key stops moving it. **Fixed on the way:** holding W and then tapping A no longer stops the throttle climbing. **Tuning:** in each ship's stats file, under Side thrusters: Side Tap Units (2) and Side Ramp Seconds (2). Side Accel Units is now the full push with the key down. On the Helm tab of **Starwolf → Tuning**: Throttle Hold Seconds (2). Throttle Key Step (10) is gone. **Made without the owner:** a tap is 2 units/s, the push grows over 2 seconds, and the throttle goes from 0 to 100 in 2 seconds. Each can be changed in Tuning. **Files:** `NavSystem.cs` (`Move`, and the Side thrusters part of `Stats`). `HelmPanel.cs` (`Update`, and the new `Throttle`). `PlaytestRunner.cs` (section 25e) | **Done**. A quick check in play mode. One Q tap gave 2 units/s to port. Two E taps after it gave about 0. Holding Q gave 2.1 at 1.3 s, 6.4 at 2.5 s and 14.2 at 5 s, then 20 from 7.6 s on. After letting go: 15.7 at 2.5 s and 9.7 at 7.6 s. The heading stayed 000. With ENG off, a tap did nothing. The playtest check in section 25e now tests the tap, the hold and the fade: "A tap of Q is a small push; held, Q slides the ship to port with its nose still; let go, and the slide fades". W and S need a person: a script can't press keys. No person has played it |
+| 172 | The sector map's new look (owner 2026-11-09: bring in the Sector Operations Map that Codex made. Codex's two pictures of the screen, the first mission and four missions won, were the target look). **What the player sees:** a painted console fills the screen. On the left is a BRIEFING screen. It is headed STARWOLF / DESTROYER / OPERATIONS, then MISSION RECORD. Under that are the picked mission's number and name, and its text. On the right is an OPERATIONAL MAP screen, headed STARWOLF / SECTOR PLOT. It is a star chart with the mission dots joined by lines. **The MISSION ARCHIVE box:** it is on the map and has three buttons. BRIEFING shows the mission's briefing text on the left screen. DEBRIEF works only on a finished mission. It shows MISSION COMPLETE above the briefing text. LAUNCH plays the mission. On a finished mission it reads REPLAY MISSION and plays the mission again. **The dots:** a finished mission's dot is a tick picture. The open mission's dot is a green dot that grows and shrinks. When the map opens, the newest dot is already picked, so the box and the left screen show it at once. The dots moved to new places on the chart. The mission order is the same: FLIGHT DRILL, COLD RUN, WEAPONS FREE, NO PEEKING, FINDERS KEEPERS, INTERCEPT, WOLF HUNT. The first dot is still FLIGHT DRILL. **In the scene:** the console is `Operational Map Console`, a Raw Image over the whole 1920 x 1080 screen. The headings, the star chart and the three empty button frames are painted into the picture. The game writes the mission's number, name and text, the button words, the dots and their names over it. The Sector Map Script has three new slots: Launch Label (the LAUNCH text), Debrief Button and Completed Node (the tick picture). It has two new button calls: ShowBriefing and ShowDebrief. The old typed SECTOR MAP title from Step 167, `SECTOR MAP card`, is still in the scene. The console picture draws over it, so it does not show. Every part, slot and picture is listed in `docs/BOARD_UI.md`, "Sector map". **The pictures:** `Assets/UI/Board/Art/Briefing/OperationalMapConsole.png` (1840 x 1035) and `CompletedMissionNode.png` (44 x 44). Codex's import settings came with them: sRGB (Color Texture) on, Compression None. The old grid picture, `Assets/Art/Sector Map/Grid Square.png`, is no longer used. It was not deleted. **Files:** `SectorMap.cs` (Launch Label, Debrief Button, Completed Node, `ShowBriefing`, `ShowDebrief`; the newest dot is picked when the map opens; the notes at the top and the tooltips describe the new screen). `SectorMap.unity`. The two new pictures and their `.meta` files | **Done**. Compiled with no errors. Played in the editor through the real campaign path. SAVE SLOTS, then slot 3: the map showed one dot, FLIGHT DRILL. LAUNCH opened FLIGHT DRILL. MISSION COMPLETE, then MISSION SELECT, opened the ship's rooms. SECTOR MAP › opened the map with two dots, FLIGHT DRILL ticked. Clicking FLIGHT DRILL: DEBRIEF showed MISSION COMPLETE, BRIEFING showed the brief, and the button read REPLAY MISSION. With four missions won, the map matched Codex's picture of it. REPLAY MISSION on COLD RUN opened COLD RUN. No errors from the map in the console. The playtest's campaign checks (section 32 of `PlaytestRunner.cs`) still match the new map. Full playtest not run since. No person has played it |
+| 173 | The close-up comes in sooner: the full 3D look at zoom x1.1, not x1.5 (owner 2026-11-09: "the zoom range shouldn't start at 1.5x. It should actually be when you're at maybe even 1x or maybe 1.1x. We need to find a way that you get some satisfaction from what you're watching, as well as not be so zoomed in that you can't see anything"). **What the player sees:** a level still opens at x1 with the line pictures. One notch of the scroll wheel zooms x1.12, so one notch in shows the full 3D look. Between x1 and x1.1 the line pictures and the 3D models fade into each other. **Tuning:** on the Plot panel in `Plot.prefab`, **Close Up From Zoom** stays 1 and **Close Up Full Zoom** went from 1.5 to 1.1. Both are on the Board tab of **Starwolf → Tuning**, under Plot & our ship. To open levels in the 3D look, set them to 0.8 and 1. The code's default is still 1.5. The prefab's number is the one the game uses. Step 164's row keeps the old numbers as history. **Files:** `Plot.prefab` | **Done**. Only the prefab number changed. Checked in play mode on 2026-11-09 (Step 177): at x1, Wolf Hunt shows the line look. One wheel notch in (x1.12) shows the metal ship and the nebula. Screenshots: `Logs/CloseUp/step173_x1.png` and `step173_x112.png`. No person has played it |
+| 174 | SECTION 36 flickers in and turns into STARWOLF (owner 2026-11-09, on the title screen: "instead of having it fade in from left to right, is it possible that it just flickers into being in its position, and then the same for Starwolf?" Offered two ways, the owner picked the second: "this flicking in is maybe fast-ish, stays for a few seconds, and then quickly flickers into Starwolf. I like that. one word should turn into the other." Then: "When you're doing that transition and flicker in, it might be cool to have a little bit of horizontal diffusion grain"). **What the player sees:** in the full intro (`00_Start`), SECTION 36 flickers into being where it stands. It comes on square by square, in a quick scattered order, over about 0.4 s. It no longer types in left to right. It stays (Section Duration is 4 s in all). Then it turns into STARWOLF over about 0.6 s. Every square lit in both words stays lit: the S (both words start with S) and most of the box. Squares only SECTION 36 uses flicker out. Squares only STARWOLF uses flicker on. (Step 177: the box now stays still.) While a word flickers in or over, thin bands slip sideways, and the light smears and grains along them. It dies away as the squares settle. It never shows on the menu. STARWOLF stays (Title Duration 4 s), then the same straight cut to the menu as before. **Where the words are:** so the S's line up, both words share one left edge. (Step 177: both words now centred, sized to each other.) **Not changed:** INITIALISING... and the title-only pages (SAVE SLOTS, SECTOR MAP, MISSIONS and the mission cards) still type in left to right, in the middle. **Tuning:** three new settings on the StarwolfIntroController, on the `00_Start` object: Flicker In Seconds (0.4), Change Seconds (0.6) and Diffusion (0.7: 0 = none, 1 = strong, up to 2). Type Share now only sets INITIALISING... and the title-only pages. The scene was not changed, so it uses these defaults. **Made without the owner:** the times, 0.4 s and 0.6 s. The Diffusion strength, 0.7. The shared left edge. **Files:** `StarwolfIntroController.cs` (`flickerInSeconds`, `changeSeconds`, `diffusion`; the shared left edge). `PhosphorDisplay.shader` (`settled`: the flicker in and the change; the sideways slip, the smear and the stronger grain) | **Done**. Checked in play mode. Frames were saved in `Logs/Intro` (`sheet.png`, `grain/sheet.png`, `grain07/sheet.png`). QA agent finding fixed: the intro clock now starts when the picture shows, and a slow first frame can no longer skip the quick flicker-in (in play, frame 5 was at 0.08 s). No person has seen it moving yet |
+| 175 | A and D turns start smoothly (owner 2026-11-09, after playing: "turning moves in steps instead of smoothly in the very, very beginning if you press A and D"). **What the player sees:** press A or D, and the bow starts to turn at once. It turns from where it is. It moves at a steady rate. There is no jump and no snap back. Keep the key down, and the bow keeps turning with no stop. After half a second the key repeats, as before. A quick tap still turns 3°. A press a little longer than a quick tap turns a little more than 3°. That is new. The railgun lock's turn, the Shift slow turn and the flat ship in the targeting computer are unchanged. **What was wrong:** two faults, both in the first half-second of a turn. First: the moment you pressed A or D, the ship's picture jumped up to 4° at once. The ship's rules move it 2.4 times a second. Between moves, it is drawn gliding. The glide was counted from the last move, and the turn order came in partway through. Also, at every move the bow snapped back by the part of a degree it had already turned. Second: a tap orders 3°. The bow reached it and stopped. A held key only starts repeating after half a second. So a held key turned the ship, stopped it, then turned it again. **The fix:** a turn now starts from the moment of the order. The drawn bow counts the part of a degree already turned. While A or D is down, the next 3° are ordered the moment the drawn bow reaches the last ones. The lock's turn, the slow turn and the ship in the targeting computer use the same turning code. **Made without the owner:** a press a little longer than a quick tap now turns more than 3°. **Files:** `NavSystem.cs` (`DrawnHeading` now counts the part of a degree already turned, `turnBank`; `StepOrderedHeading` starts a new turn from the moment of the order). `HelmPanel.cs` (`Update`: while A or D is down, the next step is ordered as the drawn bow reaches the last one) | **Done**. Compiled with no errors. Played in the editor on the board (02.1_Grid), ENG 1 (10° a second). The test pressed D in the middle of a move and held it for 1.5 seconds, the same way the key does, then let go. The bow moved on the first frame after the press. It kept to a steady 10° a second, never more than 0.12° off the steady line. The biggest single-frame change off the line was 0.08°. It never went backward. It stopped cleanly at 18°. Full playtest not run since. No person has played it. A person needs to press the real keys to feel it |
+| 176 | The newest dot on the sector map stays still (owner 2026-11-09: "when a new node appears, it doesn't need to be pulsing ... It doesn't need that animation"). **What the player sees:** the open dot, the newest one, no longer grows and shrinks. It is a plain green dot that keeps one size. **Unchanged:** the first time a new dot shows, the dot, its name and its line fade in over 1.5 seconds (**Fade In Seconds**). **On the Sector Map Script:** **Pulse Seconds** and **Pulse Size** are gone. Fade In Seconds stays. `SectorMap.unity` was saved in Unity since. Its copy on disk no longer has the old pulse numbers. That save is not committed. It also holds other changes that are not part of Step 176. Nobody edited the scene file by hand. **Files:** `SectorMap.cs` (Pulse Seconds and Pulse Size removed; `Update` no longer changes the dot's size) | **Done**. Compiled with no errors. Play check run and filmed on 2026-11-09, through the real flow: SAVE SLOTS, then empty slot 2, then the SECTOR MAP. The ORIENTATION dot, its name and nothing else fade in over about 1.5 seconds. After that the dot keeps one size to the end of the film. Measured on every frame: the dot and its name cover the same 75 x 50 px area from 5 s to 17 s. The film is `Logs/SectorMapCheck/sector-map.mp4` (Logs is not in git). The test save in slot 2 was deleted afterwards. Slot 1 was not touched. Not committed yet. Full playtest not run since. No person has played it |
+| 177 | SECTION 36 and STARWOLF centred and sized to each other (owner 2026-11-09: first asked for the two words to be "sized to each other", then: "fix everything. Make sure nothing is slipped. Film a video if needed."). Fixes Step 174's off-centre words. **What was wrong:** to line the S's up, Step 174 gave both words one left edge. So SECTION 36 was 36 px right of the middle and STARWOLF 36 px left of it, and the box's right side moved in during the change-over. **What the player sees:** in the full intro (`00_Start`), both words fill the same box, centred on the screen. STARWOLF is narrower (120 squares to SECTION 36's 136), so its letters are spread out to fill the box. The gaps between its letters grow from 4 squares to 6 or 7. The S's still line up. The box stays still during the change-over: only the letters inside change. **Not changed:** INITIALISING... and the title-only pages. They keep normal spacing, in the middle. The flicker times and the Diffusion are the same as Step 174. **Made without the owner:** STARWOLF's letters spread out to match SECTION 36, rather than SECTION 36 squeezed in. The extra space is shared as evenly as it can be between the gaps. **Files:** `PhosphorData.cs` (`Cells` and `MakeMask` take a width to fill; the extra squares go between the letters). `StarwolfIntroController.cs` (on start, the full intro sizes the two words to each other; the left edge is now half the box's width). `PhosphorDisplay.shader` (`content` draws both words in the middle; `_IdentX` and `_TitleX` removed; the "potentially uninitialized variable" warning is gone) | **Done**. Checked by filming the real intro with the Unity Recorder: `Logs/Intro/video/intro.mp4` (30 fps, 2112 x 1188, 22.6 s), with picture sheets beside it (`sheet_in.png`, `sheet_change2.png`, `sheet_cut.png`). In the video the lit area is centred to within 3 px. The change-over runs from frame 143 to 166 (about 0.75 s, smear included). STARWOLF then stays 119 frames (4.0 s), with a clean cut to the menu at frame 262. The video runs slightly ahead of the intro's clock: the intro counts real seconds, and Unity ran a little faster than 30 fps while filming. That comes from the filming, not the game. Step 173 was also checked in play (see its row). No person has seen it moving yet |
+| 178 | Story missions replace the test levels. Mission 1, ORIENTATION (owner 2026-11-09: "Too many levels, and they're not very good." The game will be about 10 story missions, "the Hunt for Red October in space", plus one SKIRMISH mode. The old test levels come off every list. What each one tested goes into the story missions. Mission 1 is the first: a combat briefing with your battle group, then an orientation checklist. Each part of the checklist you finish opens more of the map. What each mission needs is copied out of the old level scenes. Owner, later the same day: never delete the old levels, only switch them off). **What the player sees:** the title menu reads NEW GAME, SKIRMISH and SETTINGS. SKIRMISH is the old LEVELS row. It plays Wolf Hunt straight away: chase and kill the Garuda (`Level_01`). The title's block letters got a K for it. The LEVELS list (`01_Briefing`) can no longer be reached. NEW GAME, then SAVE SLOTS, then the SECTOR MAP now shows one dot: 1 ORIENTATION. Its briefing box reads: "COMBAT BRIEFING. Commander, welcome to the battle group. INDRA, VARUNA and MARUT are with you. A quick mop-up patrol. Standard thing. Before we move, run the orientation checklist: flying, sensors, power. Each part you finish opens more of the patrol area. Then take point to the target zone." In a skirmish, MISSION SELECT on the end screen and on the pause menu goes back to the title. In the campaign it still goes to the ship's rooms, then the sector map. **In ORIENTATION:** weapons are off. The map starts 10,000 x 10,000 units. Our ship starts near the bottom, facing north. Our battle group is round it: three ships, all facing north. INDRA · CARRIER is to port, VARUNA · BATTLESHIP to starboard and MARUT · CORVETTE behind. Before a scan, each shows as an amber dot labelled BOGEY F1, F2 or F3, like any unknown ship. After an ACTIVE SCAN passes over it, its name shows in blue, and its dot turns blue. Zoomed in past x1.1, the close-up shows them as full 3D models. They can't be targeted. They are solid, like every ship. **The battle group flies with us** (owner, later the same day: "The ships will fly around you and with you. You can deviate from them, but basically, they fly in a loose formation with you. If you fall off, then you have to catch up back to them... They're not sticking to you." And then: "they're not supposed to follow you. They pursue their path, and you have to sort of follow them."). The group flies its own path, the level's **Group Route**, at 15 units/s, and waits at its last point. It never follows us. Our place is the middle of the formation: the centre starts on our ship. Each ship flies to its place round the centre, turned the way the group flies, and drifts gently round that place. In ORIENTATION the path runs north from the start to (0, −1,000), north-west to (−1,500, 1,000), then to (0, 2,800) at the south edge of the rock field. The THROTTLE note says "The group is under way. Keep station in the middle of the formation." From TAKE POINT on, we leave them there and go through the rocks alone; the note says "The group holds south of the rock field." The ships steer round rocks and ships the way the enemy does, and they stay inside the battle space. **The checklist:** 16 steps. Each is a note from COMMAND in the briefing box, with the same box and chime as FLIGHT DRILL. Each note's title starts "COMMAND ·". In order: power, throttle, heading, the two side thrusters, zoom out, zoom back in. Then PATROL AREA OPEN: the map grows to 16,000. Then sensors, ACTIVE SCAN, and a SENSOR CHECK: scan one ship. Then TAKE POINT: the map grows to 24,000, and a ring shows the target zone to the north. Then more power, full throttle, the rock field, and the target zone: stop inside its ring. Then the mission is won. The end screen says CHECKLIST COMPLETE. It said FLIGHT DRILL PASSED before. Every step is in section 2, under `Orientation`. **The map grows:** when a step opens more of the map, the map grows from the middle to its new size, square, over 3 real seconds. The grid draws out to the new edge as it grows. The edge rule is unchanged: a warning near the edge, then 30 seconds to turn back. **How it works:** ships can now be placed in a level scene. Each one joins the world when the level loads (`TacticalWorld.JoinLevelShips` → `Join`). New **Friendly** tick box on `WorldContact`. New `friendly` flag on a board track (`ShipState.Track`). A friendly ship's name and class come from its object's name: `Indra · Carrier` shows as INDRA, CARRIER. `PlotPanel` colours a scanned friendly ship in the palette's `ownForce` blue. New **Battle group** settings on `EnemyBrain`, on the Board tab of **Starwolf → Tuning** under Battle group: **Escorts** (on or off), **Slot Units** (its place: x to our right, y ahead), **Group Speed Units** (15), **Sway Units** (150), **Sway Seconds** (60), **Keep Clear Units** (500), **Make Room Share** (0.3), **Catch Up Per Unit** (0.05) and **In Place Units** (100). On `TacticalWorld`, under Crashes: **Touching Units** (50). All are logged in `docs/TUNING_LOG.md`. With Escorts on, the brain flies the ship in the formation (`EnemyBrain.Escort`). The formation's centre starts on our ship and flies the level's `Mission.groupRoute` at Group Speed, then waits at the last point; with no route it stays put. Each ship flies to its Slot round that centre, turned the way the group flies, and drifts by up to Sway Units round it over Sway Seconds. It keeps Keep Clear Units from our ship, and goes round us to reach its place; closer than that, it moves away first. (The first film run stuck: as we turned north, INDRA crossed our bow to its new place, and the two ships pinned each other.) The second run found the same with rocks: INDRA and VARUNA touched rocks at the edge of the rock field, found every way blocked, and kept pushing. `TacticalWorld.ClearHeading` (the enemy's steering too) now heads straight away from whatever a ship touches when every way is blocked, then looks again. The third run showed a leash idea failing: the group stopped 3,000 units back and was stranded at the rock field when we took point at full speed. The leash was removed. The fourth run: the carrier and the battleship could not get through the rock field (rocks about 700 apart; they need about 900) and paced along its south edge, so their path ends south of the rocks. Runs three to five had the group head for each checklist ring and follow us between rings; the owner then said they must not follow us, so the group now flies its own route and we follow them. It steers with the enemy's steering (`ClearHeading`, `KeepInside`). `WorldContact`'s Friendly tooltip now says its brain should have Hunts off and Escorts on. A drill step has a new **Map Units** box (`DrillStep.mapUnits`). When the step starts, the map grows to that size, square. At 0 the map stays as it is. The grow time is **Map Grow Seconds** (3), on the Mission part of **Starwolf → Tuning**. New drill check SCANNED: that many ships scanned (named). A won flight drill's end screen line is now CHECKLIST COMPLETE, in every level with the Flight goal. **The mission scene:** `Assets/Scenes/Levels/Orientation.unity`, copied from `FlightDrill`, then changed. It is in the build list. `Player Spawn` at (0, −3,000), facing north. The Garuda is parked at (0, 30,000), far outside the map. It never shows. The rock field is moved to (0, 5,000). The three ships are under `Battle Group`. INDRA · CARRIER at (−700, −2,900), 450 x 230 units, prefab `Assets/Prefabs/BattleGroup/Indra.prefab`, stats `Assets/Ships/Carrier.asset` (Indra-class carrier), model `StarWolf_Carrier_mesh`. VARUNA · BATTLESHIP at (700, −3,050), 400 x 190, `Varuna.prefab`, `Assets/Ships/Battleship.asset`, model `StarWolf_Battleship_mesh`. MARUT · CORVETTE at (0, −3,700), 120 x 80, `Marut.prefab`, `Assets/Ships/Corvette.asset`, model `StarWolf_Corvette_mesh`. Each is a copy of the board's `Frigate (template)` with a different model and stats file. Friendly is ticked, Hunts is off, Escorts is on, and it never fires. Its Slot Units: INDRA (−700, 100), on our left. VARUNA (700, −50), on our right. MARUT (0, −700), behind us. The sector map's Missions list has one mission, ORIENTATION, with the briefing above. The old levels' scene files and `01_Briefing` are kept, switched off, never deleted (owner). The story and where each old level goes are at the top of `docs/FTUE_PLAN.md`. **The playtest** (`PlaytestRunner.cs`): the title's second row check now expects SKIRMISH to open the board on `Level_01`. MISSION SELECT outside the campaign expects the title. The campaign check wins "Orientation" and expects the map to still show one dot. **My calls, for the owner to veto:** the ship names INDRA, VARUNA and MARUT, and their sizes. The mission name ORIENTATION. The battle group shows as BOGEY until scanned: the scan step teaches naming a ship. The battle group's numbers: Group Speed 15, Sway 150 over 60 s, Keep Clear 500, each ship's place, and the group's path (it ends at the south edge of the rock field). The map edge stays as it is in every level: a warning, then 30 s. Weapons are off in mission 1. Weapons come in mission 2, the pirates. **Files:** `TacticalWorld.cs` (`JoinLevelShips`, `Join`). `WorldContact.cs` (`friendly` and its tooltip). `EnemyBrain.cs` (the Battle group settings, `Escort`). `ShipState.cs` (`Track.friendly`). `PlotPanel.cs` (a scanned friendly ship in `ownForce` blue). `Mission.cs` (`DrillStep.mapUnits`, `DrillCheck.Scanned`). `QuestSystem.cs` (`GrowMap`, `mapGrowSeconds`, the SCANNED check). `EndScreenPanel.cs` (CHECKLIST COMPLETE; Menu Scene is now `00_Start`). `End Screen.prefab`. `00_Start.unity` (the SKIRMISH row). `glyphs.json` (the K). `SectorMap.unity` (the Missions list). New `Orientation.unity`. New `Indra.prefab`, `Varuna.prefab` and `Marut.prefab`. New `Carrier.asset`, `Battleship.asset` and `Corvette.asset`. `EditorBuildSettings.asset`. `PlaytestRunner.cs` | **Done** — checked in play, 2026-11-09. A script flew the whole mission on the board by setting its controls (power, throttle, heading, Q and E, zoom, DRADIS, ACTIVE SCAN, the cone). Nobody pressed keys. All 16 steps passed in order, and the end screen said MISSION COMPLETE, CHECKLIST COMPLETE, our ship at 100% armour. The three ships joined with their names. At x1.3 they showed as 3D models. The scan turned INDRA and MARUT blue, and VARUNA stayed BOGEY F2. The map grew to 16,000, then 24,000, while zoomed out. Step 16 first stuck: the script held the ship in the ring at 2.5 speed, and the step wants 2 or less. Throttle 0 in the ring passed it. That was the script's flying, not the game. The title draws SKIRMISH with the new K, and SKIRMISH opens Wolf Hunt on Level_01. The sector map shows one dot, 1 ORIENTATION, and the combat briefing fits. No errors in the console. The film is `Logs/Orientation/Starwolf - Mission 1 Orientation.mp4` (5 min 46 s, the hover in the last ring cut). That film was made before the battle group flew. The battle group's flying was checked in play: while our ship flew east at 20 units/s, the three ships stayed 450 to 1,200 units from us. With our ship moved 7,000 units away, they stayed near where they were. Brought back, they caught up within about 10 seconds. Full mission film, sixth run (the first five found the pinning, the stranding, the rock field and following us, above): all 16 steps passed; the group flew its path north and our ship kept station in the middle, 500 to 1,000 units from each ship, through the checklist; from TAKE POINT we went through the rocks alone while the group went on to the field's south edge; our ship scraped one rock, so the end screen read 94% armour; 6 min 30 s, `Logs/Orientation/Starwolf - Mission 1 Orientation.mp4`, with `run.log`. The full playtest has not run since this step. |
+| 179 | The 3D models follow the Length number (owner 2026-11-09: "Make the three models for the number", then: "3D models should be scaled uniformly to follow the length number."). **What the player sees:** nothing new at today's numbers. The models were already their Length, scaled by hand in Step 164: our Asura 200 units, the Garuda 350, the frigate 100. **What changed:** each ship's 3D model now sizes itself to its Length when a level starts. Its longest side, seen from above, is the Length. It is scaled evenly, so the width grows or shrinks with it and the shape stays the same. Change Length during play and the model follows at once. Length is at the top of the Ship tab (our ship) and the Enemy tab of **Starwolf → Tuning**. **Width does not change the model.** It still only sets the width of the hit box. The model's width follows its Length, in the model's own shape. **The line pictures:** the camera that films each ship's line picture follows Length too. How much it frames, and how far back it is, come from the Length. So the line picture stays whole at any Length. **Removed:** Height on the Board tab of Starwolf → Tuning, under Plot & our ship (how far above the ship that camera was). It is now worked out from Length. The old values set by hand in `02.1_Grid` are no longer used. **New ships:** no scaling by hand. Set Length in the ship's stats file in `Assets/Ships`. **Made without the owner:** the camera's distance (twice the Length) and how deep it sees. The model grows or shrinks about the ship's centre. **Files:** `Ship.cs` (`FitModel`, `WidthShare`, a `LateUpdate` that fits the model again when Length changes). `ShipView.cs` (frame and camera from Length; Height removed; `WidthShare` now comes from `Ship`). `StarwolfTuningWindow.cs` (a Length edit reaches every ship on that file) | **Done**. Compiled with no errors. Checked in play on Wolf Hunt. Our ship's Length went from 200 to 300 during play. The model became 300 units long, in the same shape. In the close-up at x2 it showed 1.5 times bigger. Zoomed out to x0.8, the line picture was 300 units long (96 px, against the grid's 32 px per 100 units) and whole. Then our ship at 120 and the Garuda at 500: both models matched, and their cameras followed. A frigate arriving as a copy of the template sized itself to 100. The width-to-length share did not change (our ship 0.639, Garuda 0.499). No errors in the console. The test did not change the stats files. Screenshots: `Logs/ShipLength/01_length200_x2.png`, `02_length300_x2.png`, `03_length300_lines_x08.png`. A QA agent then read the code and found no problem in it. It found one gap next to it: a Length edit in Tuning reached only that one ship, so a second frigate on the same stats file kept the old size. Fixed: the edit now reaches every ship on that file, as the Hard Points tab already did. Compiled with no errors. Full playtest not run. No person has played it. Next: the owner picks which ship gets a new length, and what length |
+| 180 | Each ship's rooms get a side and an order number, set in Tuning (owner 2026-11-09: "I really just need to do two things in a ship layout… a sequence in which they exist, so an order, which is non-exclusive… two compartments can be 1 and 2, for example, or 2 and 2, which means that they are on the same line… you are pegging a compartment to a side, which is one of four sides, and you're setting a sequence… I don't need to drag things around." Then: "If the magazine is destroyed, then it should hit something else… once a side is open, then what is exposed?" On the six steps below: "It should start getting breached… these fights are meant to be short." The plan is `docs/finished-plans/ROOM_LAYOUT_PLAN.md`). **What the player sees:** once a side's armour is gone, hits go deeper into the ship. A wrecked room no longer stops them. The bridge and habitation can now be hit. Fights end sooner. The targeting computer's hull line ("STBD ▸ HGR 3") shows the room the next hit will damage. With no room left to hit, it reads "▸ OPEN". **Where the rooms are:** each of a ship's six rooms has a side (PROW, STBD, AFT or PORT) and an order number, 1 to 6. Order 1 is right behind the armour. Two rooms with the same number are side by side, on the same line. Each ship's file in `Assets/Ships` sets the layout for that ship. **The starting layout, on all six ships** (Asura, Garuda, Frigate, Corvette, Battleship, Carrier): magazine PROW 1, bridge PROW 2, engine room AFT 1, habitation AFT 2, hangar bay STBD 1, reactor PORT 1. **A hit through a side:** 1. Armour first. 2. Once the armour is gone, the room with the lowest order number on that side. 3. A wrecked room (integrity 0) lets the hit through to the next number. 4. Rooms on the same line take turns: the one with more integrity first, then the one higher in the list. No dice. 5. With every room on that side wrecked, the hit goes on into the opposite side's rooms, the deepest first. PROW goes into AFT. STBD goes into PORT. 6. With nothing left on both sides, the hit does nothing. One hit damages one room. Damage left over is lost. The rules are the same for every ship, ours and the enemy's. Before, each side had one fixed room: magazine PROW, hangar STBD, engine room AFT, reactor PORT. The bridge and habitation were never hit. A wrecked room took every later hit on its side. **Tuning:** the Hard Points tab of **Starwolf → Tuning** has a switch at the top: WEAPONS (the tab as before) and ROOMS. ROOMS shows the ship's rectangle, nose up. Each side's armour number is in gold, outside it. Each room's short name (MAG, BRI, HAB, HGR, RCT, ENG) is inside, along its side. The lowest order number is next to the edge. Rooms on the same line are side by side. Under the picture is one row per room, with a Side drop-down and an Order number. Then the four armour numbers. A side with no rooms shows a note: hits through it go straight on into the opposite side's rooms. Edits can be undone and are saved in the ship file. In play mode the game uses them at once. The Ship tab → Damage shows the same two lists, as Room Side and Room Order. **The Garuda's fighters:** on DISABLE they now attack the side the engine room is on. Before, it was always the AFT. **Made without the owner:** rooms on the same line go by integrity, then by their place in the list. Fire, vacuum and radiation still spread by the old fixed list of which rooms touch. Moving a room doesn't change its neighbours. The WEAPONS / ROOMS switch. Bridge PROW 2 and habitation AFT 2 in the starting layout. The order number stops at 6. **Files:** `DamageSystem.cs` (new `Side` enum, `Stats.roomSide`, `Stats.roomOrder`, `NextRoom`, `SideOfRoom`, `OrderOfRoom`; `Behind` uses `NextRoom`; `TakeFighterRun` on DISABLE uses the engine room's side; `BehindSide` and `RoomBehind` removed). `PeriscopePanel.cs` (`HullLine` uses `NextRoom`). `StarwolfTuningWindow.cs` (`hullView`, `DrawRooms`, `PaintRooms`). `docs/TUNING_LOG.md` (one row). The ship files were not saved again. They take the starting layout from the code until someone edits a room in Tuning | **Done**. Compiled outside Unity, then in Unity, with no errors. Played on `02.1_Grid`. 16 slugs on the Garuda's PROW: the armour went 67%, 33%, OPEN. Then MAG −2 three times (breached on the first), BRI three times, HAB three times, ENG three times, then nothing. The hull line read BOW ▸ MAG 5, then BOW ▸ BRI 5, then BOW ▸ OPEN. On the Varuna, with the hangar moved to PROW 1 (the magazine's line) and the engine room to STBD 2: the hits went OPEN, MAG, HGR, MAG, HGR, MAG, HGR, then BRI. A fighter DISABLE run hit the STBD armour. The ROOMS view was opened in Tuning and looked right. Full playtest not run. No playtest check for a moved room: `PlaytestRunner.cs` had another chat's unsaved changes. No person has played it. Fights will be shorter. Player 1's fight sums were run again on 2026-11-10 (§8). Next: the playtest check for a moved room |
+| 181 | The loading screen gets corner text and clearance squares, the font gets every letter and number, and the green gets richer (owner 2026-11-10, answering a page about the look of the screens before the board: "Yes, add the new letters to the game font… Mission names and numbers will need them." On the 5 keeping the cut right corners that the B and D already have: "I don't mind." On the loading screen: "small text on the screen and clearance squares… dim, in Share Tech Mono." On colour: "keep the game's, but the references had a lovely, slightly richer green. If you can get to that effect, I'll be happier."). **What the player sees:** on every green dot screen (SECTION 36, STARWOLF, the menu, the page titles, INITIALISING), each lit square is pale green in the middle and fades to a deeper green at its edge. The glow round the letters is pure green and stronger, with a wider faint halo. Before, each square was one flat pale colour, and the glow was the same pale colour, which looked grey-green. On INITIALISING, once Corner Text is ticked, small dim text in Share Tech Mono shows in the four corners of the picture. Top left: UC-FLEET, and // CLASSIFIED below it. Top right: S36-PR-001, REV A and 1993.11.04 (the reference says S38; the owner picked S36 to match SECTION 36, 2026-11-10). Bottom left: RESEARCH / DEVELOPMENT / OPERATIONS. Bottom right: CLEARANCE LEVEL 3, with five small squares under it. The first three are lit, the other two hollow. The text stays in the corners of the 16:9 picture at any window size. Mission names can now use every letter A to Z, the numbers 0 to 9, the colon and the dash. No screen uses the new characters yet. **The font:** 15 new characters in `glyphs.json`: J, Q, X, Y, Z, 0, 1, 2, 4, 5, 7, 8, 9, the colon and the dash. The font now has A to Z, 0 to 9, the full stop, the colon, the dash and space. All pass the script's own check of two-square strokes. The 5 has the cut right corners of the B and D at its middle and bottom. The S has square corners there. **The richer green:** measured from the reference picture `References/Company Logo.png` against the game. The middles of the lit squares were already the same: reference (161, 252, 174), game (160, 246, 158). The edges were the difference. The reference fades to (60, 145, 73) at each square's edge. The game had a hard edge with no change of colour. Now it fades to about (63, 147, 67). Past the strokes, the reference shows a faint glow, (0, 25, 1). The game showed the bare background there, (0, 16, 0). Two new colours in `glyphs.json`: `rim` #3CA050 (the square's edge) and `glow` #1AFF2E (the glow). The three glow strengths are now in the shader's Properties: **Glow next to a square** 0.02 (was 0.015, written in code), **Glow a little further out** 0.012 (was 0.009) and **Wide halo round the strokes** 0.003 (new). Nothing in code writes them. The new green was tried on a copy outside Unity first. **The corners:** new **Loading screen corners** fields on `StarwolfIntroController`: a **Corner Text** tick box, the words for each corner, **Clearance Lit** (how many of the five squares are lit, 0 to 5, default 3), the font (`ShareTechMono-Regular SDF`), the material (left empty: the font's own material), the colour (#73E18A at 80%) and the size (24). With the box ticked, the script makes four texts in the corners. They are laid out on the 1920 × 1080 screen and scaled with it. The shader draws the clearance squares, only on INITIALISING and only with the box ticked. The box is off by default. **Made without the owner:** the corner words and their places, copied and measured from `References/Company Logo.png`. The shapes of the new characters, the 5 included. The colour values, measured from the same picture. The corner text size 24 and its colour, #73E18A at 80%. **Files:** `glyphs.json` (15 characters, `rim`, `glow`). `PhosphorData.cs` (reads and checks `rim` and `glow`). `PhosphorDisplay.shader` (new Properties `_Rim`, `_Glow`, `_Corners`, `_ClearanceLit`, `_GlowNear`, `_GlowFar`, `_GlowWide`; the square edges; the pure green glow and its wide halo; `clearance()` draws the squares). `StarwolfIntroController.cs` (the Loading screen corners fields, `BuildCorners`, `Corner`; writes the two colours, `_Corners` and `_ClearanceLit` to the shader). `docs/TUNING_LOG.md` (six rows). `Assets/StarwolfIntro/README.md` | **Done.** Compiled outside Unity and in Unity: no errors. Corner Text is on both loading screens: `INITIALISING` in `01_Briefing`, and `INITIALISING` in `SectorMap`, which shows after the campaign's LAUNCH. The `SectorMap.unity` change goes in the Campaign Manager chat's commit, as agreed with it. The corner text uses the font's own material. The Phosphor Glow material made it too thick: 18% of the corner area lit, against the reference's 11%. Now 10%. Top right reads S36-PR-001: the owner's pick, to match SECTION 36 (the reference says S38). The owner said to leave the green as it is. Filmed the real path in play mode: the intro, NEW GAME, save slot 1, the sector map, LAUNCH, INITIALISING with the corner text, then the board (`Logs/Intro/v181/real-path.mp4`). The film re-saved the owner's slot 1 save; it was put back from its backup. Test runs use a hidden slot from now on. Full playtest not run. Nothing left to do. |
+| 182 | The battle board fills any screen (owner 2026-11-10: played a Mac build on the MacBook, saw black space, and asked how the board can fit Mac, Windows and any screen size. The owner agreed to the plan: tie each panel to its screen edge, and let the plot grow to fill the middle). **What the player sees:** on any screen shape, the battle board fills the whole screen. There are no black bands. On a 16:9 screen the board looks the same as before. On a 16:10 screen (2880 x 1800) the plot is taller: 1712 x 1010 board px. Before, it was 1712 x 890. On a wide 21:9 screen (3440 x 1440) the plot is wider: 2372 x 890. Panels, buttons and text keep their size. More of the map shows. On a 21:9 screen a second bogey showed. At 16:9 it was off the edge. **What changed:** all in `02.1_Grid` unless named. The board canvas is the same: Scale With Screen Size, 1920 x 1080, Screen Match Mode Expand. `Tactical Board` now stretches to fill the canvas. Before, it was a fixed 1920 x 1080 box in the middle of the screen. Each panel is a 1920 x 1080 sheet with the panel drawn on one part of it. Each sheet is now tied (anchored) to the edge where its panel is. Nothing inside the sheets moved. Left middle: ToolRail. Right middle: SystemsRail, and the six drawers under Drawers (Power, Sensors, Comms, Engineering, Hangar, Fire Control). Top middle: AlarmStrip, Periscope, State · periscope. Top right: SignalBox. Top left, as before: TimeControl, Briefing Icon, Help Bubble. Bottom left: Orders. Bottom middle: Helm. Bottom right: Console. **The drawers:** they slide in and out from the right. The code for that is in `BoardMotion.cs`: open is x 0, shut is x 376 (**Drawer Travel Px**). Each drawer sheet's pivot is now (1, 0.5), at position (0, 0). At x 0 the drawer's right side is on the board's right edge. A new drawer under Drawers needs the same anchor (right middle) and pivot. **The plot:** it stretches, with the same gaps as before: 104 px left, 100 top, 104 right, 90 bottom. Its layers that were 1712 x 890 stretch with it (in `Plot.prefab`). Its four edge lines are tied to their own sides. The code sizes the sensor sweep and the 3D views each frame. They were not changed. PlotRing and Drawers stretch too. The Drawers clip box (its RectMask2D padding: 98 left, 84 bottom, 98 right, 94 top) still matches the plot opening. The drawers still slide out from behind the frame. **The frame:** the original frame, `Frame.prefab`, fills the board. The plot is drawn over it. The owner saw it stretched first and said: "stretching is really ugly. It's really bad. You're dragging these things." The owner picked "repeat, don't stretch" (2026-11-10, passed on by the Fire Control art chat). Now nothing painted is pulled longer. Corners and fixed parts keep their size. Short plain pieces of the edges repeat along each side. The metal sheet (Steel frame) uses a new picture, `steel_frame_1920x1080.png`. It is `steel_frame.png` resized to the board's size. At 16:9 it fits exactly once. The board looks the same as before. On bigger screens the four big corner pieces stay as drawn. Across, a 200 px piece from the middle repeats, where the lighting hardly changes. Up and down, a strip only 4 px tall repeats (rows 543 to 547 of the picture). The metal's grain runs up and down. The strip continues with no step in shade. A 190 px piece was tried first. It showed a darker band across the middle at 16:10. Its sprite border is 860 left, 533 bottom, 860 right, 543 top. Its Image Type is Tiled. The frame's Art list (entry 0) points at the new picture. The old `steel_frame.png` is kept. This frame no longer uses it. Black backing stretches. The four corner bolts (under Corner bolts) are each tied to their own corner. The pipes (under Conduits): the left pipe and its two bolts are tied to the left edge, middle height, beside the tool rail. The right pipe and its two bolts are tied to the right edge, middle height, beside the systems rail. The middle pipe runs along the bottom between ORDERS and the console. It is tied to the bottom: 1398 px long at 16:9, 2058 px at 21:9. Its picture is `conduit_mid.png`. Its two ends stay as drawn. The middle repeats. One repeated piece is exactly two clamp spaces (728 px in the picture). The clamps keep the same spacing however long the pipe gets. Sprite border 16 left, 1324 right. Image Type Tiled. The stencil words (under Stencils): BUS A-14 is on the left pipe. It is tied to the left edge, middle height. VENT PLENUM 3 is tied to the bottom right, near the middle pipe's right end. At 16:9 every part is exactly where it was. Codex's frame, `Frame - Fire Control.prefab`, was on the board for part of the night by mistake, and is now back in the test scene only. Its picture, `FireControlSurround.png`, now repeats the same way: sprite border 860 left, 440 bottom, 860 right, 450 top, Image Type Tiled, Fill Center off. Earlier the same night it was 104 / 90 / 104 / 100. Repeating whole edges showed seams from the art's lighting. **The code:** `PlotPanel.cs`: the plot's middle was a fixed point, (960, 545), set in the inspector as **Plot Centre**. The code now works it out from the plot grid's size. It is no longer in the inspector. `BoardManager.cs`: new `PanelPoint`. Some controls are dragged around fixed points written in their code: the comms tuning dial (centre 1590, 422.5), the helm throttle well, and the sensors dial and gain. When a sheet moves to its edge, those points move with it. PanelPoint gives each panel the mouse point on its own 1920 x 1080 sheet. Those points still match the mouse. Down, Up and Drag all go through it. **Not changed:** the other screens (title, SAVE SLOTS, SECTOR MAP, the ship's rooms, the MISSIONS list) still show dark bands on screens that aren't 16:9. The Fire Control art chat's test scene, `Fire Control Codex.unity`. **Made without the owner:** which edge each panel is tied to. Which edge each pipe and stencil word is tied to. No limit for screens wider than 21:9. **Files:** `02.1_Grid.unity`, `Plot.prefab`, `Frame.prefab`, `steel_frame_1920x1080.png` (new), `conduit_mid.png` (its sprite border), `FireControlSurround.png` (its sprite border, now 860 / 440 / 860 / 450, used by the test scene's frame), `PlotPanel.cs`, `BoardManager.cs`, `docs/BOARD_UI.md` | **Done.** Compiled with no errors. Pictures of the board drawn off-screen at 1920 x 1080, 2880 x 1800 (16:10) and 3440 x 1440 (21:9). The Game view was not changed. At 1920 x 1080 the board was the same as before, pixel for pixel. Before the change, 16:10 showed black bands above and below. After, it filled the screen. Play mode in `02.1_Grid` with ORIENTATION. At 2880 x 1800 the comms drawer and the helm opened in place. The plot's middle was (960, 605), as it should be. Our ship was drawn in the middle of the bigger plot. A point on the comms dial and a point in the throttle well went to the screen and back to the same place. At 3440 x 1440 the Fire Control drawer opened at the right edge. At 1920 x 1080 it opened where it did before. No person has dragged a control with a real mouse on a 16:10 or wide screen. No new Mac build. The frame was checked by number: each part's box at 1920 x 1080, 1920 x 1200 and 2580 x 1080. After the change to repeat: both frames drawn off to the side (no scene opened) at 1920 x 1080, 2880 x 1800 and 3440 x 1440. At 16:9 both match the before pictures. The original frame's metal sheet is within 1 shade. At the other sizes nothing is pulled longer. One small thing still showing: at 21:9 Codex's top lip shows slight shade steps where its middle piece repeats. Then a full-board picture of `02.1_Grid` with all panels, drawn from the scene loaded off to the side (no open scene touched), at 2880 x 1864 (the owner's MacBook screen), 3440 x 1440 and 1920 x 1080. At 2880 x 1864 there is no band and no seam, the bottom pipe's clamps are evenly spaced, and every panel is on its edge. Full playtest not run (quick checks for one change). |
+| 183 | The campaign's missions are in one file, the Campaign file (owner 2026-11-10: "Is there something we can drag those things into?", then, on the plan: "that's absolutely fine"). **What the player sees:** nothing new. The sector map shows the same one dot, 1 ORIENTATION, with the same briefing. **What changed:** the list of missions moved out of the sector map scene into a new file, `Assets/Campaign/Campaign.asset`. It is the one Campaign file. It has the missions in play order. Each mission has a name (**Title**), a **Level** slot, a briefing (**Brief**, the text on the map's left screen) and its dot's place (**At**, in px from the middle of the 1920 x 1080 screen). Drag the level's scene into the Level slot. The slot keeps the scene's name. It also adds the scene to the build's scene list, so the game can load it. Today the file has one mission, ORIENTATION, carried over exactly from the sector map scene: the same name, level, briefing and dot place. The Sector Map Script in `SectorMap.unity` has a new **Campaign** slot, with this file in it. The scene's own Missions list is gone. **Unchanged** (owner restated it on 2026-11-10): a mission's dot shows on the map only after the mission before it is won. **How to set up a mission now:** select `Assets/Campaign/Campaign.asset` in the Project window. In Missions, add a mission. Type its name and briefing. Drag its level scene into Level. Set where its dot goes. The level itself is still made in its own scene in `Assets/Scenes/Levels`, with **Starwolf → Level** and the Mission part on it: its checklist steps, rings, help text and battle group path. **Not built yet, planned on top of this file:** the end card's closing line; CAMPAIGN COMPLETE and the percent on the save slot; the Mission Setup Tool chat's work (call signs, who speaks, a line for each checkpoint, a Starwolf → Mission window). No Starwolf menu item was added. **Files:** new `Assets/Scripts/Game/Campaign.cs` (the Campaign file and its missions). `Assets/Editor/ReadOnlyDrawer.cs` (new `SceneDrawer`: the Level slot you drag a scene into). `SectorMap.cs` (reads its missions from the Campaign slot). `SectorMap.unity` (the Campaign slot filled; the Missions list gone). New `Assets/Campaign/Campaign.asset`. `docs/TUNING_LOG.md` (a row: moved, not changed) | **Done**. Checked in play with a spare test save, deleted afterwards: the map showed "1 ORIENTATION" and the briefing on the left screen. Full playtest not run since. No person has played it |
+| 184 | Torpedoes drop, drift and flare, and a salvo ripples (owner 2026-11-10, after a page of firing looks, "Ship Actions Lab", https://claude.ai/artifact/KXZhwnSU7hoG7aaEqThx6g. The owner picked: torpedoes A2 "drop, drift, flare" and A3 "ripple salvo"; boats B3 "catapult, hard break"; railgun C2 "charge, flash, kick", with the charge at the muzzle only and no glow along the spine, and C3 "the line stays"; far shot D2, the countdown, always, and D3 when a drone watches; PDCs E2 "streams". Then: "I'm honestly ready to go." On A2: "I really like A2, which is drop drift flare. Excellent thing: things being dropped. The only thing is, when it's pushed out the side and a little back, it should move a little further away, like push out the side maybe about 50% more." On A3: "it's still A2, but it's a ripple salvo, so multiple things come out ... a little bit more like A3 is perfectly fine." Asked whether A2 or the launch lines drawn on 2026-11-02 (Step 162) should win: "A2 wins. Take the lines off, but set the distance to be maybe 300 units from the ship rather than 30, whatever, because at a greater zoom we will not be able to see this effect (which I think is important to at least broadly have). When you actually zoom into a visual level, you'll also actually see the model of these things." This step builds only the torpedoes. The rest of the picks are in section 8). **What the player sees:** a torpedo is pushed out of the launcher's side, tilted 30° toward the stern. Its motor is off. It slows fast at first, then drifts. Over 3.5 game seconds it drifts about 300 units. Its nose swings onto the target as it drifts. Then its motor bursts on. In the close-up, a big soft blue-white flare shows: 60 units across, growing to 90, gone in 0.6 game seconds. On the table, a small amber ring grows and fades where the motor lit. The torpedo speeds up to 250 in about 0.2 game seconds. It flies where its nose points and turns onto the target. In the close-up, a drifting torpedo is a small metal cylinder, 14 units long and 5.5 across, along its nose, with no glow (owner, later the same day: "instantiate a little cylinder"). Zoomed in, a torpedo's table dot and trail fade out so the cylinder shows. Once its motor is on, it is the blue-white streak of Step 166 (red for the enemy), with the body on it. **The salvo:** it now leaves one torpedo at a time, 0.3 game seconds apart. Ours come from both launchers by turns, starting with the one on the target's side. A salvo of two is one from each launcher. The ones from the far side swing round behind the ship and across the bow. Our torpedoes can't hit our ship. **The enemy:** enemy ships follow the same rules. All six ship files have the same new numbers. An enemy's salvo ripples too, from one launcher. Each of its torpedoes leaves from where that launcher was when it fired. The enemy moves about 10 units between them. **The drawn lines:** the two launch lines the owner drew on our ship's launchers, VLS-A and VLS-B (Step 162), are removed. The line tool on the Hard Points tab of **Starwolf → Tuning** still works. A torpedo with a line drifts down the line, slowing the same way. Its motor lights at the line's end. The lines on our ship's two hangar dots were not changed. **Tuning:** every change has a row with its old value in `docs/TUNING_LOG.md`. On the Ship tab of **Starwolf → Tuning**, under Weapons, in all six files in `Assets/Ships` (Asura, Garuda, Frigate, Corvette, Battleship, Carrier): Torpedo Launch Speed Units 80 to 250. Torpedo Coast Seconds 2.5 to 3.5. Torpedo Coast Speed Units 15 to 5. Torpedo Tilt Back Deg 15 to 30. Torpedo Curve Deg Per S 32 to 90: it now sets how fast the nose swings while the torpedo drifts with its motor off. Torpedo Turn Build Seconds 0.5 to 0.3. Torpedo Burn Units 300 to 1,100. Torpedo Turn Deg Per S 120 to 140. New: Torpedo Ripple Seconds, 0.3. Torpedo Speed Units (250) and Torpedo Spread Deg (20) did not change. On the Board tab, under Plot & our ship (`PlotPanel`), five new values: Torpedo Body Units (14), Torpedo Body Ink (pale grey, 70%), Torpedo Flare Units (60), Torpedo Flare Seconds (0.6) and Torpedo Ring Px (16). **How it is set up:** `WeaponSystem.cs`: each torpedo (`Round`) now has `nose` (where its nose points), and `litX`, `litY` and `lit` (where its motor lit, and the game seconds since). `Clear` became `Drift`. The speed eases from launch speed down to coast speed, falling fast at first (by the square of the time left). A new `Light` turns the motor on and points the torpedo where its nose points. While the motor is off, `SteerAt` turns only the nose. With the motor on, it turns the torpedo and burns. The old rule that the motor lights once the torpedo is within 3° of lined up (`MotorLinedUpDeg`) is gone. The motor lights when the drift ends. A salvo goes through a small queue (`Queue`, `Release` and the `Queued` class). Each torpedo is made when its turn comes, from where its launcher is then. The torpedo part of `Fire` uses the two launchers by turns and takes their cells at once. `LaunchAt` (the enemy's) queues its torpedoes the same way. The new ship-file number is `torpedoRippleSeconds`. `PlotPanel.cs`: the close-up strokes go through a new `Streak`. `ShowShotsAndBlasts` draws the body, the flare and the lit streak. A new `AddLightRing` draws the ring on the table. The nose and the flare move on smoothly between board ticks (0.42 real seconds each at x1), using the time since the last tick. `PlaytestRunner.cs`: the torpedo checks wait for both torpedoes of the salvo to leave. The slow-down check allows the speed to be within 10 of the drift's end speed. The torpedo slows all through the drift, so a tick seldom falls exactly on its end speed. `docs/scale-sim/scalesim.py` (the fight sums): `torp_step` follows the new flight. Both sides' salvos ripple. Our salvo uses the launchers by turns. One simplification there: a torpedo waiting its turn waits at its launch spot. `CODE['motor_lined_up_deg']` is removed. The six ship files were saved through the Editor. Saving the Garuda and the frigate also wrote fields the Editor already used that the files lacked: room sides and order, some movement numbers, and 6 fighters on the Garuda. It dropped the old `bearingTrailSeconds`. Nothing in play changes from that. **Made without the owner:** the numbers that give the drift of about 300 units: launch 250, 3.5 game seconds, end speed 5, eased. The 30° tilt, the nose swing of 90° a game second, the turn build of 0.3 game seconds, the burn of 1,100 and the turn of 140° a game second: all copied from the A2 and A3 drawing on the page. The look and sizes of the flare and the ring. The body's size and colour. An enemy's ripple leaving from its firing spot. Both launchers by turns, starting with the target's side. The far-side torpedoes crossing the bow. **Not done:** in the close-up, the table's white dot draws on top of a drifting torpedo's body and hides most of it. There is no torpedo model. The body is a stand-in. The side-thruster puffs that A2 showed while the nose swings are not built. Player 1's fight sums have not been run again with the new flight. The rest of the owner's picks are still to build, in this order: the railgun (C2, C3, D2; D3 waits on the drones), the boats (B3), the PDCs (E2). All of these are in section 8. **Files:** `WeaponSystem.cs`, `PlotPanel.cs`, `PlaytestRunner.cs`, `docs/scale-sim/scalesim.py`, the six ship files in `Assets/Ships`, `docs/TUNING_LOG.md` (twelve rows), `docs/TACTICAL_BOARD_SPEC.md` §8.5 (the new flight and look), `StarwolfTuningWindow.cs` (the Hard Points line text now says torpedoes leave straight out of the side), `Plot.prefab` (Torpedo Look = `Assets/Art/Close Up/Ship Metal.mat`, the ships' metal). The full playtest of 2026-11-10 (run `2026-11-10_113810`, by the Ship Layout Manager chat) failed #153: the Garuda's salvo check expected both torpedoes out at once. The check now waits for the second (the ripple); #154 to #162 followed from it | **Done.** Compiled with no errors. A quick play check on Wolf Hunt (`02.1_Grid`, `Level_01`). The Garuda was moved by script to about 2,500 units off our starboard bow. The fire switches were set by script. The shot itself went through `Fire()`. A salvo of four: one left at once and three waited their turn. The cells went 16 to 12, two from each launcher. They left on 110°, 130°, −130° and −110°: 30° back, and the two on each side fanned 20°. The first torpedo's motor lit 311 units from our ship. The flare, the amber ring and the lit streak were seen in the close-up at zoom x1.6, with the game slowed to x0.05. Screenshots: `Logs/TorpedoDrop`, 01 to 06, plus crops (`Logs/` is not in git). No errors from the game in the console. Not run: the full playtest (its two torpedo checks were changed but not run). The enemy's torpedoes were not watched in play. No person has played it. Player 1's fight sums have not been run again with the new flight |
+| 185 | One window for every picture: **Starwolf → Art** (owner 2026-11-10: "Please, please don't keep art in tuning. Tuning is for systems." Then: "you can have it in Starwolf, but it would be a separate menu item." The owner asked for one place to see and swap every picture, the states of things too: rocker up, locked, thrown). **What the player sees:** nothing new. **What the owner sees:** a new menu item, **Starwolf → Art**. At the top is a **Find** box: type a panel, a part or a file name. Under it is a **Waiting for art** tick box: it shows only empty boxes and stand-ins. Then the line "A scene's own pictures show when it is open:", with one button for each scene in `Assets/Scenes/Tactical/` that is in the build list and not open. A button opens that scene. If a scene has unsaved changes, it asks to save them first. Then one fold for each prefab in `Assets/UI/Board/Panels/`, with the panel's name and how many pictures it has. Each row is one picture: its name in bold, the file name under it, and a picture box on the right. When the same picture is in more than one row, "used in 6 places" (or the number) follows the file name. Drop a picture onto the box, or click **Select** on it to pick one. A panel lists every Art list entry by its name, and every picture its code swaps. For example Rocker Up, Rocker Locked and Rocker Thrown. In Engineering each repair rocker shows by its name: "reboot · Up", "reboot · Locked", "reboot · Thrown". The Hangar has Recall Up and Recall Pressed. The Periscope has Aperture Idle and Aperture Slewing. The Plot has Passive Bar Art. A panel also lists pictures on raw images: Engineering's four ship pictures, and the stars and nebulas behind the plot. Then one fold for each open scene, named "Scene ·" and the scene's name. It lists pictures on objects that are not copies of the panel prefabs. On `Tactical Board`: Pause Key Run, Pause Key Paused, Rate Key On, Rate Key Off, and the Thrown and Locked picture for each rocker size (the **Rockers** script). In `Ship`: the ship rooms' Art list, four paintings and four people. In `SectorMap`: Completed Node and the console picture. It also lists images in the scene that have a picture and are on no Art list, for example PlotRing, Briefing Icon and ReferenceOverlay. **Changing a picture:** in a panel, the change is saved into the prefab at once. In a scene, the scene is marked as changed. Save the scene to keep it. A change to an Art list entry still puts the picture on all of the entry's images at once, as before. If the old picture is in other rows too, a box asks: **Only here**, **Cancel** or **Everywhere (N)**. Everywhere changes every row that showed the old picture. Many stand-ins use `Shapes/circle.png`. To replace one stand-in, pick Only here. In play mode the window shows, but the boxes are greyed out: "Stop play mode to change pictures." **Not in the window:** the rocker images themselves (their code sets the picture; their states are listed). The ships drawn from their 3D models, and other pictures the game draws while it runs. Fonts: they are still on each panel's Fonts list. **Nothing moved.** Every picture is still in the prefab or scene it was in before. The window shows them together and changes them there. **Made without the owner:** the window's layout. The picture box size, 52 px. The Only here / Everywhere question. The scene buttons, and which scenes get one. **Files:** new `Assets/Editor/StarwolfArtWindow.cs`. `docs/BOARD_UI.md` (a new part, "In the Art window"). `docs/team-reports/art/2026-11-09.md` (How to change a picture) | **Done**. Compiled with no errors. The console's two older errors are from other chats: a screenshot and a window shortcut. With the `Fire Control Codex` scene open, the window listed 313 pictures. A test swap on AlarmStrip's Lamp entry put lamp_glow on the Lamp image. Putting the old picture back left `AlarmStrip.prefab` exactly as before: git shows no change. The window opened from the menu. Nobody has looked at it by eye or used it yet |
+| 186 | The rooms are in a row inside the ship, from bow to stern (owner 2026-11-10: "think of the four plates of armour as a box… Everything is aligned in a row. If you hit the side of the thing, then you will see the pieces that are aligned to the side. If you hit the top and you destroy the top, then the thing that comes after it is the next item." On a midships setting: "maybe I don't need a midships." Then, on the design page "Ship Room Layout" (https://claude.ai/artifact/6biZNa9s9NcQeXHjSBNQJ1): "I agree with everything you said. You may proceed."). **What the player sees:** every armour plate can now lead to a kill. A hit through the PROW damages the front room still standing, then the next one back, all the way down the row. A hit through the AFT does the same from the back. A hit through STBD or PORT damages the room behind the spot where it lands; if that room is wrecked, the nearest room still standing. A lock aims at the middle of the ship, so a locked broadside goes to the reactor. **The layout, on all six ships** (layout B on the page): row 1 magazine, row 2 bridge, row 3 reactor, row 4 habitation and hangar side by side, row 5 engine room. Slug hits to destroy the Garuda: bow 12, stern 14, side at the middle 6 (hand-aimed shots spread along the side need about 15; we have 12 slugs). Our ship: bow 8, stern 9, side at the middle 4. **Tuning:** Hard Points → ROOMS shows one Row number per room; the picture draws the rows top to bottom. The Side column is gone. **Made without the owner, all agreed on the page:** a side hit into a wrecked room goes to the nearest room still standing; rooms with the same number take turns from every direction; every row is the same length; fighter runs and crashes hit the middle of a side; fighters on DISABLE go for the end of the ship the engine room is nearer; the magazine stays at the bow. **Files:** `DamageSystem.cs` (`Stats.roomRow` replaces `roomSide` and `roomOrder`; the `Side` list is gone; `NextRoom` takes where along the ship the hit landed; `TakeSlug` and `TakeWarhead` take it too). `WeaponSystem.cs` (our shots and the enemy's pass that spot on; it was already worked out for where a killed ship breaks apart). `PeriscopePanel.cs` (comment). `StarwolfTuningWindow.cs` (the ROOMS view). `PlaytestRunner.cs` (the starboard hangar check aims at row 4). | **Done.** Compiled outside Unity and in Unity with no errors. Played on `02.1_Grid`: 9 slugs on the Garuda's PROW went armour 67%, 33%, OPEN, then MAG three times, then BRI three times, and the hull line read "BOW ▸ RCT 5". On its PORT, a slug at 0.9 of the way back hit ENG, two at 0.7 hit HAB then HGR (turns), the hull line read "PORT ▸ RCT 5", and three at the middle destroyed it. The ROOMS view was checked by screenshot. Full playtest (2026-11-10_113810): 248 passed, 8 failed. Every room check passed, real shots on the Garuda's port side included. The 8 fails are other work: six are the Garuda's torpedo salvo (Step 184; only 1 of 2 torpedoes in flight), two are the Garuda's model on the plot ("picture False"). The fight sums and the sheet's "Room hits" tab now play the box, on the new torpedo flight. Wins: Wolf Hunt x1 42% to 52%, COLD RUN x1 34% to 38%, INTERCEPT x1 33% to 37%. LONG SHOT x5 fell from 55% to 23%. Not committed |
+| 187 | Every note moved into `docs/` (owner 2026-11-10: "can you please stop saving random READMEs in random places? Why does the scene folder tactical have READMEs in there?"). **What the player sees:** nothing new. **What the owner sees:** the Tactical scene folder and the Assets folder have no notes in them now. The 8 notes from `Assets/Scenes/Tactical`, the 4 from the top of `Assets` and the board guide are in `docs/`, with the same names. The board guide is now `docs/BOARD_UI.md`. Every link to them points to the new place. Rule from now on: never make a note inside `Assets`. Add to a note that exists, or put a new one in `docs/`. Two READMEs stay where they are, because each one describes the files next to it: the intro package (`Assets/StarwolfIntro`) and the design export (`Assets/UI/Board/Design`). |
+| 188 | Back at the title, only STARWOLF flickers in; a tiny watermark on the menu (owner 2026-11-10: "ensure that the end campaign screen also loads just the Starwolf logo flickering in"; "At the bottom of the menu screen… in small text… just 'Shagun Shah'… a small little watermark in the corner, just for me"). **What the player sees:** when the game starts, the intro is as before: SECTION 36, then STARWOLF, then the menu. Coming back to the title later shows only STARWOLF. Its box and letters flicker in from an empty screen, it stays for the title time (4 s), then the menu shows. That covers MAIN MENU in the Escape menu (save slots, sector map, ship rooms) and the menu button at the end of a fight. On the menu, "Shagun Shah" shows in tiny dim text in the bottom-right corner. It shows on the menu only. **Made without the owner:** the end card, the screen after the campaign's last mission, isn't built yet (Campaign Flow's next job, `docs/CAMPAIGN_FLOW_PLAN.md` point 6: the intro, then the title menu). It gets only STARWOLF too, because any second full intro in a run starts at the title. Campaign Flow was told. The watermark sits in the bottom-right corner, size 10 on the 1920 × 1080 screen, in the corner text's green at 50%. **Files:** `StarwolfIntroController.cs` (`introSeen`, `returning`: the second full intro in a run starts at the title, changing over from an empty picture; new **Menu** fields `watermark`, `watermarkSize`, `watermarkColour`; the watermark uses the corner text's font, `cornerFont`). | **Built and checked in Unity.** Unity compiled it with no errors. It went into the Mac build killshot-95 made before the font was set, so that build's watermark is in TextMeshPro's default font. The next build has the right one. `cornerFont` is ShareTechMono-Regular SDF on the intro in `00_Start`, set in the Editor by the Build chat. That save also wrote the new fields at their code defaults. Play check: the first start goes SECTION 36, then STARWOLF, then the menu. The menu shows "Shagun Shah" in Share Tech Mono, size 10, dim, bottom-right. Loading `00_Start` again in the same run, as MAIN MENU and the end screen do, shows no SECTION 36. STARWOLF's box and letters flicker in from black, the title stays, then the menu shows. The watermark stays hidden until the menu. The game wrote no errors. Not played: the MAIN MENU button itself, which loads `00_Start` the same way. **2026-11-11:** the watermark's place is a setting too, `watermarkPlace` under Menu (owner: "I would like a setting for that"). Default 80, 60, as before. Size, colour and place now change straight away in play mode. |
+| 189 | Every menu screen gets an Art list (owner 2026-11-10: "just go in order… save slots are the easiest… Pause menu is so easy. Let's start doing it… let's just start blocking that all off"). **What the player sees:** the pause menu and the end screen have the board's art. The grey box in the middle is now the board's dark plate. RESUME, RESTART MISSION, MISSION SELECT and QUIT GAME are the board's bevelled keys. Their words are still easy to read. The other screens look the same as before. **What the owner sees:** each screen has an Art list now. It is the same **Art List** script the frame pieces use. No new code. The lists show in **Starwolf → Art** (Step 185). **SAVE SLOTS** (`Assets/Scenes/Tactical/SaveSlots.unity`): the list is on `Slot List`. Its entries are Slot button (Slot 1 to 3) and Delete button (Delete 1 to 3). Both are empty. This screen is green words on black, like the intro. The box behind each button can't be seen. It shows as a faint green box only when you point at it (14%) or press it (28%). A picture there would show only then too. The slots are left empty for real art. **End screen and pause menu** (`Assets/UI/Board/Panels/End Screen.prefab`): its Art list was empty. It now has Shade (empty), Plate (`Plates/plate_dark.png`) and Button (`Plates/plate_legend.png`, on all four buttons). The plate and the buttons are set to Image Type Sliced. Their colours are the same as before. **Menu Scene** is still `00_Start`. **The briefing** (`01_Briefing.unity`): the list is on `Level List`. It has one entry, Mission button (the 8 buttons), empty. The screen looks like SAVE SLOTS. No script opens this scene any more. **The sector map** (`SectorMap.unity`): the list is on `Sector Map`. Its entries are Button (BRIEFING, DEBRIEF and LAUNCH) and Mission box. Both are empty. The Mission box's image is switched off. No picture or layout changed. The map's **Campaign** slot still has the Campaign file in it. The Mission Setup and Campaign Flow chats said yes first. **The start screen** (`00_Start.unity`): unchanged. The intro's code draws it in green letters. Its old START GAME button is switched off. It has no boxes to give art. **Made without the owner:** the art on the end screen (plate_dark and plate_legend). Keeping the end screen's colours. Leaving the green screens' slots empty. The entry names. **Files:** `SaveSlots.unity`, `End Screen.prefab`, `01_Briefing.unity`, `SectorMap.unity`. | **Done.** git shows each change is only the new list. SaveSlots also got Unity's usual tidy-ups when it was saved: newer intro settings written out, and text colours stored again. The screen looks the same (`Logs/ArtLists/01_saveslots_before.png`). End screen pictures: `Logs/ArtLists/02_endscreen_before.png` and `02_endscreen_after.png`. They were drawn in a test scene. The colours are close to the board's, but not exact. Nobody has played through these screens since |
+| 190 | The Escape menu on the screens between missions (owner 2026-11-09: Escape on SAVE SLOTS, the map and the rooms opens a small menu with RESUME, MAIN MENU and QUIT GAME; 2026-11-10, on the build order in `docs/CAMPAIGN_FLOW_PLAN.md`: "Build order is perfectly fine. Let's go ahead". This is step 1 of that plan). **What the player sees:** on SAVE SLOTS, the SECTOR MAP and the ship's rooms, Escape opens a small menu. It reads PAUSED, then RESUME, MAIN MENU and QUIT GAME. Escape again, or RESUME, closes it. A dark see-through layer covers the screen behind. That screen can't be clicked, and it doesn't move on by itself. MAIN MENU goes back to the title (`00_Start`). The save stays as it was last saved. No slot is picked until you pick one again. QUIT GAME quits the game. In the Unity editor it stops play mode. Before, Escape quit the game at once on these three screens. On the intro and the briefing, Escape still quits at once. **The look:** the same as the pause menu in a mission: dark buttons, white Barlow Condensed letters, and an amber tint when the mouse is over a button. **How it is set up:** the menu is one prefab, `Assets/UI/Menus/Escape Menu.prefab`. It has a separate canvas, drawn on top of everything. A copy is in `SaveSlots.unity`, `SectorMap.unity` and `Ship.unity`, switched off. Each copy's buttons call that scene's ScreenFlow: **Resume**, **MainMenu** and **Quit**. ScreenFlow, the script that moves between screens, has two new settings. **Escape Menu** is the menu Escape opens; left empty, Escape quits at once, as before. **Main Menu Scene** is the scene MAIN MENU loads (`00_Start`). No new script. The Art Manager chat may give the menu board art later, on the prefab. How to change its look is in `docs/BOARD_UI.md`, "Escape menu". No game numbers changed, so there is no row in `docs/TUNING_LOG.md`. **Made without the owner:** the PAUSED title, and the look copied from the pause menu. **Files:** `Assets/Scripts/Tactical/ScreenFlow.cs`. New `Assets/UI/Menus/Escape Menu.prefab`. `SaveSlots.unity`, `SectorMap.unity`, `Ship.unity` **After a review, two fixes:** opening the menu picks RESUME, so Enter or Space can't press a button behind it (on SAVE SLOTS that could start slot 1). Once a level is loading after LAUNCH, Escape and MAIN MENU do nothing. Checked in play on SAVE SLOTS: before, slot 1 was picked; with the menu open, RESUME was; after RESUME, nothing (`Logs/CampaignFlow/02_escape_menu_save_slots.png`). | **Done.** Checked in play with a hidden test save, deleted afterwards. The buttons were pressed by script. On the sector map the menu opened over the map (`Logs/CampaignFlow/01_escape_menu_sector_map.png`). RESUME closed it. MAIN MENU in the ship's rooms opened `00_Start` and left the campaign. QUIT GAME on SAVE SLOTS stopped play mode. Nobody has pressed the real Escape key: a script can't press keys. The key only switches the menu on and off |
+| 191 | The Escape menu gets board art, like the pause menu (the open item "Escape menu art" in section 8, after Steps 189 and 190). **What the player sees:** the Escape menu on SAVE SLOTS, the sector map and the ship's rooms now looks like the pause menu in a mission. The box is the board's dark plate. RESUME, MAIN MENU and QUIT GAME are the board's bevelled keys. The amber when you point at or press a button is the same as before. **What the owner sees:** `Assets/UI/Menus/Escape Menu.prefab` has an Art list on its top object, `Escape Menu`. It is the same **Art List** script. Its entries: Dim (empty), Box (`Plates/plate_dark.png`) and Button (`Plates/plate_legend.png`, on the three buttons). The box and the buttons are set to Image Type Sliced. The box is the pause menu plate's grey (0.31, 0.34, 0.36), as see-through as before. Each button's Normal and Selected colour is the pause menu's grey (0.40, 0.42, 0.44). The buttons and their clicks were not replaced. **Starwolf → Art** now also lists the prefabs in `Assets/UI/Menus/`. Before, it read only `Assets/UI/Board/Panels/`. How to change it: `docs/BOARD_UI.md`, "Escape menu". No game numbers changed, so there is no row in `docs/TUNING_LOG.md`. **Made without the owner:** matching the pause menu's art and greys. **Files:** `Assets/UI/Menus/Escape Menu.prefab`, `Assets/Editor/StarwolfArtWindow.cs`. | **Done.** Compiled with no errors. Pictures before and after: `Logs/ArtLists/03_escape_before.png` and `03_escape_after.png`. Nobody has played through these screens since |
+| 192 | MILK RUN, part 2: mission 1 plays the owner's whole flow (owner 2026-11-10, go ahead: the station, the hidden pirate corvette, torpedoes, the boarding, the intel). **What the player sees:** MILK RUN (`Assets/Scenes/Levels/Orientation.unity`) has 23 checkpoints. Checkpoints 1 to 11 are Codex's: power, throttle, heading, side thrusters, zoom, DRADIS, ACTIVE SCAN, and a scan of one ship of the group. Rings 2 and 3 moved to fit the Tutorial Mission Manager chat's new spawn. Then: 12, ENG to 5, and the map grows to 24,000. 13, speed 45. 14, into the ring at (300, 1,900), at the rocks. 15, stop in the ring at (0, 5,900), at the station. 16, scan the station, s1. 17, DRADIS gain to 4. Until then the pirate corvette, p1, is hidden in the wreckage. 18, scan p1. It runs. 19, Condition 2. This checkpoint frees the weapons. COMMAND: "You pursue that immediately, Captain. We'll stay here to take care of survivors." 20, lock p1. 21, open one side of p1's armour with torpedoes. 22, the marines capture p1. 23, a 20 s wait with the last note, then MISSION COMPLETE. The railgun is off for the whole mission. Fire Control reads RAILGUN HOLD. Torpedoes, PDCs and the boats still work. The words of 12 to 23 are stand-ins. Codex rewrites them. **The corvette:** it stays still until we scan it. Then it runs straight away from us. It steers round rocks and keeps inside the map. It runs at 0.6 of its top speed: 36. Our top speed is 50. We can catch it. Once one side of its armour is gone, it stops dead. Then the marines can board it. It can't be destroyed. Its reactor never drops below 1. Outside the map, it is never counted as gone. Marines sent on DESTROY capture it. Its crew can't fight off our marines. **What the owner can set:** on the Mission's Drill list, seven new checks. GAIN AT: the DRADIS gain dial. CONDITION AT: the alert condition. LOCKED. NEAR: the alarm strip shows that ship's bearing and range (MILK RUN does not use it). BREACHED: one side of its armour is gone. CAPTURED. WAIT: game seconds. A checkpoint can name a ship by its track key (Track). SCANNED with a Track means that one ship. A checkpoint can tick Weapons Free. When that checkpoint starts, the level's weapons-off ends. The Mission has Railgun Off. A ship's WorldContact has Cannot Be Destroyed. An enemy brain has Flees and Flee Speed Share (Tuning, Enemy tab). The numbers are in `docs/TUNING_LOG.md`. **Made without the owner:** the crew of a ship that can't be destroyed can't fight off our marines (the owner can say no). The words of 12 to 23. **Other chats:** the Tutorial Mission Manager chat built the station, the wrecks, the pods, p1's place and the group's path (section 8, "Open after Step 178"). **Files:** `Mission.cs` (the new checks, `track`, `weaponsFree`, `railgunOff`), `QuestSystem.cs` (the new checks; `StepStarts`; NEAR on the alarm strip), `EnemyBrain.cs` (`flees`, `fleeSpeedShare`, `Flee`), `WorldContact.cs` and `ShipState.cs` (`cannotBeDestroyed`), `DamageSystem.cs` (the reactor stays at 1), `HangarSystem.cs` (DESTROY becomes SECURE; the marines always win), `OrdersSystem.cs` (`railgunHold`), `WeaponSystem.cs` (`WepReady`), `FireControlPanel.cs` (RAILGUN HOLD), `Orientation.unity`. | **Built.** Compiled with no errors. Checked in play by a one-time script, not saved. At gain 2 DRADIS did not hear p1. At gain 4 it did. Once scanned, p1 got out of the wrecks, then ran at 34 to 36. Once its armour was open, its throttle went to 0 and it slowed to 0.3. Its reactor, set to 0, came back to 1. It was not destroyed. The capture checkpoint passed. The last note showed in the BRIEFING box (`Logs/MilkRun/intel-note.png`). MISSION COMPLETE showed 20 s later. At WEP 2 the railgun was not ready and torpedoes were. Not checked: a real lock through the targeting computer, a real torpedo hit, a real boarding, a full play-through by a person. Committed in b0f82e5. On 2026-11-11 a script played it through with the board's own controls: a real lock, torpedo hit and boarding, all 23 checkpoints passed (Step 200). |
+| 194 | The end card, and the percent on the save slot (owner 2026-11-09: after the last mission, an end card shows the story's closing line, then the title, and the save slot reads CAMPAIGN COMPLETE and 100%; 2026-11-10: "ensure that the end campaign screen also loads just the Starwolf logo flickering in"; then the go: "we're back again and can begin this". This is step 2 of `docs/CAMPAIGN_FLOW_PLAN.md`). **What the player sees:** win the campaign's last mission and press MISSION SELECT. The screen goes black. The story's closing line types in, one letter at a time, in the middle of the screen. The letters are the sector map's green Share Tech Mono. The whole line stays up for 5 seconds. Then the title loads, and only STARWOLF flickers in, as on every return to the title since Step 188. Any key or click shows the whole line at once. Another key or click goes straight to the title. Before, MISSION SELECT always opened the ship's rooms. **The end card shows only once the closing line is written.** The owner writes it. It is empty now. While it is empty, MISSION SELECT after the last mission opens the ship's rooms, as before. **Today:** the campaign has one mission, MILK RUN (level scene `Orientation`). So a campaign win of MILK RUN still opens the rooms, not the end card. **Changed in Step 203:** the end card now opens even with the line empty, and goes straight to the title. A campaign win of MILK RUN no longer opens the rooms. When missions are added, the end card follows the new last mission by itself. **The save slot:** a used slot now reads, for example, "CAMPAIGN · 1 OF 10 · 10%". That is missions won, out of the missions in the Campaign file, and the percent. With every mission won it reads "CAMPAIGN COMPLETE · 100%". Only the Campaign file's missions count. Old test levels don't. Before, it read "CAMPAIGN · N MISSIONS DONE". The owner's slot 1 now reads "CAMPAIGN · 0 OF 1 · 0%": its one win is the old FLIGHT DRILL test level. After a campaign win of MILK RUN, a slot reads "CAMPAIGN COMPLETE · 100%". Every mission in the file is won. **The save:** it is written at the win, as before. The end card then leaves the campaign. No slot is picked until you pick one again. **How it is set up:** the closing line is in the Campaign file, `Assets/Campaign/Campaign.asset` → **Closing Line**. The end card is a new scene, `Assets/Scenes/Tactical/EndCard.unity`, added to the build's scene list. Its two numbers are on the Board tab of **Starwolf → Tuning**, under End card, with `EndCard.unity` open: Letters Per Second (30, how fast the line types in) and Hold Seconds (5, how long the whole line stays up). Both are in `docs/TUNING_LOG.md`. The End Screen Panel has a new setting, **End Card Scene** (`EndCard`). MISSION SELECT opens the ship's rooms, as before, if the closing line is empty or if that scene is missing from the build's scene list. Save Slots has a new **Campaign** slot, set in `SaveSlots.unity`, for the percent. The sector map gives the Campaign file to the save when the map opens. In the code: `Campaign.Won()` counts the missions won. `SaveGame.FinishedWith(level)` is true when that level is the last mission and every mission is won. How to change the end card is in `docs/BOARD_UI.md`, "End card". **New script:** `EndCard.cs` (the owner OK'd one new script). **Files:** new `Assets/Scripts/Game/EndCard.cs` and `Assets/Scenes/Tactical/EndCard.unity`. `Campaign.cs`, `SaveGame.cs`, `SectorMap.cs`, `EndScreenPanel.cs`, `SaveSlots.cs`, `SaveSlots.unity`, `ProjectSettings/EditorBuildSettings.asset` | **Done.** Checked in play with a hidden test save, deleted afterwards. FinishedWith was false before the win, true after it, and false for another level. SAVE SLOTS showed the new percent text. A test line was put in for the check, then emptied. The Campaign file on disk never had it. The end card typed all 68 letters, kept the line up, then loaded `00_Start` (`Logs/CampaignFlow/03_end_card_test_line.png`). Nobody has played a full campaign win through the real win screen yet. The rule that the end card waits for the closing line was added after a review. |
+| 195 | Our battle group shows blue in visual range (owner 2026-11-10: "when you're in the non-visual mode, when your things come within visual range of you, they appear as yellow wireframes. They should be blue wireframes."). **What the player sees:** a friendly ship inside visual range is now blue, scanned or not: its line picture, its dot and its label. Its label still reads BOGEY until an ACTIVE SCAN names it. Unscanned enemies stay amber. Scanned enemies stay red. Past visual range, a friendly ship that is not scanned shows like any unknown ship: a red bar on the DRADIS circle, with its bearing. **What changed:** before a scan, a friendly ship used the amber of unknown ships. Its line picture showed yellow. Two lines in `PlotPanel.cs` (the `Color ink` line and the dot's ink) now give Own Force blue (`Palette.asset`) to a friendly ship that is scanned or in visual range. This is every ship with Friendly ticked on its World Contact. In MILK RUN: the battle group, the three shuttles and the station. Commit be31ce1 (2026-11-11). | **Done, compiles; seen in play: waiting on the MILK RUN play-through.** Unity's console is clean. The Tutorial Mission Manager chat checks it in its MILK RUN play-through. |
+| 196 | Supplies and crew are kept between campaign missions (owner 2026-11-10: "the whole point of Starwolf also is that you will actually raid for supplies"; "damage does not carry over: fire, radiation, hull breaches"; "If you lose crew, you lose crew." This is step 3 of `docs/CAMPAIGN_FLOW_PLAN.md`, part 1). **What the player sees:** win a campaign mission and press MISSION SELECT. The next mission starts with what our ship had left. Before, every mission started full. **What is kept:** the rounds in each gun and launcher, by its label: RAILGUN, PDC GROUP A to D, TORPEDO VLS A and B. The marines aboard. Marines still out on boats when the mission ends count as home: only marines killed are lost. Each room's crew. Nothing goes above the full numbers in the ship's stats file, `Assets/Ships/Asura.asset`. **What is not kept:** fires, air loss and radiation, as before. Only armour and room damage are kept, as they already were. **When it is saved:** only when the player presses MISSION SELECT after a win, the same as damage. RESTART MISSION on the win screen replays from the save before. When everything is full, nothing is saved for it. **No way to restock yet.** REPAIR ALL in ENGINEERING clears the damage only. Part 2, the travel bar and the actions in each room, adds restocking. **Trap:** saved numbers match by name. Rename a gun's label or a room, and what was saved for it is lost. **In the code:** the save has a new list, `stores`, next to `damage`. `SaveGame.KeepDamage` takes the full numbers from the ship's stats file. `SaveGame.PutDamage` only lowers the ship's numbers. No game numbers changed, so there is no row in `docs/TUNING_LOG.md`. **Files:** `Assets/Scripts/Game/SaveGame.cs` | **Done.** Checked in play mode on 2026-11-11 with the hidden test slot (slot 9), deleted afterwards. A save with RAILGUN 5, PDC GROUP B 900, TORPEDO VLS A 3, MARINES 10, reactor crew 2 and bridge crew 99 started MILK RUN with exactly 5, 900, 3, 10 and 2. The bridge had its full 9. The other ships were untouched. A win after one torpedo from launcher B, marines down to 4 and the magazine crew down to 1 saved 7 of 8, 4 of 18 and 1 of 4. Marines on boats counting as home was added after the review; it compiles, not yet played. A full ship saved nothing. |
+| 197 | The rest of the Ship Actions picks: the railgun's push back and look, the shot line, the far shot, the catapult and hard break, and PDC streams (owner 2026-11-10, on the "Ship Actions Lab" page, https://claude.ai/artifact/KXZhwnSU7hoG7aaEqThx6g: railgun C2 and C3, far shot D2, boats B3, PDCs E2; then "I'm honestly ready to go" and "I think there's lots to be implemented, so I trust you to go for". The torpedoes, A2 and A3, were Step 184). **What the player sees:** **The railgun (C2).** Each shot pushes our ship backwards, away from the shot: 40 units a second for 0.4 game seconds, then the thrusters stop the push over 0.4 game seconds. 24 units in all, the same at x0.25, x1 and x5, with or without ENG power. The Garuda's railguns push it back the same way. In the close-up, nothing glows along the ship (owner: the ship is built around the weapon). While the railgun is armed, a charge glow pulses at the gun's mouth and grows over about a second. When it fires, a flash shows at the mouth (0.3 game seconds) and two puffs of vent gas blow out of the sides of the bow (1.1 game seconds). **The shot line (C3).** Our shot leaves a line on the table, from the gun to the slug. It fades over 5 game seconds. Owner: "part of the charm". Ours only. **The far shot (D2).** Owner: "That thing shot away, but you're not sure if the impact happened." A POINT within 500 units of our slug's path counts down in place of its time: IMPACT 4 S … IMPACT 1 S. Then IMPACT ? blinks for 3 game seconds. If our slug hits a ship we can't see, can't hear on DRADIS and haven't locked, the hit still does its damage, but no HIT is reported. The slug flies on to the end of its reach, and the report is IMPACT ?, the same as a miss. A miss aimed at a ship we can't see or hear also reports IMPACT ?. A hit we can see still reports HIT. **The boats (B3).** Owner: for every craft, assault boats too, "regardless of the weight". Boats and fighters are thrown out of the side at 560 units a second and slow to their own speed over 1.2 game seconds. At the end of their straight run, or their drawn launch line, they break hard onto the target: up to 240° a game second, back to the normal turn once within 8° of the target. Craft heading home don't break. In the close-up, a light streak trails the craft while the push lasts, and a thruster flash shows on the outside of the break (0.3 game seconds). **The PDCs (E2).** When a PDC group gets a go at an enemy torpedo, a stream of rounds walks onto it, starting 60 units off. On a kill, the torpedo goes down 0.5 game seconds later: "PDC-A · TORPEDO DOWN". A miss stays off the torpedo. **Bug fixed: enemy salvos.** Since Step 184, when the Garuda fired a salvo, only the first torpedo left. The rest were used up but never launched (found by the chat killshot-78). That is why the Step 184 playtest saw the Garuda send only one of its two torpedoes. Now every torpedo of an enemy salvo leaves, 0.3 game seconds apart. **Tuning:** every new number has a row in `docs/TUNING_LOG.md`. On the Ship tab of **Starwolf → Tuning**, under Weapons: Railgun Kick Units (40), Railgun Kick Seconds (0.4), Railgun Kick Stop Seconds (0.4), Pdc Stream Seconds (0.5). Under Hangar: Catapult Units (560), Catapult Seconds (1.2), Break Deg Per S (240), Break Ease (2,000), Break End Deg (8). Written in Asura.asset. The other ship files use the same numbers from the code until saved. On the Board tab, under Plot & our ship: Muzzle Charge Units (30), Muzzle Flash Units (90), Muzzle Flash Seconds (0.3), Vent Gas Seconds (1.1), Shot Line Seconds (5), Impact Near Units (500), Impact Blink Seconds (3), Craft Streak Units (60), Break Flash Units (40), Break Flash Seconds (0.3), Pdc Walk Units (60). **How it is set up:** `NavSystem.cs`: `Kick` starts the push away from the shot's bearing. `KickGone` works out exactly how far the push carries the ship in any stretch of time, so it is the same at every game speed. `Recoil` moves the ship by it each board step. The push is kept apart from the throttle's speed, so the engines don't fight it. `WeaponSystem.cs`: `Fire` kicks our ship. `RoundStep` checks each hit with `Watched` (in sight, heard, or locked). A hit nobody watched still does its damage, marks the slug `spent`, and the slug flies on hitting nothing. `PdcStops` now starts a `PdcBurst` (kept in `Bursts`). The torpedo goes down when the burst ends. `TickIncoming` now releases the enemy's queued torpedoes (the bug). `EnemyBrain.cs`: `Shoot` kicks the Garuda. `HangarSystem.cs`: `LaunchSquad` gives the craft the catapult's push. `Fly` runs the hard break. `PlotPanel.cs`: `ShowRailgun` (charge, flash, vent gas), `TrackRailShots` (the table line and the muzzle rings), `ImpactLabel` (the POINT's countdown), `ShowCraft` (streak and break flash), `ShowPdcStream` and `TrackPdcBursts` (the streams). `PlaytestRunner.cs`: the hangar checks allow the hard break and wait for the push to end. **Made without the owner (open points, section 8):** with no ENG power, the push back was first left as drift. In play, one shot sent the ship backwards for good, out of the battle space. Changed: the thrusters always stop the push. The first version also moved the whole push in one board step (17 units at x1, about 84 at x5). Now it is worked out exactly: 24 units at every rate. A hit on a ship we can't see still does its damage; only the report is hidden. A POINT's countdown runs to IMPACT ? even when we saw the slug hit a ship before it reached the POINT. A doomed torpedo keeps flying for the 0.5 seconds while the stream walks onto it, so one first caught very close could still hit us. The 8° that ends the hard break was first written in the code; it is now Break End Deg in Tuning. **Not done:** D3 (a drone shows the hit) waits on the drones. The enemy's shots leave no line; the owner hasn't answered. Player 1's fight sums have not been run again after the torpedo and railgun changes. **Files:** `NavSystem.cs`, `WeaponSystem.cs`, `EnemyBrain.cs`, `HangarSystem.cs`, `PlotPanel.cs`, `PlaytestRunner.cs`, `Asura.asset`, `Plot.prefab`, `docs/TUNING_LOG.md` (eight rows), `docs/TACTICAL_BOARD_SPEC.md` (Rules 4.3.b, 8.4.c, 8.4.d, 13.5.b, 18.2.d; §8.5, §8.6, §11.4, §12.3, §20.1, §20.2), `docs/BOARD_UI.md` (Plot) | **Done.** Compiled, and checked in play on `02.1_Grid` on 2026-11-11. **Railgun:** the charge glow at the mouth, the flash, the vent gas and the table line were all seen. A seen hit reported "HIT · GARUDA · PORT ARMOUR 67%". The push back measured 24 units at x1 and at x5. **Far shot:** the Garuda was put 12,000 units ahead, out of sight and off DRADIS. A POINT at 6,000 counted down IMPACT 4 S to 1 S, then IMPACT ?. The slug hit the Garuda (its armour fell from about 474 to 424) with no HIT report, flew on, and reported IMPACT ? at the end of its 30,000-unit reach. **Boats:** thrown out at about 560 units a second, slowed to their own speed in about 1.2 seconds, then broke at up to 240° a second and lined up on the Garuda in about 0.4 seconds. The streak and the break flash were seen. **PDCs:** an enemy salvo of two. Both torpedoes left, 0.3 seconds apart (the bug is fixed). Both were shot down after a 0.5-second stream each. No hits taken. **Full playtest** (2026-11-11_015627): 256 passed, 1 failed. The one fail is #194, the wreck's picture, which failed before this step too (another chat's contact-picture change). The first run that day failed 7: six checks were written before D2 and B3 and were brought up to date (#107, #109, #244: a shot at a ship out of sight now reports IMPACT ?, so the checks read its armour to know if it hit; #144: the catapult ends the straight run in half a second, so the launch is read at once; #154: the alarm strip changes on the next board step). It also found one real bug: `NavSystem.PlaceAt` kept a leftover push, so a ship put somewhere new slid 24 units. Fixed: `PlaceAt` clears it. Since the docs were first written, the 8° break end is Break End Deg in Tuning, and the shot lines and PDC streams take a frame's time once (`FrameDt`). No person has played it. |
+| 198 | The travel bar and the actions in each room, and no replays (owner 2026-11-09: a bar of about 10 units at the top of the ship's rooms, the travel time to the next mission, and a cost for each action; 2026-11-10: one repair is one fix, each action is in its room, and "You have to generate the ammo, so you'll get some ammo back"; 2026-11-11: replays off. This is step 3 of `docs/CAMPAIGN_FLOW_PLAN.md`, part 2. Step 3 is now done). **What the player sees:** win a campaign mission and press MISSION SELECT. The ship's rooms open. At the top right is the travel bar: TRAVEL 0 / 10. A won mission gives a fresh bar of 10 units. Each room shows its actions as buttons. A button reads what it does, how it stands, what it gives and its cost. **ENGINEERING:** the DAMAGE REPORT box lists each damaged part as a button, for example "REPAIR REACTOR   1 / 5   +2   COST 3". The reactor costs 3 and gives back 2 of its 5 points. Another room costs 2 and gives back 2 points. One side's armour costs 1 and gives back a quarter of that side's full armour. With nothing damaged, it reads ALL PARTS WHOLE. **HANGAR:** a STORES box. RESTOCK TORPEDOES shows both launchers together, for example 7 / 16. It costs 2 and gives 4 torpedoes, to the emptiest launcher first. EXTRA AMMO shows the railgun's rounds and the PDC groups' rounds. It costs 1. It gives the railgun and each PDC group 20% of its full rounds, rounded down: 2 slugs, and 480 rounds a group. **QUARTERS:** a MARINES box. HEAL MARINES costs 2 and gives 6 marines. **BRIDGE:** talk only. **The bar:** each click adds its cost to the bar and saves at once. A button that doesn't fit in the bar is greyed out. HANGAR's and QUARTERS' buttons always show. When the stock is full they are greyed out, and the stock can still be read on them. When the bar is full, every action locks. The SECTOR MAP tab flashes amber, once a second. SECTOR MAP can be pressed any time. Any units left are lost. After a lost mission, the rooms show the bar at 10 / 10, locked. A new campaign starts with the bar shut. The first bar comes with the first win. **REPAIR ALL is gone.** Its button is now the hidden "Action" button. Every action button is a copy of it. **No replays** (owner 2026-11-11). On the sector map, a won mission's LAUNCH is greyed out and does nothing. BRIEFING and DEBRIEF still work. Owner: "You're not going to get a better result or new assets or new anything." If replays come back later, they are just for fun and give no travel bar. **Tuning:** every number is on the Board tab of **Starwolf → Tuning**, under Travel bar, with `Assets/Scenes/Tactical/Ship.unity` open: Travel Units (10), the six costs, what each action gives, and Flash Per Second (1). All are in `docs/TUNING_LOG.md`, in four rows dated 2026-11-11. **How it is set up:** the save has two new values, `travelOpen` and `travelUsed`. A win opens a fresh bar. SECTOR MAP shuts it. `SaveGame.Repair` is removed. Ship Rooms has new slots under Travel bar and actions: **Our Ship** (`Assets/Ships/Asura.asset`; it tells torpedoes, slugs and PDC rounds apart), **Travel Fill**, **Travel Text** and **Action Template**. Each room in the Rooms list has an **Actions** slot, where its buttons go. Empty: no actions in that room. How to change it is in `docs/BOARD_UI.md`, "Ship rooms". **Traps:** actions find their room by its name: ENGINEERING, HANGAR, QUARTERS. Rename a room, and it loses its actions (section 5, trap 35). Supplies still match by each gun's label (trap 34). **Made without the owner:** leaving early loses the units left. The flash. Torpedoes go to the emptiest launcher first. Ammo rounds down. The stock always shows, greyed out when full. The boxes are at the top right, in the damage report's style. A lost mission gives no bar. **Still open:** restock drones stays hidden until drones are built. Only the HANGAR has its painting. `Campaign.asset`'s Closing Line is still empty. **Files:** `Assets/Scripts/Game/SaveGame.cs`, `Assets/Scripts/Game/ShipRooms.cs`, `Assets/Scripts/Game/SectorMap.cs`, `Assets/Scenes/Tactical/Ship.unity`, `docs/TUNING_LOG.md` (four rows) | **Done.** Checked in play mode on 2026-11-11 with the hidden test slot (slot 9), deleted afterwards. A reactor repair took it from 1 to 3, and the bar to 3. RESTOCK TORPEDOES took launcher A from 1 to 5. Launcher B stayed at 6. EXTRA AMMO took the railgun from 5 to 7 and PDC group B from 900 to 1,380. HEAL MARINES took the marines from 4 to 10. A repair took the engine room from 3 to 5. At 10 / 10 the rest were greyed out and SECTOR MAP flashed. Pressing a locked repair changed nothing. Leaving shut the bar. Coming back showed 10 / 10, locked. After the win, MILK RUN's LAUNCH was greyed out. **A bug found and fixed in the test:** LAUNCH was not greyed out when the map opened. The mission box is still switched off then. **Fixed after the review:** only the SECTOR MAP tab shut the bar. Escape → MAIN MENU, quitting, or the last mission's end card left it open, so a later visit to the rooms could spend units with no new win. Now the sector map shuts the bar every time it opens. Every way into a mission goes through the map. A greyed-out LAUNCH or DEBRIEF also has its words dimmed. A gun, launcher or the marines with no saved number count as full, from the stats file. Played on 2026-11-11: after Escape → MAIN MENU the bar was still open, and opening the map shut it. MILK RUN's LAUNCH showed greyed out with dimmed words. With only launcher A saved (3), HANGAR read 11 / 16, and RESTOCK put all 4 into launcher A. |
+| 199 | Our craft show as 3D models in the close-up (owner 2026-11-11: "in the tutorial … the starfighters, even in the visual mode, don't have a 3D model attached. … There is a starfighter asset … scale it down to … 10 units long … use that in visual mode. And then, otherwise, when you zoom out, it's just those triangles."). **What the player sees:** zoom in past x1, and each craft we launch, fighter or assault boat, turns into a small grey 3D fighter model. Its nose points the way it flies. Its white triangle fades out as the close-up comes in. Zoom back out, and only the triangles show, as before. The models fly in the same V as the triangles, from the same leader spot. Zoomed right in, the V spreads so the craft are never closer than one model length. The models never overlap. The triangles' V does not change. **Tuning:** Fighter Model Units (10), a model's length in units. It is on the Board tab of **Starwolf → Tuning**, under Hangar & fighters. Its row is in `docs/TUNING_LOG.md`. **How it is set up:** the Plot panel has a new slot, **Fighter Model**, set to `Assets/3D Assets/Starships/StarWolf_LightFighter.fbx`. Leave it empty and the triangles show at every zoom. The models wear the ships' grey metal, **Torpedo Look** (`Assets/Art/Close Up/Ship Metal.mat`). They are on the TransparentFX layer, like the torpedo models. The close-up camera films them. The small ship-picture cameras don't. In `PlotPanel.cs`, `FighterModel` places one model, next to `Fighter(int i)`. The V loop under "fighters in flight (Step 54)" calls it. **Settled (owner 2026-11-11):** one light fighter model for every craft, assault boats too. "These are sample models. I'll find better ones anyway. I just want one light fighter model." **Worth knowing:** the fighter model is heavy, about 812,000 vertices each. It ran fine in the check. If the close-up ever stutters with many craft, look here first. **Files:** `PlotPanel.cs` (its top note and the Torpedo Look tooltip too), `Assets/UI/Board/Panels/Plot.prefab` (its save also wrote another chat's new Plot panel fields at their code values; no value changed), `docs/TUNING_LOG.md` (one row), `docs/BOARD_UI.md` (Plot), `docs/TACTICAL_BOARD_SPEC.md` (§11.4) | **Done.** Checked in play mode in `02.1_Grid` on 2026-11-11 with five test craft. At x2.5 and x4 they showed as small grey fighter models in a V, each pointing along its heading. At x0.8 the models were hidden and the five triangles were at full strength. No new console errors. Not a full playtest. No person has played it. |
+| 200 | MILK RUN played through, and four fixes (owner 2026-11-11: go ahead on the fixes). **The play-through** (2026-11-11, by the Tutorial Mission Manager chat, with Codex's new checkpoint lines): a script worked the board's own controls. All 23 checkpoints passed. The run ended in MISSION COMPLETE. The lock came through the targeting computer. One torpedo salvo at range 281 hit the corvette and knocked out its engines. The assault boats went out on SECURE. The marines took the captain 63 s after launch. 12 of 18 marines came back. MISSION COMPLETE showed 20 s later. Our battle group's BOGEY F2 and F3 showed as blue outlines in visual range before any scan (Step 195 confirmed). Not checked: what shows after MISSION COMPLETE (the ship's rooms). Not seen on screen: the notes of checkpoints 3 to 9 and 11. The script cleared each in about 1 s. **What the player sees now:** **1. Notes stay up.** Every checkpoint note stays up at least 4 game seconds, even when its check is already met. Before, the station note, "Station traffic control isn't answering. Ping the station.", was gone after 0.4 s. ACTIVE SCAN was still on from the ping of the formation. The station was already named. **2. A slower corvette.** It runs at 24 units/s. It ran at 36. Our top speed is 50. Before, the chase went almost to the map edge, near (11,000, 10,700). The edge warning came up during the boarding. **3. Power orders that add up.** Checkpoint 20 now says "Take SEN back down to 1 to free power." Checkpoint 22 now says "Give AUX 2." Before, checkpoint 22 asked for AUX power with the 10-unit reactor full (ENG 5, WEP 2, SEN 3). Checkpoint 20 gave no number. The assault boats' catapult needs at least 1 AUX unit. **4. The intel.** Checkpoint 23 now ends "Bring the prisoner aboard. We'll hear what the captain knows." Codex's version had dropped the intel. **Left as it is:** "Contact east of the station" can show about 3 s before the red contact. That is the DRADIS sweep catching up. **Codex's lines:** Codex rewrote checkpoints 1 to 23 as COMMAND lines, each with an order. No CAPTAIN lines. Committed in 49f9f74. **Who decides (owner 2026-11-11):** the Mission Setup Tool chat has the final say on mission words. Codex helps with the writing. **Tuning:** both numbers are in `docs/TUNING_LOG.md`. Min Note Seconds (4 game seconds, new): Board tab of **Starwolf → Tuning**, under Mission (`QuestSystem.minNoteSeconds`). Flee Speed Share on the pirate corvette p1, 0.6 to 0.4: p1's Enemy Brain in the MILK RUN level (Board tab → Enemy, with the level open). **Files:** `QuestSystem.cs` (`minNoteSeconds`, its top note), `Assets/Scenes/Levels/Orientation.unity` (Codex's lines, checkpoints 20, 22 and 23, p1's Flee Speed Share), `docs/TUNING_LOG.md` (two rows), `docs/MISSION_SETUP_PLAN.md`. Commit 49f9f74. | **Done** — checked in play, 2026-11-11. With the station already named, checkpoint 16 moved on after 4.2 s. At throttle 40, once clear of the wrecks, the corvette's speed read 24.0. |
+| 203 | The end card always opens after the last win, and STARWOLF stays out of the bottom half (owner 2026-11-11: "for now, you can just have Starwolf... we'll keep it empty for the moment." Then: "Starwolf should not be in the bottom half of the screen."). **What the player sees:** win the campaign's last mission and press MISSION SELECT. The end card now always opens. The closing line is empty, so it goes straight on to the title. Only STARWOLF flickers in, in the middle of the screen. Before, an empty closing line opened the ship's rooms. **Knock-on:** MILK RUN is the campaign's only mission, so it is also the last. A campaign win of MILK RUN now goes to STARWOLF and the title. The ship's rooms and the travel bar don't show until a second mission is added. **The closing line** stays empty for now (owner), in `Assets/Campaign/Campaign.asset` → Closing Line. **A rule for later (owner):** STARWOLF must never be in the bottom half of the screen. On the title it is in the middle. An end card with a closing line must not put STARWOLF below the line. The old design page drew it below the line. That is ruled out. **What changed:** in `EndScreenPanel.cs`, MISSION SELECT no longer needs the closing line to be written. One check is gone. It still needs the EndCard scene in the build. Its top note is updated. No game numbers changed. **Files:** `Assets/Scripts/UI/Panels/EndScreenPanel.cs` | **Done.** Checked in play mode on 2026-11-11 with the hidden test slot (slot 9), deleted afterwards: with MILK RUN won and the line empty, the end card went straight to the title, the campaign was left, and STARWOLF flickered in at the middle of the screen. |
+| 205 | A window to set up the campaign: **Starwolf → Campaign** (owner 2026-11-11: "I hope there's a tool for it", then a yes to the window). **The owner's flow:** (1) **Starwolf → Level**: draw the map. (2) **Starwolf → Mission**: build the mission inside the level (planned by the Mission Setup Tool chat, not built). (3) Save the level: the map and the mission are in one scene file. (4) **Starwolf → Campaign**: put it in the campaign. **What the owner sees:** a new menu item, Starwolf → Campaign. The window edits `Assets/Campaign/Campaign.asset`. At the top are the missions in play order. Drag a row to move it. + adds a mission. − removes the picked one. Each row has an On switch, its number, its name and its level. Pick a row to see all of that mission below: Switched off, name, level, briefing and its dot on the map. Under that is the closing line, with a note: empty, the last mission goes straight to the title. A last note says the travel bar's numbers are in Starwolf → Tuning → Travel bar, with the Ship scene open. They stay in Tuning: game numbers go there (owner rule). Every change saves the Campaign file at once. Ctrl+Z undoes it. **A switch on each mission:** a mission switched off is skipped everywhere: on the sector map, in the save slot's count and percent, and in which mission counts as the last for the end card. **For the player build, switch TEST MISSION off in this window.** Do not delete it. MILK RUN is then the last mission again. TEST MISSION is still on today. **Agreed with the Mission Setup Tool chat (2026-11-11):** the Campaign window sets up the mission list: its order, adding and removing, the On switch, the name, level, briefing, map dot and the closing line. Their planned Mission window sets up what happens inside one mission: checkpoints, lines and who says them. These are saved in the level's Mission object. It picks the mission from the same list. There is one list. The ship call signs for the whole campaign and the title word are theirs to set up with the owner later, in `Campaign.asset`. They are not built. **What changed:** the new window. Each mission in `Campaign.cs` has an `off` switch. `Campaign.On` lists the missions switched on. `SectorMap`, `SaveSlots` and `SaveGame.FinishedWith` read it. A trap: saves keep a won mission by its level's scene name. Changing a mission's level loses its win in old saves. No game numbers changed. **Files:** `Assets/Editor/CampaignWindow.cs` (new), `Assets/Scripts/Game/Campaign.cs`, `SectorMap.cs`, `SaveSlots.cs`, `SaveGame.cs` | **Done.** Checked 2026-11-11: the game and editor scripts compile with no errors. In Unity the menu item opens the window. It lists both missions, and the console shows no errors. On a copy of the Campaign file, with TEST MISSION off: one mission is on, MILK RUN counts as the last, and a MILK RUN win counts as 1 of 1. A save slot then reads CAMPAIGN COMPLETE · 100% (from the code). With TEST MISSION on, all is as before. The real file was not changed. No picture of the window was taken. The owner will open it. |
+
+**Old status notes, corrected (2026-11-01).** The table and section 6 keep what was true when each
+step was written. These notes have changed since:
+
+- Step 17 "keys not": W/S were built in Step 106, and the owner played the app.
+- Step 27 "CRT treatment not yet seen": the flat intro of Steps 56 and 70 replaced it. The same goes
+  for "Not yet seen on screen" in its write-up.
+- "Full run still to re-run" or "playtest not run" on Steps 69, 71, 110, 112, 115, 116, 119, 131, 133,
+  134, 135, 136 and 139: the full run `2026-11-01_194534` came after all of them. Its #216 to #222
+  cover the grid.
+- Step 118 "not run": report #16 passed.
+- Step 124 "no fight played with the bigger ship": fights were played in Step 130.
+- Step 125 "that one check has not been run again": it passed in run `2026-11-01_194534`, as #221.
+- Step 126 "wider than the box": the owner said in Step 127 the picture needn't match.
+- Step 128 "no shot fired in the running game": Step 132 hit from the gun's dot. No ship file has the
+  old Hit Margin Units line now.
+- Step 129 "playtest not run": #223 to #225 ran. #225 read 0 to 0, so it proves nothing yet. "Map not
+  checked by eye": Step 136 used the real window.
+- Step 130 "a newer designer brief is waiting": built in Steps 135 and 139.
+- Step 138 "not yet run": report #107 passed. "Full playtest not run": run `2026-11-01_194534` came after it.
+  "Not fired through the real switches" and "hit report was not read": Step 143 did both.
+- Section 3, the `PlotPanel` line, and section 4, decision 40: since Step 138, "where the sweep last touched
+  it" has two exceptions, a locked ship and a scanned ship under the ACTIVE SCAN cone.
+- Step 119's screenshots in `Logs/LevelPlay` and Step 138's in `Logs/SmoothMotion` were deleted on 2026-11-01
+  (owner). The numbers in those rows stand.
+- Step 141 has no "Done" in its status. It is built and checked.
+- Section 6, Step 63, the throttle trap: Step 64's rule replaced it. Lose power, and the throttle
+  goes to zero and stays there (`NavSystem.Steer`).
+- Section 6, doc check of Steps 56 to 66: the heading "Bugs, not fixed yet" no longer exists.
+- Section 6, Step 105's questions: answered and built in Steps 106 and 107.
+- Section 6, Step 109, the white reticle: the owner said on 2026-11-01 that the white corners stay.
+- "Missile" in older steps and sections means torpedo (owner 2026-11-02, Step 149). The old text keeps
+  the word it was written with.
+- Step 147, BEARING OUTSIDE LAUNCH CONE and the open question: Step 149 removed the message and closed
+  the question.
+- Steps 147 and 149, "have not been run", "Full playtest not run" and "has not been reported yet": the
+  full playtest of 2026-11-02 checks both steps. It passed 245 of 245 (run `2026-11-02_005126`; #127,
+  #145 and #146).
+- Step 85, in the table and in section 6, MAIN MENU: since Step 154 the button says MISSION SELECT.
+  It loads `01_Briefing`, the MISSIONS list.
+- Step 92, in the table and in section 6, ruins inside the DRADIS circle while DRADIS is on: Step 157
+  replaced it.
+- Section 6, Step 41, "There is no reverse" and "0–100%": Step 157 added reverse.
+- Steps 148 and 151, false dots and the enemy's false look: Step 157 removed them.
+- Step 129, a cloud on the plot as a faint soft box: Step 158 replaced it. In visual range a cloud now
+  shows as a cloud picture. Past it, with DRADIS on, it shows as a hollow circle.
+- Step 44, in the table and in section 6, the bearing line from our ship: Step 161 replaced it. A heard
+  ship that is not scanned is now a short red bar on the DRADIS circle. The same goes for the bearing
+  line in the Step 75 write-up. Step 75's rule that its bearing stays put until the next sweep no
+  longer applies: the bar and its BRG turn on every frame.
+- Step 45, in the table and in section 6, the bearing trail: Step 161 deleted it. ERASE no longer
+  clears a trail. Step 105's question 2, Step 106's "cross the bearing lines" and the playtest shot
+  `23_bearing_trail` describe the old board.
+- Step 144, in the table and in section 8, "13 steps": Step 163 added an ACTIVE SCAN step. FLIGHT
+  DRILL has 14 steps now.
+- Steps 114 to 116, the WEAPONS FREE and NO PEEKING briefings: Step 163 changed them. They now say to
+  find the red bar on the DRADIS circle. They no longer say to wait for a bearing line or to cross the
+  bearing lines.
+- Steps 106 and 157, and section 6, Step 106, W and S step the throttle 10 (Throttle Key Step): Step
+  171 replaced it. A tap moves the throttle 1. Held, it counts faster and faster.
+- Step 144, in the table and in section 8, "let go, and the thrusters stop the slide": Step 171
+  replaced it. Let go, and the slide keeps going and fades. A tap of Q or E is now a small push.
+- Step 167, in the table, the sector map's stand-in look: the title SECTOR MAP, the faint green grid,
+  the box with the briefing line and LAUNCH, and the dimmer dot with a ✓ after its name. Step 172
+  replaced it. The box now shows the newest dot as soon as the map opens.
+- Steps 167 and 172, in the table, the open dot that grows and shrinks, and Pulse Size on the Sector
+  Map Script: Step 176 removed both. The open dot keeps one size. A new dot still fades in.
+- Step 143, in the table, "`Level_02` ... the file stays until the owner says": the file no longer
+  exists (checked 2026-11-09).
+- Steps 167, 172 and 178, in the table, the Missions list on the Sector Map Script in
+  `SectorMap.unity`: Step 183 moved it into the Campaign file, `Assets/Campaign/Campaign.asset`. The
+  scene no longer has a Missions list.
+- Step 149, in the table, how a torpedo flies (straight out, slowing to the coast speed, curving onto
+  the target at that speed, then the motor lighting once within 3° of lined up): Step 184 replaced it.
+  A torpedo now drifts with its motor off while only its nose swings onto the target. Its motor lights
+  when the drift ends. A salvo leaves one torpedo at a time. Step 147's squadrons still leave the old
+  way. The same goes for Step 162's torpedo with a line: it no longer turns at the line's end before
+  its motor lights. Its motor lights at the line's end.
+- Step 162, the two launch lines the owner then drew on our ship's launchers, VLS-A and VLS-B: Step
+  184 removed them (owner 2026-11-10: "A2 wins. Take the lines off"). The line tool stays. The lines
+  on our ship's hangar dots stay.
+- Step 184, in the table, "The rest of the owner's picks are still to build" (the railgun, the boats,
+  the PDCs): Step 197 built them, all but D3. The same goes for Step 166's "PDC fire has no streak".
+  Step 184's playtest result, the Garuda sending only one of its two torpedoes, was a bug. Step 197
+  fixed it.
+- Steps 147 and 162, a squadron's gentle turn onto its target at the end of its run: since Step 197
+  it is a hard break, up to 240° a game second, after a catapult throw at 560 units a second.
+- Step 204, in the table, "To take it out, delete the second entry": since Step 205, switch TEST
+  MISSION off in Starwolf → Campaign. Do not delete it.
+
+Steps 6 to 28 and Steps 34 to 118 are written up in section 6. Steps 29 to 33 were written up in `UI_INTEGRATION_LOG.md` (deleted; see below). What is still not done is in **Open items**, at the very
+bottom of this file. Read that before you pick up any work.
+
+**Old docs deleted (owner, 2026-10-27).** These described deleted code, the old `02_Grid` or the
+old cockpit game: `Assets/DOCUMENTATION.md`, `Assets/STAKEHOLDER_DOCUMENTATION.md`,
+`Assets/TACTICAL_BOARD_PLAN.md`, `Assets/PARITY_PLAN.md`, the two READMEs in
+`Assets/Scripts/Weapons`, and in `Assets/Scenes/Tactical`: `VERIFICATION.md`, `ASSET_AUDIT.md`,
+`TARGETING_AUDIT.md`, `TARGETING_COMPUTER_SPEC.md`, `UICONTROLLER_PARTS.md` and
+`UI_INTEGRATION_LOG.md`. This log still names them in old steps. To read one, use git:
+`git show 12ccdd1:Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`.
+
+---
+
+
+## 2 · Scenes
+
+Scene notes that are old, switched off or reworded, moved out on 2026-11-11.
+
+The intro, briefing and board scenes are in `Assets/Scenes/Tactical/`. Levels are in
+`Assets/Scenes/Levels/`. The play order is `00_Start` → `01_Briefing` → `02.1_Grid`, with a level
+loaded on top of the board. Build Settings list nine scenes: `00_Start`, `01_Briefing`, `02.1_Grid`,
+`Level_01`, the training levels `FirstShot`, `SilentShot` and `Prize` (Step 114), `Intercept` (Step
+137) and `FlightDrill` (Step 144). Prototype Dev came off in Step 84, and `Level_02` on 2026-11-01.
+
+| `01_Briefing.unity` | `326d3f3159fcb4965bebcf61495595c6` | Built |
+| `02.1_Grid.unity` | `db225074494dd4259bc8aab05e48399e` | Built — the board. In the play flow after `01_Briefing` |
+| `Levels/Orientation.unity` | `e8095fc79760047e4a1fa59c5faa65ba` | Built in Step 178 — ORIENTATION, mission 1 of the story |
+
+### `00_Start` — built in Step 2
+
+- `STARWOLF Intro`: the intro and menu. NEW GAME calls `ScreenFlow.Advance()`.
+
+### `02.1_Grid` — made in Step 28, board built in Steps 29–33, World added in Step 34
+
+  - Both models are about 12–14 km long. Models only, no old scripts.
+
+### `FirstShot`, `SilentShot`, `Prize` — made in Step 114
+
+The training levels, on the list as WEAPONS FREE, NO PEEKING and FINDERS KEEPERS (Step 115). The numbers
+are Step 130's. Each: `Battle Space` 20,000 × 20,000; `Player Spawn` at (0, −6,000) facing north;
+`Enemy Spawn · Garuda` at a fixed spot (box 0 × 0), Hunts off; one `Debris Field`, a circle of 40 pieces;
+a `Mission` box.
+
+| Level | Goal | The Garuda starts | Debris |
+|---|---|---|---|
+| `FirstShot` | Destroy | (0, −4,500), 1,500 ahead, facing west, still | (−4,500, −2,000) |
+| `SilentShot` | HitUnseen | (2,400, −2,800), 4,000 away, facing west, at 8 units/s | (−4,000, 1,000) |
+| `Prize` | Capture | (−900, −4,800), 1,500 away, facing east, still | (4,500, −1,500) |
+
+### `Intercept` — made in Step 137, moved onto COLD RUN's map in Step 148
+
+The training level for real radio messages. A copy of `ColdRun`'s map with the radio on. `Battle Space`
+20,000 × 20,000 with the S corridor; `Player Spawn` at (−7,500, −7,000) facing east; `Enemy Spawn · Garuda`
+at (6,500, 6,800), box 0 × 0, Hunts on, 13 route points, Signal Seconds 60, First Signal Seconds 15, On
+Air Seconds 60; a `Jump Point` at (7,500, 7,500); a `Mission` box with the goal JumpPoint and Weapons
+Off on.
+
+### `FlightDrill` — made in Step 144
+
+The level that teaches flying. `Battle Space` 20,000 × 20,000; `Player Spawn` at (0, −8,000) facing
+north; `Enemy Spawn · Garuda` at (−9,000, 9,000), box 0 × 0, Hunts off, Cruise Units 0, no messages. It
+is 12,657 units from the last ring, and DRADIS reaches 7,500. One `Debris Field` at (0, −2,100), a Band
+9,000 long and 2,000 wide, with 39 rocks. A `Mission` box with the goal Flight, the 14 steps below and
+no help text.
+
+The player flies north. Each step shows its own note and plays a soft tone. A step with a ring shows
+the ring on the plot, labelled CHECKPOINT, with its bearing and distance on the alarm strip. The ring
+is a circle: its size is its radius, in units.
+
+| Step | The note's title | What ends the step | Ring: centre, radius |
+|---|---|---|---|
+| 1 | POWER FIRST | ENG on STANDBY with 1 to 3 units | None |
+| 2 | THROTTLE | Inside the ring | (0, −7,550), 150 |
+| 3 | HEADING | Inside the ring | (800, −7,500), 150 |
+| 4 | SIDE THRUSTERS | `Q` down for 3 game seconds, with ENG above 0 | None |
+| 5 | SIDE THRUSTERS | `E` down for 3 game seconds, with ENG above 0 | None |
+| 6 | ZOOM | Plot zoom at x0.20 or less | (600, −5,300), 200 |
+| 7 | ZOOM | Plot zoom at x0.80 or more | The same |
+| 8 | MORE POWER | ENG at 5 | The same |
+| 9 | FULL THROTTLE | Speed at 45 or more | The same |
+| 10 | None | Inside the ring | The same |
+| 11 | DRADIS | DRADIS on, with SEN power | None |
+| 12 | ACTIVE SCAN (Step 163) | ACTIVE SCAN on, with DRADIS listening | None |
+| 13 | ROCK FIELD | Inside the ring | (0, −600), 250 |
+| 14 | LAST CHECKPOINT | Inside the ring, speed at 2 or less | (0, 100), 300 |
+
+Steps 6 to 9 show step 10's ring, and reaching it doesn't end them. The notes, rings and amounts are
+typed in the Mission box. The Level window's map doesn't draw the
+rings, and its list doesn't show the Mission box: pick the `Mission` object in the Hierarchy. To lose
+this level, lose the ship, as in any level (spec §14).
+
+### `Orientation` — made in Step 178
+
+Mission 1 of the story, ORIENTATION, and the one dot on the sector map. A copy of `FlightDrill`,
+changed. Weapons are off. The map starts 10,000 × 10,000. `Player Spawn` at (0, −3,000) facing north.
+`Enemy Spawn · Garuda` at (0, 30,000), far outside the map. The Garuda is parked there and never shows.
+The `Debris Field` is moved to (0, 5,000). A `Mission` box with the goal Flight and the 16 steps below.
+
+Under `Battle Group` are three ships of our battle group, all facing north at the start:
+
+- `Indra · Carrier` at (−700, −2,900), 450 × 230 units. Prefab `Assets/Prefabs/BattleGroup/Indra.prefab`,
+  stats `Assets/Ships/Carrier.asset`.
+- `Varuna · Battleship` at (700, −3,050), 400 × 190. `Varuna.prefab`, `Battleship.asset`.
+- `Marut · Corvette` at (0, −3,700), 120 × 80. `Marut.prefab`, `Corvette.asset`.
+
+Each has Friendly ticked, Hunts off and Escorts on, and never fires. Before a scan each shows as
+BOGEY F1, F2 or F3. Once scanned, its name shows in blue.
+
+They fly their own path in a loose formation, and we follow them. Each ship's place (Slot Units,
+x to the right, y ahead, turned the way the group flies): INDRA (−700, 100), VARUNA (700, −50),
+MARUT (0, −700). Our place is the middle. The path (Group Route, on the Mission) runs from the
+start to (0, −1,000), (−1,500, 1,000) and (0, 2,800), at 15 units/s; they wait at the last point,
+south of the rock field, while we take point through the rocks. The
+Battle group settings on `EnemyBrain` set this (Step 178).
+
+Each step is a note from COMMAND, with the same box and chime as FLIGHT DRILL. Each title starts
+"COMMAND ·". The table gives the rest of the title.
+
+| Step | The note's title | What ends the step | The map grows to |
+|---|---|---|---|
+| 1 | WELCOME, COMMANDER / POWER | ENG on STANDBY with 1 to 3 units | |
+| 2 | THROTTLE | Inside the ring at (0, −2,450), radius 150 | |
+| 3 | HEADING | Inside the ring at (700, −2,250), radius 150 | |
+| 4 | SIDE THRUSTERS | `Q` down for 3 seconds | |
+| 5 | SIDE THRUSTERS | `E` down for 3 seconds | |
+| 6 | ZOOM | Plot zoom at x0.20 or less. The note: "you'll see the group round you, and the edge of the patrol area" | |
+| 7 | ZOOM | Plot zoom at x0.80 or more | |
+| 8 | PATROL AREA OPEN | Plot zoom at x0.12 or less | 16,000 |
+| 9 | SENSORS | SEN on DRAW, DRADIS on | |
+| 10 | ACTIVE SCAN | ACTIVE SCAN on | |
+| 11 | SENSOR CHECK | One ship scanned (its name shows in blue) | |
+| 12 | TAKE POINT | Plot zoom at x0.08 or less. The target zone is north: step 15's ring shows at (0, 6,800) | 24,000 |
+| 13 | MORE POWER | ENG at 5 | |
+| 14 | FULL THROTTLE | Speed at 45 or more | |
+| 15 | ROCK FIELD | Inside the ring at (0, 6,800), radius 250 | |
+| 16 | TARGET ZONE | Inside the ring at (0, 9,000), radius 300, speed at 2 or less | |
+
+When a step with a number in its **Map Units** box starts, the map grows from the middle to that
+size, square, over 3 real seconds (**Map Grow Seconds**, on the Mission part of **Starwolf → Tuning**).
+The grid draws out to the new edge as it grows. The edge rule is the same as in every level. After
+step 16 the mission is won, and the end screen says CHECKLIST COMPLETE.
+
+### `LongShot` — made in Step 170
+
+The test range for the spinal railgun. A copy of `ColdRun`, changed. `Battle Space` 40,000 × 40,000;
+`Player Spawn` at (0, −14,000) facing north; `Enemy Spawn · Garuda` patrolling east and west between
+(−15,000, −5,000) and (15,000, −5,000) at its usual cruise speed, Hunts off; three gas clouds near our
+start; ColdRun's four Big Rocks groups, moved; a `Mission` box with the goal Destroy and an eight-step
+briefing. The numbers are in Step 170 in the table above.
+
+### Deleted in Step 1
+
+These were leftovers from an earlier attempt that was abandoned. They are gone on purpose. Do not
+bring them back.
+
+- `Assets/Scenes/Sandbox/` and `TacticalGrid_Test01.unity` inside it.
+- The old `Assets/Scripts/Tactical/` and the three unfinished files in it: `Bearing.cs`, `Track.cs`,
+  `TacticalRadar.cs`. (The folder exists again now, with the board's scripts.)
+- `TacticalRadar.cs` was deleted rather than repaired. It referenced the old cockpit `UIController`,
+  which must stay out of these scenes (see Decisions).
+
+---
+
+## 3 · Scripts, shaders and wiring
+
+Script notes that were reworded or are only history, moved out on 2026-11-11.
+
+### `ScreenFlow.cs` — new in Step 4
+
+| `00_Start` | Its own root object, named `ScreenFlow` | `01_Briefing` | off | NEW GAME calls `Advance()` |
+| `01_Briefing` | Its own root object | `02.1_Grid` (was `02_Grid` until Step 28) | off | Step 114: it waits. A row on the level list calls `Play(level)`: it sets `TacticalWorld.chosenLevel` and shows INITIALISING, whose `finished` calls `Advance()`. (Until Step 114: every 3 s or on Enter, the next card.) |
+
+The chain was run in play mode twice in Step 4: `00_Start` → click → `01_Briefing` → advance →
+`02_Grid`. Both times it worked. Since Step 28 the chain ends at `02.1_Grid` instead, also checked in
+play mode.
+
+### The board — new in Steps 29–33
+
+| `Assets/Scripts/UI/Panels/EndScreenPanel.cs` | The end screen (Step 85): how the mission ended, RESTART MISSION and MISSION SELECT. MISSION SELECT loads `01_Briefing`, the MISSIONS list (Step 154). It is the pause menu too (Step 156): Escape in a level opens it, titled PAUSED, with RESUME and QUIT GAME added. |
+
+### The playtest and the Game view
+
+- goes through the user flow: intro → menu NEW GAME → briefing → board;
+
+Each run writes `Logs/Playtests/<date_time>/`: `playtest.mp4`, `report.md` (pass/fail per step)
+and `shots/`. It leaves play mode and reopens the scene you were in. When a run starts, it deletes
+every earlier run's `playtest.mp4`. Screenshots stay for the newest three runs. Every `report.md`
+stays (Step 75). First good run: 18/18 PASS,
+22 s of 1080p video. Since Step 35: 27/27 PASS, 35 s, and it also checks pause, RUN, signal and
+LOAD SHED. Since Step 36: 37/37 PASS, 37 s, and it also drops a POINT, a RULER and a COMPASS, moves
+our ship and checks the marks stay put. Since Step 40: 48/48 PASS. It also checks the click sounds,
+the LOAD SHED slide, a refused locked rocker, and the TRACK and RECALL presses. Since Step 41: 57/57.
+It also drives the helm (ENG power, throttle, a turn, pause) and pans the plot. Now 214
+(Step 106); each step's count is in the table in section 1. It grows as features land: add steps to `PowerUpRun()`. There is only one
+Unity editor, so it runs when no other agent is using Unity.
+
+a script cannot press, so it calls what those presses call (`Activate(0)`, `ScreenFlow.Advance`)
+
+left of the Game view). The board draws at the window's real pixel size, and its layout is designed
+for 16:9. **Free Aspect** fills any window, but other shapes have not been checked. A fixed size like
+
+---
+
+## 4 · Decisions already made
+
+These decisions were reworded on 2026-11-11. This is how they read before. The current wording is
+in `docs/BUILD_LOG.md`, section 4.
+
+2. **New code for the scene flow.** Existing managers get referenced when needed. They do not get
+   edited. Now: `QuestSystem` was rewritten for the board in Step 85 and moved to `Scripts/Game`.
+   Its stages are kept.
+3. **`QuestSystem` stays as it is.** Its stages already fit the design. Now: rewritten for the board
+   in Step 85 and moved to `Scripts/Game`. Its stages are kept.
+8. **Colours come from the design handoff tokens.** Do not invent new ones.
+   - Background / void `#0A0C0E`
+   - Text `#E8EDF0`
+   - Prompts and orders, amber `#E8A33D`
+   - Sensor cyan `#3FA9C9`
+   - Plot glass `#0A1719`
+9. **The grid is a world-space plane, not a UI element.** `TacticalGrid.shader`, not `NavGrid`.
+   Now: the board's grid is `PlotGrid`, a UI mesh on the plot.
+11. **The new handoff wins on weapons and power** (owner, 2026-10-04, editable later): two railgun
+    turrets, two PDC groups, one missile launcher, four power buses (ENG, WEP, SEN, AUX). Its fire
+    sequence and the missile salvo knob are wanted.
+13. **Distances are kilometres. One world unit is one kilometre.** Replaced in Step 111: the owner
+    thinks in units now (a small square at x1.0 is 50 units, our ship 100). The game's numbers did not
+    change, so one old km is one unit. Step 113 renamed the code to units too. The screen still shows
+    km; what the player reads is decided later. Now: our ship is 200 x 50 units, the Garuda 350 x 100
+    and the frigate 100 x 25 (Steps 126 and 127).
+18. **The North Star is a dummy enemy at a fixed position** (owner, 2026-10-17). It sits at TRACK
+    07's spot, bearing 048, 24,300 km. It does not move or fire. It is there to check the radar,
+    moving around it, and shooting at it. Its plot dot shows only once identified. Since Step 75,
+    inside visual range its model shows before it is identified (decision 40). Now: the Garuda. It
+    starts at a random point in its spawn box (Step 95), hunts us, and fights with railguns and
+    missiles (Step 97).
+23. **Every tunable value is in one window**, Starwolf → Tuning (owner, 2026-10-17). Tag every new
+    tunable with `[Tune("Section")]`. Details in Step 38. **Being replaced by 31:** the window goes
+    when each ship's numbers move into its stats file. Now: the window stays, with six tabs: Ship,
+    Enemy, Board, Keys, Hard Points and Ranges (Steps 80, 108, 121 and 129). `[Tune]` is for board values only. Ship numbers go in each part's
+    `Stats`, in the ship's stats file.
+26. **Our ship moves across a fixed grid** (owner, 2026-10-18). Top speed about 2.5 km/s. The plot
+    pans by dragging the grid or with the arrow keys. Details in Step 41. Now: top speed is
+    50 units/s at ENG 5 and 25 at ENG 1 (Step 130).
+27. **Plotting feeds the firing solution** (owner, 2026-10-23). A passive contact gives a bearing
+    only, and the bearing trail finds its range. The solution is dialled by hand, aiming at a point
+    in space; TRACK needs an active scan. Details in Steps 45–47. Now: TRACK takes the plot, the
+    newest POINT and the newest POINT-to-POINT RULER (Step 106). A lock gives the solution otherwise
+    (Steps 125 and 141). Now: the bearing trail is gone (Step 161). To find a heard ship's range,
+    plot it (POINT, RULER) or scan it.
+28. **Railgun: a 50 km/s slug that hits within a class radius, aimed in whole degrees** (owner,
+    2026-10-23). Whole degrees stay on purpose: from ~24,000 km even the best aim can just miss a
+    cruiser. Close in for a sure shot. Details in Step 48. Now: the slug flies at 300 units/s,
+    about 7 s to its 2,000 reach (Step 130).
+29. **Fighters fly and fight on the plot; RECALL brings them home** (owner, 2026-10-23). 40 km/s (8 before Step 63's 5×),
+    attack runs of 10 armour per fighter, wedges in a V with no labels. They land when they reach
+    us. Details in Step 54. Now: 100 units/s (Step 130). Now: small white triangles that appear
+    beside our ship (Step 160).
+
+    Now: the menu has only `Starwolf/Tuning`, `Starwolf/Level` and
+    `Starwolf/Playtest/Run power-up playtest`. Keys, Hard Points and Ranges are tabs of Tuning (Step
+    129). The panels are prefabs, and the guide for UI artists is `docs/BOARD_UI.md`.
+    The checks are not in the Test Runner yet.
+38. **Ruins are in the level, sized for play** (owner, 2026-10-25/26). Placed copies go in the
+    level scene; the prefabs are shared in `Assets/Prefabs/Terrain/`; what is the same in every level
+    (drawing ruins on the plot, the "found" rule) stays on the board. The starbase's hard core is at
+    the grid centre and debris gets thicker toward it. Our ship starts at one edge (Level_01: the
+    bottom), the enemy at the other (the top): you each come through the core to find the other.
+    Ships are really 100–500 m long, but ruins are sized for how the ship plays (gaps of a few hundred
+    km), not for the 13 km models, which stay until the outside cameras come. Details in Step 73.
+    Now: Level_01 has no husk (Step 107).
+42. **Each weapon has its own reach** (owner, 2026-10-27). Railguns **25,000 km**, missiles
+    **35,000 km**, PDCs **10,000 km**, on our ship and the Garuda alike. A slug takes about 10 s
+    to reach 25,000 km (decision 46). Missiles are
+    slower but home, so they reach further. Was 30,000 km for railguns and missiles (the DRADIS at
+    full gain) and 4,000 km for PDCs. The numbers are in the Weapons group of each ship's stats
+    file (`WeaponSystem.Stats.mounts`). The plot's weapon ring follows the selected mount. Now:
+    railguns 2,000, missiles 3,000, PDCs 600 (Step 130).
+43. **Ammunition is a real count** (owner, 2026-10-27). It only goes down; there is no reload.
+    Each railgun shot takes one slug from its turret. Each PDC go at a missile takes 100 rounds
+    from its group. Each missile takes one cell. Every mount starts full: railguns 22 and 22, PDCs
+    2400 and 2400, missiles 8. The fire control line reads "SLUGS 22", with no "RAIL 2 / 2". With
+    nothing left, LOAD refuses. Details in Step 79.
+46. **The railgun slug is the fastest thing on the board** (owner, 2026-10-27). **2,500 km/s**:
+    about 10 s to its 25,000 km reach. The owner's words: you know where the target is, because you
+    scanned it and did the maths. Was 250 km/s (about 100 s). The number is `slugSpeedKms` in the
+    Weapons group of each ship's stats file. Details in Step 81. Now: 300 units/s, about 7 s to its
+    2,000 reach, and the number is `slugSpeedUnits`. Slug and missile speeds are separate numbers, and
+    the missile is faster, at 400 (owner, Step 130).
+
+- **Notes go in `docs/`** (owner 2026-11-10). Never make a .md note inside `Assets`. Add to a note that exists first. Step 187.
+- **Every script starts with a plain-English note** (owner 2026-11-10). It says what the script does and how it works. It goes above the script's `using` lines. The rules and the layout are in `docs/script-notes/BRIEF.md`.
+- **Codex's Fire Control** (owner 2026-11-10). FIRE on the systems rail opens it as a drawer. It never stays fixed on the side. The periscope's red view goes inside its monitor, and the periscope at the top goes. A big FIRE button that glows FIRE FIRE FIRE replaces the drag lever. So far it is built in the test scene only (Step 193).
+- **Tests stay in their test scene** (owner 2026-11-10). Once a test scene is made for some work, every follow-up for it goes there. Change `02.1_Grid` or a level only when the owner names that scene.
+- **Never stretch painted art** (owner 2026-11-10). On other screen shapes, corners keep their size and plain pieces of the edges repeat (Step 182).
+
+---
+
+## 5 · Known issues and traps
+
+Traps that are fixed.
+
+1. ~~Build Settings not on disk.~~ **Fixed.** The scenes are now written into
+   `ProjectSettings/EditorBuildSettings.asset`. Worth remembering why it looked broken before: that
+   file only catches up when Unity saves the project, so a scene you just added in the Editor will
+   not show up on disk until then.
+
+13. ~~**The old `TacticalGrid.shader` (unused) takes its line width in pixels, not world units.**~~ **Gone.** The shader and its material were deleted on 2026-10-29 (section 8, "Deleted on 2026-10-29"). Step 18 has the story.
+
+---
+
+## 6 · Steps 6 to 28, and 34 to 118, in detail
+
+### Step 6 — corner panels fixed and verified
+
+The four corner panels are `ShipStats`, `Power`, `Weapons` and `Scanner`.
+
+- They are **real `UIController` canvases from `UI.prefab`**, rendered to RenderTextures and shown as
+  RawImages. **They are not rebuilt UI.** Nobody remade these screens by hand, and nobody should.
+- Each panel is `Frame` + `Screen` as **siblings**, with `Frame` first in the hierarchy. Unity UI
+  draws children on top of parents, so while the frame was a child of the RawImage it simply covered
+  the content. Making them siblings is what fixed it.
+- The RawImages are **300x300**, not 420x236. Every render texture in `UI.prefab` is 1024x1024 —
+  square — so a 16:9 RawImage stretched the picture.
+- Confirmed working in play mode.
+
+### Step 7 — linear colour space fix on the grid
+
+- The project renders in **Linear** colour space. Values handed to `Material.SetColor` are treated as
+  linear, so the sRGB numbers we were passing came out washed-out grey-green.
+- **Fix: append `.linear` to every colour set from code** on `TacticalGrid.mat`.
+- The amber centre crosshair was removed at the owner's request. `_AxisEnable` is set to 0 on the
+  material.
+
+### Step 8 — art profile ScriptableObject created
+
+New file: `Assets/Scripts/Tactical/TacticalArtProfile.cs`. One ScriptableObject holding every sprite
+and colour the tactical board uses, so art can be swapped later without touching the scene or any
+code.
+
+Create one from `Assets > Create > Starwolf > Tactical Art Profile`.
+
+What is on it:
+
+| Group | Fields |
+|---|---|
+| System icons (6) | targeting, sensors, reactor, hangar, comms, engineering |
+| Tool icons (7) | point, line, ruler, compass, erase, undo, clearAll |
+| Frames (2) | metalPlate, panelFrame |
+| Hull glyphs (2) | hullFilled, hullOutline |
+| Board colours | plot background, grid minor, grid major, icon tint, icon tint active, frame tint |
+
+Why it exists: the owner said missing art is fine, so long as there is **one place** to swap the
+assets in later.
+
+### Step 9 — tool icons corrected to the handoff
+
+- The first set of tool icons was generated by guesswork. The owner pointed out the real ones are in
+  the design handoff.
+- Source: `References/Tactical spaceship UI planning.zip`, file `Star Wolf Asset Kit.dc.html`,
+  section **6.2 TOOL BUTTON**. The glyphs there are **CSS shapes, not SVGs**, drawn at 19x19 with a
+  1.5px stroke.
+- The exact shapes recorded there:
+  - **POINT** — a full-width crosshair.
+  - **LINE** — a single stroke at -42 degrees.
+  - **RULER** — a 20x5 outlined bar at -42 degrees.
+  - **COMPASS** — a circle with a needle from top centre.
+  - **ERASE** — an X at plus and minus 45 degrees.
+  - **CLEAR** — a dashed rectangle.
+- The handoff zip is **never unzipped in place**. Extract it to the session scratchpad and read it
+  from there. `References/` is owner-authored input and is never edited.
+
+### Step 10 — grid turned amber, with a third tier of lines
+
+- `TacticalGrid.mat` colours now come from `Assets/Art/TacticalArtProfile.asset`, converted with
+  `.linear`. **The profile is the source of truth. The material is just where the values land.**
+- `TacticalGrid.shader` was rewritten to three tiers of lines: fine at 400 units, minor at 2,000,
+  major at 10,000.
+- **Each tier fades on its own.** A tier is invisible once its lines crowd closer together than
+  `_FadeMin` (6) pixels, and full above `_FadeMax` (26). So zooming out thins the grid instead of
+  turning it to mush, and zooming in reveals finer detail.
+- New shader properties: `_FineColor`, `_FineDivisions`, `_FineWidthScale`, `_FadeMin`, `_FadeMax`.
+- The corner panel frames changed from cyan to the profile's `frameTint` amber.
+
+### Step 11 — the orange panel bug, and the layer that fixes it
+
+- **Symptom:** once the grid went amber, the ShipStats panel filled with orange.
+- **Cause:** every camera in the scene had a culling mask of -1, meaning everything.
+  `Camera-PlayerShipStats` was photographing the 140,000-unit grid quad as a backdrop behind the
+  ship model.
+- **Fix:** a new layer 8, `TacticalPlot`. `TacticalGrid` was moved onto it, and the layer was removed
+  from every camera's culling mask except `Main Camera`.
+- An opaque black `Backdrop` Image was also added as child 0 of all four panels. Panel order is now
+  `Backdrop, Frame, Screen`. Nothing behind a panel can bleed through it any more.
+- **The trap worth remembering: any new world-space object in this scene must go on the
+  `TacticalPlot` layer, or the UI cameras will photograph it.**
+
+### Step 12 — the two icon rails
+
+- New file `Assets/Scripts/Tactical/IconRail.cs`. It builds its own buttons from a
+  `TacticalArtProfile`, so adding or reordering a system is a profile edit, not scene surgery. Call
+  `Rebuild()`.
+- Metrics from the handoff: 64 wide, 52x52 cells, 5px gaps, 6px padding, 26px inset from the screen
+  edge.
+- `Canvas/Rails/LeftRail_Tools` — 7 tools, 406 tall. `Canvas/Rails/RightRail_Systems` — 6 systems,
+  349 tall. Both vertically centred.
+- **System icons carry their own colour and must not be tinted.** The handoff says so explicitly.
+  Tool icons are drawn white and do get tinted. That is the `tintIcons` flag.
+- Icon size is **34 inside a 52 cell**. At 26 the glyphs read as specks.
+- Rail backing plates are RawImages with a cropped `uvRect` onto `steel_plate.png`, not stretched
+  Images, so the brushed grain stays at its own scale.
+
+### Step 13 — power controls brought over from the cockpit
+
+- The Power controls were never in `Canvas-Power`. They live in `Assets/Prefabs/Canvas.prefab` under
+  `Power_Cont`, and were lost when `Canvas-Interior` was deleted from the scene.
+- `Power_Cont/Power/Buttons` (five system toggles plus the reactor dial) and `Power_Cont/Power (2)`
+  (the two green plates, Emergency Vent and Black Alert) were reparented into `Canvas/Panels/Power`
+  as `Controls` and `Green`. The working render-texture screen was kept between them.
+- The panel is now 300x420: green plates on top, screen in the middle, toggles at the bottom. The
+  source cluster is 855 wide, so everything is scaled by 300/855.
+- **Trap: reparenting a UI subtree collapses it to 0x0 if you do not set `sizeDelta` explicitly.**
+  The originals sized themselves from stretch anchors against their old parent. Set the size the
+  layout groups expect (855x150 and 855x170), then call `LayoutRebuilder.ForceRebuildLayoutImmediate`,
+  then `Canvas.ForceUpdateCanvases()`, then rebuild again.
+- The panel grew to 420 tall and collided with the tool rail, so it moved right to clear it.
+
+Final boxes, in screen pixels at 1920x1080. No overlaps.
+
+| Thing | x | y |
+|---|---|---|
+| ShipStats | 30–330 | 750–1050 |
+| Power | 110–410 | 30–450 |
+| Weapons | 1590–1890 | 750–1050 |
+| Scanner | 1590–1890 | 30–330 |
+| LeftRail | 26–90 | 337–743 |
+| RightRail | 1830–1894 | 366–715 |
+
+### Step 14 — the board's data layer, and the targeting drawer
+
+The owner asked for two things: the rails must be uniform on both sides, and the weapons panel must
+open when its rail button is clicked. The design handoff is explicit on each.
+
+- Handoff section 4: "Geometrically identical to the left rail — same 64px width, same 52px cells,
+  same 5px gaps, same centring — mirrored to right:26px. This symmetry matters; the two rails must
+  never drift apart in size or rhythm."
+- Handoff section 5: the weapons panel is the targeting computer. A slide-out drawer, 376x830 at
+  right:104 top:100, that pulls out from the rail over 0.42s on `cubic-bezier(.2,.85,.25,1)`.
+
+**New ScriptableObjects.**
+
+- `RailStyle.cs`, asset at `Assets/Art/Board/RailStyle.asset`. Holds the rail geometry: width 64,
+  cell 52, gap 5, padding 6, edge inset 26, icon size 34, button face sprite, plate texture and tint.
+  **Both rails read this one asset, so they cannot drift apart. That is the whole point of it.**
+- `plateCells` is 7. Both rails get a plate that tall whatever they hold, so a 7-tool rail and a
+  6-system rail still read as a mirrored pair. Both are now 64x418.
+- `BoardAction.cs`, thirteen assets under `Assets/Art/Board/Actions/`. One per rail button: id,
+  label, icon, kind (Tool or System), whether the icon gets tinted, and what clicking it opens
+  (panel mode, size, offset, render texture, slide time). **Adding a system is a new asset dropped
+  into a rail's list, never a scene edit.**
+- `TacticalArtProfile.cs` was cut back to the theme: frames, hull glyphs, and the colour set (plot
+  background, grid fine/minor/major, icon tint, icon tint active, frame tint, panel well). The
+  per-button icon fields moved onto the `BoardAction` assets, because per-button is the right
+  granularity for swapping art.
+
+**New MonoBehaviours.** The rule used: a ScriptableObject holds design data that is true regardless
+of scene; a MonoBehaviour holds scene wiring and runtime state. Render textures are assets so a
+`BoardAction` can hold one; cameras and canvases are scene objects so it cannot.
+
+- `IconRail.cs` rewritten. Takes a `RailStyle` plus a list of `BoardAction`s, positions itself
+  against its own screen edge, and raises a `Clicked` event.
+- `DrawerPanel.cs`. Slides a panel in and out, easing on the handoff's `cubic-bezier(.2,.85,.25,1)`
+  solved by Newton iteration. Uses `Time.unscaledDeltaTime` so the drawer still works when the board
+  is paused. Fades a `CanvasGroup` slightly ahead of the slide and toggles `blocksRaycasts`.
+- `BoardController.cs`, on a root `Board` GameObject. Rebuilds both rails in `Start` and subscribes
+  before anything can be pressed, then routes clicks. Keeps one drawer open at a time. A button whose
+  action has no panel logs and does nothing.
+
+**Scene changes.**
+
+- `Canvas/Drawers/TargetingComputer` added, with a `Panel` child that slides. The order under
+  `Canvas` is Panels, Drawers, Rails, so the drawer appears to emerge from behind the rail.
+- The `Weapons` corner panel was deleted. That content is the drawer now.
+- Verified in play mode: clicking TARGETING slides the drawer open, and a second click closes it.
+  Clicking SENSORS or a tool logs and does nothing, as intended.
+
+**Trap worth recording: a solid `Image` is a fill, not a border.** The drawer's frame was one, which
+turned the empty lower half into an amber slab. The border is now four thin edge Images under a
+`Border` child. The corner panels get away with a solid fill only because their render texture covers
+it completely.
+
+### Step 15 — the outer metal frame
+
+Built from the handoff's own spec: Asset Kit section **3.1 BEZEL BUILD-UP** and **3.2 FASTENERS &
+SEAMS**.
+
+Three textures were generated into `Assets/Art/Frames/`:
+
+- `frame_metal.png`, 1920x1080. The handoff's 158-degree gradient — `#33383E` at 0 percent, `#23282D`
+  at 40 percent, `#181C20` at 100 percent, "cool grey, never warm" — with the brushed grain from the
+  handoff's own `figma/steel.png` multiplied over it.
+- `rivet.png`, 64px. A radial gradient at 34/30 percent, `#6B747C` out to `#1B1F23` at 72 percent,
+  with the lit 1px inner ring.
+- `vignette.png`. The handoff's `inset 0 0 160px rgba(0,0,0,.75)` baked as an alpha ramp.
+
+Scene: `Canvas/Frame` as **child 0**, so it sits behind the panels, drawers and rails. It holds a
+vignette, four 118px metal bands, five bevel strips and four corner rivets. 118 was chosen so the
+rails, which run from 26 to 102, sit **on** the frame rather than beside it.
+
+**The bands are one continuous sheet, not four repeats.** Each band is a RawImage whose `uvRect` maps
+to its own slice of the single 1920x1080 texture, so the brushed grain runs round the frame with no
+seams and no repetition.
+
+The bevel follows 3.1: a lit top lip on the outer shell, and a plot well that is **recessed with a
+dark inner edge** rather than given a plain border. Rivets sit at the four shell corners only — the
+handoff says never as decorative runs.
+
+**Three traps worth recording.**
+
+1. **Unity rescales a non-power-of-two texture on import.** `frame_metal.png` came in as 2048x1024,
+   which broke the exact 1920x1080 mapping the bands depend on. Set
+   `npotScale = TextureImporterNPOTScale.None`.
+2. **Setting `textureType = Sprite` alone produces no Sprite subasset.** `spriteImportMode` must also
+   be set to `Single`, or `LoadAssetAtPath<Sprite>` returns null with no error.
+3. **An asset reimport can bounce the editor back into play mode.** A scene build ran during that and
+   was silently discarded. Check `Application.isPlaying` before any scene edit, not just at the start
+   of a session.
+
+### Step 16 — frame thinned
+
+The 118px band was too heavy. The frame was rebuilt at **44px**. The rails, which run from 26 to 102,
+now overhang the frame and float over the plot the same way the corner panels do. Rivets scaled down
+to 9px and moved to sit inside the narrower band.
+
+Everything else about the frame is unchanged — same continuous `uvRect` sheet, same bevel.
+
+### Step 17 — engine power and WASD movement
+
+The goal was small on purpose: get power flowing to engines only, so the ship can move under WASD,
+before building anything else.
+
+**Nothing new was written. It all already existed.** The audit trail:
+
+- `PlayerShip.FixedUpdate` at `Assets/Scripts/PlayerShip.cs:517`. W is `:531`, S is `:536`, A and D
+  are `Input.GetAxis("Horizontal")` at `:612`. Velocity is locked to `transform.up` at `:596`, so the
+  hull never slides sideways.
+- The engine power gate is at `:526` — `powerManager.GetSystemEfficiency("engines")`.
+- **Pressing 1 toggles engine power.** `PlayerShip.cs:241` calls
+  `PowerManager.ToggleSystemState(engines)`.
+- All six input axes the ship asks for exist in `ProjectSettings/InputManager.asset`: Horizontal,
+  ControllerThrust, LeftTrigger, RightTrigger, DPadX, DPadY.
+- `PowerManager.GetSystemByName` lowercases its argument, so the lowercase `"engines"` lookup
+  resolves.
+
+**The important behaviour to record: turning is multiplied by engine power.** `PlayerShip.cs:619` is
+`targetTurnSpeed = turnInput * turnRate * enginePower`. With no power the ship cannot turn at all,
+and thrust is capped at a 5 unit/s crawl (`:553`). **Power is not optional for movement. It gates
+both.**
+
+Power fills at 0.5 bars per second, split across every drawing system, so engines alone take about
+10 seconds to reach 5 of 5. Each bar costs 0.5 reactor. Reactor reports 8 max here, not the
+serialized 15, because `GetMaxReactorPower` scales by the `InternalSubsystems` reactor multiplier.
+
+**A real bug found and fixed: the Rigidbody had no constraints.** `PlayerShip.Awake` at `:84` only
+sets `useGravity`, `constraints` and damping **when it creates the Rigidbody itself**. The scene's
+ship carries one from the prefab, so it was left completely unconstrained — free to drift in Z and
+tumble in X and Y on a flat top-down plot. It is now set on the scene instance to
+`FreezePositionZ | FreezeRotationX | FreezeRotationY`, with interpolation on. **Any new ship added to
+a Tactical scene needs the same, or it will tumble.**
+
+Camera zoom was temporarily changed from orthographic 30,000 to **600**. At 30,000 the ship drew
+**0.26 pixels tall** and was invisible. At 600 it is about 13 pixels. **This is a stopgap.** The plot
+layer will draw own ship as a fixed-size glyph, the way the prototype does, so zoom stops affecting
+it. The grid looks sparse at this zoom because only the 400-unit fine tier is in range.
+
+`PlayerSettings.runInBackground` was turned **on**. It was off, which meant play mode froze
+completely whenever the editor lost focus — `Time.frameCount` stayed at 1 across repeated probes.
+**This is why an automated play-mode test appears to do nothing.** Even with it on, driving play mode
+over time from outside the editor proved unreliable in this session. Held keys have to be verified by
+hand in the editor.
+
+- **Verified:** engine power reaches 5 of 5 with efficiency 1.0, and the ship produces velocity along
+  its own nose.
+- **Not verified:** W, S, A and D under a real held keypress. That needs a human at the keyboard.
+
+### Step 18 — three bugs on the plot, and the plot camera
+
+**Bug 1: grid line width was in world units, not pixels.** `_LineWidth` was 12 world units. At a
+strategic zoom that is invisibly thin. Zoomed in to orthographic 600 it became a 24 pixel amber bar,
+and because the fine (400), minor (2,000) and major (10,000) lines all pass through x=0 and y=0, it
+read as a bright amber cross through the middle of the plot. That was mistaken for the centre
+crosshair, which was already off. **A note recorded earlier in this file claimed `fwidth` held the
+stroke to one pixel. That was wrong** — `fwidth` was only feeding the antialias, not the width.
+`lineCoverage` now takes a width in **pixels** and multiplies by `fwidth(coord)`, which is world
+units per pixel, so the stroke is constant on screen at any zoom. `_LineWidth` is now 1.1 pixels.
+
+**Bug 2: `PlayerShip` was hijacking the plot camera as a chase cam.** `PlayerShip.Start` at
+`Assets/Scripts/PlayerShip.cs:133` grabs `Camera.main` whenever its `cameraTransform` field is empty.
+`:663-684` then writes ship position plus an offset, **and ship rotation plus a roll offset**,
+straight onto that camera every FixedUpdate. On a top-down plot that made the whole grid pivot as the
+ship turned. Fixed by giving it a dummy `LegacyChaseCamRig` GameObject to drive instead, and setting
+`maxCameraRollOffset` to 0. **Any Tactical scene containing PlayerShip must fill in `cameraTransform`,
+or the plot camera gets hijacked.**
+
+**Bug 3: `ScreenConstantScale` compounded itself to nothing.** It measured its base size in `Awake`,
+which meant every domain reload took the already-scaled transform as the new base. The first run
+produced a scale of 0.12 instead of about 16. `baseScale` and `baseHeight` are now
+`[SerializeField, HideInInspector]` and measured exactly once, with a `Remeasure(trueScale)` to start
+over deliberately.
+
+**New: `Assets/Scripts/Tactical/PlotCamera.cs`**, on `Main Camera`.
+
+- Scroll wheel zoom between 400 and 30,000, eased rather than snapped, anchored on the cursor so the
+  world point under the pointer stays put.
+- An optional follow target, currently **off**. The owner wants the camera fixed to the world map,
+  not chasing the ship.
+- It exposes `ScreenToPlot` and `PlotToScreen`, the screen-to-world bridge the tools and the
+  targeting computer both need. **That is the first piece of the plot layer.**
+
+Also in this step: the camera is back to orthographic 30,000 at `(0, 0, -1000)`, rotation identity.
+The own ship glyph was raised to 170 pixels at the owner's request. The Scanner (comms/sensor) corner
+panel is disabled.
+
+### Step 19 — tuning asset
+
+`Assets/Art/Board/TacticalTuning.asset`, from `Assets/Scripts/Tactical/TacticalTuning.cs`, with
+`Assets/Editor/TacticalTuningEditor.cs` providing the buttons and the `Starwolf > Tuning` menu.
+
+It holds the movement, power, stability, plot camera, ship glyph and grid numbers in one place.
+
+**It is not a runtime indirection.** Apply writes the numbers into the scene as real serialized
+values. Capture reads the scene back into the asset. Nothing reads the asset at runtime, so what you
+see on a component is what the game uses, and there is no hidden lookup to debug.
+
+**Two scene overrides were making movement feel dead** and have been corrected:
+
+| Field | Was | Now | Why it mattered |
+|---|---|---|---|
+| `turnRate` | 20 | 90 | An 18 second full circle. |
+| `rateOfAcceleration` | 5 | 50 | 20 seconds to reach top speed. |
+
+Both were **scene overrides** of the script defaults, not the script values themselves.
+
+### Step 20 — why the power bars never moved
+
+The owner reported the engine bars not filling. **Power was working. The display was not.**
+
+**The audit.** `UIController` has 137 object references in this scene. **104 of them, 76 percent, are
+unassigned.** Whole arrays are empty: `imgPowerMet` 6 of 6, `powerNodeImg` 6 of 6, `btnPowerBool`
+6 of 6, `btnPowerBoolImage` 5 of 5, `sc` 7 of 7, `canvasUI` 6 of 6, and ten more.
+
+**The blocker.** `UIController.Update` calls `UpdateCompass` at `:242` and `ScanMovment()` at `:259`.
+Both threw a NullReferenceException every frame — `compassRect` and `scannerSlider` belong to
+`Canvas-Navagation` and the scanner canvas, and the Tactical scenes load neither. An exception aborts
+the rest of the method, so `SyncPowerBarsFromManager()` at `:315` **never ran at all.** Four
+exceptions a frame, sixty times a second.
+
+**Fixes applied.**
+
+1. Three null guards added to `UIController` — `ScanMovment` (`:427`), `UpdateCompass(float)`
+   (`:1033`), `StabilityMeterStart` (`:1138`). Each returns early when the UI it needs is not loaded.
+   **These are the only edits made to that file, and they are purely defensive.**
+2. `imgPowerMet` and `powerNodeImg` wired, 6 of 6 each, to the real objects inside
+   `UI/Canvas-Power`.
+3. New `Assets/Scripts/Tactical/PowerMeterBinding.cs`, on a `PowerMeters` child of PlayerShip. It
+   drives the meters **straight from `PowerManager`**, reusing the existing `UI_GradeDisplay`
+   shader-graph art from the UI prefab, and does not go through `UIController` at all. The shader
+   properties are `_PowerCur` and `_PowerMax`. **It instances each material in `Awake`** — otherwise
+   every bar shares one material and they all show the same value.
+
+Verified in play mode: with engines at 5 of 5 and arms at 3 of 5, the shader reads `_PowerCur` 5 and
+3, and the panel shows five and three lit cells.
+
+**Why a separate binding rather than repairing UIController's path:** UIController's power sync sits
+behind two calls that reference UI the Tactical scenes do not have. A direct binding has nothing in
+between that can break. UIController still runs and still owns the other panels.
+
+**The general lesson, worth carrying forward:** an exception anywhere early in `UIController.Update`
+silently disables everything after it. When a panel in a Tactical scene appears frozen or static,
+check the console for a per-frame exception before assuming the underlying system is broken.
+
+### Step 21 — plot layer, part one: camera, zoom range and input
+
+This is the foundation the tools and the targeting computer both sit on. **Nothing owned the plot
+before.** There was no way to turn a screen position into a world position, and clicks on the board
+went nowhere.
+
+**Zoom range widened a long way.** `PlotCamera` now runs from orthographic **300 to 250,000**, up
+from 400 to 30,000. At maximum the view is 500,000 units tall against a roughly 50,000 unit arena,
+which is what the owner asked for. Zoom stays cursor-anchored and eased.
+
+**New `Assets/Scripts/Tactical/PlotGridFitter.cs`**, on the `TacticalGrid` quad. The quad was a fixed
+140,000 across, so past about orthographic 35,000 the plot simply ran out and went black at the
+edges. The fitter tracks the camera and scales the quad to cover the view with a 1.35x margin. At
+orthographic 250,000 the quad sizes itself to 1,200,000. **The grid pattern does not move when the
+quad does** — the shader computes it from world position, so the quad only decides how much of the
+grid exists, never where it is.
+
+Confirmed by render at maximum zoom: only the 10,000-unit major tier survives, about 21 pixels apart.
+The finer tiers fade themselves out. That is the shader's fade behaviour working as intended.
+
+**New `Assets/Scripts/Tactical/PlotSurface.cs`**, as child 0 of the Canvas, so it sits behind every
+panel, drawer and rail and never steals their clicks. It is an `Image` with zero alpha and
+`raycastTarget` on — the standard way to receive pointer events without drawing anything. The graphic
+is created in the scene rather than only in `Awake`, so it is inspectable.
+
+It exposes four events, all in **world** coordinates, and knows nothing about tools: `Clicked`,
+`Dragged` (start and current), `DragEnded` (start and end), and `Hovered`.
+
+**Panning** is on the middle button, with the right button as an alternative. **Left is deliberately
+left free for the tools.** The pan works by dragging the world rather than the camera: it moves the
+camera by however far the grabbed world point has slipped from under the cursor, so the point you
+grabbed stays under the pointer.
+
+**Verified: the screen-to-world round trip is exact.** Screen centre maps to the camera position, and
+all four corners round-trip with 0.000 pixels of error at orthographic 30,000. **`ScreenToPlot` and
+`PlotToScreen` are now the single conversion everything else must use. Nothing should write its
+own.**
+
+**Trap:** `PlotCamera` caches its `Camera` in `Awake`, so calling `ScreenToPlot` from an editor
+script before play mode requires setting that field first.
+
+### Step 22 — own ship glyph: minimum size instead of constant size
+
+The owner asked for a minimum visible size, so the ship cannot become infinitesimally small when
+zoomed far out.
+
+**Measured first: it was not actually shrinking.** `ScreenConstantScale` was holding it at exactly
+170 pixels at orthographic 1,000, 30,000, 120,000 and 250,000. But the request exposed a real flaw in
+the other direction — **at constant size the ship also never grows when you zoom in**, which is wrong
+for a real object on a plot.
+
+`ScreenConstantScale` was reworked from constant size to a **floor**:
+
+- `minPixels` (170) — never draw smaller than this.
+- `maxPixels` (0 = no ceiling) — never draw larger than this.
+- Above the floor it draws at **true world scale**.
+
+Measured behaviour, with the ship 116 world units tall:
+
+| ortho | true size | drawn | behaviour |
+|---|---|---|---|
+| 300 | 209 px | 209 px | true scale |
+| 369 | 170 px | 170 px | crossover |
+| 1,000 | 63 px | 170 px | floored |
+| 30,000 | 2.1 px | 170 px | floored |
+| 250,000 | 0.3 px | 170 px | floored |
+
+So zoom in and the ship grows like a real object. Zoom out and it settles into a glyph. At maximum
+zoom true scale would be a third of a pixel, so the floor is doing real work. **This matches how the
+prototype handles plot symbols** — they shrink with zoom, but only to a limit.
+
+A `TruePixels` property was also added, so other code can ask how big something would be at true
+scale without duplicating the maths.
+
+`TacticalTuning` updated: `shipGlyphPixels` is replaced by `shipMinPixels` (170) and `shipMaxPixels`
+(0). `TacticalTuningEditor` maps both. Apply and Capture were round-tripped against the new fields
+and verified.
+
+**Note the class name is now slightly misleading.** It gives a minimum size, not a constant one.
+Renaming it would break the scene reference, so it stays for now. Recorded here so nobody trusts the
+name over the behaviour.
+
+### Step 23 — plot layer, part two: annotation rendering and the seven tools
+
+**Zoom and pan feel, measured first.** Zoom drift is 0.015 world units over twelve notches out, which
+is 0 pixels. Pan slip is 0.004 world units. The full 300 to 250,000 range is 34 scroll notches end to
+end. Both are effectively exact.
+
+Two feel problems were fixed by inspection rather than measurement:
+
+1. `PlotCamera` now carries `[DefaultExecutionOrder(-100)]`. `PlotGridFitter` and
+   `ScreenConstantScale` both read camera state in `LateUpdate`, and with no fixed order they used
+   last frame's zoom and lagged a frame. That reads as jitter while scrolling.
+2. Zoom used to anchor on the raw `Input.mousePosition`, so it would lurch toward a point hidden
+   behind a panel, or toward a stale position once the pointer left the window. `PlotSurface` now
+   reports the pointer through `PlotCamera.SetPointer` on move and on exit, and zoom anchors on the
+   cursor **only when it is genuinely over the plot**. Otherwise it zooms about the centre.
+
+**New `Assets/Scripts/Tactical/PlotAnnotation.cs`.** One mark: Point, Line, Ruler or Ring. Positions
+are stored in **world** coordinates. It carries `Range` and `Bearing`, where bearing is compass
+degrees — **0 is +Y north, 90 is +X east** — not atan2's maths convention.
+
+**New `Assets/Scripts/Tactical/PlotOverlay.cs`**, a `MaskableGraphic` that rebuilds one mesh each
+frame from world coordinates projected to screen. **World coordinates stored, screen space drawn.**
+That is what keeps a mark pinned to the world while its lines stay 1.5 pixels wide instead of
+ballooning as you zoom in. One Graphic for every annotation, so the whole layer is a single draw
+call. It also owns `Undo`, `Clear` and `EraseNear`, which picks the nearest mark within a pixel
+radius using true point-to-segment and point-to-circle distance.
+
+**New `Assets/Scripts/Tactical/PlotTools.cs`.** Five modes — POINT, LINE, RULER, COMPASS, ERASE — and
+two immediate actions, UNDO and CLEAR ALL. **The actions never become the active tool.** That was the
+trap flagged during planning: treat them as modes and the board gets stuck in a tool that does
+nothing. Pressing the live tool again puts it away. Colours follow the handoff: green for
+measurement, amber for orders and marks. A drag shorter than four pixels is treated as a click, not a
+mark.
+
+Scene: `Canvas/PlotOverlay` added at child index 1, between `PlotSurface` and `Frame`, with
+`raycastTarget` **off** so it can never eat a click. `PlotTools` sits on the `Board` object.
+`BoardController` now routes any `BoardAction` of kind Tool to `PlotTools.Press(id)` instead of
+looking for a drawer.
+
+**Verified in play mode, every tool through the same path a rail click takes:**
+
+- POINT drops a mark and reads out `X 4,000   Y 2,000`.
+- RULER north reads `BRG 000`, east `BRG 090`, south-west `RNG 14,142 u   BRG 225` — 14,142 being
+  10,000 root two, so the range maths is right.
+- COMPASS reads `RADIUS 8,000 u`.
+- ERASE removes the nearest mark.
+- UNDO and CLEAR leave the active tool untouched.
+- Re-pressing the live tool sets it to None.
+
+Confirmed by render: two range rings, a dashed green ruler with end crosses, a solid amber line and
+amber point crosses, all crisp.
+
+**Trap: do not name a public MonoBehaviour method `Invoke`.** `PlotTools.Invoke(string)` collided
+with `MonoBehaviour.Invoke(string, float)` and every reflection lookup threw an
+`AmbiguousMatchException`. It was renamed to `Press`.
+
+### Step 24 — Cut to five tools, MOUSE as the default
+
+The owner cut the tool set down, twice, firmly. LINE merged into RULER — a line that does not tell
+you its range and bearing is decoration. UNDO and CLEAR ALL were dropped entirely.
+
+**Clear-all is nested in the eraser.** Press ERASE a second time while it is already live and the
+plot wipes. It does not get a button.
+
+Five buttons: MOUSE, POINT, RULER, COMPASS, ERASE. MOUSE is the default and means "no tool" — the
+plot is something you look at. `line.asset`, `undo.asset` and `clear.asset` were deleted.
+
+`RailStyle.plateCells` set to **6**, the larger rail's count, so both plates stay the same height and
+the rails read as a mirrored pair. Both are now 64 x 361.
+
+Active state follows the handoff: a lighter face plus a 3px left bar in the icon's own colour. Built
+once per button and shown or hidden by `IconRail.SetActiveId`, driven from `BoardController` off
+`PlotTools.ToolChanged`.
+
+### Step 25 — Plot labels
+
+`PlotLabels.cs`. A pool of TextMeshProUGUI objects, repositioned every frame from world coordinates,
+so a label stays stuck to its mark through pan and zoom. Text cannot come out of `PlotOverlay`'s mesh
+— that is one Graphic drawing lines.
+
+POINT reads `P1  T+0:13`, RULER reads `RNG 34,000 u / BRG 118°`, COMPASS reads `R 18,000 u`.
+
+`MissionClock.cs` added as the one place that answers what time it is. It is `Time.timeSinceLevelLoad`
+for now. **When there is a real clock that can pause, only this changes** — otherwise pausing would
+drift every timestamp against the clock the player sees.
+
+**Two traps.** `RectTransformUtility.ScreenPointToLocalPointInRectangle` with a null camera silently
+returns zero on a Screen Space - Camera canvas, and every label stacks in the middle — pass
+`canvas.worldCamera`. And a point and a ruler end can share a coordinate exactly, so labels now stack
+rather than printing over each other.
+
+### Step 26 — Ship readout
+
+`ShipReadout.cs`. One TMP line at the top of the board: `SPD 5 u/s    HDG 062°`.
+
+**The UIController speedometer is dead and was not reused.** `UpdateSpeedometer` has its only line
+commented out, and `velocityMeterImg` points into the interior canvas these scenes do not load.
+`PlayerShip.GetCurrentSpeed()` already exists, so one label reading it was cheaper than extracting a
+meter that never worked.
+
+Heading is compass degrees off `transform.eulerAngles.z` — Unity's 298 is heading 062.
+
+### Step 27 — The intro and menu, wired into the flow
+
+The owner asked for one chain: SECTION 36, then STARWOLF, both on their own with no keypress, then a
+menu, then NEW GAME to the beta message, then Enter to the board.
+
+**Almost none of this needed new code.** `Assets/StarwolfIntro/` already held the whole sequence —
+`StarwolfIntroController` plays SECTION 36 → INITIALISING... → STARWOLF → a pull-back → a menu of
+NEW GAME / LOAD GAME / SETTINGS, on its own clock, and exposes a `newGame` UnityEvent. So the work
+was wiring, not building. **No new script was written for this step.**
+
+What went into `00_Start`:
+
+- `STARWOLF Intro`, a root object with `StarwolfIntroController` on it, with `glyphData`,
+  `displayShader` and `hardwareHum` assigned from `Assets/StarwolfIntro/`.
+- `newGame` wired to the existing `ScreenFlow.Advance()`, which already pointed at `01_Briefing`.
+- `loadGameAvailable` off. There is no save system, so LOAD GAME draws dimmed and is skipped when
+  you arrow through the menu.
+- An `AudioListener` on `Main Camera`. There was none, so the hardware hum had nothing to play into.
+- `Title` and `StartButton` **deactivated, not deleted.** The intro draws its own title and menu over
+  the top. They are left in the scene so the old screen can come back if the intro is dropped.
+  Delete them once the owner is happy.
+
+The chain was walked in play mode: intro → menu → NEW GAME → `01_Briefing` → `02_Grid`.
+
+**Pacing.** The package shipped at 2.5 / 1.2 / 2.0 / 3.0 seconds, 8.7 in total, which the owner found
+too fast. Now 4 / 2 / 4 / 4, 14 in total. These are inspector fields on `STARWOLF Intro`.
+
+#### Four rendering bugs in the intro package
+
+The package was written against a Gamma project. This one is Linear, and it showed.
+
+1. **Double gamma encode.** The render target was sRGB, so the blit encoded on write and the
+   backbuffer encoded again. The `#010601` CRT field measured `(63,113,63)` on screen — mid green.
+   Fixed by making the target linear. It is now `ARGBHalf`, not `ARGB32`, because the unlit field
+   sits a few thousandths above black and eight bits cannot hold that.
+2. **Grain on the black field.** `grain * .003` is below what eight bits can represent near black, so
+   it quantised up to a visible green on *every unlit pixel*. That, not the background colour, was
+   most of the green. Grain now modulates the lit phosphor instead.
+3. **Shader uniforms dropped on reload.** `_Pitch`, `_Phosphor`, `_Background` and the six mask sizes
+   were never declared in the shader's `Properties` block. Any shader reload dropped them, the mask
+   sizes came back zero, `mask()` divided by zero and **the whole intro drew pure black.** This is
+   why SECTION 36 looked missing. They are now declared *and* re-applied every frame by
+   `ApplyStaticUniforms`. Declaring alone is not enough — a reload resets a declared property to its
+   default, and a default mask size of zero is just as fatal.
+4. **The grid washing the screen.** The package draws a full-screen phosphor grid at a 9px pitch. The
+   pull-back zooms it 5x, which puts the cells below one pixel, and it aliased into a flat green
+   field. Two changes: each tier now fades out as its lines close to within a pixel, and the grid
+   only appears during the pull-back, swelling and going again.
+
+#### Why it still does not look like the reference
+
+`References/Company Logo.png` is the canonical image. Measured against our render:
+
+| | reference | ours |
+|---|---|---|
+| phosphor peak | `(214,255,229)` | `(213,255,212)` |
+| unlit field | `(0,19,1)` | `(0,0,0)` before Step 27's CRT work |
+
+**The colour was never the real difference.** The reference is not a logo, it is a whole terminal:
+CRT bezel, screen curvature, strong scanlines, a vignette, a faintly lit field, and four corners of
+microtext (`UC-FLEET`, `// CLASSIFIED`, `S38-PR-001 / REV A / 1993.11.04`,
+`RESEARCH / DEVELOPMENT / OPERATIONS`, `CLEARANCE LEVEL 3` with five boxes, three lit).
+
+The package renders only the core mark. That is defensible — `References/LogoREADME.md` §7 separates
+the "core studio mark" from "terminal presentation" and says the bezel, microtext, revision codes,
+clearance levels, scanlines and curvature are **not** part of the permanent logo. But it is why the
+two look nothing alike side by side.
+
+Added in this step: a lit field, scanlines across the whole screen, a stronger vignette, and a
+rounded screen edge, as four tunable shader properties — `_ScanDepth`, `_FieldGlow`, `_Vignette`,
+`_ScreenInset`. **This is tone only. No geometry is warped**, deliberately, because `HandleMenu`
+hit-tests the menu against fixed rectangles in 1920x1080 space and warping the picture would move
+the text away from its own hit boxes.
+
+**Not yet seen on screen.** The Unity MCP bridge dropped before this could be checked. Verify the
+CRT treatment and the menu-on-black change before trusting either.
+
+#### Traps
+
+- **`execute_code` and any asset refresh reload shaders, which used to blank the intro.** Bug 3
+  above. Fixed now, but it is why so many screenshots in this step came back black.
+- **A tool round trip takes roughly fifteen seconds.** You cannot screenshot a beat that lasts four.
+  To photograph one, set its duration to 120 at runtime and call `RestartIntro()`.
+- **Do not hand-author new glyphs into `glyphs.json`.** The microtext needs `U P V H / - 0 1 4 8 9`,
+  none of which exist. `LogoREADME.md` §5 says the glyph tables are canonical and must match the web
+  implementation exactly. §11 allows TextMeshPro for terminal metadata — use that, not new glyphs.
+- The intro package sits in `Starwolf.Intro`, a namespace. The rest of the project has none. It is
+  vendored, owner-supplied code. Left as it is on purpose; do not restyle it.
+
+### Step 28 — A new scene for the new handoff
+
+The owner chose the new Claude Design handoff (`Assets/UI2/Claude Design handoff/export/`) as the
+board to build. It was read in full first: README, asset map, tokens, layout, state spec and logic.
+
+`02.1_Grid.unity` was made with a camera, an EventSystem and a `Board` canvas set to the handoff's
+numbers. It was added to Build Settings after `02_Grid`. The briefing's `ScreenFlow.nextScene` was
+changed from `02_Grid` to `02.1_Grid` — one line in `01_Briefing`.
+
+Checked in play mode: `ScreenFlow.Advance()` in `01_Briefing` lands in `02.1_Grid`, no console
+errors.
+
+Steps 29 to 33 are written up in `UI_INTEGRATION_LOG.md`.
+
+### Step 34 — Wiring begins: the dummy enemy exists and the board reads it
+
+**Owner direction (2026-10-17).** Start wiring real game systems, one feature at a time. Plan each
+feature with the owner. Don't invent: follow the sources. Each feature must work before the next
+starts. The North Star is a dummy enemy at a fixed position. It doesn't move or fire. We use it to
+check the radar, moving around it, and shooting at it.
+
+**Owner decisions for this step.**
+
+- The dummy sits at TRACK 07's spot: bearing 048, 24,300 km.
+- Its plot dot shows only once identified. That is the board's rule.
+- The other four mock contacts (CONTACT 17, CONTACT 22, FTR-2, BC-01) are removed. Their plot art is
+  hidden, not deleted.
+- A new World object owns the game state and feeds the board. The old `Radar.cs`, `EnemyShip`,
+  `PlayerShip` and `PowerManager` scripts are not revived.
+- 1 unit = 1 km, already ruled (decision 13).
+- Keep real 3D objects seen top-down, for future external viewport cameras.
+
+**What was built.**
+
+- `TacticalWorld.cs` on a root `World` object, outside the Board canvas. Children: `OwnShip` at
+  (0, 0, 0) and `Dummy · TRACK 07` at (18058.42, 16259.87, 0).
+  - It uses the x/y plane, x east, y north. This matches the old build's 3D plane (rotation about z,
+    +y forward).
+  - Each tick it writes true bearing (whole degrees, `JsRound`) and range (whole km) into
+    `HandoffBoardState.tracks`.
+- `WorldContact.cs`, which holds a `trackKey`.
+- `HandoffBoardControls.Ticked`: fires once per board tick, after the state ticks, before the panels
+  redraw. The world steps inside the board's single timer.
+- `HandoffBoardState.KeepTracks` drops tracks with no world contact, and prunes identified and
+  classified.
+- `HandoffPlotPanel` draws identified hostile contacts at their true km position. For now that is a
+  red dot plus a `NAME / RNG n km` label.
+- `HandoffBoardBuilder`:
+  - new `Contacts (drawn)` and `Contact labels` layers;
+  - hides the mock contact art (26 objects);
+  - `RelinkWorld` re-points the World at the new board after every rebuild. The first check caught
+    the link being dropped.
+- 3D models as `Model` children. OwnShip uses `StarWolf_Destroyer_PlayerShip.fbx`, the same model and
+  placement as the old `Prefabs/PlayerShip.prefab`. TRACK 07 uses `StarWolf_Cruiser.fbx`. Scale
+  0.11612, so about 12–14 km long at 1 unit = 1 km. Their real scale is to be decided when viewport
+  cameras come. Models only, no old scripts.
+
+**Verified.**
+
+- Only t07 is tracked.
+- Bearing and range through real ticks: 048 / 24,300 at load, and 000 / 090 / 180 / 270 at the four
+  compass points.
+- Contact board: unidentified at SEN gain 2, `TRACK 07 · 048 · 24k` after the real cone identify,
+  gone with SEN empty.
+- The dot is exact to 0.0001 px at zoom 1, 0.5 and 0.1, and clipped to the plot.
+- The RULER from our ship to the dot reads `RNG 24,300 km · BRG 048°`.
+- No mock contacts anywhere.
+- The board outside the plot is pixel-identical to before.
+- Fire control TRACK and periscope SLEW use the real numbers.
+- One control per drawer works.
+- The World survives two rebuilds, still linked.
+- Console clean.
+- Evidence is in `Logs/HandoffQA/step34/`. `Logs/` is git-ignored and survives Unity restarts;
+  `Temp/` does not.
+
+**How to see it in play.**
+
+1. Power: SEN to DRAW until 2 units.
+2. Sensors: gain to 2.
+3. Active scan on, cone to 048, release.
+4. Zoom the plot to about ×0.4. The red TRACK 07 dot is top right.
+
+### Step 35 — Power makes the ship loud (signal), and nothing real changes while paused
+
+**Owner decisions (2026-10-17).**
+
+- Every unit drawn to a bus makes us louder, and so does ACTIVE SCAN. Sources: GDD p18, spec
+  3.1.b, and the prototype's `getSig`. The design board only counted ACTIVE SCAN; the owner
+  overrode that.
+- The internal value is called **signal**, on a 0–100.0 scale.
+  - Each action adds a tweakable amount. Every amount is an Inspector field.
+  - It never jumps straight to 100.
+  - The decimals are internal only. The player sees a whole percent on the OWN EMISSIONS meter,
+    the 10 cells (white, then amber, then red), the blinking lamp and the alert line.
+- The meter climbs and falls gradually.
+- Freeze while paused: nothing real changes until RUN. Controls still work.
+
+**What was built.**
+
+- `HandoffBoardState`:
+  - `signal`, renamed from `ownSig`. `FormerlySerializedAs` keeps saved values.
+  - `signalRise` 9 and `signalFall` 6 per tick.
+  - `signalTrackedAt` 45.
+  - `Bus.signalPerUnit`, default 10 per bus, so a full 10-unit reactor reads 100.
+  - `activeScanSignal` 35 (the reference sim's 3.5 units).
+  - `SignalTarget` = clamp(Σ fill × signalPerUnit + scan, 0, 100). `TickSensors` moves toward it
+    with no overshoot.
+- The sensors note:
+  - "RUNNING SILENT" at 0.
+  - "EMISSIONS DECAYING — NOT YET RESOLVED" while falling.
+  - "POWER SIGNATURE — NOT YET RESOLVED" while rising or steady below 45. This is a stand-in: the
+    design has no line for it (`docs/finished-plans/HANDOFF_GAPS.md` row 106).
+  - "N HOSTILE SET(S) HAVE YOUR RANGE" at 45 or more.
+- `HandoffBoardControls`: the whole tick waits while paused. That includes the world's `Ticked`
+  event and the mission clock. The design ran its power tick while paused; the owner overrode that.
+
+**Verified.** STEP 35: VERIFIED, first pass.
+
+- 54 ticks matched an independent model exactly: fill mixes, scan, LOAD SHED, the reactor cap of
+  4, and the clamps.
+- Tunable values take effect on the next tick.
+- The meter, note and blink states are correct.
+- Pause froze everything for about 25 s: fills, charges, signal, heading, party, launch, clock and
+  the world sync. Everything resumed on RUN.
+- Step 34's checks, sensors, fire control and the drawers are unchanged.
+- Console clean.
+- Evidence is in `Logs/HandoffQA/step35/`.
+
+**Known.**
+
+- "1 HOSTILE SET HAS YOUR RANGE" counts every hostile once we are loud, even far away. The
+  enemy-notices-you feature (Power P3, parked) fixes that.
+- The board loads PAUSED, so nothing fills until the player presses RUN.
+- The reactor serves buses first come, first served. A bus sent to DRAW late can find it already
+  spent.
+
+**Playtest grown.** `Assets/Editor/Playtest/PlaytestRunner.cs` now also checks that:
+
+- the board starts paused;
+- buses set to DRAW don't fill while paused;
+- RUN starts time;
+- the signal climbs to its target and reads "1 HOSTILE SET HAS YOUR RANGE";
+- LOAD SHED vents everything back to "RUNNING SILENT".
+
+It runs 27/27 checks with a 35 s video. Two playtest fixes went in:
+
+- A control with no argument is saved as "", not null.
+- All buses are now set to DRAW while paused, so the reactor shares out evenly.
+
+### Step 36 — Plot tools: marks stay put in space
+
+**Owner decisions (2026-10-17).**
+
+- **POINT** is a timestamp. It stays where it was dropped and shows the mission time at the drop.
+- **RULER** draws a distance, typically between two points.
+- **COMPASS** sits around our own ship.
+- Marks stay put in space. They do not move with our ship.
+- Plots feed fire control later. That belongs to the fire-control step.
+
+**What was built.**
+
+- `HandoffBoardState`:
+  - Marks store world km (`x, y, x2, y2`), not screen px.
+  - `ownX` / `ownY`, our ship's world position, written by `TacticalWorld` every tick.
+  - `MarkDown(tool, x, y, missionT)`. A COMPASS always starts at our ship.
+  - `MarkUp(minLenKm)` keeps a mark of exactly the minimum length (a tiny tolerance).
+- `HandoffPlotPanel` turns km into screen px through the zoom, both ways. A POINT label is its
+  mission time. A RULER label is its range and bearing. A COMPASS ring is re-measured from our
+  ship.
+- Contact dots are drawn at the contact's exact world position, not its rounded bearing and range.
+- The first check found three defects, all fixed: a ruler of exactly the minimum length was
+  dropped; the contact dot used rounded numbers; the ruler label's rounding. The second check found
+  the label still 1 px off on exact half pixels (km to px leaves float dust). It now trims to 6
+  decimals before rounding.
+
+**Verified.** STEP 36: VERIFIED on the third pass (2026-10-18).
+
+- 2,016 rulers and 672 compass rings over 4 ship positions and 3 zooms: none wrong. Rulers of
+  exactly 4 px are kept.
+- A replay of 914 design-board steps matched label text, shapes and hit boxes. No ruler label was
+  off (935 were before the last fix).
+- The contact dot sits within 0.0001 px of its true world spot.
+- Marks stay put when the ship moves; the COMPASS re-measures.
+- Evidence: `Logs/HandoffQA/step37/v/` and `Logs/HandoffQA/step38/`.
+
+**Playtest grown.** It now drops a POINT, a RULER and a COMPASS, moves our ship 5,000 km east
+(a stand-in for the helm), and checks the POINT and RULER stay put in space with their labels
+unchanged while the COMPASS is re-measured. ERASE clears them. 37/37 PASS.
+
+**Known, for the helm step.**
+
+- The grid does not scroll with the world yet.
+- While moving, marks step at the board tick (2.4 a second), not smoothly.
+- The COMPASS erase area is a square.
+
+### Step 37 — Our ship on the plot, as the 3D model seen from above
+
+**Owner direction (2026-10-17).** Our ship must appear on the plot. It is the 3D model seen from
+above. Its size is true to scale, with a minimum and a maximum so it never vanishes or swamps the
+plot. The design handoff already specified the glyph (34 × 76 hull, turned to heading, shrinks
+with zoom). It had been left as placeholder rectangles. That was our miss.
+
+**What was built.**
+
+- `ShipView.cs` on a new `Ship View Camera`. It looks straight down at `OwnShip`, north up, and
+  renders only the `WorldShips` layer into a 256 px texture. It measures the ship once, so the
+  ship fills 80% of the frame.
+- `OwnShip` turns to the board's heading every tick (`TacticalWorld`).
+- A `Ship Light`, lighting only `WorldShips`.
+- `Own ship (3D view)`, a RawImage at the plot centre. Size: 76 px at zoom 1, scaled by zoom,
+  held between 30 and 120 px.
+- `BoardLinearImage.shader` and its material. The board works in sRGB values, so the shader
+  converts the camera image first. The VectorModel pass draws lines on black, so it makes black
+  see-through.
+- The builder hides the old placeholder rectangles and adds the image, switched off. It turns on in
+  play once the ship view has a picture. An image with no picture draws a white square.
+- Both ship models are turned 180° about their length. The camera looks from below the world
+  plane, so unturned we saw the belly.
+- The bow is the wide hammerhead end (turrets point that way; the Art Spec says "hammerhead
+  prow"). It leads along the heading.
+
+**Verified.** STEP 37: VERIFIED on the second pass (2026-10-18).
+
+- Red line art at the plot centre, no square, in play. Nothing in edit mode.
+- Size matches clamp(76 × zoom, 30, 120) at every zoom tried.
+- The top side shows, and the bow leads at six headings, within 0.5°. The ship holds still while
+  paused.
+- Marks and the contact dot draw over it; the periscope covers it; nothing leaks out of the plot.
+- It survives a rebuild.
+- Evidence: `Logs/HandoffQA/step37/v/` and `Logs/HandoffQA/step38/`.
+
+**Our ship is white** (owner, 2026-10-18). The camera image is drawn by the old build's VectorModel
+full-screen effect as red lines on black, and red means "hostile" in the design palette. The effect
+itself stays red: other cameras use it. `BoardLinearImage.shader` instead uses the lines as a mask
+and fills them with the image's colour. That colour is `HandoffPlotPanel.ownShipColor`, in the
+tuning window under Plot & our ship. Its default is the design's white, `ink.data` #E8EDF0, the
+colour of the design's own-ship glyph.
+
+### Step 38 — Every tunable value in one window
+
+**Owner direction (2026-10-17).** Every tunable value lives in the Inspector, gathered in one
+place, so the owner doesn't have to hunt through objects. A web app or spreadsheet was raised; one
+window inside Unity was chosen: nothing to sync, and it edits the real values.
+
+**What was built.**
+
+- `TuneAttribute.cs`: `[Tune("Section")]` marks a value as tunable.
+- `Assets/Editor/StarwolfTuningWindow.cs`, menu **Starwolf → Tuning**. It lists every tagged value
+  on the open scene's components, including inside lists (each bus's signal per unit), grouped by
+  section. Edits go to the real values and can be undone.
+- In play mode it warns that changes are lost when play stops. Tick **Keep play-mode changes** to
+  copy them back afterwards. Then save the scene.
+- 49 declarations tagged, 65 values shown, in nine sections: Power & signal, Sensors, Helm, Plot
+  tools, Plot & our ship, Periscope & fire control, Engineering & orders, Board & time, Motion.
+
+**Rule from now on:** tag every new tunable value with `[Tune("Section")]`.
+
+**Verified.** STEP 38 checked on 2026-10-18.
+
+- 65 values; every one resolves. Labels are unique within each section. Each tag shows exactly once.
+- Edits change the real value and undo cleanly.
+- In play: without the tick, changes go back when play stops. With it, they are kept. A change
+  takes effect on the next board tick.
+- The checker found one defect: with the window open, a playtest put two layout errors in the
+  console. The window decided what to draw separately in Unity's two drawing passes. It now
+  decides once per frame. Re-checked by running the playtest with the window open: 37/37 PASS,
+  console clean.
+
+**Known.** `ShipView`'s three values are read when play starts. Changing them mid-play does
+nothing until the next run.
+
+### Step 39 — Nothing standing on the plot
+
+**Owner decision (2026-10-18).** The plot carries no standing text or mock art. "It's too much."
+The player learns these things through the tools.
+
+- **Gone for good:**
+  - our ship's name and call sign (STARWOLF, SW-01);
+  - the mock heading and speed line under it (HDG 062°, V 1.84 km/s);
+  - the SENSOR RANGE label on the envelope ring (the ring stays);
+  - BOARD POINT ALPHA and its ×, a mock waypoint;
+  - `drawn#33`, an empty circle that drew nothing;
+  - `STAND-IN drawn#35`, a frozen grey line pointing north-west. It is probably part of the
+    design's radar sweep: it has the same −58° angle as the sweep disc `drawn#34`, already hidden
+    (`docs/finished-plans/HANDOFF_GAPS.md` rows 7, 12, 105). The design's sweep turns round our ship while DRADIS
+    (passive sweep) is on, which is the default. It is built for real in the sensors step.
+- **Hidden until real:**
+  - The PDC GROUP A arc and its label show only once the PDCs are activated. They are wired in
+    the fire-control step.
+  - The alarm strip ("3 NEW CONTACTS SINCE COMMIT") shows only for a real alert. The board loads
+    quiet, as if already acknowledged. The sensors step gives it a real trigger: a new contact
+    identified.
+- The builder hides them (`WirePlot`, and the alarm strip in the time-control wiring), so a
+  rebuild keeps them hidden.
+
+**Checked.** After a rebuild, nothing under `Plot/Mockup` or `AlarmStrip` shows. The World is
+still linked and the scene saved clean. Playtest: 37/37 PASS, console clean, our ship white (`Logs/Playtests/2026-10-18_225433/`).
+
+### Step 40 — Press and click: switches slide, refuse, and click
+
+**Owner decisions (2026-10-18).** Bring in the design's press and click interactions; the handoff
+is the newest source.
+
+- Rocker switches slide their pad, built now from the cut-out art.
+- A locked switch that is clicked gives a small "refused" nudge. This is the owner's addition; the
+  design has nothing for it.
+- Click sounds, from the prototype. The design board has no sound.
+- Unity's audio was switched off for the whole project (since August 2025, no reason recorded).
+  It is now on. The intro's hum is now audible too.
+- A refused order keeps the design's own reaction (it throws, the lamp goes red for 0.42 s, it
+  flicks back), plus the refused sound.
+
+**What was built.**
+
+- `HandoffRockers.cs` on the board, covering all 21 clickable rockers in seven drawers.
+  - When a panel swaps a rocker's sprite, a cover the colour of the well (`sprite.well.01`) hides
+    the baked pad. Two cut-outs of the old and new pads slide over it, and the new one fades in.
+    The slide uses the design's spring curve, cubic-bezier(.3, 1.5, .5, 1), and the fade uses
+    ease. A slide lasts 0.14 s on the 30×38 and 24×32 rockers and 0.12 s on the 22×30 and REBOOT
+    (UIStateSpec §9.1).
+  - At rest the three layers are off, so the board looks exactly as before. The edit-mode board
+    renders pixel-identical before and after the rebuild.
+  - A change made while a drawer is shut isn't animated when it opens.
+  - Pad boxes and travel were measured in the art. The thrown pad carries a glow 2 px wider, so
+    the cut-outs include it. The 30×38 thrown pad sits 11 px lower; the spec says 10 (top 3 → 13).
+    The art wins, so the slide lands exactly on the baked pad.
+  - Refused nudge: if the rocker shows its locked art when clicked, the pad dips 2 px and springs
+    back over 0.12 s.
+- Click sounds, made in code from the prototype's `playTone` (no audio files):
+  - tab (560 Hz square, 35 ms): tool rail, systems keys and latches, helm, orders and periscope
+    headers;
+  - switch (310 Hz square, 45 ms): every other control that takes a click;
+  - refused (150 Hz sawtooth, 80 ms): locked rockers and refused orders;
+  - drag-only controls and drawing on the plot make no sound.
+- TRACK (fire control) and its lamp drop 1 px while held. The design gives no ease, so it's
+  instant.
+- RECALL (hangar) eases into its pressed art over 0.1 s and back.
+- Tuning window: Motion gains the four slide times, the nudge distance and time, the RECALL
+  press, and the TRACK drop. A new **Sound** section holds the three cues: pitch, length,
+  volume, and square or saw.
+
+**Checked.**
+
+- The edit-mode board renders pixel-identical before and after the rebuild (`Logs/HandoffQA/step40/`).
+- In play, the LOAD SHED pad was logged frame by frame (`slide_frames.txt`): 17 → 28.9 px with the
+  spring's small overshoot, then rest at 28, over 0.13 s. The new pad fades in alongside.
+- Playtest: 48/48 PASS, console clean (`Logs/Playtests/2026-10-18_234125/`). New checks:
+  - the tab and switch clicks;
+  - the LOAD SHED slide;
+  - drawing on the plot makes no sound;
+  - a locked arming rocker nudges with the refused sound and stays locked;
+  - TRACK drops 1 px and returns;
+  - RECALL eases down and back.
+
+**Known.**
+
+- The cover is one flat colour. The real well has a slight gradient and the thrown pad's red
+  glow. It only shows in the strip the pad uncovers during a 0.12–0.14 s slide.
+- RECALL's press is a crossfade between the up and pressed art. The design moves the button's
+  top 3 → 7 px; the pressed art already has the button lower, so it reads as a press.
+- Tuning window: "Keep play-mode changes" does not keep edits to the three sounds or the RECALL
+  press. It only keeps single numbers, colours and switches.
+
+### Step 41 — The helm: our ship moves, and the plot pans
+
+**Owner decisions (2026-10-18).**
+
+- Top speed is on the design's scale: about 2.5 km/s at full throttle. The design's contacts run
+  0.4–2.6 km/s. Reaching the dummy, 24,300 km away, takes about 7 minutes at ×10.
+- The grid stays put and our ship moves across it. The design kept our ship at the plot centre;
+  the owner overrode that.
+- You can drag across the grid to pan the plot, and use the arrow keys.
+
+**What was built.**
+
+- `HandoffBoardState.TickMove`, run every board tick for `rate` mission seconds (so ×10 moves ten
+  times as far per tick). Spec §4:
+  - the throttle sets a target speed along the nose, and the ship speeds up and slows down at
+    capped rates;
+  - the hull turns, but the ship keeps sliding on its old course while the sideways speed bleeds
+    off.
+  - The numbers are the prototype's, slowed to the owner's top speed: time stretches by
+    240 / 2.5 = 96. That gives 0.9 G accelerating and 1.7 G braking, which matches the design
+    helm's "1.0 G". Full speed takes about 5 minutes of mission time.
+  - All five values are in the tuning window under Helm.
+  - Throttle is still held to what ENG power allows, as before. There is no reverse; the board's
+    throttle runs 0–100%.
+- The board now owns our ship's position. `TacticalWorld` reads the model's start position once,
+  then places the model where the board has it every tick. Bearings and ranges to contacts use
+  that position.
+- `HandoffPlotPanel` has a view centre, which starts on our ship. Marks, contacts and the grid are
+  drawn around it. Our ship's image sits where the ship actually is.
+  - Dragging the empty grid pans the plot. The plot ground's hit is now `plot.pan`; the mouse wheel
+    still zooms there.
+  - The marking tools keep their drags for drawing.
+  - Holding an arrow key pans at 600 screen px a second (tunable), except while typing in a
+    field.
+- `HandoffPlotGrid.OffsetPx` shifts the grid lines, so the grid stays fixed in the world.
+
+**Checked.** Playtest 57/57 PASS, console clean (`Logs/Playtests/2026-10-19_000009/`). New checks:
+
+- Putting our ship 5,000 km east moves its image 304.5 px across the plot; marks don't move on
+  screen, and the COMPASS re-measures.
+- With ENG powered and the throttle at 50%, the ship gathers speed (0.77 km/s after 4 s at ×10)
+  and moves along its heading.
+- After a 90° turn the course lags the heading (heading 173°, course 140°).
+- Paused, the ship stops dead.
+- Dragging the grid 100 px pans the view by exactly 100 px worth of km.
+
+**Known.**
+
+- The playtest sets the ordered heading directly; the helm dial is a drag it doesn't do yet.
+  Arrow-key panning can't be pressed by a script (the old Input class), so it is untested.
+- Turning still runs at the design's 4° per board tick at every time rate, while movement scales
+  with the rate. So at ×10 the ship slides further during a turn.
+- The axis numbers on the plot's edge (−30 … +30) are fixed. They read as distance from the plot
+  centre, not world position. (Fixed in Step 65.)
+- Nothing recentres the plot on our ship. Panning is the only way to follow it. (Fixed in Step 65:
+  the `C` key.)
+
+### Step 42 — The sensor circle: DRADIS's hearing range around our ship
+
+**Owner direction (2026-10-18).** When DRADIS is on, a circle shows around our ship. Its radius is
+the sensor range.
+
+**What happened before.** The design's sensor ring was `drawn#33`, a 398 px circle round the plot
+centre: 150 + gain × 48 layer px, the radius the SENSOR RANGE label rode on. The export gave it no
+fill and no line, so it never drew in Unity. It was removed in Step 39 as "an empty circle"; nothing
+visible was lost.
+
+**What was built.**
+
+- A `Sensor ring (drawn)` layer under our ship (a `HandoffMarksGraphic`, which gains a solid
+  `circle` and a filled `disc`).
+- `HandoffPlotPanel` draws it around our ship's true position at the true hearing range,
+  `PassiveRangeKm`: the range at which `Heard()` takes a contact while DRADIS is on. That is
+  12,000 km + 7,000 km per gain step, ×0.55 on UV. So 19,000 km at gain 1.
+- It is drawn only while DRADIS is on.
+- The colours are the design's `senEdge` and `senGlow`: the edge in data white at 26% and a faint
+  fill at 4%. On the amber grid, alarm red at 30% and 5%.
+- It eases to a new size over 0.5 s when the gain changes (UIStateSpec §9.1, lines 204 and 210).
+  The ease is in the tuning window under Sensors.
+- The radius is true to scale, not the design's fixed px. At ×1 a 19,000 km circle is wider than
+  the plot, so zoom out to see it (×0.3 fits it).
+
+**Checked.** Playtest 60/60 PASS, console clean (`Logs/Playtests/2026-10-19_001410/`). The circle matches the hearing range with DRADIS on, goes with
+DRADIS off, and comes back. A screenshot at ×0.3 shows it centred on our ship.
+
+### Step 43 — The radar sweep
+
+**What the design has.** `rd-sweep`: while DRADIS is on, a sweep turns once every
+(5.4 − 0.5 × gain) seconds (UIStateSpec §9.2; board-logic.js `sweepDur`). It has a bright leading
+edge (`sweepEdge`, data white at 70%) and a faint tail (`sweepTail`, 9%). On the amber grid they
+are red at 75% and 11%. The export only had a frozen gradient stand-in for it (`drawn#34`, hidden;
+`drawn#35`, removed in Step 39).
+
+**What was built.**
+
+- `HandoffSweepGraphic.cs`: draws the edge, a line from our ship to the rim pointing north, and
+  the tail, a fan fading to nothing 60° behind it. It is drawn once; turning it costs nothing.
+- `HandoffPlotPanel` sizes it to the sensor circle and places it on our ship. It turns it
+  clockwise at the design's rate, and hides it while DRADIS is off.
+- It holds still while the board is paused. The design kept it turning; the owner's rule is that
+  nothing moves while paused.
+- Tuning window, Sensors section: the tail angle (the design gives none) and the turn time.
+- A `Sensor sweep (drawn)` layer between the sensor circle and our ship (builder).
+
+**Checked.** Playtest 62/62 PASS, console clean (`Logs/Playtests/2026-10-23_000343/`). The sweep turned 39° in
+0.5 s at gain 1; the design rate gives 37°. It held still while paused and went with DRADIS off. The
+×0.3 screenshot shows the edge and its fading tail inside the circle.
+
+**Known.** On the amber grid the tail uses the edge's colour (rgb 255, 150, 130). The design's tail
+there is a deeper red (224, 75, 60), at 11%.
+
+### Step 44 — Hearing the enemy: bearing lines, the alert strip, the tracked blink
+
+**Owner direction.** Alerts appear only when there is a real alert (2026-10-18). This step also
+delivers Power P2, which was parked here: hearing on the plot.
+
+**What was built.**
+
+- **Bearing lines.** Every contact DRADIS hears but hasn't identified gets a line fading out from
+  our ship along its bearing, to the sensor circle's edge, with a "BRG 047" label. A passive
+  contact gives a bearing only, no range.
+  - Lines and labels are data white at 60%. While the periscope is on the contact, the line is at
+    100% and the label turns amber, as the design's `passives` do.
+  - Clicking the label still swings the periscope onto the contact (`plot.look`).
+  - The label sits 200 px out along the line, or at the circle if that is nearer (tunable). The
+    line is a new `fade` kind in `HandoffMarksGraphic`, on a `Passive bearings (drawn)` layer.
+  - The export's only passive label (BRG 149, for the removed CONTACT 22) is now the template
+    for every heard contact's label.
+- **The alert strip.** The board counts each contact once, the first time DRADIS hears it or a
+  scan identifies it (`HandoffBoardState.NoteNewContacts`, run every tick). A new one raises the
+  strip and sets its count: "1 NEW CONTACT SINCE COMMIT", plural for more. It also plays the
+  prototype's alert tone, 170 Hz sawtooth for 0.42 s, tunable under Sound. Clicking the strip
+  acknowledges it and clears the count. The design raised the strip once at load and never
+  again; this trigger is ours, after the owner's direction.
+- **The tracked blink.** While our signal is at or above the tracked line (45%), our ship blinks:
+  full for the first half of each 1.1 s, then at 20% (the design's `bd-blink` on its own-ship
+  glyph). (Removed in Step 66.)
+
+**Checked.** Playtest 68/68 PASS, console clean (`Logs/Playtests/2026-10-23_000923/`).
+
+- At load nothing is heard and the strip is quiet.
+- With SEN powered and gain 2, the hearing range is 26,000 km and DRADIS hears TRACK 07 at
+  24,127 km.
+- Its line and label read "BRG 047".
+- The strip raised "1 NEW CONTACT SINCE COMMIT" with the alert tone. Clicking it cleared it.
+- At 100% signal our ship blinked.
+
+**Known.**
+
+- The playtest sets the sensor gain directly; the gain fader is a drag it doesn't do yet.
+- The enemy noticing us (Power P3) is still to come. It is the first-mission plan's step B
+  (`FTUE_PLAN.md`).
+
+### Step 45 — The bearing trail: plotting a passive contact's range
+
+**Owner decisions (2026-10-23).** The plot tools exist to build an accurate firing solution by hand
+(Silent Shark style). A passive contact gives a bearing only. To find its range:
+
+- each sweep leaves a bearing line where our ship was;
+- the lines fade out over **2 minutes** of mission time;
+- as we move, they cross at the target.
+
+The design's buttons, drawers and flows are unchanged; this is drawing on the plot only.
+
+**What was built.**
+
+- `HandoffBoardState.BearingFixes`: one fix each time the radar sweep passes a contact DRADIS hears
+  but hasn't identified. A fix holds our position, the exact bearing (not rounded) and the
+  mission time. `bearingTrailSeconds` (120) is under Sensors in the tuning window. Old fixes are
+  pruned.
+- The plot draws each fix as a line fading out from where we were, out to the hearing range. Its
+  strength fades with age; a fresh line is at 45% (tunable).
+- The live bearing line now uses the exact bearing too. Its label still shows whole degrees.
+- Pausing freezes the sweep, so nothing new is laid. Pressing ERASE twice clears the trail along
+  with the marks.
+
+**Checked.** Playtest 70/70 PASS, console clean (`Logs/Playtests/2026-10-23_005602/`). At ×10 two
+lines laid 140 km apart crossed 0.0 km from TRACK 07. The first line was gone 140 s later.
+
+**Known.** At 24,000 km a short baseline gives near-parallel lines. The player has to cover distance
+or turn across the bearing to get a clear cross. Bearings are exact: no sensor error yet.
+
+### Step 46 — Intercept helpers: time to reach, tracks, weapon reach
+
+**Owner decisions (2026-10-23).**
+
+- A RULER label adds the time to cover its length at our current speed. Nothing while stopped.
+- A RULER drawn from one POINT to another snaps to them. It becomes a target's track: course and
+  speed, with the course projected **5 minutes** ahead. This settles the old open question of
+  whether a RULER snaps to a POINT.
+- The selected weapon's reach shows as a **plain dashed amber ring** round our ship, while Fire
+  Control is open.
+- The design's buttons and flows are unchanged. The RULER keeps its drag; its label carries more.
+
+**What was built.**
+
+- `HandoffBoardState`: `Mark.ptA` / `ptB`, the POINTs a ruler's ends snapped to. Also
+  `PointNear` and `TrackLeg`: course runs from the earlier POINT to the later, and speed is
+  distance over time.
+- `HandoffPlotPanel`:
+  - a RULER end within 12 screen px of a POINT snaps to it (tunable);
+  - a track ruler's label reads "CRS 063° · 1.10 km/s", and a dashed line runs from the later
+    POINT along the course for 300 mission seconds of travel (tunable);
+  - other rulers add " · 26 MIN" (or "45 S", or "1 H 12 MIN");
+  - while the FIRE drawer is open, the selected mount's `rangeKm` is a dashed ring at 70% amber
+    (railgun 30,000 km, PDC 4,000 km, VLS 40,000 km).
+  - A drawer click now refreshes the panels, so the ring appears at once.
+- `HandoffMarksGraphic`: a dashed line and a plain dashed ring. Builder: a `Weapon ring (drawn)`
+  layer.
+
+**Checked.** Playtest 76/76 PASS, console clean (`Logs/Playtests/2026-10-23_010133/`).
+
+- A RULER read "RNG 1,970 km · BRG 090° · 26 MIN" at 1.25 km/s.
+- A RULER between two POINTs 40 s apart snapped to both. It read "CRS 063° · 18.36 km/s", the
+  exact course and speed of the test points, and drew its projection.
+- The railgun ring showed only while FIRE was open.
+
+**Known.** With POINTs close together, the track label can overlap the POINTs' time labels.
+
+### Step 47 — The firing solution dialled by hand
+
+**Owner decisions (2026-10-23).**
+
+- The player dials the firing solution by hand from the plot. TRACK only works after an active
+  scan identifies the target, as the design already had it.
+- A hand-dialled solution aims at **a point in space**, not a locked contact. You can shoot a
+  contact you have only heard.
+- With no solution, turning a knob starts one: on the periscope's bearing, at 10,000 km, speed 0.
+- How close a solution must be to hit is decided in the fire step.
+
+This changes the design's fire control in one place. Its RNG / BRG / SPD knobs only adjusted a
+solution TRACK had made; now they also start one. The layout and controls are unchanged.
+
+**What was built.**
+
+- `Solution.manual`. `NudgeSol` with no solution starts one: `manualStartRangeKm` (10,000,
+  tunable), relative bearing from the periscope, speed 0. Then it applies the turn.
+- For a manual solution:
+  - BEARING (`OnBearing`) wants the periscope on the dialled bearing (heading + relative);
+  - SLEW TO puts it there;
+  - `AllSet` doesn't need a locked contact.
+  TRACK solutions behave exactly as before.
+- The readout shows "MANUAL / DIALLED BY HAND". The status line skips "NO TARGET DESIGNATED" and
+  "NO TRACKING ID" for a manual solution. Only the words change.
+
+**Checked.** Playtest 81/81 PASS, console clean (`Logs/Playtests/2026-10-23_011103/`).
+
+- TRACK refused a heard-only contact.
+- Ten steps of the RNG knob started a manual solution at 11,000 km on the periscope's bearing
+  (REL −111°), at speed 0. The readout said MANUAL.
+- BEARING was off 10° away from the dialled bearing. SLEW TO put the periscope on it, and it read
+  ON BEARING.
+
+**Known.**
+
+- The knobs step 100 km per 8 px of drag, the design's fine-tune pitch. Dialling a long range from
+  10,000 km takes long drags; a coarse mode may be wanted.
+- The solution holds range, relative bearing and speed but no course. Leading a moving target
+  needs one. That belongs to the fire step.
+- The relative bearing is against our heading when it is dialled, as the design stores it.
+  Turning afterwards moves the aim.
+
+### Step 48 — Fire and hit: the railgun slug
+
+**Owner decisions (2026-10-23).**
+
+- A railgun shot is a **slug that flies at 50 km/s**: the prototype's 4,800 slowed ×96, like our ship.
+  It takes about 8 minutes of mission time to reach TRACK 07, about 20 s at ×10.
+- It **hits** if it passes within the ship's **hit radius**, set per class from the prototype (km):
+  - frigate 95;
+  - destroyer 135;
+  - cruiser 210 (TRACK 07);
+  - carrier 600;
+  - anything else 150.
+- On a hit, **fire control reports it with the side struck**: "HIT · TRACK 07 · PORT". Otherwise
+  "MISS". Each has a sound. The slug shows on the plot as a small dot with a short trail, no label.
+  Damage comes in the damage step.
+- **Firing spikes our signal**: +25, tunable (GDD p.42). The enemy reacting to it comes with the
+  enemy AI.
+
+**From the spec, not new calls:**
+
+- one shot per arming: firing releases ARM (spec 8.4.b);
+- no shot below the charge it costs;
+- turret arcs are fixed to the hull (spec 8.7.a);
+- a slug dies at its weapon's range.
+
+**Settled by a source:** no lead in this step. The dummy doesn't move. Leading from a POINT-to-POINT
+track comes with a moving enemy.
+
+**What was built.**
+
+- `HandoffBoardState`:
+  - `Fire()` refuses below the shot cost, releases ARM, and for the railgun adds a `Round`: our
+    position, the bearing heading + BRG, and the mount's range. It spikes the signal.
+  - `TickRounds(dt)` runs every board tick for `rate` mission seconds. It tests each slug's whole
+    path that tick, so a 500 km jump at ×10 can't skip past a ship. The first ship passed within
+    its hit radius is hit.
+  - The side struck is where the slug came from, against the ship's bow: PROW, STBD, AFT or PORT
+    (reference sim `sideFacing`). The bow comes from the model's heading (`Track.worldHdg`, set by
+    `TacticalWorld`).
+  - `InArc`: the solution's bearing from our bow must lie inside the mount's arc. **The ANGLE
+    rocker now locks out of arc, with the hint "OUT OF ARC"**: turn the ship, or pick the other
+    turret. The rule is new; the switch is the design's.
+- Fire control's status line: ROUNDS AWAY while the slug flies, then the report.
+- The plot draws slugs in our own-force blue.
+- Sounds: firing plays the prototype's railgun cue (90 Hz saw). A hit is a 680 Hz tone and a miss
+  the refused buzz; those two are my choice, tunable under Sound.
+- Tuning window: slug speed, hit radii by class, the signal spike and the slug's trail length.
+
+**Checked.** Playtest 93/93 PASS, console clean (`Logs/Playtests/2026-10-23_013213/`). Weapons released at CONDITION 2 from the orders station. SEN vented
+to free power for WEP, and the gun charged. A hand-dialled solution on TRACK 07's bearing, nearest
+whole degree. Turret A was out of arc (ANGLE locked); turret B bore. All four rockers set, and the
+lever fired one slug and released ARM. Firing spiked the signal +25. Paused, the slug held still.
+The test predicts each shot from the geometry and checks the game agrees:
+
+- In run `2026-10-23_012910` the best whole-degree aim passed 192 km from TRACK 07: **"HIT · TRACK 07
+  · PORT"**, with the hit cue.
+- In run `2026-10-23_013213` the ship sat a little further off. The best aim passed 223 km away,
+  and the game said **"MISS"**, as predicted.
+- A second shot 2° off: **"MISS"** both times.
+
+**Known.**
+
+- Aiming is in whole degrees. At ~24,000 km half a degree is ~213 km, just over a cruiser's
+  hit radius, so a dead-on shot from that far may still miss. Close in for a sure shot. **The owner
+  kept whole degrees on purpose (decision 28).**
+- Only the railgun fires a slug. PDC and VLS still only spend charge.
+- Our own speed isn't added to the slug. There is no lead and no aim scatter.
+- With high power drawn our signal is already at 100%, so the spike has nothing to add.
+
+### Step 49 — Damage: armour, compartments, the kill
+
+**Owner decisions (2026-10-23).**
+
+- **Armour by side.** The prow and flanks take 2 railgun slugs to open (armour 100, a slug takes
+  50). The aft takes 1 (armour 50), the weak stern.
+- Once a side is open, **each slug takes 2 integrity** (of 5) off one compartment behind it, at
+  random among those still standing.
+- The target's damage shows on **fire control's report line** for now. A proper target readout
+  waits for art.
+- **The reactor at zero destroys the ship.** It becomes **a cold wreck**: no longer hostile or
+  heard, a dim dot where it died.
+
+Already ruled in `FTUE_PLAN.md` §4.4 (2026-10-18):
+
+- the side facing the shot takes it;
+- what sits behind each side: prow BRI; aft RCT and ENG; starboard MAG; port HAB and HGR;
+- the enemy uses our damage model and our kill condition.
+
+**What was built.**
+
+- `HandoffBoardState`, the model both ships use:
+  - `sideArmourMax` (PROW, STBD, AFT, PORT), `slugArmourDamage`, `slugCompartmentDamage`, all
+    under Damage in the tuning window;
+  - `TakeSlug(side)`: armour first, then a compartment behind the side;
+  - `destroyed`, when the reactor reaches 0.
+- `WorldContact.Ship`: each contact has its own `HandoffBoardState`, undamaged at load.
+  `TacticalWorld` hands it to the board (`ShipOf`), with our damage numbers from the tuning window.
+- `TickRounds`: the struck ship takes the hit on its own model. The report reads "HIT · TRACK 07 ·
+  AFT OPEN", "… · AFT ARMOUR 50%", "… · AFT · RCT −2", or "TRACK 07 DESTROYED".
+- A destroyed track becomes a wreck: not heard (`Heard` skips wrecks), not hostile, and slugs pass
+  through it. The plot draws a dim dot where it died.
+- The prototype's kill cue (120 Hz saw) plays for a kill.
+
+**Checked.** Playtest 99/99 PASS, console clean (`Logs/Playtests/2026-10-23_080215/`). TRACK 07
+started undamaged. The fight, from 10,000 km behind its stern (stopped, side-on so turret B bore):
+
+1. "HIT · TRACK 07 · AFT OPEN"
+2. "HIT · TRACK 07 · AFT · RCT −2"
+3. "HIT · TRACK 07 · AFT · RCT −2"
+4. "TRACK 07 DESTROYED"
+
+Its reactor went to 0, its engines stayed at 5, and nothing else was touched. It went cold, and the
+kill cue sounded. The earlier long-range shot correctly missed by 224 km.
+
+**Known.**
+
+- The fight test puts our ship in place directly, standing in for flying there with the helm.
+- Hits on our own ship come when the enemy shoots back (`FTUE_PLAN.md` step J). Our own sides and
+  compartments use the same code.
+- The plot view doesn't follow our ship: after a long move you pan to find it.
+
+### Step 50 — Engineering's ship diagram
+
+**Owner decisions (2026-10-23).** The same picture of our ship as on the plot appears in the
+engineering drawer:
+
+- it replaces the design's line-and-blocks diagram;
+- it is always bow up;
+- a lamp on the hull shows each compartment, green, then amber, then red as its integrity drops.
+
+**What was built.**
+
+- The builder hides the design's diagram (`drawn#230` line, `#231`–`#236` blocks) and keeps its
+  dark box (`#228`/`#229`). Over the box it adds `Ship diagram`: a RawImage of the plot's ship
+  view, plus six lamps (`lamp_dot`).
+- `HandoffEngineeringPanel.ShowDiagram`, on every refresh:
+  - the picture shows `ShipView`'s texture in our ship's white;
+  - it is turned back by our heading, so the bow is always up (no second camera);
+  - its size is set by `diagramShipPx` (190);
+  - lamps follow `CompHealth`: 4–5 green, 2–3 amber, 0–1 red;
+  - lamp spots: bridge at the bow, magazine starboard, habitation and hangar port, reactor and
+    engines at the stern. They follow the side-to-compartment map in `FTUE_PLAN.md` §4.4.
+  Spots and size are tunable under Engineering & orders.
+
+**Checked.** Playtest 103/103 PASS, console clean (`Logs/Playtests/2026-10-23_081716/`).
+
+- With the drawer open, the picture showed our ship turned back 90° for heading 090°, bow up.
+- Six lamps were green.
+- With HAB at 2 and HGR at 1 (a stand-in for enemy hits), their lamps went amber and red, the
+  others stayed green. Restored, they went green again.
+
+**Known.**
+
+- The wide hammerhead spills a little past the old dark box, still inside the screen.
+- The lamp spots are placed by eye on the model (tunable).
+- The target's own diagram (seeing the enemy's damage this way) waits for the target readout.
+
+### Step 51 — The enemy moves: TRACK 07 patrols
+
+**Owner decisions (2026-10-23).**
+
+- The order from here: an enemy that moves; leading a moving target; then missiles, fighters,
+  PDCs and the hangar launch.
+- **TRACK 07 moves.** It **patrols a loop of waypoints** at **1.1 km/s** (the design's speed for
+  it) and **does not react to us yet**.
+
+This is `FTUE_PLAN.md` step A, done the plan's way: a brain that only gives orders, and the ship's own
+`HandoffBoardState` moved by the same code as ours.
+
+**What was built.**
+
+- `EnemyBrain.cs`, on `Dummy · TRACK 07`:
+  - its route is a loop of points, km from where it starts. The default diamond runs (0,0),
+    (−6000,−4000), (0,−8000), (6000,−4000), from its start toward our side and back;
+  - `cruiseKms` (1.1) and `arriveKm` (300);
+  - `Think()` sets the ordered heading toward the current waypoint and the throttle for cruise
+    speed, and moves on to the next waypoint on arrival.
+  All three are under Enemy in the tuning window.
+- `TacticalWorld`:
+  - at load, each contact's ship starts where its model is, facing its way, engines powered;
+  - each board tick, for each contact with a brain, it runs `Think`, `TickHelm` and
+    `TickMove(rate)` — the same turning, acceleration and drift as ours — then places its model;
+  - the track's `speed` is now its real speed, which TRACK reads;
+  - a destroyed ship cuts its throttle and coasts to a stop.
+- Paused, there is no tick, so it holds still.
+
+**Checked.** Playtest 107/107 PASS, console clean (`Logs/Playtests/2026-10-23_085004/`).
+
+- After 3 s at ×10, TRACK 07 had gone 34 km and was making 0.71 km/s, still speeding up.
+- It was ordered onto 236° for its first waypoint and was still turning (heading 308°).
+- Its model followed its ship model, and the board's track read its real speed.
+- The older checks (the bearing trail crossing at the target, the hit, the fight) still assume a
+  target that holds still. Until leading lands in Step 52, the playtest stops TRACK 07 after the
+  patrol check, and holds our own ship still during the patrol burst.
+
+**Known.** At load our throttle sits at the design's 40%, so once ENG is powered our ship gets under
+way on its own.
+
+### Step 52 — Leading a moving target
+
+**Owner decisions (2026-10-23).**
+
+- A hand-dialled shot is led by **fire control, from your plotted track**: the latest
+  POINT-to-POINT RULER gives the target's course and speed. Your plot's accuracy decides the hit.
+- **TRACK leads exactly** once an active scan has identified the target, as the reward for going
+  loud.
+- No new controls. Drawing a track copies its speed into the existing SPD readout.
+
+**What was built.**
+
+- A `Solution` now carries:
+  - `hasCourse` and `course`;
+  - where the target was (`wx`, `wy`) and when (`t`, mission seconds) as the solution was set.
+- The solution is set in three places:
+  - a hand-dialled solution records the dialled point at each knob turn (`Fix`);
+  - the latest track (`ApplyTrack`) gives it course and speed, when the solution starts or when a
+    track is drawn;
+  - TRACK takes the target's true position, course and speed from the lock.
+- `LeadBearing()`, at the moment of firing:
+  - it reckons the target forward from the solution's point and time to now;
+  - it solves where the 50 km/s slug meets it, and fires on that bearing;
+  - without a course, the shot flies straight down the dialled bearing, as before.
+- `HandoffBoardControls` keeps the board state's clock current (`missionNow`). `TacticalWorld` gives
+  each track its real course over the ground (`Track.course`).
+
+**Checked.** Playtest 113/113 PASS, console clean (`Logs/Playtests/2026-10-23_090720/`). Run against the patrolling TRACK 07, steady on its leg, from 12,000 km
+off its starboard beam:
+
+- Without a track, the solution had no course.
+- Two POINTs on it two minutes apart, joined by a RULER, fed the solution exactly the track's
+  course and speed.
+- The led shot hit. Aimed straight, the same shot would have passed 295 km off and missed; led, it
+  passed 113 km off. The plotted course read 250°, against 244° at that instant: after its turn the
+  ship was still sliding onto its new course, so the plot shows the average. (In an earlier run: 438
+  km unled, 33 km led.)
+- After a lock, TRACK carried the target's course, and its led shot hit too.
+
+In the first run TRACK 07 was still turning onto its leg while it was plotted. The track then gives
+its average course over the two minutes (256° against 248° at that instant), and the shot still hit
+(`2026-10-23_085847`). The test now waits for a steady target.
+
+**Known.**
+
+- The playtest places the two POINTs on the target's true positions, standing in for good
+  plotting; the plot itself is tested in Step 46. It dials the range directly.
+- If the target turns after it was plotted, the lead is wrong until it is re-plotted, as at sea.
+- The solution's point is fixed when the knob is last turned: an old solution is reckoned forward
+  on the plotted course.
+
+### Step 53 — Missiles: the launcher, homing, three warheads
+
+**Owner decisions (2026-10-23).**
+
+- Missiles fly at **20 km/s**: slower than a slug, but they home. About 10 minutes to 12,000 km.
+- They **home on a locked target**, which needs an active-scan identification (GDD p.45). No
+  leading needed.
+- **The warheads split:**
+  - HE hits armour hard;
+  - PENETRATOR ignores armour and goes straight to a compartment behind the side;
+  - EMP does no hull damage but knocks the power out.
+- **Salvos stay** (1–8, using the launcher's 8 cells).
+- The design's warhead selector and salvo stepper were never in the export, so:
+  - **the turret knob picks the warhead** while MISSILE is selected (there is only one launcher);
+  - **the salvo is set in the tuning window** (default 2) until the stepper has art.
+
+**What was built.**
+
+- `Round` is now a slug or a missile: it carries its speed, whether it is a missile, its target
+  and its warhead.
+- `Fire()` with MISSILE (`MS`):
+  - it refuses without a lock or a cell (`MissileReady`), before spending charge;
+  - it launches `salvo` missiles, fanned 3° apart, and counts the cells down;
+  - it spikes the signal.
+- In `TickRounds` a missile steers toward its target, at up to 1.3° per mission second (the
+  prototype's 2.2 rad/s slowed ×96). The path test and hit radius are the slug's.
+- `TakeWarhead` on the struck ship:
+  - HE takes 100 armour, which opens any side in one hit, then compartments −2;
+  - PEN takes a compartment behind the side −2, whatever the armour;
+  - EMP drains every bus to 0 for 60 mission seconds (`empUntil`). The ship's power can't refill
+    until then (`TickPower` holds it at 0; a contact's engines come back when it ends).
+- Reports read "HIT · TRACK 07 · STBD · HE · MAG −2", "… · EMP · POWER DOWN", "… · PEN · MAG −2".
+- Fire control:
+  - with MISSILE the turret knob cycles HE → EMP → PENETRATOR, which also clears the ladder, as
+    the design says;
+  - the readout shows "HE · SALVO 2 OF 6" (cells left).
+- Tuning window: missile speed, turn rate and spread, HE armour damage, EMP time, salvo.
+
+**Checked.** Playtest 121/121 PASS, console clean (`Logs/Playtests/2026-10-23_221627/`). Against the
+patrolling TRACK 07, with a lock (stand-in for an active scan):
+
+- An HE salvo of two left the launcher (6 cells left). Both homed in and hit its already-open
+  starboard side, and its magazine went 5 → 1.
+- The knob picked EMP: "POWER DOWN". With no power it slowed from 0.93 to 0.27 km/s.
+- PENETRATOR: "PEN · MAG −2".
+- Four cells used.
+
+**Known.**
+
+- Missiles are drawn like slugs: a dot and a trail.
+- Nothing can shoot them down yet. PDCs come later.
+- The knob doesn't turn to show the warhead; the readout line does.
+- No reload: 8 cells per mission.
+
+### Step 54 — Fighters: launch, fly out, attack runs, recall
+
+**Owner decisions (2026-10-23).**
+
+- Fighters fly at **8 km/s**, about three times our top speed.
+- **Attack runs:**
+  - DESTROY: every 30 mission seconds each fighter takes 10 armour off the side facing it. Once
+    that side is open, it takes 1 off a compartment behind it.
+  - DISABLE: the same, but always at the engines (AFT armour, then ENG).
+  - ESCORT: the squadron stays with our ship.
+- **On the plot:** one small wedge per fighter, in own-force blue, in a loose V, pointing where
+  they fly. No labels.
+- **RECALL brings them home.** They turn back to our ship and land; the squadron is then ready
+  again. Fuel comes later.
+
+**What was built.**
+
+- `HandoffBoardState`:
+  - `LaunchSquad()` now also puts a `Flight` in the air: the squadron's ready craft, its order,
+    fire control's target, starting at our ship on the launch bearing.
+  - `TickFlights()`, each board tick:
+    - the flight flies toward its target, or home, or with us on ESCORT;
+    - inside 200 km of the target it makes its attack runs (`TakeFighterRun` on the target's own
+      ship model);
+    - if the target is destroyed, it turns home;
+    - home and inside 50 km, it lands: the squadron is aboard and the launch stages clear.
+  - `RecallSquad()` with a flight out turns it home instead of removing it at once.
+  - `FlightStatus()` gives the hangar's telemetry line: "OUTBOUND TO TRACK 07 · 1,592 KM",
+    "ATTACKING TRACK 07 · PROW ARMOUR 60%", "RETURNING · 1,820 KM", "ESCORTING".
+  - A destroyed target is marked a wreck through the same `Kill()` as a slug.
+- `HandoffPlotPanel` draws the fighters from a hidden template (`fighterTemplate`, the builder's
+  "Fighters" layer, `hull_wedge_filled`). Size and V gap are in the Tuning window.
+- `HandoffHangarPanel`'s telemetry line shows `FlightStatus` while the squadron is out.
+- Tuning window, "Hangar & fighters": speed, attack range, seconds between runs, armour and
+  compartment damage, wedge size and gap.
+
+**Behaviour change, as the owner decided.** Before, RECALL ended a launch at once. Now it turns the
+fighters home and they land when they reach us. The telemetry line used to read "SQUADRON AIRBORNE —
+RECALL TO RECOVER" while out; it now says what the flight is doing.
+
+**Checked.** Playtest 130/130 PASS, console clean (`Logs/Playtests/2026-10-23_231846/`). With TRACK 07
+held still and our ship 2,000 km off its bow:
+
+- ENG and WEP were drawing all 10 units, so the catapult refused ("NO AUX UNITS"). Venting ENG
+  (we were stopped) gave AUX 3 units.
+- The six launch stages ran to 100% and the launch lever put four interceptors on the plot.
+- They flew out at 8.00 km/s ("OUTBOUND TO TRACK 07").
+- Their first run took PROW armour 100 → 60, which is 4 × 10 ("ATTACKING TRACK 07 · PROW ARMOUR 60%").
+- RECALL turned them home; they landed, the stages cleared, and there were no runs after the recall.
+- The fight to the kill that follows still passed unchanged.
+
+**Known.**
+
+- The outline wedge (`hull_wedge_outline`) vanishes at 16 px, as its lines go under a pixel, so the
+  filled one is used. Same shape.
+- The fighters fly to the target's true position even when we only hear it. The plot shows them
+  flying down the bearing line.
+- The playtest doesn't run DISABLE or ESCORT; their code paths are simple branches of the same
+  tick. It launches with a stand-in for typing the launch bearing.
+- No fuel, no losses, no enemy PDCs shooting them down yet.
+- The assault boats' SECURE order attacks like DESTROY (boarding is out, decision in memory).
+
+### Step 55 — PDCs, and the enemy fires back
+
+**Owner decisions (2026-10-24).**
+
+- **TRACK 07 fires back.** When we hit it, and we are inside its launcher's range, it fires a
+  missile salvo at us. This is the first small piece of the ship AI.
+- **Arming the ladder puts a PDC group on AUTO.** Select PDC, pick group A or B with the turret
+  knob, and arm the ladder. The group then shoots by itself at anything in its arc until you drop
+  ARM. Its arc shows on the plot while it is on. No new controls.
+- **A chance per missile.** Each enemy missile that enters an AUTO group's arc and range gets one
+  roll: 70% it is shot down (Tuning window).
+- **Enemy PDCs come later,** with the ship AI. Our missiles and fighters work as before.
+
+**What was built.**
+
+- `HandoffBoardState`:
+  - `Incoming`: enemy missiles flying at us. `LaunchAt()` adds a fanned salvo; `TickIncoming()`
+    lets the PDCs try, then steers each missile at us. One that passes within `ownHitRadiusKm`
+    (210) strikes the side facing it through the same `TakeWarhead` as our missiles
+    ("MISSILE HIT · PROW · HE · BRI −2").
+  - `pdcAuto[2]`, for PDC-A and PDC-B. Throwing ARM with a group selected turns it on; dropping
+    any rung turns it off. Switching weapons leaves it on; coming back to that group shows its
+    ladder still armed.
+  - `RungGated()`: one place for the ladder's gates, used by `Flip` and by the fire-control panel.
+    A PDC group needs only WEP power and its autoloaders: no solution, no ANGLE or BEARING gate.
+  - `PdcStops()`: one roll per group per missile, needing WEP and the autoloaders.
+  - Sides now come from one helper, `SideAt`, for slugs, fighters and incoming missiles.
+- `EnemyBrain`: if its armour or a compartment dropped since the last tick, it fires `fireBackSalvo`
+  (2, HE) at us, at most once every `fireBackSeconds` (120), while it has cells. Its switch
+  `firesBack` is in the Tuning window.
+- `HandoffPlotPanel`: enemy missiles show as red dots with a trail. Each AUTO group draws its arc as
+  a dashed amber sector out to its range (the design's PDC arc colour, accent.caution at .45). No
+  label.
+- Fire control's status line reads "PDC-A AUTO · LAST: PDC-A · MISSILE DOWN".
+- Being hit plays the alert tone.
+
+**Behaviour changes, flagged.**
+
+- **Autoloaders start ENGAGED** (`loaders = true`). The design starts them off, but its LOADERS
+  button was never in the export (HANDOFF_GAPS row 73). Without it PDCs could never arm. The switch
+  is in the Tuning window until the button has art.
+- **With PDC selected, the fire lever does nothing.** The guns fire by themselves on AUTO.
+- **PDC's ladder no longer needs a firing solution, ANGLE or BEARING.**
+
+**Checked.** Playtest 138/138 PASS, console clean (`Logs/Playtests/2026-10-24_002347/`). With our
+ship stopped 6,000 km off TRACK 07's bow, turned so it bears 042° (PDC-A's arc):
+
+- The ladder armed on PDC-A with no solution, and PDC-A went AUTO.
+- A stand-in hit on TRACK 07 made it fire two HE missiles at us (its cells went 8 → 6).
+- PDC-A shot both down, at a stand-in certain chance; nothing hit us.
+- On the railgun PDC-A stayed on AUTO. Back on PDC-A, its ladder still showed armed.
+- With ARM dropped, the next salvo got through: two hits ("MISSILE HIT · PROW · HE · BRI −2"),
+  with the alert tone.
+- The fight to the kill and the engineering checks that follow still pass. The test repairs our
+  ship first, as a stand-in for damage control.
+
+**Known.**
+
+- The playtest stands in for the railgun hits that trigger the salvo, and for a certain PDC; the
+  70% chance itself isn't tested.
+- Enemy missiles show on the plot even when our sensors couldn't see them.
+- Nothing happens if our reactor reaches 0: no game over yet.
+- TRACK 07 fires whatever its own power state is.
+- PDC-B covers astern-port (200° ±35°); nothing covers dead ahead or dead astern, as the design
+  has it.
+
+### Step 56 — The intro: flat black, typed in place, straight cuts
+
+**Owner direction (2026-10-17, restated 2026-10-24).** The intro screen must be flat black. Each
+line appears in place, left to right, as if typed. Then a straight cut to the next thing. No
+zoom: the old pull-back shrank STARWOLF in place.
+
+**What was wrong.** The green was the intro package itself. Step 27 gave its shader a faint lit
+field (`_FieldGlow` .006 of the phosphor, plus the `#010601` background). On screen it measured
+(45, 77, 45), a mid green: the picture is still encoded twice on its way to the screen, which
+brightens anything near black.
+
+**What changed** (`Assets/StarwolfIntro/`, owner-supplied, changed at the owner's request):
+
+- `PhosphorDisplay.shader`:
+  - the field is pure black; `_FieldGlow` and `_Background` are gone;
+  - SECTION 36, INITIALISING... and STARWOLF each type in by cell column (`typed()`, driven by
+    `_Reveal`), the newest column fading up;
+  - the pull-back zoom and its grid are gone; the menu draws alone.
+- `StarwolfIntroController`:
+  - `pullbackDuration` is gone; the menu follows the title directly;
+  - `typeShare` (0.5): each line types over this share of its time, then holds;
+  - the old fade in and out is gone.
+- Timing in `00_Start` is unchanged: 4 / 2 / 4 s, then the menu (10 s, was 14). After the reorder
+  below, INITIALISING... no longer plays here, so the menu comes at 8 s.
+
+**Checked** in play mode, screenshots measured: the background is (0, 0, 0) on all three lines
+and on the menu. SECTION 36 shows half typed, STARWOLF fully typed in place, and the menu has no
+title behind it.
+
+**Known.**
+
+- The double encode is still there, so the text is a little paler than the reference
+  (`References/Company Logo.png`). Only black is immune to it.
+- `00_Start` still holds an unused `pullbackDuration: 4` line; Unity drops it on the next save.
+
+**The order, changed the same day (owner 2026-10-24).** The flow is now:
+
+**SECTION 36 → STARWOLF → menu → NEW GAME → beta page → Enter → INITIALISING... → battle map.**
+
+- `StarwolfIntroController.initialisingOnly`: with it ticked, the controller types only the
+  INITIALISING... line, holds, then calls its new `finished` event. Without it (in `00_Start`),
+  the intro is SECTION 36 then STARWOLF then the menu: 4 + 4 s.
+- `01_Briefing` has a new inactive object, `INITIALISING`, with that controller (2 s), and
+  `finished` wired to `ScreenFlow.Advance()`.
+- `ScreenFlow.showFirst`: on Enter, it shows that object first instead of loading at once.
+- Checked in play mode: shots at 2.5 s (SECTION 36), 5.2 s (STARWOLF) and 8.3 s (the menu). In
+  `01_Briefing`, INITIALISING... typed in over black, then `02.1_Grid` loaded.
+
+A trap: a screenshot taken right after `SeekPreview()` lands about half a second later than the
+time asked for (the editor runs a few frames first). A shot asked for at 3.5 s showed STARWOLF's
+first letter, not SECTION 36.
+
+### Step 57 — Everything in game time
+
+**Owner decision (2026-10-24).** Every rate runs per game second, charging included. At x10
+everything is ten times as fast, together.
+
+**Why.** The board's per-tick amounts (weapon charge, AUX, bus fill, the bow's swing, launch stages,
+the damage-control party, signal) were applied once per 0.42 s tick whatever the rate. At x10, guns
+recharged ten times faster in game time than ships moved.
+
+**What changed** (`HandoffBoardState`):
+
+- `TickPower`, `TickAux`, `TickHelm`, `TickWeapons`, `TickLaunch`, `TickParty` and `TickSensors`
+  take the tick's game seconds (`rate`), as `TickMove` already did.
+- Whole-unit steps (a bus filling one unit, the bow swinging whole degrees) bank the fractions, so
+  x0.25 is exact too. The reactor cap still holds at once.
+- The party works `partySeconds` (6) game seconds; it was `partyTicks`. The engineering line reads
+  "n OF 6" in seconds.
+- `TacticalWorld` passes the rate to the enemy's helm. The radar sweep turns in game time, so x10
+  sweeps ten times as fast.
+- **x1 is unchanged:** a tick at x1 is one game second, so the design's numbers now read as per game
+  second. (Step 63 later made everything that moves 5x.)
+
+**Checked.** Playtest 138/138 PASS (`Logs/Playtests/2026-10-24_104850/`).
+
+Two runs failed first:
+
+- One because someone clicked the engineering key during the run; the fire-control drawer closed
+  under the test.
+- One because game time changed our ship's path in the helm step, so an earlier shot hit TRACK
+  07's bow. The fighter check had assumed an untouched bow; it now works from whatever the bow
+  holds.
+
+**Damage plan.** The damage model is written up in `DAMAGE_README.md`, next to this file. It is
+built in the order given there: side map, conditions, teams, breakdowns, displays. Boarding comes
+right after conditions.
+
+### Step 58 — The audit's side map; our ship can die
+
+**Owner decisions (2026-10-24).**
+
+- **The design audit's map** replaces the 18 Oct one: bow → magazine, stern → engine room, port →
+  reactor, starboard → hangar. One fixed room per face. Bridge and habitation sit inboard and are
+  never hit directly.
+- **A reactor at 0 destroys any ship, ours included.** This overrides the audit's "never
+  unrecoverable".
+
+**What changed.**
+
+- `HandoffBoardState.BehindSide` is one room per face. `Behind()` has no random pick; a wrecked room
+  reports "· RCT WRECKED" and takes no more.
+- **Destroyed** means the reactor's structure is at 0. It used to read `CompHealth`, which counts a
+  vented room as 0, so venting the reactor would have destroyed the ship. (Step 65: staying outside
+  the battle space too long also sets `destroyed`, with `deserted`.)
+- Our ship, when destroyed, goes dark: `TickPower` holds every bus at 0. With no power there is no
+  thrust and no weapons. DRADIS still listens at the lowest gain: hearing needs no power. A destroyed
+  enemy becomes a cold wreck instead.
+- Fighters on DISABLE still go for the stern, which is now the engine room alone.
+- The engineering diagram's lamps follow the deck plan in `DAMAGE_README.md`.
+- `FTUE_PLAN` §4.4 points to the README.
+
+**Checked.** Playtest 139/139 PASS (`Logs/Playtests/2026-10-24_105807/`):
+
+- The fight to the kill now comes off TRACK 07's port beam: "PORT ARMOUR 50% / PORT OPEN /
+  PORT · RCT −2 / PORT · RCT −2 / DESTROYED". Nothing else on it was touched.
+- Missiles from its starboard beam hit the hangar ("STBD · HE · HGR −2").
+- New check: our port side opened and three slugs into our reactor destroy our ship, and its power
+  drops to 0. This is a stand-in for enemy fire.
+
+**Known.** Nothing happens on screen when our ship is destroyed beyond going dark. The game-over
+screen is still to be designed (`DAMAGE_README.md`, still open).
+
+### Step 59 — Conditions: fire, vacuum, radiation
+
+**Owner decisions (2026-10-24).** The rules are in `DAMAGE_README.md`, with the design audit §09.5 as
+the base:
+
+- The three conditions spread over the owner's deck plan.
+- **The weapon and the room decide what a hit starts:**
+  - HE and penetrators start fires;
+  - slugs breach a room;
+  - reactor hits leak radiation.
+- **More hits on a wrecked room** still start conditions.
+- **The audit's rules, on the design's own buttons.** DUMMY 1 becomes **RECALL**, with the REPAIR /
+  SEAL / VENT rocker art and its own legend. DUMMY 2 stays as it is.
+
+**What was built** (`HandoffBoardState`; the same model runs both ships):
+
+- **Room state.** Each room carries `fire`, `rad` and `doorsShut` next to `vented`. The design's
+  `cond` is derived from them: FIRE before RAD.
+- **What a hit starts.** `Strike()` rolls the condition chances on every hit that reaches a room.
+  The report says what started: "· MAG −2 · FIRE", "· HGR −2 · BREACH", "· RCT −2 · RADIATION".
+- **`TickConditions(dt)`**, per game second:
+  - fire takes 1 integrity every 30 s;
+  - radiation kills one crew member every 20 s;
+  - all three spread to neighbours: fire only into rooms with air; vacuum only from rooms whose
+    doors are open; radiation only while the reactor leaks (below integrity 3, not vented);
+  - radiation fades 90 s after the reactor is contained;
+  - a reactor burned to 0 destroys the ship.
+- **A breach** vents the room, puts out its fire, kills half its crew, and loses any team working
+  there.
+- **Engineering's rockers (and the orders station, now on the same rules):**
+  - REPAIR sends the team. It puts a fire out, or restores the air in a sealed room, or repairs.
+    It no longer needs crew in the room; it refuses an open airless room with "SEAL THE DOORS FIRST".
+  - SEAL shuts an airless room's doors.
+  - VENT dumps the air: the fire goes out, all crew inside die, and the doors shut.
+  - REBOOT adds 1 and no longer clears a condition.
+  - RECALL calls the team back.
+- **The enemy's ship** runs the same conditions with our Tuning numbers (`CopyDamageTuning`). One
+  whose reactor burns out becomes a wreck (`NoteWrecks`).
+- Tuning window, new section **"Damage control"**: every chance, rate and time in the README.
+
+**Behaviour changes to the design, flagged.**
+
+- SEAL no longer restores air at once.
+- REBOOT no longer clears conditions.
+- REPAIR no longer needs crew aboard.
+- The orders station's VENT no longer refuses with crew aboard, and its PARTY can work an airless
+  room once sealed.
+- DUMMY 1 is RECALL.
+
+**Checked.**
+
+- A quick check on a bare ship model first, all rules.
+- Then playtest 153/153 PASS (`Logs/Playtests/2026-10-24_111146/`), new step 24. Chances and spread
+  are set to certain for exact results, and the hits are stand-ins:
+  - HE through the open bow set the magazine on fire. It spread to the bridge, reactor and hangar,
+    and not to the engines or habitation. It burned the magazine 3 → 2.
+  - A team put it out. VENT put out the bridge fire and its 9 crew died.
+  - A slug breached the hangar ("HGR −2 · BREACH", crew 7 → 3). REPAIR refused until SEAL; with
+    the doors shut nothing spread; the team restored the air.
+  - RECALL called a team back with no repair landing.
+  - Two slugs into the reactor leaked radiation into the magazine and bridge, not the hangar, and
+    it killed magazine crew. Contained, it faded.
+- The engineering screen shows it with the design's own readouts (ATMO VENT, COND FIRE, crew 0, "3
+  COMPARTMENTS IN HAZARD").
+- Steps 1–23 run with the condition chances at 0 (a stand-in), so they stay as written.
+
+**Known.**
+
+- A room with both fire and radiation shows FIRE only, and doors shut on an airless room still show
+  VENT. Both wait for the displays step.
+- Teams take no travel time and no crew yet (the teams step).
+- Crew killed in a room are not replaced or moved.
+- The enemy does not fight its own fires: its rooms burn until we finish it, or a fire reaches its
+  reactor.
+
+### Step 60 — Boarding: the assault boats
+
+**Owner decisions (2026-10-24).** The rules are in `BOARDING_README.md`, next to this file.
+
+- **The design's three orders, exactly:** DESTROY blows up its reactor; DISABLE wrecks its engines
+  and magazine; SECURE captures it.
+- **Boarding needs** one face open and the ship nearly stopped: fight it down first.
+- **The fight aboard is time and odds:** 60 s, marines against a quarter of its crew, with losses
+  on both sides.
+
+**What was built** (`HandoffBoardState`):
+
+- **Launch.** The ASSAULT BOAT squadron flies as a `Flight`, like the fighters, at 6 km/s. Each boat
+  takes 6 marines from the ship's 18. The launch refuses with "NO MARINES ABOARD" when none are left.
+- **`TickBoarding`:**
+  - the boats hold off with a reason ("HOLDING OFF TRACK 07 · NO OPEN SIDE" or "TARGET UNDER WAY");
+  - they dock and fight ("BOARDING TRACK 07 · 42 S");
+  - they win or are repelled ("BOARDING REPELLED"), then fly home with the outcome on the hangar
+    line;
+  - survivors rejoin the pool when they land.
+- **SECURE** marks the ship and its track captured. The enemy stops and holds still
+  (`TacticalWorld`), and the plot shows it as an own-force dot (placeholder).
+- **RECALL** while aboard withdraws the marines with no result.
+- Tuning window, "Hangar & fighters": boat speed, marines, docking distance, speed limit, fight time,
+  defender share, losses.
+
+**Checked.**
+
+- On bare ship models, all three orders: SCUTTLED (wreck), DISABLED (ENG and MAG 0, alive), SECURED
+  (captured, not hostile). In each case the boats held off with no face open, and the marines came
+  home.
+- Playtest 160/160 PASS (`Logs/Playtests/2026-10-24_120447/`), new step 21f, through the hangar's
+  controls:
+  - three boats launched on DISABLE with 18 marines;
+  - they held off while no face was open (a stand-in), and boarded once one was;
+  - they won (stand-in: no defenders, so the result is certain) and disabled TRACK 07;
+  - they flew home with "TRACK 07 DISABLED · RETURNING" and landed with all 18 marines;
+  - the fight to the kill that follows still passed.
+
+**Known.**
+
+- Salvage and what a prize is for, fuel, and enemy boarders are not built (`BOARDING_README.md`,
+  still open).
+- The boats are drawn as the fighters' wedges.
+
+### Step 61 — Scan to know what you hit; smoothing; heading 000 at load
+
+**Owner (2026-10-24).**
+
+- "You have to scan the ship to even be able to understand what you're damaging."
+- Use what is there, with no new art: engineering shows only our own ship, and the periscope is
+  really the targeting computer.
+- Separately: the room rings and bars looked grainy; and the ship should start pointing up.
+
+**What changed.**
+
+- **One naming rule, as the design's sensors board already had it.**
+  - A contact is "BOGEY T07" until an active scan identifies it, then "TRACK 07" (`NameOf`,
+    `Scanned`).
+  - Hit reports, the kill line, the hangar's lines and boarding outcomes all follow it.
+  - Unscanned, a hit reads only "HIT · BOGEY T07"; scanned, it gives side, room and condition.
+- **The targeting computer's SUBJECT box,** for a scanned subject, uses its own two lines:
+  - "TRACK 07 · CRUISER" (the class once CLASS is pressed);
+  - its hull: "BOW 100 · STBD ▸ HGR 3 · AFT 50 · PORT 50". Each face shows its armour %; through an
+    open face (▸, as engineering's lines use it) it shows the room behind and its integrity.
+  - The name under the brackets follows the scan rule.
+- **Smoothing.** The board was drawn into a render texture with no anti-aliasing, and the board
+  camera had MSAA off. So every shape the board draws itself came out hard-edged and grainy next to
+  the browser design: the compartment rings, bars, plot lines, the sweep, wedges. Now 4× MSAA
+  (`GammaBoardPresenter.msaaSamples`; the builder allows MSAA). The design's art and text are
+  unchanged.
+- **Heading 000 at load** (the design's demo had 083).
+
+**Checked.** Playtest 161/161 PASS (`Logs/Playtests/2026-10-24_154633/`):
+
+- The first two hits read "HIT · BOGEY T07", before any scan.
+- After a stand-in scan, the targeting computer read "TRACK 07" / "BOW ▸ MAG 0 · STBD ▸ HGR 0 · AFT
+  100 · PORT 100".
+- Rings checked zoomed in: smooth edges.
+
+Two runs before it failed: the window was used mid-run, then Unity was restarted mid-run.
+
+**Trap.** The playtest wait loop picked the newest run by modification time. The old run folders
+were touched when their videos were deleted, so it read an old report. Pick the newest run by name.
+
+### Step 62 — Weapon reach, the sweep's inner circle, the enemy's picture
+
+**Owner decisions (2026-10-24).**
+
+- **Weapon reach equals the DRADIS at full gain:** railgun and missiles reach 47,000 km (12,000 +
+  5 × 7,000). It doesn't depend on the gain set now. You can dumb-fire that far; a lock still needs
+  a scan. The design had 30,000 and 40,000. PDCs stay at 4,000.
+- **A small circle round our ship.** The sweep runs from it to the DRADIS edge, not from the ship.
+- **Enemy picture after CLASS.** Once scanned and classified, a contact shows on the plot as its
+  own 3D model seen from above, in red, turned to its heading, instead of its dot.
+
+**What changed.**
+
+- `HandoffBoardState.mounts`: RGA, RGB and VLS reach 47,000 km.
+- `HandoffSweepGraphic.SetInner` draws the band and the edge from an inner radius.
+- `HandoffPlotPanel` draws the inner circle, half our ship's drawn length plus `innerRingMarginPx`
+  (8). It also shows `contactShipImage` for a classified contact, with its label pushed clear.
+- **New in `02.1_Grid` (World):** "Contact View Camera · TRACK 07", a copy of our ship's view camera
+  aimed at TRACK 07's model (StarWolf_Cruiser). The builder adds a "Contact ship (3D view)" layer.
+- `ShipView.Own()`: our ship's picture (plot and engineering) now finds our own camera, not any
+  ShipView.
+
+**Checked** in play mode, with a screenshot:
+
+- the inner circle and the sweep starting from it;
+- our ship pointing up;
+- TRACK 07 drawn as a red cruiser, turned to its heading.
+
+**Playtest:** first run with Step 63 (163/163). The owner's laptop had died before it could run here. It has two new
+checks (CLASS shows the picture; the sweep starts at the inner circle) and the updated range check.
+Run it first next session.
+
+### Step 63 — Scale: everything that moves 5× faster; ACTIVE scans; the gain comes back (undone in Step 64)
+
+**Why (owner, 2026-10-24).** After playing: the ships felt too slow, plotting gave no data, and the
+active scan "didn't seem to be working".
+
+**Played and measured.**
+
+- **In the game, before the change:**
+  - at x1, 30 real seconds at full throttle moved our ship 3 px and TRACK 07 4 px;
+  - powering up quietly dropped the DRADIS gain from 2 to 1 for good, so TRACK 07 (24,300 km)
+    fell out of the 19,000 km DRADIS;
+  - ACTIVE on identified nothing: only letting go of the cone dial, or clicking a contact-board
+    row, did.
+- **The scale study.** `docs/scale-sim/` (new, kept as a tool; README there) played whole fights at
+  several speed scales:
+  - at the old speeds a win took 35 minutes at x1, and two marks read a course only to ±20°;
+  - at 5×, about 7 minutes and ±4°; at 10×, about 4 minutes;
+  - engagement range barely mattered;
+  - at x5 and x10, people arm too slowly and TRACK 07 can win.
+
+**Owner decisions.** **5×** ("slow but not tediously slow"). ACTIVE scans while it is on. The gain
+comes back once the power does. (Step 64 reversed this: lose power, the gain drops to 1.)
+
+**What changed.**
+
+- **Everything that moves, 5×** (`HandoffBoardState`; `EnemyBrain` default and the scene's value):
+  - our top speed 12.5 km/s;
+  - acceleration and braking ×25, so full speed comes 5× sooner;
+  - drift and drag keep rates to the 5th power;
+  - turn 20°/s; TRACK 07 cruises at 5.5 km/s;
+  - slugs 250 km/s, missiles 100 km/s (turn 6.5°/s), fighters 40, assault boats 30;
+  - boarding speed limit 0.5;
+  - the SPD knob steps 0.25 (`spdStep`).
+  - The map, sensor and weapon ranges, charge and timings are unchanged.
+- **The hit test follows the target's motion within a tick** (`TickRounds`). At these speeds and
+  x10 a ship moves further in one tick than its hit radius.
+- **ACTIVE scan:** with ACTIVE on, a contact inside the cone and DRADIS range is identified as the
+  sweep passes it (`HandoffPlotPanel`). The alarm strip and alert tone sound only for a
+  contact DRADIS had not already heard; one already heard is identified silently. Letting go of the
+  cone dial and clicking a row still work.
+- **Gain:** `gainSet` remembers the gain you set. While the SEN bus is short of power the gain is
+  held down, then comes back to it. **Superseded by Step 64:** `gainSet` is gone; the gain drops to 1
+  and stays.
+
+**Checked.**
+
+- In the game after the change, the same opening: the gain held at 2, ACTIVE identified TRACK 07
+  on its own, and TRACK 07 moved 19 px in 30 s at x1.
+- Playtest 163/163 PASS (`Logs/Playtests/2026-10-25_184602/`), including Step 62's checks. Tests
+  adjusted for the new speeds:
+  - the gain starts at 1 so hearing still comes at step 17;
+  - a marginal aim may land either way;
+  - fighters' speed is measured at x1;
+  - the second salvo waits out TRACK 07's reload.
+
+**Found, not changed (for the owner).**
+
+- The throttle has the same trap the gain had. Set full throttle while the ENG bus is still filling
+  and it is clamped to 20%, then stays there: the design's "the lever stops where the bus stops".
+- With all four buses on DRAW, ENG gets 3 of 10 units, so throttle stops at 60%. That is the
+  power trade-off as designed.
+- The mission clock starts at 2:03:32, the design's demo time.
+
+### Step 64 — Lose power, lose the setting
+
+**Owner decision (2026-10-25).** "If the power goes, you have to redo everything. It just sets back
+to zero." This replaces Step 63's "the gain comes back".
+
+**What changed** (`HandoffBoardState`):
+
+- **Gain:** if the SEN bus can no longer carry it, the gain drops to 1 (its lowest) and stays there.
+  `gainSet` is gone.
+- **Throttle:** if the ENG bus can no longer carry it, the throttle drops to 0 and the ship brakes to
+  a stop. The design held it at what the bus could carry.
+- **At load** power is cold, so the gain starts at 1 and the throttle at 0. The design's demo had 2
+  and 40. Powering up no longer knocks anything back without telling you. Set them once the power
+  is on.
+
+**Checked.** Playtest 163/163 PASS (`Logs/Playtests/2026-10-25_185453/`).
+
+### Step 65 — The battle space: a map with edges, the grid resizing inside it
+
+**Owner decisions (2026-10-25).** A first try used fixed 1,000 km squares and a 10 x 10 square
+map, with zoom stopping when the map filled the plot's height. It left black down both sides. The
+owner wants: the squares resize as you zoom, as before; the map has a separate width and height;
+zoom stops when the **sides** fill, and you pan up and down for the rest.
+
+**Where to change it.** `Board/HandoffBoard` → Handoff Board Controls → State → Battle space:
+**Arena Width Km** and **Arena Height Km** (100,000 each to start: 20 x 20 big squares at x1),
+**Arena Warn Km** (2,500), **Arena Return Seconds** (30; owner, 2026-10-25, was 150).
+
+**What changed.**
+
+- `HandoffBoardState`: `arenaWidthKm`, `arenaHeightKm`. Near the edge a warning; past it a
+  countdown; not back in time and the ship is lost. Crossing out drops the rate to x1.
+- `HandoffPlotGrid`: the minor square is again the step nearest 61 px (1,000 km down to x0.67, then
+  2,000 down to the x0.35 limit; 5,000 only below x0.29). Lines start from the map's corner, so its edge is always a
+  line if each side is a multiple of 50,000 km. Drawn only inside the map, and square.
+- `HandoffBoardControls.MinZoom`: full zoom-out is **Zoom Out Limit** on Handoff Board Controls,
+  x0.35 (owner). If the map is too narrow to fill the plot's width there (under about 80,000 km
+  wide), zoom stops sooner, where it fills, so the sides are never black. A 100,000 km map would fill
+  at x0.28, so the limit applies. At x0.35 the squares are
+  2,000 km and the map is wider than the plot, so you pan side to side as well.
+- `HandoffPlotPanel`: panning stops at the map's edges. If our ship is outside, you can pan out
+  to it.
+- The alarm strip shows the edge warning and the countdown.
+- **Axis numbers follow the grid** (owner agreed). One on each big-square line, along the top and
+  left edges of the plot, in thousands of km from the world centre (+ east and north). They slide
+  when you pan and spread out when you zoom. A number that would sit on the "X (1,000 KM)" or
+  "Y (1,000 KM)" title is skipped. The design's bottom row is gone: the ORDERS panel covers its
+  left end, and the top row already gives the same numbers.
+- **The axis numbers' look is on the inspector** (owner): `Plot` → Handoff Plot Panel → Axis
+  numbers: the layer they are made under (`Plot/Scale`), the two titles, font (Share Tech Mono),
+  material (its thickened "Small" one), size (11) and colour. The design's 12 fixed number labels
+  were deleted from `02.1_Grid`. The board builder (`WirePlot`) did the same on a rebuild: it
+  deleted them and filled the slots from their look. Checked on the full rebuild of 2026-10-25 (Step 68's
+  notes): 12 deleted, every slot filled, live numbers in play.
+- **`C` centres the plot on our ship** (owner asked for a key). Near the map's edge the view stops
+  at the edge, so the ship can sit off-centre.
+
+**Checked** in play mode, with screenshots (before the x0.35 limit): at x0.28 the grid fills the plot's width; panning is
+locked side to side and stops at the top and bottom edges; at x0.5 and x1 it stops at all four.
+Axis numbers checked in play mode at x1 and x0.35, panned: each number sits on its line, our ship
+reads 0, 0. The `C` key: MCP can't press a key; the owner pressed it in play and it works (2026-10-25). Playtest 163/163
+(`Logs/Playtests/2026-10-25_221753/`); it has no battle-space checks yet.
+
+### Step 66 — Our ship stops blinking; drawers slide out from behind the frame
+
+**Owner decisions (2026-10-25).**
+
+- **Our ship no longer blinks when we're tracked.** The owner saw it as a bug. The warning is the
+  red E-SIG lamp and meter on the Sensors panel (and the SIG lamp on Comms). Step 68 copied that
+  whole row into a box in the frame's top-right. Step 44's blink is gone from `HandoffPlotPanel`. The
+  playtest now checks that the ship does **not** blink.
+- **The metal frame is in front of the drawers**, so a drawer slides out from behind it.
+
+**How the frame is in front.** The frame is one solid steel sheet under everything; the plot covers
+its middle. So the frame isn't moved. The six drawers are moved under a new
+`Board/HandoffBoard/Drawers` object, just above `Plot`. It clips the drawers to the frame's opening
+(`RectMask2D`, padding 98, 84, 98, 94: left, bottom, right, top). Everything on the frame (alarm
+strip, clock, rails, Console, Orders, Helm, periscope, and since Step 68 the signal box) now draws
+on top of the drawers. The drawers' cast shadows no longer spill onto the frame.
+
+`HandoffBoardBuilder.TuckDrawersUnderFrame` did this near the end of the build, so a rebuild kept
+it. It had to run after every Wire step, because they found the drawers as direct children of
+`HandoffBoard`. From Step 68, `BuildSignalBox` ran after it.
+
+The draw order in `UI_INTEGRATION_LOG.md` ("What the builder does") is from before this step. The
+drawers now sit in `Drawers`, between `Plot` and `AlarmStrip`.
+
+**Checked** by rendering the Board Camera with Sensors half open (cut cleanly at the frame's inner
+edge, under the rail) and fully open (unchanged). Not looked at by eye in play mode. Playtest 163/163 (`Logs/Playtests/2026-10-25_221753/`), including "Tracked,
+our ship does not blink" and every drawer click through the new mask.
+
+### Doc check — Steps 56 to 66 (2026-10-25)
+
+**What.** Four independent, read-only checks compared the write-ups of Steps 56 to 66,
+`DAMAGE_README.md`, `BOARDING_README.md` and `docs/scale-sim/` with the code, claim by claim, with
+file and line evidence. Most claims held. The scale sim still matches the game's numbers.
+
+**Docs fixed.**
+
+- Earlier steps now point to the later step that changed them: Step 57's speeds, Step 58's
+  "destroyed", Step 63's gain, decision 29's fighter speed, Step 41's axis numbers and recentring,
+  Step 44's blink.
+- Step 58: with no power, DRADIS still listens. It was written as "no sensors".
+- Step 63: the sweep's identification sounds the alert only for a contact not already heard.
+- Step 65: the grid steps and zoom limit as they are at x0.35. Decision 32 names the limit and the
+  countdown. Steps 65 and 66 had passed the playtest (163/163).
+- `BOARDING_README`: boats 30 km/s, boarding below 0.5 km/s (Step 63's numbers); names follow the
+  scan rule.
+- `DAMAGE_README`: radiation starts on a slug, HE or penetrator hit, not a fighter's; REBOOT adds 1;
+  the button reads RECALL; boarding sits in the build order where it was built; where the team's
+  time is tuned.
+
+**Code fixed.**
+
+- **A disabled enemy still drove and fired.** Its brain set cruise and fired back without looking
+  at its own engine room or magazine. Now its throttle is held to what its engine room allows
+  (`ThrCap`, as our lever is), and it fires back only with its magazine whole (`EnemyBrain`). This
+  also makes "fight it down" for boarding work: wreck its engine room and it stops. New playtest
+  check after step 21f.
+- **The targeting computer named a classified ship before it was scanned.** It now uses the same
+  rule as everywhere else, BOGEY until scanned (`HandoffPeriscopePanel`).
+- The battle space's return countdown is 30 game seconds (owner). The tooltip's fastest return is
+  corrected from about 110 to about 75 game seconds.
+
+**Owner answers (2026-10-25).**
+
+- A ship with no power should not hear on DRADIS. Logged as a bug in Open items.
+- Coming back inside for a moment restarts the 30 seconds. That is fine.
+- 30 game seconds is 12.6 real seconds at x1. Straight out at full speed, the fastest return is
+  about 75 game seconds: brake, then turn. The 2,500 km warning is the time to turn.
+
+**Answered later the same day.** You turn on ACTIVE and the sweep passes a ship. Every pass beeps.
+Step 69.
+
+**Not yet.** The bugs this check found that are not fixed are in Open items, "Bugs, not fixed yet".
+
+**Checked.** With Step 68: playtest 165/165, including "Disabled, its brain cannot drive it"
+(`Logs/Playtests/2026-10-25_224013/`).
+
+### Step 67 — The Level tool: each level is a scene; the enemy spawn box
+
+**Owner decisions (2026-10-25).** Each level is its own small scene, loaded on top of the board.
+**Starwolf → Level** is the tool. To start, the enemy spawn is just a box: seen in the Scene view so
+it can be moved, never on the board. Debris (not built yet) will be the same every play. The
+mission scripter gets its own menu item later. Decision 33.
+
+**What changed.**
+
+- `EnemySpawn` (new): a filled box with a bow line and its name, the same size on screen at any
+  zoom. At play, in `Start`, it calls `TacticalWorld.Spawn`, which moves its contact there, facing
+  the box's way. The patrol route goes with it: `EnemyBrain` takes its home on its first think.
+- `TacticalWorld`: `levelScene` (default `Level_01`) loads on top at play, unless a level is
+  already open in the editor; then that one plays. New `Spawn(key, at, zDeg)`. The ship start code
+  moved into `StartShip`.
+- `LevelWindow` (new): **Open** loads the board with the level on top and shows the map from above,
+  north up. **New level** makes the next `Level_NN` and adds it to Build Settings. **Enemy spawn**
+  adds a box where the Scene view is looking.
+- The board stays the active scene, so its lighting and settings are the ones that play.
+
+**Checked.** Playtest 163/163 (`Logs/Playtests/2026-10-25_221753/`), with `Level_01` loading on
+top. In play mode: with only the board open, `Level_01` loads by itself; with the spawn moved (not
+saved) to (0, 20,000) facing 090, the enemy started there, heading 090.
+
+**Known.**
+
+- The dummy's model still sits at its old spot in `02.1_Grid` in the editor. At play it jumps to
+  the box. Only the box matters.
+- Something you add by hand goes into the active scene (the board), not the level. Use the window's
+  buttons, or drag it into the level in the Hierarchy.
+- The box was made screen-sized after the playtest (drawing only) and checked on screen: at the
+  whole-map view it shows as a filled red square, its bow line and its name.
+
+### Step 68 — The signal alarm: a box in the frame's top-right, and the alert tone
+
+**Owner decisions (2026-10-25).** After Step 66 removed our ship's blink, the signal needed a
+warning you can see with the Sensors drawer shut. The owner chose a box in the empty top-right of
+the frame, opposite the mission clock, and the alert tone once when you become trackable.
+
+**What it shows.** The Sensors drawer's E-SIG row, copied: the E-SIG label, the 10 cells (white,
+then amber, then red), the percent, the lamp (amber with any signal, red and blinking once tracked),
+and the note ("RUNNING SILENT", or "1 HOSTILE SET HAS YOUR RANGE" once tracked).
+
+**How.**
+
+- `Board/HandoffBoard/SignalBox`, just after `TimeControl`. The row's dark backing (`well_r3`)
+  sits at board px 1519, 30 (356 x 50), clear of the corner bolt. Copies are named `Signal · well`, `· label`, `· cell 1`–`10`, `· glow`,
+  `· lamp`, `· percent`, `· note`.
+- `HandoffSensorsPanel` fills in the box exactly as it fills in its own row: same rules, same
+  blink. Its `Box …` slots (under "Signal box" in its inspector) point at the box's cells, lamp,
+  glow, percent and note. The well and label are plain copies. The panel sits on
+  `Board/HandoffBoard`, so it keeps working with the drawer shut.
+- No new script (owner, 2026-10-25). A first version used a separate `HandoffMirror` script to
+  copy the row; the owner found it confusing, and it was removed the same day. Playtest after
+  removing HandoffMirror: 166/166 (`Logs/Playtests/2026-10-25_233126/`).
+- `HandoffBoardControls`: after `TickSensors`, the alert tone plays once as the signal crosses
+  `signalTrackedAt` (45). It plays again only after the signal drops below and comes back.
+- `HandoffBoardBuilder.BuildSignalBox` built it, after `TuckDrawersUnderFrame`, so a rebuild kept
+  it. It copied from `Drawers/State · sensors`.
+- Playtest: a new check after "Tracked, our ship does not blink". The box reads the signal and
+  the trackers line.
+
+**Checked.** Rendered the Board Camera at rest: the box sits in the top-right band, clear of the
+periscope housing and the corner bolt, and reads 0% and RUNNING SILENT. Playtest 165/165 PASS
+(`Logs/Playtests/2026-10-25_224013/`): 163 plus two new checks, this step's signal box and the doc
+check's "Disabled, its brain cannot drive it". Tracked at 100%, the box read "100%" and "1 HOSTILE
+SET HAS YOUR RANGE"; the run's shot `23_bearing_trail.png` shows it red in the top-right.
+
+**Full rebuild checked (owner asked).** `Starwolf/Handoff/2` rebuilt the whole board with this
+step's code and the axis-number change. Every setting on the board, the World and the cameras was
+listed before and after: no value changed. The only additions were 2 text sub-objects TMP makes by
+itself for the "▸" glyph. The build counts show "deleted: fixed axis number: 12". Playtest after
+the rebuild: 164/165 (`2026-10-25_230225`, check 140 failed, trap 23), then 165/165 on a re-run
+(`2026-10-25_230646`), with live axis numbers on the plot.
+
+**Known.** The box only exists in `02.1_Grid`. The tone isn't checked by the playtest: other cues
+(new contact, edge) use the same tone, so `LastSound` can't tell them apart.
+
+### Step 69 — Each DRADIS sweep pass beeps
+
+**Owner decision (2026-10-25).** "Every time that thing is tagged by the sweep, that's when that
+beep should come." With ACTIVE on, the DRADIS sweep tags a ship in the cone on every pass, and every
+tag beeps. Naming the ship has no sound of its own.
+
+**What changed.**
+
+- `HandoffPlotPanel`: the sweep looks at ships already scanned too. A ship in the cone and in DRADIS
+  range is tagged on every pass: a beep, and it is scanned if it was not.
+- `HandoffBoardControls`: the beep is `tagSound` (880 Hz, 0.05 s), in **Starwolf → Tuning →
+  Sound**. `Tags` counts the beeps apart from the click cues, so a beep never stands in for the cue
+  a check waits on.
+- Playtest: a new check where our ship is put 2,000 km off TRACK 07's bow (step 21d). ACTIVE on and
+  the cone on TRACK 07: two passes, two beeps.
+
+**Checked.** The new check passed: 2 beeps (`Logs/Playtests/2026-10-25_232343/`). That run then
+stopped at check 158: the engineering BRI cell click landed off the board, at x 3375. It ran while
+another session was rebuilding the board, and this step does not touch engineering. Re-run the
+full playtest once that work is in. An earlier try stopped at step 15 on a reload.
+
+### Step 70 — Intro colour: drawn through a Canvas; dark green field
+
+**Owner direction (2026-10-25).** Match two reference shots of the intro (SECTION 36 and STARWOLF
+on a green CRT): deep black-green field, strong green dots, a faint glow, lit screen edges,
+scanlines. This replaces the flat black of Step 56. Colour first; the frame, subtitle, corner text
+and screen surface come after.
+
+**Measured from the shots.** Lit dots (150, 249, 163): the existing `#A2F9A0` already matches.
+Field (0, 17, 0), with faint scanline bands. Gaps between dots ~60. Screen rim ~80, fading inward;
+outside the screen ~4. The paleness in Unity was only the double encode.
+
+**The cause.** `OnGUI`'s `GUI.DrawTexture` sRGB-encoded the picture twice, and cut it to 8 bits
+before that. Undoing one encode in the shader was tried first: the dots came right, but anything
+that dark rounds to zero before the encodes, so the field stayed black. (Also: `GammaToLinearSpace`
+is a fit that is ~6x too dark near black; use the `Exact` form if you ever need it.) The same
+picture on a uGUI `RawImage` came out encoded once, with the field intact.
+
+**What changed** (`Assets/StarwolfIntro/`):
+
+- `StarwolfIntroController`:
+  - `BuildCanvas()` makes a child `Phosphor screen`: an overlay canvas (sort order 32767), a black
+    backing, and a 16:9 `Display` `RawImage` showing the render target. Hidden while suspended or
+    disabled.
+  - `OnGUI` now only handles menu input; it no longer draws. The hit rectangles are unchanged
+    (`ScreenRect()` is the same rectangle as the 16:9 fit).
+  - sets `_Background` from the glyph data.
+- `PhosphorDisplay.shader`: `_Background` is back, under the lit text. The near glow is .015 (was
+  .027) to match the gaps in the shots.
+- `glyphs.json`: `background` is `#001100` (was `#010601`).
+
+**Checked** in play mode, screenshots measured against the shots:
+
+| | Unity | Reference |
+|---|---|---|
+| Lit dots | (158, 244, 156) | (150, 249, 163) |
+| Field | (0, 15, 0) | (0, 17, 0) |
+| Gaps between dots | 55–62 | 50–64 |
+
+The menu draws on the same field. Playtest after the canvas change: 166/166 PASS
+(`Logs/Playtests/2026-10-26_000216/`).
+
+**Still to do (owner's order).** The frame with open sides, the STRATEGIC SYSTEMS DIVISION line,
+the corner text and clearance squares, and the screen surface (lit rim, visible scanline bands).
+
+### Step 71 — The welcome page on the phosphor screen; a loading bar under INITIALISING
+
+**Owner direction (2026-10-26).** The page after NEW GAME gets the intro's look: the same screen, a
+short dot title, the lines in green monospace with the same glow, the Enter prompt green. The title
+is **DEMO** (owner: "demo" or "WIP"). The first line is "Welcome to Starwolf." (was "Welcome to
+Starwolf Tactical Grid Test."). INITIALISING... gets a loading bar under it that fills left to right.
+
+**What changed.**
+
+- `StarwolfIntroController`, four new fields:
+  - `titleOnly`: types the title in, then holds it; no menu, no `finished`.
+  - `titleText` (default STARWOLF), `titleOffset` (pixels up), `canvasOrder` (default 32767).
+  - sends `_Progress` (share of the line's time gone) to the shader.
+- `PhosphorDisplay.shader`: `_TitleOffset` moves the title; `bar()` draws the loading bar under
+  INITIALISING... in the same dots (one-cell outline, one-cell gap, fill by `_Progress`).
+- `01_Briefing`:
+  - new `WELCOME Screen`: a `StarwolfIntroController` copied from `INITIALISING`, with `titleOnly`,
+    `titleText` DEMO, `titleOffset` 300, `canvasOrder` 0, `titleDuration` 2.
+  - `Canvas` is now Screen Space Overlay, sort order 1, so its text draws over the phosphor screen.
+    Its two texts had z 1195.77 left over from camera mode, which hid them; set to 0.
+  - `BriefingText` (30 pt) and `EnterPrompt` (26 pt): Share Tech Mono, `#A2F9A0`, upper case,
+    letter-spaced, on the new material below.
+- New `Assets/StarwolfIntro/Materials/ShareTechMono-Regular SDF Phosphor Glow.mat`: the font's mobile
+  shader with a soft green underlay as the glow.
+- `INITIALISING` keeps sort order 32767, so it covers the welcome page when Enter is pressed.
+
+**Checked** in play mode with screenshots: the welcome page (title, lines, prompt, glow), and
+INITIALISING over it with the bar part filled.
+
+**Traps.**
+
+- The full `TextMeshPro/Distance Field` shader draws magenta blocks here. Stay on the mobile shader;
+  its underlay is the glow.
+- A canvas switched from camera to overlay keeps its children's z. Zero it or the text vanishes.
+
+### Step 72 — Mission clock and signal box lined up with the plot
+
+**Owner direction (2026-10-26).** The mission clock's left edge lines up with the plot's left edge,
+and the signal box's right edge with the plot's right edge.
+
+**What changed** (`02.1_Grid`, set in the scene; the board builder is retired):
+`TimeControl` x +72 (left edge 32 → 104 px) and `SignalBox` x −59 (right edge 1,875 → 1,816 px).
+The plot runs 104–1,816 px.
+
+**Checked** by measuring the screenshot: both edges sit on the plot's edges.
+
+**Trap.** In edit mode the board is drawn by `Board Camera` into a render texture, which does not
+redraw on its own. Call `Render()` on that camera before an edit-mode screenshot, or it shows the
+old layout.
+
+### Step 73 — Ruins in the level: the starbase husk, a debris belt, and where each ship starts
+
+**What it is.** Space has stuff in it now. `Level_01` holds a broken starbase at the grid centre and
+766 pieces of wreckage, rock and dead ships around it, thicker the closer you get. Our ship starts at
+the bottom edge, the enemy at the top, and the core is between you. Nothing of it shows on the plot or
+blocks anything yet: this step places it.
+
+**Owner direction (2026-10-25/26).** The prototype and the GDD both call for ruined starbases and big
+debris. The **hard core of the starbase sits at the grid centre**, the debris is **radial and thicker
+toward the core**, and you **start at one edge and work inward**. The enemy starts at the other edge:
+"You have to get through the core. It'll come to the core as well. You're going to circle through
+them and try to find each other. It's going to hunt you. You're going to hunt it." (The hunt is not
+built; see Open items.)
+
+**Scale (owner).** Ships are really 100–500 m long, by tonnage. Ruins are sized for **how the ship
+plays**, not for the 13 km models: a full-speed 90° turn takes about 300 km, stopping about 180 km,
+and a slug hits within 95–600 km. So gaps of a few hundred km let you fly through, hide behind, and
+play chicken with collision. The base husk is **double the prototype's**, about 13,000 km across.
+The ship models stay as they are until the outside cameras come; nothing in play reads their size.
+
+**What was built.**
+
+- **Layer `WorldTerrain`** (slot 10). No board camera draws it and no live code does physics queries,
+  so the terrain changes nothing in play yet.
+- **The terrain prefabs** (section 3): four kit pieces, `BaseHusk`, `Rock`, four `Wreck_` prefabs.
+  The husk's core is four blocks of 500–1,400 km with cracks of 200–300 km.
+- **`Level_01` → `Terrain`:** the husk at (0, 0); 766 pieces thinning outward, gaps about 350 km
+  inside the husk, 500 km at its rim and thousands near the battle space's edges; four asteroid fields;
+  five wrecks named after the prototype's, WRECK-2, -4, -7, -9 and -11. Station wreckage near the core,
+  mostly rock far out. Placed by a one-off script, so it is the same every play; edit it by hand in the
+  Scene view (Starwolf → Level → Open).
+- **`PlayerSpawn`** (section 3) and the Level window's **Player spawn** button. `Level_01`'s Player
+  Spawn is at (0, −45,000), facing north, clear of the 2,500 km edge warning. The enemy spawn moved
+  to (0, +45,000), facing south. The ships start 90,000 km apart, beyond either one's hearing.
+- **Playtest check 3b:** our ship starts at the level's Player Spawn, facing its way. Then both ships
+  go back to the board's own spots (ours (0, 0) heading 000, TRACK 07 at (18058, 16260)), so every
+  later check keeps its numbers whatever the level does.
+
+**Checked.** Playtest 168/168 (`Logs/Playtests/2026-10-26_003801/`): our ship started at
+(0, −45,000), heading 000, and the plot opened on it just above the map's bottom edge. The saved
+scene holds 767 prefab copies and 826 colliders.
+
+**Traps.**
+
+- The ship and rock models import turned 270° on X and scaled ×100 (made in Blender). Unturned, a
+  ship's length points straight out of the map. The terrain prefabs replace that turn.
+- Soham's `Asteroid.cs` (health, breaking apart) is not on the rock. Asteroids can't be destroyed yet,
+  and it sets an "Asteroid" tag this project doesn't have, which throws.
+- The playtest's TRACK 07 checks assume its old spot; check 3b puts it back there.
+- Several chats shared Unity during this step. Each terrain edit was one call that opened `Level_01`
+  beside whatever was open, saved it and closed it again, only while Unity was idle.
+
+### Step 74 — Engineering's ship picture shows side armour; the room rings change colour
+
+**Owner direction (2026-10-26).** The engineering drawer's ship picture shows **side armour**. It
+uses the four-part models in `Assets/3D Assets/UpdatedStarships/`. Each model is cut into four parts,
+each with its own material slot: `Prow(front)`, `Port(left)`, `Star(right)`, `Aft(back)` (on the
+Carrier the front slot is just `Front`). These match the damage model's four faces
+(`HandoffBoardState.Sides`: PROW, STBD, AFT, PORT).
+
+- Each part takes its side's armour colour: **white** while full, **amber** once hit, **red** once
+  open (armour 0, so hits now reach the room behind). The owner's pick. Claude agreed: the room
+  rings are white when whole, and our ship is white on the plot.
+- The six compartment dots are gone. The room rings on the right of the drawer already show the
+  rooms.
+- The room rings change colour too. Lit segments are white at health 4–5, amber at 2–3, red at 0–1
+  (`CompHealth`, so a vented room counts as 0). Same thresholds as the dots had, white in place of
+  green.
+- The plot ship stays plain white and is not touched. This lives on engineering only.
+- Four flat top-down pictures, not a live 3D camera. The drawer's ship is always bow up, so it
+  never turns.
+
+With today's numbers, one slug turns the prow, port or starboard amber, and a second opens it. The
+aft has half the armour, so one slug opens it. A fighter run takes 10% of a side's armour, so one
+run turns that side amber.
+
+**What changed.**
+
+- New `Assets/Art/Board/Hull/hull_prow.png`, `hull_stbd.png`, `hull_aft.png`, `hull_port.png`
+  (512 px, with .meta files).
+  - How they were made: `StarWolf_Destroyer_PlayerShip_mesh.fbx` was drawn in an editor preview
+    scene, copying the plot's `Ship View Camera`: orthographic, looking along +z, ship filling 0.8
+    of the frame, model turned (0, 180, 0), `Ship Light` at (325, 25, 0) with intensity 1.2. It
+    drew through `PC_Renderer`, so the VectorModel line pass applied.
+  - Each part was drawn alone. The other three slots got an invisible transparent material: the
+    line pass reads depth and normals, which transparent objects don't write.
+  - Import: sRGB **off** (saved straight from the linear camera image, like the live ship view), no
+    mipmaps, clamp, uncompressed.
+  - Shown through the existing `BoardLinearImage` material, the same one the plot ship uses: black
+    becomes see-through, and the lines take the image's colour.
+  - Port lines centre at x 0.40 of the frame and starboard at 0.60, so port is on the left.
+- `HandoffEngineeringPanel.cs`:
+  - Removed `shipPicture`, `compartmentLamps`, `lampKeys`, `lampOffsets` and the `ShipView` lookup.
+  - Added `hullSides` (four RawImages: PROW, STBD, AFT, PORT) and `pictureFill` (0.8). Kept
+    `diagramShipPx` (190, under "Engineering & orders" in Tuning) and `shipInk`.
+  - `ShowDiagram` sizes the four pictures and paints each from `SideArmour` against
+    `sideArmourMax`.
+  - The ring loop colours lit segments by `CompHealth`.
+- `02.1_Grid`, under `Drawers/State · engineering/Ship diagram` (set in the scene; the board
+  builder is retired):
+  - The six `Lamp · …` objects are deleted.
+  - `Ship (bow up)` became `Ship · PROW`, plus three copies: `Ship · STBD`, `Ship · AFT`,
+    `Ship · PORT`. RawImages, 237.5 px square, with `BoardLinearImage`, wired to `hullSides`. They
+    show in edit mode too, not only in play.
+  - `Assets/Editor/HandoffBoardBuilder.cs` still names `shipPicture` and `compartmentLamps` by
+    string. Not updated: the builder no longer runs.
+- `PlaytestRunner.cs`, check 23 rewritten:
+  - all four parts white, rings white;
+  - STBD at half armour, AFT open, HAB at 2, HGR at 1: STBD amber, AFT red, PROW and PORT white,
+    HAB ring amber, HGR ring red; screenshot;
+  - repaired: everything white again.
+
+**Checked.** Playtest **PASS, 168/168** (`Logs/Playtests/2026-10-26_003801/`). The engineering
+checks are rows 150–154. The screenshot `shots/30_engineering_diagram.png` shows starboard amber,
+aft red, prow and port white, the HAB ring amber and the HGR ring red. The same run covered Step 73.
+
+**Traps.**
+
+- Don't colour the shared `ShipView` render. The plot uses it, and the plot ship must stay white.
+- The pictures must import with sRGB off, or the lines come out the wrong brightness through
+  `BoardLinearImage`.
+- To remake the pictures for a new model: draw each material slot alone through `PC_Renderer` (for
+  the line pass), with the other slots invisible. Find the slots by name. Their order differs per
+  model: the Battleship's is Prow, Aft, Port, Star.
+- The ship is about 120 px wide in a 112 px box, so the side pods poke slightly past the dark box.
+  It was the same before; not new.
+
+### Step 75 — Ships glide; DRADIS shows the sweep's last touch; visual range; wrecks stay; ranges 30,000 km
+
+**Owner direction (2026-10-26).** Before this step, our ship jumped across the plot at every 0.42 s
+tick. The owner asked for this:
+
+- Our ship glides smoothly across the plot.
+- An enemy known only through DRADIS moves on the plot only when the sweep touches it.
+- Inside visual range, the enemy's full model shows and glides. You see its shape. Its name shows
+  only once it is identified, and you cannot target it before that.
+- A destroyed ship turns grey and drifts. It stays on the plot.
+- Guns reach 30,000 km. DRADIS at full gain reaches 30,000 km. Visual range is 10,000 km. These are
+  starting numbers, to be tuned.
+- The engineering hull picture looked greasy: every panel line of the model showed as a hairline.
+  The owner wanted the panel lines grey and the outline bright. (A solid grey fill was built first by
+  mistake; the owner turned it down the same day.)
+
+**What changed.**
+
+- **The glide.** Only the drawing changed. The rules still step once per tick.
+  - `HandoffBoardControls.SinceTick` is the game time since the last tick. It goes up to one tick's
+    worth. It is 0 while paused.
+  - `NavSystem.DrawnX`, `DrawnY` and `DrawnHeading` are where the ship is drawn: its spot moved on
+    along its velocity for that time, with the bow still turning toward the ordered heading.
+    `PlaceModel` puts the model there every frame, in `Update`. The ship cameras follow in
+    `LateUpdate`.
+  - `HandoffPlotPanel` redraws every frame while time runs. Our ship's picture, the sensor circle,
+    the sweep, the weapon ring and the PDC arcs are drawn at our ship's drawn spot.
+  - `TacticalWorld.Sync` reads each contact's spot and heading from its `NavSystem`, and gives the
+    track its `nav` (trap 25).
+- **What DRADIS shows.**
+  - The sweep passes a contact that is heard or in the cone. `HandoffBoardState.See` stores where
+    the contact is at that moment (`Track.seen`, `seenX`, `seenY`, `seenBrg`, `seenRangeKm`).
+  - Out of visual range, an identified hostile shows as a dot at that spot. Its label gives the
+    range at that moment.
+  - A heard contact that is not identified gets a bearing line at the sweep's first touch. The line
+    keeps that bearing until the next pass.
+- **In visual range** (`visualRangeKm`, 10,000 km, in Tuning → Sensors; `InSight`).
+  - The contact shows as its model seen from above, gliding.
+  - It is red once identified. Until then it is amber and labelled **BOGEY T07**. It stays
+    unidentified, so the targeting computer can't use it.
+  - Being in visual range brings up the picture. Pressing CLASS no longer does.
+- **Wrecks.** In visual range, a wreck's model is grey (`wreckInk`, ink.secondary `#8A959D`) and
+  drifts. Out of visual range it is the same dim dot as before, now drawn where the wreck drifts.
+- **Ranges.**
+  - `senRangePerStepKm` went from 7,000 to 3,600. DRADIS now reaches 15,600 km at gain 1 and
+    30,000 km at gain 5.
+  - RGA, RGB and VLS reach 30,000 km. That is still the DRADIS range at full gain (Step 62).
+  - The numbers are set in the code and in `02.1_Grid`'s saved board state. The enemy ships use the
+    code's numbers.
+- **Engineering hull pictures.** The four images in `Assets/Art/Board/Hull/` were redrawn from the
+  Step 74 line pictures.
+  - Each part is the gap it leaves in the other three.
+  - A 3 px outline is at full brightness, edges smoothed at 4×. Inside it, the Step 74 panel lines
+    are at 40% brightness, so they read grey (or dim amber or red). No fill. The lines stop 3 px
+    short of the outline.
+  - The frame and the file names did not change, so nothing else had to.
+  - To remake them for a new model, make the line pictures as in Step 74, then redraw them this way.
+    `BoardLinearImage` encodes first and then uses brightness as alpha. So store each brightness as
+    the shader's target run back through the sRGB curve.
+- `PlaytestRunner.cs`:
+  - TRACK 07 starts 17,500 km out on 048° (was 24,300), so gain 2 still hears it.
+  - The bearing-line check waits for the sweep's first touch.
+  - "Its 3D model follows it" allows one tick's glide.
+  - The CLASS check now needs the contact in visual range. A new check: out of visual range it is a
+    dot again.
+  - New check: the wreck stays on the plot, in visual range, as its model.
+  - The ship-shift stand-in moves 5,000 km west. When it moved east, DRADIS at gain 1 heard TRACK 07
+    too early.
+  - Videos: when a run starts, it deletes every earlier run's `playtest.mp4` (owner, 2026-10-26: a
+    video is not needed once its run is checked). Screenshots stay for the newest three runs. Every
+    `report.md` stays. The recording keeps the Game view's 16:9 shape (owner).
+
+**Checked.** Playtest **PASS, 170/170** (`Logs/Playtests/2026-10-26_011622/`). The first run
+(`2026-10-26_011116`) failed only "Nothing heard yet": the east stand-in, fixed above. The
+screenshot `30_engineering_diagram.png` shows the hull: starboard amber, aft red, prow and
+port white. That run had the solid fill. The grey-line version was checked by hand:
+`Logs/Checks/hull_inner_lines.png` (starboard half, aft open).
+
+Then, with the GARUDA renames and the fighter take-off change in the same build: playtest **PASS,
+171/171** (`Logs/Playtests/2026-10-26_013236/`).
+
+Checked by hand in play mode (2026-10-26):
+- The glide. At x10, over half a second, our ship's picture moved on 73 of 77 frames. The game clock
+  ticked once. At that tick the true spot jumped 125 km and the drawn model did not jump.
+- The wreck. GARUDA destroyed, 8,000 km from our ship. Its model shows in grey (`wreckInk`), next to
+  our white ship. Screenshot: `Logs/Checks/step75_wreck.png`.
+
+**Traps.**
+
+- Trap 25: a ship's model can be up to one tick ahead of the ship. Rules read `NavSystem`.
+- The glide is a straight-line guess. A ship that speeds up or turns slips back a little at each
+  tick (about 0.2 km at x1). If that shows at high zoom or at x10, predict the next tick instead.
+- The plot redraws every frame while time runs, as it already did while panning. If that costs too
+  much, redraw only what moves.
+- There is one contact picture (`contactShipImage`). A second contact in visual range shows as a dot
+  if it is identified, and not at all if it is not. A second wreck shows as a dim dot.
+
+### Step 76 — Axis numbers measured from our ship; old titles and stencils gone
+
+**Owner direction (2026-10-26).** The numbers along the top and left of the plot should change as
+our ship moves and as you zoom. The "X (1,000 KM)" and "Y (1,000 KM)" titles go. The frame stencils
+"TCB-1 / REV D" and "ACC 07" go.
+
+**What changed.**
+
+- `HandoffPlotPanel.ShowAxes`: each number is a distance from our ship, in km.
+  - 0 is level with our ship. Then one number per big square: 5,000, 10,000 and on at x1.
+  - The numbers move with the ship and spread out or close up with the zoom.
+  - They redraw every frame while time runs (Step 75).
+- `HandoffPlotPanel`: the `axisXTitle` and `axisYTitle` fields are gone. The retired board builder
+  no longer sets them.
+- `02.1_Grid`, deleted: under `Plot/Scale`, `text#21 X ( )`, `text#21 X ( ) (close)`,
+  `text#22 1,000 KM`, `text#23 Y ( )`, `text#23 Y ( ) (close)` and `text#24 1,000 KM`; under
+  `Frame`, `text#4 TCB-1 / REV D` and `text#3 ACC 07`.
+
+**Checked.** Playtest **PASS, 171/171** (`Logs/Playtests/2026-10-26_015950/`). In its shots
+`11_ship_moved.png` and `18_panned.png` the 0 sits on our ship, and moves with it. That run still
+showed the two closing brackets. They were deleted after it. A play-mode screenshot after that,
+`Logs/Checks/step76_axis.png`, shows 10,000, 5,000, 0, 5,000, 10,000 across the top, and no titles,
+brackets or stencils.
+
+**Still on the frame:** the stencils "CL II EQUIP — 480V DC" and "CONSOLE HARNESS — DO NOT SERVICE
+UNDER LOAD". The owner has not decided on them.
+
+### Step 77 — The debris scatter tool
+
+**What it is.** **Starwolf → Level → Debris field** adds a Debris Field to the open level and fills it
+at once. You can then lay debris out by shape instead of by hand. Step 73's hand-placed debris in
+`Level_01` is unchanged.
+
+**Owner direction (2026-10-25/26).** A pattern maker in the level tool: pick a shape and scatter
+debris in it. The same every play; it changes only on Reshuffle. A tool in the Level window and the
+inspector, not in the menu bar (decision 31).
+
+**How to use it.** Select the field. In its inspector:
+
+- **Shape:** Circle, Ring, Band or Line, with its sizes in km. The field's outline shows in the Scene
+  view. Move and turn the field to place it.
+- **Pieces:** the prefabs to pick from (the button starts with Block, Drum, Girder, Plate and Rock;
+  add wrecks or anything else), **Count**, **Size Km** (each piece's size across, between two
+  numbers), and **Gap Km**, the smallest gap between two pieces' middles (400 to start).
+- **Spread:** Even, Thicker In Middle, or Clumps (with how many).
+- **Scatter** lays the pieces out again from the seed. **Reshuffle** picks a new seed. Both replace
+  every piece under the field, hand-moved ones too, in one undo. If the gap leaves no more room, it
+  places fewer than asked and says so.
+
+**Calls made without the owner (can be changed):** Scatter and Reshuffle replace hand-moved pieces
+(the inspector warns). A Line is a band one piece wide. Pieces turn only around the axis we look
+down, so they stay flat to the plot.
+
+**Checked.** `DebrisFieldEditor.Check()` (run through MCP): for every shape and spread, every piece
+is inside the shape, no two are closer than the gap, and the same seed gives the same layout: ok. In
+`Level_01` (closed without saving): a Circle of 120 pieces, then a Ring with Clumps (106 of 200 fit at
+a 400 km gap), and Scatter again gave the same layout. Playtest not run: nothing in the field runs at
+play, and `Level_01` is unchanged.
+
+### Step 78 — The active scan cone on the plot
+
+**Owner direction (2026-10-26).** The active scan had no cone on the plot; it showed only on the
+sensors drawer's dial. Now the plot shows it: a wedge from our ship out to the DRADIS range, two
+bright edge lines and a faint fill. Like the sweep, it starts at the small circle round our ship.
+
+**What was built.**
+
+- `HandoffMarksGraphic`: two new shape kinds. "sector" is a filled slice of a ring (`Shape.inner`
+  is its inner radius in px, `Shape.half` its half-width in degrees). "line" is a plain line.
+- `HandoffPlotPanel.DrawSensorRing()` adds the cone to the sensor circle's shapes while DRADIS and
+  ACTIVE are both on. It turns with the cone dial and widens with NARROW / WIDEN. It takes the
+  circle's colour (amber on the amber grid).
+- Tuning window, Sensors: `coneEdgeAlpha` (0.6) and `coneFillAlpha` (0.07).
+- No scene, prefab or new script.
+
+**Calls made without the owner (can be changed):** the cone reaches the scan's range
+(`SenRangeKm`, what `ConeCovers` uses), not the hearing circle. They are the same except on UV,
+where the circle shrinks to 55% and the cone goes past it. Its reach eases like the circle's (0.5 s).
+With DRADIS off and ACTIVE on, no cone shows: the sweep identifies, and it only runs with DRADIS.
+
+**Checked.** Screenshot in play mode, cone at 048 ± 40: the edges run at 008 and 088 from the small
+circle out to the DRADIS circle. Inside the cone the plot reads 21–30 (of 255), just outside 6–8.
+Playtest not run (visual only).
+
+### Step 79 — Ammunition is a real count; boarding goes on while the target moves
+
+**Owner direction (2026-10-27).** The owner asked for checks on missiles, PDCs, ammunition and
+boarding. Railgun and PDC ammunition was fixed text that never went down. Decisions 43 and 44.
+
+**What was built.**
+
+- `WeaponSystem`: each mount's `ammo` is now a whole number that only goes down. A railgun shot
+  takes one slug from its turret. Each PDC go at an enemy missile takes `pdcRoundsPerGo` (100)
+  from its group. `vlsCells` now reads the launcher's `ammo`. Every mount starts full: 22, 22,
+  2400, 2400, 8. `loaded` ("2 / 2", "BELT") is gone.
+- With nothing left, LOAD refuses, and the lever does nothing. The last shot drops the ladder. A
+  PDC group too low for another go drops off AUTO.
+- Fire control's line reads "SLUGS 21", "2200 RDS · LOADERS ENGAGED" or "HE · SALVO 2 OF 6". It
+  turns caution amber when the mount is empty.
+- `HangarSystem`: once the marines are aboard, the boats ride with the target and the fight runs
+  on while it moves. The boats go no further than `boatRangeKm` (15,000 km) from our ship.
+  Outbound past it, they turn home: "OUT OF RANGE · RETURNING". Coming home with our ship out of
+  range, they are stranded: the alert tone, and "STRANDED · CLOSE IN · 87 S". After
+  `boatStrandSeconds` (120) they and their marines are lost. The boats show LOST, in red.
+- The three new numbers are in the Tuning window. `02.1_Grid` saved with both ships full.
+  `BOARDING_README.md` updated.
+
+**Calls made without the owner (can be changed):** the stranded clock stops while the boats are
+in range, but does not go back. It sounds the alert once when it starts and once on the loss.
+Fighters have no range yet. A PDC group with fewer than 100 rounds left cannot fire at all.
+
+**Checked.** Playtest 191/191 (19 new checks). Slugs, PDC-A and PDC-B rounds, missile cells, and
+LOAD refusing at zero. A ship moving with marines aboard; SECURE and DESTROY on the Garuda (each put
+back for the fight after); the boats giving up past 15,000 km; stranded and coming home; stranded
+too long and lost.
+
+### Step 80 — The Tuning window's tabs, and a stats file per ship
+
+**What it is.** **Starwolf → Tuning** opens a window with three tabs:
+
+- **Ship:** our ship (Asura-class destroyer), its file `Assets/Ships/Asura`. Its numbers are grouped
+  by ship part: Navigation, Power, Sensors, Weapons, Hangar, Damage, Orders. Each group opens and
+  closes.
+- **Enemy:** the Garuda (Garuda-class cruiser), `Assets/Ships/Garuda`, with the same groups.
+- **Board:** everything else marked for tuning: the plot, sounds, the clock, the battle space.
+
+**Owner direction (2026-10-25/27).** One stats file per ship (decision 31), and the window as
+sketched: tabs for Ship, Enemy and Board, numbers grouped by ship part. Decision 45.
+
+**How it works.**
+
+- Each ship part has a `Stats` section with its numbers (`NavSystem.Stats` and so on).
+  `ShipStats` (`Systems/ShipStats.cs`) holds one of each, plus the ship's class. The files are in
+  `Assets/Ships`.
+- A new `Ship` component (`Systems/Ship.cs`) on `OwnShip` and `Garuda · Cruiser` points at its file.
+  Every part reads its numbers through it (`nav.stats.topSpeedKms` and so on).
+- While the game runs, each ship plays by a copy of its file, so nothing a run does changes the file.
+  An edit in the Tuning window goes to the file and to the copy: it shows at once and is kept.
+- The weapon mounts (reach, arcs, ammunition at the start) are in the Weapons group. The running
+  game counts its copy's ammunition down.
+- Three values change as the ship plays: the salvo, the PDC loaders, the marines aboard. The file
+  holds where they start.
+- Signal per unit is one number per bus in the Power group (it was on each bus).
+- Every `[Tune]` number on the ship parts moved, including Step 79's PDC rounds per go, boat range
+  and stranded clock.
+
+**Calls made without the owner (can be changed):** the Garuda uses its own damage numbers instead of
+copying ours each tick (`CopyDamageTuning` is gone). Both files start with the same numbers.
+
+**Fixed on the way.**
+
+- `Starwolf/Tuning` never opened: it clashed with the old `Starwolf/Tuning/Apply` and `/Capture`
+  menu items (a menu entry can't be a window and a sub-menu at once). Those two are gone, as
+  decision 31 said.
+- The Level window threw errors when used with the game running. It now says "Stop the game to open
+  or edit a level."
+- The playtest switches off the Garuda's fire, breach and radiation chances too, as it does ours
+  (before, the Garuda copied ours).
+
+**Checked.** Quick checks in play mode: each ship reads its own file through a copy; a file edit
+reaches the running game; the files kept their numbers after a run. The window opened, with all three
+tabs, through a start and stop of the game, with no errors. Playtest 191/191 (run
+2026-10-27_004921). The run before it failed from check 114: the Garuda's own fire chances were on
+and an HE hit burned it out, which the playtest change above fixes.
+
+### Step 81 — The Level window shows the level from above; the railgun slug at 2,500 km/s
+
+**What it is.**
+
+- **Starwolf → Level**, with a level open, shows the level from above under the list of levels: the
+  battle space's edge as a line, every piece of debris as a grey dot, the enemy spawn as a red box
+  (E) and the player spawn as a white box (P).
+- Under the map is a list of the level's debris fields. Pick one there, or click it on the map. Its
+  outline turns amber, and its settings show under the list, with Scatter and Reshuffle.
+- Change a setting and amber dots show at once where Scatter would put the pieces. The field's real
+  pieces stay as they are, in grey, until you press Scatter.
+- The railgun slug flies at 2,500 km/s: about 10 s to 25,000 km (decision 46).
+
+**Owner direction (2026-10-27).** The map and preview as sketched (Level tool item 7). For the slug:
+"10 seconds is good."
+
+**How it works.**
+
+- `Assets/Editor/LevelWindow.cs` draws the map. Its size is the board's battle space
+  (`arenaWidthKm`, `arenaHeightKm`), or 100,000 km if no board is open.
+- A grey dot is any renderer on the `WorldTerrain` layer in the open level, drawn at its size.
+- The amber dots come from `DebrisField.Layout()`, the same code Scatter uses. They are worked out
+  again only when a setting changes.
+- The settings under the map are the Debris Field's own inspector (`DebrisFieldEditor`).
+- The slug: `slugSpeedKms` is 2,500 in both ship files and in the code. `docs/scale-sim` has the new
+  slug speed and the 25,000 km railgun reach.
+
+**Calls made without the owner (can be changed):** the playtest's first railgun shot fires at x1. At
+x10 one tick is 10 game seconds, and the slug lands inside it, before the pause check can see it.
+
+**Checked.**
+
+- The window on Level_01, with a test field: the preview showed 120 pieces, then 240 when the count
+  doubled, then 60 amber dots beside 5 placed pieces (screenshot). No errors. The test fields were
+  not saved; Level_01 is unchanged.
+- The scale study, run again with the new slug. Its DRADIS reach was also wrong (7,000 km per
+  gain step); it now uses the game's 3,600. At today's speeds a fight takes about 11½ minutes at
+  x1, with either slug. Our ship fires 5 slugs for its 5 hits; with the old slug it fired 6.
+- Playtest, run 2026-10-27_012242: 188 passed, 3 failed. Two failures came from the faster slug:
+  at x10 it landed before "Paused, the slug holds still" (check 98), and the cue check (100) then
+  heard the pause key. The first shot now fires at x1, and the in-flight screenshot is taken
+  sooner. The third failure, "RECALL eases down while held" (53), passed in the 7 runs before;
+  it looks like a timing flake.
+- The run after the fixes (2026-10-27_012852) hung after screenshot 28f (boats holding) and was
+  stopped, with no report.
+- The next run (2026-10-27_084153) passed 191/191. The fixes are confirmed.
+
+**Owner, after Step 81:** a shot hits within 100 km of any ship (decision 47).
+
+### Step 82 — DRADIS needs SEN power
+
+**What it is.**
+
+- With no power on the SEN bus, DRADIS hears nothing. The plot shows no sensor circle, no sweep and
+  no scan cone, the same as with DRADIS off.
+- The DRADIS switch stays where the player set it.
+- The buses are empty at load, so the plot has no sweep until SEN has power.
+
+**Owner direction (2026-10-25).** No power, no hearing. The calls in "Playable end to end" (call 7)
+were made for the owner, who said to make them without asking.
+
+**How it works.**
+
+- `SensorSystem.Listening`: DRADIS on, and at least 1 unit on the SEN bus. `Heard()` uses it in
+  place of the DRADIS switch.
+- `HandoffPlotPanel` reads `Listening` in four places: `SensorRingKm`, the sweep in `Update`, and
+  `DrawSensorRing` twice.
+
+**What it does to play.** The reactor gives 10 units and a bus holds 5. With ENG and SEN both
+full, WEP gets nothing. To charge the guns, the player takes units off SEN or ENG. Take SEN to 0
+and DRADIS goes deaf.
+
+**The playtest.**
+
+- A new check at load (power cold): the gain raised by hand to 2, which reaches TRACK 07; DRADIS
+  hears nothing, and the plot shows no circle and no sweep.
+- After LOAD SHED, the playtest puts SEN back on DRAW with ENG (the DRADIS circle checks need it).
+  Step 17 no longer clicks SEN on; it is already on.
+- Before the first shot, SEN gives back all but one unit (a stand-in for VENT, then STANDBY at 1),
+  so DRADIS still hears through the fight. It used to give back all five.
+
+### Step 83 — Enter on the briefing always leads on
+
+**What it is.** If the INITIALISING screen can't start (a missing shader), the game goes straight
+on to the board. Before, Enter did nothing.
+
+**How it works.** `StarwolfIntroController.Awake`: if it fails and `initialisingOnly` is ticked, it
+calls `finished` before it switches itself off. The briefing's `ScreenFlow` listens to `finished`
+and loads the board.
+
+**The playtest.** At the briefing it makes an INITIALISING controller with no shader, switches it
+on, and checks that it calls `finished`. That logs one error, which is expected.
+
+### Step 84 — Prototype Dev off the build list
+
+The build list is now `00_Start`, `01_Briefing`, `02.1_Grid` and `Level_01`. `Prototype Dev` (Soham's
+old cockpit test scene) is off it. The scene file stays. Nothing loaded it. Nothing loads a scene by
+its build number.
+
+### Step 85 — Win, loss and restart; SHIP LOST clears
+
+**What it is.**
+
+- You win when the Garuda is destroyed, or when our marines take it (SECURE).
+- You lose when our reactor reaches 0, or when our ship is lost at the battle space's edge.
+- When the mission ends, the game pauses at once. 2 seconds later the end screen covers the board.
+- The end screen says MISSION COMPLETE in green, or SHIP LOST in red. The line under it says
+  GARUDA DESTROYED, GARUDA CAPTURED, REACTOR DESTROYED or LEFT THE BATTLE SPACE. Three rows
+  follow: TARGET (GARUDA · DESTROYED, CAPTURED or AFLOAT), OUR SHIP (its armour left, as a
+  percent, or LOST) and TIME (game time since the board opened).
+- RESTART MISSION loads the board again, with its level. It skips the intro and the briefing.
+  MAIN MENU loads `00_Start`: the intro, then the menu.
+- After a restart, SHIP LOST is gone. The restart loads the scene again, so everything starts
+  fresh.
+
+**Owner direction (2026-10-27).** Playable from start to finish. The calls in "Playable end to
+end" (calls 1 to 5) were made for the owner, who said to make them without asking.
+
+**How it works.**
+
+- `Assets/Scripts/Game/QuestSystem.cs` (moved from `Assets/Scripts`). It is on `World` in
+  `02.1_Grid`. Each board tick (`Ticked`) it checks our ship, then the target (`t07`). Our sensors
+  identifying the target moves it from LocateTarget to EliminateTarget. At the end it keeps the
+  stage, the reason and the real time, and calls `HandoffBoardControls.Pause()`. Soham's old
+  version (tags, the jump point, `WorldBoundary`, `GameClock`, `InternalSubsystems`) is in git
+  history. The two enums are kept.
+- `Assets/Scripts/UI/Panels/EndScreenPanel.cs`, on `End Screen` (`Assets/UI/Board/Panels/End
+  Screen.prefab`), the last child of `HandoffBoard`. It shows the screen once the mission is over
+  and **Delay Seconds** (2, Board & time on the Tuning window) have passed.
+- The screen is placeholder: plain colours, Barlow Condensed for the title and buttons, Share Tech
+  Mono for the rest. There is no art yet.
+
+**The playtest.** The run kills both ships part way and tests on, so the mission is switched off
+just after the board opens, and on again at the end. A new last section:
+1. Mission on: MISSION COMPLETE at the next tick, and the game pauses. The end screen comes up 2 s
+   later: MISSION COMPLETE, GARUDA DESTROYED. Screenshot `29_mission_complete`.
+2. RESTART MISSION, clicked for real: a fresh board, paused, power cold, the Garuda back, the
+   mission at its start, no end screen.
+3. The battle space's edge (Step 86), ending with our ship lost at the edge:
+   SHIP LOST, LEFT THE BATTLE SPACE, our ship LOST. Screenshot `30_ship_lost_edge`.
+4. RESTART MISSION: not lost, no countdown, and the alarm strip does not say SHIP LOST after a tick.
+5. Our reactor set to 0 (a stand-in for enemy fire): SHIP LOST, REACTOR DESTROYED. Screenshot
+   `31_ship_lost_reactor`.
+6. MAIN MENU: `00_Start` loads.
+
+### Step 86 — The playtest checks the battle space's edge
+
+**What it is.** The playtest now checks the battle space (Step 65). Nothing in the game changed.
+The checks run on the board after the first RESTART MISSION, with our ship at the centre and the
+Garuda's fire off:
+
+- At x1 the axis numbers show 0 level with our ship. Every other number is a whole number of big
+  squares of 5,000 km.
+- The mouse wheel, turned far out, stops the zoom at x0.35. The big squares are then 10,000 km.
+- The grid, dragged far past a corner, stops with the plot's edge on the map's edge.
+- `C` brings the view back to our ship. The playtest calls `CentreOnOurShip`, which is what `C`
+  calls. A script can't press keys read by Unity's old Input class.
+- Our ship 1,250 km inside the east edge, then RUN: the alarm strip says APPROACHING THE EDGE OF
+  THE BATTLE SPACE.
+- At x10, our ship just outside: the rate drops to x1. The strip says EXITING THE BATTLE SPACE —
+  TURN BACK, and its count shows 30, then counts down.
+- x10 again: at 0 our ship is lost, and the end screen says SHIP LOST, LEFT THE BATTLE SPACE. This
+  replaces Step 85's 3-second stand-in clock.
+
+### Step 88 — A shot hits within 100 km of any ship; a hit's damage comes from the weapon that fired it
+
+**What it is.**
+
+- A slug or a missile hits a ship it passes within **100 km** of. This is the same for every ship,
+  ours and the Garuda (decision 47). Before, it was 95 to 600 km by class (the Garuda 210 km), and
+  210 km for missiles hitting us.
+- How hard a hit lands is now set by the ship that fired it (decision 49). On **Starwolf → Tuning**,
+  the Ship tab's Weapons group sets how hard our slugs and missiles hit. The Enemy tab's sets the
+  Garuda's.
+
+**Owner direction (2026-10-27).** First: no hit radius, a slug must hit the ship itself. Told that
+the BRG knob turns in whole degrees (about 190 km at 11,000 km), the owner chose 100 km, with the
+knobs as they are. The damage split as proposed: "Yes, move them."
+
+**How it works.**
+
+- Each ship file's Weapons group has `hitRadiusKm` (100) and the moved numbers: `slugArmourDamage`,
+  `slugCompartmentDamage`, `heArmourDamage`, `empSeconds`, `fireChanceHE`, `fireChancePEN`,
+  `breachChanceSlug`. The Damage group keeps armour, the radiation chance, spread, crew losses and
+  repairs.
+- `DamageSystem.TakeSlug` and `TakeWarhead` take the firing ship's numbers, as `TakeFighterRun`
+  already did.
+- An enemy missile carries the Garuda's numbers (`Round.by`, set by `LaunchAt`). Its speed and fan
+  are the Garuda's too; before, they were ours (the same values).
+- `docs/scale-sim` uses 100 km.
+
+**Calls made without the owner (can be changed):** the hit distance is in the firing ship's file, as
+the damage is. Both files say 100.
+
+**Checked.** Compiled with no errors. Both ship files re-saved through the Editor. Playtest 209/209
+(run 2026-10-27_104545, run by the Worker session while this session's Unity link was down): the
+first slug hits with its aim 30 km off, the led shot 6 km off; HE, EMP and PEN hits land; the
+Garuda's missiles hit us; the step-22 kill and MISSION COMPLETE still pass. The scale study: a fight
+still takes about 11 minutes at x1, 5 slugs for 5 hits.
+
+### Step 89 — UI restructure, steps 1 to 5: fonts, materials, two stencils, the mock-up, the old export
+
+**What it is.**
+
+- The board's fonts are in `Assets/UI/Fonts`, one folder per family, with their `.ttf` files and
+  licences: `BarlowCondensed`, `ShareTechMono` and `NotoSansSymbols2`.
+- Each panel and frame piece has a **Fonts** list beside its Art list. Swap a font in the list and
+  every text under it changes. Each entry is a font, a material preset if the texts use one (Share
+  Tech Mono's "Small"), and the texts.
+- The board's two materials are in `Assets/UI/Board/Materials`.
+- The frame stencils CL II EQUIP and CONSOLE HARNESS are deleted. BUS A-14 and VENT PLENUM 3 are
+  left.
+- The plot's design mock-up: 43 unused parts are deleted. Kept: the passive label template, and the
+  SENSOR RANGE label and value. Their entries in `HandoffBoardMotion` (one drift, one pulse) are
+  removed.
+- The old design export's reference files are in `Assets/UI/Board/Design`: the README, the asset
+  map, the tokens, `layout/layout.json`, the 1920 × 1080 reference picture (the switched-off
+  `ReferenceOverlay` uses it), `UIStateSpec.md`, `board-logic.js` and `plot-grid.json`. The rest of
+  `Assets/UI2` is deleted, the folder too.
+
+**How it works.** `HandoffPanel.FontSlot` and `ApplyFonts`, called from `OnValidate` in the editor.
+`ArtList` uses the same. A material made for another font is ignored, and the font's own material is
+used. Every move went through the Editor, so every link stayed.
+
+**Checked.**
+
+- The board rendered before and after the fonts: 0 pixels changed.
+- After the stencils and the mock-up: only the two stencils' pixels changed.
+- No broken links in the board scene or in any panel prefab.
+- Playtest 2026-10-27_105858: 209/209.
+
+**Left:** steps 6 to 8 of the "UI restructure — to do" list.
+
+### Step 90 — UI restructure, step 6: "Handoff" is gone from every script name
+
+**What it is.** Only names changed. The game looks and plays the same.
+
+| Old name | New name | Folder |
+|---|---|---|
+| `HandoffBoardControls` | `BoardManager` | `Scripts/Game` |
+| `HandoffBoardState` | `ShipState` | `Scripts/Systems` |
+| `HandoffHit` | `ClickSpot` | `Scripts/UI` |
+| `HandoffPanel` | `Panel` | `Scripts/UI` |
+| `HandoffBoardMotion`, `HandoffRockers`, `HandoffPlotGrid`, `HandoffMarksGraphic`, `HandoffSweepGraphic`, `HandoffScopeSight`, `HandoffWedge`, `HandoffPolygon`, `HandoffEased` | the same without "Handoff" | `Scripts/UI` |
+| `HandoffPlotPanel`, `HandoffPeriscopePanel` | `PlotPanel`, `PeriscopePanel` | `Scripts/UI/Panels` |
+
+The board's root object in `02.1_Grid` is now `Tactical Board` (was `HandoffBoard`). The code that
+finds it by name (the playtest and `GammaBoardPresenter`) uses the new name.
+
+**How it was done.** Each file moved with `git mv`, its `.meta` too, so every scene and prefab kept
+its link. Then the names were replaced, whole words only, in 39 `.cs` files.
+
+**Checked.** It compiles with no errors. No missing scripts on the board (1,741 scripts, as before).
+The board renders the same (36 pixels off by 1 step in 255, scattered: rounding after the reload).
+Playtest 2026-10-27_232526: 209/209.
+
+**Trap.** Scene and prefab files still show the old names in their `m_EditorClassIdentifier` lines.
+Those are only labels: Unity links scripts by their GUID, which did not change. Unity rewrites a label
+when that part is next edited. Don't hand-edit them.
+
+### Step 91 — Each level has its own battle space
+
+**What it is.** The battle space is the area you may fight in. Leave it and you get the turn-back
+warning and the countdown. Until now every level had the same one, 100,000 × 100,000 km. Now each
+level sets its own.
+
+1. Open a level in **Starwolf → Level**.
+2. Press **Battle space**. Two boxes appear under the map: Width, km and Height, km.
+3. Type the size. The map's edge follows as you type.
+4. Play the level: the board uses that size. The edge, the turn-back warning, the zoom-out limit
+   and how far you can scroll all follow it.
+
+A level without a Battle Space keeps the board's size, 100,000 × 100,000 km. The battle space is
+always centred on the grid's centre.
+
+**Owner direction (2026-10-27).** Decision 50, as proposed: "Yes, a box per level."
+
+**How it works.**
+
+- `Assets/Scripts/Tactical/BattleSpace.cs`, beside the spawn boxes. At play it sets the board's
+  `arenaWidthKm` and `arenaHeightKm` (`ShipState`) and clamps the zoom again. In the Scene view it
+  draws the edge with its size.
+- The Level window's map uses the level's Battle Space, or the board's size without one. It no
+  longer draws outside its frame.
+- **Spawns always stay inside** (owner, 2026-10-27). Shrink the battle space past a spawn, or drag a
+  spawn out, and the Level window moves it to 3,000 km inside the edge, just clear of the turn-back
+  warning (which starts 2,500 km from the edge). One undo puts it back.
+- `Level_01` has a Battle Space at 100,000 × 100,000 km, so it plays as before.
+
+**Calls made without the owner (can be changed):** how far inside a moved spawn goes (3,000 km).
+
+**Checked.** Quick check in play mode, with Level_01 set to 60,000 × 80,000 km for the test (not
+saved): the board took that size, the zoom-out limit went from 0.35 to 0.47, and the grid's edge
+followed. Our ship started at the player spawn, 45,000 km south, so it was outside, as expected. The
+window and map by screenshot. Then, at 80,000 km tall, both spawns moved from 45,000 to 37,000 km
+from the centre. Level_01 saved at 100,000 × 100,000 km. No new console errors.
+
+### Step 92 — Ruins and debris on the plot, in range
+
+**What it is.** The level's ruins and debris show on the plot only while they are in range of our
+ship. With DRADIS on and power on SEN, that is every piece inside the DRADIS circle. With DRADIS off,
+it is every piece within visual range, 10,000 km. Out of range a piece disappears again. They are
+drawn in grey line art, true to scale, on top of the DRADIS circle, sweep and weapon ring, and under
+our ship, contacts and marks. They move with the plot's pan and zoom.
+
+**Owner direction (2026-10-27).** First built as "found by DRADIS, then stays". The owner played it:
+"The field … is not meant to be constantly active. It should not be visible unless it's within
+your visual range", "not meant to be constantly visible and way beyond the visibility of DRADIS",
+"the debris should not be drawn underneath the circles. The debris has to be visible when your
+sensors are on." This replaces the rules in Ruins item 1.
+
+**How it works.**
+
+- `TacticalWorld` hides every renderer on the `WorldTerrain` layer when a level loads. Each board
+  tick it shows the pieces within range plus half the piece's size, and hides the rest. The range is
+  the DRADIS circle (`SensorSystem.PassiveRangeKm`) while DRADIS listens (`Listening`), and visual
+  range (`Stats.visualRangeKm`) otherwise. `RuinsInSight` counts them.
+- `PlotPanel` makes a camera that looks straight down at the `WorldTerrain` layer, framed exactly
+  as the plot (its centre and km per pixel), into a picture the plot's size. The picture is
+  `Plot/Ruins (3D view)`, just above `Sensor sweep (drawn)` and below `Own ship (3D view)`.
+- The ruins come out as line art by the same full-screen pass as our ship's picture: red lines on
+  black. The `BoardLinearImage` material keys the black out and tints the lines with the palette's
+  `secondary` grey. The ruins camera has HDR off, as the ship views do.
+- Nothing else draws the `WorldTerrain` layer, so a hidden piece is hidden everywhere.
+
+**Calls made without the owner (can be changed):** the grey (`secondary`); a piece counts as in sight
+by its centre plus half its size.
+
+**Trap.** A camera picture shown on the board needs the `BoardLinearImage` material. With the
+default UI material, the line-art pass shows as red lines on solid black and covers the grid.
+
+**Checked.** Quick check in play mode on Level_01: 15 pieces in sight at the player spawn; 111 at
+14,000 km south of the centre, in the near belt; back at the spawn, 15 again. There, DRADIS on with
+3 units on SEN (circle 15,600 km): 354 in sight, none outside the circle, drawn over it. Screenshot
+`Logs/Shots/ruins_dradis_circle_on_top.png`.
+
+**The hang, solved (2026-10-28, killshot-81).** Two full runs hung with `NullReferenceException` in
+`BoardManager.Update` (`state.orders`) and in `Eased.Set`. The cause was not this step's code. Unity's
+"Script Changes While Playing" was "Recompile And Continue Playing", so a script saved by another
+session during a run recompiled the game mid-run, and the board lost its links to the ship's systems.
+It is now "Recompile After Finished Playing" (an Editor preference on this Mac, not in the project).
+Run 2026-10-28_012951: 209/209.
+
+### Step 93 — Debris you can fly through; running into a piece damages the ship
+
+**What it is.**
+
+- Level_01's crowded debris is thinned out. Pieces were removed at random, and the shape of each
+  belt is kept. The near belt has 50 pieces (was 216), the debris inside the husk 26 (was 81), the
+  middle belt 140 (was 228). The far belt and the asteroid fields are unchanged.
+- Running our ship into a piece damages it: 25 armour off the side facing the piece. With that side
+  open, 1 integrity off the room behind. It hits once each time the ship goes in; staying inside does
+  nothing more. The ship is not pushed back out.
+
+**Owner direction (2026-10-26/27).** "If it hits it takes damage. It doesn't get pushed out."
+"There's no way that you could even fly through it." Asked whether to spread the debris out: "Yes."
+
+**How it works.**
+
+- `TacticalWorld` checks each board tick whether our ship's centre is inside a piece (the piece's own
+  box, level with the piece). On the way in, `DamageSystem.TakeCollision` hits the side facing the
+  piece, like a fighter's run (no fire, breach or radiation). `collisionReport` holds the last one
+  ("COLLISION · PROW ARMOUR 75%"); `collisions` counts them.
+- The numbers are in each ship's stats file, Damage group: `collisionArmourDamage` (25) and
+  `collisionCompartmentDamage` (1).
+- The Debris Field tool already has a minimum gap (its Gap setting).
+
+**Calls made without the owner (can be changed):** the damage (25 armour, 1 integrity); our ship
+counts as a point (its real size is 100 to 500 m); how many pieces each belt kept; only our ship
+collides for now (the Garuda's patrol does not steer round debris); no sound yet.
+
+**Measured.** Gap to the nearest piece, median: near belt about 1,000 km before, 1,300 km after
+(many of its pieces are next to the husk); middle belt 1,950 km before, 2,180 km after; far belt
+4,380 km. Our ship's picture on the plot is about 1,250 km long at full zoom, so in the near belt
+it can still look bigger than a gap.
+
+**Checked.** Quick check in play mode: put on a near-belt piece, the prow went to 75%; staying on
+it, no second hit; out and back in, the prow went to 50%. Not committed: see Step 92.
+
+### Steps 94 to 101 — Wolf Hunt: the hunt, the fight, the reinforcements, the exit, the tools
+
+Built overnight (2026-10-28) by killshot-81 while the owner slept ("I want a Mac playable at the end").
+Every call made without the owner is listed at the end, and can be changed.
+
+**What it plays like.**
+
+1. NEW GAME. "WOLF HUNT" types in green on the phosphor screen, holds, then INITIALISING... and the
+   board. No Enter press (Step 94).
+2. Our Asura starts at the Player Spawn. The Garuda starts at a random point in its spawn box, facing a
+   random way, every game (Step 95). The box stays inside the battle space.
+3. The Garuda is bigger and slower than us and hits harder, with shorter reach (Step 96). See its
+   numbers below.
+4. The Garuda hunts the map (Step 97). It picks points across the battle space, drifting from its
+   half toward ours over 15 game minutes. It listens with its own DRADIS. It hears us out to its
+   DRADIS reach times our signal: silent, never; at full signal, from about 21,000 km when it is
+   calm, 28,000 km when alert. Inside 10,000 km it sees us, whatever our signal. Our fighters are loud
+   to it (a signal of 60) and lead it to them.
+   - UNEASY: it heard us faintly. It turns for where it heard us.
+   - SEARCHING: heard more clearly, or heard again after a gap. It speeds up and searches round that
+     spot.
+   - ALERT: heard loud and close, seen, or hit. It closes to its railguns' reach, turns a turret's side
+     to us, and fires railgun slugs (they fly straight at 2,500 km/s; PDCs cannot stop them) and HE
+     missile salvos while it has a fix on us. Out of power (an EMP), it cannot fire.
+5. The moment it is ALERT, the alarm strip says REINFORCEMENTS INBOUND, with a 3:00 countdown in game
+   time (Step 99). At 0, two Naga-class frigates enter at random edges of the battle space, at least
+   25,000 km from us, told roughly where we are. One more comes every 2 game minutes. The strip then
+   says ENEMY SHIPS IN THE SECTOR: n. Each frigate hunts with the same mind.
+6. Clicking a contact's label on the plot turns the periscope to it and makes it fire control's target
+   (Step 99). Before, the target was always the Garuda. A ship in sight that we have not identified
+   shows as an amber dot labelled BOGEY (it showed nothing before).
+7. The Garuda destroyed or captured: a jump point opens at the middle of the battle space's edge
+   farthest from us, 5,000 km in (Step 98). The plot shows it as a green ring (the 2,000 km that
+   counts as there) with JUMP POINT beside it. The alarm strip gives its bearing and distance. Reaching
+   it wins: MISSION COMPLETE, "GARUDA DESTROYED · JUMPED OUT".
+8. Tools (Step 100): the RULER shows only the distance, in larger, sharper text. The COMPASS ring is
+   graded like a compass: a tick every 10°, a longer one every 30° with its number, 000 at the top,
+   and its label gives the distance and the bearing. The text size is `markLabelSize` (14 pt) on the
+   plot, Board tab of Starwolf → Tuning, under Plot tools.
+9. Fighters scout (Step 101): any ship or ruin within 10,000 km of one of our fighter flights shows on
+   our plot, kept up to date while they are near.
+
+**The numbers.**
+
+| | Asura (ours) | Garuda | Naga frigate |
+|---|---|---|---|
+| Top speed, km/s | 12.5 | 8.75 | 15 |
+| Turn, °/s | 20 | 14 | 30 |
+| Side armour (prow, stbd, aft, port) | 100, 100, 50, 100 | 150, 150, 75, 150 | 50, 50, 25, 50 |
+| Railguns | 2, 25,000 km | 2, 18,000 km, hits 1.5× | 1, 18,000 km, 12 slugs |
+| Missile cells | 8 | 4, HE hits 1.5× | none |
+| PDC groups | 2 | 1 (PDC-B emptied) | none |
+| DRADIS base reach, km | 12,000 | 10,000 | 10,000 |
+| Marines | 18 | none | none |
+
+The Garuda's file is `Assets/Ships/Garuda.asset`; the frigate's is the new `Assets/Ships/Frigate.asset`.
+
+**How it is built.**
+
+- `EnemyBrain` (rewritten): awareness COLD, UNEASY, SEARCHING, ALERT (never goes down); `hunts` turns
+  the hunting on (the playtest's older checks set it off); `Brief(where, now)` for an arriving ship.
+  Its numbers are on the Board tab of Starwolf → Tuning, under Enemy.
+- `WeaponSystem.ShootAt`: an enemy slug into our `Incoming` list. `TickIncoming` tests a slug against
+  our own motion through the tick. `Retarget(key)`: a new target resets the ladder and solutions.
+- `QuestSystem`: the jump point (`ExitOpen`, `ExitAt`, `ExitReachKm`), the alarm and countdown
+  (`AlarmAt`, `Arrived`), the arrivals. `BoardManager.missionAlarm` / `missionCount` put its line on
+  the alarm strip; `BoardManager.Alert()` sounds the tone.
+- `TacticalWorld.AnyAlert`, `TacticalWorld.AddContact(template, key, at, hdg, brief, now)`;
+  `ShipState.AddTrack`. The frigate template is `World/Frigate (template)` in `02.1_Grid`, switched
+  off: a copy of the Garuda with the frigate's stats file and its model at 0.6 scale.
+- `ScreenFlow.advanceAfterSeconds` (4 s on the briefing). `EnemySpawn.sizeKm` (40,000 × 12,000 km).
+- `PlotPanel`: the compass grading (`Grade`), the jump point (`ShowJumpPoint`), contact labels with a
+  `plot.look` ClickSpot. `SensorSystem.InSight` and `TacticalWorld`'s ruin sighting count our
+  fighters (`HangarSystem.Sees`).
+
+**Checked.**
+
+- A reviewer agent applied every patch to copies and compiled the whole project with Unity's own
+  compiler: 0 errors. It found ten problems; the real ones were fixed before anything went in (stale
+  alarm strip text, a stuck 0:00, a spawn box past the edge, EMP, PDC AUTO on retarget, identified
+  contacts not clickable, unknown contacts in sight not drawn, the awareness middle steps barely
+  used).
+- In play mode, by hand (stand-ins for the helm): the Garuda started at (-445, 40,038), heading 250.
+  With our ship loud and 18,000 km off, it went UNEASY and turned toward us; at 11,865 km it went
+  ALERT, turned side-on, fired five slugs and a missile salvo and hit us four times ("SLUG HIT · PROW
+  · MAG −3"). The strip said REINFORCEMENTS INBOUND 1:40. Two frigates arrived when it ended, then one
+  every 2 game minutes (NAGA 1 to NAGA 6), each SEARCHING where it was told we were. Killing the
+  Garuda opened the jump point at (0, 45,000) with "JUMP POINT · BRG 000° · 90,000 KM" on the strip;
+  reaching it: MISSION COMPLETE, "GARUDA DESTROYED · JUMPED OUT". No errors in the console.
+- Screenshot `Logs/Shots/wolfhunt_tools_check.png`: the graded compass, the ruler's distance, the jump
+  point ring.
+- The playtest: two checks failed once (PDC-B), because the Garuda's harder HE hits left our magazine
+  below the 3 it needs. The playtest now repairs us before PDC-B (a stand-in for damage control).
+
+**Calls made without the owner (can be changed).**
+
+- Clicking a contact's label targets it. The frigate's name (Naga-class), model (the Garuda's at 0.6)
+  and numbers above.
+- The Garuda's hearing: DRADIS gain 3 when calm, 4 searching, 5 alert; SEARCHING from 0.25 of its
+  hearing distance, ALERT from 0.5; a fix lasts 30 game s; railgun reload 12–17 game s; aim off by up
+  to 0.4°; a salvo every 90 game s once ALERT.
+- The jump point's place and 2,000 km reach; arrivals at a random edge, at least 25,000 km from us,
+  told where we are to within 5,000 km.
+- The compass grades in our marks' blue; numbers only when the ring is over 40 px.
+- The nav wheel art was not used for the compass: the ring is drawn, so it scales with the zoom.
+
+### Step 104 — TextMesh Pro's examples deleted; its shader file put back
+
+The owner said yes to deleting `Assets/TextMesh Pro/Examples & Extras` (2026-10-28). One example font was
+in use, by Soham's old `TestScene` and `Prefabs/UI.prefab`: Electronic Highway Sign. It moved, with its
+links kept, to `Assets/UI/Fonts/ElectronicHighwaySign`.
+
+The 3 build errors were not the examples. They came from TextMesh Pro's own shaders, which need
+`Assets/TextMesh Pro/Shaders/TMPro.cginc`, deleted in February in b47111e ("Removed old project from main").
+It is back, taken from the TextMesh Pro package that comes with this Unity. The board's fonts use the Mobile
+shader, which did not need it, so the board looked the same before.
+
+### Step 105 — Playing Wolf Hunt for real, and four fixes
+
+The owner asked (2026-10-28): did anyone actually play it, and do the systems work together as a flow? Until
+now, no: the playtest checks every control, but with the Garuda's hunting switched off and our ship moved
+by hand. So killshot-81 played a game in the Editor through the board's own switches (clicks and drags
+sent through the EventSystem, as the playtest does). Only two stand-ins: the A key (called as the key
+calls it) and, once, the scroll wheel's zoom.
+
+**What happened.**
+
+1. Power: ENG and SEN on DRAW, throttle up, DRADIS gain 5 (30,000 km). Signal 100%.
+2. Flew north for about 7.5 real minutes at x10. The Garuda drifted toward us.
+3. Heard it at 29,900 km, bearing 336: the alarm strip, the contact board and the bearing line all came
+   up. It had not heard us.
+4. It heard us faintly at 20,700 km (UNEASY), and came our way.
+5. Cut ENG to give WEP the power. The ship stopped dead. Signal stayed 100% (WEP drew what ENG gave back).
+6. CONDITION 2, ACTIVE SCAN, the cone dial onto 321: identified. TRACK, turret B, the ladder. BEARING
+   refused until the periscope was on it; clicking its label on the plot did that. Fired at 16,000 km:
+   **HIT · GARUDA · PROW ARMOUR 67%.** This all worked, and felt good.
+7. It fired two missiles back. Both point-defence groups on AUTO fired nothing: the missiles came from
+   our front-left, which neither group covers. Both hit: our magazine down to 2, on fire.
+8. Engineering: VENT put the fire out; the repair party's first trip only brought the air back.
+9. At 12,200 km it went ALERT: REINFORCEMENTS INBOUND 3:00 came up. It fired a slug every 15 game
+   seconds and hit every time (we were stopped). The second slug wrecked the magazine: we could not
+   fire again. The breach let the vacuum spread through every room; the crew began to die, the reactor
+   fell to 2 units, and DRADIS went deaf. The fight was lost about 70 game seconds after its first hit.
+
+**Fixed (bugs).**
+
+- **A hit did not put the Garuda on ALERT** while it could also hear us faintly: it stayed UNEASY,
+  fired only its hit salvo, and the reinforcements' countdown did not start. Now a hit always means ALERT
+  (`EnemyBrain.Listen`).
+- **"1 HOSTILE SET HAS YOUR RANGE" was false.** It counted every hostile contact once our signal passed
+  45%, even 88,000 km away. Now it counts the enemy ships that really hear or see us
+  (`EnemyBrain.HearsUs`, `TacticalWorld.HearingUs`), at any signal. Loud and unheard, it says
+  NO HOSTILE SET HAS YOUR RANGE. `SensorSystem.Trackers()` is gone.
+- **Nothing showed enemy fire coming.** The alarm strip now shows INCOMING MISSILES · BRG 321 (or
+  INCOMING FIRE when slugs are in it) with the count, and the alert tone sounds once as it starts.
+- **Nothing showed what hit us.** "SLUG HIT · PROW · MAG WRECKED" and Tooling's "COLLISION · PROW ARMOUR
+  75%" were written but never shown. Both now take the strip for 4 real seconds
+  (`BoardManager.Struck`, **Hit Line Seconds**), with the alert tone. Flying through the starbase
+  had cost us half our bow and stern armour, silently.
+
+The strip's order is now: the battle space's edge, what just hit us, enemy fire in flight, the mission's
+line, new contacts. The playtest has one new check: the strip warns of the Garuda's salvo. Playtest
+2026-10-28_081651: 211/211.
+
+**Questions for the owner (not changed).** These are game feel, so they are yours:
+
+1. **The plot does not follow our ship.** At speed it leaves the screen in seconds; you press C again and
+   again. Should the plot follow our ship while under way, until you pan it yourself?
+2. **Bearing lines fade after 2 game minutes.** That is 12 real seconds at x10, and our ship moves only
+   about 1,500 km in that time, so at 20,000 km the lines are nearly parallel and never cross usefully.
+   Make them last longer (say 10 game minutes)?
+3. **The PDCs cover only 140° of 360°**: 7°–77° (front-right) and 165°–235° (back-left). Missiles from
+   ahead or from the left always get through. Keep it (turning to defend is a skill), or widen the arcs?
+   Either way, should the plot show which way to turn?
+4. **Noise is total power drawn.** WEP is as loud as ENG, so you cannot be armed and quiet. Intended?
+5. **Cutting ENG power stops the ship dead.** It doesn't drift. Intended?
+6. **The periscope stays down** over the middle of the plot after you look at a target, hiding our ship.
+   Raise it by itself after a few seconds?
+7. **The first salvo decides the fight.** The magazine sits behind the bow; two hits there (HE at 1.5×)
+   and we can never fire again. A breach then spreads vacuum through every room in under a minute, the
+   reactor crew die and power falls to 2 units. Soften it: slower spread, a sturdier magazine, or the
+   Garuda's hits back to 1×?
+8. **The opening is long:** 88,000 km apart, first contact after about 7.5 real minutes at x10. Start
+   closer, or add x20?
+
+The owner's answers to these are in section 8, "The owner's answers (2026-10-29)". Step 106 builds them.
+
+### Step 106 — The owner's play report: keys, the ring, the title, the plot feeds the gun, and the Step 105 answers
+
+The owner played the Mac app (2026-10-28): "the app works", but the instruments did not lead to the
+enemy or to a shot, W/S did not work, and P did not pause. Built by the Worker (was killshot-81), the
+owner's answers taken first.
+
+**Keys.** W and S step the throttle **Throttle Key Step** (10%) a press, held keys repeating, up to
+what the ENG bus allows (`HelmPanel`, Tuning: Helm). P pauses and runs, as the PAUSE key does
+(`BoardManager`). Neither works while typing in a text field.
+
+**The visual range ring.** A thin ring round our ship at the visual range (10,000 km, the ship's stats
+file), always on: inside it you see ships with your eyes (`PlotPanel`, **Visual Ring Alpha**, Tuning:
+Sensors; 0 hides it). The owner chose this look.
+
+**The title.** Two cards, MISSION ONE, then WOLF HUNT, 3 s each, then INITIALISING. `ScreenFlow` has a
+list of **Cards** shown in turn. The title screen's letters have no digit 1, so it is spelled out.
+
+**The plot feeds the gun (owner's yes, 2026-10-29).** TRACK now chooses what to lock, in this order: a
+scanned enemy the periscope is on (within 4°); else the target, if scanned; else **your plot**: the
+newest POINT is where it was, and the newest POINT-to-POINT RULER is its course and speed, reckoned
+forward from the POINT's time to now. Fire control's ID reads PLOT, "FROM YOUR PLOT". The knobs then
+fine-tune it. So the quiet way works: hear it, cross the bearing lines, drop POINTs, RULER between them,
+TRACK, SLEW TO, arm, fire. No long knob drags. (`WeaponSystem.ComputeSol`, `Solution.fromPlot`.)
+
+**The periscope picks the target (owner, 2026-10-29: no clicking the plot to aim).** Clicking a
+contact's label or a bearing label does nothing now; the labels let clicks through to the plot. You turn
+the periscope by hand (SLEW), or SLEW TO puts it on the solution's bearing. TRACK on a scanned ship
+under the periscope makes it the target (the Step 99 call that clicking a label targets it is undone).
+The owner said no to plain-word hints on the firing switches.
+
+**Bugs 7 and 8 (Tooling's).** A thrown LOAD whose gate fails (WEP power, the magazine, CONDITION 2,
+rounds) or a thrown ANGLE out of arc now drops, with every rung after it, on the next tick; the lever
+checks the gates again before it fires (`WeaponSystem.TickCharge`, `Fire`). BEARING is left alone: a
+moving target drifts off it slowly.
+
+**The Step 105 answers built here.** (1) The plot follows our ship as it moves; panning stops it, C
+follows again (`PlotPanel`). (3) PDC-A covers the starboard half (000–180), PDC-B the port half
+(180–360), in the code's defaults and all three stats files, set through the Editor. (5) With no power on
+the ENG bus there is no thrust and no braking: the ship drifts on (`NavSystem.Move`). This is every
+ship's rule, so an EMP'd enemy drifts too, at full speed (before, it slowed); boarding it then waits
+for it to be slowed some other way. **A call made without the owner: change it if EMP should still stop
+a ship.** **Owner, 2026-10-29: keep it.** "An EMP should kill the ship's engines. It should shut it all
+off, so it will be drifting." (An EMP already empties every bus for its time, `PowerSystem.BlackOut`.)
+
+**Also.** `Level_02` is off the build list and out of the project (the owner: "it can be chucked
+away"); a copy is in `~/Documents/GitHub/Killshot-Builds/removed-2026-10-29`. The app's bundle ID is now
+`com.shagunshah.starwolf`. For killshot-a2, whose Unity link was down, the Worker ran its Level_01
+script (the 60,000 km square: the husk gone, 136 pieces kept, spawns at ±22,000 km; its write-up is
+killshot-a2's).
+
+**Playtest changes.** Step 15's check is now "the plot follows our ship" (its image holds still, the
+grid moves). A new check: not scanned, TRACK takes the plot. The EMP check is now "without power it
+drifts". The periscope stand-in replaces the label click. Two old checks assumed a still plot (marks stay put on screen) and the 100,000 km map's zoom limit (x0.35); both now check the new rules. Playtest 2026-10-29_011619: **214/214**, with killshot-a2's bug 6 checks and Level_01.
+
+### Step 107 — A smaller Wolf Hunt; engineering pays AUX; crew in the stats file
+
+Three of the owner's answers from 2026-10-29. Built by killshot-a2. Its Unity link was down, so the
+Worker ran the level script and compiled the code.
+
+**1. The level is smaller.** The opening took about 7.5 real minutes at x10 before the first contact
+(Step 105). The owner: "If we need to make a smaller level, let's make a smaller level. Let's even
+remove the big piece of debris and have a little bit of debris." The owner chose a 60,000 km square
+with a few small debris fields.
+
+- `Base Husk` and `Debris · in the husk` are deleted. `BaseHusk.prefab` stays for later levels.
+- Everything else moved toward the centre by 0.6 (100,000 km to 60,000 km), so the layout keeps its
+  shape. Pieces keep their size. The asteroid fields moved as a whole, so their rocks keep their
+  spacing. Each wreck moved on its own.
+- The near, middle and far belts kept about a quarter of their pieces (12 of 50, 35 of 140, 50 of
+  202), in a fixed shuffled order. Every kept piece is at least 1,200 km from every other, and none
+  is within 3,000 km of our start, so we start in open space.
+- The Battle Space is 60,000 × 60,000 km. Player Spawn (0, −22,000); Enemy Spawn (0, +22,000), its
+  box 24,000 × 7,200 km. The ships start about 44,000 km apart (the check: 43,592). DRADIS hears
+  30,000 km out, so first contact comes after about 2 real minutes at x10 at the Step 105 pace.
+- 136 pieces, none outside the battle space. Nothing in code changed: the Garuda's hunt, the jump
+  point and the frigates' arrival all work from the battle space's size. The plot now zooms out to
+  x0.47 (was x0.35).
+- How: a script for Unity's `execute_code`, first tried in Python on the real positions. Unity checked
+  it in play mode: no errors.
+
+**2. Engineering pays AUX (bug 6).** Engineering's REPAIR, SEAL and VENT cost the same AUX as the
+orders station's (REPAIR 30, SEAL 25, VENT 15). `DamageSystem.EngBlock` now gives the room's reason
+first, then "INSUFFICIENT AUX — N% REQUIRED", the orders station's words. The orders station asks
+`EngBlock` too, so the two can't disagree. `EngRun` spends the AUX. The rocker locks and engineering's
+note shows the reason, as it already did for SEAL THE DOORS FIRST. Playtest: two new checks, REPAIR
+spends AUX (100 → 70%), and with no AUX engineering refuses REPAIR. The five engineering orders in a
+row cost 130, so the playtest fills the pool to 100 twice as a stand-in.
+
+**3. Crew in the stats file** (owner: "crew numbers need to be a tuning variable and should not be
+hard-coded"). The Damage group of each ship's stats file has **Crew**: six numbers, one per room,
+in order MAG, BRI, HAB, HGR, RCT, ENG. Each starts at today's 4, 9, 18, 7, 6, 8 (52). Tune the Garuda
+and the frigates on the Enemy tab. `Ship.Awake` fills each room's crew from the file, as it does the
+marines. The rooms' list in `DamageSystem` no longer has crew numbers.
+
+**Checked.** Parts 1 and 2: playtest 2026-10-29_011619, 214/214 (with Step 106). Part 3: compiled by
+the Worker, written into Asura, Garuda and Frigate through the Editor, and COMPLEMENT 52 in play
+(commit 7e82b40).
+
+### Step 108 — Keys for the drawers, and a window to change every key
+
+The owner, 2026-10-29: number keys open the systems, and a tool in the Starwolf menu changes the keys.
+Built by killshot-76.
+
+**What the player gets.** 1 Fire Control, 2 Sensors, 3 Power, 4 Hangar, 5 Engineering, 6 Comms. A key
+opens its drawer, or closes it if it is already out, the same as clicking the systems key. Like P and
+WASD, the keys do nothing while you type in a text box (the hangar's launch bearing).
+
+**What the owner gets.** **Starwolf → Keys** opens the Tuning window on a new **Keys** tab. It lists
+all 16 board keys: the six drawers, Pause Run (P), Turn Port (A), Turn Starboard (D), Throttle Up (W),
+Throttle Down (S), Centre On Ship (C) and the four Pan keys (arrows). Pick a new key from each list.
+The Board tab no longer shows these.
+
+**Where the keys are.** The drawer and pause keys are on `BoardManager`, the helm's on `HelmPanel`,
+the plot's on `PlotPanel`, each marked `[Tune("Keys")]`. A change made in edit mode goes into the
+board scene, so save the scene. A change made in play mode is lost unless "Keep play-mode changes"
+is ticked.
+
+**Checked.** Unity compiled clean. All 16 keys are on the Keys tab with their starting keys. In play
+mode, through the same call the keys make, each drawer opens in turn and comms closes the second
+time; no errors in 636 frames. Nobody
+has pressed the keys by hand yet; Unity can't fake a key press here.
+
+### Step 109 — The periscope shows the enemy ship
+
+The owner, 2026-10-29: as you slew the periscope (the targeting computer), the Garuda appears in it,
+and you zoom in or out to capture it. Built by Targeting Computer View.
+
+**What the player sees.** Lower the periscope and slew it. When DRADIS hears a ship and it is within
+27° of the sight, the ship slides into view, in the sight's red. It is the plot's top-down picture,
+always level: if it heads to our right it points straight right, otherwise straight left. Far away it
+is small. Turn the MAG knob to grow it. The red lines stay as they were (owner: very important).
+
+**CLASS needs the right zoom.** CLASS works only when the ship fills the brackets: within 15% either
+way. Too little zoom and it is too small. Too much and it spills out. At 1× a close ship may spill out
+and still count, because the MAG goes no lower. The CLASS lamp glows only when CLASS will work. At 1×
+a ship 3,750 km away fills the brackets; at 2×, one 7,500 km away; at 8×, 30,000 km (DRADIS's reach).
+
+**Tuning.** Scope Fit Km (3,750) and Scope Fit Slack (0.15) are in Periscope & fire control. Periscope
+Panel has Ship Picture, Bracket Px (42) and Ship Ink.
+
+**How it is built.** `PeriscopePanel` shows the plot's existing camera picture of the contact
+(`Contact View Camera · Garuda`) in `Sight/Mask/Ship picture`, sized by zoom and range.
+`ShipState.ScopeFill` and `ScopeFits` set the rule, and `Classify` uses it. The picture uses
+`BoardLinearImage`, which now has the UI Mask's stencil so the round sight clips it. Nothing that used
+it before is under a Mask, so they look the same. No new camera or scene change.
+
+**Checked.** Compiled clean. In play mode the Garuda was put 7,000 km away on 048°, heading 186°, at
+MAG 1.9×. It showed inside the brackets, pointing right. CLASS was refused at 8×. The red lines
+matched the before shot. The plot's Garuda picture was unchanged. Shots are in `Logs/PeriscopeCheck`.
+Pointing left was checked too (heading 338°). The playtest gained one check before the CLASS click:
+215/216 in run 2026-10-29_015659, and it passes.
+
+**Owner calls made on the fly.** The CLASS lamp glows only at the right zoom. The brackets stay small
+(42 px), so a ship that fits is small in the sight.
+
+**Open, for the owner.** The owner said "I don't want the white reticle." Targeting Computer View asked
+whether that means the four white corner marks (the brackets) in the sight; no answer before they went
+to sleep. The brackets are unchanged. CLASS uses them: the ship must fill them.
+
+### Step 110 — Zoom out to x0.1; the grid carries on past the battle space
+
+The owner, 2026-10-29: zooming out stopped too soon, and it was hard to see enough. Built by Grid
+Visual.
+
+**What the player sees.** The SCALE knob and the mouse wheel go out to x0.1. Past the battle space
+the grid carries on: the same big squares, with 5 × 5 small ones inside. A thicker, brighter line
+marks the battle space's edge, white on the white grid and amber on the amber grid. At x0.1 Wolf
+Hunt's 60,000 km battle space is about a fifth of the plot's width, with grid all round it. Panning
+still stops at the edge (owner's pick). Once the whole battle space fits, it stays in the middle.
+
+**What changed.**
+
+- `BoardManager.MinZoom` is just **Zoom Out Limit**, now 0.1, saved in `02.1_Grid`. Step 65's
+  second rule is gone. It stopped zooming sooner, where the map filled the plot's width: x0.47 for
+  Wolf Hunt.
+- `PlotGrid` draws its lines across the whole plot, still counted from the battle space's corner.
+  Then it draws the edge on top. **Edge Width Px** (3), **White Edge** (0.6) and **Amber Edge** (0.9)
+  are on Plot Grid in the inspector.
+- Below about x0.29 the small squares are 5,000 km and the big ones 25,000 km. At x0.1 a small square
+  is 30 px.
+- Playtest section 25b: the zoom stops at x0.1, the big squares there are 25,000 km, then it zooms in
+  to x0.5 before the drag-past-a-corner check. Earlier steps that zoom to 0.25, 0.3 and 0.4 for
+  screenshots now really get there. Before, they stopped at x0.47.
+
+**Checked.** Compiled clean. In play mode the mouse wheel stopped at x0.1. Screenshots at x0.1, white
+and amber, are in `Logs/GridCheck`. The full playtest was not run, because KM to Units changes the
+scale next and will update section 25b again.
+
+**Seen on the way.** The axis numbers count from our ship. At x0.1 they don't sit on the grid lines,
+because 60,000 km is not a whole number of 25,000 km squares. This was already the case whenever our
+ship was off a line.
+
+**Calls made on the fly.** x0.1 is the owner's first number. The edge is 3 px, at 0.6 white and 0.9
+amber. The grid outside is as bright as inside. 5,000 km stays the biggest small square.
+
+**Next.** KM to Units changes the plot to units (760 px per 1,000 units) and takes the zoom limit to
+x0.01.
+
+### Step 111 — Units: a small square is 50 units, our ship two squares; zoom out to x0.01
+
+The owner, 2026-10-29: a ship can't be hundreds of km long. Think in units. At x1.0 a small square is
+50 units and our ship is 2 squares long. "This does not mean you scale down the ship models. It means
+you adjust the size of the squares." Then: "zoom out properly to 0.1 or even 0.01". Built by KM to
+Units.
+
+**What the player sees.** At x1.0 the small squares are 38 px, down from 61, and each one is 50 units.
+A big square is 250. Our ship is drawn 76 px long, as before, which is 2 small squares: 100 units. The
+Garuda is drawn 1.5 times as long: 150 units, 3 squares. Before, both were drawn the same size. The
+SCALE knob and the mouse wheel now go out to x0.01. There the small squares are 5,000 and the big ones
+25,000, and all of Wolf Hunt's 60,000-unit battle space fits, with grid round it. The readout shows
+three places below x0.1 (x0.010).
+
+**What changed.**
+
+- Every ship's stats file has a **Length** in units: Asura 100, Garuda 150, Naga frigate 75. It is in
+  Starwolf → Tuning. The plot draws each ship at its length, between 30 and 120 px.
+- The plot's scale is 760 px per 1,000 units at x1.0 (`PlotGrid` **Px Per 1000 Units**), up from 60.9
+  per 1,000 km: 12.5 times bigger. **Square At Full Zoom** (50) sets the small square at x1.0.
+- No game number changed. Speeds, ranges and the battle space are the same numbers, read as units.
+  So x0.08 now shows what x1.0 showed before.
+- **Zoom Out Limit** is 0.01, saved in `02.1_Grid`. The SCALE knob's sweep covers two steps of ten
+  (x1 to x0.01).
+- The plot's rings and dashed lines draw only the part that shows on the plot. At x1.0 the
+  visual-range ring alone was about 64,000 points, past what one picture can hold, and Unity showed an
+  error.
+- Playtest section 25b checks, at x1.0: a small square is 50 and a big one 250; our ship is drawn 2
+  small squares long and is 100; the Garuda is 150. Then the zoom stops at x0.01, where the big squares
+  are 25,000. Steps that zoomed to old values for screenshots now zoom to the same view as before.
+
+**Checked.** Compiled clean. In play mode: at x1.0 a square is 38 px and our ship 76 px; at x0.01 the
+whole battle space shows. Screenshots are in `Logs/UnitsCheck` (x1.png, x0.01.png). Full playtest
+218/218 (2026-10-29_021252). That run showed the too-many-points error once, without failing a check.
+The fix came after it and was checked in play mode: a ring 22,800 px across now takes 5,660 points,
+and no errors.
+
+**Calls made on the fly.** The Naga frigate is 75 units. Code names still say km. The board starts at
+x1.0, so the Garuda is off screen at the start. The ship picture stays between 30 and 120 px.
+
+**Next.** What zooming out means, then speeds, then ranges (section 8, "Distances in units"). What the
+player reads comes last. The owner may try our ship at 4 squares at x1.0.
+
+### Step 112 — Turning after TRACK no longer spoils the aim
+
+The owner, 2026-10-29: "can we fix the ship turn after placing track?" If you turn after TRACK, the
+ship fires where the target was worked out to be. It does not keep tracking it.
+
+**The bug.** A firing solution kept its bearing as an angle from our bow. Turn the ship after TRACK
+and the angle turned with it. ANGLE checked the old angle, so it could stay OUT OF ARC after you
+turned. A shot with no course (a still target, a hand-dialled one, or a POINT with no RULER) went off
+by as much as you had turned.
+
+**What the player sees now.**
+- TRACK takes the target's position, course and speed at that moment.
+- The gun aims where the target should be by now, if it kept going straight. Turning or moving our
+  ship doesn't change that.
+- It doesn't follow the target after TRACK. If the target turns, the shot misses. Press TRACK again.
+- The RNG and BRG readouts change as we turn and move. They show the range and bearing from our bow
+  to where the target should be now.
+- Turn far enough that the target leaves the turret's arc, and ANGLE drops (with BEARING and ARM).
+- Turning the RNG or BRG knob after TRACK moves the aim point. Before, against a moving target, these
+  knobs changed only the readout. SPD changes only the speed.
+
+**What changed.** Only `WeaponSystem.cs`. Each game tick, `Follow` works out each solution's range and
+bearing from our bow to its point (`Reckon`: the point, moved on along its course and speed). The slug
+aims at that point (`LeadBearing`), not along the old angle. `NudgeSol` moves the point for RNG and
+BRG on a TRACK solution too.
+
+**Checked.** Compiled clean, no warnings. In play mode on Level_01, with test slugs:
+- A still Garuda 46,000 km away, aimed with no course, then we turn 60°. BRG went from -1 to -61, the
+  gun still aimed at it, and the slug hit. Fired along the old angle (the way before the fix), it
+  missed.
+- A Garuda crossing at 8.75 km/s. TRACK, then 20 game seconds and a 60° turn. The slug hit. With the
+  Garuda turned north after TRACK, the same solution missed.
+- Bow-on, turret A bears. After a 90° turn to starboard, it doesn't.
+Full playtest 2026-10-29_100527, run with Step 113: two checks failed because they expected the old aim.
+- #89 wanted the dialled solution's RNG and REL BRG unchanged. The point stays put in space, so they
+  drift a little as our ship moves on (RNG 10,994 for 11,000, REL BRG off by 1°). It now allows 100
+  units and 1°.
+- #111 took "unled" as BRG from the bow. BRG now follows the point on along the track, so that shot
+  passed 44 off, inside the 100 hit radius. "Unled" is now straight at where the first POINT put it,
+  two minutes before, as the check meant.
+Both changes are in `PlaytestRunner.cs`. They compiled clean. The playtest has not been run again.
+
+**Fixed after (KM to Units, 2026-10-29; found by killshot-fb).** Each tick BRG is rounded to a whole
+degree. A RNG or BRG click rebuilt the aim point from that rounded BRG. So after flying away from a
+point, one RNG click moved it 100 out and up to half a degree sideways: 104 units at 24,700, more than
+the hit radius. Now a click rebuilds the point from the exact bearing to it. A BRG click still turns it
+by exactly 1°. Checked in play mode, hand-dialled and TRACK: a point 25,276 out, after flying away and
+turning, RNG +1 gave +100.0 out and 0.00 sideways; BRG +1 gave +1.000°. Full playtest 217/218 (2026-10-29_105333): #89, #111 and the x1.0 checks #205-206 pass; the one failure is #56 RECALL, the old frame timing.
+
+**Call made on the fly.** The RNG and BRG knobs move a TRACK solution's aim point (above).
+
+**Found for the owner.** The helm shows "AUTO — DIRECT" at the start, but no autopilot is built.
+Nothing steers the ship. The attitude key NOSE starts lit.
+
+### Step 113 — Everything in the game's workings is in units
+
+The owner, 2026-10-29 (passed on by the hotkeys chat): "speed and range should also be changed to
+[units]. Everything should be [units] so that then we can build back from there. This is all backend,
+okay? Visually, we can decide if we still want to show kilometres." Built by KM to Units.
+
+**What the player sees.** Nothing new. The board still shows KM.
+
+**What the owner sees.** The Tuning and Level windows say units where they said km: Range Units, Top
+Speed Units, Visual Range Units, Width, units, and so on. Tooltips say units and units/s.
+
+**What changed.**
+
+- Every km name in the code is now units, 74 names in 21 files. `rangeKm` is `rangeUnits`,
+  `topSpeedKms` is `topSpeedUnits`, `accelKms2` is `accelUnits`, `KmPerPx` is `UnitsPerPx`, and so on.
+  Comments and tooltips say units. On-screen text is unchanged.
+- No number changed. One old km is one unit.
+- Values saved in the ship files, `02.1_Grid`, `Level_01` and the plot prefab keep working: each renamed
+  value that is saved somewhere has a tag with its old name (`FormerlySerializedAs`). The files are not
+  rewritten. Unity writes the new names the next time each one is saved.
+- The rename was done by a script and checked by hand. Two lines that declared two values at once
+  were split, so each tag sits on the right value.
+
+**Checked.** Compiled clean, no warnings. All 94 saved values read back the same under their new
+names: the three ship files, and every piece of the board scene. That includes values that differ
+from the code's defaults (the Garuda's arrive distance 300, the frigate's guns 18,000 and 25,000).
+Level_01's battle space came through too: in the playtest the jump point opened at
+-25,000, 5,000 in from its 30,000 edge.
+
+Full playtest 213/218 (2026-10-29_100527). None of the five failures is the rename:
+
+- #205 and #206 (square and ship size at x1.0): the shot shows SCALE x0.19. The zoom was moved during
+  the run (the owner was in Unity then). No code zooms out by itself. Rechecked in play mode: at x1.0
+  the zoom holds, a square is 50 units and 38 px, and our ship is 76 px.
+- #89 (the RNG knob's hand-dialled solution: RNG 10,994, REL BRG -28°) and #111 (the unled shot,
+  44 off): these checks expect the old aim. Step 112 makes a solution a point in space, with RNG and
+  BRG following the bow, so the checks need updating for Step 112. Passed to killshot-fb.
+- #56 RECALL: the old frame-timing failure (Step 109).
+
+**Calls made on the fly.** Names end in Units, speeds too (`topSpeedUnits`, units a second). The Level
+window's labels and the battle space's label in the Scene view say units, since they are the owner's
+tools. The playtest's report text is unchanged.
+
+**Next.** What zooming out means, then speeds, then ranges. The docs checklist under "Distances in
+units" in section 8 is still to do in one go.
+
+### Step 114 — Training levels and the MISSIONS list
+
+The owner, 2026-10-29: the first version of the tutorial is a set of short levels. Each has one small
+goal and a different mix of tools. The player picks one from a list, and NEW GAME opens the list. The
+plan is in `FTUE_PLAN.md` §0. Built by the FTUE chat.
+
+**What the player sees.** NEW GAME opens a green screen with MISSIONS typed in at the top. Under it
+are four rows:
+
+1. FIRST SHOT: scan the Garuda and destroy it with the railgun.
+2. SILENT SHOT: hit the Garuda once without scanning it. A scan loses.
+3. PRIZE: capture the Garuda with the marines. Destroying it loses.
+4. WOLF HUNT: as before.
+
+The arrow keys or the mouse pick a row. Enter or a click plays it: INITIALISING..., then the board.
+In the first three, the Garuda does not hunt us. It cruises the map, never listens for us and never
+fires. Each is won or lost the moment its goal is met. There is no jump point. A lost training goal
+says MISSION FAILED, not SHIP LOST. RESTART MISSION plays the same level again.
+
+**What the owner sees.** Three new levels in Starwolf → Level: FirstShot, SilentShot and Prize
+(section 2 has where everything starts). The Level window has a Mission button. The Mission box sets
+the level's goal. An Enemy Spawn has a Hunts tick box.
+
+**What changed.**
+
+- `Game/Mission.cs` (new): the level's goal. At the start it tells QuestSystem. A level without one
+  plays Wolf Hunt, so `Level_01` is unchanged.
+- `QuestSystem`: the goals (`MissionGoal`: WolfHunt, Destroy, HitUnseen, Capture) and two fail
+  reasons (Scanned, PrizeDestroyed). Wolf Hunt's own rules are untouched.
+- `EnemySpawn`: Hunts, on by default. At the start it sets that ship's brain (`TacticalWorld.Hunts`).
+- `TacticalWorld.chosenLevel`: the level picked on the list. Empty, the board loads its own
+  `levelScene` (`Level_01`), so playing the board straight from the editor is unchanged.
+- `ScreenFlow.Play(level)`: what each row calls.
+- `EndScreenPanel`: MISSION FAILED and its two reasons. A SILENT SHOT win reads "GARUDA HIT · NEVER
+  SCANNED".
+- `01_Briefing` is the list (section 2). Build Settings have the three levels.
+- Playtest check #5 picks WOLF HUNT on the list. It used to call `ScreenFlow.Advance` straight.
+
+**Checked** in play mode (`Logs/LevelListCheck`):
+
+- The list shows, with FIRST SHOT picked. Its click loads `FirstShot` with goal Destroy, the Garuda's
+  Hunts off, both ships on their spawns.
+- 230 game seconds at x10 with our signal held at 100: the Garuda stayed COLD, fired nothing and
+  cruised.
+- Every goal through the end screen: FIRST SHOT destroyed → complete; SILENT SHOT scanned → failed,
+  hit → complete; PRIZE destroyed → failed, captured → complete. RESTART MISSION reloads the level.
+- WOLF HUNT from the list loads `Level_01` with Wolf Hunt's goal and the Garuda hunting.
+- The wins were set by hand, not fought. The playtest's own checks show a shot plotted from two
+  POINTs and a RULER hitting the moving, unscanned Garuda.
+
+Full playtest 217/218 (2026-10-29_110455). The one failure is #5, the new list check. It read the
+WOLF HUNT row after the board had loaded, when the row was gone. The game did the right thing: the
+board opened on `Level_01`, and every check after it passed. The check now reads the row first. It
+was rechecked in play mode (four rows, WOLF HUNT found, `Level_01` chosen), not in a full run. #56
+RECALL passed this time.
+
+**Calls made on the fly.**
+
+- The title is MISSIONS, not LEVELS: the green screen's letters (`glyphs.json`) have no V.
+- In SILENT SHOT a scan loses (`FTUE_PLAN.md` §0, open question 3).
+- FIRST SHOT also counts a capture as a win.
+- After a pick: INITIALISING..., then the board, with no title card. The MISSION ONE and WOLF HUNT
+  cards are kept in the scene, switched off.
+- A lost training goal says MISSION FAILED.
+
+**Not done.** No level has been played through by hand, start to finish. Nothing on the board says
+the goal once a level has started. (Step 115 added the help bubble.)
+
+### Step 115 — The training levels' names, and a help bubble
+
+The owner, 2026-10-29: "don't call it FirstShot. Need a more cavalier military banter name for each
+level, with a subheading that briefly explains what you have to do." And: "a dummy text bubble which
+will teach you what to do in each level." Built by killshot-fb, with the FTUE chat's yes.
+
+**What the player sees.**
+- The MISSIONS list: 1 WEAPONS FREE, 2 NO PEEKING, 3 FINDERS KEEPERS, 4 WOLF HUNT. Each keeps its
+  line under it saying what to do.
+- On the board, at the start of every level, a dark box with an amber edge sits at the plot's lower
+  left. It is titled BRIEFING and lists what to do, step by step. A click anywhere on it closes it.
+  It does not come back until the level starts again.
+
+**What the owner sees.** Each level's Mission box has a **Help** text box. That is the bubble's
+text. Change it in the level scene. Empty means no bubble. `Level_01` now has a Mission box too
+(goal Wolf Hunt), for its bubble. The bubble is `Help Bubble` under `Tactical Board` in `02.1_Grid`.
+
+**What changed.**
+- `Mission.cs`: the Help text; at the start it hands it to `QuestSystem.ShowHelp`.
+- `QuestSystem.cs`: links to the bubble and its text; `ShowHelp`; a click on the bubble hides it.
+- `02.1_Grid`: the `Help Bubble` object (Image, Button, Outline; Title, Close hint, Text with
+  auto-size 14 to 20). Saving the scene also wrote Step 113's new units names into it; the numbers
+  are the same.
+- `01_Briefing`: three rows renamed (text and object names). The WOLF HUNT row is unchanged; playtest
+  check #5 finds it by name.
+- The four level scenes: the Help text. The scene files keep their names (`FirstShot` and so on).
+
+**Checked** in play mode (`Logs/HelpBubbleCheck`): the list shows the new names; WEAPONS FREE loads
+`FirstShot` with goal Destroy and its bubble; Wolf Hunt shows its bubble; NO PEEKING's text, the
+longest, fits at size 20; a click hides the bubble. Compiled clean. Playtest not run.
+
+**Calls made on the fly.** The names. The title BRIEFING. The bubble's place and look. The steps'
+words. The rows' lines under the names were kept as FTUE wrote them.
+
+**Not done.** The bubble can't be brought back once closed. It doesn't move on step by step as the
+player does each thing; that would be the XO walkthrough (FTUE_PLAN §6).
+
+**The Mac app, rebuilt 2026-10-29 12:17** with Steps 112 to 115, for the owner's demo. Apple Silicon
+(the setting had gone back to Intel again; set to ARM64 first). 0 errors. Started once: no errors in
+its log, checked only to the menu. The app before it is kept at
+`~/Documents/GitHub/Killshot-Builds/Old/Starwolf-2026-10-29-0850.app`.
+
+**Rebuilt again, 12:23, after two owner asks.**
+- `Level_02` is gone. The owner made it and deleted it, but the file had stayed. It was taken off the
+  build list, and the file and its `.meta` were moved to the Mac's Trash.
+- **Escape quits the game at once, at any time:** on the intro, the MISSIONS list and the board,
+  even while typing. On the board it is **Quit Key** on the Keys tab of Starwolf → Tuning (`BoardManager`); the intro
+  and the list use `ScreenFlow`, with Escape fixed. It does nothing in the editor. Not yet pressed in
+  the app: a session can't press keys in it.
+- The Mac build is now Apple Silicon in `ProjectSettings` (c3044fa), so it no longer falls back to
+  Intel.
+
+### Step 118 — DRADIS starts off
+
+The owner, 2026-10-29: "dradis should be off. you have to start it." Built by killshot-fb.
+
+- At the start of every level our DRADIS rocker is off: no circle, no sweep, no hearing. The player
+  turns it on in the sensors drawer (key 2), and it needs SEN power to hear (Step 82). This is
+  `OwnShip`'s Sensor System **Dradis** in `02.1_Grid`, now unticked. The Garuda and the frigate
+  template keep theirs on: they still listen for us.
+- The bubbles say "turn on DRADIS" again (WEAPONS FREE, NO PEEKING). Step 116 had changed them to
+  "DRADIS is already on". Wolf Hunt's says "Turn on DRADIS (key 2)".
+- Playtest: a new check at step 5, "DRADIS starts off", then a stand-in turns it on, since the
+  checks after it expect it on.
+
+**Played in Unity before the final app (2026-10-29, killshot-fb).** WEAPONS FREE, from the MISSIONS
+list, through the board's own switches as the bubble says: P; SEN and WEP to DRAW; C2; DRADIS on;
+heard at 10,226 units; ACTIVE SCAN and the cone named it GARUDA; SIGHT, SLEW TO, TRACK; the four
+rockers; the lever (set by code, as a drag). Hits opened its prow, then its port side. When it
+turned past turret A's arc, ANGLE dropped and turret B took over. Then MISSION COMPLETE · GARUDA
+DESTROYED. No errors. Screenshot: `Logs/FinalCheck/weapons_free_won.png`.
+- **Found and fixed:** our hits stopped the Garuda's engines, but re-arming without a fresh TRACK
+  kept leading it at its old speed, so three shots missed (Step 112: the solution doesn't follow the
+  target after TRACK). WEAPONS FREE's step 8 said "throw ARM again, pull again". It now says "Each
+  new shot: SLEW TO, TRACK, the four switches, the lever." Shots hit again once TRACK was pressed
+  each time.
+- Not played this time: NO PEEKING, FINDERS KEEPERS (FTUE played those in Step 116) and Wolf Hunt.
+
+**The final app for the owner's demo: built 2026-10-29 12:44**, from e2322b8, at
+`~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app` (Apple Silicon, 0 errors). Started once: no errors in
+its log, checked only to the menu.
+
+### Board refactor, 2026-10-26 to 27 (moved from section 8)
+
+- **Navigation (2026-10-26).** All ship movement is in `Systems/NavSystem.cs`: position, heading,
+  throttle, turning, speed, drift and placing the 3D model. It replaced `TickHelm` and `TickMove`
+  in `HandoffBoardState`, and the model placing in `TacticalWorld`.
+  - `OwnShip` and `Garuda · Cruiser` (was `Dummy · TRACK 07`) each carry a NavSystem. `BoardManager.nav` points at
+    ours, and every ship state reaches its own through `.nav`.
+  - `HandoffHelmPanel` became `UI/Panels/HelmPanel`. It only shows the NavSystem and passes the
+    throttle, the A and D keys and the clicks to it.
+  - No behaviour change. The playtest passed 166/166 after the move (run 2026-10-26_002152), and
+    again after the rename to NavSystem (run 2026-10-26_002808).
+- **The enemy is GARUDA (2026-10-26).** Track t07 is named GARUDA, a Garuda-class cruiser, in code and
+  in the scene. The contact is `Garuda · Cruiser`. Its model is the StarWolf cruiser mesh.
+  Level_01's spawn is `Enemy Spawn · Garuda`. Playtest 171/171 (run 2026-10-26_013236).
+- **Helm panel prefab (2026-10-26).** `Assets/UI/Board/Panels/Helm.prefab`, made from the helm in the
+  scene. The builder was not used. How to use it: `docs/BOARD_UI.md`.
+  - The helm is one object, `Helm`, under `Tactical Board`. Its children are `Closed` and `Open`
+    (were `Helm` and `State · helm`). `HelmPanel` moved onto it. The board now finds panels on
+    child objects too.
+  - Every part is named after its control. Each control's parts are under one parent, for
+    example `Open/01 Flight/Throttle/Cap`. The draw order is the same as before. Screenshots
+    before and after match pixel for pixel, closed and open.
+  - The helm's art is a list on `HelmPanel` (**Art**, 20 entries). Swap a sprite there and every
+    image under it changes. The list is in `Panel`, and every panel has one.
+  - Art files moved, and their links still work. Art only the helm uses went to
+    `Assets/UI/Board/Art/Helm`. Art other panels use too went to the folder for its kind
+    (`Art/Lamps`, `Art/Bolts` …). Four shapes went to `Art/Shapes`. Only the @2x files the board
+    uses moved. The 1x copies are still in the export.
+  - Playtest 171/171 (run 2026-10-26_014759).
+  - The palette asset came later (see "The shared colour palette" below).
+- **Power drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Power.prefab`, the same way as the
+  helm. Owner 2026-10-26: panels go in system order, and each system's rules move after its panel.
+  - `Drawers/State · power` became `Drawers/Power`, and `HandoffPowerPanel` moved onto it. The
+    playtest now finds the drawer by its script.
+  - Parts named and grouped: `Frame`, `Header`, `Reactor`, `Load shed`, `Buses/ENG` … `Buses/AUX`
+    (each with `Cells` and `Selector`). Screenshots before and after match pixel for pixel.
+  - Art list: 20 entries. The load-shed rocker is not in it. The code swaps its sprite. Its two
+    sprites are the panel's **Rocker Up** and **Rocker Thrown** fields.
+  - Art moved: 7 power-only files to `Art/Power` (the casting among them), and 8 that other panels
+    use too to the folder for their kind.
+  - The playtest now films the Game view at the view's 16:9 size. It used to film at a fixed
+    1920 × 1080 (owner 2026-10-26; written by another session, committed here).
+  - Playtest 171/171 (run 2026-10-26_021347).
+- **Power (2026-10-26).** The reactor and the four buses are in `Systems/PowerSystem.cs`: each bus's
+  units, selector and signal per unit, the load shed, the reactor cap, and filling and draining once
+  per tick. It replaced the buses, `CycleBus`, `ToggleShed` and `TickPower` in `HandoffBoardState`.
+  - `OwnShip` and `Garuda · Cruiser` each carry a PowerSystem, with the same numbers the board had
+    (10 units, 5 a bus). `BoardManager.power` points at ours, and every ship state reaches
+    its own through `.power`. The enemy's engines start powered (`PowerEngines`), as before.
+  - `HandoffPowerPanel` became `UI/Panels/PowerPanel` (its link kept, so the prefab still holds it).
+    It only shows the PowerSystem and passes the shed and selector clicks to it.
+  - **Name clash.** Soham's old `PowerManager.cs` already had a class called `PowerSystem` (one power
+    bar). Owner 2026-10-26: his became `PowerChannel`. Only the name changed, in his three files;
+    nothing was deleted.
+  - Kept though nothing uses them: `Climbing` and `Available` (the design's p1–p5). The audit decides.
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_075922).
+- **Sensors drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Sensors.prefab`, the same way.
+  - `Drawers/State · sensors` became `Drawers/Sensors`, and `HandoffSensorsPanel` moved onto it.
+    The playtest now finds every panel with `GetComponentInChildren`. It works before and after
+    each panel moves.
+  - Parts grouped: `Frame`, `Header`, `Masters/DRADIS` and `Masters/ACTIVE SCAN`, `E-SIG`,
+    `01 Sensor array` (`Gain`, `Bands/THERM` …), `02 Active scan` (`Cone dial`, `Narrow`, `Widen`),
+    `03 Contact board` (`Row 1` … `Row 3`). Screenshots before and after match pixel for pixel.
+  - Art list: 19 entries. The code swaps the two master rockers' sprites. Those sprites are still
+    the **Rocker Up** and **Rocker Thrown** fields.
+  - **Links outside the drawer.** The panel also fills the signal box in the frame's top-right and
+    the plot's SENSOR RANGE label. A prefab can't link to objects outside it. Those 17 fields are
+    empty in the prefab file. They are set on the board's copy. Open the board scene to see them.
+  - Art moved: 7 sensors-only files to `Art/Sensors`, `well_r3` (the signal box uses it too) to
+    `Art/Wells`, `round_2` to `Art/Shapes`.
+  - **No folder called "Shared"** (owner 2026-10-26: name a folder after what is in it). Art more
+    than one panel uses is now in a folder for its kind: `Art/Lamps`, `Bolts`, `Knobs`, `Switches`,
+    `Latches`, `Screens`, `Plates`, `Wells` and `Shapes`.
+  - Playtest 171/171 (run 2026-10-26_080658).
+- **Sensors (2026-10-26).** DRADIS and the active scan are in `Systems/SensorSystem.cs`: gain, band,
+  scan cone, the ship's own signal, which contacts are identified, the new-contact count, the bearing
+  trail, and what is heard, covered by the cone or in sight. It replaced those fields and rules in
+  `HandoffBoardState`, and `TickSensors`.
+  - `OwnShip` and `Garuda · Cruiser` each carry a SensorSystem, with the board's numbers.
+    `BoardManager.sensors` points at ours, and every ship state reaches its own through
+    `.sensors`.
+  - The contact list (`tracks`) stays on the ship state, and the sensors read it. `classified` stays
+    too: the periscope fills it, and it moves with the periscope.
+  - `HandoffSensorsPanel` became `UI/Panels/SensorsPanel` (its link kept, so the prefab and the 17
+    links on the board's copy still hold).
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_081854).
+- **Comms drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Comms.prefab`, the same way.
+  - `Drawers/State · comms` became `Drawers/Comms`, and `HandoffCommsPanel` moved onto it.
+  - Parts grouped: `Frame`, `Header`, `01 Receiver` (`Band selector`, `Scope` with its 56 bars,
+    `Tuned`, `Lock`), `02 Decrypt` (`Message` with its 59 letters, `Key dial 1` … `4`). The bars
+    are in their original order inside `Scope`. Some of them draw over the tuning knob.
+    Screenshots before and after match pixel for pixel.
+  - Art list: 20 entries. The lock rocker's sprites are still separate fields on the panel.
+  - Two band-lamp glows are empty, as before: the design gives only the first band lamp a glow.
+  - Art moved: 6 comms-only files to `Art/Comms`, `rocker_30x38_locked` to `Art/Switches`.
+  - Playtest 171/171 (run 2026-10-26_082511).
+- **Comms (2026-10-26).** The radio is in `Systems/CommsSystem.cs`: band, frequency, the carrier lock,
+  the four cipher dials, the message and its cipher. It replaced those fields and rules in
+  `HandoffBoardState`.
+  - `OwnShip` and `Garuda · Cruiser` each carry a CommsSystem, with the board's numbers.
+    `BoardManager.comms` points at ours, and every ship state reaches its own through `.comms`.
+  - `HandoffCommsPanel` became `UI/Panels/CommsPanel` (its link kept, so the prefab still holds it).
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_084735). The run before it failed 3 checks
+    (our ship moving on the plot, and the POINT and RULER staying put) and passed on the re-run. It
+    had waited about 11 minutes on a Unity save box first.
+  - **Trap.** Twice, starting the playtest froze Unity on a "save changes?" box while Unity was
+    behind another window, even though the scene had just been saved. With Unity in front, it
+    started at once. Bring Unity to the front before running the playtest from another program.
+- **Fire control drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Fire Control.prefab`.
+  - `Drawers/State · fire control` became `Drawers/Fire Control`, and `HandoffFireControlPanel`
+    moved onto it.
+  - Parts grouped: `Frame`, `Header` (with `Sight`), `Scope bearing`, `01 Weapon system` (`System
+    selector`, `Mount selector`), `02 Firing solution` (`Track button`, `Range knob`, `Bearing knob`,
+    `Speed knob`), `03 Capacitor` (`Cells`), `04 Arming sequence` (`Housings`, `LOAD`, `ANGLE`,
+    `BEARING`, `ARM`), `Fire lever`. The RAILGUN, PDC and MISSILE labels are outside the selector's
+    group. They still draw over the mount knob they touch. Screenshots before and after match
+    pixel for pixel.
+  - From this panel on, a group stretches to fill its parent. Before, a group had the board's
+    fixed size. For a drawer the result is the same. The periscope needs groups that stretch: its
+    height changes as it moves.
+  - Art list: 19 entries. The four arming rockers' sprites are still separate fields on the panel.
+  - Four lamp glows are empty, as before: the design gives those lamps none.
+  - The playtest found the TRACK lamp by its old name (`lamp#82`) and crashed. It now looks for
+    `Lamp` beside the button, in the `Track button` group.
+  - Art moved: 4 files to `Art/Fire Control`; `glass_r3_c` and `screen_r4` to `Art/Screens`,
+    `knob_knurl` to `Art/Knobs`, `rocker_housing` to `Art/Switches`, `button_push` to a new
+    `Art/Buttons`.
+  - Playtest 171/171 (run 2026-10-26_223837).
+- **Hangar drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Hangar.prefab`. Done before the
+  weapons system. The owner had paused Tooling.
+  - `Drawers/State · hangar` became `Drawers/Hangar`, and `HandoffHangarPanel` moved onto it.
+  - Parts grouped: `Frame`, `Header`, `01 Bay status` (`Doors selector`, `Doors`, `Pressure`,
+    `Catapult`, `Cat charge`), `02 Squadrons` (`Squadron 1`, `Squadron 2`), `03 Launch order`
+    (`Ship selector`, `Bearing`, `Command selector`), `04 Launch sequence` (`Housings`, `CREW` …
+    `CATAPULT`, `Telemetry`), `Launch lever`, `Recall`. Screenshots before and after match pixel
+    for pixel.
+  - The selection bezel moves between the two squadron rows in play. The squadron groups come after
+    it in the list. It still draws under both rows, as before.
+  - Art list: 19 entries. The six stage rockers and the RECALL button (with its pressed overlay)
+    are not in it. The code swaps their sprites.
+  - Squadron 2's selection lamp has no glow, as before.
+  - Art moved: 6 files to `Art/Hangar`, the 24 × 32 rockers to `Art/Switches`, `glass_r3` to
+    `Art/Screens`, `round_5` to `Art/Shapes`.
+  - Playtest 171/171 (run 2026-10-26_225037). The two runs before it (22:44:33 and 22:45:40)
+    don't count: another session recompiled and entered play mode during them.
+- **Weapons (2026-10-26).** Fire control and everything it fires are in `Systems/WeaponSystem.cs`: the
+  weapon groups (railgun, PDC, missile), mounts, warheads, the arming ladder, the firing solutions,
+  picking a target, salvo, PDC loaders and AUTO, the capacitor and the fire lever; leading a moving
+  target; slugs and missiles in flight; enemy missiles coming in and our PDCs' chance at them.
+  - `OwnShip` and `Garuda · Cruiser` each carry a WeaponSystem, with the board's numbers.
+    `BoardManager.weapons` points at ours, and every ship state reaches its own through
+    `.weapons`. The Garuda's fire-back reads its own launcher and fires at our ship, as before.
+  - Stays on the ship state: the contact list, damage (`TakeSlug`, `TakeWarhead`), kills, the
+    periscope and the plot marks. The weapons read them.
+  - The PDCs still roll the ship's shared dice (`NextDie`), so every PDC and damage roll falls as
+    before.
+  - The weapon group type is `WeaponSystem.Group` (was `HandoffBoardState.WeaponSystem`). The
+    capacitor's tick is `TickCharge` (was `TickWeapons`).
+  - `HandoffFireControlPanel` became `UI/Panels/FireControlPanel` (its link kept, so the prefab still
+    holds it).
+  - **Owner 2026-10-26: the board's weapons stay as they are, not rebuilt on Soham's `WeaponBase`.**
+    His railgun fires an instant beam through Unity physics in real time. The board's slug flies in
+    game time and has to be led. Hitting debris can be added to the board's own code. `CLAUDE.md`
+    now says where the board's weapons are.
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_231109).
+- **Hangar (2026-10-26).** The hangar is in `Systems/HangarSystem.cs`: the squadrons and their craft,
+  the launch stages, the bay doors, the launch bearing and lever, squadrons in flight, the fighters'
+  attack runs, and the assault boats with the marines they carry.
+  - `OwnShip` and `Garuda · Cruiser` each carry a HangarSystem, with the board's numbers.
+    `BoardManager.hangar` points at ours, and every ship state reaches its own through
+    `.hangar`.
+  - Stays on the ship state: `captured` (the ship's own status, like `destroyed`), the crew
+    (`TotalCrew`, `KillCrew`), damage, kills and the alert gates. Boarding still rolls the ship's
+    shared dice (`Roll`), so every roll falls as before.
+  - The fire lever's threshold is the hangar's `leverFireAt` (0.9), as it always was; fire control now
+    reads it as `hangar.leverFireAt`.
+  - `HandoffHangarPanel` became `UI/Panels/HangarPanel` (its link kept, so the prefab still holds it).
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_232330).
+- **Engineering drawer prefab (2026-10-26).** `Assets/UI/Board/Panels/Engineering.prefab`.
+  - `Drawers/State · engineering` became `Drawers/Engineering`, and `HandoffEngineeringPanel`
+    moved onto it.
+  - Parts grouped: `Frame`, `Header`, `Compartments` (`Ship picture`, and one group per room:
+    `MAG`, `BRI`, `HAB`, `HGR`, `RCT`, `ENG`), `Status`, `Acting on` (`Selector`), `Repairs`
+    (`Housings`, `REBOOT`, `REPAIR`, `SEAL`, `VENT`, `RECALL`, `SPARE`). The old row highlight
+    stays, switched off, as `Compartments/Old row highlight (off)`. Screenshots before and after
+    match pixel for pixel.
+  - Art list: 17 entries. The six repair rockers are not in it. Each one has an up, a locked and a
+    thrown sprite on the panel.
+  - Art moved: the casting and the REBOOT rocker sprites to `Art/Engineering`; the 22 × 30 rockers,
+    the blank rocker and `rocker_housing_r3` to `Art/Switches`; `plate_dark` to `Art/Plates`.
+  - Playtest 171/171 (run 2026-10-26_232931).
+- **Damage (2026-10-26).** Damage is in `Systems/DamageSystem.cs`: the six compartments (integrity,
+  crew, air, fire and radiation), the armour on each side, what a slug, a warhead or a fighter run does,
+  fire, vacuum and radiation spreading, the crew, and damage control (the selected compartment, the
+  repair orders and the team out).
+  - `OwnShip` and `Garuda · Cruiser` each carry a DamageSystem, with the board's numbers.
+    `BoardManager.damage` points at ours, and every ship state reaches its own through
+    `.damage`. The Garuda took our damage numbers each tick (`CopyDamageTuning`). Since Step 80 it
+    uses its own, in `Garuda.asset`.
+  - Stays on the ship state: whether it is `destroyed` or `captured`, its EMP clock (`empUntil`, which
+    power reads), and its dice (`Roll`, `NextDie`), so every roll falls as before. The orders station,
+    the alert condition and the rockers that flick back stay too, for the orders step; the orders
+    station's repairs call `damage.EngBlock` and `damage.ApplyOrder`.
+  - `HandoffEngineeringPanel` became `UI/Panels/EngineeringPanel` (its link kept, so the prefab still
+    holds it).
+  - No behaviour change. Playtest 171/171 (run 2026-10-26_233713, after the owner cleared a Unity save
+    box that held it).
+- **Orders station prefab (2026-10-26).** `Assets/UI/Board/Panels/Orders.prefab`, the same way as the
+  helm.
+  - The orders station is one object, `Orders`, under `Tactical Board`. It has `Closed` and `Open`
+    (they were `Orders` and `State · orders`). `HandoffOrdersPanel` moved onto it.
+  - Parts are grouped: `Bolts`, `Header`, `Alert` (with `Selector`), and in `Open` also `AUX pool`
+    (with `Cells`) and `Order switches` (`Housings`, `PARTY`, `SEAL`, `VENT`, `FIRE`, `BLKHD`,
+    `SCRUB`). Screenshots before and after match pixel for pixel, closed and open.
+  - Art list: 17 entries. The three working order rockers are not in it. Their sprites are the
+    panel's **Rocker Up**, **Rocker Locked** and **Rocker Thrown** fields.
+  - Art moved: the two body plates and `latch_track_orders` to `Art/Orders`.
+- **Fix: the hangar's launch bearing box (2026-10-26).** Moving the hangar script onto `Hangar`
+  broke the box's two links to it. Typing a bearing did nothing. The docs agent and the checker
+  agent both found this. The links point at `HangarPanel` again, in the prefab and on the board's
+  copy. The playtest has a new check: it types a bearing into the box and reads it back. No other
+  panel had links like these.
+  - Playtest 172/172 (run 2026-10-26_234914). The two runs before it (23:43 and 23:46) don't count:
+    the board was in use during them.
+- **Orders (2026-10-26).** The orders station is in `Systems/OrdersSystem.cs`: the alert condition, the
+  AUX order pool, what each order costs and why one is refused, and the repair and order rockers that
+  flick back after a throw.
+  - `OwnShip` and `Garuda · Cruiser` each carry an OrdersSystem, with the board's numbers.
+    `BoardManager.orders` points at ours, and every ship state reaches its own through
+    `.orders`. The weapons, hangar and damage systems read its alert (`WeaponsReleased`,
+    `FlightOpsReleased`, the repair rate). Its repairs are damage control's (`damage.EngBlock`,
+    `damage.ApplyOrder`).
+  - `HandoffOrdersPanel` became `UI/Panels/OrdersPanel` (its link kept, so the prefab still holds it).
+  - No behaviour change. Playtest 172/172 (run 2026-10-26_235522).
+  - **The ship state now holds only what is the ship's own or shared:** the contact list, whether it is
+    destroyed or captured, the EMP clock, the dice, kills, the periscope, the plot marks and the
+    battle space. Every ship part is a system.
+- **Periscope prefab (2026-10-27).** `Assets/UI/Board/Panels/Periscope.prefab`.
+  - `Periscope` is a clip window. It grows from 44 px (housed) to 656 px (lowered). The periscope
+    script `PeriscopePanel` is now on it.
+  - Parts are grouped: `Carriage`, `Bolts`, `Sight` (with `Brackets`), `Readout`, `Mag knob`,
+    `Convergence`, `Slew button`, `Subject` and `Classify button`. The mount plate, caption, screen
+    and text stay at the top level. In a group they would draw under the aperture, which overlaps
+    them.
+  - The groups stretch with the clip, so the parts stay put as it grows.
+  - The prefab is saved lowered, so the whole periscope shows when you open it. The copy on the
+    board is housed. Screenshots before and after match pixel for pixel, housed and lowered.
+  - Art list: 15 entries. The aperture is not in it. The code swaps its idle and slewing sprites.
+  - Art moved: 8 periscope-only files to `Art/Periscope`.
+  - `State · periscope` (the LOWERED label) stays on the board. The board's motion script shows it.
+- **Plot prefab (2026-10-27).** `Assets/UI/Board/Panels/Plot.prefab`. `PlotPanel` is now on
+  `Plot`.
+  - The plot's parts already had plain names (`Ground`, `Grid`, `Marks (drawn)` …). They keep them.
+  - `Mockup` is now `Design mock-up (off)`. Its 46 parts are the design's sample picture, all
+    switched off. Three are still used: `Passive label template` (the plot copies it for passive
+    bearing labels), and the SENSOR RANGE label and value (the sensors drawer links to them).
+    The board's motion script also animates some of them. Nothing was deleted. Step 89 later
+    deleted the other 43.
+  - Art list: 5 entries (ground, glow, fighter wedge, scanlines, vignette). Art moved: the glow,
+    scanlines and vignette to `Art/Plot`, `round_6` to `Art/Shapes`. The fighter wedge stays in
+    `Assets/Art/Hulls`.
+  - The whole board matches pixel for pixel before and after.
+- **Owner 2026-10-27: no full playtest per change.** Each change gets a quick look in play mode.
+  The periscope and the plot were checked that way, then tested together in one full run:
+  172/172 (run 2026-10-27_001637).
+- **Frame pieces as prefabs (2026-10-27).** `Frame`, `ToolRail`, `SystemsRail`, `TimeControl`,
+  `Console`, `AlarmStrip` and `SignalBox` are prefabs in `Assets/UI/Board/Panels`. They keep their
+  object names: the board script and the playtest find some of them by name.
+  - They have no panel script. Owner 2026-10-27: each gets a small new script, `UI/ArtList.cs`,
+    that has only the Art list. The list code is shared with the panels (`Panel.ApplyArt`).
+    The pause key and the four rate keys are not in it: the board script swaps their sprites.
+  - Parts are named after what they are. `Frame`, `TimeControl` and `Console` have groups
+    (`Conduits`, `Corner bolts`, `Stencils`; `Clock`, `Pause`, `Rate keys`; `Power`, `Scale`,
+    `Tint`). The rails have no groups. Each key overlaps the next by 3 px, and its plate and lamp
+    draw later. A group per key would put a plate under the next key. `SignalBox` keeps its
+    readable names, and its ten cells are in `Cells`.
+  - The playtest finds the alarm strip's words as `AlarmStrip/Words` now.
+  - Art moved: each piece's own art to `Art/Frame`, `Art/ToolRail`, `Art/SystemsRail`,
+    `Art/TimeControl`, `Art/Console` and `Art/AlarmStrip`. Art both rails use went to `Art/Rails`
+    (the rail frame), `Art/Buttons`, `Art/Lamps` and `Art/Plates`.
+  - The whole board matches pixel for pixel before and after. A look in play mode: the clock, rate
+    keys, tool rail and periscope all respond. Playtest 191/191 (run 2026-10-27_010011).
+- **Fix: the periscope's convergence bar.** The docs agent found that the script's convergence bar
+  was the part named `Subject/Rule short`. It is now `Convergence/Bar`, with its track
+  `Convergence/Track`. The group that was called `Convergence` is now `Slew readout`: the bearing,
+  the SLEW label and its marker.
+- **New art needs one import setting.** The board's sprites have **sRGB (Color Texture)** off. The
+  board blends in gamma space. The old import tool set this. Tooling deleted that tool with the
+  builder (owner 2026-10-27). Set it off by hand on any new board art.
+- **The shared colour palette (2026-10-27).** The board's colours are in one file:
+  `Assets/UI/Board/Palette.asset` (script `UI/BoardPalette.cs`). It has 22 colours, each with a
+  note on what it is for: green for working, amber for caution, red for alarm, the text greys, the
+  unlit lamps and cells, and white for our ship, fighters and slugs.
+  - Every panel and the board script read their colours from it. Change a colour in the file, and
+    every panel that uses it changes. A test in play mode turned the green to magenta: the power
+    readout, the core lamps, the helm's STEADY and lamp and the orders condition all changed at once.
+  - Before the change, all 106 colour values on the board matched the palette. Nothing was lost.
+  - Playtest 191/191 (run 2026-10-27_010831).
+  - Five colours belong to one panel each and stay on it: the plot's axis numbers and amber sweep,
+    the sensors' band and contact row tints, and the periscope's rail legend.
+  - Our ship's colour on the plot was in the Tuning window's Board tab. It is in the palette now
+    (**Our ship**).
+  - A panel with no palette file set uses the design's own colours.
+
+---
+
+## 7 · How to keep this log
+
+This file is the handoff. Update it at the end of every step:
+
+- Move the step to Done in the table in section 1.
+- Fill in what actually went into the scene, in section 2.
+- Add any new script, shader or material and what it is attached to, in section 3.
+- Add any decision that was made, in section 4, so nobody reopens it.
+- Add anything broken, half-finished, or any trap that cost you time, in section 5.
+- Write up the step itself in section 6.
+- Update **Open items** at the bottom: take out what you finished, add anything you left behind.
+
+Nothing else in the repo gets written by the log keeper. Only this file.
+
+---
+
+## 8 · Open items
+
+Items that were finished or closed, under the heading they had in `docs/BUILD_LOG.md`.
+
+### Done: a plain-English note at the top of every script (owner 2026-11-10)
+
+All 109 C# scripts in `Assets` now start with a note in plain English. It says what the script does
+and how it works. Four writer agents wrote the notes. They read each script in full, one at a time.
+Four checker agents then read each note and the whole script again. They checked the English and
+every fact. 47 notes passed and 61 were fixed, for wrong facts and English slips. A tool then put
+each note above line 1, one script at a time. After each one it proved the code under the note is
+the same as before, byte for byte. No code changed. Nothing was commented out. The game scripts and
+the editor scripts were compiled outside Unity with Unity's own compiler. There were no errors. The
+old `/// <summary>` notes were deleted later, in the Technical pass below.
+
+- `docs/SCRIPT_LIST.md`: every script, with what it does. It is made from the notes.
+- `docs/script-notes/`: the kit for running the job again. It has the rules for the writers
+  (`BRIEF.md`), the checkers (`VERIFY.md`), the Technical pass (`TECH.md`) and the tidy pass
+  (`TIDY.md`). It also has `notes_tool.py`. The tool adds the notes and proves the code is unchanged.
+- The writers noticed some things in the code along the way. The bugs are in "Bug list", further
+  down this section, under "Found by the script notes". Two traps went into section 5, traps 29 and
+  30.
+- **Left to do:**
+  1. Done: Unity compiled all 108 notes with 0 errors, and the full playtest then ran (Ship Layout
+     Manager, 2026-11-10).
+  - Done: a tidy pass cut every note to short sentences. None is over 20 words. 13 scripts had been
+    changed by other chats, so their notes were matched to the new code first. All 108 notes are
+    checked again, the code under each is proven unchanged, and both sets of scripts compile.
+  3. Answered (owner 2026-11-11): yes. The kit in `docs/script-notes/` is kept. The working folders
+     are deleted: `notes/`, `before/`, `merge/`, `verdicts/` and the batch lists.
+  4. Answered (owner 2026-11-10): yes. `CLAUDE.md` now says: when you change what a script does,
+     update its note in the same edit, and a new script gets a note too.
+  - Done (owner 2026-11-10, "yes, please"): all 109 notes now have a third part, "Technical:" (data,
+    who calls what, where the numbers are set, traps). A new script, `EndCard.cs`, was added today.
+    Each note was brought up to date with today's code. Four writers, then four verifiers, one per
+    list. 53 notes passed and 56 were fixed (passed + fixed per list: 13 + 12, 16 + 18, 18 + 17,
+    6 + 9). The 81 old `/// <summary>` notes are deleted, after their useful facts moved into the new
+    notes. 28 scripts had none. A tool proved each script changed only in its top note and the
+    deleted old-note lines. The game and editor code compile with 0 errors. 35 bugs were found. They
+    are in "Bug list", under "Found by the Technical pass". The job sheet is
+    `docs/script-notes/TECH.md`.
+  5. Done: committed as `f9e7166` on 2026-11-11.
+  - Checked 2026-11-11: every one of the 109 scripts has all three parts. They are "What it does",
+    "How it works" and "Technical". `docs/SCRIPT_LIST.md` matches the scripts on disk exactly. A page
+    with two maps, of the systems and of the scripts, is at
+    https://claude.ai/artifact/Tk285DVMpwzAfb44Ph2Abr. It is private until the owner shares it.
+  6. Open (2026-11-11): six scripts have uncommitted changes from other chats. Their top notes are
+     unchanged. Each chat checks its script's note before it commits. The six are
+     `Assets/Scripts/UI/Panels/PlotPanel.cs`, `Assets/Scripts/UI/Panels/FireControlPanel.cs`,
+     `Assets/Scripts/Systems/WeaponSystem.cs`, `Assets/Scripts/Systems/HangarSystem.cs`,
+     `Assets/Scripts/Tactical/EnemyBrain.cs` and `Assets/Editor/Playtest/PlaytestRunner.cs`.
+  - The map page (2026-11-11): the owner asked for a dev map, and it's now one private page with two
+    tabs. The Systems map shows the screens from the title to the next mission, then 15 boxes for the
+    parts of the game. Click a box to see the boxes it affects and the boxes that affect it, with a
+    written list and the scripts behind it. The Code map shows the three main scripts
+    (`BoardManager`, `ShipState` and `Ship`) and the order of what happens every 0.42 seconds. Below
+    them are all 109 scripts in columns: 66 that the game uses today and 43 from the older version.
+    Click a script to see which scripts it uses and which scripts use it. The owner found the first
+    version too cluttered, so the lines now show only for the box or script you pick. The owner also
+    found the page's English robotic and chopped up, so all of its wording was rewritten in normal
+    sentences. The page shows the code as it was on 2026-11-11 and doesn't update by itself.
+
+### Open: the information hierarchy, a talk (2026-11-10, the owner's main priority)
+
+- **The owner's first notes (2026-11-10):** mix and match across A, B and C. No diamonds.
+  Triangles are preferred. No long pointy triangles: a triangle is always a fixed equilateral
+  triangle. My reading: it never turns to point along the ship's course. Check that with the owner.
+  Full feedback comes later.
+- **Replaced by the page's "Still open" list**, the first page's five points:
+  1. Which ladder: A, B or C? My pick is A. Ship triangles would need to be bigger than our fighter
+     triangles, or the fighters change shape.
+  2. Should a scan first leave a ship unnamed, with the name coming after the cone stays on it a few
+     seconds? My view: yes. It changes a rule.
+  3. When does a ship become a bogey past visual range? My view: keep today's rule, only by sight or
+     a lock.
+  4. Should the plot say GARUDA · CRUISER? It says GARUDA today. My view: yes.
+  5. The telemetry dot's look. My view: a hollow square in A or B, a hollow diamond in C.
+
+### Open after Step 185: art (2026-11-10)
+
+- ~~**Escape menu art, waiting for Unity.**~~ **Done, Step 191.** The Escape menu has an Art list
+  and looks like the pause menu. Starwolf → Art lists `Assets/UI/Menus/` too.
+- ~~**Six picture files have sRGB on.**~~ **Resolved 2026-11-10, no change.** Four are plain white
+  shapes the game colours (`Plot/GasCloud.png`, `Plot/JumpPoint.png`, `Plot/DradisContactBar.png`,
+  `Assets/UI/Sprite/triangle-128.png`): sRGB does not change plain white. The other two
+  (`Briefing/OperationalMapConsole.png`, `Briefing/CompletedMissionNode.png`) are on the sector map,
+  which does not draw through the board's colour screen, so sRGB on is right for them.
+
+### Open after Step 178: mission 1 and the battle group (2026-11-10)
+
+**The owner's direction for mission 1 (2026-11-10), to build next:**
+- Mission 1 is **MILK RUN** (Codex's name; take it). Codex writes the lines; this chat shapes the
+  tutorial. Codex's new briefing and checkpoint 1 and 2 notes are in `Assets/Campaign/Campaign.asset`
+  and `Orientation.unity`, uncommitted. Keep them.
+- The story frame: we merge the old tutorials into a few missions with a story round them.
+- The opening: we come out of **hyper velocity** (not light speed) into the map. A ping comes into
+  the orange briefing box from the battleship: "make your way to us". Then the power lesson (press 3,
+  ENG to DRAW), as now. We fly to the battle group and join it.
+- Then we fly with the group towards a **station**, through a **small rock field** where we learn to
+  manoeuvre. The group flies a loose formation round us, nose forward, never drifting.
+- The station: a big layered disc, 4,000 to 5,000 units across, made from Unity shapes, with the
+  wireframe look. Put its shapes on the WorldTerrain layer: the board then outlines it like a rock,
+  keeps it hidden until in range, and makes it solid.
+- **No more videos** (owner: "you're filming junk videos").
+
+**Done and committed (2c3153f, "MILK RUN, part 1"), checked in play:**
+- Every ship in sight shows its line picture, never a dot: one picture per ship on the plot
+  (`PlotPanel.ExtraShipImage`; copies made during the grid's fade-in fade in too), and a camera for each
+  ship a level brings (`ShipView.Give`, called in `TacticalWorld.Join`). A big ship or station gets a
+  sharper picture (Units Per Px). A ship counts as in sight once its near side is within visual range
+  (`SensorSystem.InSight`).
+- The battle group flies nose forward: no sway; while the group moves each ship keeps within Most Off
+  Course Deg (30) of the group's course, speeds up when behind its place and eases off when ahead; the
+  formation turns onto a new leg at Group Turn Deg; a ship that comes within Keep Clear of ours keeps its
+  course (stops if we are ahead, goes on if we are behind); its rock and ship avoidance ignores our ship.
+  The group waits where it starts until we are within Join Units (800). MARUT's place is (0, −900).
+  Check: from our arrival we flew to the group; it waited, then set off; on the straight legs each ship
+  turned 0 to 3 degrees in 3 s; the corner was a smooth turn; MARUT jinked once (about 50 degrees) as it set
+  off with our ship beside it.
+- A level's own ships are named by their object ("Pirate · Corvette" → PIRATE).
+
+**The MILK RUN layout, built and saved in `Orientation.unity` (not committed: the Mission Setup Tool chat
+commits it with its checkpoints):** our arrival at (−2,500, −3,800), heading 45; the group waits at
+(0, −1,500) and flies (−1,200, 1,800), (−3,000, 4,000), (−2,600, 6,200); a small rock field at
+(1,000, 3,600), radius 1,200, 22 rocks; the station s1 (`Station · Ruin`, `Assets/Ships/Station.asset`,
+a layered square turned 45 degrees, made of Unity shapes) at (0, 8,500), with ten wrecked ships and ten
+escape pods round it; the pirate corvette p1 at (2,600, 7,200) inside seven wrecks: from (0, 5,900) DRADIS
+at gain 2 does not hear it, at gain 4 it does (range 2,907, interference 3,500).
+
+**Still open for MILK RUN:**
+- **Built in Step 192** by the Mission Setup Tool chat: the checkpoints, the corvette's flight, the
+  can't-be-destroyed switch and railgun off. Codex wrote the words of all 23 (2026-11-11: COMMAND
+  only, no CAPTAIN replies). **Done:** Codex's words are committed (49f9f74, Step 200).
+- **Done: played through, 2026-11-11, and passed (Step 200)** (Tutorial Mission Manager chat; a script working the board's own
+  controls, Codex's new text): all 23 checkpoints passed and the run ended in MISSION COMPLETE. A real
+  lock came through the targeting computer. One torpedo salvo was fired at range 281; it hit and
+  stopped the corvette. The six launch stages took about 40 s. The marines took the captain 63 s
+  after launch, and 12 of 18 marines came back. Our battle group shows blue in sight before a scan.
+  Every captured note fits its box. Log: `Logs/MilkRun/playthrough.log`. Open points, sent to the
+  Mission Setup Tool chat:
+  - Checkpoint 16, "Station traffic control isn't answering. Ping the station.", was replaced
+    after 0.4 s. The station was probably already named because ACTIVE SCAN was still on. Not
+    confirmed. A player may never read the line. **Fixed in Step 200:** every checkpoint note
+    stays up at least 4 game seconds (Min Note Seconds).
+  - At checkpoint 18, "Contact east of the station", the red contact was not on the plot. It
+    showed about 3 s later. This may be DRADIS sweep timing. Not confirmed. **Left as it is (Step
+    200):** it is the DRADIS sweep catching up.
+  - The corvette ran nearly to the map edge. It was caught near (11,000, 10,700), with
+    APPROACHING THE EDGE OF THE BATTLE SPACE showing. Is a chase that long wanted? **Fixed in Step
+    200:** the corvette runs at 24 units/s. It ran at 36.
+  - Checkpoint 20 says "Take SEN back down" with no number. Checkpoint 22 says "Give AUX power"
+    without saying where it comes from. The reactor's 10 units are full at ENG 5, WEP 2 and SEN 3.
+    **Fixed in Step 200:** "Take SEN back down to 1 to free power." and "Give AUX 2."
+  - Not checked: what shows after MISSION COMPLETE. Not checked on screen: the notes of
+    checkpoints 4 to 10, 12 and 16, which the script cleared in about 1 s each.
+- ~~The group's small shuttles going out to the escape pods.~~ **Built:** three shuttles (h1 to h3, Friendly, class SHUTTLE, `Assets/Ships/Shuttle.asset`) under Station Area / Shuttles. Each waits until we are within 4,000, then ferries at 20 between the group's waiting point and one of the three nearest pods (`EnemyBrain` Patrol Route and Wait For Us Units, set in the level). Checked in play. Committed with the scene by the Mission Setup Tool chat.
+
+**Other open items:**
+- **Run the full playtest.** Not run since Step 178.
+- **Docs not yet in line with Step 178:** in this log, section 1's "The first mission, Wolf Hunt, is
+  playable", section 2's flow (00_Start → 01_Briefing → 02.1_Grid) and its `00_Start` and `01_Briefing`
+  entries, and section 3's ScreenFlow and MISSION SELECT lines. In `docs/BOARD_UI.md`, the Briefing
+  Icon's "In FLIGHT DRILL it is 230 px". In `docs/CONTEXT_INDEX.md`, the MISSIONS list mentions.
+
+### Brought up to date on 2026-11-09, after an audit of the whole log
+
+This list was last brought up to date on 2026-11-02 (Step 157). Nothing from Steps 158 to 176 went
+in. On 2026-11-09 five readers went through this log, the code, the team reports
+(`docs/team-reports/`), the playtest reports (`Logs/Playtests/*/report.md`), `SNIPER_PLAN.md` and
+the owner's notes. What they found is in the six sections just below. Items that are done are struck
+out where they stand, with the step that did them. Items marked **unsure** need a quick check first.
+The owner questions they found are added to "Owner questions never answered", in "Found by two
+audits" below. The owner's order of work is unchanged: see "Later, in the owner's order" in the
+triage below.
+
+**Codex art test (2026-11-10, Step 193).**
+
+- **Codex's Fire Control: built as a test, the owner still to decide** (owner 2026-11-10). It is in a test
+  scene, `Assets/Scenes/Tactical/Fire Control Codex.unity`: a copy of `02.1_Grid`, not in Build
+  Settings or the game flow. The drawer is `Panels/Fire Control - Codex.prefab`, a variant of the
+  board's Fire Control. FIRE on the systems rail slides it in from the right. The periscope's round
+  red view shows in its monitor. The periscope at the top of the board is gone in this scene. A big
+  FIRE button replaces the drag lever. It glows FIRE  FIRE  FIRE when a press would fire. The
+  button and `Fire()` both read the new `WeaponSystem.ReadyToFire`. The fire rules did not change.
+  Also built: Codex's frame, `Panels/Frame - Fire Control.prefab`, in the test scene only. It was put
+  in `02.1_Grid` too, and taken out again the same night: the owner keeps `02.1_Grid` unchanged. The HANGAR room in `Ship.unity` shows Codex's painting and the FLIGHT LEADER's picture.
+  Set-up: `docs/BOARD_UI.md`, "Fire Control - Codex (test panel)", "Frame pieces" and
+  "Ship rooms". Screenshots: `Logs/FireControlCodex/`. Open:
+
+**Playtest and play checks (2026-11-09).**
+
+- The last full playtest is `Logs/Playtests/2026-11-09_005653`: 256 of 256, during Step 170. No full
+  run since. It has not run Step 170's fix for the tilting ship in the targeting computer, or its new
+  check, or Steps 172 to 176.
+
+**Committed and cleaned up (2026-11-10).**
+
+- ~~Step 176 waits for a commit.~~ Done: the code is commit 351f915, and its row in the table went
+  in after the docs move. Its lines in this section go in with the rest of this section.
+- ~~`.gitignore`~~ Done, commit 05dd3cf (owner 2026-11-10): videos and screenshots never go into
+  git. It ignores every video (mp4, mov, webm, avi, mkv), and every picture under `docs/` and
+  `References/`. Game art in `Assets/` is still committed. `References/Company Logo.png` was in git
+  before and stays.
+- ~~Old staged copies~~ Done: the old staged `BUILD_LOG.md`, `SectorMap.cs` and both README files
+  are out of the queue.
+- Logs cleaned up (owner 2026-11-10: delete old screenshots and videos). Deleted: every picture and
+  video in the `Logs/` check folders from 2 November or earlier (273 MB), two old watcher logs, and
+  an old spare copy of the project in `.claude/worktrees/` (482 MB, from 26 October, nothing
+  unsaved in it). Kept: everything from 8 November on, the cutscene film (`Logs/Cutscene/`), the
+  newest two playtest runs, and every text note and playtest report.
+
+### Campaign: still to do (Steps 167 to 172; owner 2026-11-08 and 09)
+
+- **Between missions: the plan is `docs/CAMPAIGN_FLOW_PLAN.md`** (owner 2026-11-10). The owner's
+  answers on supplies carrying over, repairs, the end card and the build order are there. The Escape
+  menu is built (Step 190). The end card and the percent on the save slot are built (Step 194).
+  Step 3, part 1 is built (Step 196): the rounds, torpedoes, marines and each room's crew left
+  after a win are kept for the next mission. Part 2 is built (Step 198): the travel bar and the
+  actions in each room. Step 3 is done. Replays are off (owner 2026-11-11): a won mission's LAUNCH
+  is greyed out.
+- **Actions between missions: the travel bar. Built in Step 198** (owner 2026-11-09). A bar at the top of the ship's
+  rooms, about 10 units long. Think of it as travel time, days or hours, to the next mission. Every
+  action has its own cost and fills the bar. When the bar is full, you go on to the next mission.
+  The actions the owner named: restock torpedoes, restock drones, extra ammo, heal the marines, and
+  repairs (for example the reactor). The free REPAIR ALL is gone (Step 198). Starting costs (owner's OK, 2026-11-09): repair the
+  reactor 3, repair any other room 2, restock torpedoes 2, heal the marines 2, restock drones 1,
+  extra ammo 1. The bar's length and every cost are Tuning numbers. There is no LAUNCH in the rooms
+  (owner: "Just the launch, no"). You go to the sector map to launch. The SECTOR MAP button stays,
+  and you can go any time; time left on the bar is lost. When the bar is full, the actions lock and
+  the SECTOR MAP button flashes to call you there (my call; the owner said "you figure it out").
+  How much each action gives is in the plan's "Settled for step 3" table. **Built in Step 198.**
+  Still open: restock drones stays hidden until drones are built.
+- **The campaign's end: built, but the closing line is not written** (was "The campaign has no
+  end", from Step 167's "Not changed"). **Owner's answer, 2026-11-09:** the campaign will have 10
+  missions. After the last one, an end card shows the story's closing line, then the title. The
+  save slot reads CAMPAIGN COMPLETE and 100%. **Built in Step 194:** the end card
+  (`Assets/Scenes/Tactical/EndCard.unity`) and the percent on the save slot ("CAMPAIGN · 1 OF 10 ·
+  10%", or "CAMPAIGN COMPLETE · 100%"). **The closing line stays empty for now** (owner
+  2026-11-11), in `Assets/Campaign/Campaign.asset` → Closing Line. Since Step 203 the end card opens
+  even with the line empty, and goes straight to the title, where only STARWOLF flickers in. Since
+  Step 204 the last mission is the throwaway TEST MISSION. A campaign win of MILK RUN opens the
+  ship's rooms and the travel bar again, and the save slot reads CAMPAIGN · 1 OF 2 · 50%. A win of
+  TEST MISSION goes to the end card and the title, and the slot reads CAMPAIGN COMPLETE · 100%. **A rule for later (owner 2026-11-11):** STARWOLF must never be in the
+  bottom half of the screen. An end card with a closing line must not put STARWOLF below the line.
+  Nobody has played a full campaign win through the real win screen yet. **Built in Step 190:** Escape on SAVE SLOTS, the map and
+  the rooms opens a small menu: RESUME, MAIN MENU, QUIT GAME. MAIN MENU goes back to the title, and
+  no slot is picked until you pick one again (`SaveGame.Leave()`, which before ran only on DELETE).
+  space". Mission 1, ORIENTATION (to be renamed, owner 2026-11-10), and SKIRMISH are built (Step 178). Missions 2 to 10 are not. The old
+- **LONG SHOT is not on the sector map** (Step 170). Since Step 178 the map shows one mission,
+  ORIENTATION, so this waits for the story missions.
+
+### The sniper ship and weapons: still to do (Step 170 on)
+
+- ~~**A room layout editor** (owner asked 2026-11-09; not built; found missing from this list the same
+  day). The plan is `docs/finished-plans/ROOM_LAYOUT_PLAN.md`. In Tuning's Hard Points tab, each
+  room gets a side and an order number, and each side its armour. No dragging. This is how the
+  magazine question (producer N3) gets answered: the owner puts it where they want it. Today which
+  room is behind which side is fixed in code (`DamageSystem.BehindSide`). The plan also sets what a
+  hit damages once a side is open, and what comes after a wrecked room. One open question for the
+  owner, in the plan.~~ **Done, Step 180.** Later, its own talk: a separate setup for conditions
+  (fire, vacuum, radiation), owner 2026-11-09.
+- ~~**A playtest check for a moved room** (Steps 180 and 186).~~ **Added 2026-11-10:** just after the starboard
+  hangar check, the magazine moves to row 5 and the engine room to row 1; a STBD hit near the stern must go to the
+  magazine, a PROW hit to the engine room. It asks only which room the next hit would damage, so nothing is hurt
+  and no dice are rolled. Compiled with no errors outside Unity; not run yet (Unity was booked). It runs in the
+  next full playtest.
+- ~~**Player 1 runs the fight sums again** (Step 180). Hits now go past a wrecked room, and the bridge
+  and habitation can be hit. Fights will be shorter. Not run yet. First, the fight sums
+  (`docs/scale-sim/scalesim.py`, `BEHIND`) and their README still use the old fixed room per side.
+  They need the new steps before the numbers mean anything.~~ **Done 2026-11-10.** The fight sums
+  now play the new hit rule. Every fight was run twice on the same ship files, levels and dice: once
+  with the old rule, once with the new. Wins went up in Wolf Hunt at x1 (14% to 41%) and LONG SHOT
+  (x1 40% to 100%, x5 19% to 55%), and down in the chases (below). The full numbers are in the
+  "Room hits" tab of the Google Sheet
+  [Starwolf Tuning and Roadmap](https://docs.google.com/spreadsheets/d/1jSI0Y1bzp3S412vM--h7_IBPSifXZ_-lRuxFVhAW_tQ/edit),
+  and in the rows dated 2026-11-10 in `docs/team-reports/numbers.csv`.
+- ~~**For the owner: can a hit on the bow or stern destroy a ship?** With the starting layout, the
+  reactor can be reached only through STBD (after the hangar) or PORT. Hits on PROW or AFT wreck the
+  magazine, bridge, habitation and engine room, then do nothing. Slug hits to destroy the Garuda:
+  PORT 6, STBD 9. Our ship: PORT 4, STBD 6. PROW and AFT: never. Keep it that way, or move a room?
+  (Fight sums, 2026-11-10.)~~ **Answered, Step 186:** the rooms are in a row (the box). Every plate can lead to a kill.
+- **The chases got harder with the new hit rule** (fight sums, 2026-11-10). About 13 points fewer
+  wins at x1. COLD RUN: x1 47% to 34%, x5 26% to 19%. INTERCEPT: x1 47% to 34%, x5 27% to 20%.
+  Weapons are off in the chases, and the Garuda hits our STBD side most as we run. In 24 COLD RUN
+  fights (good player, quiet, x1), 40 of the 67 room hits on us were on STBD. 7 of our 16 deaths came
+  through our hangar into our reactor. Under the old rule a wrecked hangar stopped those hits.
+  With the box (Step 186) they are easier again: COLD RUN x1 34% to 38%, INTERCEPT x1 33% to 37%.
+- ~~**Our ship's bridge is at AFT 2, and the tuning log doesn't say so.** `Assets/Ships/Asura.asset`
+  has the bridge at AFT 2. The starting layout has it at PROW 2. It was saved in Tuning on
+  2026-11-09 at 23:56, after Step 180 was finished. `docs/TUNING_LOG.md` has no row for it. The fight
+  sums of 2026-11-10 used the file as saved. For the owner: keep it and log it (old value PROW 2), or
+  put it back.~~ **Settled, Step 186:** every ship gets the new layout. The old values are in `docs/TUNING_LOG.md`.
+- **The owner's picks from the firing looks page** ("Ship Actions Lab", 2026-11-10). Built: the
+  torpedoes, A2 and A3 (Step 184). ~~Still to build, in this order:~~ **Built in Step 197:** C2,
+  C3, D2, B3 and E2. Left:
+  - ~~**The railgun. Decided: build it, don't ask again** (owner 2026-11-10: "I already explained
+    what I want… I don't want to talk about it more"). C2: a small push back after each shot, which
+    the thrusters stop. No glow along the ship: the ship is built around the gun. The charge is a
+    flare at the muzzle only, as the page shows it, then a flash and vent gas. C3: our shot leaves a line on the table that
+    fades in 5 game seconds. D2: a far shot's mark counts down and blinks IMPACT ?.~~ **Built, Step 197.**
+  - **The page's Learning map tab, watched (2026-11-11).** Owner: "Watch everything, and then can you
+    put the GIF in each of these things?" All 34 reference clips were watched frame by frame. Each card
+    now has a GIF of the real moment, and its link opens the video at that second. About half of the
+    first descriptions were wrong (for example, the Star Trek II part has phasers only, and the Donnager
+    clip has no railgun fire), so the cards now say what is really on screen, with a "Watched" note.
+    Three clips were swapped for clearer ones. Page: https://claude.ai/artifact/KXZhwnSU7hoG7aaEqThx6g
+    (Learning map tab). Nothing in the game changed.
+  - ~~**The boats.** B3, for every craft, assault boats too.~~ **Built, Step 197.** Only our ship
+    launches craft, so only ours fly it.
+  - ~~**The PDCs.** E2, streams.~~ **Built, Step 197.**
+  - ~~**Step 197: the 8° that ends a craft's hard break is written in the code** (`HangarSystem.Fly`).~~
+    Done in Step 197: it is now Break End Deg (8) on the Ship tab of Tuning, under Hangar, with a row in
+    `docs/TUNING_LOG.md`.
+- **Step 184, the full playtest ran on 2026-11-10** (`Logs/Playtests/2026-11-10_113810`, run by the Ship Layout
+  Manager chat): the two changed torpedo checks passed. Six checks failed on the Garuda's salvo (#153 to #162):
+  only 1 of its 2 torpedoes was in flight, so the PDC and hit counts were off by one. Likely the new ripple. Two
+  more failed (#186, #194): the Garuda's model did not show on the plot when locked and in sight. The Ship Visual
+  Artefact chat then changed #153 to wait for the ripple's second torpedo (not run again yet). It says #186 and #194
+  likely come from the other uncommitted PlotPanel change, "every ship in sight shows its line picture, never a dot".
+  **Later the same day:** the cause of the missing torpedo was a bug in `WeaponSystem.cs`. The Garuda's second
+  torpedo never left the queue. **Fixed in Step 197** and seen in play: both torpedoes of a salvo of two left, 0.3
+  seconds apart. See "Bug list", "Found by the Technical pass". #153 to #162 have not been run again.
+- ~~**Step 184, the close-up:** the table's white dot draws on top of a drifting torpedo's body and
+  hides most of it.~~ **Fixed the same day:** zoomed in, a torpedo's table dot and trail fade out.
+- ~~**Player 1 runs the fight sums again** (Step 184). The torpedo flight changed. The Ship Layout
+  Manager chat's fight sums of 2026-11-10 (the room-rule numbers above) used the old flight.~~
+  **Done 2026-11-10:** the Step 186 run (the box) used the new torpedo flight.
+- **Finish Step 186** (the rooms in a row). In this order:
+  1. ~~Read Unity's console. A compile was started, then the Editor's connection dropped. The code compiled with no
+     errors outside Unity.~~ **Done:** Unity compiled it at 02:08 on 2026-11-10 with no errors. Its compiled code
+     has Room Row and no Room Side.
+  2. ~~A quick play check on `02.1_Grid`: slugs through the Garuda's PORT, near the middle, go to the reactor; slugs
+     through its PROW go magazine, then bridge, then reactor; the targeting computer's hull line names those rooms.~~
+     **Done 2026-11-10** (Step 186 row).
+  3. ~~Open Starwolf → Tuning → Hard Points → ROOMS and take a screenshot: five rows, habitation and hangar side by side
+     in row 4.~~ **Done 2026-11-10.** It shows them.
+  4. ~~The fight sums: `docs/scale-sim/scalesim.py` still plays the Step 180 rule (`next_room` with sides). Give it the
+     rows and the spot where each shot lands (`enters_box` knows it), then run it with the Step 180 rule and the box,
+     both on the new torpedo flight. Put the results in the sheet's "Room hits" tab: parts 1 and 2 (the layout and the
+     hits to destroy) and part 4 (the fights). The geometry in part 3 stays. This also covers the Step 184 re-run above.~~
+     **Done 2026-11-10.** The results are in the sheet and in `docs/finished-plans/ROOM_LAYOUT_PLAN.md`, "Step 186".
+  5. ~~A docs agent for `docs/finished-plans/ROOM_LAYOUT_PLAN.md`, `docs/DAMAGE_README.md` (sides and rooms), `docs/CONTEXT_INDEX.md`
+     and the Step 186 row. The design page above has the rules and numbers.~~ **Done 2026-11-10.**
+  6. ~~The full playtest, once, with this batch (its starboard hangar check changed).~~ **Done 2026-11-10**
+     (`Logs/Playtests/2026-11-10_113810`): every room check passed, the starboard hangar check included.
+  7. ~~Not committed. Commit only when the owner asks, from a private index.~~ **Done 2026-11-10** (owner asked):
+     two commits, the rooms, then the fight program.
+     `docs/scale-sim/scalesim.py` also holds the Step 184 torpedo flight (the Ship Visual Artefact chat's lines;
+     its commit 46e1cda left them out). Commit them with the Step 186 sim changes.
+- ~~**LONG SHOT at x5 fell to 23% wins with the box**~~ (Step 186; it was 55% under Step 180). At x5 our shots
+  land behind the middle of the moving Garuda. **Closed, owner 2026-11-10:** "I don't really care about longshot… I
+  care about the actual tutorial level. If longshot is not making sense, remember you can always pause the game."
+
+### Bug list: every known bug, not fixed
+
+- ~~**`WeaponSystem.cs`, `LaunchAt`: an enemy torpedo salvo fired only its first torpedo.** The others
+  waited in the queue forever. Their cells were still spent. Nothing called `Release(dt, true)`. This
+  explains the Step 184 playtest result "only 1 of its 2 torpedoes". That result was put down to the
+  ripple's timing.~~ Found by the chat killshot-78. **Fixed in Step 197:** `WeaponSystem.TickIncoming`
+  now releases the enemy's queued torpedoes. Checked in play on 2026-11-11: both torpedoes of a
+  salvo of two left, 0.3 seconds apart.
+  Taken out of the Bug list on 2026-11-11: fixed in Step 197.
+- ~~`PlotPanel.cs`, `TrackRailShots` and `TrackPdcBursts`: each redraw adds the frame's time. A frame
+  where the game steps or the plot is dragged redraws twice. Shot lines, PDC streams and the muzzle
+  timers then run fast. Only the picture is wrong.~~ **Fixed in Step 197:** each timer now takes a
+  frame's time once (`FrameDt`).
+  Taken out of the Bug list on 2026-11-11: fixed in Step 197.
+
+- **The radio countdown is jammed against its text** on the strip: 59INCOMING SIGNAL. See "Radio
+  countdown on the strip: not fixed". The Count box in `AlarmStrip.prefab` is 7 px wide, so two
+  digits run into the words. The battle space edge's 30-second countdown has the same fault
+  ("30EXITING…"). MILK RUN: the edge countdown.
+  MILK RUN: the rooms after MISSION COMPLETE. See "Brought up to date on 2026-11-09", "Codex art test".
+
+### The small number box on the Hangar panel: closed (Step 149, 2026-11-02)
+
+The box can no longer stop a launch. BEARING OUTSIDE LAUNCH CONE no longer exists. The box and its
+red number are still on the panel and do nothing else. The owner did not recognise the box. Do not
+ask about it again.
+
+### False dots: removed (Step 157, 2026-11-02)
+
+Steps 148 and 151 built false dots near rocks, on our plot and for the enemy. Step 157 removed them
+for both sides (owner: "the rock should be silent until you ping... those false red dots don't make
+sense"). A rock is silent until ACTIVE SCAN pings it. Do not ask about it again. False dots from
+radiation are a later idea (For later talks, below).
+
+### Radio countdown on the strip: not fixed (2026-11-02)
+
+A small known problem. The strip shows the radio countdown jammed against its text, like
+59INCOMING SIGNAL.
+
+### Ship movement feel: open questions (Steps 171 and 175, 2026-11-09)
+
+5. **Full playtest** not run since Step 175.
+
+### FLIGHT DRILL: calls for the owner to check (Step 144, 2026-11-01)
+
+The owner gave the session a free hand. These calls were made without asking. Each can be changed.
+
+**Probably overtaken (unsure, 2026-11-09).** The owner said on 2026-11-09 that the levels get
+reworked as a set later ("The level rework", above). These calls may go with that rework.
+
+1. **The name.** FLIGHT DRILL.
+2. **Its place.** First on the MISSIONS list, and the first pick.
+6. **A slide stops by itself** when the key is let go. The owner changed this in Step 171: the slide
+   keeps going and fades.
+8. **The 14 steps and their wording** (section 2, `FlightDrill`). Step 163 added an ACTIVE SCAN step
+   to the first 13.
+9. **The parked Garuda.** It is still and silent at the far corner, beyond DRADIS reach of the course.
+
+The board opens paused, and ENG gains nothing until time runs. The first note says to press `P`, as WEAPONS FREE's and INTERCEPT's briefings do.
+
+A very short tap of `Q` or `E` used to do nothing. Fixed in Step 171: every tap counts.
+
+### Review of the game, and the owner's answers (2026-11-01)
+
+A session reviewed the game as a designer and as a gamer. It used the playtest shots, the level text
+and the code. Nobody played the game by hand for this review. The owner answered the gamer's list
+and agreed the first jobs.
+
+**The jobs, in order.**
+
+1. **A briefing button.** Built in Step 134: a small icon next to the time control.
+4. **A bigger hit and kill.** Built in Step 131: the shake on a hit or crash, and the ship breaking in
+   two.
+5. **Military labels.** Owner: the labels "ARE weird". The words must be real military words, short
+   and clear. The owner said yes to the wording below. Built in Step 133.
+6. **x5 is the top rate (owner: fine for now).** Built in Step 133. Pause stays. Crossing the whole
+   20,000 map at top speed takes about 80 seconds at x5.
+
+**Left as they are (owner).**
+
+- The lowered periscope covers our ship and its gun cones in the normal view.
+- DUMMY 2 and stability, which are not built yet.
+
+**Scan, plot and lock: built in Step 141.** The owner's words: a scan has to help the shot, you can't
+board what you can't scan, locks are short, and you plot because you don't know where the ship is
+going. The rules are in `TACTICAL_BOARD_SPEC.md` §9.4 and §18.4. killshot-e7 handed these rules to
+killshot-d2 on 2026-11-01, with the hand checks at the top of this file.
+
+**Dropped from the review.** It said most shots were at a dot and that the flight to the jump point
+was long. The ship files changed while it was being written, and both points are out of date. At
+18:26 the files read: top speed 50 (25 at base power), railgun 2,000, missile 3,000, PDC 600, visual
+range 2,000, DRADIS 5,000 to 7,500, and `Level_01` 20,000 x 20,000.
+
+**Label wording (owner's yes, 2026-11-01).** Only these labels change. Every other label stays as it
+is. The owner rejected THROW THE SWITCHES, NOT YET and LOUD · NOT HEARD YET. Don't use those or
+anything like them.
+
+Signal box:
+
+- NO HOSTILE SET HAS YOUR RANGE → UNDETECTED
+- 1 HOSTILE SET HAS YOUR RANGE → DETECTED BY 1 HOSTILE
+- 2 HOSTILE SETS HAVE YOUR RANGE → DETECTED BY 2 HOSTILES
+- EMISSIONS DECAYING — NOT YET RESOLVED → EMISSIONS DECAYING
+- POWER SIGNATURE — NOT YET RESOLVED → EMISSIONS LOW
+
+Alarm strip:
+
+- NEW CONTACT SINCE COMMIT → NEW CONTACT
+- NEW CONTACTS SINCE COMMIT → NEW CONTACTS
+
+Fire control:
+
+- CHARGED — GATE WILL ARM → CAPACITOR CHARGED
+- CHARGING AT +N/S — GATE LOCKED → CAPACITOR CHARGING +N/S
+- GATE LIVE, under ARM → ARM READY
+- LOCKED, under the switches → INTERLOCK. The lock on a ship uses the word LOCKED too. The design's
+  spec calls these interlocks.
+
+Playtest checks 38, 77 and 80 read these words. Step 133 measured each new label in its box.
+
+### Triage: everything left, sorted (2026-10-29, killshot-a2)
+
+The owner asked for everything left over, with nothing missed. This list sorts every open item in
+this file into: blocks play, hurts play, owner only, and later. The detail stays in each item's own
+section below. **Who:** "Worker" is the session that was killshot-81.
+
+**Blocks play** (a new player can't get through Wolf Hunt)
+
+Nothing open. Item 1 (the instruments) was built in Step 106: the ring, the plot feeds the gun, the
+periscope picks the target. Item 2 (the first salvo) was answered "no change".
+
+**Hurts play**
+
+3. The Step 105 questions: answered and built in Steps 106 and 107.
+4. Bugs 7 and 8: fixed in Step 106.
+5. Bug 6: fixed in Step 107.
+6. W/S, P and the title: done in Step 106.
+7. **Seven font files rewrite themselves** whenever Unity runs. See trap 28 in section 5.
+
+**Owner only**
+
+8. The Mac app play-through: done by the owner on 2026-10-28.
+9. `Level_02`: deleted in Step 106. An empty scene of that name came back on 2026-10-29, and came off
+   the build list on 2026-11-01. The file no longer exists (checked 2026-11-09).
+
+**Later, in the owner's order: refactor, then tools, then the mission scripter, then features**
+
+- **UI restructure step 8, the check: done (2026-10-29).** No missing scripts in the four build
+  scenes or the board's prefabs; nothing points into `UI2`; the last playtest passed 211/211.
+
+The owner's answers (2026-10-29) are built in Steps 106 and 107.
+
+**The owner's hygiene answers (2026-10-29).**
+- **Delete the unused things** (git keeps every one): the two old demo builds and `node_modules` out
+  of git (the builds moved to `~/Documents/GitHub/Killshot-Builds/`); the unused game files
+  (`Assets/Screenshots`, `Art/Icons`, `Art/Frames`, `hull_wedge_outline.png`, `ui_square.png`,
+  `TacticalGrid.shader` and `.mat`, three unused materials, `PlotAnnotation.cs`, `MissionClock.cs`,
+  six empty folders); the old QA folders in `Logs`; `docs/reference-sim`. See "Deleted on 2026-10-29"
+  below for what is done.
+- **`Starship_Silhouette.png` stays deleted** (the owner's ChatGPT art; git has it at `499909d`).
+- **The Claude Design request: send it soon.** Next: bring `docs/finished-plans/CLAUDE_DESIGN_NEEDS.md` up to date (PDC
+  quadrants are now two halves; contact clicking changed in Step 106), draft the request, the owner
+  sends it. Keep `docs/finished-plans/HANDOFF_GAPS.md` and `docs/finished-plans/CLAUDE_DESIGN_NEEDS.md` until then. **Probably overtaken
+  (unsure, 2026-11-09):** the owner now brings art from ChatGPT and Codex.
+- New plans this day, below: distances in units, the plot zoom-out, comms intercepts.
+
+**Deleted on 2026-10-29** (owner's yes; checked first: no scene, prefab, asset or material refers to
+any of them, and no script names them; git keeps them all):
+- In `Assets`: `Screenshots` (19 PNGs), `Art/Icons` (23), `Art/Frames` (4),
+  `Art/Hulls/hull_wedge_outline.png`, `UI/ui_square.png`, `UI/Shader/TacticalGrid.shader` and `.mat`,
+  `UIScreenIcons.mat`, `Weapon.mat`, `Shader Graphs_GridSpace.mat`, `Scripts/Tactical/PlotAnnotation.cs`
+  and `MissionClock.cs`, and six empty folders (`_TransferTmp`, `Font`, `UI/Scene`, `Plugins`,
+  `Resources`, `Settings/Build Profiles`).
+- Out of git: `Starwolf_Demo_Build_v0.1` and `Starwolf_Demo_Build_v0.2.zip` (moved to
+  `~/Documents/GitHub/Killshot-Builds/Old`; `.gitignore` now keeps builds out), `node_modules`,
+  `package.json` and `package-lock.json` (an unused animation library), and `docs/reference-sim`.
+- On disk only: the old QA folders in `Logs` (`HandoffQA`, `Shots`, `Checks`, `FighterArtTest`), and
+  the videos and shots of every playtest run but the newest two. Every `report.md` is kept.
+- Checked after: Unity refreshed and compiled with 0 errors and 0 warnings (Targeting Computer View).
+  Commits cca9051 (the deletions) and fba384c (this log).
+
+**Marked done on 2026-10-29** (these were still listed as open): the Garuda hunts you (Step 97); the
+enemy notices us, P3 (Step 97); hitting debris hurts the ship (Step 93); the battle space per level
+(Step 91); the UI restructure check (above).
+
+### For later talks (owner, 2026-11-01)
+
+- **An art and UI asset manager.** The owner wants one place to swap all the art and UI assets.
+  Today the art files are in `Assets/UI/Board/Art`, and each panel has its own Art list.
+- **The level editor.** Done in Step 136: drag, resize, edit what you click, Save, and grid numbers.
+  Zooming the map was offered and left out.
+- **The sneak level is built.** Step 146 built it as COLD RUN, an S-shaped map. All today's levels are tests and get deleted in the end.
+  Wolf Hunt is not the level that matters. Weapons are off. A far jump point is the goal, and it shows
+  from the start. The map is one long winding corridor made of debris. The enemy patrols the corridor
+  on a route set on the Level map. The player watches its path and moves from gas cloud to gas cloud.
+  You lose when your ship is destroyed. There is no separate "caught" rule. Since Step 148, rocks cut
+  the enemy's hearing and block its sight by the same rule as ours.
+- **INTERCEPT is built on the sneak level** (owner 2026-11-01, built in Step 148). It is a copy of COLD
+  RUN's map with the radio on. You sneak past the Garuda to the jump point and use the radio to work
+  out where it is going. This replaced its first goal, finding the Garuda on DRADIS.
+
+### Play-through 2: scan, fighters, missiles, boarding against the live Garuda (2026-10-29, Worker)
+
+The owner asked whether fighters, active scan, missiles and boarding were ever tested for real. In the
+playtest they are, with stand-ins (the Garuda held still, our ship placed by hand, the scan faked, the
+marines sure to win). So the Worker played a second game in the Editor, on the 60,000 km Level_01,
+through the board's switches. PlaytestRunner step 21b now scans for real: the ACTIVE rocker and the
+cone dial onto GARUDA's bearing identify it (was a stand-in). Commit e69e8b5. Full playtest
+2026-10-29_015659, with all of that day's work: 215/216. The one failure, #56 "RECALL eases down while
+held (.1 s)", is a frame-timing check that has failed the same way before on a busy machine, not a code
+fault.
+
+**Worked, in order.** First contact at 29,960 km after about 2 real minutes at x10 (it was 7.5 on the old
+map). With ENG cut, the ship drifted on. Fighters: CONDITION 2, doors, the six stages, the lever, four
+interceptors away. They scouted (the Garuda showed on our plot at 17,800 km) and made attack runs:
+its bow to 30, its stern **open**. The fighters' hit put it on ALERT, and the strip warned of its
+missiles. ACTIVE SCAN with the cone dial identified it; TRACK, SLEW TO, the missile ladder and the lever
+sent an HE salvo of two. PDC-B went on AUTO.
+
+**Found (for the owner):**
+
+2. ~~**A fighter's hit tells the Garuda where our ship is,** not where the fighters are: it gets a fix on
+   us and opens fire on us (`EnemyBrain.Listen`, the hit branch uses our position). Probably a bug.~~
+   Not a bug: Step 143 checked it.
+6. ~~**The plot can't show the fight.** At its widest zoom (x0.47 on the 60,000 km map) it shows about
+   14,000 km each way, so a contact at 15,000–30,000 km, inside our DRADIS circle and our railgun's
+   reach, is off the screen.~~ Fixed in Step 130: the map is 20,000, and at x0.058 all of it fits the
+   plot's height.
+7. ~~**Boarding is still untested in a real game.** The Garuda's stern was open, but by then our hangar
+   was airless and the boats could not launch.~~ Done: Step 143 won FINDERS KEEPERS by boarding,
+   through the board's controls, by script.
+
+None of these were changed: they are game feel or game rules, so the owner decides.
+
+### Distances in units, not km (owner, 2026-10-29). Sizes built in Step 111, speeds and ranges in Step 130; what the player reads still to do
+
+- At x1.0, one small plot square is 50 units. Our ship is drawn 76 px long, as now, and is 2 squares
+  long: 100 units. The squares shrink to fit the ship: 38 px each, down from 61. The ship art stays the
+  same size.
+- The Garuda is 1.5 times our ship: 150 units, 3 squares. Today the plot draws it the same size as ours.
+  That changes with this work.
+- Order: sizes at x1.0 first, then what zooming out means, then speeds, then ranges. What the player
+  reads (km or anything else) comes last.
+- Build the sizes step together with the plot zoom-out below. On its own, the plot at x1.0 shows only
+  about 2,250 units, and zoom-out stops at x0.35. DRADIS and the Garuda would be off screen.
+- This replaces decision 13 ("one world unit is one kilometre"). `scopeFitKm` (periscope, 3,750) is
+  `scopeFitUnits` since Step 113.
+- **Checklist for the docs: done (2026-11-01).** This log's decisions, section 2 and Wolf Hunt's
+  numbers; `docs/CONTEXT_INDEX.md`; `docs/scale-sim`; `docs/TACTICAL_BOARD_SPEC.md`;
+  `docs/FTUE_PLAN.md`.
+
+### Plot zoom-out (owner, 2026-10-29). Built in Step 110; the owner's answers built too
+
+From Grid Visual. Built: zoom out to x0.1, the grid past the battle space, a heavier edge line, panning
+still stops at the edge. Step 111 took the limit to x0.01 with the change to units. Step 124 set it to
+x0.1 and replaced the square rule below (decision 53). Step 130 set the limit to x0.058, and Steps 135
+and 139 set the squares as they are now.
+
+- **Done in Step 130:** at x0.058 the whole 20,000 map fits the plot's height, with the railgun and
+  missile rings.
+
+- The owner's answers (2026-10-29), all settled:
+  - Panning stops at the edge, never past it. As built.
+  - The grid outside the battle space is not dimmer. As built.
+  - The edge is amber on the white grid and red on the amber grid (amber would not show there). Built:
+    `PlotGrid` White Edge and Amber Edge (commit 365056f), and written into `Plot.prefab` (767786d).
+    Checked in play mode at x0.02, both tints (`Logs/GridCheck/edge_*.png`).
+  - Replaced in Step 124: a big square held 5 x 5 small squares, and what each square was worth
+    changed as you zoomed. It was 10 x 10 from Step 124. Since Step 139 it is 5 x 5 again, and the
+    squares change size as you zoom.
+- **Trap: Unity keeps old values in a loaded prefab after a recompile.** A new default in a script does
+  not reach a prefab that is already loaded, even when the prefab file doesn't list the field. The
+  edge stayed white in play mode until `Plot.prefab` was saved with the colours in it.
+- Also from Grid Visual: the spec has "Body cam — not built yet" under §12.2 (commit b8dffe9), an idea
+  for a marine helmet-camera window during boarding. Not to be built yet.
+
+### Comms intercepts (owner, 2026-10-29). Built in Steps 137, 140 and 148. Every level uses them now
+
+**Still to do.**
+
+**Calls made while building, confirmed by the owner on 2026-11-02.** These were never answered in the
+2026-10-29 talk, and the owner said to start building:
+
+- A soft tone plays when a message comes in.
+- 60 seconds to lock. 30 to 60 is good. It is adjustable as On Air Seconds on each level's Enemy
+  Spawn. Locked in time, a message stays for as long as you need.
+- A missed message is lost (GDD p. 31).
+- The bearing in a message is always a direction word such as NORTHWEST, never a number.
+- Comms hears a ship from a very large distance, so it hears the Garuda anywhere on the 20,000 map for
+  now. The exact number doesn't matter yet.
+
+**A message is guidance (owner 2026-11-02).** It gives the player a reason to move in a direction and
+think. It doesn't have to be a real decision by the enemy ship in the story.
+
+The speed is rounded to the nearest 5. Only one message is on the air at a time.
+
+**The wording (owner 2026-11-01).** It is an intercepted message, so it doesn't speak to us:
+"GARUDA HEADING NORTHEAST SPEED TWENTY BEARING NORTHWEST". The bearing is the Garuda's from our ship.
+It is one of the eight words, as the owner said on 2026-10-29. The "NORTH OF YOU" wording in Steps 137
+and 140 is replaced.
+
+**The plan as agreed.** The 30,000 km and "SPEED NINETY" below are older than the Step 130 numbers. The
+5 minutes below is replaced: a message about every 60 seconds (owner 2026-11-01).
+
+From the hotkeys chat. Comms gets real signals. It becomes the main way to find the enemy beyond
+DRADIS's 30,000 km.
+
+- The Garuda sends a radio message about once every 5 game minutes.
+- LOCK does not draw a bearing line on the plot.
+- Every message has a new code. The player keeps solving codes over time with the four dials. Each
+  message starts with the sender's full name, GARUDA (six letters). The code is made new for each
+  message.
+- Decoded, the message gives three things: which way the Garuda is from us, which way it is heading,
+  and its speed. The player uses them to work out where it is. Directions are in words, eight of them:
+  north, northeast, east, southeast, south, southwest, west, northwest.
+- No quadrants, and no markings on the grid (the owner first wanted "QUADRANT 2", then dropped it the
+  same day).
+- Everything in the message is in words, the speed too (for example "SPEED NINETY"), so the whole
+  message is in code and has to be decoded. "Which way it is" is a word like "northeast". There are no
+  digits in the message. Nothing about comms is open now.
+- ~~In WEAPONS FREE, NO PEEKING and FINDERS KEEPERS, comms has one fixed made-up signal (band 2, 72.2) with a fixed message,
+  and nothing reads the decoded text.~~ Step 148 removed the fixed signal from every level.
+
+### Found by two audits (2026-10-29, Worker)
+
+The owner asked for the old logs to be gone through, so nothing they asked for slips, and for a check
+that the restructure was really done. Two agents read every owner message in the 26 past sessions,
+and checked the restructure against the code. Read-only; nothing was changed. Items already in the
+triage above are left out.
+
+**Owner requests never done, or only partly** (not in the triage above):
+
+- ~~**The comms cipher does nothing in play** (2026-09-01: "keep the comms game"). It solves on the
+  panel; nothing reads it.~~ Real messages built in Steps 137 and 140, in INTERCEPT and Wolf Hunt.
+- **The battle board fills any screen** (Step 182; its open items are at the top of this section). Before, it fitted the MacBook's 2880 × 1864
+  screen with dark bands above and below (Step 87). The other screens still show dark bands on
+  screens that aren't 16:9: the title, SAVE SLOTS, SECTOR MAP, the ship's rooms and the MISSIONS
+  list.
+
+**Records that disagree with the code:**
+
+- ~~Step 96 says the Garuda is "bigger". No stats file has a size; every hit uses one 100 km radius.
+  Bigger only in its numbers, not on the plot or to a slug (not checked in the scene).~~ Fixed: ships
+  have sizes and hit boxes since Steps 123 and 126.
+- ~~The playtest keeps only the newest run's video, and screenshots from 3 runs. The owner asked for the
+  last two runs to keep both (`PlaytestRunner.cs`, around line 102).~~ Fixed in Step 143: the newest
+  two runs keep both (`PlaytestRunner.cs:102`).
+- ~~`FTUE_PLAN` still lists the Garuda's hearing, searching and firing back as not built (Step 97 built them).~~ Fixed: it reads "Done, Step 97".
+- ~~`docs/BOARD_UI.md` says the palette has 23 colours.~~ Fixed 2026-10-29 (22).
+- ~~The knowledge graph (`graphify-out`) was last built on 2026-10-27, before the Handoff renames.~~ Rebuilt 2026-11-01.
+
+### Wolf Hunt — the first level. Built in Steps 92 to 107
+
+**What it is.** The first level, called WOLF HUNT. Our Asura starts at the bottom of the map. The
+Garuda starts somewhere at the top. It patrols and does not know where we are. We hunt it, and it
+hunts us. We stay quiet, scan, send fighters ahead to scout, and pick our moment: guns,
+a missile salvo, or a broadside followed by marines. If it finds us, it calls for help, and a
+countdown starts. When the countdown ends, enemy frigates arrive. Kill or capture the Garuda, and a
+jump point appears. Reach it to win.
+
+**Since Step 130** the level is a 20,000-unit square with no husk, a little debris and three gas
+clouds; the ships start about 16,000 units apart. The km numbers below are older than Step 130. Now:
+the ranges and speeds are in Step 130's row. The jump point is 1,700 units in and reached within 700.
+The arrivals come 700 in, told where we are to within 1,700. The Garuda searches within 2,000.
+
+**The owner's goal for today:** a playable Mac app of this level, and game feel. "The fun of the
+game is the hunt." Every tool must make sense.
+
+**How it plays.**
+
+1. Pick WOLF HUNT on the MISSIONS list. INITIALISING..., then the board.
+2. We start at the Player Spawn, at the bottom. The Garuda starts at a random point in its spawn box
+   at the top, facing a random way. We only know it is somewhere up there.
+3. We move through the ruins. The rocks show only within visual range. Past it, ACTIVE SCAN shows
+   them as blinking hollow circles (Step 157). We keep our signal low. Fighters scout ahead: what they see shows on our plot.
+4. The Garuda patrols the ruins. It listens with its own DRADIS. If it hears us, it grows uneasy,
+   then searches where it heard us, then sweeps actively, closes and fights side-on.
+5. When the Garuda finds us (ALERT), the alarm says REINFORCEMENTS INBOUND, and a 3-minute
+   countdown starts (game time).
+6. At 0, two frigates enter at the battle space's edges and hunt us. One more comes every 2 minutes
+   until we leave.
+7. The Garuda destroyed or captured: a jump point appears on the plot at a far edge. We fly to it.
+   Reaching it wins: MISSION COMPLETE.
+8. We lose if our reactor reaches 0, or if we stay outside the battle space too long.
+
+**The owner's answers (2026-10-27).**
+
+- The countdown starts when the Garuda finds us (its ALERT). Stay hidden, and it never starts.
+- When it runs out, real enemy ships arrive: 2 frigates, then 1 more every 2 minutes. Countdown 3
+  game minutes. Frigates: small, fast, weak, one railgun each. Placeholder models are fine.
+- The exit is revealed at the kill (or capture), at a far edge. Reaching it wins.
+- The Garuda against our Asura: speed 70% of ours, turns slower; armour 1.5×; railgun hits 1.5×
+  harder, but its reach is 18,000 km (ours 25,000); 4 missile cells; one PDC group (ours two); no
+  fighters and no boats; DRADIS hears a little less far. All tunable after the owner plays it.
+- The Garuda starts at a random point in its box, every game.
+- The start: WOLF HUNT, then INITIALISING with its loading bar. The DEMO page goes. No Enter press.
+- Fighters as scouts: any ship or ruin within 10,000 km of a fighter shows on our plot, kept up to
+  date while they are near. Their engines are loud, so the Garuda can hear them too.
+- Ruler: distance only, in bigger, clearer text. No bearing.
+- Compass: a graded ring, 0 at the top, 359 to the left, 1 to the right, with the bearing and the
+  distance. Use the nav wheel art if it fits.
+- Debris: the gaps must be wide enough to fly through, at the plot's zoom limits. Hitting a piece
+  damages the ship, with no push-out (owner, 2026-10-26).
+
+**Calls made without the owner (can be changed).**
+
+- ~~Clicking a hostile contact on the plot also makes it fire control's target (`ShipState.LookAt`).~~
+  **Undone in Step 106:** `LookAt` only aims the periscope now; TRACK on a scanned ship under the
+  periscope makes it the target.
+- The frigate is the "Naga-class frigate" (NAGA 1, NAGA 2…), a placeholder name. It uses the Garuda's model
+  at 0.6 scale. Numbers: top speed 15 km/s, turns 30°/s, armour 50/50/25/50, one railgun (12 slugs,
+  18,000 km), no missiles, no PDCs.
+- The Garuda's second PDC group is emptied rather than deleted (the code expects two groups).
+- Its awareness: SEARCHING from 0.25 of its hearing distance, ALERT from 0.5, a fix lasts 30 game s;
+  railgun reload 12–17 game s; aim off by up to 0.4°; a missile salvo every 90 game s once ALERT. Our
+  fighters are as loud to it as a signal of 60. All on the Board tab of Starwolf → Tuning, under Enemy.
+- The jump point: the middle of the battle space edge farthest from our ship, 5,000 km in; reaching
+  within 2,000 km wins. The arrivals: a random edge, 2,000 km in, told where we are to within 5,000 km.
+
+**This replaces:** the sample game: Wolf Hunt is the sample game. FTUE_PLAN §1's
+"no reinforcements" and "ends at the kill" (owner, 2026-10-27: the newer rule wins). The XO
+walkthrough and the derelicts (FTUE_PLAN §5–8) are not in today's build. The mission
+scripter stays for later: Wolf Hunt's countdown, arrivals and exit go straight into `QuestSystem`
+today. The scripter will turn them into editable steps.
+
+**Not today:** fog of war beyond "ruins in range" (Step 92); the disguise mechanic; the XO; derelicts;
+enemies that use engineering, comms or the plot tools.
+
+### Board follow-ups
+
+From `UI_INTEGRATION_LOG.md`, section 10 (deleted; `git show 12ccdd1:Assets/Scenes/Tactical/UI_INTEGRATION_LOG.md`). In order:
+
+1. **Audit the project's existing UI assets** against `docs/finished-plans/CLAUDE_DESIGN_NEEDS.md`. **Done 2026-10-05,
+   verified:** `ASSET_AUDIT.md` (deleted; `git show 12ccdd1:Assets/Scenes/Tactical/ASSET_AUDIT.md`). Of 28 items, 5 fit as-is, 7 fit after a small change, 10 get partial
+   help, 6 have nothing. Nothing is used yet; each use needs the owner's yes.
+2. **The short Claude Design request**, when the owner asks. Drop row 2.7 of
+   `docs/finished-plans/CLAUDE_DESIGN_NEEDS.md` (own-ship blink): decision 34 says our ship never blinks. **Probably
+   overtaken (unsure, 2026-11-09):** the owner now brings art from ChatGPT and Codex.
+4. **Left from Step 75.**
+   - Only one contact can show as its model at a time (`contactShipImage`). A second one in visual
+     range shows as an amber dot. **Partly fixed:** in the Step 164 close-up (x1.1 and closer) every
+     ship shows as its model. Further out, still one.
+5. **To do after Steps 75–76** (owner, 2026-10-26). All done. The two frame stencils were deleted in
+   Step 89, and the visual range ring was drawn in Step 106. Step 130 tuned visual range and DRADIS
+   reach, and brought `scalesim.py` up to date. The spec's numbers were updated on 2026-11-01.
+6. **A little more life in the plot's grid** (owner, 2026-10-28). Dropped: the owner chose a quieter
+   grid instead (Step 139). The full green phosphor plot is also **dropped** (owner, 2026-10-28):
+   don't build it.
+
+### Board refactor (owner, 2026-10-25). In progress (paused and restarted by the owner, 2026-10-26)
+
+**Where it stands (2026-10-27).** Done: all eight ship parts are systems in `Scripts/Systems`, and
+each ship's numbers are in its stats file (Step 80). All eleven panels and seven frame pieces are
+prefabs in `Assets/UI/Board/Panels`, placed in `02.1_Grid`. The colours are in one palette file. The
+builder and the import menu are deleted. The fonts and the "Handoff" rename are done (Steps 89 and
+90). Left: the Test Runner (step 2), the last scripts out of `Scripts/Tactical` (step 5) and the
+clock move (step 8).
+
+Replaces the 2026-10-24 "clean-up once the game is working" list.
+
+**How it is being done (owner, 2026-10-26).** Not everything at once. One ship system at a time, all
+the way through, then a playtest and a commit. The scripts go into three folders:
+- **`Scripts/Systems`:** the ship's parts. Each has rules only, nothing on screen. Our ship and the
+  enemy carry the same ones.
+- **`Scripts/UI`:** the panels, and the pieces they are made from. A panel shows its system and passes
+  input to it.
+- **`Scripts/Game`:** everything bigger than one ship or one panel: the game manager, the clock, the
+  world, levels, the mission and enemy brains.
+
+So far `Scripts/Game` has `BoardManager.cs`, `DebrisField.cs`, `GasCloud.cs`, `Mission.cs` and
+`QuestSystem.cs`. The world and the enemy brain are still in `Scripts/Tactical`.
+
+The board builder is deleted. The scene is edited directly.
+
+What was done, part by part, is at the end of section 6 ("Board refactor, 2026-10-26 to 27").
+
+**Why.** On 2026-10-25 the board was hard to follow:
+- One 1,915-line class (`HandoffBoardState`, now `ShipState`) had every rule. Now the rules are in the eight ship
+  parts, and that class is about 400 lines.
+- The builder made the scene from code and deleted it on every run, so hand edits were lost. Now
+  the builder is deleted, and the scene is edited directly.
+- Drawer parts were named by export record (`sprite#178 rocker_30x38_locked`). Now each part is
+  named after its control.
+- The code used "Handoff" names. They are gone (Step 90).
+
+On 2026-10-25, three read-only checks found that a UI artist could not work on the board without a
+programmer. The guide for UI artists is now `docs/BOARD_UI.md`.
+
+1. **Commit the open work.** Done.
+3. **Find what is used and what is not.** An agent traces every script, scene, prefab and asset,
+   and writes a list. The owner picks what to delete. **Nothing is deleted without the owner's yes,
+   Soham's old scripts included.** Done for the old `02_Grid` board: the scene and its scripts are
+   deleted (commits bb530a3 and 87676e1). Its unused files, `PlotAnnotation.cs`, `MissionClock.cs` and
+   `TacticalGrid.shader` / `.mat`, were deleted on 2026-10-29.
+4. **Drop "Handoff" from the names.** Done in Step 90. Nothing else changed.
+6. **Make the panels prefabs** (decision 31). Done (2026-10-26 and 27):
+   - Each panel's sprites are an Art list in its own inspector. Fonts: a Fonts list beside it (Step
+     89).
+   - Shared colours are in one palette file that every panel points at.
+   - Each object is named after its control, and each control's parts are under one parent.
+   - The builder and the import menu are deleted.
+   - The guide for UI artists is `docs/BOARD_UI.md`.
+7. **Split `HandoffBoardState` (now `ShipState`) into ship parts,** one component each: power, sensors, comms, helm,
+   weapons, hangar, damage and orders. Done: the eight systems (2026-10-26) and a stats file per
+   ship (Step 80). Where the board already worked, its rules stayed.
+
+### UI restructure (owner, 2026-10-27)
+
+All eight steps done (Steps 89 and 90, the docs, the check on 2026-10-29).
+
+### Combat autopilot and W/S (owner, 2026-10-25). Autopilot agreed, not built; W/S built in Step 106
+
+**W and S.** Built in Step 106, changed in Step 171. A tap moves the throttle 1. Held, it keeps
+counting, slowly at first, then faster, and moves 100 in 2 seconds (Throttle Hold Seconds, Tuning:
+Helm). Still capped by ENG.
+
+### Ruins and the level, next (from Step 73, 2026-10-26)
+
+Left unfinished when the Step 73 chat closed. Plan each with the owner before building. Done and
+dropped from this list: ruins on the plot (Step 92), hitting a piece damages the ship (Step 93), the
+Garuda hunts you (Step 97), the grid forming (Step 120).
+
+---
+
+## From CONTEXT_INDEX, as it stood on 2026-11-11
+
+Moved here in the clean-up. The open questions from its section 7 are in `BUILD_LOG.md`, section 8, "Open design questions".
+
+### 6 · Where the work is right now
+
+**The current effort is the Unity tactical board, in `Assets/Scenes/Tactical/`.**
+
+The flow is `00_Start` → `01_Briefing` → `02.1_Grid`. The new Claude Design handoff is fully built
+into `02.1_Grid` and passed its final QA. Every control is clickable and shows its states. Wiring to
+game systems started in Step 34 and is ongoing. All eight levels are playable, from the MISSIONS list
+in `01_Briefing`. The Mac app is built at `~/Documents/GitHub/Killshot-Builds/Mac/Starwolf.app`. The older
+`02_Grid` board has been deleted. At play the board loads the picked level on top of itself, from `Assets/Scenes/Levels/`.
+For the current step, read section 1 of `BUILD_LOG.md`.
+
+**Read `docs/BUILD_LOG.md` before you touch that scene.** The owner builds one step
+at a time and checks each step on screen before the next one starts. Do one step, show it, wait.
+
+The rest of the Unity build is an older attempt at a different UI — a six-screen 3D cockpit. It
+decides nothing about design. `docs/CODEBASE_BASELINE.md` describes those older scripts, as they were
+on 2026-09-01.
+
+There was also a web prototype in TypeScript. It was abandoned and deleted. Its simulation core was
+kept at `docs/reference-sim/` until 2026-10-29, when it was deleted too (git has it at 218acc8).
+
+Placeholder hull art exists at `Assets/Art/Hulls/` — white with alpha, tinted per allegiance in
+engine. Placeholder. Replace before ship.
+
+### What section 7 said was settled by the code
+
+**Settled by the code since this list was first written:**
+
+- Stability: the owner said on 2026-11-01 to leave it as it is. It is a meter on the helm, and
+  nothing else reads it.
+- Rocks make interference (Step 148). They cut DRADIS and scans, and block sight, for both sides, in
+  every level. More power pierces it. They never cut comms.
+
+- Firing a railgun spends 70 of the weapon charge and adds 25 to our signal. Nothing vents. Each shot
+  pushes the firing ship back 24 units, ours and the Garuda's (Step 197).
+- A bus on DRAW takes units the reactor has spare. With all ten units placed, it waits until another
+  bus vents.
+- The plot shows 760 px per 1,000 units at zoom 1 (`PlotGrid.cs`, `pxPer1000Units`).
+- PDC groups have fixed arcs and fire by themselves on AUTO. Torpedoes fire from the Fire Control
+  panel, and the launcher on the target's side picks itself. A salvo uses the other launcher too, by
+  turns (Step 184).
+- Each level sets its battle space with a Battle Space box (Starwolf → Level, Step 91). Every level is 20,000 × 20,000 units (Step 130), except LONG SHOT at 40,000 × 40,000 (Step 170). Without one it is 100,000 × 100,000 units (`ShipState.arenaWidthUnits`).
+- Ammunition is a real count in the ship stats files.
+- The aft armour is 50.
+- The Engineering panel is built (`Assets/Scripts/UI/Panels/EngineeringPanel.cs`).

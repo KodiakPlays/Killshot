@@ -91,6 +91,11 @@ Tuning, so the owner can change them. Log the old values in `docs/TUNING_LOG.md`
 
 ### The sight in fire control
 
+**Paused by the owner, 2026-11-09:** "let's put a pin in this, and we'll figure it out." Then: "I
+don't want these things stuck together. Either we'll build one clean new UI, or let them be separate
+for now in their existing and current incarnation." So the periscope and fire control stay as they
+are now. Don't build this until the owner raises it. The plan below is kept as it was.
+
 - The periscope no longer drops from the top of the board.
 - Its sight moves into the fire control drawer, above the weapon picker. The drawer slides in from
   the side as it does now.
@@ -159,7 +164,8 @@ works is still to be agreed with the owner. The DROP key and the boat drop below
    solution from the plot does not.
 2. The E-SIG circle, shown on the plot, with the hit rule. (Was "the flare"; see "The E-SIG
    circle" above.)
-3. The sight in fire control. ANGLE and BEARING go.
+3. The sight in fire control. ANGLE and BEARING go. **Paused by the owner, 2026-11-09** (see "The
+   sight in fire control" above). ANGLE and BEARING stay until then.
 4. Sensor drones.
 5. Lasers.
 6. A new damage type, once the owner says what it should be.
