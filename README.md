@@ -233,6 +233,8 @@ selected.
 | What is built, what is left, and every trap hit | `docs/BUILD_LOG.md` |
 | Which document answers your question | `docs/CONTEXT_INDEX.md` |
 | How the game is meant to work | `docs/TACTICAL_BOARD_SPEC.md` |
+| What every script does | `docs/SCRIPT_LIST.md` |
+| How the systems and the scripts connect, as two maps | https://claude.ai/artifact/Tk285DVMpwzAfb44Ph2Abr (private until the owner shares it) |
 | Rules for working in this repo | `CLAUDE.md` |
 
 ## A note on the sources

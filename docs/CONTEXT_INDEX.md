@@ -79,6 +79,7 @@ pages, and most of it has been overtaken.
 | What Soham's older scripts do, read line by line as of 2026-09-01 | `docs/CODEBASE_BASELINE.md` |
 | What the board's scripts are and what they are wired to | `docs/BUILD_LOG.md`, section 3 |
 | What any C# script does | `docs/SCRIPT_LIST.md` lists all 109. Each script also starts with a note in plain English on what it does and how it works. The rules for those notes are in `docs/script-notes/BRIEF.md`. |
+| How the systems and the scripts connect | Two maps on one page: https://claude.ai/artifact/Tk285DVMpwzAfb44Ph2Abr. "Systems map" shows the board's systems as the player meets them, and what changes what. "Code map" shows every script and which other scripts it uses. The page is private until the owner shares it. |
 | What is built in the tactical scene, and the traps already hit | `docs/BUILD_LOG.md`. The traps are in section 5. |
 | What is left to do, sorted | `docs/BUILD_LOG.md`, section 8, "Triage" |
 | Every known bug that is not fixed | `docs/BUILD_LOG.md`, section 8, "Bug list" |

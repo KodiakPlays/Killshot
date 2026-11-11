@@ -57,6 +57,7 @@ Read what's relevant before non-trivial work. These sources are **rolling** — 
 | **Start here** — routes you to everything else | `docs/CONTEXT_INDEX.md` |
 | **The specification** (how the game works) | `docs/TACTICAL_BOARD_SPEC.md` |
 | **Verified code baseline** (every script read line by line) | `docs/CODEBASE_BASELINE.md` |
+| **What every script does** | `docs/SCRIPT_LIST.md` |
 | **Prototype baseline** (the playable build, read line by line) | `docs/PROTOTYPE_BASELINE.md` |
 | Engine version | `ProjectSettings/ProjectVersion.txt` |
 | Packages & render pipeline | `Packages/manifest.json` |
@@ -101,7 +102,7 @@ Docs may lag the code. **Code and live Editor state win.**
 
 These describe the existing codebase. Match them; do not introduce a competing style.
 
-- **Do** keep the plain-English note at the top of every script (owner, 2026-11-10): "What it does", then "How it works", above the `using` lines. When you change what a script does, update its note in the same edit. A new script gets a note too. The layout and the English rules are in `docs/script-notes/BRIEF.md`.
+- **Do** keep the plain-English note at the top of every script (owner, 2026-11-10): "What it does", then "How it works", then "Technical", above the `using` lines. When you change what a script does, update its note in the same edit. A new script gets a note too. A new or deleted script also gets its line added to or removed from `docs/SCRIPT_LIST.md`. The layout and the English rules are in `docs/script-notes/BRIEF.md`.
 
 - **No namespaces.** Every type is in the global namespace, except the intro package (`Assets/StarwolfIntro`, namespace `Starwolf.Intro`). Don't add one to a new file.
 - **No asmdefs.** Runtime code compiles into `Assembly-CSharp`; code under `Assets/Editor/` into `Assembly-CSharp-Editor`. Adding an `.asmdef` silently severs existing references — treat it as a deliberate architectural decision, not a tidy-up.

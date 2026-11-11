@@ -820,6 +820,18 @@ Soham's code. Keep it until the owner decides.
 | UI shaders: `UI_PowerArrow`, `UI_ShipHack`, `ScanLines`, `UI_GradeDisplay*` | Not used. |
 | Rail icons in `Assets/Art/Icons/` | 23 icons from the old board. The board doesn't use them. |
 
+Checked 2026-11-11: Soham wrote 42 of the 109 scripts. None of them is in any scene the game uses,
+and none of the newer scripts calls them. This was checked against git history, the game's scenes
+and prefabs, and the code. `ControllerHaptics` starts itself when the game opens and keeps running
+the whole time, but only Soham's old ship and gun scripts ask it for a rumble, so in the game it
+never rumbles. `ReadOnlyDrawer` (editor only) was started by Soham, but most of it is new now. It
+greys out `[ReadOnly]` settings in the Inspector and draws the scene slots in the Campaign file.
+`GameManager.cs` has to stay because `ReadOnlyDrawer` needs a small part of it, and the rest of it
+does nothing in the game. `QuestSystem` started as Soham's script, but it was rewritten for the
+battle board in Step 85, and only 16 of its 425 lines are still his. His other 39 scripts are only
+on old prefabs (`PlayerShip`, `EnemyShip1`, `EnemyShip2`, `Canvas`, `Weapon_Laser` and `Missile`),
+and those prefabs only appear in older test scenes that aren't in the build.
+
 ### Things to leave alone
 
 | Thing | Why |
@@ -5416,9 +5428,9 @@ the editor scripts were compiled outside Unity with Unity's own compiler. There 
 old `/// <summary>` notes were deleted later, in the Technical pass below.
 
 - `docs/SCRIPT_LIST.md`: every script, with what it does. It is made from the notes.
-- `docs/script-notes/`: the rules for the writers (`BRIEF.md`) and the checkers (`VERIFY.md`), the
-  four script lists, the notes, the checkers' verdicts, and `notes_tool.py`. The tool adds the notes
-  and proves the code is unchanged.
+- `docs/script-notes/`: the kit for running the job again. It has the rules for the writers
+  (`BRIEF.md`), the checkers (`VERIFY.md`), the Technical pass (`TECH.md`) and the tidy pass
+  (`TIDY.md`). It also has `notes_tool.py`. The tool adds the notes and proves the code is unchanged.
 - The writers noticed some things in the code along the way. The bugs are in "Bug list", further
   down this section, under "Found by the script notes". Two traps went into section 5, traps 29 and
   30.
@@ -5430,7 +5442,8 @@ old `/// <summary>` notes were deleted later, in the Technical pass below.
     checked again, the code under each is proven unchanged, and both sets of scripts compile.
   2. Go through the script notes' bugs in "Bug list" with the owner. Only the enemy torpedo salvo bug
      is fixed in code.
-  3. Owner question: keep `docs/script-notes/` for running this again later, or delete it?
+  3. Answered (owner 2026-11-11): yes. The kit in `docs/script-notes/` is kept. The working folders
+     are deleted: `notes/`, `before/`, `merge/`, `verdicts/` and the batch lists.
   4. Answered (owner 2026-11-10): yes. `CLAUDE.md` now says: when you change what a script does,
      update its note in the same edit, and a new script gets a note too.
   - Done (owner 2026-11-10, "yes, please"): all 109 notes now have a third part, "Technical:" (data,
@@ -5442,7 +5455,31 @@ old `/// <summary>` notes were deleted later, in the Technical pass below.
     deleted old-note lines. The game and editor code compile with 0 errors. 35 bugs were found. They
     are in "Bug list", under "Found by the Technical pass". The job sheet is
     `docs/script-notes/TECH.md`.
-  5. Nothing is committed yet.
+  5. Done: committed as `f9e7166` on 2026-11-11.
+  - Checked 2026-11-11: every one of the 109 scripts has all three parts. They are "What it does",
+    "How it works" and "Technical". `docs/SCRIPT_LIST.md` matches the scripts on disk exactly. A page
+    with two maps, of the systems and of the scripts, is at
+    https://claude.ai/artifact/Tk285DVMpwzAfb44Ph2Abr. It is private until the owner shares it.
+  6. Open (2026-11-11): six scripts have uncommitted changes from other chats. Their top notes are
+     unchanged. Each chat checks its script's note before it commits. The six are
+     `Assets/Scripts/UI/Panels/PlotPanel.cs`, `Assets/Scripts/UI/Panels/FireControlPanel.cs`,
+     `Assets/Scripts/Systems/WeaponSystem.cs`, `Assets/Scripts/Systems/HangarSystem.cs`,
+     `Assets/Scripts/Tactical/EnemyBrain.cs` and `Assets/Editor/Playtest/PlaytestRunner.cs`.
+  - The map page (2026-11-11): the owner asked for a dev map, and it's now one private page with two
+    tabs. The Systems map shows the screens from the title to the next mission, then 15 boxes for the
+    parts of the game. Click a box to see the boxes it affects and the boxes that affect it, with a
+    written list and the scripts behind it. The Code map shows the three main scripts
+    (`BoardManager`, `ShipState` and `Ship`) and the order of what happens every 0.42 seconds. Below
+    them are all 109 scripts in columns: 66 that the game uses today and 43 from the older version.
+    Click a script to see which scripts it uses and which scripts use it. The owner found the first
+    version too cluttered, so the lines now show only for the box or script you pick. The owner also
+    found the page's English robotic and chopped up, so all of its wording was rewritten in normal
+    sentences. The page shows the code as it was on 2026-11-11 and doesn't update by itself.
+  7. Open (2026-11-11): the "What it does" text on the code map comes from the note at the top of
+     each script, and those notes are written in the same clipped style the owner disliked on the
+     page. The owner said yes: all 109 notes and `docs/SCRIPT_LIST.md` get rewritten in proper,
+     flowing sentences, by the chat that made the map. It's on hold until a memory problem is fixed
+     first. The owner also wants the map kept up to date as new scripts and systems are added.
 
 ### Open: the information hierarchy, a talk (2026-11-10, the owner's main priority)
 
