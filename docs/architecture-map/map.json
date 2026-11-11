@@ -1,0 +1,631 @@
+{
+ "url": "https://claude.ai/artifact/Tk285DVMpwzAfb44Ph2Abr",
+ "views": {
+  "board": [
+   {
+    "key": "screens",
+    "label": "Screens and campaign",
+    "items": [
+     "StarwolfIntroController",
+     "PhosphorData",
+     "ScreenFlow",
+     "SaveSlots",
+     "SectorMap",
+     "ShipRooms",
+     "EndCard",
+     "Campaign",
+     "SaveGame"
+    ]
+   },
+   {
+    "key": "core",
+    "label": "Battle board basics",
+    "items": [
+     "BoardManager",
+     "Panel",
+     "ClickSpot",
+     "BoardMotion",
+     "Rockers",
+     "Eased",
+     "CssEase",
+     "BoardPalette",
+     "ArtList",
+     "GammaBoardPresenter",
+     "QuestSystem",
+     "Mission"
+    ]
+   },
+   {
+    "key": "drawing",
+    "label": "Drawing helpers",
+    "items": [
+     "Wedge",
+     "Polygon",
+     "SweepGraphic",
+     "MarksGraphic",
+     "PlotGrid",
+     "ShipView",
+     "ScopeSight"
+    ]
+   },
+   {
+    "key": "panels",
+    "label": "Panels",
+    "items": [
+     "HelmPanel",
+     "PowerPanel",
+     "SensorsPanel",
+     "CommsPanel",
+     "FireControlPanel",
+     "HangarPanel",
+     "EngineeringPanel",
+     "OrdersPanel",
+     "PeriscopePanel",
+     "PlotPanel",
+     "EndScreenPanel"
+    ]
+   },
+   {
+    "key": "ship",
+    "label": "Ship and its parts",
+    "items": [
+     "NavSystem",
+     "PowerSystem",
+     "SensorSystem",
+     "CommsSystem",
+     "WeaponSystem",
+     "HangarSystem",
+     "DamageSystem",
+     "OrdersSystem",
+     "ShipState",
+     "Ship",
+     "ShipStats"
+    ]
+   },
+   {
+    "key": "world",
+    "label": "World and levels",
+    "items": [
+     "TacticalWorld",
+     "WorldContact",
+     "EnemyBrain",
+     "EnemySpawn",
+     "PlayerSpawn",
+     "BattleSpace",
+     "GasCloud",
+     "DebrisField"
+    ]
+   },
+   {
+    "key": "tools",
+    "label": "Editor tools",
+    "items": [
+     "StarwolfTuningWindow",
+     "TuneAttribute",
+     "LevelWindow",
+     "DebrisFieldEditor",
+     "StarwolfArtWindow",
+     "PlaytestRunner",
+     "ReadOnlyDrawer",
+     "WindowsBuildCheck"
+    ]
+   }
+  ],
+  "older": [
+   {
+    "key": "oldgame",
+    "label": "Old game setup and screens",
+    "items": [
+     "GameManager",
+     "GameClock",
+     "WorldBoundary",
+     "CommsManager",
+     "UIController",
+     "BogieClass",
+     "UIPowerClass",
+     "TestUIKeyControler",
+     "PowerManagerEditor"
+    ]
+   },
+   {
+    "key": "oldship",
+    "label": "Old physics ship",
+    "items": [
+     "PlayerShip",
+     "HullSystem",
+     "InternalSubsystems",
+     "PowerManager",
+     "Shields",
+     "ShipStability",
+     "Autopilot",
+     "Radar",
+     "RadarTarget",
+     "ControllerHaptics",
+     "EnemyShip",
+     "Asteroid",
+     "IDamageable"
+    ]
+   },
+   {
+    "key": "oldguns",
+    "label": "Old guns and aiming",
+    "items": [
+     "WeaponManager",
+     "WeaponBase",
+     "WeaponType",
+     "WeaponSystemExample",
+     "WeaponUIDisplay",
+     "Weapons",
+     "LaserWeapon",
+     "Laser",
+     "Macrocannon",
+     "BroadsideCannon",
+     "Shell",
+     "MissileLauncher",
+     "Missile",
+     "PointDefenseCanon",
+     "PDCBullet",
+     "Railgun",
+     "BoardingPodLauncher",
+     "BoardingPod",
+     "TargetingSystem",
+     "Targetable",
+     "TargetingReticle"
+    ]
+   }
+  ]
+ },
+ "new_scripts_go_to": [
+  [
+   "Assets/Editor",
+   "tools"
+  ],
+  [
+   "Assets/StarwolfIntro",
+   "screens"
+  ],
+  [
+   "Assets/Scripts/Game",
+   "screens"
+  ],
+  [
+   "Assets/Scripts/Systems",
+   "ship"
+  ],
+  [
+   "Assets/Scripts/Tactical",
+   "world"
+  ],
+  [
+   "Assets/Scripts/UI/Panels",
+   "panels"
+  ],
+  [
+   "Assets/Scripts/UI",
+   "drawing"
+  ],
+  [
+   "Assets",
+   "core"
+  ]
+ ],
+ "ignore_links": [
+  [
+   "Campaign",
+   "Mission"
+  ],
+  [
+   "SectorMap",
+   "Mission"
+  ]
+ ],
+ "screens": [
+  [
+   "Title",
+   "The intro plays, and then the menu appears with NEW GAME, SKIRMISH and SETTINGS."
+  ],
+  [
+   "Save slots",
+   "The player picks one of three save slots. An empty slot starts a new campaign."
+  ],
+  [
+   "Sector map",
+   "Each mission is a dot on a star chart. The player picks one, reads its briefing and presses LAUNCH."
+  ],
+  [
+   "Battle board",
+   "The mission itself is played here."
+  ],
+  [
+   "End screen",
+   "When the mission ends, it shows MISSION COMPLETE, SHIP LOST or MISSION FAILED."
+  ],
+  [
+   "Ship's rooms",
+   "Between missions the player visits the ship, talks to the crew and pays for repairs and supplies. Then it's back to the sector map."
+  ]
+ ],
+ "main_scripts": [
+  [
+   "BoardManager",
+   "Runs the battle board. It keeps the game clock going, reacts to every click and key press, plays the sounds, and tells each panel when to update."
+  ],
+  [
+   "ShipState",
+   "Keeps track of one ship during a fight. It links the ship's eight parts together and remembers its contacts, map marks and periscope. Every panel reads from our ship's copy."
+  ],
+  [
+   "Ship",
+   "Every ship has one. It points to the ship's stats file, where all of that ship's numbers are kept, and passes those numbers on to the ship's parts."
+  ]
+ ],
+ "systems": {
+  "power": {
+   "c": 0,
+   "r": 0,
+   "n": "Power",
+   "sub": "the reactor and four buses",
+   "d": "The reactor feeds four power lines, called buses: ENG for the engines, WEP for the weapons, SEN for the sensors and AUX for the hangar and repairs. The player switches each bus to DRAW, STBY or VENT to send power where it's needed. The emergency load shed switch drains all four at once.",
+   "s": [
+    "PowerSystem",
+    "PowerPanel"
+   ]
+  },
+  "helm": {
+   "c": 1,
+   "r": 0,
+   "n": "Helm",
+   "sub": "steering and speed",
+   "d": "This is how the player flies the ship. The throttle goes from full reverse to full ahead. A and D turn the ship, Shift with A or D turns it slowly for careful aiming, and Q and E slide it sideways. Without engine power the ship just drifts.",
+   "s": [
+    "NavSystem",
+    "HelmPanel"
+   ]
+  },
+  "orders": {
+   "c": 2,
+   "r": 0,
+   "n": "Orders",
+   "sub": "alert level and repairs",
+   "d": "The player sets the ship's alert level here, from CONDITION 3 to CONDITION 1. Weapons and launches only work at CONDITION 2 or 1. This panel also has a charge that fills from AUX power and pays for repair orders.",
+   "s": [
+    "OrdersSystem",
+    "OrdersPanel"
+   ]
+  },
+  "sensors": {
+   "c": 0,
+   "r": 1,
+   "n": "Sensors",
+   "sub": "DRADIS and ACTIVE SCAN",
+   "d": "DRADIS listens for other ships nearby, and turning up the gain lets it hear further. ACTIVE SCAN looks at every ship inside a cone the player aims. It tells you what each ship is and records its course and speed.",
+   "s": [
+    "SensorSystem",
+    "SensorsPanel",
+    "SweepGraphic",
+    "Wedge"
+   ]
+  },
+  "plot": {
+   "c": 1,
+   "r": 1,
+   "n": "Plot",
+   "sub": "the map",
+   "d": "The map in the middle of the board. It shows the ships DRADIS can hear and anything close enough to see. Zoom in and ships appear as 3D models. The player can mark the map with the POINT, RULER and COMPASS tools.",
+   "s": [
+    "PlotPanel",
+    "PlotGrid",
+    "MarksGraphic",
+    "ShipView",
+    "ShipState"
+   ]
+  },
+  "fire": {
+   "c": 2,
+   "r": 1,
+   "n": "Fire control",
+   "sub": "railgun, torpedoes, PDCs",
+   "d": "Our ship has one railgun in its nose, two torpedo launchers and four PDC guns for defence. To fire, the player flips four switches in order (LOAD, ANGLE, BEARING and ARM) and then pulls the fire lever. The PDCs can be left on AUTO to shoot down incoming torpedoes.",
+   "s": [
+    "WeaponSystem",
+    "FireControlPanel"
+   ]
+  },
+  "periscope": {
+   "c": 3,
+   "r": 1,
+   "n": "Periscope",
+   "sub": "the targeting computer",
+   "d": "The player turns the sight onto a ship and zooms in until the ship fills the box. A bar fills up, and when it's full the ship is locked for a short time. The periscope also shows what a scan has found out about that ship.",
+   "s": [
+    "PeriscopePanel",
+    "ScopeSight",
+    "ShipView",
+    "ShipState"
+   ]
+  },
+  "signal": {
+   "c": 0,
+   "r": 2,
+   "n": "Our signal",
+   "sub": "how loud we are",
+   "d": "How easy our ship is for enemies to hear. Using more power, scanning and firing all make the ship louder. Keeping the signal low is how the player sneaks past enemies. The signal box in the top right corner of the board shows it.",
+   "s": [
+    "SensorSystem",
+    "SensorsPanel"
+   ]
+  },
+  "comms": {
+   "c": 1,
+   "r": 2,
+   "n": "Comms",
+   "sub": "the radio",
+   "d": "The player tunes in to a radio signal, locks onto it, and turns four dials to decode the message. If a message isn't caught in time, it's lost.",
+   "s": [
+    "CommsSystem",
+    "CommsPanel"
+   ]
+  },
+  "hangar": {
+   "c": 2,
+   "r": 2,
+   "n": "Hangar",
+   "sub": "boats and marines",
+   "d": "Our ship carries assault boats full of marines, but no fighters. A launch takes six steps and then the launch lever. The boats can only dock once one side of the target's armour is broken and it has almost stopped. The marines then destroy, disable or capture the ship.",
+   "s": [
+    "HangarSystem",
+    "HangarPanel"
+   ]
+  },
+  "damage": {
+   "c": 3,
+   "r": 2,
+   "n": "Damage",
+   "sub": "armour, rooms and crew",
+   "d": "Our ship has armour on four sides, with six rooms inside. A hit wears down the armour on that side first, and then damages the room behind it. Fires, air leaks and radiation can spread from room to room. The Engineering drawer shows all of this.",
+   "s": [
+    "DamageSystem",
+    "EngineeringPanel",
+    "Wedge"
+   ]
+  },
+  "world": {
+   "c": 0,
+   "r": 3,
+   "n": "The world",
+   "sub": "rocks, clouds and the edge",
+   "out": 1,
+   "d": "The level itself: rocks, gas clouds and the edge of the battle space. Ships can crash into rocks and into each other. Rocks only show up once they're close enough to see.",
+   "s": [
+    "TacticalWorld",
+    "GasCloud",
+    "DebrisField",
+    "BattleSpace",
+    "PlayerSpawn",
+    "EnemySpawn"
+   ]
+  },
+  "enemy": {
+   "c": 1,
+   "r": 3,
+   "n": "Other ships",
+   "sub": "enemies and allies",
+   "out": 1,
+   "d": "Every other ship is built from the same parts as ours, with its own numbers. Enemy ships listen for us, hunt for us and open fire once they find us. The ships in our battle group fly a set route together.",
+   "s": [
+    "EnemyBrain",
+    "WorldContact",
+    "EnemySpawn",
+    "Ship",
+    "ShipStats"
+   ]
+  },
+  "mission": {
+   "c": 2,
+   "r": 3,
+   "n": "Mission",
+   "sub": "win or lose",
+   "out": 1,
+   "d": "This checks whether the player has won or lost. A level's goal can be to destroy a ship, capture it, hit it without being seen, find it by its radio signal, reach a jump point, or finish a flying drill. When the mission ends, the game pauses and the end screen appears.",
+   "s": [
+    "QuestSystem",
+    "Mission",
+    "EndScreenPanel"
+   ]
+  },
+  "campaign": {
+   "c": 3,
+   "r": 3,
+   "n": "Campaign",
+   "sub": "saves, map and rooms",
+   "out": 1,
+   "d": "The save slots, the sector map and the ship's rooms. Between missions, the player spends a travel bar on repairs and new supplies before setting off again.",
+   "s": [
+    "SaveGame",
+    "Campaign",
+    "SaveSlots",
+    "SectorMap",
+    "ShipRooms",
+    "EndCard",
+    "ScreenFlow"
+   ]
+  }
+ },
+ "links": [
+  [
+   "power",
+   "helm",
+   "Engine power (ENG) decides how fast the ship can go and how quickly it turns."
+  ],
+  [
+   "power",
+   "fire",
+   "Weapons power (WEP) charges the guns. The LOAD switch needs at least 2 units of it."
+  ],
+  [
+   "power",
+   "sensors",
+   "Sensor power (SEN) runs DRADIS and limits how high the gain can go."
+  ],
+  [
+   "power",
+   "orders",
+   "AUX power fills the charge that pays for repair orders."
+  ],
+  [
+   "power",
+   "hangar",
+   "The launch steps need AUX power."
+  ],
+  [
+   "power",
+   "signal",
+   "The more power the ship uses, the louder it gets."
+  ],
+  [
+   "sensors",
+   "plot",
+   "Every ship DRADIS hears appears on the plot."
+  ],
+  [
+   "sensors",
+   "fire",
+   "A scan records a ship's course and speed, and the guns aim with that. Torpedoes need the target to be scanned or locked first."
+  ],
+  [
+   "sensors",
+   "hangar",
+   "Assault boats can only launch at a ship that has been scanned."
+  ],
+  [
+   "sensors",
+   "signal",
+   "Using ACTIVE SCAN makes our ship louder."
+  ],
+  [
+   "plot",
+   "fire",
+   "The player can plot a ship's path with two POINTs and a RULER, and TRACK turns that into a firing solution."
+  ],
+  [
+   "periscope",
+   "fire",
+   "Locking a ship tells the guns exactly where it is for a short time. The BEARING switch needs the sight to be on the target."
+  ],
+  [
+   "fire",
+   "signal",
+   "Locking on and firing both make our ship louder."
+  ],
+  [
+   "fire",
+   "helm",
+   "When the railgun is locked on, the whole ship turns to aim it. Every shot also pushes the ship back a little."
+  ],
+  [
+   "fire",
+   "damage",
+   "A hit wears down the armour on the side it strikes, and then damages the room behind it."
+  ],
+  [
+   "orders",
+   "fire",
+   "Weapons only work at CONDITION 2 or 1."
+  ],
+  [
+   "orders",
+   "hangar",
+   "Launches only work at CONDITION 2 or 1."
+  ],
+  [
+   "orders",
+   "damage",
+   "The charge pays for the REPAIR, SEAL and VENT orders on a damaged room."
+  ],
+  [
+   "hangar",
+   "damage",
+   "Marines who board an enemy ship can destroy, disable or capture it."
+  ],
+  [
+   "damage",
+   "power",
+   "Damage to the reactor cuts the power it can give."
+  ],
+  [
+   "damage",
+   "helm",
+   "Damage to the engine room makes the ship slower and worse at turning."
+  ],
+  [
+   "damage",
+   "fire",
+   "Damage to the magazine stops the guns from loading."
+  ],
+  [
+   "damage",
+   "hangar",
+   "Damage to the hangar bay or the magazine stops launches."
+  ],
+  [
+   "damage",
+   "mission",
+   "If the reactor is destroyed, the ship is lost and the mission fails."
+  ],
+  [
+   "signal",
+   "enemy",
+   "Enemies find us by hearing our signal. The louder we are, the sooner they find us."
+  ],
+  [
+   "world",
+   "signal",
+   "Hiding in a gas cloud makes our ship quieter."
+  ],
+  [
+   "world",
+   "sensors",
+   "Rocks in the way shorten how far DRADIS and scans can reach, and block the view."
+  ],
+  [
+   "world",
+   "damage",
+   "Ships can crash into rocks and into each other. Faster crashes do more damage."
+  ],
+  [
+   "world",
+   "mission",
+   "Staying outside the battle space for too long loses the ship."
+  ],
+  [
+   "enemy",
+   "damage",
+   "Enemy railguns and torpedoes hit us the same way ours hit them."
+  ],
+  [
+   "enemy",
+   "comms",
+   "Enemies sometimes send radio messages. Decoding one tells us which way the enemy is heading, how fast it's going and roughly where it is."
+  ],
+  [
+   "enemy",
+   "mission",
+   "Scanning, destroying or capturing the target ship moves the mission forward."
+  ],
+  [
+   "comms",
+   "mission",
+   "Some missions ask the player to decode a message."
+  ],
+  [
+   "mission",
+   "campaign",
+   "Winning a campaign mission saves the game, along with our ship's damage, ammunition, marines and crew."
+  ],
+  [
+   "campaign",
+   "damage",
+   "The next mission starts with the ship in the same state, unless the player repairs it in the ship's rooms first."
+  ]
+ ]
+}
