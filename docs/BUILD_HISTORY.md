@@ -5838,3 +5838,13 @@ in Step 184, the owner closed LONG SHOT at x5 on 2026-11-10, and the sRGB pictur
   (fixed in 2c3153f).
 - Taken out on 2026-11-11: the white dot over a drifting torpedo (fixed in Step 184), LONG SHOT at x5
   (closed by the owner on 2026-11-10) and the six sRGB pictures (settled on 2026-11-10, no change).
+
+## Master list rows closed
+
+Rows finished and taken off the master list at the top of `docs/BUILD_LOG.md` section 8.
+
+| # | Item | What the owner asked | Status | Owner chat | Next step | Detail |
+|---|---|---|---|---|---|---|
+| M6 | Enemy slugs we can see leave a line on the table (Step 206) | "Only ones we can see" (2026-11-11) | done: checked in play, committed 1f3b605 (Step 206) | Ship Visual Artefact | 5-minute play check, then commit | section 1, "Steps not finished" |
+| M7 | "Test: play from here" in Starwolf → Campaign | "some kind of testing tool ... where I can just load into the scene that I want to see in action" (2026-11-11) | done (Step 207) | Campaign Flow | none | section 1, "Steps not finished", Step 207 |
+| M48 | Uncommitted: Player 1's report, 420 rows in `numbers.csv` and the fight program's changes. (Our ship's speed 60 and base 30, with their tuning rows, were committed in de3779d.) | owner rule: commit your finished work before you stop (2026-11-11) | done: Player 1's files committed 7dad844; the speed lines de3779d | Ship Visual Artefact | Commit its own lines | `git status` |
