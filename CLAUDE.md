@@ -109,7 +109,7 @@ Docs may lag the code. **Code and live Editor state win.**
 - **Do** delete a job's working folders when the job ends (lists, verdicts, before and after copies). Keep only what the owner asked to keep.
 - **Do** keep `BUILD_LOG.md` section 1, "Where we are", to one screen that is true today. When a step or an open item is finished, move its write-up to `docs/BUILD_HISTORY.md` in the same edit.
 - **Do** move a finished plan doc to `docs/finished-plans/` and fix the links to it in `docs/CONTEXT_INDEX.md`.
-- **Do** keep Claude's memory notes for the owner's lasting rules and decisions only. Build history goes in `BUILD_HISTORY.md`, not in memory. Add to a note that exists before making a new one, and keep `MEMORY.md` under its size limit.
+- **Do** keep Claude's memory notes for the owner's lasting rules and decisions only. Build history goes in `BUILD_HISTORY.md`. Add to a note that exists before making a new one, and keep `MEMORY.md` under its size limit.
 
 ## C# conventions
 

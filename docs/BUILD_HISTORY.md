@@ -389,6 +389,10 @@ loaded on top of the board. Build Settings list nine scenes: `00_Start`, `01_Bri
 `Level_01`, the training levels `FirstShot`, `SilentShot` and `Prize` (Step 114), `Intercept` (Step
 137) and `FlightDrill` (Step 144). Prototype Dev came off in Step 84, and `Level_02` on 2026-11-01.
 
+*Three rows of the scene table in section 2, as they read before the 2026-11-11 rewrite. The table as it is now is in BUILD_LOG.md, section 2.*
+
+| Scene | GUID | State |
+|---|---|---|
 | `01_Briefing.unity` | `326d3f3159fcb4965bebcf61495595c6` | Built |
 | `02.1_Grid.unity` | `db225074494dd4259bc8aab05e48399e` | Built — the board. In the play flow after `01_Briefing` |
 | `Levels/Orientation.unity` | `e8095fc79760047e4a1fa59c5faa65ba` | Built in Step 178 — ORIENTATION, mission 1 of the story |
@@ -399,7 +403,9 @@ loaded on top of the board. Build Settings list nine scenes: `00_Start`, `01_Bri
 
 ### `02.1_Grid` — made in Step 28, board built in Steps 29–33, World added in Step 34
 
-  - Both models are about 12–14 km long. Models only, no old scripts.
+*An old sub-bullet about the World object's two ship models. Now the models scale to each ship's Length (Step 179).*
+
+- Both models are about 12–14 km long. Models only, no old scripts.
 
 ### `FirstShot`, `SilentShot`, `Prize` — made in Step 114
 
@@ -534,6 +540,10 @@ Script notes that were reworded or are only history, moved out on 2026-11-11.
 
 ### `ScreenFlow.cs` — new in Step 4
 
+*The two ScreenFlow rows as they read before 2026-11-11. The table as it is now is in BUILD_LOG.md, section 3, "ScreenFlow.cs".*
+
+| Scene | On | `nextScene` | `advanceOnEnter` | How it fires |
+|---|---|---|---|---|
 | `00_Start` | Its own root object, named `ScreenFlow` | `01_Briefing` | off | NEW GAME calls `Advance()` |
 | `01_Briefing` | Its own root object | `02.1_Grid` (was `02_Grid` until Step 28) | off | Step 114: it waits. A row on the level list calls `Play(level)`: it sets `TacticalWorld.chosenLevel` and shows INITIALISING, whose `finished` calls `Advance()`. (Until Step 114: every 3 s or on Enter, the next card.) |
 
@@ -543,9 +553,15 @@ play mode.
 
 ### The board — new in Steps 29–33
 
+*The EndScreenPanel row as it read before 2026-11-11. The table as it is now is in BUILD_LOG.md, section 3, "The board".*
+
+| File | What it is |
+|---|---|
 | `Assets/Scripts/UI/Panels/EndScreenPanel.cs` | The end screen (Step 85): how the mission ended, RESTART MISSION and MISSION SELECT. MISSION SELECT loads `01_Briefing`, the MISSIONS list (Step 154). It is the pause menu too (Step 156): Escape in a level opens it, titled PAUSED, with RESUME and QUIT GAME added. |
 
 ### The playtest and the Game view
+
+*One old line from the playtest's list of steps. The list as it is now is in BUILD_LOG.md, section 3, "The playtest and the Game view".*
 
 - goes through the user flow: intro → menu NEW GAME → briefing → board;
 
@@ -561,10 +577,14 @@ It also drives the helm (ENG power, throttle, a turn, pause) and pans the plot. 
 (Step 106); each step's count is in the table in section 1. It grows as features land: add steps to `PowerUpRun()`. There is only one
 Unity editor, so it runs when no other agent is using Unity.
 
-a script cannot press, so it calls what those presses call (`Activate(0)`, `ScreenFlow.Advance`)
+*The old end of a sentence about the playtest. The code now calls Activate(1); the whole sentence is in BUILD_LOG.md, section 3.*
 
-left of the Game view). The board draws at the window's real pixel size, and its layout is designed
-for 16:9. **Free Aspect** fills any window, but other shapes have not been checked. A fixed size like
+"…a script cannot press, so it calls what those presses call (`Activate(0)`, `ScreenFlow.Advance`)…"
+
+*Part of the old note about the Game view's size. The note as it is now is in BUILD_LOG.md, section 3, "The playtest and the Game view".*
+
+"…left of the Game view). The board draws at the window's real pixel size, and its layout is designed
+for 16:9. **Free Aspect** fills any window, but other shapes have not been checked. A fixed size like…"
 
 ---
 
@@ -622,6 +642,8 @@ in `docs/BUILD_LOG.md`, section 4.
     attack runs of 10 armour per fighter, wedges in a V with no labels. They land when they reach
     us. Details in Step 54. Now: 100 units/s (Step 130). Now: small white triangles that appear
     beside our ship (Step 160).
+
+*Decision 31's old "Now:" note, as it read before 2026-11-11. Decision 31 as it is now, with the Art and Campaign menus, is in BUILD_LOG.md, section 4.*
 
     Now: the menu has only `Starwolf/Tuning`, `Starwolf/Level` and
     `Starwolf/Playtest/Run power-up playtest`. Keys, Hard Points and Ranges are tabs of Tuning (Step
@@ -5778,3 +5800,40 @@ engine. Placeholder. Replace before ship.
 - Ammunition is a real count in the ship stats files.
 - The aft armour is 50.
 - The Engineering panel is built (`Assets/Scripts/UI/Panels/EngineeringPanel.cs`).
+
+---
+
+## Bug list entries closed on 2026-11-11
+
+The Bug Fixes chat checked the Bug list again on 2026-11-11 and took these out. Each one's text is
+kept here as it read in the Bug list before then, with what happened to it.
+
+**Taken out: the Garuda's turning and lead.** Turning with no ENG power is the same for every ship, so
+it is now one entry about `NavSystem.Steer` in the Bug list. Our ship also works out its lead from the
+centre, so that one is not Garuda-only either. The old text, from "The Garuda does not follow our rules":
+- It still turns with no ENG power, and under EMP too.
+- Its lead is worked out from the ship's centre, not from the gun.
+
+**Fixed: the PlaytestRunner comment.** The comment now says `Activate(1)`, the same as the code.
+- **`Assets/Editor/Playtest/PlaytestRunner.cs`:** the comment at the top of the class says the run
+  calls `StarwolfIntroController.Activate(0)`. The code calls `Activate(1)`, SKIRMISH. The comment is
+  wrong.
+
+**Closed: the torpedo's white dot, LONG SHOT at x5, and the six sRGB pictures.** The white dot was fixed
+in Step 184, the owner closed LONG SHOT at x5 on 2026-11-10, and the sRGB pictures were settled on
+2026-11-10 with no change. The old text:
+- **In the close-up, the table's white dot hides most of a drifting torpedo's body** (Step 184). See
+  "The sniper ship and weapons: still to do".
+- **Unsure: at x5, our locked shots may land too far back on a moving Garuda** (Step 186). Check in
+  the game first. See "The sniper ship and weapons: still to do", "LONG SHOT at x5".
+- **Unsure: six board pictures have sRGB on.** Their colours may be wrong. Check each by eye first.
+  See "Open after Step 185: art".
+
+**The notes the Bug list kept about these, moved here:**
+- Removed on 2026-11-11, not Garuda-only: turning with no ENG power is the same for every ship (see
+  `NavSystem.cs`, `Steer` in the Bug list), and our ship also works out its lead from the centre.
+- Taken out on 2026-11-11: the Naga frigate's missing picture (`TacticalWorld.Join` now gives every
+  ship one; what is left is the `PeriscopePanel` entry below) and `PlotPanel`'s list of ship views
+  (fixed in 2c3153f).
+- Taken out on 2026-11-11: the white dot over a drifting torpedo (fixed in Step 184), LONG SHOT at x5
+  (closed by the owner on 2026-11-10) and the six sRGB pictures (settled on 2026-11-10, no change).
