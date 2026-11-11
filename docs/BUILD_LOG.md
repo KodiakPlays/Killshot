@@ -857,6 +857,9 @@ At the end of every step:
 - Every known bug goes in section 8, "Bug list", even a bug in old code. Write the bug out in full
   there, not as a pointer to another heading. When it is fixed, move it to `docs/BUILD_HISTORY.md`
   with the step that fixed it.
+- Change your row in section 8's master list in the same edit: when you take an item, finish it or
+  park it. A new owner ask gets a row the same day, with your chat as its owner. Nothing may be
+  tracked only in a plan doc, a memory note or a chat (owner, 2026-11-11).
 
 A docs agent also updates the other docs a step changes, such as `docs/BOARD_UI.md`,
 `docs/TUNING_LOG.md` and `docs/SCRIPT_LIST.md`.
@@ -866,6 +869,81 @@ A docs agent also updates the other docs a step changes, such as `docs/BOARD_UI.
 ## 8 · Open items
 
 Still not done. **This is the list to work from.** Read it before picking up any work.
+
+### Master list: every open item and who owns it (Producer, 2026-11-11)
+
+One line per item. The detail stays where the last column says. **NONE** in the owner column means no
+chat is working on it: the item was dropped and needs a chat. "Parked" means the owner paused it, so
+nobody starts it. A chat title in the owner column is the chat that answers for it.
+
+Keep it current (owner, 2026-11-11). A new owner ask gets a row the same day, with the chat that owns
+it. When a chat takes, finishes or parks an item, it changes the row in the same edit; a finished row
+moves to `docs/BUILD_HISTORY.md`. Nothing may be tracked only in a plan doc, a memory note or a chat.
+The Producer chat checks this list against the chats and the docs.
+
+Status words: not started · designed · part built · built, not checked · waiting for the owner ·
+blocked · parked.
+
+| # | Item | What the owner asked | Status | Owner chat | Next step | Detail |
+|---|---|---|---|---|---|---|
+| | **The MILK RUN player build (now)** | | | | | |
+| M1 | The MILK RUN player build: Mac and Windows x64 zips, named with the date | "one proper story level, MILK RUN, that is fun to play", then put it in front of people (2026-11-11) | blocked: waits on the owner's go, and on M3, M5, M6 and M7 | Mission Setup Tool | Owner says go; the chats take Unity in turn; build | "Next: the MILK RUN player build" |
+| M2 | At build time: switch TEST MISSION off, and set the closing line to "To be continued." | "just 'To be continued.' It's absolutely fine." (2026-11-11) | not started | Mission Setup Tool | Both in Starwolf → Campaign, just before the zips | same; "Campaign: still to do" |
+| M3 | The playtest still checks the old ship (two side railguns, six fighters), and check #194 fails every run | owner rule: one full playtest per batch | not started | **NONE: dropped** | Rewrite the checks for the nose railgun and the boats, then run it before the build | "Bug list" (playtest); "Codex's Fire Control test, and what no person has played yet" |
+| M4 | Not seen by a person yet: the rooms and end card after MISSION COMPLETE; checkpoint notes 4–10, 12 and 16; the real Escape key on both menus; a full campaign win | none | not started | Mission Setup Tool (rooms, notes); the owner (by hand) | The 10-minute check before the build; the owner plays the build | "Next: the MILK RUN player build"; BUILD_HISTORY Steps 156, 189–191 |
+| M5 | MILK RUN's AI flying fix: big ships stop swerving for small craft, battleship turn 12, carrier 10, shuttle routes, plain ship names | owner, 2026-11-11 | part built: saved, not compiled. The tuning log has the turn rows; the ship files don't yet | Tutorial Mission Setup | 15 minutes of Unity on the owner's go, then commit | "Open after Step 178" |
+| M6 | Enemy slugs we can see leave a line on the table (Step 206) | "Only ones we can see" (2026-11-11) | built, not checked: not played, not committed | Ship Visual Artefact | 5-minute play check, then commit | section 1, "Steps not finished" |
+| M7 | "Test: play from here" in Starwolf → Campaign | none written down | built, not checked: not tried, not committed | Campaign Flow | Try it in Unity, docs, commit | Campaign Flow chat |
+| M8 | The bugs a MILK RUN player meets (16 in the Bug list). First: no turning with ENG at 0 | none | waiting for the owner's go on the first fix | Bug Fixes | Owner says go; then the rest in its order | "Bug list" |
+| M9 | Checkpoint 13 asks for speed 45, but the helm shows no speed | none | waiting for the owner | Mission Setup Tool | Owner picks: change the note, or add a speed readout | "FLIGHT DRILL: calls for the owner to check", call 10 |
+| M10 | SETTINGS on the main menu does nothing | none | not started | **NONE: dropped** | Owner picks: hide it for the build, or build it | "Triage", small jobs |
+| M11 | "KM" shows after distances that are really units | "Visually, we can decide" (2026-10-29) | waiting for the owner | Bug Fixes | Owner picks the word | "Bug list"; "Distances in units" |
+| M12 | Call signs for the carrier, the battleship, the corvette and our ship | "English with an Indic feel" (2026-11-10) | waiting for the owner | Mission Setup Tool | Owner picks from the list | `MISSION_SETUP_PLAN.md` "Names"; "Open after Step 178" |
+| | **The sniper plan (being built)** | | | | | |
+| M13 | The E-SIG circle round each ship, and the hit rule: a hit from outside it tells only the direction | "It's how much the eSig expands"; 2,500 to 20,000, +25 a shot, cools 2 a second (2026-11-09) | designed; being built | Sniper Plan | Build it, with four numbers in Tuning | `SNIPER_PLAN.md` "The E-SIG circle". The "15,000 waits for a yes" line in "The sniper ship and weapons" is out of date |
+| M14 | Sensor drones in the hangar's INTERCEPTOR row. They unlock D3 (a far hit shows when a drone watches) and restock drones | "we're replacing interceptors with drones that need to be deployed" (2026-11-09) | waiting for the owner: how you deploy them (a design page is coming) | Sniper Plan | Owner picks on the page; then build | `SNIPER_PLAN.md` "Sensor drones" |
+| M15 | Lasers on the two side dots | "you get in, you zap things" (2026-11-09); the sides "are going to be lasers again" (2026-11-11) | designed; the owner sees the look first | Sniper Plan | After the drones | `SNIPER_PLAN.md` "Lasers" |
+| M16 | DRADIS reaches further, and a lock covers all of DRADIS (the MAG cap rises with it) | DRADIS "does need to reach a little further" (2026-11-09) | waiting for the owner: the number | Sniper Plan | Ask with the drones | "The sniper ship and weapons" |
+| M17 | How drone and telemetry marks look on the plot | none yet | designed by Information Hierarchy, sent to Sniper Plan | Sniper Plan | Show the owner with the drones | "Open: the information hierarchy" |
+| | **The enemy follows our rules** | | | | | |
+| M18 | The Garuda, and MILK RUN's corvette, follow all our weapon rules: a lock, a charge, crew arming each shot, a slow gun, torpedoes need a scan or a lock, PDCs fire | "Otherwise this is never going to work. You have to have a pretty fair chance of winning." (2026-11-09) | not started | **NONE: dropped** | A new chat, after M13 (same hit code). Talk first: it changes MILK RUN | "The Garuda does not follow our rules"; `SNIPER_PLAN.md` "The Garuda" |
+| M19 | The enemy is heard by its own signal, hides in gas clouds, fights fires in every room, turns a fresh side when one is worn | "the enemy is our ship with different numbers" (settled) | not started | **NONE: dropped** | Same chat as M18 | "The Garuda does not follow our rules"; `team-reports/enemy-ai-manager/2026-11-08.md` |
+| M20 | What the enemy does past Wolf Hunt: what mission 2's enemy needs | none | parked until mission 2 is talked through | none (parked) | With M37 | "Open design questions", 1 |
+| | **Damage and conditions** | | | | | |
+| M21 | A hit room lowers the top power of its system, and the lost steps show crossed out. Only the reactor does this today | given with the campaign answers (2026-11-10) | not started | **NONE: dropped** | A new damage chat: write it into `DAMAGE_README.md`, then plan it | `CAMPAIGN_FLOW_PLAN.md` "A damage rule the owner gave" |
+| M22 | A separate setup for conditions: which rooms touch, how fire, vacuum and radiation start and spread. Since Step 186 they still spread by the old fixed list | "over time, we need a separate conditions setup" (2026-11-09) | not started; a talk first | **NONE: dropped** | Same chat: a design page | `DAMAGE_README.md` "Deck plan"; `finished-plans/ROOM_LAYOUT_PLAN.md` "Later" |
+| M23 | Torpedo blast: a torpedo that misses still hurts a ship near it | "a torpedo that misses still hurts a ship near the blast" (2026-11-09) | not started. How big, and whether it hurts us, was never asked | **NONE: dropped** | Same chat: options on the design page | "The sniper ship and weapons" |
+| M24 | Rocks and ruins stop slugs | "ruins block shots" (2026-09-01) | not started | **NONE: dropped** | Same chat | "Found by two audits"; spec §8.2 |
+| M25 | Damage-control teams, breakdowns and engineering's displays (damage steps 5 to 7) | "conditions first, then damage-control parties, then breakdowns" (2026-10-24) | part built: one team with a timer | **NONE: dropped** | Same chat, after M22 | `DAMAGE_README.md` "Build order" |
+| M26 | A new damage type for the railgun | "once the owner says what it should be" | waiting for the owner | none (parked) | none | `SNIPER_PLAN.md`, build order 6 |
+| | **Numbers through Tuning** | | | | | |
+| M27 | Numbers still typed into the code: the TUNING_AUDIT list, the W tap and its curve, code defaults far below the ship files | every game number goes through Tuning (owner rule, 2026-11-09) | not started. The Bug list holds only part of it | **NONE: dropped** | Give it to Bug Fixes after the MILK RUN bugs | `finished-plans/TUNING_AUDIT_2026-11-09.md` A1, A2, B3; "Bug list" |
+| | **How the ship feels** | | | | | |
+| M28 | Engine flare while you hold W; thruster puffs for slide and turn (Q, E, A, D) and on a torpedo's nose swing | the owner wants to see the engine fire (2026-11-09); the A2 pick (2026-11-10) | not started; talk first | **NONE: dropped** | A new chat: a design page with the looks | "Ship movement feel" |
+| M29 | Feel the 5-second slide | "let's make it 5 seconds for the slide" (2026-11-09) | built; the owner hasn't played it | the owner | Play the build | "Ship movement feel" |
+| | **Between missions** | | | | | |
+| M30 | Sector map: the slight flicker; the won-mission tick is still Codex's teal | the owner asked for "our phosphor effects" (2026-11-11) | not started | **NONE: dropped** (Sector Map Phosphor is closing) | Suggested: Campaign Flow, which owns the sector map | BUILD_HISTORY, Step 201 |
+| M31 | The other screens fill any shape: rooms, SAVE SLOTS, the title, the sector map (owner picks option 1, 2 or 3) | "start" (2026-11-10) | not started | **NONE: dropped** | Suggested: Campaign Flow (its screens), rooms first | "Open after Step 182" |
+| M32 | A mission needs torpedoes or marines, but the ship has none left after repairs | none | waiting for the owner | Campaign Flow | Owner: a minimum at the start, or the player's problem? | Campaign Flow chat |
+| M33 | Room art and people (Bridge, Engineering, Quarters); the FLIGHT LEADER still talks about fighters | the owner makes the art | waiting for the owner | the owner | none | "Open after Step 185: art" |
+| | **Information on the plot** | | | | | |
+| M34 | The information hierarchy, the rest: start as an unknown ping; blue circles next to grey rock circles; when a ship becomes a bogey; ACTIVE SCAN as a long narrow telescope | the owner's main priority (2026-11-10) | waiting for the owner | Information Hierarchy | Owner answers on its page | "Open: the information hierarchy" |
+| M35 | Look back at old comms messages | the owner was unhappy it was left behind (2026-10-29) | not started | **NONE: dropped** | Suggested: Information Hierarchy | "Comms intercepts" |
+| | **Fire Control** | | | | | |
+| M36 | Codex's Fire Control: does it replace the board's? Does the periscope lower itself? The FLIGHT LEADER's words? Unpack the Hangar package? | "Make a new scene for this… It doesn't have to be in the flow" (2026-11-10) | waiting for the owner | none (parked; the Fire Control Codex chat is done) | Owner decides after the build | "Codex's Fire Control test" |
+| | **Missions, tools and code (after the build)** | | | | | |
+| M37 | Missions 2 to 10 | "Red October in space", about 10 missions (2026-11-09) | MILK RUN built; 2 to 10 not started | none (parked until people play MILK RUN) | Talk mission 2 through | "Campaign: still to do"; `FTUE_PLAN.md` |
+| M38 | Mission tools: the Starwolf → Mission window; the Level window draws ships, rings and the route; play from checkpoint N | "I need a mission setup tool" (2026-11-09); the order agreed (2026-11-11) | designed | Mission Setup Tool, then a new chat after the build | Talk first | `MISSION_SETUP_PLAN.md` "The tools, in order" |
+| M39 | Refactor steps 2, 5 and 8: the playtest into the Test Runner, the last files out of `Scripts/Tactical`, the clock into `GameManager` | the owner's order (2026-10-25 and 26) | part built | none (after the build) | none | "Board refactor" |
+| M40 | Combat autopilot | "Autopilot agreed" (2026-10-25) | designed; TAIL facing not answered | none (after the build) | none | "Combat autopilot and W/S"; spec §4.6 |
+| | **Writing and docs** | | | | | |
+| M41 | Rewrite all 109 script notes and `SCRIPT_LIST.md` in proper sentences | the owner said yes (2026-11-11) | on hold until the memory was fixed; it is fixed now | **NONE: dropped** | A new chat on the owner's go. No Unity needed | "Script notes: what is left", item 7 |
+| M42 | Rewrite the team reports in plain English, producer first | "badly written… rubbish" (2026-11-10) | not started | **NONE: dropped** | Same chat as M41 | `docs/team-reports/` |
+| M43 | Out-of-date lines: the spec (six places), BOARDING_README's numbers, DAMAGE_README, ROOM_LAYOUT_PLAN, FTUE_PLAN §0, BOARD_UI "230 px", CONTEXT_INDEX "MISSIONS list" | none | not started | Producer | A docs agent | Producer chat |
+| | **Waiting on the owner, no build work** | | | | | |
+| M44 | Calls chats made that change play, for the owner to check: Step 178 (battle group sizes; BOGEY until scanned), Step 192 (marines always win on a ship that can't be destroyed), Step 197 (four calls), Step 198 (travel bar calls), Step 206 ("can see" goes by distance only) | none: the chats made them | waiting for the owner | none | Owner checks them in the build | BUILD_HISTORY Steps 178, 192, 197, 198; section 1, Step 206 |
+| M45 | Parked by the owner: the sight in fire control; controller support (don't raise it); real sounds; a save during a mission; HEAT for signal; radiation false dots; raiding and salvage; enemy boarders; the disguise; the XO walkthrough and derelicts; the cloak; spoken orders; the old helm art; the body cam; Soham's scripts | the owner parked each one | parked | none (parked) | Wait for the owner | "For later talks"; "Triage"; spec §12.2 |
+| M46 | Probably overtaken, for the owner to drop: the WEAPONS FREE split and the old level text fixes; the FTUE XO plan (MILK RUN's COMMAND checkpoints may replace it); the Claude Design request; "is x5 for fighting?"; recording real fights | none | waiting for the owner | none | Owner says drop or keep | "The level rework"; "Triage"; `FTUE_PLAN.md` |
 
 ### Next: the MILK RUN player build
 
@@ -909,7 +987,8 @@ or sound yet. These items come before the player build.
   calls for the owner to check").
 - The title, SAVE SLOTS and the sector map show dark bands on screens that aren't 16:9, and the owner
   hasn't played the board full screen on the MacBook ("Open after Step 182").
-- The sector map's phosphor-green look is a test the owner hasn't decided on (Step 201, section 1).
+- The sector map is green in the game now (941942f, owner). Not done: the slight flicker, and the
+  won-mission tick is still Codex's teal (master list M30).
 - How the ship feels to fly: the slide, the W tap and the engine flare ("Ship movement feel").
 - Every sound is a generated tone, and some art is a stand-in. That is expected for now.
 
@@ -1123,9 +1202,10 @@ after at the MacBook's shape.
      (item 1). Still to do: the window and the checkpoint talk in the Campaign file (ask once more
      before the new window script). The checkpoints are still on the level's Mission object.
 - **The travel bar (Step 198):** restock drones stays hidden until drones are built.
-- **The campaign's end (Steps 194 and 203):** the closing line stays empty for now (owner 2026-11-11),
-  in `Assets/Campaign/Campaign.asset` → Closing Line. Nobody has played a full campaign win through
-  the real win screen yet.
+- **The campaign's end (Steps 194 and 203):** the closing line is "To be continued." (owner
+  2026-11-11, later the same day as "keep it empty": "just 'To be continued.' It's absolutely fine.").
+  It goes in `Assets/Campaign/Campaign.asset` → Closing Line at build time (master list M2). Nobody
+  has played a full campaign win through the real win screen yet.
 - **A SAVE during a mission** (the pause menu): parked by the owner, "mention it later". The owner
   liked checkpoints better: a save at one or two set moments in a mission. Not built.
 - **The story** (owner 2026-11-09, still being talked through): about 10 missions, "Red October in
