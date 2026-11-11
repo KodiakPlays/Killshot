@@ -57,6 +57,8 @@
 //   the Inspector, a pale stroke stands in and the dot stays. Hits get a flash and kills a blast.
 //   Our railgun: a charge glows at the muzzle while it is armed, then a flash and vent gas as it
 //   fires. On the table its shot leaves a line that fades, and rings mark the charge and the shot.
+//   An enemy slug leaves a red line too, but only along the part of its path we have seen: from
+//   where it came into sight or DRADIS range. So the line never shows where an unseen ship fired.
 //   A POINT on the slug's path counts down to its arrival, then blinks IMPACT ?.
 //   Each craft in flight is a small fighter model, 10 units long, and its triangle fades out.
 //   Zoomed right in, the V spreads so the models don't overlap. With no fighter model set in the
@@ -194,10 +196,10 @@ public class PlotPanel : Panel
     [Tune("Plot & our ship")] [SerializeField] private float torpedoFlareUnits = 60f, torpedoFlareSeconds = 0.6f, torpedoRingPx = 16f;
     [Tooltip("Owner 2026-11-10 (railgun C2): in the close-up, the charge that builds at the railgun's muzzle while it is armed (units across), the flash when it fires (units across) and how long it lasts, and how long the vent gas shows (game seconds). Nothing glows along the ship.")]
     [Tune("Plot & our ship")] [SerializeField] private float muzzleChargeUnits = 30f, muzzleFlashUnits = 90f, muzzleFlashSeconds = 0.3f, ventGasSeconds = 1.1f;
-    [Tooltip("Owner 2026-11-10 (railgun C3): our railgun shot leaves a line on the table, from the muzzle to the slug, gone in this many game seconds.")]
+    [Tooltip("Owner 2026-11-10 (railgun C3): our railgun shot leaves a line on the table, from the muzzle to the slug, gone in this many game seconds. Owner 2026-11-11: an enemy slug we can see leaves one too, from where we first saw it, gone as fast.")]
     [Tune("Plot & our ship")] [SerializeField] private float shotLineSeconds = 5f;
     class RailShot { public WeaponSystem.Round r; public double x0, y0, x1, y1; public float age; }
-    private readonly List<RailShot> railShots = new List<RailShot>();
+    private readonly List<RailShot> railShots = new List<RailShot>(), enemyShots = new List<RailShot>();
     private float railArmedFor, railFiredAgo = 99f; // game seconds our railgun has been armed, and since it last fired
     [Tooltip("Owner 2026-11-10 (far shot, D2): a POINT this close to our slug's path, units, counts down to when the slug gets there. Then it blinks IMPACT ? for this many game seconds.")]
     [Tune("Plot & our ship")] [SerializeField] private float impactNearUnits = 500f, impactBlinkSeconds = 3f;
@@ -1031,6 +1033,7 @@ public class PlotPanel : Panel
             dots.Add(new MarksGraphic.Shape { kind = "fade", a = at, b = tail, alpha = 0.8f * seen });
             AddLightRing(dots, r);
         }
+        TrackEnemyShots(s, dots);
         TrackPdcBursts(dots);
         if (contactMarks) contactMarks.Set(dots);
         ShowShotsAndBlasts();
@@ -1632,7 +1635,7 @@ public class PlotPanel : Panel
         seen = Time.frameCount;
         return Controls.Paused ? 0f : Time.unscaledDeltaTime * Controls.Rate; // ponytail: a game second is a real second at x1 (Step 130)
     }
-    private int railFrame = -1, pdcFrame = -1;
+    private int railFrame = -1, pdcFrame = -1, enemyFrame = -1;
 
     void TrackRailShots(ShipState s, List<MarksGraphic.Shape> shapes, Color ink)
     {
@@ -1659,6 +1662,31 @@ public class PlotPanel : Panel
         var c = Screen(at.x, at.y);
         if (armed) { float p = Mathf.Clamp01(railArmedFor); shapes.Add(new MarksGraphic.Shape { kind = "circle", a = c, b = c + new Vector2(3f + torpedoRingPx * (1f - p), 0f), alpha = 0.3f + 0.6f * p, ink = ink }); }
         if (railFiredAgo < muzzleFlashSeconds) { float f = railFiredAgo / muzzleFlashSeconds; shapes.Add(new MarksGraphic.Shape { kind = "circle", a = c, b = c + new Vector2(4f + torpedoRingPx * f, 0f), alpha = 1f - f, ink = ink }); }
+    }
+
+    // Owner 2026-11-11: an enemy slug leaves a line on the table too, but only one we can see, and only the part of its path we
+    // saw: from where it came into visual or DRADIS range to where it is, or where it left our sight. It fades like ours, red.
+    void TrackEnemyShots(ShipState s, List<MarksGraphic.Shape> dots)
+    {
+        float dt = FrameDt(ref enemyFrame);
+        foreach (var r in s.weapons.Incoming)
+            if (!r.torpedo && SeesSpot(s, r.x, r.y) && !enemyShots.Exists(k => k.r == r))
+                enemyShots.Add(new RailShot { r = r, x0 = r.x, y0 = r.y, x1 = r.x, y1 = r.y });
+        for (int i = enemyShots.Count - 1; i >= 0; i--)
+        {
+            var k = enemyShots[i];
+            if ((k.age += dt) >= shotLineSeconds) { enemyShots.RemoveAt(i); continue; }
+            if (s.weapons.Incoming.Contains(k.r) && SeesSpot(s, k.r.x, k.r.y)) { bool drawn = k.r.drawn.at > 0f; k.x1 = drawn ? k.r.drawn.x : k.r.x; k.y1 = drawn ? k.r.drawn.y : k.r.y; }
+            dots.Add(new MarksGraphic.Shape { kind = "line", a = Screen(k.x0, k.y0), b = Screen(k.x1, k.y1), alpha = 0.55f * (1f - k.age / shotLineSeconds) });
+        }
+    }
+
+    // In visual range of our ship, or inside DRADIS's range while it is listening.
+    // ponytail: by distance only; rocks and the DRADIS band don't hide a slug yet. Use the track rules if a slug should hide behind a rock.
+    static bool SeesSpot(ShipState s, double x, double y)
+    {
+        double dx = x - s.nav.x, dy = y - s.nav.y, d = System.Math.Sqrt(dx * dx + dy * dy);
+        return d <= s.sensors.stats.visualRangeUnits || (s.sensors.Listening && d <= s.sensors.PassiveRangeUnits);
     }
 
     // Owner 2026-11-10 (far shot, D2): "That thing shot away, but you're not sure if the impact happened." A POINT on our slug's

@@ -947,11 +947,21 @@ with no WEP units: charge − 3 per game second
 > `HIT · …`. Torpedoes always report as before. D3, where a drone watching shows the hit, waits on
 > the drones.
 
+> **Rule 8.4.e** **An enemy slug's line** (owner, 2026-11-11, "Only ones we can see"; Step 206).
+> An enemy slug we can see leaves a faint red line on the table. It fades over 5 game seconds
+> from when we first saw it, the same Shot Line Seconds as ours. "Can see" means inside our visual
+> range, or inside DRADIS's range while DRADIS is listening. The line covers only the part of the
+> slug's path we saw: it starts where the slug first came into sight or DRADIS range, and stops
+> where it left. So a line never shows where an unseen ship fired from. Enemy torpedoes leave no
+> line. For now the test is distance only: a rock between us and the slug doesn't hide it, and
+> DRADIS's band isn't checked (a call made in Step 206, for the owner to check).
+
 The look of a railgun shot (Step 197): in the close-up, a charge glow at the gun's mouth while it is
 armed, a flash and two puffs of vent gas when it fires. Nothing glows along the ship: the ship is
 built around the gun. On the table, our shot leaves a line from the gun to the slug that fades over
-5 game seconds (C3). The enemy's shots leave no line; the owner hasn't answered that yet. A POINT
-near the slug's path counts down to it (§18.2). How each one looks is in `docs/BOARD_UI.md`, Plot.
+5 game seconds (C3). An enemy slug leaves a line only if we can see it (owner, 2026-11-11: "Only
+ones we can see"; Step 206): see Rule 8.4.e. A POINT near the slug's path counts down to it
+(§18.2). How each one looks is in `docs/BOARD_UI.md`, Plot.
 
 ### 8.5 Torpedo
 
@@ -1314,7 +1324,8 @@ The tool rail: CURSOR, POINT, RULER, COMPASS and ERASE (§18). The systems rail:
 | A contact | A red bar on the DRADIS circle, a dot with its range, or its model (§9.6) |
 | Our fighters | Small white triangles in a V, 10 px, nose pointing the way they fly, with no labels. The V is shut where they appear beside our ship. It opens as they fly out and closes as they land (owner, 2026-11-02). Zoomed in, each is a small 3D model, 10 units long, and its triangle fades out. The models' V spreads so they never overlap (owner, 2026-11-11, Step 199) |
 | Our slugs and torpedoes | A white dot with a fading trail: 120 px on a slug, less on anything slower, so a torpedo's grows as its motor lights. Our slug also leaves a line from the gun that fades over 5 game seconds (Step 197) |
-| Enemy torpedoes | A red dot with a short trail |
+| Enemy slugs | A faint red line along the part of the slug's path we saw, fading over 5 game seconds. Only a slug we can see leaves one (Rule 8.4.e, Step 206) |
+| Enemy torpedoes | A red dot with a short trail. No line |
 | A ship our marines secured | A dot |
 | DRADIS | The hearing circle and the sweep; with ACTIVE on, the scan cone |
 | Visual range | A thin ring round our ship, always on. Inside it you see ships with your eyes (§9.3) |
@@ -2279,7 +2290,7 @@ Per §19.2.a, everything here draws on the plot too.
 | A PDC group on AUTO | Its arc, a dashed sector off our hull |
 | Shot fired | The slug in flight, at true speed: a white dot with a short trail, white like our ship and our fighters (owner 2026-10-26). The dot can go up to twice that speed just after firing, and it can slow before a hit (§9.6) |
 | Torpedo salvo fired | Each torpedo in flight, also a white dot with a short trail |
-| Railgun shot fired (Step 197) | A line from the gun to the slug, fading over 5 game seconds; a ring that closes in at the gun while it is armed, and one that opens as it fires. In the close-up: the charge glow, the flash and the vent gas (Rule 8.4.c) |
+| Railgun shot fired (Step 197) | A line from the gun to the slug, fading over 5 game seconds; a ring that closes in at the gun while it is armed, and one that opens as it fires. In the close-up: the charge glow, the flash and the vent gas (Rule 8.4.c). An enemy slug we can see leaves a faint red line too, fading the same way, along only the part of its path we saw (Rule 8.4.e, Step 206) |
 | A PDC go at an enemy torpedo (Step 197) | A dotted line from the gun, walking onto the torpedo on a kill and staying off it on a miss (§8.6) |
 
 ### 20.3 State and persistence
