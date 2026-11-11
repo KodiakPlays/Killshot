@@ -11,7 +11,7 @@ How to add a row: one row per number. "Where" is the Tuning tab and field, or th
 
 | Date | Number | Old | New | Where | Who asked, and why |
 |---|---|---|---|---|---|
-| 2026-11-11 | Our top speed (Asura, at full ENG) | 50 units/s | 60 units/s | Ship tab → Asura → Navigation, Top Speed Units (`Assets/Ships/Asura.asset`) | Owner 2026-11-11, changed by the owner in Tuning to try it out: "I just wanted to play around with it." Logged afterwards by killshot-a7 |
+| 2026-11-11 | Our top speed (Asura, at full ENG) | 50 units/s | 60 units/s | Ship tab → Asura → Navigation, Top Speed Units (`Assets/Ships/Asura.asset`) | Owner 2026-11-11, changed by the owner in Tuning: "I just wanted to play around with it." Then, kept for the MILK RUN build: "I think 30 to 60, going double, is a good place to be. We'll play around with it if we need to." Logged by killshot-a7 |
 | 2026-11-11 | Our base speed (Asura, at ENG 1) | 25 units/s | 30 units/s | Same file, Base Speed Units | Same |
 | 2026-11-11 | Friend Mark Px: how wide one of our ships' filled blue circle is on the plot, out of sight | none (new; it was a 7 px dot, the Point Dot size) | 11 px | Board tab → Sensors (`PlotPanel`) | Owner 2026-11-11: the agreed visual language goes into the build. Ours are filled blue circles, sized with the triangle and square. 11 is my pick |
 | 2026-11-11 | Enemy Mark Px: how wide a scanned enemy's triangle is on the plot, out of sight | none (new; it was a 7 px dot, the Point Dot size) | 14 px | Board tab → Sensors (`PlotPanel`) | Owner 2026-11-11, information hierarchy first try: a scanned enemy is a filled triangle with equal sides that never turns. 14 is my pick |
