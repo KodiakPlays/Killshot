@@ -884,6 +884,25 @@ The Producer chat checks this list against the chats and the docs.
 Status words: not started · designed · part built · built, not checked · waiting for the owner ·
 blocked · parked.
 
+**Who says go (owner, 2026-11-11):** "it's your job now to set the priority for what all the other
+chats should be doing right now. I don't want to keep telling it to go or no-go, so it's your job. You
+decide." The Producer chat sets the order and says go or no-go. Design calls still go to the owner.
+
+**Today's order (Producer, 2026-11-11): the MILK RUN player build first.** Unity builds from the files
+on disk, not from git, so nothing half-done may sit on disk when the build runs. Unity goes to one chat
+at a time, and each chat says "free" to the next and to Producer:
+1. Sniper Plan: finish its E-SIG check, then take its E-SIG edits off disk until the zips are made.
+2. Campaign Flow: try the test tool (M7), commit.
+3. Ship Visual Artefact: Step 206's play check (M6), commit; commit Player 1's files (M48).
+4. Bug Fixes: the ENG 0 fix (M8), commit.
+5. Tutorial Mission Setup: its MILK RUN turn (M5, M47), commit.
+6. Mission Setup Tool: the check after MISSION COMPLETE (M4), the full playtest as it is, TEST MISSION
+   off, "To be continued." (M2), the dated zips (M1), TEST MISSION back on, commit.
+No Unity and no code left on disk until the zips are made: Information Hierarchy (plans the scan
+hold). Owner questions not answered by then (M9, M10, M11, M12) ship as they are today. After the
+zips: Sniper Plan goes on with E-SIG, Information Hierarchy builds the scan hold, Bug Fixes goes on
+with its list, and the new chats start (Playtest Update, then Plain English Rewrite).
+
 | # | Item | What the owner asked | Status | Owner chat | Next step | Detail |
 |---|---|---|---|---|---|---|
 | | **The MILK RUN player build (now)** | | | | | |
@@ -894,11 +913,11 @@ blocked · parked.
 | M5 | MILK RUN's AI flying fix: big ships stop swerving for small craft, battleship turn 12, carrier 10, shuttle routes, plain ship names | owner, 2026-11-11 | part built: saved, not compiled. The tuning log has the turn rows; the ship files don't yet | Tutorial Mission Setup | 15 minutes of Unity on the owner's go, then commit | "Open after Step 178" |
 | M6 | Enemy slugs we can see leave a line on the table (Step 206) | "Only ones we can see" (2026-11-11) | built, not checked: not played, not committed | Ship Visual Artefact | 5-minute play check, then commit | section 1, "Steps not finished" |
 | M7 | "Test: play from here" in Starwolf → Campaign | none written down | built, not checked: not tried, not committed | Campaign Flow | Try it in Unity, docs, commit | Campaign Flow chat |
-| M8 | The bugs a MILK RUN player meets (16 in the Bug list). First: no turning with ENG at 0 | none | waiting for the owner's go on the first fix | Bug Fixes | Owner says go; then the rest in its order | "Bug list" |
+| M8 | The bugs a MILK RUN player meets (16 in the Bug list). First: turning with ENG at 0 | ENG at 0: "you'll have very, very limited mobility and turning", "turning very slowly using auxiliary power" (2026-11-11) | go: slot 4 of today's order | Bug Fixes | A very slow turn at ENG 0 (a Tuning number), every ship; then the rest in its order | "Bug list" |
 | M9 | Checkpoint 13 asks for speed 45, but the helm shows no speed | none | waiting for the owner | Mission Setup Tool | Owner picks: change the note, or add a speed readout | "FLIGHT DRILL: calls for the owner to check", call 10 |
 | M10 | SETTINGS on the main menu does nothing | none | not started | **NONE: dropped** | Owner picks: hide it for the build, or build it | "Triage", small jobs |
 | M11 | "KM" shows after distances that are really units | "Visually, we can decide" (2026-10-29) | waiting for the owner | Bug Fixes | Owner picks the word | "Bug list"; "Distances in units" |
-| M47 | MILK RUN's note says torpedoes reach 3,000. Against a moving ship, with the drift, the real reach is about 2,400 | none (fight sums, 2026-11-11) | not started | Mission Setup Tool (Tutorial Mission Setup was told) | Change the note before the build | `team-reports/player-1/2026-11-11.md` |
+| M47 | MILK RUN's note says torpedoes reach 3,000. Against a moving ship, with the drift, the real reach is about 2,400 | none (fight sums, 2026-11-11) | not started | Tutorial Mission Setup | "Fire from 2,000 or closer." in its Unity turn, before the build | `team-reports/player-1/2026-11-11.md` |
 | M48 | Uncommitted: Player 1's report, 420 rows in `numbers.csv` and the fight program's changes. (Our ship's speed 60 and base 30, with their tuning rows, were committed in de3779d.) | owner rule: commit your finished work before you stop (2026-11-11) | built, not committed | Ship Visual Artefact | Commit its own lines | `git status` |
 | M12 | Call signs for the carrier, the battleship, the corvette and our ship | "English with an Indic feel" (2026-11-10) | waiting for the owner | Mission Setup Tool | Owner picks from the list | `MISSION_SETUP_PLAN.md` "Names"; "Open after Step 178" |
 | | **The sniper plan (being built)** | | | | | |
@@ -920,18 +939,18 @@ blocked · parked.
 | M25 | Damage-control teams, breakdowns and engineering's displays (damage steps 5 to 7) | "conditions first, then damage-control parties, then breakdowns" (2026-10-24) | part built: one team with a timer | **NONE: dropped** | Same chat, after M22 | `DAMAGE_README.md` "Build order" |
 | M26 | A new damage type for the railgun | "once the owner says what it should be" | waiting for the owner | none (parked) | none | `SNIPER_PLAN.md`, build order 6 |
 | | **Numbers through Tuning** | | | | | |
-| M27 | Numbers still typed into the code: the TUNING_AUDIT list, the W tap and its curve, code defaults far below the ship files | every game number goes through Tuning (owner rule, 2026-11-09) | not started. The Bug list holds only part of it | **NONE: dropped** | Give it to Bug Fixes after the MILK RUN bugs | `finished-plans/TUNING_AUDIT_2026-11-09.md` A1, A2, B3; "Bug list" |
+| M27 | Numbers still typed into the code: the TUNING_AUDIT list, the W tap and its curve, code defaults far below the ship files | every game number goes through Tuning (owner rule, 2026-11-09) | not started. The Bug list holds only part of it | Bug Fixes (Producer, 2026-11-11) | After the MILK RUN bugs. The W tap goes to Ship Feel (M28) | `finished-plans/TUNING_AUDIT_2026-11-09.md` A1, A2, B3; "Bug list" |
 | | **How the ship feels** | | | | | |
 | M28 | Engine flare while you hold W; thruster puffs for slide and turn (Q, E, A, D) and on a torpedo's nose swing | the owner wants to see the engine fire (2026-11-09); the A2 pick (2026-11-10) | not started; talk first | **NONE: dropped** | A new chat: a design page with the looks | "Ship movement feel" |
 | M29 | Feel the 5-second slide | "let's make it 5 seconds for the slide" (2026-11-09) | built; the owner hasn't played it | the owner | Play the build | "Ship movement feel" |
 | | **Between missions** | | | | | |
-| M30 | Sector map: the slight flicker; the won-mission tick is still Codex's teal | the owner asked for "our phosphor effects" (2026-11-11) | not started | **NONE: dropped** (Sector Map Phosphor is closing) | Suggested: Campaign Flow, which owns the sector map | BUILD_HISTORY, Step 201 |
-| M31 | The other screens fill any shape: rooms, SAVE SLOTS, the title, the sector map (owner picks option 1, 2 or 3) | "start" (2026-11-10) | not started | **NONE: dropped** | Suggested: Campaign Flow (its screens), rooms first | "Open after Step 182" |
+| M30 | Sector map: the slight flicker; the won-mission tick is still Codex's teal | the owner asked for "our phosphor effects" (2026-11-11) | not started | Campaign Flow (Producer, 2026-11-11) | After the build | BUILD_HISTORY, Step 201 |
+| M31 | The other screens fill any shape: rooms, SAVE SLOTS, the title, the sector map (owner picks option 1, 2 or 3) | "start" (2026-11-10) | not started | Campaign Flow (Producer, 2026-11-11) | After M30, rooms first | "Open after Step 182" |
 | M32 | A mission needs torpedoes or marines, but the ship has none left after repairs | none | waiting for the owner | Campaign Flow | Owner: a minimum at the start, or the player's problem? | Campaign Flow chat |
 | M33 | Room art and people (Bridge, Engineering, Quarters); the FLIGHT LEADER still talks about fighters | the owner makes the art | waiting for the owner | the owner | none | "Open after Step 185: art" |
 | | **Information on the plot** | | | | | |
-| M34 | The information hierarchy, the rest: start as an unknown ping; blue circles next to grey rock circles; when a ship becomes a bogey; ACTIVE SCAN as a long narrow telescope | the owner's main priority (2026-11-10) | waiting for the owner | Information Hierarchy | Owner answers on its page | "Open: the information hierarchy" |
-| M35 | Look back at old comms messages | the owner was unhappy it was left behind (2026-10-29) | not started | **NONE: dropped** | Suggested: Information Hierarchy | "Comms intercepts" |
+| M34 | The information hierarchy, the rest: "hold the scan to learn more" (a single click scans, holding learns more); blue circles next to grey rock circles; when a ship becomes a bogey; ACTIVE SCAN as a long narrow telescope | the owner's main priority (2026-11-10). 2026-11-11: "I like the 'hold scan to learn more.'"; the enemy triangle "is not necessary… a diamond is okay… I like the bar" | the scan hold picked; the rest waiting for the owner | Information Hierarchy | Plan the scan hold now; build it after the zips, on top of Sniper Plan's E-SIG lines | "Open: the information hierarchy" |
+| M35 | Look back at old comms messages | the owner was unhappy it was left behind (2026-10-29) | not started | Information Hierarchy (Producer, 2026-11-11) | After the scan hold | "Comms intercepts" |
 | | **Fire Control** | | | | | |
 | M36 | Codex's Fire Control: does it replace the board's? Does the periscope lower itself? The FLIGHT LEADER's words? Unpack the Hangar package? | "Make a new scene for this… It doesn't have to be in the flow" (2026-11-10) | waiting for the owner | none (parked; the Fire Control Codex chat is done) | Owner decides after the build | "Codex's Fire Control test" |
 | | **Missions, tools and code (after the build)** | | | | | |
