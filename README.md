@@ -231,8 +231,8 @@ What each panel's switches do is in `docs/BOARD_UI.md`.
 **Engine power sets your top speed, thrust and turn rate.** One unit on the ENG
 bus allows 25 units a second, and five units allow 50. Five units also give
 twice the acceleration, braking, turn rate and side thrust of one unit. With no
-ENG power the ship has no thrust and no side thrusters, and it still turns, at
-the one-unit rate. Put the ENG bus on DRAW first and let it fill. If the ENG bus
+ENG power the ship has no thrust and no side thrusters. It drifts, and every
+turn is very slow, 1 degree a second, the slow turn too. Put the ENG bus on DRAW first and let it fill. If the ENG bus
 drops, the throttle goes back to zero and you set it again. A damaged engine
 room turns the ship more slowly and lowers the throttle limit.
 

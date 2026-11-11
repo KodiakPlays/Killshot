@@ -1451,8 +1451,6 @@ Found by the Technical pass of the script notes (2026-11-10):
   jump point, checkpoint and NEAR lines.
 - `HangarSystem.cs`, `FlightStatus`: the RETURNING and OUTBOUND lines show "KM". The distances are in
   units.
-- `NavSystem.cs`, `Steer`: there is no check for ENG power. Any ship still turns with ENG at 0 or under
-  EMP, ours too. MILK RUN: its first lesson is power, then movement.
 - `HangarSystem.cs`, the boarding order that disables a ship: it sets the enemy's ENG and MAG to 0
   directly, the same as the scuttle below. It should go through `DamageSystem` (found 2026-11-11).
 - `PeriscopePanel.cs`, `ViewOf`: the list of ship pictures is made once. A ship that joins later, such
@@ -1656,7 +1654,6 @@ MILK RUN's level was copied from FLIGHT DRILL, so the calls below apply to MILK 
 itself is switched off. The owner hasn't checked these calls.
 
 3. **ENG 1 is half of full ENG** for acceleration and turn rate: 1 to 2, and 10 to 20° a second.
-4. **ENG 0 still turns**, at the ENG 1 rate. It has no thrust.
 5. **Side speed** is 20 at full ENG.
 7. **A slide adds no signal.**
 10. **No speed readout.** The full-throttle step ends at speed 45, and the player can't read the speed.

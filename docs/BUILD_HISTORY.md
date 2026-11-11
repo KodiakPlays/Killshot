@@ -5830,6 +5830,37 @@ in Step 184, the owner closed LONG SHOT at x5 on 2026-11-10, and the sRGB pictur
 - **Unsure: six board pictures have sRGB on.** Their colours may be wrong. Check each by eye first.
   See "Open after Step 185: art".
 
+**Fixed: turning with no ENG power (commit 4b3e2ae, 2026-11-11).** With ENG at 0, or under an EMP, a
+ship used to turn at its ENG 1 rate. Our ship turned 10 degrees a second. The old text, from the Bug list:
+- `NavSystem.cs`, `Steer`: there is no check for ENG power. Any ship still turns with ENG at 0 or under
+  EMP, ours too. MILK RUN: its first lesson is power, then movement.
+
+It was also call 4 in "FLIGHT DRILL: calls for the owner to check", taken out of `docs/BUILD_LOG.md`
+the same day. Its old text:
+- **ENG 0 still turns**, at the ENG 1 rate. It has no thrust.
+
+The owner's answer (2026-11-11): "With the engine at zero, the ship is either at rest or it's
+drifting, but your ability to turn will be extremely limited. You will be turning very slowly using
+auxiliary power… you'll have very, very limited mobility and turning."
+
+What changed: with ENG at 0, or under an EMP, every ship turns at 1 degree a game second. That is our
+ship, the Garuda and all the others. The slow aiming turn (Shift with A or D, normally 2 degrees a
+second) goes no faster than 1 degree a second at ENG 0 either. With ENG at 1 or more, turning is the
+same as before. With ENG at 0 there is still no thrust and no braking, and the ship drifts, as before.
+The owner wasn't asked about adding thrust at ENG 0 and hasn't answered. Only the slow turn was built.
+
+Where the number is: the turn at ENG 0 is a number in each ship's stats file. Find it in
+**Starwolf → Tuning** → Ship tab → the ship → Navigation, under Turning: **No Eng Turn Rate** (1).
+The owner didn't give the number. 1 was the Bug Fixes chat's pick. No ship file has it saved yet, and
+every ship uses the 1 from the code until its file is saved. The row is in `docs/TUNING_LOG.md`.
+Files: `Assets/Scripts/Systems/NavSystem.cs` (with its note at the top), `docs/TUNING_LOG.md`.
+
+The check: a quick one in play mode. The full playtest was not run. At ENG 0 our ship turned 10
+degrees in 10 game seconds when the check moved the clock on itself, and 39 degrees in 39 game seconds
+with the board running on its own. At ENG 1 it turned 30 degrees in 3 seconds. The slow turn did 4
+degrees in 4 seconds at ENG 0, and 8 in 4 at ENG 1. The Garuda turned 5 degrees in 5 seconds at ENG 0.
+No errors. In MILK RUN, every turn comes after ENG has power. The mission plays the same as before.
+
 **The notes the Bug list kept about these, moved here:**
 - Removed on 2026-11-11, not Garuda-only: turning with no ENG power is the same for every ship (see
   `NavSystem.cs`, `Steer` in the Bug list), and our ship also works out its lead from the centre.

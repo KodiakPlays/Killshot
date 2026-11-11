@@ -415,7 +415,9 @@ and E do nothing. The numbers are in the ship's stats file, under Side thrusters
 and **Side Ramp Seconds**.
 
 Shift with A or D is the slow turn, for aiming the spinal railgun (Step 170). While both keys are
-down, the ship turns 2° a game second, in parts of a degree. ENG power doesn't change it. The order
+down, the ship turns 2° a game second, in parts of a degree. ENG power doesn't change it, except at
+ENG 0. There every turn, slow or normal, is 1° a game second (**No Eng Turn Rate**, in the ship's
+stats file under Navigation, Turning). The order
 follows the bow, and the attitude key clears. The HDG readout still shows whole degrees. The ship on
 the plot turns by the part of a degree. A normal A or D turn drops the part of a degree. The speed
 is **Fine Turn Deg Per S** (2), on the Ship tab of **Starwolf → Tuning**, under Navigation. The key

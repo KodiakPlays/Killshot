@@ -342,13 +342,13 @@ Venting comes first, so units freed by a vent can be drawn in the same second.
 > Releasing it puts every bus on STANDBY.
 
 An EMP empties every bus at once. The power stays out for 60 game seconds (§8.1a). With no power
-on ENG, the ship drifts (§4.3).
+on ENG, the ship drifts, and it turns very slowly (§4.3).
 
 ### 3.4 What a unit is worth
 
 | Bus | What its units do |
 |---|---|
-| ENG | ENG 1 allows 25 units/s and ENG 5 allows 50, in equal steps. ENG 5 also gives twice ENG 1's acceleration, braking, turn rate and side thrust (§4.2, §4.3). With no ENG units, the ship drifts. |
+| ENG | ENG 1 allows 25 units/s and ENG 5 allows 50, in equal steps. ENG 5 also gives twice ENG 1's acceleration, braking, turn rate and side thrust (§4.2, §4.3). With no ENG units, the ship drifts, and it turns very slowly (§4.3). |
 | WEP | Feeds the weapons capacitor, 5 per unit per game second (§8.4). Weapons need at least 2 units. |
 | SEN | Caps the DRADIS gain: up to the SEN units, never below 1 (§9.1). |
 | AUX | Fills the orders pool, 3.2 per unit per game second (§6). The hangar's catapult needs at least 1 unit (§12.3). |
@@ -412,10 +412,11 @@ ENG also sets how fast speed changes (owner, 2026-11-01). On our ship, speed alo
 ### 4.3 Drift — the ship slides
 
 > **Rule 4.3.a** `A` and `D` step the ordered heading by 3° per press. The bow turns toward it at
-> 10° per game second at ENG 1 and 20° at ENG 5, in equal steps (owner, 2026-11-01). ENG 0 turns at
-> the ENG 1 rate. Base Turn Rate in the stats file gives the ENG 1 number. It is slower when the
-> engine room is damaged (never below 1°). The velocity keeps its old direction and bends round
-> slowly. Pressing A or D also clears the helm's attitude key.
+> 10° per game second at ENG 1 and 20° at ENG 5, in equal steps (owner, 2026-11-01). Base Turn Rate
+> in the stats file gives the ENG 1 number. It is slower when the engine room is damaged (never below
+> 1°). At ENG 0, or under an EMP, every ship turns very slowly, at 1° per game second (owner,
+> 2026-11-11). No Eng Turn Rate in the stats file gives that number. The velocity keeps its old
+> direction and bends round slowly. Pressing A or D also clears the helm's attitude key.
 
 Each game second, velocity splits into a part along the nose and a sideways part:
 
@@ -426,7 +427,7 @@ all speed      × 0.997502
 
 > **Rule 4.3.b** With no units on the ENG bus there is no thrust and no braking. The ship drifts on
 > at the same speed and direction (owner, 2026-10-29). This is true of every ship, so an EMP leaves
-> a ship drifting too. The one exception is a railgun's push back: the thrusters always stop it
+> a ship drifting too. The bow still turns, very slowly (Rule 4.3.a). The one exception is a railgun's push back: the thrusters always stop it
 > (Rule 8.4.c).
 
 > **Rule 4.3.c** `Q` slides the ship to port and `E` to starboard (owner, 2026-11-01). The nose
@@ -451,7 +452,8 @@ all speed      × 0.997502
 
 > **Rule 4.3.d** Shift with `A` or `D` is the slow turn, for aiming the spinal railgun (owner,
 > 2026-11-08; Step 170). While the keys are down, the bow turns 2° per game second, in parts of a
-> degree. ENG power doesn't change it. The ordered heading follows the bow, and the helm's attitude
+> degree. ENG power doesn't change it, except at ENG 0: there it goes no faster than 1° per game
+> second (Rule 4.3.a). The ordered heading follows the bow, and the helm's attitude
 > key clears. The helm's HDG still shows whole degrees. A normal `A` or `D` turn drops the part of a
 > degree. Fine Turn Deg Per S is in each ship's stats file, under Navigation. The key is Fine Turn
 > Key (LeftShift), on the Keys tab.
@@ -816,7 +818,7 @@ fighters (owner, 2026-10-27; BUILD_LOG decision 49).
 | Railgun slug | Takes 50 armour off the side it hits | Takes 2 integrity off the room behind; 50% chance to breach it |
 | HE torpedo | Takes 100 armour | Takes 2 integrity off the room behind; 60% chance of fire |
 | PENETRATOR torpedo | Goes straight through | Takes 2 integrity off the room behind; 40% chance of fire |
-| EMP torpedo | No damage | No damage. The ship's power goes out for 60 game seconds, and it drifts (§4.3) |
+| EMP torpedo | No damage | No damage. The ship's power goes out for 60 game seconds. It drifts, and it turns very slowly (§4.3) |
 | Fighter run | Takes 10 armour per fighter | Takes 1 integrity per fighter off the room behind |
 
 These are our ship's numbers. The Garuda's slugs and HE torpedoes hit 1.5 times as hard: a slug takes
